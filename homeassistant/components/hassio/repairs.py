@@ -18,10 +18,13 @@ from . import get_addons_info, get_issues_info
 from .const import (
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
+    PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
+    PLACEHOLDER_KEY_ADDON_INFO,
     PLACEHOLDER_KEY_COMPONENTS,
     PLACEHOLDER_KEY_REFERENCE,
 )
@@ -195,6 +198,23 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
         return placeholders or None
 
 
+class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
+    """Handler for deprecated addon issue fixing flows."""
+
+    @property
+    def description_placeholders(self) -> dict[str, str] | None:
+        """Get description placeholders for steps."""
+        placeholders: dict[str, str] = super().description_placeholders or {}
+        if self.issue and self.issue.reference:
+            placeholders[PLACEHOLDER_KEY_ADDON_INFO] = (
+                f"homeassistant://hassio/addon/{self.issue.reference}/info"
+            )
+            placeholders[PLACEHOLDER_KEY_ADDON_DOCUMENTATION] = (
+                f"homeassistant://hassio/addon/{self.issue.reference}/documentation"
+            )
+        return placeholders or None
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -205,6 +225,8 @@ async def async_create_fix_flow(
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:
         return DockerConfigIssueRepairFlow(hass, issue_id)
+    if issue and issue.key == ISSUE_KEY_ADDON_DEPRECATED:
+        return DeprecatedAddonIssueRepairFlow(hass, issue_id)
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,

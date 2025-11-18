@@ -23,7 +23,7 @@ from . import init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_global_survices_with_config_entry(
+async def test_global_services_with_config_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:

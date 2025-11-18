@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pyfirefly.models import Account, Category
+from pyfirefly.models import Account, Budget, Category
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,7 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
-from .entity import FireflyAccountBaseEntity, FireflyCategoryBaseEntity
+from .entity import (
+    FireflyAccountBaseEntity,
+    FireflyBudgetBaseEntity,
+    FireflyCategoryBaseEntity,
+)
 
 ACCOUNT_ROLE_MAPPING = {
     "defaultAsset": "default_asset",
@@ -35,6 +39,7 @@ ACCOUNT_BALANCE = "account_balance"
 ACCOUNT_ROLE = "account_role"
 ACCOUNT_TYPE = "account_type"
 CATEGORY = "category"
+BUDGET = "budget"
 
 
 async def async_setup_entry(
@@ -57,6 +62,13 @@ async def async_setup_entry(
         [
             FireflyCategorySensor(coordinator, category, CATEGORY)
             for category in coordinator.data.category_details
+        ]
+    )
+
+    entities.extend(
+        [
+            FireflyBudgetSensor(coordinator, budget, BUDGET)
+            for budget in coordinator.data.budgets
         ]
     )
 
@@ -176,3 +188,30 @@ class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
         if spent == 0 and earned == 0:
             return None
         return spent + earned
+
+
+class FireflyBudgetSensor(FireflyBudgetBaseEntity, SensorEntity):
+    """Budget sensor."""
+
+    _attr_translation_key = "budget"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        budget: Budget,
+        key: str,
+    ) -> None:
+        """Initialize the budget sensor."""
+        super().__init__(coordinator, budget, key)
+        self._budget = budget
+        self._attr_native_unit_of_measurement = (
+            coordinator.data.primary_currency.attributes.code
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return spent value for this budget in the period."""
+        spent_items = self._budget.attributes.spent or []
+        return sum(float(item.sum) for item in spent_items if item.sum is not None)

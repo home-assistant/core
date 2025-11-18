@@ -4,23 +4,23 @@
       "pump_pressure": {
         "default": "mdi:water-pump"
       },
-      "reservoir_temperature": {
-        "default": "mdi:coolant-temperature"
+      "pump_type": {
+        "default": "mdi:pump"
+      },
+      "reservoir_capacity": {
+        "default": "mdi:waves"
       },
       "reservoir_content": {
         "default": "mdi:car-coolant-level"
+      },
+      "reservoir_temperature": {
+        "default": "mdi:coolant-temperature"
       },
       "water_saved": {
         "default": "mdi:water-opacity"
       },
       "water_used": {
         "default": "mdi:chart-donut"
-      },
-      "reservoir_capacity": {
-        "default": "mdi:waves"
-      },
-      "pump_type": {
-        "default": "mdi:pump"
       }
     }
   }

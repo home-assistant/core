@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import DPCodeIntegerWrapper, IntegerTypeData, find_dpcode
 from .util import get_dpcode
 
 TUYA_HVAC_TO_HA = {
@@ -39,6 +39,16 @@ TUYA_HVAC_TO_HA = {
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
+
+
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+    """An integer that always rounds its value."""
+
+    def read_device_status(self, device: CustomerDevice) -> int | None:
+        """Read and round the device status."""
+        if (value := super().read_device_status(device)) is None:
+            return None
+        return round(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -97,6 +107,12 @@ async def async_setup_entry(
                         manager,
                         CLIMATE_DESCRIPTIONS[device.category],
                         hass.config.units.temperature_unit,
+                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                            device, DPCode.HUMIDITY_CURRENT
+                        ),
+                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                            device, DPCode.HUMIDITY_SET, prefer_function=True
+                        ),
                     )
                 )
         async_add_entities(entities)
@@ -111,10 +127,8 @@ async def async_setup_entry(
 class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     """Tuya Climate Device."""
 
-    _current_humidity: IntegerTypeData | None = None
     _current_temperature: IntegerTypeData | None = None
     _hvac_to_tuya: dict[str, str]
-    _set_humidity: IntegerTypeData | None = None
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
@@ -125,12 +139,17 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
         system_temperature_unit: UnitOfTemperature,
+        *,
+        current_humidity_wrapper: _RoundedIntegerWrapper | None = None,
+        target_humidity_wrapper: _RoundedIntegerWrapper | None = None,
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
         self.entity_description = description
 
         super().__init__(device, device_manager)
+        self._current_humidity_wrapper = current_humidity_wrapper
+        self._target_humidity_wrapper = target_humidity_wrapper
 
         # If both temperature values for celsius and fahrenheit are present,
         # use whatever the device is set to, with a fallback to celsius.
@@ -153,11 +172,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = system_temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(
-            (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+        celsius_type = find_dpcode(
+            self.device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
         )
-        fahrenheit_type = self.find_dpcode(
-            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
+        fahrenheit_type = find_dpcode(
+            self.device,
+            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F),
+            dptype=DPType.INTEGER,
         )
         if fahrenheit_type and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
@@ -173,11 +194,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._current_temperature = celsius_type
 
         # Figure out setting temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(
-            DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
+        celsius_type = find_dpcode(
+            self.device, DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
         )
-        fahrenheit_type = self.find_dpcode(
-            DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
+        fahrenheit_type = find_dpcode(
+            self.device, DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
         if fahrenheit_type and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
@@ -201,8 +222,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
@@ -225,22 +246,19 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ]
 
         # Determine dpcode to use for setting the humidity
-        if int_type := self.find_dpcode(
-            DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
-        ):
+        if target_humidity_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
-            self._set_humidity = int_type
-            self._attr_min_humidity = int(int_type.min_scaled)
-            self._attr_max_humidity = int(int_type.max_scaled)
-
-        # Determine dpcode to use for getting the current humidity
-        self._current_humidity = self.find_dpcode(
-            DPCode.HUMIDITY_CURRENT, dptype=DPType.INTEGER
-        )
+            self._attr_min_humidity = round(
+                target_humidity_wrapper.type_information.min_scaled
+            )
+            self._attr_max_humidity = round(
+                target_humidity_wrapper.type_information.max_scaled
+            )
 
         # Determine fan modes
         self._fan_mode_dp_code: str | None = None
-        if enum_type := self.find_dpcode(
+        if enum_type := find_dpcode(
+            self.device,
             (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
             prefer_function=True,
@@ -275,10 +293,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         commands = [{"code": DPCode.SWITCH, "value": hvac_mode != HVACMode.OFF}]
@@ -301,20 +315,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         self._send_command([{"code": self._fan_mode_dp_code, "value": fan_mode}])
 
-    def set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if TYPE_CHECKING:
-            # guarded by ClimateEntityFeature.TARGET_HUMIDITY
-            assert self._set_humidity is not None
-
-        self._send_command(
-            [
-                {
-                    "code": self._set_humidity.dpcode,
-                    "value": self._set_humidity.scale_value_back(humidity),
-                }
-            ]
-        )
+        await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
@@ -380,14 +383,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if self._current_humidity is None:
-            return None
-
-        humidity = self.device.status.get(self._current_humidity.dpcode)
-        if humidity is None:
-            return None
-
-        return round(self._current_humidity.scale_value(humidity))
+        return self._read_wrapper(self._current_humidity_wrapper)
 
     @property
     def target_temperature(self) -> float | None:
@@ -404,14 +400,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity currently set to be reached."""
-        if self._set_humidity is None:
-            return None
-
-        humidity = self.device.status.get(self._set_humidity.dpcode)
-        if humidity is None:
-            return None
-
-        return round(self._set_humidity.scale_value(humidity))
+        return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
     def hvac_mode(self) -> HVACMode:
