@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -44,7 +45,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
-    websocket_terminated = True
+    _websocket_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
@@ -63,6 +64,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
         self.cloud_client = cloud_client
+
+    @property
+    def websocket_terminated(self) -> bool:
+        """Return True if the websocket task is terminated or not running."""
+        if self._websocket_task is None:
+            return True
+        return self._websocket_task.done()
 
     async def _async_update_data(self) -> None:
         """Do the data update."""
@@ -102,7 +110,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
-        self.config_entry.async_create_background_task(
+        self._websocket_task = self.config_entry.async_create_background_task(
             hass=self.hass,
             target=self.connect_websocket(),
             name="lm_websocket_task",
@@ -121,7 +129,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         _LOGGER.debug("Init WebSocket in background task")
 
-        self.websocket_terminated = False
         self.async_update_listeners()
 
         await self.device.connect_dashboard_websocket(
@@ -130,7 +137,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             disconnect_callback=self.async_update_listeners,
         )
 
-        self.websocket_terminated = True
         self.async_update_listeners()
 
 
