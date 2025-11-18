@@ -59,14 +59,8 @@ DESCRIPTIONS: tuple[DayBetterSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        exists_fn=lambda device: device.get("temp") is not None
-        or device.get("temperature") is not None,
-        value_fn=lambda device: _safe_div(
-            device.get("temp")
-            if device.get("temp") is not None
-            else device.get("temperature"),
-            10,
-        ),
+        exists_fn=lambda device: device.get("temp") is not None,
+        value_fn=lambda device: _safe_div(device.get("temp"), 10),
     ),
     DayBetterSensorEntityDescription(
         key="humidity",
@@ -74,14 +68,8 @@ DESCRIPTIONS: tuple[DayBetterSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        exists_fn=lambda device: device.get("humi") is not None
-        or device.get("humidity") is not None,
-        value_fn=lambda device: _safe_div(
-            device.get("humi")
-            if device.get("humi") is not None
-            else device.get("humidity"),
-            10,
-        ),
+        exists_fn=lambda device: device.get("humi") is not None,
+        value_fn=lambda device: _safe_div(device.get("humi"), 10),
     ),
     DayBetterSensorEntityDescription(
         key="battery",
