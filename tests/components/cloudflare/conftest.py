@@ -13,7 +13,7 @@ def cfupdate() -> Generator[MagicMock]:
     """Mock the CloudflareUpdater for easier testing."""
     mock_cfupdate = get_mock_client()
     with patch(
-        "homeassistant.components.cloudflare.pycfdns.Client",
+        "homeassistant.components.cloudflare.coordinator.pycfdns.Client",
         return_value=mock_cfupdate,
     ) as mock_api:
         yield mock_api
