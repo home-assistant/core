@@ -27,7 +27,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .binary_sensor import get_delay
 from .const import (
     CONF_FROM,
     CONF_ROUTES,
@@ -60,6 +59,11 @@ def _get_route(trip: Trip | None) -> list[str]:
         route.append(departure)
     route.extend(part.destination for part in trip_parts)
     return route
+
+
+def _get_delay(planned: datetime | None, actual: datetime | None) -> bool:
+    """Return True if delay is present, False otherwise."""
+    return bool(planned and actual and planned != actual)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,15 +202,13 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         if not first_trip:
             return None
 
-        route = _get_route(first_trip)
         status = first_trip.status
 
-        # Static attributes
         return {
             "going": first_trip.going,
             "departure_time_planned": _get_time_str(first_trip.departure_time_planned),
             "departure_time_actual": _get_time_str(first_trip.departure_time_actual),
-            "departure_delay": get_delay(
+            "departure_delay": _get_delay(
                 first_trip.departure_time_planned,
                 first_trip.departure_time_actual,
             ),
@@ -214,7 +216,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             "departure_platform_actual": first_trip.departure_platform_actual,
             "arrival_time_planned": _get_time_str(first_trip.arrival_time_planned),
             "arrival_time_actual": _get_time_str(first_trip.arrival_time_actual),
-            "arrival_delay": get_delay(
+            "arrival_delay": _get_delay(
                 first_trip.arrival_time_planned,
                 first_trip.arrival_time_actual,
             ),
@@ -223,6 +225,6 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             "next": _get_time_str(_get_departure_time(next_trip)),
             "status": status.lower() if status else None,
             "transfers": first_trip.nr_transfers,
-            "route": route,
+            "route": _get_route(first_trip),
             "remarks": None,
         }

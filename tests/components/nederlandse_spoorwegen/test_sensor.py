@@ -70,7 +70,6 @@ async def test_config_import(
 async def test_sensor(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -85,7 +84,6 @@ async def test_sensor(
 async def test_single_trip_sensor(
     hass: HomeAssistant,
     mock_single_trip_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -100,7 +98,6 @@ async def test_single_trip_sensor(
 async def test_no_trips_sensor(
     hass: HomeAssistant,
     mock_no_trips_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
