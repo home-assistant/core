@@ -21,8 +21,8 @@ class AirobotEntity(CoordinatorEntity[AirobotDataUpdateCoordinator]):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        status = coordinator.data["status"]
-        settings = coordinator.data["settings"]
+        status = coordinator.data.status
+        settings = coordinator.data.settings
 
         if entity_key:
             self._attr_unique_id = f"{status.device_id}_{entity_key}"

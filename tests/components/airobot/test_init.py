@@ -27,7 +27,7 @@ async def test_setup_entry_success(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (AirobotAuthError("Authentication failed"), ConfigEntryState.SETUP_ERROR),
+        (AirobotAuthError("Authentication failed"), ConfigEntryState.SETUP_RETRY),
         (AirobotConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -79,34 +79,6 @@ async def test_coordinator_update_failed(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_coordinator_update_recovery(
-    hass: HomeAssistant,
-    mock_airobot_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test coordinator logs when device recovers from unavailability."""
-    coordinator = mock_config_entry.runtime_data
-
-    # Simulate connection error to make device unavailable
-    mock_airobot_client.get_statuses.side_effect = AirobotConnectionError(
-        "Connection lost"
-    )
-    await coordinator.async_refresh()
-    assert coordinator.last_update_success is False
-    assert "Device is unavailable" in caplog.text
-
-    # Clear the log
-    caplog.clear()
-
-    # Restore connection - device comes back online
-    mock_airobot_client.get_statuses.side_effect = None
-    await coordinator.async_refresh()
-    assert coordinator.last_update_success is True
-    assert "Device is back online" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -93,7 +93,7 @@ async def test_climate_set_temperature_error(
     """Test error handling when setting temperature fails."""
     mock_airobot_client.set_home_temperature.side_effect = AirobotError("Device error")
 
-    with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
+    with pytest.raises(ServiceValidationError, match="Failed to set temperature"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -173,7 +173,7 @@ async def test_climate_set_preset_mode_error(
     """Test error handling when setting preset mode fails."""
     mock_airobot_client.set_boost_mode.side_effect = AirobotError("Device error")
 
-    with pytest.raises(HomeAssistantError, match="Failed to set preset mode"):
+    with pytest.raises(ServiceValidationError, match="Failed to set preset mode"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,

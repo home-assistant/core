@@ -23,12 +23,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import AirobotConfigEntry
+from .const import DOMAIN
 from .entity import AirobotEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AirobotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airobot climate platform."""
@@ -63,12 +64,12 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
     @property
     def _status(self) -> ThermostatStatus:
         """Get status from coordinator data."""
-        return self.coordinator.data["status"]
+        return self.coordinator.data.status
 
     @property
     def _settings(self) -> ThermostatSettings:
         """Get settings from coordinator data."""
-        return self.coordinator.data["settings"]
+        return self.coordinator.data.settings
 
     @property
     def current_temperature(self) -> float | None:
@@ -85,7 +86,9 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
-        return HVACMode.HEAT
+        if self._status.is_heating:
+            return HVACMode.HEAT
+        return HVACMode.OFF
 
     @property
     def hvac_action(self) -> HVACAction:
@@ -114,8 +117,10 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
             else:
                 await self.coordinator.client.set_away_temperature(float(temperature))
         except AirobotError as err:
-            raise HomeAssistantError(
-                f"Failed to set temperature to {temperature}°C: {err}"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+                translation_placeholders={"temperature": str(temperature)},
             ) from err
 
         await self.coordinator.async_request_refresh()
@@ -138,8 +143,10 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
                 elif preset_mode == PRESET_AWAY:
                     await self.coordinator.client.set_mode(MODE_AWAY)
         except AirobotError as err:
-            raise HomeAssistantError(
-                f"Failed to set preset mode to {preset_mode}: {err}"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode_failed",
+                translation_placeholders={"preset_mode": preset_mode},
             ) from err
 
         await self.coordinator.async_request_refresh()

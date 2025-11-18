@@ -89,12 +89,15 @@ def mock_airobot_client(
 
 
 @pytest.fixture
-def mock_airobot_config_flow_client(mock_settings: ThermostatSettings):
+def mock_airobot_config_flow_client(
+    mock_status: ThermostatStatus, mock_settings: ThermostatSettings
+):
     """Mock AirobotClient for config flow."""
     with patch(
         "homeassistant.components.airobot.config_flow.AirobotClient", autospec=True
     ) as mock_client:
         client = mock_client.return_value
+        client.get_statuses = AsyncMock(return_value=mock_status)
         client.get_settings = AsyncMock(return_value=mock_settings)
         yield client
 

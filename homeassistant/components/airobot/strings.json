@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,15 +9,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
+      "dhcp_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The thermostat password."
+          "password": "The thermostat password.",
+          "username": "The thermostat Device ID (e.g., T01XXXXXX)."
         },
-        "description": "The authentication for {username} at {host} needs to be updated.",
-        "title": "[%key:common::config_flow::title::reauth%]"
+        "description": "Airobot thermostat discovered at {host}. Enter your credentials to complete setup. Find the Device ID and password in the thermostat settings menu under Connectivity → Mobile app."
       },
       "user": {
         "data": {
@@ -40,6 +40,14 @@
       "thermostat": {
         "name": "Thermostat"
       }
+    }
+  },
+  "exceptions": {
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode to {preset_mode}."
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set temperature to {temperature}°C."
     }
   }
 }
