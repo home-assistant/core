@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+import tibber
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -20,6 +21,42 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+def create_tibber_device(
+    device_id: str = "device-id",
+    external_id: str = "external-id",
+    name: str = "Test Device",
+    brand: str = "Tibber",
+    model: str = "Gen1",
+    value: float | None = 72.0,
+    home_id: str = "home-id",
+) -> tibber.data_api.TibberDevice:
+    """Create a fake Tibber Data API device."""
+    device_data = {
+        "id": device_id,
+        "externalId": external_id,
+        "info": {
+            "name": name,
+            "brand": brand,
+            "model": model,
+        },
+        "capabilities": [
+            {
+                "id": "storage.stateOfCharge",
+                "value": value,
+                "description": "State of charge",
+                "unit": "%",
+            },
+            {
+                "id": "unknown.sensor.id",
+                "value": None,
+                "description": "Unknown",
+                "unit": "",
+            },
+        ],
+    }
+    return tibber.data_api.TibberDevice(device_data, home_id=home_id)
 
 
 @pytest.fixture

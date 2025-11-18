@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -25,30 +24,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .conftest import create_tibber_device
+
 from tests.common import MockConfigEntry
-
-
-def _create_device(value: float) -> SimpleNamespace:
-    """Create a fake Tibber Data API device."""
-    return SimpleNamespace(
-        id="device-id",
-        external_id="external-id",
-        name="Test Device",
-        brand="Tibber",
-        model="Gen1",
-        sensors=[
-            SimpleNamespace(
-                id="storage.stateOfCharge",
-                value=value,
-                description="State of charge",
-            ),
-            SimpleNamespace(
-                id="unknown.sensor.id",
-                value=None,
-                description="Unknown",
-            ),
-        ],
-    )
 
 
 @pytest.fixture
@@ -70,8 +48,12 @@ async def test_data_api_setup_adds_entities(
     """Ensure Data API sensors are created and coordinator refreshes data."""
     runtime = MagicMock()
     client = MagicMock()
-    client.get_all_devices = AsyncMock(return_value={"device-id": _create_device(72.0)})
-    client.update_devices = AsyncMock(return_value={"device-id": _create_device(83.0)})
+    client.get_all_devices = AsyncMock(
+        return_value={"device-id": create_tibber_device(value=72.0)}
+    )
+    client.update_devices = AsyncMock(
+        return_value={"device-id": create_tibber_device(value=83.0)}
+    )
     runtime.async_get_client = AsyncMock(return_value=client)
 
     hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime

@@ -23,8 +23,7 @@ async def async_get_config_entry_diagnostics(
     domain_data = hass.data.get(DOMAIN, {})
 
     if api_type == API_TYPE_GRAPHQL:
-        runtime = domain_data.get(API_TYPE_GRAPHQL, {})
-        tibber_connection: tibber.Tibber = runtime.tibber
+        tibber_connection: tibber.Tibber = domain_data[API_TYPE_GRAPHQL].tibber
         return {
             "api_type": API_TYPE_GRAPHQL,
             "homes": [
