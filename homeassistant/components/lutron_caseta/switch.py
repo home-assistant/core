@@ -5,9 +5,12 @@ from typing import Any
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import LutronCasetaEntity, LutronCasetaUpdatableEntity
+from .models import LutronCasetaData
 
 
 async def async_setup_entry(
@@ -23,11 +26,14 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
-    async_add_entities(
+    entities = [
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
-    )
-    if (bridge.smart_away_state != ""):
-        async_add_entities([LutronCasetaSmartAwaySwitch(data)])
+    ]
+
+    if bridge.smart_away_state != "":
+        entities.append(LutronCasetaSmartAwaySwitch(data))
+
+    async_add_entities(entities)
 
 
 class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
@@ -68,7 +74,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
 class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
     """Representation of Lutron Caseta Smart Away."""
 
-    def __init__(self, data):
+    def __init__(self, data: LutronCasetaData):
         """Init a switch entity."""
         device = {
             "device_id": "smart_away",
@@ -79,13 +85,26 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
             "serial": data.bridge_device["serial"],
         }
         super().__init__(device, data)
-        self._attr_device_info = {
-            "identifiers": {("lutron_caseta", data.bridge_device["serial"])},
-        }
-        self._attr_unique_id = f"{data.bridge_device['serial']}_smart_away"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.bridge_device["serial"])},
+        )
+        self._smart_away_unique_id = f"{data.bridge_device['serial']}_smart_away"
 
-    async def async_added_to_hass(self):
-        self._smartbridge.add_smart_away_subscriber(self._handle_bridge_update)
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the smart away switch."""
+        return self._smart_away_unique_id
+
+    async def async_added_to_hass(self) -> None:
+        self.unsubscribe = self._smartbridge.add_smart_away_subscriber(
+            self._handle_bridge_update
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from the events."""
+        if self.unsubscribe:
+            self.unsubscribe()
+        await super().async_will_remove_from_hass()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Smart Away on."""
