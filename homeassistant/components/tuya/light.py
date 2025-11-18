@@ -125,7 +125,7 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Return the color temperature value in Mireds."""
+        """Convert a Home Assistant value (Kelvin) back to a raw device value."""
         return round(
             self.type_information.remap_value_from(
                 color_util.color_temperature_kelvin_to_mired(value),
