@@ -18,6 +18,9 @@ from . import update_callback_entity
 
 from tests.common import MockConfigEntry
 
+# Apply setup_integration fixture to all tests in this module
+pytestmark = pytest.mark.usefixtures("setup_integration")
+
 
 @pytest.fixture
 def platform() -> Platform:
@@ -25,7 +28,6 @@ def platform() -> Platform:
     return Platform.LIGHT
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_light_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -54,7 +56,6 @@ async def test_light_setup(
 
 
 # This test is not light specific, it just uses the light platform to test the base entity class.
-@pytest.mark.usefixtures("setup_integration")
 async def test_entity_callbacks(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -80,7 +81,6 @@ async def test_entity_callbacks(
     assert mock_light.unregister_device_updated_cb.call_args[0][0] is cb
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_light_brightness_and_is_on(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
@@ -110,7 +110,6 @@ async def test_light_brightness_and_is_on(
     assert state.state == "off"
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_light_turn_on_with_brightness_uses_set_intensity(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
@@ -138,7 +137,6 @@ async def test_light_turn_on_with_brightness_uses_set_intensity(
     assert kwargs.get("wait_for_completion") is True
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_light_turn_on_without_brightness_calls_turn_on(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:

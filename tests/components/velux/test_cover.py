@@ -33,6 +33,9 @@ from . import update_callback_entity
 
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
+# Apply setup_integration fixture to all tests in this module
+pytestmark = pytest.mark.usefixtures("setup_integration")
+
 
 @pytest.fixture
 def platform() -> Platform:
@@ -40,7 +43,6 @@ def platform() -> Platform:
     return Platform.COVER
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_entity_setup(
     hass: HomeAssistant,
@@ -57,7 +59,6 @@ async def test_blind_entity_setup(
     )
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("mock_cover_type")
 @pytest.mark.parametrize(
     "mock_cover_type", [Awning, GarageDoor, Gate, RollerShutter, Window], indirect=True
@@ -82,7 +83,6 @@ async def test_cover_entity_setup(
     )
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_cover_device_association(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -110,7 +110,6 @@ async def test_cover_device_association(
         ) in via_device_entry.identifiers
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_cover_closed(
     hass: HomeAssistant,
     mock_window: AsyncMock,
@@ -141,7 +140,6 @@ async def test_cover_closed(
 # Window command tests
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_window_open_close_stop_services(
     hass: HomeAssistant, mock_window: AsyncMock
@@ -166,7 +164,6 @@ async def test_window_open_close_stop_services(
     mock_window.stop.assert_awaited_once_with(wait_for_completion=False)
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_window_set_cover_position_inversion(
     hass: HomeAssistant, mock_window: AsyncMock
@@ -190,7 +187,6 @@ async def test_window_set_cover_position_inversion(
     assert kwargs.get("wait_for_completion") is False
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_window_current_position_and_opening_closing_states(
     hass: HomeAssistant, mock_window: AsyncMock
@@ -227,7 +223,6 @@ async def test_window_current_position_and_opening_closing_states(
 # Blind command tests
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_open_close_stop_tilt_services(
     hass: HomeAssistant, mock_blind: AsyncMock
@@ -261,7 +256,6 @@ async def test_blind_open_close_stop_tilt_services(
     mock_blind.stop_orientation.assert_awaited_once_with(wait_for_completion=False)
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_set_cover_tilt_position_inversion(
     hass: HomeAssistant, mock_blind: AsyncMock
@@ -284,7 +278,6 @@ async def test_blind_set_cover_tilt_position_inversion(
     assert call.kwargs.get("wait_for_completion") is False
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_current_tilt_position(
     hass: HomeAssistant, mock_blind: AsyncMock
@@ -299,7 +292,6 @@ async def test_blind_current_tilt_position(
     assert state.attributes.get("current_tilt_position") == 90
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_non_blind_has_no_tilt_position(
     hass: HomeAssistant, mock_window: AsyncMock
