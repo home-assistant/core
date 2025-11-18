@@ -1,4 +1,4 @@
-"""Provides triggers for alarm control panels."""
+"""Provides triggers for assist satellites."""
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger, make_entity_state_trigger
