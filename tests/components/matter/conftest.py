@@ -138,7 +138,7 @@ async def integration_fixture(
         "switch_unit",
         "tado_smart_radiator_thermostat_x",
         "temperature_sensor",
-        "thermostat",
+        "longan_link_thermostat",
         "vacuum_cleaner",
         "valve",
         "window_covering_full",

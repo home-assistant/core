@@ -59,7 +59,6 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
-    floor_registry as fr,
     issue_registry as ir,
     location as loc_helper,
 )
@@ -79,7 +78,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default
+from .helpers import raise_no_default, resolve_area_id
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -1167,13 +1166,6 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return list(found.values())
 
 
-def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
-    """Get entity ids for entities tied to a device."""
-    entity_reg = er.async_get(hass)
-    entries = er.async_entries_for_device(entity_reg, _device_id)
-    return [entry.entity_id for entry in entries]
-
-
 def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     """Get entity ids for entities tied to an integration/domain.
 
@@ -1215,65 +1207,6 @@ def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
     return None
 
 
-def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
-    """Get a device ID from an entity ID or device name."""
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get(entity_id_or_device_name)
-    if entity is not None:
-        return entity.device_id
-
-    dev_reg = dr.async_get(hass)
-    return next(
-        (
-            device_id
-            for device_id, device in dev_reg.devices.items()
-            if (name := device.name_by_user or device.name)
-            and (str(entity_id_or_device_name) == name)
-        ),
-        None,
-    )
-
-
-def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the device name from an device id, or entity id."""
-    device_reg = dr.async_get(hass)
-    if device := device_reg.async_get(lookup_value):
-        return device.name_by_user or device.name
-
-    ent_reg = er.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            if entity.device_id and (device := device_reg.async_get(entity.device_id)):
-                return device.name_by_user or device.name
-
-    return None
-
-
-def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
-    """Get the device specific attribute."""
-    device_reg = dr.async_get(hass)
-    if not isinstance(device_or_entity_id, str):
-        raise TemplateError("Must provide a device or entity ID")
-    device = None
-    if (
-        "." in device_or_entity_id
-        and (_device_id := device_id(hass, device_or_entity_id)) is not None
-    ):
-        device = device_reg.async_get(_device_id)
-    elif "." not in device_or_entity_id:
-        device = device_reg.async_get(device_or_entity_id)
-    if device is None or not hasattr(device, attr_name):
-        return None
-    return getattr(device, attr_name)
-
-
 def config_entry_attr(
     hass: HomeAssistant, config_entry_id_: str, attr_name: str
 ) -> Any:
@@ -1290,13 +1223,6 @@ def config_entry_attr(
         return None
 
     return getattr(config_entry, attr_name)
-
-
-def is_device_attr(
-    hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
-) -> bool:
-    """Test if a device's attribute is a specific value."""
-    return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
 def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
@@ -1318,74 +1244,6 @@ def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | N
     return None
 
 
-def floors(hass: HomeAssistant) -> Iterable[str | None]:
-    """Return all floors."""
-    floor_registry = fr.async_get(hass)
-    return [floor.floor_id for floor in floor_registry.async_list_floors()]
-
-
-def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
-    """Get the floor ID from a floor or area name, alias, device id, or entity id."""
-    floor_registry = fr.async_get(hass)
-    lookup_str = str(lookup_value)
-    if floor := floor_registry.async_get_floor_by_name(lookup_str):
-        return floor.floor_id
-    floors_list = floor_registry.async_get_floors_by_alias(lookup_str)
-    if floors_list:
-        return floors_list[0].floor_id
-
-    if aid := area_id(hass, lookup_value):
-        area_reg = ar.async_get(hass)
-        if area := area_reg.async_get_area(aid):
-            return area.floor_id
-
-    return None
-
-
-def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the floor name from a floor id."""
-    floor_registry = fr.async_get(hass)
-    if floor := floor_registry.async_get_floor(lookup_value):
-        return floor.name
-
-    if aid := area_id(hass, lookup_value):
-        area_reg = ar.async_get(hass)
-        if (
-            (area := area_reg.async_get_area(aid))
-            and area.floor_id
-            and (floor := floor_registry.async_get_floor(area.floor_id))
-        ):
-            return floor.name
-
-    return None
-
-
-def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
-    """Return area IDs for a given floor ID or name."""
-    _floor_id: str | None
-    # If floor_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if floor_name(hass, floor_id_or_name) is not None:
-        _floor_id = floor_id_or_name
-    else:
-        _floor_id = floor_id(hass, floor_id_or_name)
-    if _floor_id is None:
-        return []
-
-    area_reg = ar.async_get(hass)
-    entries = ar.async_entries_for_floor(area_reg, _floor_id)
-    return [entry.id for entry in entries if entry.id]
-
-
-def floor_entities(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
-    """Return entity_ids for a given floor ID or name."""
-    return [
-        entity_id
-        for area_id in floor_areas(hass, floor_id_or_name)
-        for entity_id in area_entities(hass, area_id)
-    ]
-
-
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
     return list(ar.async_get(hass).areas)
@@ -1393,37 +1251,7 @@ def areas(hass: HomeAssistant) -> Iterable[str | None]:
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area ID from an area name, alias, device id, or entity id."""
-    area_reg = ar.async_get(hass)
-    lookup_str = str(lookup_value)
-    if area := area_reg.async_get_area_by_name(lookup_str):
-        return area.id
-    areas_list = area_reg.async_get_areas_by_alias(lookup_str)
-    if areas_list:
-        return areas_list[0].id
-
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            # If entity has an area ID, return that
-            if entity.area_id:
-                return entity.area_id
-            # If entity has a device ID, return the area ID for the device
-            if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
-                return device.area_id
-
-    # Check if this could be a device ID
-    if device := dev_reg.async_get(lookup_value):
-        return device.area_id
-
-    return None
+    return resolve_area_id(hass, lookup_value)
 
 
 def _get_area_name(area_reg: ar.AreaRegistry, valid_area_id: str) -> str:
@@ -2359,6 +2187,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
         self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
@@ -2462,23 +2292,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
 
-        # Floor extensions
-
-        self.globals["floors"] = hassfunction(floors)
-        self.filters["floors"] = self.globals["floors"]
-
-        self.globals["floor_id"] = hassfunction(floor_id)
-        self.filters["floor_id"] = self.globals["floor_id"]
-
-        self.globals["floor_name"] = hassfunction(floor_name)
-        self.filters["floor_name"] = self.globals["floor_name"]
-
-        self.globals["floor_areas"] = hassfunction(floor_areas)
-        self.filters["floor_areas"] = self.globals["floor_areas"]
-
-        self.globals["floor_entities"] = hassfunction(floor_entities)
-        self.filters["floor_entities"] = self.globals["floor_entities"]
-
         # Integration extensions
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
@@ -2491,23 +2304,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
-        # Device extensions
-
-        self.globals["device_name"] = hassfunction(device_name)
-        self.filters["device_name"] = self.globals["device_name"]
-
-        self.globals["device_attr"] = hassfunction(device_attr)
-        self.filters["device_attr"] = self.globals["device_attr"]
-
-        self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = self.globals["device_entities"]
-
-        self.globals["is_device_attr"] = hassfunction(is_device_attr)
-        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
-
-        self.globals["device_id"] = hassfunction(device_id)
-        self.filters["device_id"] = self.globals["device_id"]
 
         # Issue extensions
 
@@ -2530,14 +2326,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_id",
                 "area_name",
                 "closest",
-                "device_attr",
-                "device_id",
                 "distance",
                 "expand",
-                "floor_id",
-                "floor_name",
                 "has_value",
-                "is_device_attr",
                 "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
@@ -2555,10 +2346,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_id",
                 "area_name",
                 "closest",
-                "device_id",
                 "expand",
-                "floor_id",
-                "floor_name",
                 "has_value",
             ]
             hass_tests = [
