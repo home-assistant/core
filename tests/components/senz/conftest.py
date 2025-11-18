@@ -3,7 +3,7 @@
 from collections.abc import Generator
 import time
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiosenz import Account, Thermostat
 import pytest
@@ -92,7 +92,7 @@ def mock_senz_client(account_fixture, device_fixture) -> Generator[MagicMock]:
 
         client.get_account.return_value = Account(account_fixture)
         client.get_thermostats.return_value = [
-            Thermostat(device, None) for device in device_fixture
+            Thermostat(device, Mock()) for device in device_fixture
         ]
 
         yield client
@@ -114,12 +114,18 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def access_token(hass: HomeAssistant) -> str:
+def unique_id() -> str:
+    """Return a unique ID."""
+    return ENTRY_UNIQUE_ID
+
+
+@pytest.fixture
+async def access_token(hass: HomeAssistant, unique_id: str) -> str:
     """Return a valid access token."""
     return config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "sub": ENTRY_UNIQUE_ID,
+            "sub": unique_id,
             "aud": [],
             "scp": [
                 "rest_api",
