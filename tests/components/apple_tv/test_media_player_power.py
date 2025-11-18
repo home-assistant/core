@@ -16,12 +16,14 @@ async def _one_media_player(hass: HomeAssistant) -> str:
     return entities[0]
 
 
-@pytest.mark.parametrize("setup_runtime_integration", [True, False], indirect=True)
+@pytest.mark.parametrize(
+    "setup_runtime_integration_power_tests", [True, False], indirect=True
+)
 async def test_power_state_from_remote(
-    hass: HomeAssistant, setup_runtime_integration
+    hass: HomeAssistant, setup_runtime_integration_power_tests
 ) -> None:
     """Test power on/off updates media_player state changing via remote. (e.g. by the Apple TV itself)."""
-    _, atv = setup_runtime_integration
+    _, atv = setup_runtime_integration_power_tests
     entity_id = await _one_media_player(hass)
 
     # Turn off
@@ -49,12 +51,14 @@ async def test_power_state_from_remote(
         assert state_on == "unknown"
 
 
-@pytest.mark.parametrize("setup_runtime_integration", [True, False], indirect=True)
+@pytest.mark.parametrize(
+    "setup_runtime_integration_power_tests", [True, False], indirect=True
+)
 async def test_power_state_using_services(
-    hass: HomeAssistant, setup_runtime_integration
+    hass: HomeAssistant, setup_runtime_integration_power_tests
 ) -> None:
     """Test power on/off using media_player services."""
-    _, atv = setup_runtime_integration
+    _, atv = setup_runtime_integration_power_tests
     entity_id = await _one_media_player(hass)
     powerstate_supported = atv.features.in_state(
         FeatureState.Available, FeatureName.PowerState
@@ -92,12 +96,14 @@ async def test_power_state_using_services(
         assert state == media_player.MediaPlayerState.PLAYING
 
 
-@pytest.mark.parametrize("setup_runtime_integration", [True, False], indirect=True)
+@pytest.mark.parametrize(
+    "setup_runtime_integration_power_tests", [True, False], indirect=True
+)
 async def test_listener_playing_state_update(
-    hass: HomeAssistant, setup_runtime_integration
+    hass: HomeAssistant, setup_runtime_integration_power_tests
 ) -> None:
     """Test that playing state updates via listener work."""
-    _, atv = setup_runtime_integration
+    _, atv = setup_runtime_integration_power_tests
     entity_id = await _one_media_player(hass)
 
     await atv.push_updater.trigger_playing(DeviceState.Idle)

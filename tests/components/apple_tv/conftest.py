@@ -1,6 +1,5 @@
 """Fixtures for component."""
 
-import asyncio
 from collections.abc import Generator
 from dataclasses import dataclass
 import sys
@@ -236,13 +235,13 @@ class FakeFeatures:
     power_feature_available: bool = True
 
     def in_state(self, state: FeatureState, feature: FeatureName) -> bool:
-        """Return if a feature is in a given state."""
+        """Always return Available except for PowerState if specified."""
         if feature is FeatureName.PowerState and state is FeatureState.Available:
             return self.power_feature_available
         return True
 
     def all_features(self) -> dict[FeatureName, SimpleNamespace]:
-        """Return all features as available."""
+        """Return all features."""
         return {f: SimpleNamespace(state=FeatureState.Available) for f in FeatureName}
 
 
@@ -259,8 +258,6 @@ class DummyPower:
         """Notify all listeners asynchronously."""
         if self.listener and hasattr(self.listener, "powerstate_update"):
             self.listener.powerstate_update(old, new)
-        # Yield control so hass can process state updates
-        await asyncio.sleep(0)
 
     async def turn_off(self) -> None:
         """Simulate turning off the device."""
@@ -296,7 +293,11 @@ class DummyPushUpdater:
     async def trigger_playing(self, new_state: DeviceState) -> None:
         """Simulate a playstatus update event."""
         self.playing_state = Playing(device_state=new_state)
-        if self.listener and hasattr(self.listener, "playstatus_update"):
+        if (
+            self.is_active
+            and self.listener
+            and hasattr(self.listener, "playstatus_update")
+        ):
             self.listener.playstatus_update(self, self.playing_state)
 
 
@@ -305,7 +306,6 @@ def dummy_atv_runtime() -> AsyncMock:
     """Unified dummy Apple TV device mock with runtime listener-capable subsystems."""
     atv = AsyncMock()
     atv.power = DummyPower()
-    atv.apps = AsyncMock()
     atv.features = FakeFeatures()
     atv.push_updater = DummyPushUpdater()
 
@@ -318,7 +318,7 @@ def dummy_atv_runtime() -> AsyncMock:
 
 
 @pytest.fixture
-async def setup_runtime_integration(
+async def setup_runtime_integration_power_tests(
     hass: HomeAssistant, dummy_atv_runtime, request: pytest.FixtureRequest
 ) -> tuple[MockConfigEntry, AsyncMock]:
     """Set up Apple TV integration using runtime dummy (for media_player tests)."""
