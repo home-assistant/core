@@ -10,8 +10,8 @@
       "user": {
         "data": {
           "id": "Installation",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
     }
@@ -32,9 +32,9 @@
       "air_quality": {
         "name": "Air Quality mode",
         "state": {
+          "auto": "[%key:common::state::auto%]",
           "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "auto": "[%key:common::state::auto%]"
+          "on": "[%key:common::state::on%]"
         }
       },
       "modes": {

@@ -27,6 +27,9 @@ async def test_async_step_user_success(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["description_placeholders"] == {
+        "compit_url": "https://inext.compit.pl/"
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT

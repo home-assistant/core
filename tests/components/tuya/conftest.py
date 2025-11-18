@@ -193,7 +193,7 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
 
     device.function = {
         key: DeviceFunction(
-            code=value.get("code"),
+            code=key,
             type=value["type"],
             values=json_dumps(value["value"]),
         )
@@ -201,7 +201,7 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
     }
     device.status_range = {
         key: DeviceStatusRange(
-            code=value.get("code"),
+            code=key,
             type=value["type"],
             values=json_dumps(value["value"]),
         )

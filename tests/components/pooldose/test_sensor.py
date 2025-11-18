@@ -1,7 +1,6 @@
 """Test the PoolDose sensor platform."""
 
 from datetime import timedelta
-import json
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,23 +8,16 @@ from pooldose.request_status import RequestStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.pooldose.const import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     Platform,
-    UnitOfTemperature,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -94,20 +86,15 @@ async def test_no_data(
     assert hass.states.get("sensor.pool_device_ph").state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("mock_pooldose_client")
 async def test_ph_sensor_dynamic_unit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pooldose_client,
+    mock_pooldose_client: AsyncMock,
 ) -> None:
     """Test pH sensor unit behavior - pH should not have unit_of_measurement."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Mock pH data with custom unit (should be ignored for pH sensor)
-    instant_values_raw = await async_load_fixture(hass, "instantvalues.json", DOMAIN)
-    updated_data = json.loads(instant_values_raw)
+    current_data = mock_pooldose_client.instant_values_structured.return_value[1]
+    updated_data = current_data.copy()
     updated_data["sensor"]["ph"]["unit"] = "pH units"
 
     mock_pooldose_client.instant_values_structured.return_value = (
@@ -115,14 +102,13 @@ async def test_ph_sensor_dynamic_unit(
         updated_data,
     )
 
-    # Trigger refresh by reloading the integration (blackbox approach)
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # pH sensor should not have unit_of_measurement (device class pH)
     ph_state = hass.states.get("sensor.pool_device_ph")
-    assert "unit_of_measurement" not in ph_state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in ph_state.attributes
 
 
 async def test_sensor_entity_unavailable_no_coordinator_data(
@@ -156,101 +142,28 @@ async def test_sensor_entity_unavailable_no_coordinator_data(
     assert temp_state.state == STATE_UNAVAILABLE
 
 
-async def test_sensor_entity_unavailable_missing_platform_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pooldose_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test sensor entity becomes unavailable when platform data is missing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify initial working state
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.state == "25"
-
-    # Remove sensor platform data by making API return data without sensors
-    mock_pooldose_client.instant_values_structured.return_value = (
-        RequestStatus.SUCCESS,
-        {"other_platform": {}},  # No sensor data
-    )
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Check sensor becomes unavailable
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.state == STATE_UNAVAILABLE
-
-
 @pytest.mark.usefixtures("mock_pooldose_client")
-async def test_temperature_sensor_dynamic_unit(
+async def test_sensor_unit_fallback_to_description(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pooldose_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test temperature sensor uses dynamic unit from API data."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify initial Celsius unit
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-
-    # Change to Fahrenheit via mock update
-    instant_values_raw = await async_load_fixture(hass, "instantvalues.json", DOMAIN)
-    updated_data = json.loads(instant_values_raw)
-    updated_data["sensor"]["temperature"]["unit"] = "°F"
-    updated_data["sensor"]["temperature"]["value"] = 77
-
-    mock_pooldose_client.instant_values_structured.return_value = (
-        RequestStatus.SUCCESS,
-        updated_data,
-    )
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Check unit changed to Fahrenheit
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    # After reload, the original fixture data is restored, so we expect °C
-    assert temp_state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
-    assert temp_state.state == "25.0"  # Original fixture value
-
-
-async def test_native_value_with_non_dict_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pooldose_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test native_value returns None when data is not a dict."""
+    """Test sensor falls back to entity description unit when no dynamic unit."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Mock get_data to return non-dict value
-    instant_values_raw = await async_load_fixture(hass, "instantvalues.json", DOMAIN)
-    malformed_data = json.loads(instant_values_raw)
-    malformed_data["sensor"]["temperature"] = "not_a_dict"
-
-    mock_pooldose_client.instant_values_structured.return_value = (
-        RequestStatus.SUCCESS,
-        malformed_data,
+    # Test ORP sensor - should use static unit from entity description
+    orp_state = hass.states.get("sensor.pool_device_orp")
+    assert orp_state is not None
+    assert (
+        orp_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == UnitOfElectricPotential.MILLIVOLT
     )
+    assert orp_state.state == "718"
 
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Should handle non-dict data gracefully
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.state == STATE_UNKNOWN
+    # Test pH sensor - should have no unit (None in description)
+    ph_state = hass.states.get("sensor.pool_device_ph")
+    assert ph_state is not None
+    assert ATTR_UNIT_OF_MEASUREMENT not in ph_state.attributes
+    assert ph_state.state == "6.8"

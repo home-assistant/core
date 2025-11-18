@@ -13,6 +13,7 @@ from homeassistant.components.tuya.const import (
     ENERGY_REPORT_MODE_CUMULATIVE,
     ENERGY_REPORT_MODE_INCREMENTAL,
 )
+from homeassistant.components.tuya.models import DPCodeWrapper
 from homeassistant.components.tuya.sensor import (
     TuyaEnergySensorEntity,
     TuyaSensorEntityDescription,
@@ -104,6 +105,17 @@ def mock_manager() -> Manager:
     return manager
 
 
+@pytest.fixture
+def mock_dpcode_wrapper() -> DPCodeWrapper:
+    """Create a mock DPCode wrapper for testing."""
+    wrapper = MagicMock(spec=DPCodeWrapper)
+    wrapper.dpcode = "total_forward_energy"
+    wrapper.native_unit = UnitOfEnergy.KILO_WATT_HOUR
+    wrapper.suggested_unit = None
+    wrapper.read_device_status = MagicMock(return_value="1000.5")
+    return wrapper
+
+
 class TestTuyaSensorEntity:
     """Test Tuya sensor entities (both energy and base sensor functionality)."""
 
@@ -113,12 +125,14 @@ class TestTuyaSensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
+        mock_dpcode_wrapper,
     ):
         """Test energy entity initialization."""
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
 
@@ -144,6 +158,7 @@ class TestTuyaSensorEntity:
         mock_energy_device,
         mock_energy_description,
         mock_manager,
+        mock_dpcode_wrapper,
         config_entry_fixture,
         expected_mode,
         description,
@@ -170,6 +185,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             config_entry,
         )
         assert entity._is_incremental_mode is expected_mode
@@ -220,6 +236,7 @@ class TestTuyaSensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
+        mock_dpcode_wrapper,
         hass: HomeAssistant,
         restore_state,
         expected_cumulative,
@@ -231,6 +248,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
 
@@ -277,6 +295,7 @@ class TestTuyaSensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
+        mock_dpcode_wrapper,
         updated_properties,
         updated_values,
         should_process,
@@ -287,6 +306,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
 
@@ -323,6 +343,7 @@ class TestTuyaSensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
+        mock_dpcode_wrapper,
         native_value,
         is_new_update,
         expected_cumulative,
@@ -333,6 +354,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
 
@@ -407,6 +429,7 @@ class TestTuyaSensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
+        mock_dpcode_wrapper,
         value,
         timestamp,
         initial_time,
@@ -420,6 +443,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
 
@@ -449,6 +473,7 @@ class TestTuyaSensorEntity:
         mock_energy_device,
         mock_energy_description,
         mock_manager,
+        mock_dpcode_wrapper,
         config_entry_fixture,
         is_incremental,
         expected_value,
@@ -460,6 +485,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             config_entry,
         )
 
@@ -486,6 +512,7 @@ class TestTuyaSensorEntity:
         mock_config_entry_with_incremental,
         mock_config_entry_with_cumulative,
         mock_manager,
+        mock_dpcode_wrapper,
     ):
         """Test extra_state_attributes comprehensively."""
         # Test incremental mode with all values
@@ -493,6 +520,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
         entity._cumulative_total = Decimal("1500.75")
@@ -519,6 +547,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             mock_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_cumulative,
         )
         attrs = entity.extra_state_attributes
@@ -535,6 +564,7 @@ class TestTuyaSensorEntity:
             mock_energy_device,
             mock_manager,
             non_energy_description,
+            mock_dpcode_wrapper,
             mock_config_entry_with_incremental,
         )
         attrs = entity.extra_state_attributes

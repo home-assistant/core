@@ -5,9 +5,15 @@
     "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
   },
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect. Details: {error_detail}",
+      "unknown": "Unknown. Details: {error_detail}"
+    },
     "step": {
       "discovery_confirm": {
-        "description": "Do you want to set up {name} ({host})?",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
@@ -17,7 +23,8 @@
           "password": "[%key:component::fully_kiosk::common::data_description_password%]",
           "ssl": "[%key:component::fully_kiosk::common::data_description_ssl%]",
           "verify_ssl": "[%key:component::fully_kiosk::common::data_description_verify_ssl%]"
-        }
+        },
+        "description": "Do you want to set up {name} ({host})?"
       },
       "user": {
         "data": {
@@ -33,45 +40,38 @@
           "verify_ssl": "[%key:component::fully_kiosk::common::data_description_verify_ssl%]"
         }
       }
-    },
-    "error": {
-      "cannot_connect": "Cannot connect. Details: {error_detail}",
-      "unknown": "Unknown. Details: {error_detail}"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
   "entity": {
     "binary_sensor": {
+      "device_admin": {
+        "name": "Device admin"
+      },
       "kiosk_mode": {
         "name": "Kiosk mode"
       },
       "plugged_in": {
         "name": "Plugged in"
-      },
-      "device_admin": {
-        "name": "Device admin"
       }
     },
     "button": {
+      "clear_cache": {
+        "name": "Clear browser cache"
+      },
+      "load_start_url": {
+        "name": "Load start URL"
+      },
       "restart_browser": {
         "name": "Restart browser"
       },
       "restart_device": {
         "name": "Restart device"
       },
-      "to_foreground": {
-        "name": "Bring to foreground"
-      },
       "to_background": {
         "name": "Send to background"
       },
-      "load_start_url": {
-        "name": "Load start URL"
-      },
-      "clear_cache": {
-        "name": "Clear browser cache"
+      "to_foreground": {
+        "name": "Bring to foreground"
       }
     },
     "image": {
@@ -88,94 +88,106 @@
       }
     },
     "number": {
-      "screensaver_time": {
-        "name": "Screensaver timer"
-      },
-      "screensaver_brightness": {
-        "name": "Screensaver brightness"
+      "screen_brightness": {
+        "name": "Screen brightness"
       },
       "screen_off_time": {
         "name": "Screen off timer"
       },
-      "screen_brightness": {
-        "name": "Screen brightness"
+      "screensaver_brightness": {
+        "name": "Screensaver brightness"
+      },
+      "screensaver_time": {
+        "name": "Screensaver timer"
       }
     },
     "sensor": {
       "current_page": {
         "name": "Current page"
       },
-      "screen_orientation": {
-        "name": "Screen orientation"
-      },
       "foreground_app": {
         "name": "Foreground app"
       },
-      "internal_storage_total_space": {
-        "name": "Internal storage total space"
-      },
       "internal_storage_free_space": {
         "name": "Internal storage free space"
+      },
+      "internal_storage_total_space": {
+        "name": "Internal storage total space"
       },
       "ram_free_memory": {
         "name": "Free memory"
       },
       "ram_total_memory": {
         "name": "Total memory"
+      },
+      "screen_orientation": {
+        "name": "Screen orientation"
       }
     },
     "switch": {
-      "screensaver": {
-        "name": "Screensaver"
+      "kiosk": {
+        "name": "Kiosk lock"
       },
       "maintenance": {
         "name": "Maintenance mode"
-      },
-      "kiosk": {
-        "name": "Kiosk lock"
       },
       "motion_detection": {
         "name": "Motion detection"
       },
       "screen_on": {
         "name": "Screen"
+      },
+      "screensaver": {
+        "name": "Screensaver"
       }
     }
   },
   "services": {
     "load_url": {
-      "name": "Load URL",
       "description": "Loads a URL on Fully Kiosk Browser.",
       "fields": {
+        "device_id": {
+          "description": "The target device for this action.",
+          "name": "Device ID"
+        },
         "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL to load."
+          "description": "URL to load.",
+          "name": "[%key:common::config_flow::data::url%]"
         }
-      }
+      },
+      "name": "Load URL"
     },
     "set_config": {
-      "name": "Set configuration",
       "description": "Sets a configuration parameter on Fully Kiosk Browser.",
       "fields": {
+        "device_id": {
+          "description": "[%key:component::fully_kiosk::services::load_url::fields::device_id::description%]",
+          "name": "[%key:component::fully_kiosk::services::load_url::fields::device_id::name%]"
+        },
         "key": {
-          "name": "Key",
-          "description": "Configuration parameter to set."
+          "description": "Configuration parameter to set.",
+          "name": "Key"
         },
         "value": {
-          "name": "Value",
-          "description": "Value for the configuration parameter."
+          "description": "Value for the configuration parameter.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Set configuration"
     },
     "start_application": {
-      "name": "Start application",
       "description": "Starts an application on the device running Fully Kiosk Browser.",
       "fields": {
         "application": {
-          "name": "Application",
-          "description": "Package name of the application to start."
+          "description": "Package name of the application to start.",
+          "name": "Application"
+        },
+        "device_id": {
+          "description": "[%key:component::fully_kiosk::services::load_url::fields::device_id::description%]",
+          "name": "[%key:component::fully_kiosk::services::load_url::fields::device_id::name%]"
         }
-      }
+      },
+      "name": "Start application"
     }
   }
 }
