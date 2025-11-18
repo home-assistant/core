@@ -72,7 +72,7 @@ async def setup_automation(
     parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_trigger_states(
             "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
@@ -87,7 +87,6 @@ async def test_climate_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
@@ -97,12 +96,12 @@ async def test_climate_state_trigger_behavior_any(
 
     # Set all climates, including the tested climate, to the initial state
     for eid in target_climates:
-        set_or_remove_state(hass, eid, initial_state)
+        set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
     await setup_automation(hass, trigger, {}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state, expected_calls in states[1:]:
         set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
@@ -178,7 +177,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_trigger_states(
             "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
@@ -193,7 +192,6 @@ async def test_climate_state_trigger_behavior_first(
     entities_in_target: int,
     entity_id: str,
     trigger: str,
-    initial_state: str | None,
     states: list[tuple[str, int, list[str]]],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
@@ -203,12 +201,12 @@ async def test_climate_state_trigger_behavior_first(
 
     # Set all climates, including the tested climate, to the initial state
     for eid in target_climates:
-        set_or_remove_state(hass, eid, initial_state)
+        set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
     await setup_automation(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state, expected_calls in states[1:]:
         set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
@@ -282,7 +280,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
     parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_trigger_states(
             "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
@@ -297,7 +295,6 @@ async def test_climate_state_trigger_behavior_last(
     entities_in_target: int,
     entity_id: str,
     trigger: str,
-    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
@@ -307,12 +304,12 @@ async def test_climate_state_trigger_behavior_last(
 
     # Set all climates, including the tested climate, to the initial state
     for eid in target_climates:
-        set_or_remove_state(hass, eid, initial_state)
+        set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
     await setup_automation(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state, expected_calls in states[1:]:
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()

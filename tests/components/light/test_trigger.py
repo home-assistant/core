@@ -68,7 +68,7 @@ async def setup_automation(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
         *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
@@ -82,7 +82,6 @@ async def test_light_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
@@ -92,12 +91,12 @@ async def test_light_state_trigger_behavior_any(
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, initial_state)
+        set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
     await setup_automation(hass, trigger, {}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state, expected_calls in states[1:]:
         set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
@@ -118,7 +117,7 @@ async def test_light_state_trigger_behavior_any(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
         *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
@@ -132,7 +131,6 @@ async def test_light_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str | None,
     states: list[tuple[str, int, list[str]]],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
@@ -142,12 +140,12 @@ async def test_light_state_trigger_behavior_first(
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, initial_state)
+        set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
     await setup_automation(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state, expected_calls in states[1:]:
         set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
@@ -167,7 +165,7 @@ async def test_light_state_trigger_behavior_first(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
         *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
@@ -181,7 +179,6 @@ async def test_light_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
@@ -191,12 +188,12 @@ async def test_light_state_trigger_behavior_last(
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, initial_state)
+        set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
     await setup_automation(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state, expected_calls in states[1:]:
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
