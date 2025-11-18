@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
+    ATTR_GROUP_ENTITIES,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -54,13 +55,15 @@ from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
-from . import device_registry as dr, entity_registry as er, singleton
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
 from .frame import report_non_thread_safe_operation
+from .group import Group
+from .singleton import singleton
 from .typing import UNDEFINED, StateType, UndefinedType
 
 timer = time.time
@@ -90,7 +93,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @callback
 @bind_hass
-@singleton.singleton(DATA_ENTITY_SOURCE)
+@singleton(DATA_ENTITY_SOURCE)
 def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources.
 
@@ -456,6 +459,9 @@ class Entity(
     # integration before the entity is added.
     # Only handled internally, never to be used by integrations.
     internal_integration_suggested_object_id: str | None
+
+    # A group information in case the entity represents a group
+    group: Group | None = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -1064,6 +1070,10 @@ class Entity(
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
+        if self.group is not None:
+            capability_attr = capability_attr.copy() if capability_attr else {}
+            capability_attr[ATTR_GROUP_ENTITIES] = self.group.included_entity_ids.copy()
+
         attr = capability_attr.copy() if capability_attr else {}
 
         available = self.available  # only call self.available once per update cycle
@@ -1503,6 +1513,9 @@ class Entity(
             )
             self._async_subscribe_device_updates()
 
+        if self.group is not None:
+            self.group.async_added_to_hass(self)
+
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -1512,6 +1525,9 @@ class Entity(
         # EntityComponent and can be removed in HA Core 2026.8
         if self.platform:
             del entity_sources(self.hass)[self.entity_id]
+
+        if self.group is not None:
+            self.group.async_will_remove_from_hass(self)
 
     @callback
     def _async_registry_updated(

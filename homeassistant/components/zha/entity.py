@@ -22,6 +22,7 @@ from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
@@ -50,6 +51,18 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
         meta = self.entity_data.entity.info_object
         self._attr_unique_id = meta.unique_id
+
+        if self.entity_data.is_group_entity:
+            group_proxy = self.entity_data.group_proxy
+            assert group_proxy is not None
+            platform = self.entity_data.entity.PLATFORM
+            unique_ids = [
+                entity.info_object.unique_id
+                for member in group_proxy.group.members
+                for entity in member.device.platform_entities.values()
+                if platform == entity.PLATFORM
+            ]
+            self.group = IntegrationSpecificGroup(unique_ids)
 
         if meta.entity_category is not None:
             self._attr_entity_category = EntityCategory(meta.entity_category)
