@@ -34,7 +34,6 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Initialize flow state."""
         super().__init__()
-        self._user_id: str | None = None
         self._device_code: str | None = None
         self._user_code: str | None = None
         self._code_verifier: str | None = None
@@ -59,29 +58,33 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Collect user credentials."""
+        # Check for application credentials first, before showing any form
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            self.hass, self.DOMAIN
+        )
+        if not implementations:
+            if (
+                self.DOMAIN
+                in await config_entry_oauth2_flow.async_get_application_credentials(  # type: ignore[attr-defined]
+                    self.hass
+                )
+            ):
+                return self.async_abort(reason="missing_credentials")
+            return self.async_abort(reason="missing_configuration")
+
         existing = self.hass.data.get(DOMAIN) or {}
         default_partner = existing.get(CONF_PARTNER_BASE_URL, DEFAULT_PARTNER_BASE_URL)
 
         if user_input is None:
-            from homeassistant.helpers.selector import (
-                TextSelector,
-                TextSelectorConfig,
-                TextSelectorType,
-            )
-
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required("user_id"): TextSelector(
-                            TextSelectorConfig(type=TextSelectorType.EMAIL)
-                        ),
                         vol.Optional(CONF_PARTNER_BASE_URL, default=default_partner): str,
                     }
                 ),
             )
 
-        self._user_id = user_input["user_id"].strip()
         self._partner_base_url = user_input.get(
             CONF_PARTNER_BASE_URL, default_partner
         ).rstrip("/")
@@ -150,10 +153,14 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Display user code and wait for mobile app verification."""
         if user_input is None:
+            if not self._user_code:
+                self.logger.error("User code not available for display")
+                return self.async_abort(reason="oauth_error")
+            
             return self.async_show_form(
                 step_id="verify",
                 data_schema=vol.Schema({}),
-                description_placeholders={"user_code": self._user_code or "N/A"},
+                description_placeholders={"user_code": self._user_code},
             )
 
         return await self.async_step_poll()
@@ -202,7 +209,7 @@ class OAuth2FlowHandler(
                         "refresh_token": data.get("refresh_token"),
                         "code_verifier": self._code_verifier,
                     }
-                    token["expires_at"] = time.time() + token["expires_in"]
+                    token["expires_at"] = time.time() + 10
 
                     return await self.async_oauth_create_entry(
                         {"auth_implementation": self.flow_impl.domain, "token": token}

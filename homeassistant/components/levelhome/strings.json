@@ -3,16 +3,14 @@
     "step": {
       "user": {
         "title": "Connect Level account",
-        "description": "Enter your Level account identifier (email or E.164 phone). Optionally override server URLs for testing.",
+        "description": "Optionally override server URLs for testing.",
         "data": {
-          "user_id": "User ID (email or E.164)",
-          "oauth2_base_url": "OAuth2 server base URL",
           "partner_base_url": "Partner server base URL"
         }
       },
       "verify": {
         "title": "Verify on your mobile device",
-        "description": "A verification code has been sent to your Level Home mobile app. Please open the app and enter the code: **{user_code}**\n\nAfter entering the code in your mobile app, click Submit below to continue."
+        "description": "Please open your Level Home mobile app and enter the verification code: **{user_code}**\n\nAfter entering the code in your mobile app, click Submit below to continue."
       },
       "otp": {
         "title": "Enter verification code",
