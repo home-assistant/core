@@ -21,7 +21,6 @@ from script.hassfest.model import Config, Integration
 # in requirements_all.txt and requirements_test_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avea",  # depends on bluepy
     "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",

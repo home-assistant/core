@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_diagnostics_config_entry
+  dict({
+    'entry_data': dict({
+      'auth_implementation': 'senz',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_in': 86399,
+        'refresh_token': '**REDACTED**',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'thermostats': list([
+      list([
+        dict({
+          'currentTemperature': 1845,
+          'errorState': None,
+          'holdUntil': None,
+          'isHeating': True,
+          'mode': 5,
+          'name': 'Test room 1',
+          'online': True,
+          'serialNumber': '1001',
+          'setPointTemperature': 1900,
+        }),
+        dict({
+          'currentTemperature': 930,
+          'errorState': None,
+          'holdUntil': None,
+          'isHeating': False,
+          'mode': 1,
+          'name': 'Test room 2',
+          'online': True,
+          'serialNumber': '1002',
+          'setPointTemperature': 600,
+        }),
+      ]),
+    ]),
+  })
+# ---
