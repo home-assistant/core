@@ -36,13 +36,13 @@ async def target_fans(hass: HomeAssistant) -> None:
     [
         *parametrize_trigger_states(
             trigger="fan.turned_on",
-            target_states=(STATE_ON,),
-            other_states=(STATE_OFF,),
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
         ),
         *parametrize_trigger_states(
             trigger="fan.turned_off",
-            target_states=(STATE_OFF,),
-            other_states=(STATE_ON,),
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
         ),
     ],
 )
@@ -93,13 +93,13 @@ async def test_fan_state_trigger_behavior_any(
     [
         *parametrize_trigger_states(
             trigger="fan.turned_on",
-            target_states=(STATE_ON,),
-            other_states=(STATE_OFF,),
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
         ),
         *parametrize_trigger_states(
             trigger="fan.turned_off",
-            target_states=(STATE_OFF,),
-            other_states=(STATE_ON,),
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
         ),
     ],
 )
@@ -149,13 +149,13 @@ async def test_fan_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="fan.turned_on",
-            target_states=(STATE_ON,),
-            other_states=(STATE_OFF,),
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
         ),
         *parametrize_trigger_states(
             trigger="fan.turned_off",
-            target_states=(STATE_OFF,),
-            other_states=(STATE_ON,),
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
         ),
     ],
 )

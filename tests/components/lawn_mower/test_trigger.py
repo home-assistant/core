@@ -10,13 +10,12 @@ from homeassistant.setup import async_setup_component
 from tests.components import (
     StateDescription,
     arm_trigger,
+    other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-LAWN_MOWER_STATES = {s.value for s in LawnMowerActivity}
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -39,23 +38,23 @@ async def target_lawn_mowers(hass: HomeAssistant) -> None:
     [
         *parametrize_trigger_states(
             trigger="lawn_mower.docked",
-            target_states=(LawnMowerActivity.DOCKED,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.DOCKED},
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.errored",
-            target_states=(LawnMowerActivity.ERROR,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.ERROR},
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.paused_mowing",
-            target_states=(LawnMowerActivity.PAUSED,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.PAUSED},
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.started_mowing",
-            target_states=(LawnMowerActivity.MOWING,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.MOWING},
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
         ),
     ],
 )
@@ -106,23 +105,23 @@ async def test_lawn_mower_state_trigger_behavior_any(
     [
         *parametrize_trigger_states(
             trigger="lawn_mower.docked",
-            target_states=(LawnMowerActivity.DOCKED,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.DOCKED},
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.errored",
-            target_states=(LawnMowerActivity.ERROR,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.ERROR},
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.paused_mowing",
-            target_states=(LawnMowerActivity.PAUSED,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.PAUSED},
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.started_mowing",
-            target_states=(LawnMowerActivity.MOWING,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.MOWING},
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
         ),
     ],
 )
@@ -172,23 +171,23 @@ async def test_lawn_mower_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="lawn_mower.docked",
-            target_states=(LawnMowerActivity.DOCKED,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.DOCKED},
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.errored",
-            target_states=(LawnMowerActivity.ERROR,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.ERROR},
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.paused_mowing",
-            target_states=(LawnMowerActivity.PAUSED,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.PAUSED},
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
         ),
         *parametrize_trigger_states(
             trigger="lawn_mower.started_mowing",
-            target_states=(LawnMowerActivity.MOWING,),
-            other_states=LAWN_MOWER_STATES - {LawnMowerActivity.MOWING},
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
         ),
     ],
 )

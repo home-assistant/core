@@ -10,13 +10,12 @@ from homeassistant.setup import async_setup_component
 from tests.components import (
     StateDescription,
     arm_trigger,
+    other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-VACUUM_STATES = {s.value for s in VacuumActivity}
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -39,23 +38,23 @@ async def target_vacuums(hass: HomeAssistant) -> None:
     [
         *parametrize_trigger_states(
             trigger="vacuum.docked",
-            target_states=(VacuumActivity.DOCKED,),
-            other_states=VACUUM_STATES - {VacuumActivity.DOCKED},
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.errored",
-            target_states=(VacuumActivity.ERROR,),
-            other_states=VACUUM_STATES - {VacuumActivity.ERROR},
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.paused_cleaning",
-            target_states=(VacuumActivity.PAUSED,),
-            other_states=VACUUM_STATES - {VacuumActivity.PAUSED},
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.started_cleaning",
-            target_states=(VacuumActivity.CLEANING,),
-            other_states=VACUUM_STATES - {VacuumActivity.CLEANING},
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
         ),
     ],
 )
@@ -106,23 +105,23 @@ async def test_vacuum_state_trigger_behavior_any(
     [
         *parametrize_trigger_states(
             trigger="vacuum.docked",
-            target_states=(VacuumActivity.DOCKED,),
-            other_states=VACUUM_STATES - {VacuumActivity.DOCKED},
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.errored",
-            target_states=(VacuumActivity.ERROR,),
-            other_states=VACUUM_STATES - {VacuumActivity.ERROR},
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.paused_cleaning",
-            target_states=(VacuumActivity.PAUSED,),
-            other_states=VACUUM_STATES - {VacuumActivity.PAUSED},
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.started_cleaning",
-            target_states=(VacuumActivity.CLEANING,),
-            other_states=VACUUM_STATES - {VacuumActivity.CLEANING},
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
         ),
     ],
 )
@@ -172,23 +171,23 @@ async def test_vacuum_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="vacuum.docked",
-            target_states=(VacuumActivity.DOCKED,),
-            other_states=VACUUM_STATES - {VacuumActivity.DOCKED},
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.errored",
-            target_states=(VacuumActivity.ERROR,),
-            other_states=VACUUM_STATES - {VacuumActivity.ERROR},
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.paused_cleaning",
-            target_states=(VacuumActivity.PAUSED,),
-            other_states=VACUUM_STATES - {VacuumActivity.PAUSED},
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
         ),
         *parametrize_trigger_states(
             trigger="vacuum.started_cleaning",
-            target_states=(VacuumActivity.CLEANING,),
-            other_states=VACUUM_STATES - {VacuumActivity.CLEANING},
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
         ),
     ],
 )

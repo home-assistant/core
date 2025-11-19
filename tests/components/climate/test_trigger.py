@@ -41,8 +41,8 @@ async def target_climates(hass: HomeAssistant) -> None:
     [
         *parametrize_trigger_states(
             trigger="climate.turned_off",
-            target_states=(HVACMode.OFF,),
-            other_states=(HVACMode.HEAT,),
+            target_states=[HVACMode.OFF],
+            other_states=[HVACMode.HEAT],
         ),
     ],
 )
@@ -147,8 +147,8 @@ async def test_climate_state_attribute_trigger_behavior_any(
     [
         *parametrize_trigger_states(
             trigger="climate.turned_off",
-            target_states=(HVACMode.OFF,),
-            other_states=(HVACMode.HEAT,),
+            target_states=[HVACMode.OFF],
+            other_states=[HVACMode.HEAT],
         ),
     ],
 )
@@ -251,8 +251,8 @@ async def test_climate_state_attribute_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="climate.turned_off",
-            target_states=(HVACMode.OFF,),
-            other_states=(HVACMode.HEAT,),
+            target_states=[HVACMode.OFF],
+            other_states=[HVACMode.HEAT],
         ),
     ],
 )

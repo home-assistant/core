@@ -10,13 +10,12 @@ from homeassistant.setup import async_setup_component
 from tests.components import (
     StateDescription,
     arm_trigger,
+    other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-ACP_STATES = {s.value for s in AlarmControlPanelState}
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -39,13 +38,13 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.disarmed",
-            target_states=(AlarmControlPanelState.DISARMED,),
-            other_states=ACP_STATES - {AlarmControlPanelState.DISARMED},
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
         ),
         *parametrize_trigger_states(
             trigger="alarm_control_panel.triggered",
-            target_states=(AlarmControlPanelState.TRIGGERED,),
-            other_states=ACP_STATES - {AlarmControlPanelState.TRIGGERED},
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
         ),
     ],
 )
@@ -96,13 +95,13 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.disarmed",
-            target_states=(AlarmControlPanelState.DISARMED,),
-            other_states=ACP_STATES - {AlarmControlPanelState.DISARMED},
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
         ),
         *parametrize_trigger_states(
             trigger="alarm_control_panel.triggered",
-            target_states=(AlarmControlPanelState.TRIGGERED,),
-            other_states=ACP_STATES - {AlarmControlPanelState.TRIGGERED},
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
         ),
     ],
 )
@@ -152,13 +151,13 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.disarmed",
-            target_states=(AlarmControlPanelState.DISARMED,),
-            other_states=ACP_STATES - {AlarmControlPanelState.DISARMED},
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
         ),
         *parametrize_trigger_states(
             trigger="alarm_control_panel.triggered",
-            target_states=(AlarmControlPanelState.TRIGGERED,),
-            other_states=ACP_STATES - {AlarmControlPanelState.TRIGGERED},
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
         ),
     ],
 )

@@ -1,6 +1,7 @@
 """The tests for components."""
 
 from collections.abc import Iterable
+from enum import StrEnum
 import itertools
 from typing import TypedDict
 
@@ -259,3 +260,8 @@ def set_or_remove_state(
         hass.states.async_remove(entity_id)
     else:
         hass.states.async_set(entity_id, state, attributes, force_update=True)
+
+
+def other_states(state: StrEnum) -> list[str]:
+    """Return a sorted list with all states except the specified one."""
+    return sorted({s.value for s in state.__class__} - {state.value})
