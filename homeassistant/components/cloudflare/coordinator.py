@@ -13,7 +13,7 @@ import pycfdns
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.location import async_detect_location_info
@@ -61,7 +61,7 @@ class CloudflareCoordinator(DataUpdateCoordinator[None]):
         except pycfdns.AuthenticationException as e:
             raise ConfigEntryAuthFailed from e
         except pycfdns.ComunicationException as e:
-            raise ConfigEntryNotReady from e
+            raise ConfigEntryError from e
 
     async def _async_update_data(self) -> None:
         """Update records."""
