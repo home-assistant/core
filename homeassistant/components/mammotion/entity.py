@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import DOMAIN
 from .coordinator import MammotionBaseUpdateCoordinator
 
 
@@ -24,12 +24,13 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
 
     @property
     def device_info(self) -> DeviceInfo:
-        mower = self.coordinator.manager.get_device_by_name(
+        """Return the device info."""
+        mower = self.coordinator.api.mammotion.get_device_by_name(
             self.coordinator.device_name
         )
         swversion = mower.state.device_firmwares.device_version
 
-        model_id = None
+        model_id: str | None = None
         if mower is not None:
             if mower.state.mower_state.model_id != "":
                 model_id = mower.state.mower_state.model_id
@@ -39,20 +40,27 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
             ):
                 model_id = mower.state.mqtt_properties.params.items.extMod.value
 
-        nick_name = self.coordinator.device.nickName
+        nick_name = self.coordinator.device.nick_name
         device_name = (
             self.coordinator.device_name
             if nick_name is None or nick_name == ""
-            else self.coordinator.device.nickName
+            else self.coordinator.device.nick_name
         )
 
         connections: set[tuple[str, str]] = set()
 
-        if mower.ble():
+        if mower.ble:
             connections.add(
                 (
                     CONNECTION_BLUETOOTH,
-                    format_mac(mower.ble().ble_device.address),
+                    format_mac(mower.ble.ble_device.address),
+                )
+            )
+        elif mower.state.mower_state.ble_mac != "":
+            connections.add(
+                (
+                    CONNECTION_BLUETOOTH,
+                    format_mac(mower.state.mower_state.ble_mac),
                 )
             )
 
@@ -64,22 +72,14 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
                 )
             )
 
-        if mower.state.mower_state.ble_mac != "":
-            connections.add(
-                (
-                    CONNECTION_BLUETOOTH,
-                    format_mac(mower.state.mower_state.ble_mac),
-                )
-            )
-
         return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device.deviceName)},
+            identifiers={(DOMAIN, self.coordinator.device.device_name)},
             manufacturer="Mammotion",
             serial_number=self.coordinator.device_name.split("-", 1)[-1],
             model_id=model_id,
             name=device_name,
             sw_version=swversion,
-            model=self.coordinator.device.productModel or model_id,
+            model=self.coordinator.device.product_model or model_id,
             suggested_area="Garden",
             connections=connections,
         )
@@ -87,10 +87,4 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            self.coordinator.data is not None
-            and self.coordinator.update_failures
-            <= self.coordinator.config_entry.options.get(
-                CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
-            )
-        )
+        return self.coordinator.data is not None and self.coordinator.is_online()
