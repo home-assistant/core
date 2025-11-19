@@ -481,6 +481,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sidebar_title="climate",
         sidebar_default_visible=False,
     )
+    async_register_built_in_panel(
+        hass,
+        "home",
+        sidebar_icon="mdi:home",
+        sidebar_title="home",
+        sidebar_default_visible=False,
+    )
 
     async_register_built_in_panel(hass, "profile")
 
@@ -771,7 +778,7 @@ class ManifestJSONView(HomeAssistantView):
     {
         "type": "frontend/get_icons",
         vol.Required("category"): vol.In(
-            {"entity", "entity_component", "services", "triggers"}
+            {"conditions", "entity", "entity_component", "services", "triggers"}
         ),
         vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
     }

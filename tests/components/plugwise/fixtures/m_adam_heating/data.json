@@ -195,6 +195,7 @@
     "name": "Living room",
     "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
     "select_schedule": "off",
+    "select_zone_profile": "active",
     "sensors": {
       "electricity_consumed": 60.8,
       "electricity_produced": 0.0,
@@ -214,7 +215,8 @@
       ],
       "secondary": []
     },
-    "vendor": "Plugwise"
+    "vendor": "Plugwise",
+    "zone_profiles": ["active", "off", "passive"]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
@@ -232,6 +234,7 @@
     "name": "Bathroom",
     "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
     "select_schedule": "off",
+    "select_zone_profile": "passive",
     "sensors": {
       "electricity_consumed": 0.0,
       "electricity_produced": 0.0,
@@ -247,6 +250,7 @@
       "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
       "secondary": ["1772a4ea304041adb83f357b751341ff"]
     },
-    "vendor": "Plugwise"
+    "vendor": "Plugwise",
+    "zone_profiles": ["active", "off", "passive"]
   }
 }

@@ -994,7 +994,6 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
-
         if (target := yaml_description.get("target")) is not None:
             description["target"] = target
 
