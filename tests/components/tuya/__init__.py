@@ -14,10 +14,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
-DEVICE_MOCKS = [
+DEVICE_MOCKS = sorted(
     str(path.relative_to(FIXTURES_DIR).with_suffix(""))
     for path in FIXTURES_DIR.glob("*.json")
-]
+)
 
 
 class MockDeviceListener(DeviceListener):
