@@ -2013,6 +2013,7 @@ def get_sensor_display_state(
         )
     ) is None:
         return value
+
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
         value = f"{numerical_value:z.{precision}f}"
