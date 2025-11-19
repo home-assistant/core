@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_device_registry[0qtza8cv6q5rdxpxgcdsw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '0qtza8cv6q5rdxpxgcdsw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart multi-channel weather station',
+    'model_id': 'xpxdr5q6vc8aztq0',
+    'name': 'Weather station',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[18yvbamhgkjc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -7029,6 +7060,37 @@
     'model': 'Smart Radiator Thermostat',
     'model_id': 'p3dbf6qs',
     'name': 'Anbau',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[srbr1lpaydiq7l5sgcdsw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'srbr1lpaydiq7l5sgcdsw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart multi-channel weather station ',
+    'model_id': 's5l7qidyapl1rbrs',
+    'name': 'Ventus test',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
