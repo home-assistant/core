@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 import itertools
+from typing import TypedDict
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -105,13 +106,20 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     ]
 
 
+class StateDescription(TypedDict):
+    """Test state and expected service call count."""
+
+    state: str | None
+    count: int
+
+
 def parametrize_trigger_states(
     trigger: str, target_states: Iterable[str], other_states: Iterable[str]
-) -> list[tuple[str, list[tuple[str | None, int]]]]:
+) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
     Returns a list of tuples with (trigger, list of states),
-    where states is a list of tuples (state to set, expected service call count).
+    where states is a list of StateDescription dicts.
     """
     return [
         # Initial state None
@@ -119,7 +127,12 @@ def parametrize_trigger_states(
             trigger,
             list(
                 itertools.chain.from_iterable(
-                    ((None, 0), (target_state, 0), (other_state, 0), (target_state, 1))
+                    (
+                        {"state": None, "count": 0},
+                        {"state": target_state, "count": 0},
+                        {"state": other_state, "count": 0},
+                        {"state": target_state, "count": 1},
+                    )
                     for target_state in target_states
                     for other_state in other_states
                 )
@@ -132,10 +145,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (other_state, 0),
-                        (target_state, 1),
-                        (other_state, 0),
-                        (target_state, 1),
+                        {"state": other_state, "count": 0},
+                        {"state": target_state, "count": 1},
+                        {"state": other_state, "count": 0},
+                        {"state": target_state, "count": 1},
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -148,10 +161,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (target_state, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1),
+                        {"state": target_state, "count": 0},
+                        {"state": target_state, "count": 0},
+                        {"state": other_state, "count": 0},
+                        {"state": target_state, "count": 1},
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -164,10 +177,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (STATE_UNAVAILABLE, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1),
+                        {"state": STATE_UNAVAILABLE, "count": 0},
+                        {"state": target_state, "count": 0},
+                        {"state": other_state, "count": 0},
+                        {"state": target_state, "count": 1},
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -179,10 +192,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (STATE_UNKNOWN, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1),
+                        {"state": STATE_UNKNOWN, "count": 0},
+                        {"state": target_state, "count": 0},
+                        {"state": other_state, "count": 0},
+                        {"state": target_state, "count": 1},
                     )
                     for target_state in target_states
                     for other_state in other_states
