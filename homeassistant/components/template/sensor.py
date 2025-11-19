@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FORCE_UPDATE,
     CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
@@ -95,6 +96,7 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_FORCE_UPDATE): cv.boolean,
     }
 )
 
@@ -234,6 +236,7 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
         self._attr_last_reset_template: template.Template | None = config.get(
             ATTR_LAST_RESET
         )
+        self._attr_force_update = config.get(CONF_FORCE_UPDATE) or False
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -299,6 +302,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
 
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_force_update = config.get(CONF_FORCE_UPDATE) or False
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
