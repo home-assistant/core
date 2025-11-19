@@ -38,14 +38,14 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "alarm_control_panel.disarmed",
-            (AlarmControlPanelState.DISARMED,),
-            ACP_STATES - {AlarmControlPanelState.DISARMED},
+            trigger="alarm_control_panel.disarmed",
+            target_states=(AlarmControlPanelState.DISARMED,),
+            other_states=ACP_STATES - {AlarmControlPanelState.DISARMED},
         ),
         *parametrize_trigger_states(
-            "alarm_control_panel.triggered",
-            (AlarmControlPanelState.TRIGGERED,),
-            ACP_STATES - {AlarmControlPanelState.TRIGGERED},
+            trigger="alarm_control_panel.triggered",
+            target_states=(AlarmControlPanelState.TRIGGERED,),
+            other_states=ACP_STATES - {AlarmControlPanelState.TRIGGERED},
         ),
     ],
 )
@@ -95,14 +95,14 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "alarm_control_panel.disarmed",
-            (AlarmControlPanelState.DISARMED,),
-            ACP_STATES - {AlarmControlPanelState.DISARMED},
+            trigger="alarm_control_panel.disarmed",
+            target_states=(AlarmControlPanelState.DISARMED,),
+            other_states=ACP_STATES - {AlarmControlPanelState.DISARMED},
         ),
         *parametrize_trigger_states(
-            "alarm_control_panel.triggered",
-            (AlarmControlPanelState.TRIGGERED,),
-            ACP_STATES - {AlarmControlPanelState.TRIGGERED},
+            trigger="alarm_control_panel.triggered",
+            target_states=(AlarmControlPanelState.TRIGGERED,),
+            other_states=ACP_STATES - {AlarmControlPanelState.TRIGGERED},
         ),
     ],
 )
@@ -151,14 +151,14 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "alarm_control_panel.disarmed",
-            (AlarmControlPanelState.DISARMED,),
-            ACP_STATES - {AlarmControlPanelState.DISARMED},
+            trigger="alarm_control_panel.disarmed",
+            target_states=(AlarmControlPanelState.DISARMED,),
+            other_states=ACP_STATES - {AlarmControlPanelState.DISARMED},
         ),
         *parametrize_trigger_states(
-            "alarm_control_panel.triggered",
-            (AlarmControlPanelState.TRIGGERED,),
-            ACP_STATES - {AlarmControlPanelState.TRIGGERED},
+            trigger="alarm_control_panel.triggered",
+            target_states=(AlarmControlPanelState.TRIGGERED,),
+            other_states=ACP_STATES - {AlarmControlPanelState.TRIGGERED},
         ),
     ],
 )

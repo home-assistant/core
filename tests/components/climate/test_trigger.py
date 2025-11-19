@@ -40,7 +40,9 @@ async def target_climates(hass: HomeAssistant) -> None:
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
+            trigger="climate.turned_off",
+            target_states=(HVACMode.OFF,),
+            other_states=(HVACMode.HEAT,),
         ),
     ],
 )
@@ -90,9 +92,9 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "climate.started_heating",
-            ((HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING}),),
-            ((HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE}),),
+            trigger="climate.started_heating",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         )
     ],
 )
@@ -144,7 +146,9 @@ async def test_climate_state_attribute_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
+            trigger="climate.turned_off",
+            target_states=(HVACMode.OFF,),
+            other_states=(HVACMode.HEAT,),
         ),
     ],
 )
@@ -193,9 +197,9 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "climate.started_heating",
-            ((HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING}),),
-            ((HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE}),),
+            trigger="climate.started_heating",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         )
     ],
 )
@@ -246,7 +250,9 @@ async def test_climate_state_attribute_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
+            trigger="climate.turned_off",
+            target_states=(HVACMode.OFF,),
+            other_states=(HVACMode.HEAT,),
         ),
     ],
 )
@@ -294,9 +300,9 @@ async def test_climate_state_trigger_behavior_last(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "climate.started_heating",
-            ((HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING}),),
-            ((HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE}),),
+            trigger="climate.started_heating",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         )
     ],
 )

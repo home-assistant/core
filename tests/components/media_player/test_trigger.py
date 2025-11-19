@@ -36,9 +36,13 @@ async def target_media_players(hass: HomeAssistant) -> None:
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "media_player.stopped_playing",
-            (MediaPlayerState.IDLE, MediaPlayerState.OFF, MediaPlayerState.ON),
-            (
+            trigger="media_player.stopped_playing",
+            target_states=(
+                MediaPlayerState.IDLE,
+                MediaPlayerState.OFF,
+                MediaPlayerState.ON,
+            ),
+            other_states=(
                 MediaPlayerState.BUFFERING,
                 MediaPlayerState.PAUSED,
                 MediaPlayerState.PLAYING,
@@ -92,9 +96,13 @@ async def test_media_player_state_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "media_player.stopped_playing",
-            (MediaPlayerState.IDLE, MediaPlayerState.OFF, MediaPlayerState.ON),
-            (
+            trigger="media_player.stopped_playing",
+            target_states=(
+                MediaPlayerState.IDLE,
+                MediaPlayerState.OFF,
+                MediaPlayerState.ON,
+            ),
+            other_states=(
                 MediaPlayerState.BUFFERING,
                 MediaPlayerState.PAUSED,
                 MediaPlayerState.PLAYING,
@@ -147,9 +155,13 @@ async def test_media_player_state_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "media_player.stopped_playing",
-            (MediaPlayerState.IDLE, MediaPlayerState.OFF, MediaPlayerState.ON),
-            (
+            trigger="media_player.stopped_playing",
+            target_states=(
+                MediaPlayerState.IDLE,
+                MediaPlayerState.OFF,
+                MediaPlayerState.ON,
+            ),
+            other_states=(
                 MediaPlayerState.BUFFERING,
                 MediaPlayerState.PAUSED,
                 MediaPlayerState.PLAYING,

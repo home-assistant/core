@@ -115,6 +115,7 @@ class StateDescription(TypedDict):
 
 
 def parametrize_trigger_states(
+    *,
     trigger: str,
     target_states: Iterable[str | None | tuple[str | None, dict]],
     other_states: Iterable[str | None | tuple[str | None, dict]],
