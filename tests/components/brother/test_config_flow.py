@@ -1,7 +1,7 @@
 """Define tests for the Brother Printer config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from brother import SnmpError, UnsupportedModelError
 import pytest
@@ -249,32 +249,31 @@ async def test_zeroconf_device_exists_abort(
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
 
 
-async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
+async def test_zeroconf_no_probe_existing_device(
+    hass: HomeAssistant, mock_brother_client: AsyncMock
+) -> None:
     """Test we do not probe the device is the host is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
     entry.add_to_hass(hass)
-    with (
-        patch("homeassistant.components.brother.Brother.initialize"),
-        patch("homeassistant.components.brother.Brother._get_data") as mock_get_data,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("127.0.0.1"),
-                ip_addresses=[ip_address("127.0.0.1")],
-                hostname="example.local.",
-                name="Brother Printer",
-                port=None,
-                properties={},
-                type="mock_type",
-            ),
-        )
-        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="example.local.",
+            name="Brother Printer",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_get_data.mock_calls) == 0
+    mock_brother_client.async_update.assert_not_called()
 
 
 async def test_zeroconf_confirm_create_entry(
