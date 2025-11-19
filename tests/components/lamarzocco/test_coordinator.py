@@ -1,0 +1,462 @@
+"""Tests for La Marzocco coordinators."""
+
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from bleak.backends.device import BLEDevice
+from pylamarzocco.const import WidgetType
+from pylamarzocco.exceptions import (
+    BluetoothConnectionFailed,
+    RequestNotSuccessful,
+)
+import pytest
+
+from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
+from homeassistant.const import CONF_MAC, CONF_TOKEN, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+
+from . import MOCK_INSTALLATION_KEY, async_init_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+pytestmark = pytest.mark.usefixtures("mock_websocket_terminated")
+
+
+async def test_bluetooth_coordinator_setup(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+) -> None:
+    """Test Bluetooth coordinator is set up correctly."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Verify Bluetooth coordinator was created
+        assert mock_config_entry.runtime_data.bluetooth_coordinator is not None
+        assert mock_lamarzocco.get_machine_info_from_bluetooth.called
+
+
+async def test_bluetooth_coordinator_disabled_when_option_false(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+) -> None:
+    """Test Bluetooth coordinator is not created when disabled in options."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        options={CONF_USE_BLUETOOTH: False},
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with patch(
+        "homeassistant.components.lamarzocco.async_ble_device_from_address",
+        return_value=mock_ble_device,
+    ):
+        await async_init_integration(hass, mock_config_entry)
+
+        # Verify Bluetooth coordinator was not created
+        assert mock_config_entry.runtime_data.bluetooth_coordinator is None
+
+
+async def test_bluetooth_coordinator_updates_when_websocket_disconnected(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    freezer,
+) -> None:
+    """Test Bluetooth coordinator fetches data when websocket is disconnected."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Reset call count after initial setup
+        mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
+
+        # Simulate websocket disconnect and cloud disconnect
+        mock_lamarzocco.websocket.connected = False
+        mock_lamarzocco.dashboard.connected = False
+
+        # Trigger update
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Verify Bluetooth update was called
+        assert mock_lamarzocco.get_dashboard_from_bluetooth.called
+
+
+async def test_bluetooth_coordinator_skips_update_when_websocket_connected(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    freezer,
+) -> None:
+    """Test Bluetooth coordinator skips updates when websocket is connected."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Reset call count after initial setup
+        mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
+
+        # Ensure websocket and machine are connected
+        mock_lamarzocco.websocket.connected = True
+        mock_lamarzocco.dashboard.connected = True
+
+        # Trigger update
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Verify Bluetooth update was NOT called
+        assert not mock_lamarzocco.get_dashboard_from_bluetooth.called
+
+
+async def test_bt_offline_mode_entity_available_when_cloud_fails(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    freezer,
+) -> None:
+    """Test entities with bt_offline_mode=True remain available when cloud coordinators fail."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Water tank sensor has bt_offline_mode=True
+        water_tank_sensor = (
+            f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
+        )
+        state = hass.states.get(water_tank_sensor)
+        assert state
+        # Initially should be available
+        initial_state = state.state
+        assert initial_state != STATE_UNAVAILABLE
+
+        # Simulate cloud coordinator failures
+        mock_lamarzocco.websocket.connected = False
+        mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
+
+        # Trigger update
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Water tank sensor should still be available because of bt_offline_mode
+        state = hass.states.get(water_tank_sensor)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+
+async def test_entity_without_bt_offline_mode_unavailable_when_cloud_fails(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    freezer,
+) -> None:
+    """Test entities without bt_offline_mode become unavailable when cloud coordinators fail."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Brew active sensor does NOT have bt_offline_mode=True
+        brew_active_sensor = (
+            f"binary_sensor.{mock_lamarzocco.serial_number}_brewing_active"
+        )
+        state = hass.states.get(brew_active_sensor)
+        assert state
+        # Initially should be available
+        initial_state = state.state
+        assert initial_state != STATE_UNAVAILABLE
+
+        # Simulate cloud coordinator failures
+        mock_lamarzocco.websocket.connected = False
+        mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
+
+        # Trigger update
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Brew active sensor should become unavailable
+        state = hass.states.get(brew_active_sensor)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+
+async def test_bluetooth_coordinator_handles_connection_failure(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    freezer,
+) -> None:
+    """Test Bluetooth coordinator handles connection failures gracefully."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Simulate Bluetooth connection failure
+        mock_lamarzocco.websocket.connected = False
+        mock_lamarzocco.dashboard.connected = False
+        mock_lamarzocco.get_dashboard_from_bluetooth.side_effect = (
+            BluetoothConnectionFailed("")
+        )
+
+        # Trigger update
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Verify coordinator handled the error
+        assert mock_config_entry.runtime_data.bluetooth_coordinator.last_update_success is False
+
+
+async def test_no_bluetooth_coordinator_without_mac(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Test no Bluetooth coordinator is created when MAC address is not available."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    await async_init_integration(hass, mock_config_entry)
+
+    # Verify Bluetooth coordinator was not created
+    assert mock_config_entry.runtime_data.bluetooth_coordinator is None
+
+
+async def test_bluetooth_coordinator_triggers_entity_updates(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    freezer,
+) -> None:
+    """Test Bluetooth coordinator updates trigger entity state updates."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data={
+            "username": "username",
+            "password": "password",
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            "installation_key": MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+
+        # Water tank sensor with bt_offline_mode
+        water_tank_sensor = (
+            f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
+        )
+        
+        # Set initial state - no water issue
+        if WidgetType.CM_NO_WATER in mock_lamarzocco.dashboard.config:
+            del mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER]
+        
+        state = hass.states.get(water_tank_sensor)
+        assert state
+
+        # Simulate Bluetooth update adding water issue
+        def add_water_issue():
+            mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = True
+
+        mock_lamarzocco.get_dashboard_from_bluetooth.side_effect = add_water_issue
+        mock_lamarzocco.websocket.connected = False
+        mock_lamarzocco.dashboard.connected = False
+
+        # Trigger Bluetooth coordinator update
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Verify entity state was updated
+        state = hass.states.get(water_tank_sensor)
+        assert state
+        assert state.state == STATE_ON
