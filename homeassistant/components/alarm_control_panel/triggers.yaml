@@ -2,7 +2,7 @@
   target:
     entity:
       domain: alarm_control_panel
-  fields:
+  fields: &trigger_common_fields
     behavior:
       required: true
       default: any
@@ -13,6 +13,38 @@
             - last
             - any
           translation_key: trigger_behavior
+
+armed_away:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY
+
+armed_home:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+
+armed_night:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT
+
+armed_vacation:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_VACATION
 
 disarmed: *trigger_common
 

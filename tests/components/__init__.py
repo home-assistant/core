@@ -106,7 +106,11 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
 
 
 def parametrize_trigger_states(
-    trigger: str, target_states: Iterable[str], other_states: Iterable[str]
+    trigger: str,
+    target_states: Iterable[str],
+    other_states: Iterable[str],
+    *,
+    trigger_from_none: bool = True,
 ) -> list[tuple[str, list[tuple[str | None, int]]]]:
     """Parametrize states and expected service call counts.
 
@@ -119,7 +123,12 @@ def parametrize_trigger_states(
             trigger,
             list(
                 itertools.chain.from_iterable(
-                    ((None, 0), (target_state, 0), (other_state, 0), (target_state, 1))
+                    (
+                        (None, 0),
+                        (target_state, 0),
+                        (other_state, 0),
+                        (target_state, 1 if trigger_from_none else 0),
+                    )
                     for target_state in target_states
                     for other_state in other_states
                 )
