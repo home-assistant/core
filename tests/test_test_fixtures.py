@@ -86,6 +86,9 @@ async def test_evict_faked_translations_assumptions(hass: HomeAssistant) -> None
     integration = mock_integration(hass, MockModule("test"), built_in=True)
     assert integration.file_path == pathlib.Path("homeassistant/components/test")
 
+    integration = mock_integration(hass, MockModule("test"), built_in=False)
+    assert integration.file_path == pathlib.Path("custom_components/test")
+
 
 async def test_evict_faked_translations(hass: HomeAssistant, translations_once) -> None:
     """Test the evict_faked_translations fixture."""
