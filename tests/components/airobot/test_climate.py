@@ -1,14 +1,15 @@
 """Test the Airobot climate platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyairobotrest.const import MODE_AWAY, MODE_HOME
-from pyairobotrest.exceptions import AirobotError
+from pyairobotrest.exceptions import AirobotConnectionError, AirobotError
 from pyairobotrest.models import ThermostatSettings, ThermostatStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airobot.climate import AirobotClimate
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
@@ -21,30 +22,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_climate_entity_setup(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test climate entity is set up correctly."""
-    # Check entity is registered
-    entity = entity_registry.async_get("climate.test_thermostat")
-    assert entity
-    assert entity.unique_id == "T01XXXXXX"
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_climate_entity_state(
+async def test_climate_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate entity state."""
-    state = hass.states.get("climate.test_thermostat")
-    assert state
-    assert state == snapshot
+    """Test climate entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -57,7 +46,6 @@ async def test_climate_entity_state(
 async def test_climate_set_temperature(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
     mock_settings: ThermostatSettings,
     mock_config_entry: MockConfigEntry,
     mode: int,
@@ -106,11 +94,11 @@ async def test_climate_set_temperature_error(
 
 
 @pytest.mark.parametrize(
-    ("preset_mode", "expected_calls"),
+    ("preset_mode", "method", "arg"),
     [
-        ("home", [("set_mode", MODE_HOME)]),
-        ("away", [("set_mode", MODE_AWAY)]),
-        ("boost", [("set_boost_mode", True)]),
+        ("home", "set_mode", MODE_HOME),
+        ("away", "set_mode", MODE_AWAY),
+        ("boost", "set_boost_mode", True),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -118,7 +106,8 @@ async def test_climate_set_preset_mode(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
     preset_mode: str,
-    expected_calls: list[tuple[str, int | bool]],
+    method: str,
+    arg: int | bool,
 ) -> None:
     """Test setting different preset modes."""
     await hass.services.async_call(
@@ -131,14 +120,12 @@ async def test_climate_set_preset_mode(
         blocking=True,
     )
 
-    for method, arg in expected_calls:
-        getattr(mock_airobot_client, method).assert_called_once_with(arg)
+    getattr(mock_airobot_client, method).assert_called_once_with(arg)
 
 
 async def test_climate_set_preset_mode_from_boost_to_home(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
     mock_settings: ThermostatSettings,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -188,7 +175,6 @@ async def test_climate_set_preset_mode_error(
 async def test_climate_heating_state(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
     mock_status: ThermostatStatus,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -206,21 +192,30 @@ async def test_climate_heating_state(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_climate_set_temperature_no_change(
+async def test_climate_unavailable_on_update_failure(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that calling set_temperature with None temperature returns early."""
-    # Get the coordinator
-    coordinator = mock_config_entry.runtime_data
+    """Test climate entity becomes unavailable when coordinator update fails."""
+    # Initially available
+    state = hass.states.get("climate.test_thermostat")
+    assert state
+    assert state.state != "unavailable"
 
-    # Create entity instance directly
-    climate_entity = AirobotClimate(coordinator)
+    # Simulate connection error during update
+    mock_airobot_client.get_statuses.side_effect = AirobotConnectionError(
+        "Connection lost"
+    )
+    mock_airobot_client.get_settings.side_effect = AirobotConnectionError(
+        "Connection lost"
+    )
 
-    # Call with no temperature - should return early without API calls
-    await climate_entity.async_set_temperature()
+    # Advance time to trigger coordinator update (30 second interval)
+    freezer.tick(timedelta(seconds=35))
+    await hass.async_block_till_done()
 
-    # Verify no API calls were made
-    mock_airobot_client.set_home_temperature.assert_not_called()
-    mock_airobot_client.set_away_temperature.assert_not_called()
+    # Entity should now be unavailable
+    state = hass.states.get("climate.test_thermostat")
+    assert state
+    assert state.state == "unavailable"

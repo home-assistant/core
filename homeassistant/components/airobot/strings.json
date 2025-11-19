@@ -35,13 +35,6 @@
       }
     }
   },
-  "entity": {
-    "climate": {
-      "thermostat": {
-        "name": "Thermostat"
-      }
-    }
-  },
   "exceptions": {
     "set_preset_mode_failed": {
       "message": "Failed to set preset mode to {preset_mode}."

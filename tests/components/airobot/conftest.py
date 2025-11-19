@@ -31,7 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_status() -> ThermostatStatus:
     """Create a mock thermostat status."""
     return ThermostatStatus(
-        device_id="T01XXXXXX",
+        device_id="T01A1B2C3",
         hw_version=256,
         fw_version=300,
         temp_air=22.0,
@@ -54,7 +54,7 @@ def mock_status() -> ThermostatStatus:
 def mock_settings() -> ThermostatSettings:
     """Create a mock thermostat settings."""
     return ThermostatSettings(
-        device_id="T01XXXXXX",
+        device_id="T01A1B2C3",
         mode=1,
         setpoint_temp=22.0,
         setpoint_temp_away=18.0,
@@ -74,31 +74,25 @@ def mock_settings() -> ThermostatSettings:
 def mock_airobot_client(
     mock_status: ThermostatStatus, mock_settings: ThermostatSettings
 ):
-    """Mock AirobotClient for coordinator."""
-    with patch(
-        "homeassistant.components.airobot.coordinator.AirobotClient", autospec=True
-    ) as mock_client:
-        client = mock_client.return_value
+    """Mock AirobotClient for both coordinator and config flow."""
+    with (
+        patch(
+            "homeassistant.components.airobot.coordinator.AirobotClient", autospec=True
+        ) as mock_coordinator_client,
+        patch(
+            "homeassistant.components.airobot.config_flow.AirobotClient", autospec=True
+        ) as mock_config_flow_client,
+    ):
+        client = mock_coordinator_client.return_value
         client.get_statuses = AsyncMock(return_value=mock_status)
         client.get_settings = AsyncMock(return_value=mock_settings)
         client.set_mode = AsyncMock()
         client.set_home_temperature = AsyncMock()
         client.set_away_temperature = AsyncMock()
         client.set_boost_mode = AsyncMock()
-        yield client
 
-
-@pytest.fixture
-def mock_airobot_config_flow_client(
-    mock_status: ThermostatStatus, mock_settings: ThermostatSettings
-):
-    """Mock AirobotClient for config flow."""
-    with patch(
-        "homeassistant.components.airobot.config_flow.AirobotClient", autospec=True
-    ) as mock_client:
-        client = mock_client.return_value
-        client.get_statuses = AsyncMock(return_value=mock_status)
-        client.get_settings = AsyncMock(return_value=mock_settings)
+        # Make config flow client return the same instance
+        mock_config_flow_client.return_value = client
         yield client
 
 
@@ -109,10 +103,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "T01XXXXXX",
+            CONF_USERNAME: "T01A1B2C3",
             CONF_PASSWORD: "test-password",
         },
-        unique_id="T01XXXXXX",
+        unique_id="T01A1B2C3",
     )
 
 
@@ -121,7 +115,6 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_airobot_client: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up the Airobot integration for testing."""
     mock_config_entry.add_to_hass(hass)

@@ -108,8 +108,7 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
+        temperature = kwargs[ATTR_TEMPERATURE]
 
         try:
             if self._settings.is_home_mode:

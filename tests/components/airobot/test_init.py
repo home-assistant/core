@@ -7,7 +7,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airobot.const import DOMAIN
-from homeassistant.components.airobot.entity import AirobotEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -34,7 +33,6 @@ async def test_setup_entry_success(
 async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_state: ConfigEntryState,
@@ -64,24 +62,6 @@ async def test_unload_entry(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_coordinator_update_failed(
-    hass: HomeAssistant,
-    mock_airobot_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator handles update failures."""
-    # Simulate connection error during update
-    mock_airobot_client.get_statuses.side_effect = AirobotConnectionError(
-        "Connection lost"
-    )
-
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_device_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -90,28 +70,7 @@ async def test_device_entry(
     """Test device registry entry."""
     assert (
         device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, "T01XXXXXX")}
+            identifiers={(DOMAIN, "T01A1B2C3")}
         )
     )
     assert device_entry == snapshot
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_entity_with_entity_key(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test entity initialization with entity_key parameter."""
-    coordinator = mock_config_entry.runtime_data
-
-    # Create entity with entity_key to test that code path
-    entity = AirobotEntity(coordinator, entity_key="test_sensor")
-
-    # Verify unique_id includes entity_key
-    assert entity.unique_id == "T01XXXXXX_test_sensor"
-
-    # Create entity without entity_key
-    entity_no_key = AirobotEntity(coordinator)
-
-    # Verify unique_id is just device_id
-    assert entity_no_key.unique_id == "T01XXXXXX"

@@ -10,25 +10,27 @@ from pyairobotrest.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.airobot.const import CONF_MAC, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.airobot.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from tests.common import MockConfigEntry
+
 TEST_USER_INPUT = {
     CONF_HOST: "192.168.1.100",
-    CONF_USERNAME: "T01XXXXXX",
+    CONF_USERNAME: "T01A1B2C3",
     CONF_PASSWORD: "test-password",
 }
 
 
-async def test_form(
+async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
+    mock_airobot_client: AsyncMock,
 ) -> None:
-    """Test we get the form."""
+    """Test user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -39,11 +41,11 @@ async def test_form(
         result["flow_id"],
         TEST_USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Thermostat"
     assert result["data"] == TEST_USER_INPUT
+    assert result["result"].unique_id == "T01A1B2C3"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -59,7 +61,7 @@ async def test_form(
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
+    mock_airobot_client: AsyncMock,
     exception: Exception,
     error_base: str,
 ) -> None:
@@ -68,7 +70,7 @@ async def test_form_exceptions(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_airobot_config_flow_client.get_settings.side_effect = exception
+    mock_airobot_client.get_settings.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -81,7 +83,7 @@ async def test_form_exceptions(
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
-    mock_airobot_config_flow_client.get_settings.side_effect = None
+    mock_airobot_client.get_settings.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -98,20 +100,11 @@ async def test_form_exceptions(
 async def test_form_unique_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test we handle unique ID properly."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        TEST_USER_INPUT,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
+    """Test duplicate detection."""
+    mock_config_entry.add_to_hass(hass)
 
     # Try to configure the same device again
     result = await hass.config_entries.flow.async_init(
@@ -127,43 +120,10 @@ async def test_form_unique_id(
     assert result["reason"] == "already_configured"
 
 
-async def test_form_fallback_title(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
-) -> None:
-    """Test fallback title when device_name and device_id are empty."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    # Create simple objects with no device_name and no device_id
-    class EmptySettings:
-        device_name = None
-        device_id = None
-
-    class EmptyStatus:
-        device_id = None
-
-    mock_airobot_config_flow_client.get_statuses.return_value = EmptyStatus()
-    mock_airobot_config_flow_client.get_settings.return_value = EmptySettings()
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        TEST_USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airobot TE1 192.168.1.100"
-    assert result["data"] == TEST_USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_dhcp_discovery(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
+    mock_airobot_client: AsyncMock,
 ) -> None:
     """Test DHCP discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -172,7 +132,7 @@ async def test_dhcp_discovery(
         data=DhcpServiceInfo(
             ip="192.168.1.100",
             macaddress="b8d61aabcdef",
-            hostname="airobot-thermostat-te1",
+            hostname="airobot-thermostat-t01a1b2c3",
         ),
     )
     await hass.async_block_till_done()
@@ -184,22 +144,32 @@ async def test_dhcp_discovery(
     # Complete the flow by providing credentials
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "T01XXXXXX", CONF_PASSWORD: "test-password"},
+        {CONF_USERNAME: "T01A1B2C3", CONF_PASSWORD: "test-password"},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Thermostat"
     assert result["data"][CONF_HOST] == "192.168.1.100"
-    assert result["data"][CONF_USERNAME] == "T01XXXXXX"
+    assert result["data"][CONF_USERNAME] == "T01A1B2C3"
     assert result["data"][CONF_PASSWORD] == "test-password"
-    assert "mac" in result["data"]
+    assert result["data"][CONF_MAC] == "b8d61aabcdef"
 
 
+@pytest.mark.parametrize(
+    ("exception", "error_base"),
+    [
+        (AirobotAuthError("Invalid credentials"), "invalid_auth"),
+        (AirobotConnectionError("Connection failed"), "cannot_connect"),
+        (Exception("Unknown error"), "unknown"),
+    ],
+)
 async def test_dhcp_discovery_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
+    mock_airobot_client: AsyncMock,
+    exception: Exception,
+    error_base: str,
 ) -> None:
     """Test DHCP discovery with error handling."""
     result = await hass.config_entries.flow.async_init(
@@ -208,83 +178,50 @@ async def test_dhcp_discovery_errors(
         data=DhcpServiceInfo(
             ip="192.168.1.100",
             macaddress="aabbccddeeff",
-            hostname="airobot",
+            hostname="airobot-thermostat-t01d4e5f6",
         ),
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "dhcp_confirm"
 
-    # Test invalid auth
-    mock_airobot_config_flow_client.get_statuses.side_effect = AirobotAuthError(
-        "Invalid credentials"
-    )
+    mock_airobot_client.get_statuses.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_USERNAME: "T01XXXXXX", CONF_PASSWORD: "wrong"},
+        user_input={CONF_USERNAME: "T01D4E5F6", CONF_PASSWORD: "wrong"},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": error_base}
 
-    # Test connection error
-    mock_airobot_config_flow_client.get_statuses.side_effect = AirobotConnectionError(
-        "Connection failed"
-    )
+    # Recover from error
+    mock_airobot_client.get_statuses.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_USERNAME: "T01XXXXXX", CONF_PASSWORD: "wrong"},
+        user_input={CONF_USERNAME: "T01D4E5F6", CONF_PASSWORD: "test-password"},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    await hass.async_block_till_done()
 
-    # Test unknown error
-    mock_airobot_config_flow_client.get_statuses.side_effect = Exception(
-        "Unknown error"
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: "T01XXXXXX", CONF_PASSWORD: "wrong"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Thermostat"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_dhcp_discovery_duplicate(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test DHCP discovery with duplicate device."""
-    # Create an existing entry via DHCP first
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.1.100",
-            macaddress="b8d61aabcdef",
-            hostname="airobot-thermostat-te1",
-        ),
-    )
-    await hass.async_block_till_done()
+    mock_config_entry.add_to_hass(hass)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "dhcp_confirm"
-
-    # Complete the setup
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "T01XXXXXX", CONF_PASSWORD: "test-password"},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    # DHCP discovers the same device again with potentially different IP
+    # DHCP discovers the same device with potentially different IP
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
             ip="192.168.1.101",  # Different IP
             macaddress="b8d61aabcdef",  # Same MAC
-            hostname="airobot-thermostat-te1",  # Same hostname = same device_id
+            hostname="airobot-thermostat-t01a1b2c3",  # Same hostname = same device_id
         ),
     )
     await hass.async_block_till_done()
@@ -295,47 +232,4 @@ async def test_dhcp_discovery_duplicate(
     assert result["reason"] == "already_configured"
 
     # Verify the IP was updated in the existing entry
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data[CONF_HOST] == "192.168.1.101"
-
-
-async def test_dhcp_discovery_non_standard_hostname(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_airobot_config_flow_client: AsyncMock,
-) -> None:
-    """Test DHCP discovery with non-standard hostname (device_id extracted from API)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.1.100",
-            macaddress="b8d61aabcdef",
-            hostname="custom-hostname",  # Non-standard hostname
-        ),
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "dhcp_confirm"
-
-    # Complete the setup - device_id will be obtained from API response
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "T01XXXXXX", CONF_PASSWORD: "test-password"},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Thermostat"  # From mock device_name
-    assert result["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_USERNAME: "T01XXXXXX",
-        CONF_PASSWORD: "test-password",
-        CONF_MAC: "b8d61aabcdef",
-    }
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].unique_id == "T01XXXXXX"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"

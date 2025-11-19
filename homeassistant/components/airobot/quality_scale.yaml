@@ -34,9 +34,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: Integration uses username/password that rarely expire and supports reconfiguration for credential updates.
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold

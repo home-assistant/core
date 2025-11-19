@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'airobot',
-        'T01XXXXXX',
+        'T01A1B2C3',
       ),
     }),
     'labels': set({

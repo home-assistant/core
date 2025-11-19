@@ -15,13 +15,13 @@ from pyairobotrest.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as BaseConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_MAC, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +59,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     # Use device name or device ID as title
     title = settings.device_name if settings.device_name else status.device_id
-    if not title:
-        title = f"Airobot TE1 {data[CONF_HOST]}"
 
     return {"title": title, "device_id": status.device_id}
 
@@ -75,6 +73,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_host: str | None = None
         self._discovered_mac: str | None = None
+        self._discovered_device_id: str | None = None
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -86,11 +85,11 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
         # Extract device_id from hostname (format: airobot-thermostat-t01xxxxxx)
         hostname = discovery_info.hostname.lower()
-        if hostname.startswith("airobot-thermostat-"):
-            device_id = hostname.replace("airobot-thermostat-", "").upper()
-            # Set unique_id to device_id for duplicate detection
-            await self.async_set_unique_id(device_id)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        device_id = hostname.replace("airobot-thermostat-", "").upper()
+        self._discovered_device_id = device_id
+        # Set unique_id to device_id for duplicate detection
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
         # Show the confirmation form
         return await self.async_step_dhcp_confirm()
@@ -119,25 +118,20 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Use device ID as unique ID to prevent duplicates
-                # (may already be set from DHCP discovery hostname)
-                if not self.unique_id:
-                    await self.async_set_unique_id(info["device_id"])
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: self._discovered_host}
-                    )
-
                 # Store MAC address in config entry data
                 if self._discovered_mac:
                     data[CONF_MAC] = self._discovered_mac
 
                 return self.async_create_entry(title=info["title"], data=data)
 
+        # Build schema with device_id as default username if available
         return self.async_show_form(
             step_id="dhcp_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(
+                        CONF_USERNAME, default=self._discovered_device_id
+                    ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
