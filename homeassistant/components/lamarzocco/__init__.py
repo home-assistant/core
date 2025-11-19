@@ -35,6 +35,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
+    LaMarzoccoBluetoothUpdateCoordinator,
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
     LaMarzoccoRuntimeData,
@@ -165,6 +166,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         coordinators.schedule_coordinator.async_config_entry_first_refresh(),
         coordinators.statistics_coordinator.async_config_entry_first_refresh(),
     )
+
+    # bt coordinator only if bluetooth client is available
+    # and after the initial refresh of the config coordinator
+    # to fetch only if the others failed
+    if bluetooth_client:
+        bluetooth_coordinator = LaMarzoccoBluetoothUpdateCoordinator(
+            hass, entry, device
+        )
+        await bluetooth_coordinator.async_config_entry_first_refresh()
+        coordinators.bluetooth_coordinator = bluetooth_coordinator
 
     entry.runtime_data = coordinators
 

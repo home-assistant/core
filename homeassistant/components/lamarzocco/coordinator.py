@@ -9,7 +9,11 @@ import logging
 from typing import Any
 
 from pylamarzocco import LaMarzoccoCloudClient, LaMarzoccoMachine
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    BluetoothConnectionFailed,
+    RequestNotSuccessful,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -34,6 +38,7 @@ class LaMarzoccoRuntimeData:
     settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
     schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
     statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
+    bluetooth_coordinator: LaMarzoccoBluetoothUpdateCoordinator | None = None
 
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
@@ -75,9 +80,18 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
+            # if no bluetooth coordinator, this is a fatal error
+            # otherwise, bluetooth may still work
+            if self.config_entry.runtime_data.bluetooth_coordinator is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="api_error"
+                ) from ex
+        except BluetoothConnectionFailed as err:
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="api_error"
-            ) from ex
+                translation_domain=DOMAIN,
+                translation_key="bluetooth_connection_failed",
+            ) from err
+        _LOGGER.debug("Current info: %s", self.device.dashboard.to_dict())
 
     @abstractmethod
     async def _internal_async_update_data(self) -> None:
@@ -89,6 +103,10 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     cloud_client: LaMarzoccoCloudClient
 
+    async def _async_setup(self) -> None:
+        await self.device.get_dashboard()
+        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
@@ -97,9 +115,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         if self.device.websocket.connected:
             return
-
-        await self.device.get_dashboard()
-        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
         self.config_entry.async_create_background_task(
             hass=self.hass,
@@ -164,3 +179,17 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Fetch data from API endpoint."""
         await self.device.get_coffee_and_flush_counter()
         _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())
+
+
+class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Class to handle fetching data from the La Marzocco Bluetooth API centrally."""
+
+    async def _async_setup(self) -> None:
+        """Initial setup for Bluetooth coordinator."""
+        await self.device.get_machine_info_from_bluetooth()
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from Bluetooth endpoint."""
+        if not self.device.websocket.connected or not self.device.dashboard.connected:
+            return
+        await self.device.get_dashboard_from_bluetooth()

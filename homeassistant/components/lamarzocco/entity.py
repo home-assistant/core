@@ -17,7 +17,10 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import (
+    LaMarzoccoBluetoothUpdateCoordinator,
+    LaMarzoccoUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,6 +29,7 @@ class LaMarzoccoEntityDescription(EntityDescription):
 
     available_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
     supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
+    bt_offline_mode: bool = False
 
 
 class LaMarzoccoBaseEntity(
@@ -90,6 +94,11 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
+        if (
+            self.entity_description.bt_offline_mode
+            and self.bluetooth_coordinator is not None
+        ):
+            return True
         if super().available:
             return self.entity_description.available_fn(self.coordinator)
         return False
@@ -98,7 +107,11 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
         entity_description: LaMarzoccoEntityDescription,
+        bluetooth_coordinator: LaMarzoccoBluetoothUpdateCoordinator | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
+        if bluetooth_coordinator is not None:
+            bluetooth_coordinator.async_add_listener(self._handle_coordinator_update)
+        self.bluetooth_coordinator = bluetooth_coordinator
