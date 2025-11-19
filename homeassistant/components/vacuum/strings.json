@@ -131,7 +131,7 @@
       "name": "When a vacuum cleaner has errored"
     },
     "paused_cleaning": {
-      "description": "Triggers when a vacuum cleaner has paused.",
+      "description": "Triggers when a vacuum cleaner has paused cleaning.",
       "description_configured": "[%key:component::vacuum::triggers::paused_cleaning::description%]",
       "fields": {
         "behavior": {
@@ -139,10 +139,10 @@
           "name": "[%key:component::vacuum::triggers::docked::fields::behavior::name%]"
         }
       },
-      "name": "When a vacuum cleaner has paused"
+      "name": "When a vacuum cleaner has paused cleaning"
     },
     "started_cleaning": {
-      "description": "Triggers when a vacuum cleaner has started.",
+      "description": "Triggers when a vacuum cleaner has started cleaning.",
       "description_configured": "[%key:component::vacuum::triggers::started_cleaning::description%]",
       "fields": {
         "behavior": {
@@ -150,7 +150,7 @@
           "name": "[%key:component::vacuum::triggers::docked::fields::behavior::name%]"
         }
       },
-      "name": "When a vacuum cleaner has started"
+      "name": "When a vacuum cleaner has started cleaning"
     }
   }
 }
