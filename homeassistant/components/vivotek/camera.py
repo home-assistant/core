@@ -14,9 +14,11 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
@@ -24,14 +26,24 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import VivotekConfigEntry
-from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH
+from .const import (
+    CONF_FRAMERATE,
+    CONF_SECURITY_LEVEL,
+    CONF_STREAM_PATH,
+    DOMAIN,
+    INTEGRATION_TITLE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +57,7 @@ DEFAULT_STREAM_SOURCE = "live.sdp"
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
@@ -78,39 +91,62 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(
             entry,
             unique_id=unique_id,
-            title=DEFAULT_NAME,
+            title=config.get(CONF_NAME, DEFAULT_NAME),
         )
     async_add_entities([VivotekCam(entry.data, cam_client, stream_source, unique_id)])
 
 
-# def setup_platform(
-#     hass: HomeAssistant,
-#     config: ConfigType,
-#     add_entities: AddEntitiesCallback,
-#     discovery_info: DiscoveryInfoType | None = None,
-# ) -> None:
-#     """Set up a Vivotek IP Camera from Yaml."""
-#     creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
-#     cam = VivotekCamera(
-#         host=config[CONF_IP_ADDRESS],
-#         port=(443 if config[CONF_SSL] else 80),
-#         verify_ssl=config[CONF_VERIFY_SSL],
-#         usr=config[CONF_USERNAME],
-#         pwd=config[CONF_PASSWORD],
-#         digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
-#         sec_lvl=config[CONF_SECURITY_LEVEL],
-#     )
-#     stream_source = (
-#         f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
-#     )
-#     unique_id = cam.get_mac()
-#     add_entities([VivotekCam(config, cam, stream_source, unique_id)], True)
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Vivotek camera platform."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 class VivotekCam(Camera):
     """A Vivotek IP camera."""
 
-    # Overrides from Camera
     _attr_brand = DEFAULT_CAMERA_BRAND
     _attr_supported_features = CameraEntityFeature.STREAM
 
@@ -157,7 +193,3 @@ class VivotekCam(Camera):
         self._attr_model = self._cam_client.model_name
         self._attr_available = self._attr_model is not None
         self._attr_serial = self._cam_client.get_serial()
-
-    async def async_update(self) -> None:
-        """Update the entity."""
-        await self.hass.async_add_executor_job(self.update)

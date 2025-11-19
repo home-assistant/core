@@ -7,3 +7,5 @@ CONF_STREAM_PATH = "stream_path"
 DOMAIN = "vivotek"
 
 MANUFACTURER = "Vivotek"
+
+INTEGRATION_TITLE = "Vivotek"
