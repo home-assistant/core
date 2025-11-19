@@ -3831,3 +3831,64 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[light.white_noise_machine-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.white_noise_machine',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.c9nbmrweturkgqktdyzbswitch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.white_noise_machine-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'White Noise Machine',
+      'hs_color': None,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.white_noise_machine',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
