@@ -405,7 +405,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.ble_device:
             return self.async_abort(reason="cannot_connect")
 
-        self.device_name = discovery_info.name
+        self.device_name = device_name
         self.context.update(
             {
                 "title_placeholders": {"name": device_name},
