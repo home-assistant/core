@@ -34,8 +34,16 @@ async def target_fans(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("fan.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("fan.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states(
+            trigger="fan.turned_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+        ),
+        *parametrize_trigger_states(
+            trigger="fan.turned_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+        ),
     ],
 )
 async def test_fan_state_trigger_behavior_any(
@@ -83,8 +91,16 @@ async def test_fan_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("fan.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("fan.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states(
+            trigger="fan.turned_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+        ),
+        *parametrize_trigger_states(
+            trigger="fan.turned_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+        ),
     ],
 )
 async def test_fan_state_trigger_behavior_first(
@@ -131,8 +147,16 @@ async def test_fan_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("fan.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("fan.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states(
+            trigger="fan.turned_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+        ),
+        *parametrize_trigger_states(
+            trigger="fan.turned_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+        ),
     ],
 )
 async def test_fan_state_trigger_behavior_last(

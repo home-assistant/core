@@ -10,13 +10,12 @@ from homeassistant.setup import async_setup_component
 from tests.components import (
     StateDescription,
     arm_trigger,
+    other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-ASSIST_SATELLITE_STATES = {s.value for s in AssistSatelliteState}
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -38,24 +37,24 @@ async def target_assist_satellites(hass: HomeAssistant) -> None:
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "assist_satellite.idle",
-            (AssistSatelliteState.IDLE,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.IDLE},
+            trigger="assist_satellite.idle",
+            target_states=[AssistSatelliteState.IDLE],
+            other_states=other_states(AssistSatelliteState.IDLE),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.listening",
-            (AssistSatelliteState.LISTENING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.LISTENING},
+            trigger="assist_satellite.listening",
+            target_states=[AssistSatelliteState.LISTENING],
+            other_states=other_states(AssistSatelliteState.LISTENING),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.processing",
-            (AssistSatelliteState.PROCESSING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.PROCESSING},
+            trigger="assist_satellite.processing",
+            target_states=[AssistSatelliteState.PROCESSING],
+            other_states=other_states(AssistSatelliteState.PROCESSING),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.responding",
-            (AssistSatelliteState.RESPONDING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.RESPONDING},
+            trigger="assist_satellite.responding",
+            target_states=[AssistSatelliteState.RESPONDING],
+            other_states=other_states(AssistSatelliteState.RESPONDING),
         ),
     ],
 )
@@ -105,24 +104,24 @@ async def test_assist_satellite_state_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "assist_satellite.idle",
-            (AssistSatelliteState.IDLE,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.IDLE},
+            trigger="assist_satellite.idle",
+            target_states=[AssistSatelliteState.IDLE],
+            other_states=other_states(AssistSatelliteState.IDLE),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.listening",
-            (AssistSatelliteState.LISTENING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.LISTENING},
+            trigger="assist_satellite.listening",
+            target_states=[AssistSatelliteState.LISTENING],
+            other_states=other_states(AssistSatelliteState.LISTENING),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.processing",
-            (AssistSatelliteState.PROCESSING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.PROCESSING},
+            trigger="assist_satellite.processing",
+            target_states=[AssistSatelliteState.PROCESSING],
+            other_states=other_states(AssistSatelliteState.PROCESSING),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.responding",
-            (AssistSatelliteState.RESPONDING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.RESPONDING},
+            trigger="assist_satellite.responding",
+            target_states=[AssistSatelliteState.RESPONDING],
+            other_states=other_states(AssistSatelliteState.RESPONDING),
         ),
     ],
 )
@@ -171,24 +170,24 @@ async def test_assist_satellite_state_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            "assist_satellite.idle",
-            (AssistSatelliteState.IDLE,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.IDLE},
+            trigger="assist_satellite.idle",
+            target_states=[AssistSatelliteState.IDLE],
+            other_states=other_states(AssistSatelliteState.IDLE),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.listening",
-            (AssistSatelliteState.LISTENING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.LISTENING},
+            trigger="assist_satellite.listening",
+            target_states=[AssistSatelliteState.LISTENING],
+            other_states=other_states(AssistSatelliteState.LISTENING),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.processing",
-            (AssistSatelliteState.PROCESSING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.PROCESSING},
+            trigger="assist_satellite.processing",
+            target_states=[AssistSatelliteState.PROCESSING],
+            other_states=other_states(AssistSatelliteState.PROCESSING),
         ),
         *parametrize_trigger_states(
-            "assist_satellite.responding",
-            (AssistSatelliteState.RESPONDING,),
-            ASSIST_SATELLITE_STATES - {AssistSatelliteState.RESPONDING},
+            trigger="assist_satellite.responding",
+            target_states=[AssistSatelliteState.RESPONDING],
+            other_states=other_states(AssistSatelliteState.RESPONDING),
         ),
     ],
 )
