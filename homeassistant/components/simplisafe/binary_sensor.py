@@ -5,6 +5,7 @@ from __future__ import annotations
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
+from simplipy.websocket import EVENT_SECRET_ALERT_TRIGGERED, WebsocketEvent
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -103,7 +104,12 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, device=sensor)
+        super().__init__(
+            simplisafe,
+            system,
+            device=sensor,
+            additional_websocket_events=[EVENT_SECRET_ALERT_TRIGGERED],
+        )
 
         self._attr_device_class = device_class
         self._device: SensorV3
@@ -112,6 +118,18 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_on = self._device.triggered
+
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
+        LOGGER.debug(
+            "Binary sensor device serial # %s received event %s",
+            self._device.serial,
+            event.event_type,
+        )
+        # Secret Alerts can only set a sensor to on
+        self._attr_is_on = True
+        self.async_reset_error_count()
 
 
 class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
