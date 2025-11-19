@@ -5,18 +5,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import base64
 from dataclasses import dataclass
-import json
-from typing import Any, Literal, Self, overload
+from typing import Any, Literal, Self, cast, overload
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import json_loads, json_loads_object
 
 from .const import DPCode, DPType
 from .util import parse_dptype, remap_value
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TypeInformation:
     """Type information.
 
@@ -24,23 +23,23 @@ class TypeInformation:
     """
 
     dpcode: DPCode
+    type_data: str | None = None
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
-        return cls(dpcode)
+        return cls(dpcode=dpcode, type_data=type_data)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
     min: int
     max: int
-    scale: float
-    step: float
+    scale: int
+    step: int
     unit: str | None = None
-    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -57,13 +56,13 @@ class IntegerTypeData(TypeInformation):
         """Return the step scaled."""
         return self.step / (10**self.scale)
 
-    def scale_value(self, value: float) -> float:
+    def scale_value(self, value: int) -> float:
         """Scale a value."""
         return value / (10**self.scale)
 
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
-        return int(value * (10**self.scale))
+        return round(value * (10**self.scale))
 
     def remap_value_to(
         self,
@@ -86,48 +85,56 @@ class IntegerTypeData(TypeInformation):
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
 
         return cls(
-            dpcode,
+            dpcode=dpcode,
+            type_data=type_data,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
-            scale=float(parsed["scale"]),
-            step=max(float(parsed["step"]), 1),
+            scale=int(parsed["scale"]),
+            step=int(parsed["step"]),
             unit=parsed.get("unit"),
-            type=parsed.get("type"),
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BitmapTypeInformation(TypeInformation):
     """Bitmap type information."""
 
     label: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(type_data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(
+            dpcode=dpcode,
+            type_data=type_data,
+            **cast(dict[str, list[str]], parsed),
+        )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
     range: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(type_data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(
+            dpcode=dpcode,
+            type_data=type_data,
+            **cast(dict[str, list[str]], parsed),
+        )
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
@@ -150,7 +157,7 @@ class DPCodeWrapper(ABC):
     native_unit: str | None = None
     suggested_unit: str | None = None
 
-    def __init__(self, dpcode: str) -> None:
+    def __init__(self, dpcode: DPCode) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
 
@@ -193,7 +200,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     DPTYPE: DPType
     type_information: T
 
-    def __init__(self, dpcode: str, type_information: T) -> None:
+    def __init__(self, dpcode: DPCode, type_information: T) -> None:
         """Init DPCodeWrapper."""
         super().__init__(dpcode)
         self.type_information = type_information
@@ -300,7 +307,7 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
 
     DPTYPE = DPType.INTEGER
 
-    def __init__(self, dpcode: str, type_information: IntegerTypeData) -> None:
+    def __init__(self, dpcode: DPCode, type_information: IntegerTypeData) -> None:
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self.native_unit = type_information.unit
@@ -330,7 +337,7 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
     """Simple wrapper for a specific bit in bitmap values."""
 
-    def __init__(self, dpcode: str, mask: int) -> None:
+    def __init__(self, dpcode: DPCode, mask: int) -> None:
         """Init DPCodeBitmapWrapper."""
         super().__init__(dpcode)
         self._mask = mask
@@ -431,7 +438,7 @@ def find_dpcode(
                 and parse_dptype(current_definition.type) is dptype
                 and (
                     type_information := type_information_cls.from_json(
-                        dpcode, current_definition.values
+                        dpcode=dpcode, type_data=current_definition.values
                     )
                 )
             ):
