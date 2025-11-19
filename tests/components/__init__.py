@@ -1,6 +1,5 @@
 """The tests for components."""
 
-from collections.abc import Iterable
 from enum import StrEnum
 import itertools
 from typing import TypedDict
@@ -118,8 +117,8 @@ class StateDescription(TypedDict):
 def parametrize_trigger_states(
     *,
     trigger: str,
-    target_states: Iterable[str | None | tuple[str | None, dict]],
-    other_states: Iterable[str | None | tuple[str | None, dict]],
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
 ) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
