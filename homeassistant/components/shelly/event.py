@@ -201,13 +201,13 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
-        is_single = is_block_single_device(coordinator.device, block)
         if hasattr(self, "_attr_name") and not (
-            is_single and get_block_custom_name(coordinator.device, block)
+            get_block_custom_name(coordinator.device, block)
+            and (single := is_block_single_device(coordinator.device, block))
         ):
             self._attr_translation_placeholders = {
                 "input_number": get_block_channel(block)
-                if is_single
+                if single
                 and get_block_number_of_channels(coordinator.device, block) > 1
                 else ""
             }
