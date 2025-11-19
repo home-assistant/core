@@ -90,9 +90,11 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(
             entry,
             unique_id=unique_id,
-            title=config.get(CONF_NAME, DEFAULT_NAME),
         )
-    async_add_entities([VivotekCam(entry.data, cam_client, stream_source, unique_id)])
+    merged_config = entry.data | entry.options
+    async_add_entities(
+        [VivotekCam(merged_config, cam_client, stream_source, unique_id)]
+    )
 
 
 async def async_setup_platform(

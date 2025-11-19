@@ -6,7 +6,7 @@ from typing import Any
 from libpyvivotek.vivotek import SECURITY_LEVELS, VivotekCameraError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
@@ -18,6 +18,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -26,7 +27,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from . import async_build_and_test_cam_client
+from . import VivotekConfigEntry, async_build_and_test_cam_client
 from .camera import DEFAULT_NAME, DEFAULT_STREAM_SOURCE
 from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH, DOMAIN
 
@@ -47,7 +48,6 @@ CONF_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Required(CONF_FRAMERATE, default=2): cv.positive_int,
         vol.Required(CONF_SECURITY_LEVEL): SelectSelector(
             SelectSelectorConfig(
                 options=list(SECURITY_LEVELS.keys()),
@@ -63,9 +63,43 @@ CONF_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_FRAMERATE, default=2): cv.positive_int,
+    }
+)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+
 
 class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vivotek IP cameras."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: VivotekConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
