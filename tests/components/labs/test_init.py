@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
-    async_is_experimental_feature_enabled,
+    async_is_preview_feature_enabled,
     async_setup,
 )
 from homeassistant.components.labs.const import LABS_DATA
@@ -28,9 +28,7 @@ async def test_async_setup(hass: HomeAssistant) -> None:
 async def test_async_is_feature_enabled_not_setup(hass: HomeAssistant) -> None:
     """Test checking if feature is enabled before setup returns False."""
     # Don't set up labs integration
-    result = async_is_experimental_feature_enabled(
-        hass, "kitchen_sink", "special_repair"
-    )
+    result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
     assert result is False
 
 
@@ -41,7 +39,7 @@ async def test_async_is_feature_enabled_feature_not_exists(
     assert await async_setup(hass, {})
     await hass.async_block_till_done()
 
-    result = async_is_experimental_feature_enabled(
+    result = async_is_preview_feature_enabled(
         hass, "kitchen_sink", "nonexistent_feature"
     )
     assert result is False
@@ -58,9 +56,7 @@ async def test_async_is_feature_enabled_feature_enabled(hass: HomeAssistant) -> 
     # Enable a feature via storage
     hass.data[LABS_DATA].data["features"]["kitchen_sink.special_repair"] = True
 
-    result = async_is_experimental_feature_enabled(
-        hass, "kitchen_sink", "special_repair"
-    )
+    result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
     assert result is True
 
 
@@ -75,9 +71,7 @@ async def test_async_is_feature_enabled_feature_disabled(hass: HomeAssistant) ->
     # Explicitly disable a feature via storage
     hass.data[LABS_DATA].data["features"]["kitchen_sink.special_repair"] = False
 
-    result = async_is_experimental_feature_enabled(
-        hass, "kitchen_sink", "special_repair"
-    )
+    result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
     assert result is False
 
 
@@ -141,9 +135,7 @@ async def test_storage_initialization_with_data(
     assert await async_setup(hass, {})
     await hass.async_block_till_done()
 
-    result = async_is_experimental_feature_enabled(
-        hass, "kitchen_sink", "special_repair"
-    )
+    result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
     assert result is True
 
 
@@ -215,17 +207,17 @@ async def test_event_fired_on_feature_update(hass: HomeAssistant) -> None:
         ("kitchen_sink", "nonexistent", False),
     ],
 )
-async def test_async_is_experimental_feature_enabled(
+async def test_async_is_preview_feature_enabled(
     hass: HomeAssistant, domain: str, feature: str, expected: bool
 ) -> None:
-    """Test async_is_experimental_feature_enabled."""
+    """Test async_is_preview_feature_enabled."""
     await async_setup(hass, {})
     await hass.async_block_till_done()
 
     # Enable the kitchen_sink.special_repair feature
     hass.data[LABS_DATA].data["features"]["kitchen_sink.special_repair"] = True
 
-    result = async_is_experimental_feature_enabled(hass, domain, feature)
+    result = async_is_preview_feature_enabled(hass, domain, feature)
     assert result is expected
 
 

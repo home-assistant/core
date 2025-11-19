@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
     EventLabsUpdatedData,
-    async_is_experimental_feature_enabled,
+    async_is_preview_feature_enabled,
 )
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
 from homeassistant.components.recorder.models import (
@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Notify backup listeners
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
-    # Subscribe to labs feature updates for kitchen_sink experimental repair
+    # Subscribe to labs feature updates for kitchen_sink preview repair
     @callback
     def _async_labs_updated(event: Event[EventLabsUpdatedData]) -> None:
         """Handle labs feature update event."""
@@ -168,7 +168,7 @@ def _async_update_special_repair(hass: HomeAssistant) -> None:
     and deletes it when disabled. This demonstrates how lab features can interact
     with Home Assistant's repair system.
     """
-    if async_is_experimental_feature_enabled(hass, DOMAIN, "special_repair"):
+    if async_is_preview_feature_enabled(hass, DOMAIN, "special_repair"):
         async_create_issue(
             hass,
             DOMAIN,

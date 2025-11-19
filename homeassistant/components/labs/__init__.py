@@ -1,6 +1,6 @@
 """The Home Assistant Labs integration.
 
-This integration provides experimental features that can be toggled on/off by users.
+This integration provides preview features that can be toggled on/off by users.
 Integrations can register lab features in their manifest.json which will appear
 in the Home Assistant Labs UI for users to enable or disable.
 """
@@ -40,7 +40,7 @@ __all__ = [
     "DOMAIN",
     "EVENT_LABS_UPDATED",
     "EventLabsUpdatedData",
-    "async_is_experimental_feature_enabled",
+    "async_is_preview_feature_enabled",
 ]
 
 
@@ -127,10 +127,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def async_is_experimental_feature_enabled(
+def async_is_preview_feature_enabled(
     hass: HomeAssistant, domain: str, feature: str
 ) -> bool:
-    """Check if an experimental lab feature is enabled.
+    """Check if a preview lab feature is enabled.
 
     Args:
         hass: HomeAssistant instance
