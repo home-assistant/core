@@ -23,6 +23,7 @@ async def test_sensor(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor entity."""
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to(datetime(2023, 10, 21, 0, 0, 0))
 
     mock_config_entry.add_to_hass(hass)
