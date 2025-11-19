@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
 from tests.common import snapshot_platform
 
@@ -55,7 +55,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the output switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
+    with patch.object(MockDeviceConnection, "dim_output") as dim_output:
         # command failed
         dim_output.return_value = False
 
@@ -92,7 +92,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the output switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
+    with patch.object(MockDeviceConnection, "dim_output") as dim_output:
         await hass.services.async_call(
             DOMAIN_SWITCH,
             SERVICE_TURN_ON,
@@ -136,7 +136,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
     """Test the relay switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.ON
 
@@ -176,7 +176,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the relay switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.OFF
 
@@ -225,7 +225,7 @@ async def test_regulatorlock_turn_on(
     """Test the regulator lock switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         # command failed
         lock_regulator.return_value = False
 
@@ -264,7 +264,7 @@ async def test_regulatorlock_turn_off(
     """Test the regulator lock switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         await hass.services.async_call(
             DOMAIN_SWITCH,
             SERVICE_TURN_ON,
@@ -308,7 +308,7 @@ async def test_keylock_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the keylock switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
+    with patch.object(MockDeviceConnection, "lock_keys") as lock_keys:
         states = [KeyLockStateModifier.NOCHANGE] * 8
         states[0] = KeyLockStateModifier.ON
 
@@ -348,7 +348,7 @@ async def test_keylock_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> 
     """Test the keylock switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
+    with patch.object(MockDeviceConnection, "lock_keys") as lock_keys:
         states = [KeyLockStateModifier.NOCHANGE] * 8
         states[0] = KeyLockStateModifier.OFF
 

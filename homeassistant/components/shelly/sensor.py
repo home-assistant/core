@@ -1919,8 +1919,23 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         super().__init__(coordinator, key, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
 
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
+        if coordinator.device.initialized:
+            if hasattr(self, "_attr_name"):
+                delattr(self, "_attr_name")
+
+            translation_placeholders, translation_key = (
+                get_entity_translation_attributes(
+                    get_rpc_channel_name(coordinator.device, key),
+                    description.translation_key,
+                    description.device_class,
+                    self._default_to_device_class_name(),
+                )
+            )
+
+            if translation_placeholders:
+                self._attr_translation_placeholders = translation_placeholders
+                if translation_key:
+                    self._attr_translation_key = translation_key
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
