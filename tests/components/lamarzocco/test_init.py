@@ -377,6 +377,8 @@ async def test_disconnect_on_stop(
         await hass.async_block_till_done()
 
         mock_bt_client.disconnect.assert_awaited_once()
+
+
 async def test_websocket_reconnects_after_termination(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
