@@ -6230,6 +6230,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[qe8vvtx4nl21wjd3dytkx]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'qe8vvtx4nl21wjd3dytkx',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Genio Nebula & Blue Star Projector (unsupported)',
+    'model_id': '3djw12ln4xtvv8eq',
+    'name': 'Genio Nebula & Blue Star Projector',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[qhgghufzqtwloqoqjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
