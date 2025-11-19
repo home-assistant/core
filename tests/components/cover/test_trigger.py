@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, CoverState
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -33,81 +33,90 @@ def parametrize_opened_trigger_states(
 ) -> list[tuple[str, dict, str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
-    Returns a list of tuples with (trigger, trigger_options, device_class,
+    Returns a list of tuples with (trigger, trigger_options,
     list of StateDescription).
     """
+    extra_attrs = {ATTR_DEVICE_CLASS: device_class}
     return [
         # States without current position attribute
         *(
-            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            (s[0], {"fully_opened": True}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {})],
                 other_states=[(CoverState.CLOSED, {})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         *(
-            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            (s[0], {"fully_opened": True}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {})],
                 other_states=[(CoverState.CLOSED, {})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         *(
-            (s[0], {}, device_class, *s[1:])
+            (s[0], {}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {})],
                 other_states=[(CoverState.CLOSED, {})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         *(
-            (s[0], {}, device_class, *s[1:])
+            (s[0], {}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {})],
                 other_states=[(CoverState.CLOSED, {})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         # States with current position attribute
         *(
-            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            (s[0], {"fully_opened": True}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 100})],
                 other_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 0})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         *(
-            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            (s[0], {"fully_opened": True}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 100})],
                 other_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 0})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         *(
-            (s[0], {}, device_class, *s[1:])
+            (s[0], {}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 1})],
                 other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
         *(
-            (s[0], {}, device_class, *s[1:])
+            (s[0], {}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 1})],
                 other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
+                extra_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -119,29 +128,41 @@ def parametrize_opened_trigger_states(
     parametrize_target_entities("cover"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "device_class", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
         # No initial state attribute, doesn't trigger because it's already in target state.
         (
             "cover.garage_opened",
             {"fully_opened": True},
-            "garage",
             [
-                {"state": CoverState.OPEN, "attributes": {}, "count": 0},
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 100},
+                    "attributes": {ATTR_DEVICE_CLASS: "garage"},
                     "count": 0,
                 },
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 0},
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 100,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
                     "count": 0,
                 },
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 100},
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 0,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
+                    "count": 0,
+                },
+                {
+                    "state": CoverState.OPEN,
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 100,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
                     "count": 1,
                 },
             ],
@@ -157,7 +178,6 @@ async def test_cover_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict,
-    device_class: str,
     states: list[StateDescription],
 ) -> None:
     """Test that the cover state trigger fires when any cover state changes to a specific state."""
@@ -167,23 +187,13 @@ async def test_cover_state_attribute_trigger_behavior_any(
 
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
-        set_or_remove_state(
-            hass,
-            eid,
-            states[0]["state"],
-            states[0]["attributes"] | {"device_class": device_class},
-        )
+        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(
-            hass,
-            entity_id,
-            state["state"],
-            state["attributes"] | {"device_class": device_class},
-        )
+        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -193,10 +203,7 @@ async def test_cover_state_attribute_trigger_behavior_any(
         # Check if changing other covers also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass,
-                other_entity_id,
-                state["state"],
-                state["attributes"] | {"device_class": device_class},
+                hass, other_entity_id, state["state"], state["attributes"]
             )
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
@@ -208,29 +215,41 @@ async def test_cover_state_attribute_trigger_behavior_any(
     parametrize_target_entities("cover"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "device_class", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
         # No initial state attribute, doesn't trigger because it's already in target state.
         (
             "cover.garage_opened",
             {"fully_opened": True},
-            "garage",
             [
-                {"state": CoverState.OPEN, "attributes": {}, "count": 0},
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 100},
+                    "attributes": {ATTR_DEVICE_CLASS: "garage"},
                     "count": 0,
                 },
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 0},
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 100,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
                     "count": 0,
                 },
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 100},
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 0,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
+                    "count": 0,
+                },
+                {
+                    "state": CoverState.OPEN,
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 100,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
                     "count": 1,
                 },
             ],
@@ -246,7 +265,6 @@ async def test_cover_state_attribute_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict,
-    device_class: str,
     states: list[StateDescription],
 ) -> None:
     """Test that the cover state trigger fires when the first cover state changes to a specific state."""
@@ -256,12 +274,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
 
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
-        set_or_remove_state(
-            hass,
-            eid,
-            states[0]["state"],
-            states[0]["attributes"] | {"device_class": device_class},
-        )
+        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -272,12 +285,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
     )
 
     for state in states[1:]:
-        set_or_remove_state(
-            hass,
-            entity_id,
-            state["state"],
-            state["attributes"] | {"device_class": device_class},
-        )
+        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -287,10 +295,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
         # Triggering other covers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass,
-                other_entity_id,
-                state["state"],
-                state["attributes"] | {"device_class": device_class},
+                hass, other_entity_id, state["state"], state["attributes"]
             )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
@@ -301,29 +306,41 @@ async def test_cover_state_attribute_trigger_behavior_first(
     parametrize_target_entities("cover"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "device_class", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
         # No initial state attribute, doesn't trigger because it's already in target state.
         (
             "cover.garage_opened",
             {"fully_opened": True},
-            "garage",
             [
-                {"state": CoverState.OPEN, "attributes": {}, "count": 0},
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 100},
+                    "attributes": {ATTR_DEVICE_CLASS: "garage"},
                     "count": 0,
                 },
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 0},
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 100,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
                     "count": 0,
                 },
                 {
                     "state": CoverState.OPEN,
-                    "attributes": {ATTR_CURRENT_POSITION: 100},
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 0,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
+                    "count": 0,
+                },
+                {
+                    "state": CoverState.OPEN,
+                    "attributes": {
+                        ATTR_CURRENT_POSITION: 100,
+                        ATTR_DEVICE_CLASS: "garage",
+                    },
                     "count": 1,
                 },
             ],
@@ -339,7 +356,6 @@ async def test_cover_state_attribute_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict,
-    device_class: str,
     states: list[StateDescription],
 ) -> None:
     """Test that the cover state trigger fires when the last cover state changes to a specific state."""
@@ -349,12 +365,7 @@ async def test_cover_state_attribute_trigger_behavior_last(
 
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
-        set_or_remove_state(
-            hass,
-            eid,
-            states[0]["state"],
-            states[0]["attributes"] | {"device_class": device_class},
-        )
+        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -364,20 +375,12 @@ async def test_cover_state_attribute_trigger_behavior_last(
     for state in states[1:]:
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass,
-                other_entity_id,
-                state["state"],
-                state["attributes"] | {"device_class": device_class},
+                hass, other_entity_id, state["state"], state["attributes"]
             )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(
-            hass,
-            entity_id,
-            state["state"],
-            state["attributes"] | {"device_class": device_class},
-        )
+        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
