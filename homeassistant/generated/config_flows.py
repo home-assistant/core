@@ -433,6 +433,7 @@ FLOWS = {
         "motionmount",
         "mpd",
         "mqtt",
+        "mta",
         "mullvad",
         "music_assistant",
         "mutesync",

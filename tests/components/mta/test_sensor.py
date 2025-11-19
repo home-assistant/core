@@ -23,4 +23,6 @@ async def test_sensor(
     assert "arrivals" in state.attributes
     assert len(state.attributes["arrivals"]) == 1
     assert state.attributes["arrivals"][0]["route"] == "1"
-    assert state.attributes["arrivals"][0]["destination"] == "Van Cortlandt Park - 242 St"
+    assert (
+        state.attributes["arrivals"][0]["destination"] == "Van Cortlandt Park - 242 St"
+    )

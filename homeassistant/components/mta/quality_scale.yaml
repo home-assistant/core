@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -12,9 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: No events subscribed.
@@ -33,7 +33,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No configuration options.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done

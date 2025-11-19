@@ -8,25 +8,25 @@
       "no_stops": "No stops found for this line. The line may not be currently running."
     },
     "step": {
-      "user": {
-        "title": "Select subway line",
-        "description": "Choose the subway line you want to track.",
-        "data": {
-          "line": "Line"
-        },
-        "data_description": {
-          "line": "The subway line to track"
-        }
-      },
       "stop": {
-        "title": "Select stop and direction",
-        "description": "Choose a stop on the {line} line. The direction is included with each stop.",
         "data": {
           "stop_id": "Stop and direction"
         },
         "data_description": {
           "stop_id": "Select the stop and direction you want to track"
-        }
+        },
+        "description": "Choose a stop on the {line} line. The direction is included with each stop.",
+        "title": "Select stop and direction"
+      },
+      "user": {
+        "data": {
+          "line": "Line"
+        },
+        "data_description": {
+          "line": "The subway line to track"
+        },
+        "description": "Choose the subway line you want to track.",
+        "title": "Select subway line"
       }
     }
   },
