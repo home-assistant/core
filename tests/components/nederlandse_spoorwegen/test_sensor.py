@@ -44,7 +44,6 @@ def mock_sensor_platform() -> Generator:
 async def test_config_import(
     hass: HomeAssistant,
     mock_nsapi,
-    mock_sensor_platform,
     mock_setup_entry: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 import logging
 from typing import Any
 
@@ -31,6 +30,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .binary_sensor import get_delay
 from .const import (
     CONF_FROM,
     CONF_ROUTES,
@@ -42,6 +42,28 @@ from .const import (
     ROUTE_MODEL,
 )
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
+
+
+def get_departure_time(trip: Trip | None) -> datetime | None:
+    """Get next departure time from trip data."""
+    return trip.departure_time_actual or trip.departure_time_planned if trip else None
+
+
+def _get_time_str(time: datetime | None) -> str | None:
+    """Get time as string."""
+    return time.strftime("%H:%M") if time else None
+
+
+def _get_route(trip: Trip | None) -> list[str]:
+    """Get the route as a list of station names from trip data."""
+    if not trip or not (trip_parts := trip.trip_parts):
+        return []
+    route = []
+    if departure := trip.departure:
+        route.append(departure)
+    route.extend(part.destination for part in trip_parts)
+    return route
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,58 +86,13 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def _get_time_str(time: datetime | None) -> str | None:
-    """Get time as string."""
-    return time.strftime("%H:%M") if time else None
-
-
-def get_departure_time(trip: Trip | None) -> datetime | None:
-    """Get next departure time from trip data."""
-    return trip.departure_time_actual or trip.departure_time_planned if trip else None
-
-
-def _get_route(trip: Trip | None) -> list[str]:
-    """Get the route as a list of station names from trip data."""
-    if not trip or not (trip_parts := trip.trip_parts):
-        return []
-    route = []
-    if departure := trip.departure:
-        route.append(departure)
-    route.extend(part.destination for part in trip_parts)
-    return route
-
-
-def _get_delay(planned: datetime | None, actual: datetime | None) -> bool:
-    """Return True if delay is present, False otherwise."""
-    return bool(planned and actual and planned != actual)
-
-
-class TripStatus(Enum):
-    """Enumeration for trip status."""
-
-    additional = "ADDITIONAL"
-    alternative_transport = "ALTERNATIVE_TRANSPORT"
-    cancelled = "CANCELLED"
-    change_not_possible = "CHANGE_NOT_POSSIBLE"
-    disruption = "DISRUPTION"
-    maintenance = "MAINTENANCE"
-    normal = "NORMAL"
-    replacement = "REPLACEMENT"
-    special = "SPECIAL"
-    uncertain = "UNCERTAIN"
-
-    def __str__(self) -> str:
-        """Return the string representation."""
-        str_value = self.value.replace("_", " ")
-        return str_value.capitalize()
-
-
 @dataclass(frozen=True, kw_only=True)
 class NSSensorEntityDescription(SensorEntityDescription):
     """Describes Nederlandse Spoorwegen sensor entity."""
 
     is_next: bool = False
-    value_fn: Callable[[Any], Any] | None = None
+    value_fn: Callable[[Trip], datetime | str | int | None]
+    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
 
 
 # Entity descriptions for all the different sensors we create per route
@@ -124,6 +101,7 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         key="actual_departure",
         translation_key="departure",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=None,
         value_fn=get_departure_time,
     ),
     NSSensorEntityDescription(
@@ -144,47 +122,47 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
     NSSensorEntityDescription(
         key="departure_platform_actual",
         translation_key="departure_platform_actual",
-        value_fn=lambda trip: getattr(trip, "departure_platform_actual", None),
+        value_fn=lambda trip: trip.departure_platform_actual if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_platform_planned",
         translation_key="arrival_platform_planned",
-        value_fn=lambda trip: getattr(trip, "arrival_platform_planned", None),
+        value_fn=lambda trip: trip.arrival_platform_planned if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_platform_actual",
         translation_key="arrival_platform_actual",
-        value_fn=lambda trip: getattr(trip, "arrival_platform_actual", None),
+        value_fn=lambda trip: trip.arrival_platform_actual if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_time_planned",
         translation_key="departure_time_planned",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: getattr(trip, "departure_time_planned", None),
+        value_fn=lambda trip: trip.departure_time_planned if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_time_actual",
         translation_key="departure_time_actual",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: getattr(trip, "departure_time_actual", None),
+        value_fn=lambda trip: trip.departure_time_actual if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_time_planned",
         translation_key="arrival_time_planned",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: getattr(trip, "arrival_time_planned", None),
+        value_fn=lambda trip: trip.arrival_time_planned if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_time_actual",
         translation_key="arrival_time_actual",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: getattr(trip, "arrival_time_actual", None),
+        value_fn=lambda trip: trip.arrival_time_actual if trip else None,
         entity_registry_enabled_default=False,
     ),
     # Trip information
@@ -192,14 +170,13 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in TripStatus],
-        value_fn=lambda trip: getattr(trip, "status", None),
+        value_fn=lambda trip: trip.status if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="transfers",
         translation_key="transfers",
-        value_fn=lambda trip: getattr(trip, "nr_transfers", 0),
+        value_fn=lambda trip: trip.nr_transfers if trip else 0,
         entity_registry_enabled_default=False,
     ),
     # Route info sensors
@@ -271,17 +248,13 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data
 
     for subentry_id, coordinator in coordinators.items():
-        subentry_entities: list[SensorEntity] = []
-        # Build entity from coordinator fields directly
-        subentry_entities.extend(
+        async_add_entities(
             [
                 NSSensor(coordinator, subentry_id, description)
                 for description in SENSOR_DESCRIPTIONS
-            ]
+            ],
+            config_subentry_id=subentry_id,
         )
-
-        # Add all entities for this subentry
-        async_add_entities(subentry_entities, config_subentry_id=subentry_id)
 
 
 class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
@@ -300,8 +273,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        if self.entity_description.key != "actual_departure":
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_entity_category = description.entity_category
         self._subentry_id = subentry_id
 
         self._attr_unique_id = f"{subentry_id}-{description.key}"
@@ -315,11 +287,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
-        if (
-            not self.coordinator
-            or not self.coordinator.data
-            or not self.entity_description.value_fn
-        ):
+        if not self.coordinator or not self.coordinator.data:
             return None
 
         data = (
@@ -351,7 +319,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
             "going": first_trip.going,
             "departure_time_planned": _get_time_str(first_trip.departure_time_planned),
             "departure_time_actual": _get_time_str(first_trip.departure_time_actual),
-            "departure_delay": _get_delay(
+            "departure_delay": get_delay(
                 first_trip.departure_time_planned,
                 first_trip.departure_time_actual,
             ),
@@ -359,7 +327,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
             "departure_platform_actual": first_trip.departure_platform_actual,
             "arrival_time_planned": _get_time_str(first_trip.arrival_time_planned),
             "arrival_time_actual": _get_time_str(first_trip.arrival_time_actual),
-            "arrival_delay": _get_delay(
+            "arrival_delay": get_delay(
                 first_trip.arrival_time_planned,
                 first_trip.arrival_time_actual,
             ),
