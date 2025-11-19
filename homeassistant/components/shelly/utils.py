@@ -933,7 +933,6 @@ def is_block_single_device(device: BlockDevice, block: Block | None = None) -> b
         block is None
         or block.type not in ("light", "relay", "emeter")
         or device.settings.get("mode") == "roller"
-        or get_block_number_of_channels(device, block) < 2
     )
 
 
@@ -947,7 +946,9 @@ def get_block_device_info(
     suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for Block device."""
-    if is_block_single_device(device, block):
+    if is_block_single_device(device, block) or (
+        block is not None and get_block_number_of_channels(device, block) < 2
+    ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
     if TYPE_CHECKING:

@@ -229,6 +229,37 @@ async def test_block_event_single_output(
     assert hass.states.get("event.test_name_input")
 
 
+async def test_block_event_custom_name(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_block_device: Mock,
+) -> None:
+    """Test block device event with custom name."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "relays",
+        [{"name": "test channel", "btn_type": "momentary"}, {"btn_type": "toggle"}],
+    )
+    await init_integration(hass, 1)
+    # num_outputs is 2, device name and custom name is used
+    assert hass.states.get("event.test_channel_input")
+
+
+async def test_block_event_custom_name_single_output(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block device event with custom name when num_outputs is 1."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "relays",
+        [{"name": "test channel", "btn_type": "momentary"}, {"btn_type": "toggle"}],
+    )
+    await init_integration(hass, 1)
+
+    assert hass.states.get("event.test_name_input")
+
+
 async def test_block_event_shix3_1(
     hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
