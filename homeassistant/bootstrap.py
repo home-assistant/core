@@ -146,7 +146,7 @@ WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
 
 # Core integrations are unconditionally loaded
-CORE_INTEGRATIONS = {"homeassistant", "persistent_notification", "labs"}
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 # Integrations that are loaded right after the core is set up
 LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
@@ -176,6 +176,8 @@ FRONTEND_INTEGRATIONS = {
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup labs for preview features
+    ("labs", {"labs"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
@@ -212,6 +214,7 @@ DEFAULT_INTEGRATIONS = {
     "backup",
     "frontend",
     "hardware",
+    "labs",
     "logger",
     "network",
     "system_health",
