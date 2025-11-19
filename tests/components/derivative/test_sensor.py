@@ -1009,13 +1009,13 @@ async def test_reload(
 ) -> None:
     """Test hot-reloading derivative YAML sensors."""
     hass.state = ha.CoreState.not_running
-    hass.states.async_set("sensor.power", "0.0")
+    hass.states.async_set("sensor.energy", "0.0")
 
     config = {
         "sensor": {
             "platform": "derivative",
             "name": "derivative",
-            "source": "sensor.power",
+            "source": "sensor.energy",
             "unit": "kW",
         }
     }

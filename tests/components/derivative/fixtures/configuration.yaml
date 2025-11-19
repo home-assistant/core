@@ -1,5 +1,5 @@
 sensor:
   - platform: derivative
     name: derivative_new
-    source: "sensor.power"
+    source: "sensor.energy"
     unit: "kW"
