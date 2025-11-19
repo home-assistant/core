@@ -90,6 +90,9 @@ BLE_MANUFACTURER_DATA_RPC = {
 BLE_MANUFACTURER_DATA_NO_RPC = {
     0x0BA9: bytes([0x01, 0x02, 0x00])
 }  # Flags without RPC bit
+BLE_MANUFACTURER_DATA_WITH_MAC = {
+    0x0BA9: bytes.fromhex("0105000b30100a70d6c297bacc")
+}  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10), MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
 
 BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="ShellyPlus2PM-C049EF8873E8",
@@ -145,6 +148,26 @@ BLE_DISCOVERY_INFO_INVALID_NAME = BluetoothServiceInfoBleak(
     ),
     advertisement=generate_advertisement_data(
         manufacturer_data=BLE_MANUFACTURER_DATA_RPC,
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA = BluetoothServiceInfoBleak(
+    name="CC:BA:97:C2:D6:72",  # MAC address as name (newer devices)
+    address="CC:BA:97:C2:D6:72",
+    rssi=-32,
+    manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(
+        address="CC:BA:97:C2:D6:72",
+        name="CC:BA:97:C2:D6:72",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
     ),
     time=0,
     connectable=True,
@@ -2055,6 +2078,30 @@ async def test_bluetooth_discovery_invalid_name(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_discovery_mac_in_manufacturer_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test bluetooth discovery with MAC in manufacturer data (newer devices)."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(
+        hass, BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Should successfully extract MAC from manufacturer data
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    # MAC from manufacturer data: 70d6c297bacc (bytes) = 70:D6:C2:97:BA:CC = 70D6C297BACC
+    # Device name should be formatted as Shelly-<full MAC> to match Gen2 format
+    assert result["description_placeholders"]["name"] == "Shelly-70D6C297BACC"
 
 
 @pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
