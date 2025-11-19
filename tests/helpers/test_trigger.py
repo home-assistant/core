@@ -647,9 +647,14 @@ async def test_async_get_all_descriptions(
     """Test async_get_all_descriptions."""
     tag_trigger_descriptions = """
         _:
-          target:
+          fields:
             entity:
-              domain: alarm_control_panel
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
         """
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
@@ -739,14 +744,22 @@ async def test_async_get_all_descriptions(
             }
         },
         "tag": {
-            "target": {
-                "entity": [
-                    {
-                        "domain": ["alarm_control_panel"],
-                    }
-                ],
-            },
-            "fields": {},
+            "fields": {
+                "entity": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": ["alarm_control_panel"],
+                                    "supported_features": [1],
+                                }
+                            ],
+                            "multiple": False,
+                            "reorder": False,
+                        },
+                    },
+                },
+            }
         },
     }
 
@@ -878,5 +891,6 @@ async def test_subscribe_triggers(
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
     assert await async_setup_component(hass, "sun", {})
+
     assert trigger_events == [{"sun"}]
     assert "Error while notifying trigger platform listener" in caplog.text
