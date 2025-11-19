@@ -38,7 +38,8 @@ def mock_gtfs_realtime_feed() -> Generator[MagicMock]:
         mock_feed_class.return_value = mock_feed_instance
         mock_feed_class.get_feed_id_for_route.return_value = "1"
 
-        arrival_time = datetime.now(UTC).replace(second=0, microsecond=0)
+        # Fixed arrival time: 5 minutes after test frozen time (2023-10-21 00:00:00 UTC)
+        arrival_time = datetime(2023, 10, 21, 0, 5, 0, tzinfo=UTC)
         mock_arrivals = [
             Arrival(
                 arrival_time=arrival_time,
