@@ -1,0 +1,20 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: vacuum
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+docked: *trigger_common
+errored: *trigger_common
+paused_cleaning: *trigger_common
+started_cleaning: *trigger_common
