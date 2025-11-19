@@ -117,11 +117,6 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     }
 )
 
-ATTR_BEHAVIOR: Final = "behavior"
-BEHAVIOR_FIRST: Final = "first"
-BEHAVIOR_LAST: Final = "last"
-BEHAVIOR_ANY: Final = "any"
-
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
@@ -258,6 +253,11 @@ class Trigger(abc.ABC):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
+
+ATTR_BEHAVIOR: Final = "behavior"
+BEHAVIOR_FIRST: Final = "first"
+BEHAVIOR_LAST: Final = "last"
+BEHAVIOR_ANY: Final = "any"
 
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
