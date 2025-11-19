@@ -110,9 +110,6 @@
     },
     "alarm_ofa_cl": {
       "value": false
-    },
-    "flow_rate_reed_sensor": {
-      "value": false
     }
   },
   "number": {

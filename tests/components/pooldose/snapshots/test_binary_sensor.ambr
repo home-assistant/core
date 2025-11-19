@@ -241,55 +241,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_opening-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_opening',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
-    'original_icon': None,
-    'original_name': 'Opening',
-    'platform': 'pooldose',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flow_rate_reed_sensor',
-    'unique_id': 'TEST123456789_flow_rate_reed_sensor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_opening-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'opening',
-      'friendly_name': 'Pool Device Opening',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_opening',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_orp_overfeed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -486,7 +437,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_recirculation_pump-entry]
+# name: test_all_binary_sensors[binary_sensor.pool_device_recirculation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -499,7 +450,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.pool_device_recirculation_pump',
+    'entity_id': 'binary_sensor.pool_device_recirculation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -511,7 +462,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Recirculation pump',
+    'original_name': 'Recirculation',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -521,14 +472,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_recirculation_pump-state]
+# name: test_all_binary_sensors[binary_sensor.pool_device_recirculation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Pool Device Recirculation pump',
+      'friendly_name': 'Pool Device Recirculation',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_recirculation_pump',
+    'entity_id': 'binary_sensor.pool_device_recirculation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

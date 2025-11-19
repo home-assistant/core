@@ -45,10 +45,7 @@ async def test_exception_raising(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("binary_sensor.pool_device_recirculation_pump").state
-        == STATE_ON
-    )
+    assert hass.states.get("binary_sensor.pool_device_recirculation").state == STATE_ON
 
     mock_pooldose_client.instant_values_structured.side_effect = exception
 
@@ -57,7 +54,7 @@ async def test_exception_raising(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("binary_sensor.pool_device_recirculation_pump").state
+        hass.states.get("binary_sensor.pool_device_recirculation").state
         == STATE_UNAVAILABLE
     )
 
@@ -73,10 +70,7 @@ async def test_no_data(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("binary_sensor.pool_device_recirculation_pump").state
-        == STATE_ON
-    )
+    assert hass.states.get("binary_sensor.pool_device_recirculation").state == STATE_ON
 
     mock_pooldose_client.instant_values_structured.return_value = (
         RequestStatus.SUCCESS,
@@ -88,7 +82,7 @@ async def test_no_data(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("binary_sensor.pool_device_recirculation_pump").state
+        hass.states.get("binary_sensor.pool_device_recirculation").state
         == STATE_UNAVAILABLE
     )
 
@@ -106,7 +100,7 @@ async def test_binary_sensor_entity_unavailable_no_coordinator_data(
     await hass.async_block_till_done()
 
     # Verify initial working state
-    pump_state = hass.states.get("binary_sensor.pool_device_recirculation_pump")
+    pump_state = hass.states.get("binary_sensor.pool_device_recirculation")
     assert pump_state.state == STATE_ON
 
     # Set coordinator data to None by making API return empty
@@ -120,7 +114,7 @@ async def test_binary_sensor_entity_unavailable_no_coordinator_data(
     await hass.async_block_till_done()
 
     # Check binary sensor becomes unavailable
-    pump_state = hass.states.get("binary_sensor.pool_device_recirculation_pump")
+    pump_state = hass.states.get("binary_sensor.pool_device_recirculation")
     assert pump_state.state == STATE_UNAVAILABLE
 
 
@@ -136,7 +130,7 @@ async def test_binary_sensor_state_changes(
     await hass.async_block_till_done()
 
     # Verify initial states
-    pump_state = hass.states.get("binary_sensor.pool_device_recirculation_pump")
+    pump_state = hass.states.get("binary_sensor.pool_device_recirculation")
     assert pump_state.state == STATE_ON
 
     ph_level_state = hass.states.get("binary_sensor.pool_device_ph_tank_level")
@@ -158,7 +152,7 @@ async def test_binary_sensor_state_changes(
     await hass.async_block_till_done()
 
     # Check states have changed
-    pump_state = hass.states.get("binary_sensor.pool_device_recirculation_pump")
+    pump_state = hass.states.get("binary_sensor.pool_device_recirculation")
     assert pump_state.state == STATE_OFF
 
     ph_level_state = hass.states.get("binary_sensor.pool_device_ph_tank_level")

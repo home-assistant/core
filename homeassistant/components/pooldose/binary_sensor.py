@@ -79,22 +79,19 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PooldoseBinarySensorEntityDescription, ...] = 
         key="relay_aux1",
         translation_key="relay_aux1",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     PooldoseBinarySensorEntityDescription(
         key="relay_aux2",
         translation_key="relay_aux2",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     PooldoseBinarySensorEntityDescription(
         key="relay_aux3",
         translation_key="relay_aux3",
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    PooldoseBinarySensorEntityDescription(
-        key="flow_rate_reed_sensor",
-        translation_key="flow_rate_reed_sensor",
-        device_class=BinarySensorDeviceClass.OPENING,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
