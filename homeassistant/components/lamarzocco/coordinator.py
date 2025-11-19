@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -64,10 +65,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device = device
         self.cloud_client = cloud_client
 
-    async def _async_update_data(self) -> None:
-        """Do the data update."""
+    async def __handle_internal_update(
+        self, func: Callable[[], Coroutine[Any, Any, None]]
+    ) -> None:
+        """Handle update with error handling."""
         try:
-            await self._internal_async_update_data()
+            await func()
         except AuthFail as ex:
             _LOGGER.debug("Authentication failed", exc_info=True)
             raise ConfigEntryAuthFailed(
@@ -78,6 +81,19 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="api_error"
             ) from ex
+        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+
+    async def _async_setup(self) -> None:
+        """Set up coordinator."""
+        await self.__handle_internal_update(self._internal_async_setup)
+
+    async def _async_update_data(self) -> None:
+        """Do the data update."""
+        await self.__handle_internal_update(self._internal_async_update_data)
+
+    async def _internal_async_setup(self) -> None:
+        """Actual setup logic."""
+        return
 
     @abstractmethod
     async def _internal_async_update_data(self) -> None:
@@ -89,6 +105,11 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     cloud_client: LaMarzoccoCloudClient
 
+    async def _internal_async_setup(self) -> None:
+        """Set up the coordinator."""
+        await self.cloud_client.async_get_access_token()
+        await self.device.get_dashboard()
+
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
@@ -97,9 +118,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         if self.device.websocket.connected:
             return
-
-        await self.device.get_dashboard()
-        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
         self.config_entry.async_create_background_task(
             hass=self.hass,
