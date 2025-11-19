@@ -1,4 +1,12 @@
-"""Tests for La Marzocco coordinators."""
+"""Tests for La Marzocco coordinators.
+
+This test module focuses on the Bluetooth coordinator functionality and ensures:
+1. Bluetooth coordinator is properly set up and manages updates
+2. Entities with bt_offline_mode=True remain available when Bluetooth hardware exists
+3. Graceful degradation when cloud APIs fail but Bluetooth is available
+4. Proper error handling for Bluetooth connection failures
+5. Bluetooth coordinator updates trigger entity state changes
+"""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
