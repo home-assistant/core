@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, CoverState
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -11,6 +11,7 @@ from tests.components import (
     StateDescription,
     arm_trigger,
     parametrize_target_entities,
+    parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
@@ -27,102 +28,9 @@ async def target_covers(hass: HomeAssistant) -> None:
     return await target_entities(hass, "cover")
 
 
-def parametrize_opened_closed_trigger_states(
-    trigger: str,
-    trigger_options: dict,
-    device_class: str,
-    target_state: tuple[str, dict],
-    other_state: tuple[str, dict],
-) -> list[
-    tuple[
-        str,
-        dict,
-        str,
-        list[StateDescription],
-    ]
-]:
-    """Parametrize states and expected service call counts.
-
-    Returns a list of tuples with (trigger, trigger_options, device_class,
-    list of StateDescription).
-    """
-    return [
-        ## TODO: Check what happens if attribute is missing
-        # Initial state None
-        (
-            trigger,
-            trigger_options,
-            device_class,
-            [
-                {"state": None, "attributes": {}, "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 0},
-                {"state": other_state[0], "attributes": other_state[1], "count": 0},
-                # This doesn't trigger because the device class is not set
-                # when the trigger is created. We need to teach TargetStateChangeTracker
-                # about device classes.
-                {"state": target_state[0], "attributes": target_state[1], "count": 0},
-            ],
-        ),
-        # Initial state different from target state
-        (
-            trigger,
-            trigger_options,
-            device_class,
-            [
-                {"state": other_state[0], "attributes": other_state[1], "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 1},
-                {"state": other_state[0], "attributes": other_state[1], "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 1},
-            ],
-        ),
-        # Initial state same as target state
-        (
-            trigger,
-            trigger_options,
-            device_class,
-            [
-                {"state": target_state[0], "attributes": target_state[1], "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 0},
-                {"state": other_state[0], "attributes": other_state[1], "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 1},
-            ],
-        ),
-        # Initial state unavailable / unknown
-        (
-            trigger,
-            trigger_options,
-            device_class,
-            [
-                {"state": STATE_UNAVAILABLE, "attributes": {}, "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 0},
-                {"state": other_state[0], "attributes": other_state[1], "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 1},
-            ],
-        ),
-        (
-            trigger,
-            trigger_options,
-            device_class,
-            [
-                {"state": STATE_UNKNOWN, "attributes": {}, "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 0},
-                {"state": other_state[0], "attributes": other_state[1], "count": 0},
-                {"state": target_state[0], "attributes": target_state[1], "count": 1},
-            ],
-        ),
-    ]
-
-
 def parametrize_opened_trigger_states(
     trigger: str, device_class: str
-) -> list[
-    tuple[
-        str,
-        dict,
-        str,
-        list[StateDescription],
-    ]
-]:
+) -> list[tuple[str, dict, str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
     Returns a list of tuples with (trigger, trigger_options, device_class,
@@ -130,62 +38,78 @@ def parametrize_opened_trigger_states(
     """
     return [
         # States without current position attribute
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {"fully_opened": True},
-            device_class,
-            (CoverState.OPEN, {}),
-            (CoverState.CLOSED, {}),
+        *(
+            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPEN, {})],
+                other_states=[(CoverState.CLOSED, {})],
+                trigger_from_none=False,
+            )
         ),
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {"fully_opened": True},
-            device_class,
-            (CoverState.OPENING, {}),
-            (CoverState.CLOSED, {}),
+        *(
+            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPENING, {})],
+                other_states=[(CoverState.CLOSED, {})],
+                trigger_from_none=False,
+            )
         ),
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {},
-            device_class,
-            (CoverState.OPEN, {}),
-            (CoverState.CLOSED, {}),
+        *(
+            (s[0], {}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPEN, {})],
+                other_states=[(CoverState.CLOSED, {})],
+                trigger_from_none=False,
+            )
         ),
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {},
-            device_class,
-            (CoverState.OPENING, {}),
-            (CoverState.CLOSED, {}),
+        *(
+            (s[0], {}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPENING, {})],
+                other_states=[(CoverState.CLOSED, {})],
+                trigger_from_none=False,
+            )
         ),
         # States with current position attribute
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {"fully_opened": True},
-            device_class,
-            (CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}),
-            (CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}),
+        *(
+            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 100})],
+                other_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 0})],
+                trigger_from_none=False,
+            )
         ),
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {"fully_opened": True},
-            device_class,
-            (CoverState.OPENING, {ATTR_CURRENT_POSITION: 100}),
-            (CoverState.OPENING, {ATTR_CURRENT_POSITION: 0}),
+        *(
+            (s[0], {"fully_opened": True}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 100})],
+                other_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 0})],
+                trigger_from_none=False,
+            )
         ),
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {},
-            device_class,
-            (CoverState.OPEN, {ATTR_CURRENT_POSITION: 1}),
-            (CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),
+        *(
+            (s[0], {}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 1})],
+                other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
+                trigger_from_none=False,
+            )
         ),
-        *parametrize_opened_closed_trigger_states(
-            trigger,
-            {},
-            device_class,
-            (CoverState.OPENING, {ATTR_CURRENT_POSITION: 1}),
-            (CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),
+        *(
+            (s[0], {}, device_class, *s[1:])
+            for s in parametrize_trigger_states(
+                trigger=trigger,
+                target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 1})],
+                other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
+                trigger_from_none=False,
+            )
         ),
     ]
 
