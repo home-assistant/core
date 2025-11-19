@@ -1,6 +1,6 @@
 """Support for Lutron Caseta switches."""
 
-from typing import Any
+from typing import Any, List, Union
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +26,7 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
-    entities = [
+    entities: List[Union[LutronCasetaLight, LutronCasetaSmartAwaySwitch]] = [
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
     ]
 
@@ -74,7 +74,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
 class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
     """Representation of Lutron Caseta Smart Away."""
 
-    def __init__(self, data: LutronCasetaData):
+    def __init__(self, data: LutronCasetaData) -> None:
         """Init a switch entity."""
         device = {
             "device_id": "smart_away",
@@ -96,6 +96,8 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
         return self._smart_away_unique_id
 
     async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
         self._smartbridge.add_smart_away_subscriber(self._handle_bridge_update)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
