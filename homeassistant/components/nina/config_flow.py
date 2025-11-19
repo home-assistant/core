@@ -117,8 +117,8 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception: %s", err)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
@@ -210,8 +210,8 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception: %s", err)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
