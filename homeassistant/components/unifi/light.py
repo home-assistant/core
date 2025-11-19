@@ -37,14 +37,14 @@ if TYPE_CHECKING:
 
 def convert_brightness_to_unifi(ha_brightness: int) -> int:
     """Convert Home Assistant brightness (0-255) to UniFi brightness (0-100)."""
-    return int((ha_brightness / 255) * 100)
+    return round((ha_brightness / 255) * 100)
 
 
 def convert_brightness_to_ha(
     unifi_brightness: int,
 ) -> int:
     """Convert UniFi brightness (0-100) to Home Assistant brightness (0-255)."""
-    return int((unifi_brightness / 100) * 255)
+    return round((unifi_brightness / 100) * 255)
 
 
 def get_device_brightness_or_default(device: Device) -> int:
