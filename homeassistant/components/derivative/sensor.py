@@ -291,14 +291,14 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         )
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
+    async def _handle_restore(self) -> None:
         restored_data = await self.async_get_last_sensor_data()
         if restored_data:
-            self._attr_native_unit_of_measurement = (
-                restored_data.native_unit_of_measurement
-            )
+            if self._attr_native_unit_of_measurement is None:
+                # Only restore the unit if it's not assigned from YAML
+                self._attr_native_unit_of_measurement = (
+                    restored_data.native_unit_of_measurement
+                )
             try:
                 self._attr_native_value = round(
                     Decimal(restored_data.native_value),  # type: ignore[arg-type]
@@ -306,6 +306,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 )
             except (InvalidOperation, TypeError):
                 self._attr_native_value = None
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        await self._handle_restore()
 
         source_state = self.hass.states.get(self._sensor_source_id)
         self._derive_and_set_attributes_from_state(source_state)
