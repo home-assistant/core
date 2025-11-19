@@ -27,7 +27,7 @@ CONFIG = {
     SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
 }
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_unload_entry")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
