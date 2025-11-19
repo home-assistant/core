@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
+from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
@@ -3508,14 +3509,21 @@ async def test_get_triggers_for_target(
     mock_platform(
         hass,
         "mqtt.trigger",
-        Mock(async_get_triggers=AsyncMock(return_value={"_": Mock})),
+        Mock(
+            async_get_triggers=AsyncMock(
+                return_value={
+                    "_": Mock,
+                    "light_message": Mock,
+                    "light_flash": Mock,
+                }
+            )
+        ),
     )
 
     common_trigger_descriptions = """
         turned_on:
           target:
             entity:
-              domain: light
           fields:
             behavior:
               required: true
@@ -3543,6 +3551,16 @@ async def test_get_triggers_for_target(
         _:
           target:
             entity:
+        light_message:
+          target:
+            entity:
+              domain: light
+        light_flash:
+          target:
+            entity:
+              domain: light
+              supported_features:
+                - light.LightEntityFeature.FLASH
     """
 
     def _load_yaml(fname, secrets=None):
@@ -3611,14 +3629,20 @@ async def test_get_triggers_for_target(
     entity_registry.async_get_or_create(
         "light", "test", "unique6", device_id=label2_device.id
     )
-    label_mqtt_entity = entity_registry.async_get_or_create("switch", "mqtt", "unique7")
+    mqtt_light = entity_registry.async_get_or_create("light", "mqtt", "mqtt_light")
+    mqtt_flash_light = entity_registry.async_get_or_create(
+        "light", "mqtt", "mqtt_flash_light", supported_features=LightEntityFeature.FLASH
+    )
+    label_mqtt_switch = entity_registry.async_get_or_create(
+        "switch", "mqtt", "mqtt_switch"
+    )
 
     # Associate entities with areas and labels
     entity_registry.async_update_entity(
         area_entity.entity_id, area_id=living_room_area.id
     )
     entity_registry.async_update_entity(
-        label_mqtt_entity.entity_id, labels={label1.label_id}
+        label_mqtt_switch.entity_id, labels={label1.label_id}
     )
 
     async def call_command(target: dict[str, str]) -> Any:
@@ -3635,11 +3659,19 @@ async def test_get_triggers_for_target(
 
     # Test entity target - unknown entity
     msg = await call_command({"entity_id": ["light.unknown_entity"]})
-    assert_triggers(msg, ["light.turned_on"])
+    assert_triggers(msg, [])
 
-    # Test entity target - existing entity from the mqtt integration
-    msg = await call_command({"entity_id": [label_mqtt_entity.entity_id]})
-    assert_triggers(msg, ["mqtt", "switch.turned_on"])
+    # Test entity targets
+    msg = await call_command(
+        {"entity_id": [mqtt_light.entity_id, label_mqtt_switch.entity_id]}
+    )
+    assert_triggers(
+        msg, ["light.turned_on", "mqtt", "mqtt.light_message", "switch.turned_on"]
+    )
+    msg = await call_command({"entity_id": [mqtt_flash_light.entity_id]})
+    assert_triggers(
+        msg, ["light.turned_on", "mqtt", "mqtt.light_message", "mqtt.light_flash"]
+    )
 
     # Test device target - multiple devices
     msg = await call_command({"device_id": [device1.id, device2.id]})
