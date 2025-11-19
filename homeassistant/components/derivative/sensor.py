@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -44,6 +45,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_report_event,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -53,6 +55,7 @@ from .const import (
     CONF_UNIT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,6 +148,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the derivative sensor."""
+    await async_setup_reload_service(hass, DOMAIN, [Platform.SENSOR])
+
     derivative = DerivativeSensor(
         hass,
         name=config.get(CONF_NAME),
