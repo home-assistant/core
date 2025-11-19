@@ -1,8 +1,8 @@
-"""Test assist satellite triggers."""
+"""Test lawn mower triggers."""
 
 import pytest
 
-from homeassistant.components.assist_satellite.entity import AssistSatelliteState
+from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
@@ -24,57 +24,57 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_assist_satellites(hass: HomeAssistant) -> None:
-    """Create multiple assist satellite entities associated with different targets."""
-    return await target_entities(hass, "assist_satellite")
+async def target_lawn_mowers(hass: HomeAssistant) -> None:
+    """Create multiple lawn mower entities associated with different targets."""
+    return await target_entities(hass, "lawn_mower")
 
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("assist_satellite"),
+    parametrize_target_entities("lawn_mower"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="assist_satellite.idle",
-            target_states=[AssistSatelliteState.IDLE],
-            other_states=other_states(AssistSatelliteState.IDLE),
+            trigger="lawn_mower.docked",
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.listening",
-            target_states=[AssistSatelliteState.LISTENING],
-            other_states=other_states(AssistSatelliteState.LISTENING),
+            trigger="lawn_mower.errored",
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.processing",
-            target_states=[AssistSatelliteState.PROCESSING],
-            other_states=other_states(AssistSatelliteState.PROCESSING),
+            trigger="lawn_mower.paused_mowing",
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.responding",
-            target_states=[AssistSatelliteState.RESPONDING],
-            other_states=other_states(AssistSatelliteState.RESPONDING),
+            trigger="lawn_mower.started_mowing",
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
         ),
     ],
 )
-async def test_assist_satellite_state_trigger_behavior_any(
+async def test_lawn_mower_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_assist_satellites: list[str],
+    target_lawn_mowers: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
+    """Test that the lawn mower state trigger fires when any lawn mower state changes to a specific state."""
+    await async_setup_component(hass, "lawn_mower", {})
 
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
-    # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    # Set all lawn mowers, including the tested one, to the initial state
+    for eid in target_lawn_mowers:
         set_or_remove_state(hass, eid, states[0]["state"])
         await hass.async_block_till_done()
 
@@ -88,7 +88,7 @@ async def test_assist_satellite_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other assist satellites also triggers
+        # Check if changing other lawn mowers also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state["state"])
             await hass.async_block_till_done()
@@ -98,50 +98,50 @@ async def test_assist_satellite_state_trigger_behavior_any(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("assist_satellite"),
+    parametrize_target_entities("lawn_mower"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="assist_satellite.idle",
-            target_states=[AssistSatelliteState.IDLE],
-            other_states=other_states(AssistSatelliteState.IDLE),
+            trigger="lawn_mower.docked",
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.listening",
-            target_states=[AssistSatelliteState.LISTENING],
-            other_states=other_states(AssistSatelliteState.LISTENING),
+            trigger="lawn_mower.errored",
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.processing",
-            target_states=[AssistSatelliteState.PROCESSING],
-            other_states=other_states(AssistSatelliteState.PROCESSING),
+            trigger="lawn_mower.paused_mowing",
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.responding",
-            target_states=[AssistSatelliteState.RESPONDING],
-            other_states=other_states(AssistSatelliteState.RESPONDING),
+            trigger="lawn_mower.started_mowing",
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
         ),
     ],
 )
-async def test_assist_satellite_state_trigger_behavior_first(
+async def test_lawn_mower_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_assist_satellites: list[str],
+    target_lawn_mowers: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
+    """Test that the lawn mower state trigger fires when the first lawn mower changes to a specific state."""
+    await async_setup_component(hass, "lawn_mower", {})
 
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
-    # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    # Set all lawn mowers, including the tested one, to the initial state
+    for eid in target_lawn_mowers:
         set_or_remove_state(hass, eid, states[0]["state"])
         await hass.async_block_till_done()
 
@@ -155,7 +155,7 @@ async def test_assist_satellite_state_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other assist satellites should not cause the trigger to fire again
+        # Triggering other lawn mowers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state["state"])
             await hass.async_block_till_done()
@@ -164,50 +164,50 @@ async def test_assist_satellite_state_trigger_behavior_first(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("assist_satellite"),
+    parametrize_target_entities("lawn_mower"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="assist_satellite.idle",
-            target_states=[AssistSatelliteState.IDLE],
-            other_states=other_states(AssistSatelliteState.IDLE),
+            trigger="lawn_mower.docked",
+            target_states=[LawnMowerActivity.DOCKED],
+            other_states=other_states(LawnMowerActivity.DOCKED),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.listening",
-            target_states=[AssistSatelliteState.LISTENING],
-            other_states=other_states(AssistSatelliteState.LISTENING),
+            trigger="lawn_mower.errored",
+            target_states=[LawnMowerActivity.ERROR],
+            other_states=other_states(LawnMowerActivity.ERROR),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.processing",
-            target_states=[AssistSatelliteState.PROCESSING],
-            other_states=other_states(AssistSatelliteState.PROCESSING),
+            trigger="lawn_mower.paused_mowing",
+            target_states=[LawnMowerActivity.PAUSED],
+            other_states=other_states(LawnMowerActivity.PAUSED),
         ),
         *parametrize_trigger_states(
-            trigger="assist_satellite.responding",
-            target_states=[AssistSatelliteState.RESPONDING],
-            other_states=other_states(AssistSatelliteState.RESPONDING),
+            trigger="lawn_mower.started_mowing",
+            target_states=[LawnMowerActivity.MOWING],
+            other_states=other_states(LawnMowerActivity.MOWING),
         ),
     ],
 )
-async def test_assist_satellite_state_trigger_behavior_last(
+async def test_lawn_mower_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_assist_satellites: list[str],
+    target_lawn_mowers: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
+    """Test that the lawn_mower state trigger fires when the last lawn_mower changes to a specific state."""
+    await async_setup_component(hass, "lawn_mower", {})
 
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
-    # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    # Set all lawn mowers, including the tested one, to the initial state
+    for eid in target_lawn_mowers:
         set_or_remove_state(hass, eid, states[0]["state"])
         await hass.async_block_till_done()
 

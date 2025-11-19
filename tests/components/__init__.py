@@ -1,7 +1,8 @@
 """The tests for components."""
 
-from collections.abc import Iterable
+from enum import StrEnum
 import itertools
+from typing import TypedDict
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -105,18 +106,38 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     ]
 
 
+class StateDescription(TypedDict):
+    """Test state and expected service call count."""
+
+    state: str | None
+    attributes: dict
+    count: int
+
+
 def parametrize_trigger_states(
-    trigger: str,
-    target_states: Iterable[str],
-    other_states: Iterable[str],
     *,
+    trigger: str,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
     trigger_from_none: bool = True,
-) -> list[tuple[str, list[tuple[str | None, int]]]]:
+) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
+    The target_states and other_states iterables are either iterables of
+    states or iterables of (state, attributes) tuples.
+
     Returns a list of tuples with (trigger, list of states),
-    where states is a list of tuples (state to set, expected service call count).
+    where states is a list of StateDescription dicts.
     """
+
+    def state_with_attributes(
+        state: str | None | tuple[str | None, dict], count: int
+    ) -> dict:
+        """Return (state, attributes) dict."""
+        if isinstance(state, str) or state is None:
+            return {"state": state, "attributes": {}, "count": count}
+        return {"state": state[0], "attributes": state[1], "count": count}
+
     return [
         # Initial state None
         (
@@ -124,10 +145,12 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (None, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1 if trigger_from_none else 0),
+                        state_with_attributes(None, 0),
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(
+                            target_state, 1 if trigger_from_none else 0
+                        ),
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -141,10 +164,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (other_state, 0),
-                        (target_state, 1),
-                        (other_state, 0),
-                        (target_state, 1),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(target_state, 1),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(target_state, 1),
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -157,10 +180,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (target_state, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1),
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(target_state, 1),
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -173,10 +196,10 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (STATE_UNAVAILABLE, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1),
+                        state_with_attributes(STATE_UNAVAILABLE, 0),
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(target_state, 1),
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -188,90 +211,15 @@ def parametrize_trigger_states(
             list(
                 itertools.chain.from_iterable(
                     (
-                        (STATE_UNKNOWN, 0),
-                        (target_state, 0),
-                        (other_state, 0),
-                        (target_state, 1),
+                        state_with_attributes(STATE_UNKNOWN, 0),
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(other_state, 0),
+                        state_with_attributes(target_state, 1),
                     )
                     for target_state in target_states
                     for other_state in other_states
                 )
             ),
-        ),
-    ]
-
-
-def parametrize_attribute_trigger_states(
-    trigger: str, state: str, attribute: str, target_state: str, other_state: str
-) -> list[
-    tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
-]:
-    """Parametrize states and expected service call counts.
-
-    Returns a list of tuples with (trigger, initial_state, list of states),
-    where states is a list of tuples (state to set, expected service call count).
-
-    The initial_state and state to set are tuples of (state, {attribute: value}).
-    """
-    return [
-        # Initial state None
-        (
-            trigger,
-            (None, {}),
-            [
-                ((state, {attribute: target_state}), 0),
-                ((state, {}), 0),
-                ((state, {attribute: target_state}), 1),
-            ],
-        ),
-        # No initial state attribute
-        (
-            trigger,
-            (state, {}),
-            [
-                ((state, {attribute: target_state}), 1),
-                ((state, {}), 0),
-                ((state, {attribute: target_state}), 1),
-            ],
-        ),
-        # Initial state attribute different from target state
-        (
-            trigger,
-            (state, {attribute: other_state}),
-            [
-                ((state, {attribute: target_state}), 1),
-                ((state, {}), 0),
-                ((state, {attribute: target_state}), 1),
-            ],
-        ),
-        # Initial state attribute same as target state
-        (
-            trigger,
-            (state, {attribute: target_state}),
-            [
-                ((state, {attribute: target_state}), 0),
-                ((state, {}), 0),
-                ((state, {attribute: target_state}), 1),
-            ],
-        ),
-        # Initial state unavailable / unknown
-        (
-            trigger,
-            (STATE_UNAVAILABLE, {}),
-            [
-                ((state, {attribute: target_state}), 0),
-                ((state, {}), 0),
-                ((state, {attribute: target_state}), 1),
-            ],
-        ),
-        (
-            trigger,
-            (STATE_UNKNOWN, {}),
-            [
-                ((state, {attribute: target_state}), 0),
-                ((state, {}), 0),
-                ((state, {attribute: target_state}), 1),
-            ],
         ),
     ]
 
@@ -314,3 +262,8 @@ def set_or_remove_state(
         hass.states.async_remove(entity_id)
     else:
         hass.states.async_set(entity_id, state, attributes, force_update=True)
+
+
+def other_states(state: StrEnum) -> list[str]:
+    """Return a sorted list with all states except the specified one."""
+    return sorted({s.value for s in state.__class__} - {state.value})

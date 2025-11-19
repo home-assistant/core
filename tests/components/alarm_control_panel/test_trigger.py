@@ -13,14 +13,14 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
+    StateDescription,
     arm_trigger,
+    other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-ACP_STATES = {s.value for s in AlarmControlPanelState}
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -35,6 +35,7 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
 
 
 def parametrize_acp_trigger_states(
+    *,
     trigger: str,
     target_states: Iterable[str],
     other_states: Iterable[str],
@@ -48,9 +49,9 @@ def parametrize_acp_trigger_states(
     return [
         (s[0], supported_features, *s[1:])
         for s in parametrize_trigger_states(
-            trigger,
-            target_states,
-            other_states,
+            trigger=trigger,
+            target_states=target_states,
+            other_states=other_states,
             trigger_from_none=supported_features == 0,
         )
     ]
@@ -64,40 +65,40 @@ def parametrize_acp_trigger_states(
     ("trigger", "supported_features", "states"),
     [
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_away",
-            (AlarmControlPanelState.ARMED_AWAY,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_AWAY},
-            AlarmControlPanelEntityFeature.ARM_AWAY,
+            trigger="alarm_control_panel.armed_away",
+            target_states=[AlarmControlPanelState.ARMED_AWAY],
+            other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
+            supported_features=AlarmControlPanelEntityFeature.ARM_AWAY,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_home",
-            (AlarmControlPanelState.ARMED_HOME,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_HOME},
-            AlarmControlPanelEntityFeature.ARM_HOME,
+            trigger="alarm_control_panel.armed_home",
+            target_states=[AlarmControlPanelState.ARMED_HOME],
+            other_states=other_states(AlarmControlPanelState.ARMED_HOME),
+            supported_features=AlarmControlPanelEntityFeature.ARM_HOME,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_night",
-            (AlarmControlPanelState.ARMED_NIGHT,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_NIGHT},
-            AlarmControlPanelEntityFeature.ARM_NIGHT,
+            trigger="alarm_control_panel.armed_night",
+            target_states=[AlarmControlPanelState.ARMED_NIGHT],
+            other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
+            supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_vacation",
-            (AlarmControlPanelState.ARMED_VACATION,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_VACATION},
-            AlarmControlPanelEntityFeature.ARM_VACATION,
+            trigger="alarm_control_panel.armed_vacation",
+            target_states=[AlarmControlPanelState.ARMED_VACATION],
+            other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
+            supported_features=AlarmControlPanelEntityFeature.ARM_VACATION,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.disarmed",
-            (AlarmControlPanelState.DISARMED,),
-            ACP_STATES - {AlarmControlPanelState.DISARMED},
-            0,
+            trigger="alarm_control_panel.disarmed",
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
+            supported_features=0,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.triggered",
-            (AlarmControlPanelState.TRIGGERED,),
-            ACP_STATES - {AlarmControlPanelState.TRIGGERED},
-            0,
+            trigger="alarm_control_panel.triggered",
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
+            supported_features=0,
         ),
     ],
 )
@@ -110,7 +111,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     supported_features: int,
-    states: list[tuple[str, int]],
+    states: list[StateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
     await async_setup_component(hass, "alarm_control_panel", {})
@@ -120,18 +121,18 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
         set_or_remove_state(
-            hass, eid, states[0][0], {"supported_features": supported_features}
+            hass, eid, states[0]["state"], {"supported_features": supported_features}
         )
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
-    for state, expected_calls in states[1:]:
+    for state in states[1:]:
         set_or_remove_state(
-            hass, entity_id, state, {"supported_features": supported_features}
+            hass, entity_id, state["state"], {"supported_features": supported_features}
         )
         await hass.async_block_till_done()
-        assert len(service_calls) == expected_calls
+        assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
@@ -139,10 +140,13 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
         # Check if changing other alarm control panels also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass, other_entity_id, state, {"supported_features": supported_features}
+                hass,
+                other_entity_id,
+                state["state"],
+                {"supported_features": supported_features},
             )
             await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * expected_calls
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
 
 
@@ -154,40 +158,40 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     ("trigger", "supported_features", "states"),
     [
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_away",
-            (AlarmControlPanelState.ARMED_AWAY,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_AWAY},
-            AlarmControlPanelEntityFeature.ARM_AWAY,
+            trigger="alarm_control_panel.armed_away",
+            target_states=[AlarmControlPanelState.ARMED_AWAY],
+            other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
+            supported_features=AlarmControlPanelEntityFeature.ARM_AWAY,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_home",
-            (AlarmControlPanelState.ARMED_HOME,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_HOME},
-            AlarmControlPanelEntityFeature.ARM_HOME,
+            trigger="alarm_control_panel.armed_home",
+            target_states=[AlarmControlPanelState.ARMED_HOME],
+            other_states=other_states(AlarmControlPanelState.ARMED_HOME),
+            supported_features=AlarmControlPanelEntityFeature.ARM_HOME,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_night",
-            (AlarmControlPanelState.ARMED_NIGHT,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_NIGHT},
-            AlarmControlPanelEntityFeature.ARM_NIGHT,
+            trigger="alarm_control_panel.armed_night",
+            target_states=[AlarmControlPanelState.ARMED_NIGHT],
+            other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
+            supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_vacation",
-            (AlarmControlPanelState.ARMED_VACATION,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_VACATION},
-            AlarmControlPanelEntityFeature.ARM_VACATION,
+            trigger="alarm_control_panel.armed_vacation",
+            target_states=[AlarmControlPanelState.ARMED_VACATION],
+            other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
+            supported_features=AlarmControlPanelEntityFeature.ARM_VACATION,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.disarmed",
-            (AlarmControlPanelState.DISARMED,),
-            ACP_STATES - {AlarmControlPanelState.DISARMED},
-            0,
+            trigger="alarm_control_panel.disarmed",
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
+            supported_features=0,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.triggered",
-            (AlarmControlPanelState.TRIGGERED,),
-            ACP_STATES - {AlarmControlPanelState.TRIGGERED},
-            0,
+            trigger="alarm_control_panel.triggered",
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
+            supported_features=0,
         ),
     ],
 )
@@ -200,7 +204,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     supported_features: int,
-    states: list[tuple[str, int, list[str]]],
+    states: list[StateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
     await async_setup_component(hass, "alarm_control_panel", {})
@@ -210,18 +214,18 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
         set_or_remove_state(
-            hass, eid, states[0][0], {"supported_features": supported_features}
+            hass, eid, states[0]["state"], {"supported_features": supported_features}
         )
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
-    for state, expected_calls in states[1:]:
+    for state in states[1:]:
         set_or_remove_state(
-            hass, entity_id, state, {"supported_features": supported_features}
+            hass, entity_id, state["state"], {"supported_features": supported_features}
         )
         await hass.async_block_till_done()
-        assert len(service_calls) == expected_calls
+        assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
@@ -229,7 +233,10 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
         # Triggering other alarm control panels should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass, other_entity_id, state, {"supported_features": supported_features}
+                hass,
+                other_entity_id,
+                state["state"],
+                {"supported_features": supported_features},
             )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
@@ -243,40 +250,40 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     ("trigger", "supported_features", "states"),
     [
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_away",
-            (AlarmControlPanelState.ARMED_AWAY,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_AWAY},
-            AlarmControlPanelEntityFeature.ARM_AWAY,
+            trigger="alarm_control_panel.armed_away",
+            target_states=[AlarmControlPanelState.ARMED_AWAY],
+            other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
+            supported_features=AlarmControlPanelEntityFeature.ARM_AWAY,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_home",
-            (AlarmControlPanelState.ARMED_HOME,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_HOME},
-            AlarmControlPanelEntityFeature.ARM_HOME,
+            trigger="alarm_control_panel.armed_home",
+            target_states=[AlarmControlPanelState.ARMED_HOME],
+            other_states=other_states(AlarmControlPanelState.ARMED_HOME),
+            supported_features=AlarmControlPanelEntityFeature.ARM_HOME,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_night",
-            (AlarmControlPanelState.ARMED_NIGHT,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_NIGHT},
-            AlarmControlPanelEntityFeature.ARM_NIGHT,
+            trigger="alarm_control_panel.armed_night",
+            target_states=[AlarmControlPanelState.ARMED_NIGHT],
+            other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
+            supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.armed_vacation",
-            (AlarmControlPanelState.ARMED_VACATION,),
-            ACP_STATES - {AlarmControlPanelState.ARMED_VACATION},
-            AlarmControlPanelEntityFeature.ARM_VACATION,
+            trigger="alarm_control_panel.armed_vacation",
+            target_states=[AlarmControlPanelState.ARMED_VACATION],
+            other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
+            supported_features=AlarmControlPanelEntityFeature.ARM_VACATION,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.disarmed",
-            (AlarmControlPanelState.DISARMED,),
-            ACP_STATES - {AlarmControlPanelState.DISARMED},
-            0,
+            trigger="alarm_control_panel.disarmed",
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
+            supported_features=0,
         ),
         *parametrize_acp_trigger_states(
-            "alarm_control_panel.triggered",
-            (AlarmControlPanelState.TRIGGERED,),
-            ACP_STATES - {AlarmControlPanelState.TRIGGERED},
-            0,
+            trigger="alarm_control_panel.triggered",
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
+            supported_features=0,
         ),
     ],
 )
@@ -289,7 +296,7 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     supported_features: int,
-    states: list[tuple[str, int]],
+    states: list[StateDescription],
 ) -> None:
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
     await async_setup_component(hass, "alarm_control_panel", {})
@@ -299,25 +306,28 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
         set_or_remove_state(
-            hass, eid, states[0][0], {"supported_features": supported_features}
+            hass, eid, states[0]["state"], {"supported_features": supported_features}
         )
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
-    for state, expected_calls in states[1:]:
+    for state in states[1:]:
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass, other_entity_id, state, {"supported_features": supported_features}
+                hass,
+                other_entity_id,
+                state["state"],
+                {"supported_features": supported_features},
             )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
         set_or_remove_state(
-            hass, entity_id, state, {"supported_features": supported_features}
+            hass, entity_id, state["state"], {"supported_features": supported_features}
         )
         await hass.async_block_till_done()
-        assert len(service_calls) == expected_calls
+        assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()

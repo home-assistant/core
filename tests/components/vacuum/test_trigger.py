@@ -1,14 +1,16 @@
-"""Test fan trigger."""
+"""Test vacuum triggers."""
 
 import pytest
 
-from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.vacuum import VacuumActivity
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
     arm_trigger,
+    other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
@@ -22,47 +24,57 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_fans(hass: HomeAssistant) -> None:
-    """Create multiple fan entities associated with different targets."""
-    return await target_entities(hass, "fan")
+async def target_vacuums(hass: HomeAssistant) -> None:
+    """Create multiple vacuum entities associated with different targets."""
+    return await target_entities(hass, "vacuum")
 
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("vacuum"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="fan.turned_on",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            trigger="vacuum.docked",
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
         ),
         *parametrize_trigger_states(
-            trigger="fan.turned_off",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
+            trigger="vacuum.errored",
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.paused_cleaning",
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_cleaning",
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
         ),
     ],
 )
-async def test_fan_state_trigger_behavior_any(
+async def test_vacuum_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_fans: list[str],
+    target_vacuums: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when any fan state changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
+    """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
+    await async_setup_component(hass, "vacuum", {})
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_vacuums) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all vacuums, including the tested one, to the initial state
+    for eid in target_vacuums:
         set_or_remove_state(hass, eid, states[0]["state"])
         await hass.async_block_till_done()
 
@@ -76,7 +88,7 @@ async def test_fan_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other fans also triggers
+        # Check if changing other vacuums also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state["state"])
             await hass.async_block_till_done()
@@ -86,40 +98,50 @@ async def test_fan_state_trigger_behavior_any(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("vacuum"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="fan.turned_on",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            trigger="vacuum.docked",
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
         ),
         *parametrize_trigger_states(
-            trigger="fan.turned_off",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
+            trigger="vacuum.errored",
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.paused_cleaning",
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_cleaning",
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
         ),
     ],
 )
-async def test_fan_state_trigger_behavior_first(
+async def test_vacuum_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_fans: list[str],
+    target_vacuums: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the first fan changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
+    """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
+    await async_setup_component(hass, "vacuum", {})
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_vacuums) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all vacuums, including the tested one, to the initial state
+    for eid in target_vacuums:
         set_or_remove_state(hass, eid, states[0]["state"])
         await hass.async_block_till_done()
 
@@ -133,7 +155,7 @@ async def test_fan_state_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other fans should not cause the trigger to fire again
+        # Triggering other vacuums should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state["state"])
             await hass.async_block_till_done()
@@ -142,40 +164,50 @@ async def test_fan_state_trigger_behavior_first(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("vacuum"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="fan.turned_on",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            trigger="vacuum.docked",
+            target_states=[VacuumActivity.DOCKED],
+            other_states=other_states(VacuumActivity.DOCKED),
         ),
         *parametrize_trigger_states(
-            trigger="fan.turned_off",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
+            trigger="vacuum.errored",
+            target_states=[VacuumActivity.ERROR],
+            other_states=other_states(VacuumActivity.ERROR),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.paused_cleaning",
+            target_states=[VacuumActivity.PAUSED],
+            other_states=other_states(VacuumActivity.PAUSED),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_cleaning",
+            target_states=[VacuumActivity.CLEANING],
+            other_states=other_states(VacuumActivity.CLEANING),
         ),
     ],
 )
-async def test_fan_state_trigger_behavior_last(
+async def test_vacuum_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_fans: list[str],
+    target_vacuums: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the last fan changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
+    """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
+    await async_setup_component(hass, "vacuum", {})
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_vacuums) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all vacuums, including the tested one, to the initial state
+    for eid in target_vacuums:
         set_or_remove_state(hass, eid, states[0]["state"])
         await hass.async_block_till_done()
 
