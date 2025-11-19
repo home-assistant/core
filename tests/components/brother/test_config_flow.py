@@ -56,6 +56,7 @@ async def test_create_entry(
     assert result["data"][CONF_TYPE] == "laser"
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_PORT] == 161
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
+    assert result["result"].unique_id == "0123456789"
 
 
 async def test_invalid_hostname(
@@ -93,6 +94,7 @@ async def test_invalid_hostname(
     assert result["data"][CONF_TYPE] == "laser"
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_PORT] == 161
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
+    assert result["result"].unique_id == "0123456789"
 
 
 @pytest.mark.parametrize(
@@ -138,6 +140,7 @@ async def test_errors(
     assert result["data"][CONF_TYPE] == "laser"
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_PORT] == 161
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
+    assert result["result"].unique_id == "0123456789"
 
 
 async def test_unsupported_model_error(
@@ -311,6 +314,7 @@ async def test_zeroconf_confirm_create_entry(
     assert result["data"][CONF_TYPE] == "laser"
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_PORT] == 161
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
+    assert result["result"].unique_id == "0123456789"
 
 
 async def test_reconfigure_successful(
