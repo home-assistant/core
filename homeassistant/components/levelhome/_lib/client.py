@@ -55,7 +55,11 @@ class Client:
     async def async_list_locks(self) -> list[dict[str, Any]]:
         """Return a list of locks as raw dictionaries from the API."""
         data = await self._request("GET", "/v1/locks")
-        return list(data.get("locks", []))
+        locks = list(data.get("locks", []))
+        for lock in locks:
+            if "uuid" not in lock and "id" in lock:
+                lock["uuid"] = lock["id"]
+        return locks
 
     async def async_get_lock_status(self, lock_id: str) -> dict[str, Any]:
         """Return the raw status payload for a lock."""

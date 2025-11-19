@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ._lib.level_ha import ApiError, Client, WebsocketManager as LevelWebsocketManager
+from ._lib.level_ha import WebsocketManager as LevelWebsocketManager
 
 LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL: timedelta | None = None  # Use push updates; no periodic polling
@@ -22,47 +22,59 @@ class LevelLockDevice:
     """Representation of a Level lock device."""
 
     lock_id: str
+    uuid: str
     name: str
     is_locked: bool | None
-    state: str | None = None  # Raw state from API for transitional states
+    state: str | None = None
 
 
 class _ClientAdapter:
-    """Adapter around the library client to map raw payloads to devices."""
+    """Adapter to parse device data from WebSocket responses."""
 
-    def __init__(self, client: Client) -> None:
-        self._client = client
+    def __init__(self, ws_manager: LevelWebsocketManager) -> None:
+        self._ws_manager = ws_manager
 
     async def async_list_locks(self) -> list[LevelLockDevice]:
-        data = await self._client.async_list_locks_normalized()
+        LOGGER.info("Fetching device list from WebSocket")
+        devices_data = await self._ws_manager.async_get_devices()
+        LOGGER.info("Retrieved %d devices from WebSocket", len(devices_data))
         devices: list[LevelLockDevice] = []
-        for item in data:
-            state = item.get("state")
+        for item in devices_data:
+            device_uuid = item.get("device_uuid") or item.get("uuid") or item.get("UUID")
+            name = item.get("name") or device_uuid or "Level Lock"
+            LOGGER.info("Processing device: uuid=%s, name=%s", device_uuid, name)
+            is_locked: bool | None = None
+            state: str | None = None
+            device_state = await self._ws_manager.async_get_device_state(str(device_uuid))
+            LOGGER.info("Device state response for %s: %s", device_uuid, device_state)
+            if device_state:
+                bolt_state = device_state.get("bolt_state")
+                if bolt_state:
+                    state = str(bolt_state)
+                    is_locked = str(bolt_state).lower() == "locked"
+                    LOGGER.info("Device %s: bolt_state=%s, is_locked=%s", device_uuid, state, is_locked)
+                else:
+                    LOGGER.warning("Device %s: No bolt_state in response", device_uuid)
+            else:
+                LOGGER.warning("Device %s: No device_state received", device_uuid)
             devices.append(
                 LevelLockDevice(
-                    lock_id=str(item.get("id")),
-                    name=str(item.get("name") or item.get("id") or "Level Lock"),
-                    is_locked=item.get("is_locked"),
-                    state=str(state) if state is not None else None,
+                    lock_id=str(device_uuid),
+                    uuid=str(device_uuid),
+                    name=str(name),
+                    is_locked=is_locked,
+                    state=state,
                 )
             )
+            LOGGER.info("Created LevelLockDevice: lock_id=%s, is_locked=%s, state=%s", device_uuid, is_locked, state)
         return devices
-
-    async def async_get_lock_status(self, lock_id: str) -> bool | None:
-        return await self._client.async_get_lock_status_bool(lock_id)
-
-    async def async_lock(self, lock_id: str) -> None:
-        await self._client.async_lock(lock_id)
-
-    async def async_unlock(self, lock_id: str) -> None:
-        await self._client.async_unlock(lock_id)
 
 
 class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
     """Coordinator to fetch all locks for the account."""
 
     def __init__(
-        self, hass: HomeAssistant, client: Client, *, config_entry: ConfigEntry
+        self, hass: HomeAssistant, ws_manager: LevelWebsocketManager, *, config_entry: ConfigEntry
     ) -> None:
         """Initialize the Level locks coordinator."""
         super().__init__(
@@ -72,41 +84,22 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
-        self._client = _ClientAdapter(client)
-        self._ws_manager: LevelWebsocketManager | None = None
+        self._ws_manager = ws_manager
+        self._client = _ClientAdapter(ws_manager)
 
     async def _async_update_data(self) -> dict[str, LevelLockDevice]:
         try:
             devices = await self._client.async_list_locks()
-        except ApiError as err:
+        except Exception as err:
             raise UpdateFailed(str(err)) from err
         result: dict[str, LevelLockDevice] = {d.lock_id: d for d in devices}
-        missing_status = [d for d in result.values() if d.is_locked is None]
-        for device in missing_status:
-            try:
-                device.is_locked = await self._client.async_get_lock_status(
-                    device.lock_id
-                )
-            except ApiError as err:
-                raise UpdateFailed(str(err)) from err
+        for device in result.values():
+            self._ws_manager.register_device_uuid(device.lock_id, device.uuid)
         return result
-
-    def attach_ws_manager(self, ws_manager: LevelWebsocketManager) -> None:
-        """Attach a WebSocket manager and start listening for push updates."""
-        self._ws_manager = ws_manager
-
-    async def async_start_push(self) -> None:
-        """Start push connections for current locks."""
-        if self._ws_manager is None:
-            return
-        if not self.data:
-            return
-        await self._ws_manager.async_start(list(self.data.keys()))
 
     async def async_stop_push(self) -> None:
         """Stop push connections."""
-        if self._ws_manager is not None:
-            await self._ws_manager.async_stop()
+        await self._ws_manager.async_stop()
 
     async def async_handle_push_update(
         self, lock_id: str, is_locked: bool | None, payload: dict[str, Any] | None
@@ -115,42 +108,40 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         current = dict(self.data or {})
         device = current.get(lock_id)
         if device is None:
-            # Unknown lock; fetch list once to incorporate
-            try:
-                devices = await self._client.async_list_locks()
-            except (ApiError, Exception):
-                LOGGER.debug("Push update for unknown lock %s", lock_id)
-                return
-            current = {d.lock_id: d for d in devices}
-            device = current.get(lock_id)
+            device_name = payload.get("device_name") if payload else None
+            if device_name:
+                for d in current.values():
+                    if d.name == device_name:
+                        device = d
+                        LOGGER.info("Matched device by name: %s -> %s", lock_id, device.lock_id)
+                        break
             if device is None:
-                LOGGER.debug("Push update for unknown lock %s", lock_id)
-                return
+                LOGGER.info("Creating new device entry from push update: %s (%s)", lock_id, device_name)
+                device = LevelLockDevice(
+                    lock_id=lock_id,
+                    uuid=lock_id,
+                    name=device_name or lock_id,
+                    is_locked=is_locked,
+                    state=payload.get("state") if payload else None,
+                )
+                current[lock_id] = device
+                self._ws_manager.register_device_uuid(device.lock_id, device.uuid)
 
         if is_locked is not None:
             device.is_locked = is_locked
-        # Update the raw state from payload if available
         if payload is not None and "state" in payload:
             state = payload.get("state")
             device.state = str(state) if state is not None else None
+        LOGGER.info("Updated device %s: is_locked=%s, state=%s", device.lock_id, device.is_locked, device.state)
         self.async_set_updated_data(current)
 
     async def async_send_command(self, lock_id: str, command: str) -> None:
-        """Send a command via push channel if available; fallback to HTTP."""
-        if self._ws_manager is not None and command in ("lock", "unlock"):
+        """Send a command via WebSocket."""
+        if command in ("lock", "unlock"):
             try:
                 await self._ws_manager.async_send_command(
                     lock_id,
                     command,  # type: ignore[arg-type]
                 )
-            except Exception as err:  # noqa: BLE001
-                LOGGER.debug("WS command failed; falling back to HTTP: %s", err)
-            else:
-                return
-        try:
-            if command == "lock":
-                await self._client.async_lock(lock_id)
-            elif command == "unlock":
-                await self._client.async_unlock(lock_id)
-        except ApiError as err:
-            raise UpdateFailed(str(err)) from err
+            except Exception as err:
+                raise UpdateFailed(f"Command failed: {err}") from err
