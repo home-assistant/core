@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_next_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_next_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:subway-variant',
+    'original_name': 'Next arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_arrival',
+    'unique_id': <ANY>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_next_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'arrivals': list([
+        dict({
+          'arrival_time': <ANY>,
+          'destination': 'Van Cortlandt Park - 242 St',
+          'minutes_until': <ANY>,
+          'route': '1',
+        }),
+      ]),
+      'friendly_name': '1 Line - Times Sq - 42 St (N direction) Next arrival',
+      'icon': 'mdi:subway-variant',
+      'stop_id': '127N',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_next_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': <ANY>,
+  })
+# ---
