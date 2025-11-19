@@ -37,7 +37,7 @@
   "title": "Lawn mower",
   "triggers": {
     "docked": {
-      "description": "Triggers when a lawn mower is docked.",
+      "description": "Triggers when a lawn mower has docked.",
       "description_configured": "[%key:component::lawn_mower::triggers::docked::description%]",
       "fields": {
         "behavior": {
@@ -45,10 +45,10 @@
           "name": "Behavior"
         }
       },
-      "name": "When a lawn mower is docked"
+      "name": "When a lawn mower has docked"
     },
     "errored": {
-      "description": "Triggers when a lawn mower is errored.",
+      "description": "Triggers when a lawn mower has errored.",
       "description_configured": "[%key:component::lawn_mower::triggers::errored::description%]",
       "fields": {
         "behavior": {
@@ -56,10 +56,10 @@
           "name": "[%key:component::lawn_mower::triggers::docked::fields::behavior::name%]"
         }
       },
-      "name": "When a lawn mower is errored"
+      "name": "When a lawn mower has errored"
     },
     "paused_mowing": {
-      "description": "Triggers when a lawn mower is paused.",
+      "description": "Triggers when a lawn mower has paused mowing.",
       "description_configured": "[%key:component::lawn_mower::triggers::paused_mowing::description%]",
       "fields": {
         "behavior": {
@@ -67,10 +67,10 @@
           "name": "[%key:component::lawn_mower::triggers::docked::fields::behavior::name%]"
         }
       },
-      "name": "When a lawn mower is paused"
+      "name": "When a lawn mower has paused mowing"
     },
     "started_mowing": {
-      "description": "Triggers when a lawn mower is started.",
+      "description": "Triggers when a lawn mower has started mowing.",
       "description_configured": "[%key:component::lawn_mower::triggers::started_mowing::description%]",
       "fields": {
         "behavior": {
@@ -78,7 +78,7 @@
           "name": "[%key:component::lawn_mower::triggers::docked::fields::behavior::name%]"
         }
       },
-      "name": "When a lawn mower is started"
+      "name": "When a lawn mower has started mowing"
     }
   }
 }
