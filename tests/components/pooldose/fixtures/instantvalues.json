@@ -111,9 +111,6 @@
     "alarm_ofa_cl": {
       "value": false
     },
-    "pump_monitoring": {
-      "value": true
-    },
     "flow_rate_reed_sensor": {
       "value": false
     }

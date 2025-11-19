@@ -486,55 +486,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_pump_monitoring-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.pool_device_pump_monitoring',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Pump monitoring',
-    'platform': 'pooldose',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pump_monitoring',
-    'unique_id': 'TEST123456789_pump_monitoring',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_binary_sensors[binary_sensor.pool_device_pump_monitoring-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Pool Device Pump monitoring',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.pool_device_pump_monitoring',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_recirculation_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

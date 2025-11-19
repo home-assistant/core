@@ -91,11 +91,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PooldoseBinarySensorEntityDescription, ...] = 
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PooldoseBinarySensorEntityDescription(
-        key="pump_monitoring",
-        translation_key="pump_monitoring",
-        device_class=BinarySensorDeviceClass.RUNNING,
-    ),
-    PooldoseBinarySensorEntityDescription(
         key="flow_rate_reed_sensor",
         translation_key="flow_rate_reed_sensor",
         device_class=BinarySensorDeviceClass.OPENING,

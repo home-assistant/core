@@ -53,10 +53,7 @@
         "name": "pH tank level"
       },
       "pump_alarm": {
-        "name": "Recirculation pump"
-      },
-      "pump_monitoring": {
-        "name": "Pump monitoring"
+        "name": "Recirculation"
       },
       "relay_alarm": {
         "name": "Alarm Relay"
