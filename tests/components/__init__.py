@@ -119,11 +119,15 @@ def parametrize_trigger_states(
     trigger: str,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    trigger_from_none: bool = True,
 ) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
     The target_states and other_states iterables are either iterables of
     states or iterables of (state, attributes) tuples.
+
+    Set `trigger_from_none` to False if the trigger is not expected to fire
+    when the initial state is None.
 
     Returns a list of tuples with (trigger, list of states),
     where states is a list of StateDescription dicts.
@@ -147,7 +151,9 @@ def parametrize_trigger_states(
                         state_with_attributes(None, 0),
                         state_with_attributes(target_state, 0),
                         state_with_attributes(other_state, 0),
-                        state_with_attributes(target_state, 1),
+                        state_with_attributes(
+                            target_state, 1 if trigger_from_none else 0
+                        ),
                     )
                     for target_state in target_states
                     for other_state in other_states
