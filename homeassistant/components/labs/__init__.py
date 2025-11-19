@@ -18,7 +18,7 @@ from homeassistant.generated.labs import LABS_FEATURES
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import Integration, async_get_custom_components
+from homeassistant.loader import async_get_custom_components
 
 from .const import (
     DOMAIN,
@@ -47,57 +47,23 @@ async def _async_scan_all_lab_features(hass: HomeAssistant) -> dict[str, LabFeat
     """Scan ALL available integrations for lab features (loaded or not)."""
     features: dict[str, LabFeature] = {}
 
-    # Load pre-generated built-in labs features
-    def _load_builtin_features() -> dict[str, LabFeature]:
-        """Load built-in labs features from pre-generated data."""
-        from homeassistant import components  # noqa: PLC0415
-
-        builtin_features: dict[str, LabFeature] = {}
-
-        # Iterate through pre-generated LABS_FEATURES
-        for domain, feature_ids in LABS_FEATURES.items():
-            try:
-                integration = Integration.resolve_from_root(hass, components, domain)
-                if not integration:
-                    continue
-
-                labs_features = integration.manifest.get("labs_features", {})
-
-                for feature_id in feature_ids:
-                    if (
-                        not isinstance(labs_features, dict)
-                        or feature_id not in labs_features
-                    ):
-                        continue
-
-                    feature_data = labs_features[feature_id]
-                    if not isinstance(feature_data, dict):
-                        continue
-
-                    feature = LabFeature(
-                        domain=domain,
-                        feature=feature_id,
-                        feedback_url=feature_data.get("feedback_url"),
-                        learn_more_url=feature_data.get("learn_more_url"),
-                        report_issue_url=feature_data.get("report_issue_url"),
-                    )
-                    builtin_features[feature.full_key] = feature
-
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("Error loading integration %s for labs features", domain)
-                continue
-
-        return builtin_features
-
-    # Load built-in features in executor (only loads manifests for integrations with features)
-    builtin_features = await hass.async_add_executor_job(_load_builtin_features)
-    features.update(builtin_features)
+    # Load pre-generated built-in labs features (already includes all data)
+    for domain, domain_features in LABS_FEATURES.items():
+        for feature_id, feature_data in domain_features.items():
+            feature = LabFeature(
+                domain=domain,
+                feature=feature_id,
+                feedback_url=feature_data.get("feedback_url"),
+                learn_more_url=feature_data.get("learn_more_url"),
+                report_issue_url=feature_data.get("report_issue_url"),
+            )
+            features[feature.full_key] = feature
 
     # Scan custom components
     custom_integrations = await async_get_custom_components(hass)
     _LOGGER.debug(
         "Loaded %d built-in + scanning %d custom integrations for lab features",
-        len(builtin_features),
+        len(features),
         len(custom_integrations),
     )
 

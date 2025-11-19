@@ -8,7 +8,7 @@ from .serializer import format_python_namespace
 
 def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate labs features data."""
-    labs_dict: dict[str, list[str]] = {}
+    labs_dict: dict[str, dict[str, dict[str, str]]] = {}
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -24,8 +24,8 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
             )
             continue
 
-        # Extract feature IDs from the dict
-        feature_ids = []
+        # Extract features with full data
+        domain_features: dict[str, dict[str, str]] = {}
         for feature_id, feature_config in labs_features.items():
             if not isinstance(feature_id, str):
                 integration.add_error(
@@ -39,11 +39,16 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
                     f"labs_features[{feature_id}] must be a dict, got {type(feature_config).__name__}",
                 )
                 break
-            feature_ids.append(feature_id)
+            # Include the full feature configuration
+            domain_features[feature_id] = {
+                "feedback_url": feature_config.get("feedback_url", ""),
+                "learn_more_url": feature_config.get("learn_more_url", ""),
+                "report_issue_url": feature_config.get("report_issue_url", ""),
+            }
         else:
             # Only add if all features are valid
-            if feature_ids:
-                labs_dict[domain] = feature_ids
+            if domain_features:
+                labs_dict[domain] = domain_features
 
     return format_python_namespace(
         {
