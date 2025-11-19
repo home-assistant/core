@@ -31,6 +31,15 @@
       }
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "clean_spot": {
       "description": "Tells the vacuum cleaner to do a spot clean-up.",
@@ -97,5 +106,51 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Vacuum"
+  "title": "Vacuum",
+  "triggers": {
+    "docked": {
+      "description": "Triggers when a vacuum cleaner is docked.",
+      "description_configured": "[%key:component::vacuum::triggers::docked::description%]",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted vacuum cleaners to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When a vacuum cleaner is docked"
+    },
+    "errored": {
+      "description": "Triggers when a vacuum cleaner is errored.",
+      "description_configured": "[%key:component::vacuum::triggers::errored::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::triggers::docked::fields::behavior::description%]",
+          "name": "[%key:component::vacuum::triggers::docked::fields::behavior::name%]"
+        }
+      },
+      "name": "When a vacuum cleaner is errored"
+    },
+    "paused_cleaning": {
+      "description": "Triggers when a vacuum cleaner is paused.",
+      "description_configured": "[%key:component::vacuum::triggers::paused_cleaning::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::triggers::docked::fields::behavior::description%]",
+          "name": "[%key:component::vacuum::triggers::docked::fields::behavior::name%]"
+        }
+      },
+      "name": "When a vacuum cleaner is paused"
+    },
+    "started_cleaning": {
+      "description": "Triggers when a vacuum cleaner is started.",
+      "description_configured": "[%key:component::vacuum::triggers::started_cleaning::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::triggers::docked::fields::behavior::description%]",
+          "name": "[%key:component::vacuum::triggers::docked::fields::behavior::name%]"
+        }
+      },
+      "name": "When a vacuum cleaner is started"
+    }
+  }
 }
