@@ -40,6 +40,14 @@
       "value": "proportional",
       "unit": null
     },
+    "cl_type_dosing": {
+      "value": "low",
+      "unit": null
+    },
+    "peristaltic_cl_dosing": {
+      "value": "off",
+      "unit": null
+    },
     "ofa_orp_time": {
       "value": 0,
       "unit": "min"
