@@ -53,11 +53,10 @@ DEFAULT_EVENT_0_KEY = "event_i0_enable"
 DEFAULT_SECURITY_LEVEL = "admin"
 DEFAULT_STREAM_SOURCE = "live.sdp"
 
-
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
