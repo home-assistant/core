@@ -30,16 +30,6 @@ CONFIG = {
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 @pytest.mark.parametrize("host", ["example.local", "127.0.0.1", "2001:db8::1428:57ab"])
 async def test_create_entry(
     hass: HomeAssistant, host: str, mock_brother_client: AsyncMock
@@ -49,9 +39,15 @@ async def test_create_entry(
     config[CONF_HOST] = host
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=config,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"],
+        user_input=config,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
