@@ -113,7 +113,7 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
             except VivotekCameraError:
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected error during camera connection test")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
