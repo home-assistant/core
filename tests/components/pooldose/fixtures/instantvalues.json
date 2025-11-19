@@ -98,6 +98,24 @@
     },
     "relay_aux2": {
       "value": false
+    },
+    "relay_aux3": {
+      "value": false
+    },
+    "alarm_ofa_ph": {
+      "value": false
+    },
+    "alarm_ofa_orp": {
+      "value": false
+    },
+    "alarm_ofa_cl": {
+      "value": false
+    },
+    "pump_monitoring": {
+      "value": true
+    },
+    "flow_rate_reed_sensor": {
+      "value": false
     }
   },
   "number": {

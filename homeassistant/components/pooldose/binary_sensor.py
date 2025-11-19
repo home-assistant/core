@@ -1,0 +1,144 @@
+"""Binary sensors for the Seko PoolDose integration."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import logging
+from typing import TYPE_CHECKING
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import PooldoseConfigEntry
+from .entity import PooldoseEntity
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class PooldoseBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes PoolDose binary sensor entity."""
+
+
+BINARY_SENSOR_DESCRIPTIONS: tuple[PooldoseBinarySensorEntityDescription, ...] = (
+    PooldoseBinarySensorEntityDescription(
+        key="pump_alarm",
+        translation_key="pump_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="ph_level_alarm",
+        translation_key="ph_level_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="orp_level_alarm",
+        translation_key="orp_level_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="flow_rate_alarm",
+        translation_key="flow_rate_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="alarm_ofa_ph",
+        translation_key="alarm_ofa_ph",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="alarm_ofa_orp",
+        translation_key="alarm_ofa_orp",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="alarm_ofa_cl",
+        translation_key="alarm_ofa_cl",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="relay_alarm",
+        translation_key="relay_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="relay_aux1",
+        translation_key="relay_aux1",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="relay_aux2",
+        translation_key="relay_aux2",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="relay_aux3",
+        translation_key="relay_aux3",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="pump_monitoring",
+        translation_key="pump_monitoring",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    PooldoseBinarySensorEntityDescription(
+        key="flow_rate_reed_sensor",
+        translation_key="flow_rate_reed_sensor",
+        device_class=BinarySensorDeviceClass.OPENING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: PooldoseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up PoolDose binary sensor entities from a config entry."""
+    if TYPE_CHECKING:
+        assert config_entry.unique_id is not None
+
+    coordinator = config_entry.runtime_data
+    binary_sensor_data = coordinator.data["binary_sensor"]
+    serial_number = config_entry.unique_id
+
+    async_add_entities(
+        PooldoseBinarySensor(
+            coordinator,
+            serial_number,
+            coordinator.device_info,
+            description,
+            "binary_sensor",
+        )
+        for description in BINARY_SENSOR_DESCRIPTIONS
+        if description.key in binary_sensor_data
+    )
+
+
+class PooldoseBinarySensor(PooldoseEntity, BinarySensorEntity):
+    """Binary sensor entity for the Seko PoolDose Python API."""
+
+    entity_description: PooldoseBinarySensorEntityDescription
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        data = self.get_data()
+        if data is not None:
+            return data["value"]
+        return None
