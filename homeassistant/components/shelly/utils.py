@@ -431,9 +431,9 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
         if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
             return custom_name
 
-        instances = get_rpc_number_of_channels(device, component)
+        channels = get_rpc_number_of_channels(device, component)
 
-        return custom_name if instances == 1 else None
+        return custom_name if channels == 1 else None
 
     if component in (*VIRTUAL_COMPONENTS, "input"):
         return f"{component.title()} {component_id}"
@@ -894,7 +894,7 @@ def get_rpc_device_info(
             and get_irrigation_zone_id(device, key) is None
         )
         or idx is None
-        or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
+        or get_rpc_number_of_channels(device, component) < 2
     ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
