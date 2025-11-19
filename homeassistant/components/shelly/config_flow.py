@@ -378,7 +378,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # Convert to format without colons to match mac_address_from_name output
             mac = mac_with_colons.replace(":", "")
             # For devices without a Shelly name, use a more descriptive name
-            # Gen4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR"
+            # Gen3/4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR"
             # Future improvement: if aioshelly adds model_id to device type mapping,
             # we could use a better name like "ShellyPlus2PM-{mac}" instead of "Shelly-{mac}"
             device_name = f"Shelly-{mac}"
