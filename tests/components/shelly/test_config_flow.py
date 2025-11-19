@@ -93,6 +93,8 @@ BLE_MANUFACTURER_DATA_NO_RPC = {
 BLE_MANUFACTURER_DATA_WITH_MAC = {
     0x0BA9: bytes.fromhex("0105000b30100a70d6c297bacc")
 }  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10), MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
+# Device WiFi MAC: 70d6c297bacc (little-endian) -> CCBA97C2D670 (reversed to big-endian)
+# BLE MAC is typically device MAC + 2: CCBA97C2D670 + 2 = CC:BA:97:C2:D6:72
 
 BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="ShellyPlus2PM-C049EF8873E8",
