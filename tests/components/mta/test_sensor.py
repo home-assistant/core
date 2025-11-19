@@ -1,7 +1,9 @@
 """Test the MTA sensor platform."""
 
+from datetime import datetime
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,8 +20,11 @@ async def test_sensor(
     mock_gtfs_realtime_feed: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor entity."""
+    freezer.move_to(datetime(2023, 10, 21, 0, 0, 0))
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

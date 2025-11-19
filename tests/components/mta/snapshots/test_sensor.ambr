@@ -39,9 +39,9 @@
     'attributes': ReadOnlyDict({
       'arrivals': list([
         dict({
-          'arrival_time': <ANY>,
+          'arrival_time': '2023-10-21T00:05:00+00:00',
           'destination': 'Van Cortlandt Park - 242 St',
-          'minutes_until': <ANY>,
+          'minutes_until': 5,
           'route': '1',
         }),
       ]),
@@ -55,6 +55,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': <ANY>,
+    'state': '5',
   })
 # ---
