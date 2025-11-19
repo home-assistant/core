@@ -40,6 +40,7 @@ DEVICE_MOCKS = [
     "cs_ka2wfrdoogpvgzfi",  # https://github.com/home-assistant/core/issues/119865
     "cs_qhxmvae667uap4zh",  # https://github.com/home-assistant/core/issues/141278
     "cs_vmxuxszzjwp5smli",  # https://github.com/home-assistant/core/issues/119865
+    "cs_u0wirz487erb0eka",  # https://github.com/home-assistant/core/issues/155364
     "cs_zibqa9dutqyaxym2",  # https://github.com/home-assistant/core/pull/125098
     "cwjwq_agwu93lr",  # https://github.com/orgs/home-assistant/discussions/79
     "cwwsq_lxfvx41gqdotrkgi",  # https://github.com/orgs/home-assistant/discussions/730
@@ -173,6 +174,7 @@ DEVICE_MOCKS = [
     "mcs_oxslv1c9",  # https://github.com/home-assistant/core/issues/139966
     "mcs_qxu3flpqjsc1kqu3",  #  https://github.com/home-assistant/core/issues/141278
     "msp_3ddulzljdjjwkhoy",  # https://github.com/orgs/home-assistant/discussions/262
+    "msp_mzuro9jgjs7uiryn",  # https://github.com/home-assistant/core/pull/156048
     "mzj_jlapoy5liocmtdvd",  # https://github.com/home-assistant/core/issues/150662
     "mzj_qavcakohisj5adyh",  # https://github.com/home-assistant/core/issues/141278
     "ntq_9mqdhwklpvnnvb7t",  # https://github.com/orgs/home-assistant/discussions/517
@@ -207,6 +209,7 @@ DEVICE_MOCKS = [
     "sj_tgvtvdoc",  # https://github.com/orgs/home-assistant/discussions/482
     "sjz_ftbc8rp8ipksdfpv",  # https://github.com/orgs/home-assistant/discussions/51
     "sp_6bmk1remyscwyx6i",  # https://github.com/orgs/home-assistant/discussions/842
+    "sp_csr2fqitalj5o0tq",  # https://github.com/home-assistant/core/pull/156103
     "sp_drezasavompxpcgm",  # https://github.com/home-assistant/core/issues/149704
     "sp_nzauwyj3mcnjnf35",  #  https://github.com/home-assistant/core/issues/141278
     "sp_rjKXWRohlvOTyLBu",  # https://github.com/home-assistant/core/issues/149704
@@ -240,6 +243,7 @@ DEVICE_MOCKS = [
     "wk_fi6dne5tu4t1nm6j",  # https://github.com/orgs/home-assistant/discussions/243
     "wk_gc1bxoq2hafxpa35",  # https://github.com/home-assistant/core/issues/145551
     "wk_gogb05wrtredz3bs",  # https://github.com/home-assistant/core/issues/136337
+    "wk_t94pit6zjbask9qo",  # https://github.com/home-assistant/core/pull/156781
     "wk_tfbhw0mg",  # https://github.com/home-assistant/core/issues/152282
     "wk_y5obtqhuztqsf2mj",  # https://github.com/home-assistant/core/issues/139735
     "wkcz_gc4b1mdw7kebtuyz",  #  https://github.com/home-assistant/core/issues/135617
