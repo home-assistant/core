@@ -7,7 +7,12 @@ from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.components import arm_trigger, parametrize_target_entities, target_entities
+from tests.components import (
+    arm_trigger,
+    parametrize_target_entities,
+    set_or_remove_state,
+    target_entities,
+)
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -19,19 +24,6 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 async def target_covers(hass: HomeAssistant) -> None:
     """Create multiple cover entities associated with different targets."""
     return await target_entities(hass, "cover")
-
-
-def set_or_remove_state(
-    hass: HomeAssistant,
-    entity_id: str,
-    state: str | None,
-    attributes: dict | None = None,
-) -> None:
-    """Set or clear the state of an entity."""
-    if state is None:
-        hass.states.async_remove(entity_id)
-    else:
-        hass.states.async_set(entity_id, state, attributes, force_update=True)
 
 
 def parametrize_opened_closed_trigger_states(
