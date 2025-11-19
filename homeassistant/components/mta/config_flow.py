@@ -23,7 +23,7 @@ from .const import CONF_LINE, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class MTAConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
+class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MTA."""
 
     VERSION = 1
