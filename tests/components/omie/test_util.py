@@ -1,8 +1,8 @@
 """Test the OMIE util module."""
 
+import datetime as dt
 from zoneinfo import ZoneInfo
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.omie.util import current_quarter_hour_cet
@@ -26,7 +26,6 @@ from homeassistant.components.omie.util import current_quarter_hour_cet
 )
 def test_current_quarter_hour_cet(now_utc: str, expected_cet: str) -> None:
     """Tests that current_quarter_hour_cet rounds down to the nearest 1/4 hour."""
-    with freeze_time(now_utc, tz_offset=0):
-        start_time = current_quarter_hour_cet()
-        assert start_time.isoformat() == expected_cet
-        assert start_time.tzinfo == ZoneInfo("CET")
+    start_time = current_quarter_hour_cet(dt.datetime.fromisoformat(now_utc))
+    assert start_time.isoformat() == expected_cet
+    assert start_time.tzinfo == ZoneInfo("CET")

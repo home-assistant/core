@@ -17,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .util import CET
+from .util import CET, current_quarter_hour_cet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,8 +73,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
 
 def calc_update_interval(now: dt.datetime) -> dt.timedelta:
     """Calculates the update_interval needed to trigger at the next 15-minute boundary."""
-    minutes_floored = now.minute // 15 * 15
-    previous_15m = now.replace(minute=minutes_floored, second=0, microsecond=0)
+    current_quarter_hour = current_quarter_hour_cet(now)
+    next_quarter_hour = current_quarter_hour + dt.timedelta(minutes=15)
 
-    next_15m = previous_15m + dt.timedelta(minutes=15)
-    return next_15m - now + _UPDATE_INTERVAL_PADDING
+    return next_quarter_hour - now + _UPDATE_INTERVAL_PADDING

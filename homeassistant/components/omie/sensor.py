@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import util
 from .const import DOMAIN
@@ -73,7 +74,7 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
 
     def _get_current_quarter_hour_value(self) -> float | None:
         """Get current quarter-hour's price value from coordinator data."""
-        current_quarter_hour_cet = util.current_quarter_hour_cet()
+        current_quarter_hour_cet = util.current_quarter_hour_cet(dt_util.now())
 
         pyomie_results = self.coordinator.data
         pyomie_quarter_hours = util.pick_series_cet(

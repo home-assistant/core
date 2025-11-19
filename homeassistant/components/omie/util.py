@@ -10,11 +10,12 @@ from pyomie.util import localize_quarter_hourly_data
 CET: Final = ZoneInfo("CET")
 
 
-def current_quarter_hour_cet() -> dt.datetime:
-    """Returns the current quarter-hour in CET with seconds and microseconds equal to 0."""
-    now = dt.datetime.now(CET)
-    floored_minute = now.minute // 15 * 15
-    return now.replace(minute=floored_minute, second=0, microsecond=0)
+def current_quarter_hour_cet(current_time: dt.datetime) -> dt.datetime:
+    """Returns the start of the quarter-hour for the passed in time in CET."""
+    current_quarter_begin = current_time.minute // 15 * 15
+    return current_time.replace(
+        minute=current_quarter_begin, second=0, microsecond=0
+    ).astimezone(CET)
 
 
 def pick_series_cet(
