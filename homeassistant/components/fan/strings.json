@@ -66,6 +66,13 @@
         "forward": "Forward",
         "reverse": "Reverse"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -152,5 +159,29 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Fan"
+  "title": "Fan",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers when a fan is turned off.",
+      "description_configured": "[%key:component::fan::triggers::turned_off::description%]",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted fans to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When a fan is turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when a fan is turned on.",
+      "description_configured": "[%key:component::fan::triggers::turned_on::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::triggers::turned_off::fields::behavior::description%]",
+          "name": "[%key:component::fan::triggers::turned_off::fields::behavior::name%]"
+        }
+      },
+      "name": "When a fan is turned on"
+    }
+  }
 }
