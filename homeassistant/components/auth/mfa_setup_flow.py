@@ -168,9 +168,9 @@ def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     return data
 
 
-def _serializer(input: selector.TargetSelector) -> dict[str, Any] | UnsupportedType:
+def _serializer(input: Any) -> dict[str, Any] | UnsupportedType:
     return (
         input.serialize()
-        if isinstance(input, selector.TargetSelector)
+        if isinstance(input, selector.EntitySelector)
         else voluptuous_serialize.UNSUPPORTED
     )

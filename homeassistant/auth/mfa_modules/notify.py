@@ -257,19 +257,24 @@ class NotifyAuthModule(MultiFactorAuthModule):
         )
 
     async def async_notify(
-        self, code: str, notify_service: str, target: dict[str, Any] | str | None = None
+        self, code: str, notify_service: str, target: str | None = None
     ) -> None:
         """Send code by notify service."""
         data = {"message": self._message_template.format(code)}
 
-        if target and notify_service == "notify":
+        target_dict: dict[str, Any] | None = None
+        if notify_service == "send_message":
+            # notify entity
+            target_dict = {"entity_id": target}
+        elif target:
+            # legacy notify
             data["target"] = [target]
 
         await self.hass.services.async_call(
             "notify",
             notify_service,
             data,
-            target=target if isinstance(target, dict) else None,
+            target=target_dict,
         )
 
 
@@ -312,10 +317,8 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         schema = vol.Schema(
             {
                 vol.Required("notify_service"): vol.In(self._available_notify_services),
-                vol.Optional("target"): selector.TargetSelector(
-                    selector.TargetSelectorConfig(
-                        entity=selector.EntityFilterSelectorConfig(domain="notify")
-                    )
+                vol.Optional("target"): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="notify")
                 ),
             }
         )

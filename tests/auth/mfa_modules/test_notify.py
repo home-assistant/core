@@ -10,6 +10,7 @@ from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.components.notify import NOTIFY_SERVICE_SCHEMA
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import selector
 
 from tests.common import MockUser, async_mock_service
 
@@ -251,7 +252,12 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     schema = step["data_schema"]
     schema({"notify_service": "test2"})
     # ensure the schema can be serialized
-    assert voluptuous_serialize.convert(schema) == [
+    assert voluptuous_serialize.convert(
+        schema,
+        custom_serializer=lambda input: input.serialize()
+        if isinstance(input, selector.EntitySelector)
+        else voluptuous_serialize.UNSUPPORTED,
+    ) == [
         {
             "name": "notify_service",
             "options": [
@@ -268,10 +274,12 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
             "type": "select",
         },
         {
+            "selector": {
+                "entity": {"domain": ["notify"], "reorder": False, "multiple": False}
+            },
             "name": "target",
-            "optional": True,
             "required": False,
-            "type": "string",
+            "optional": True,
         },
     ]
 
