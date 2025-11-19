@@ -16,6 +16,8 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import find_device_listener
+
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_DIMMER_ENTITY_ID = "light.dimmer_0000_02"
@@ -29,18 +31,16 @@ def _trigger_light_status_callback(
     device: MagicMock, device_id: str, status: dict[str, Any]
 ) -> None:
     """Trigger the light status callbacks registered on the device mock."""
-    callbacks = device._listeners.get(CallbackEventType.LIGHT_STATUS, [])
-    for callback in callbacks:
-        callback(device_id, status)
+    callback = find_device_listener(device, CallbackEventType.LIGHT_STATUS)
+    callback(status)
 
 
 def _trigger_availability_callback(
     device: MagicMock, device_id: str, available: bool
 ) -> None:
     """Trigger the availability callbacks registered on the device mock."""
-    callbacks = device._listeners.get(CallbackEventType.ONLINE_STATUS, [])
-    for callback in callbacks:
-        callback(device_id, available)
+    callback = find_device_listener(device, CallbackEventType.ONLINE_STATUS)
+    callback(available)
 
 
 @pytest.fixture
