@@ -390,7 +390,7 @@ async def test_reorder_areas_invalid_area_ids(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["code"] == "invalid_format"
     assert "must contain all existing area IDs" in msg["error"]["message"]
 
 
@@ -409,7 +409,7 @@ async def test_reorder_areas_with_nonexistent_id(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["code"] == "invalid_format"
 
 
 async def test_reorder_areas_persistence(

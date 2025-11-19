@@ -145,7 +145,7 @@ def websocket_reorder_floors(
     try:
         registry.async_reorder(msg["floor_ids"])
     except ValueError as err:
-        connection.send_error(msg["id"], "invalid_info", str(err))
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
     else:
         connection.send_result(msg["id"])
 

@@ -327,7 +327,7 @@ async def test_reorder_floors_invalid_floor_ids(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["code"] == "invalid_format"
     assert "must contain all existing floor IDs" in msg["error"]["message"]
 
 
@@ -346,7 +346,7 @@ async def test_reorder_floors_with_nonexistent_id(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["code"] == "invalid_format"
 
 
 async def test_reorder_floors_persistence(
