@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -16,6 +16,13 @@ STORAGE_KEY = "core.labs"
 STORAGE_VERSION = 1
 
 EVENT_LABS_UPDATED = "labs_updated"
+
+
+class EventLabsUpdatedData(TypedDict):
+    """Event data for labs_updated event."""
+
+    feature_id: str
+    enabled: bool
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)

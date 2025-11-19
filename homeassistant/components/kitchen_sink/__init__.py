@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
+    EventLabsUpdatedData,
     async_is_experimental_feature_enabled,
 )
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
@@ -120,9 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Subscribe to labs feature updates for kitchen_sink experimental repair
     @callback
-    def _async_labs_updated(event: Event) -> None:
+    def _async_labs_updated(event: Event[EventLabsUpdatedData]) -> None:
         """Handle labs feature update event."""
-        if event.data.get("feature_id") == "kitchen_sink.special_repair":
+        if event.data["feature_id"] == "kitchen_sink.special_repair":
             _async_update_special_repair(hass)
 
     entry.async_on_unload(

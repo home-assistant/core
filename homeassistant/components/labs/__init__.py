@@ -26,6 +26,7 @@ from .const import (
     LABS_DATA,
     STORAGE_KEY,
     STORAGE_VERSION,
+    EventLabsUpdatedData,
     LabFeature,
     LabsData,
     LabsStoreData,
@@ -38,6 +39,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 __all__ = [
     "DOMAIN",
     "EVENT_LABS_UPDATED",
+    "EventLabsUpdatedData",
     "async_is_experimental_feature_enabled",
 ]
 
@@ -207,9 +209,10 @@ async def websocket_update_feature(
     await labs_data.store.async_save(labs_data.data)
 
     # Fire event
-    hass.bus.async_fire(
-        EVENT_LABS_UPDATED,
-        {"feature_id": feature_id, "enabled": enabled},
-    )
+    event_data: EventLabsUpdatedData = {
+        "feature_id": feature_id,
+        "enabled": enabled,
+    }
+    hass.bus.async_fire(EVENT_LABS_UPDATED, event_data)
 
     connection.send_result(msg["id"])
