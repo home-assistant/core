@@ -1,0 +1,228 @@
+"""Test vacuum triggers."""
+
+import pytest
+
+from homeassistant.components.vacuum import VacuumActivity
+from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.setup import async_setup_component
+
+from tests.components import (
+    StateDescription,
+    arm_trigger,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    set_or_remove_state,
+    target_entities,
+)
+
+VACUUM_STATES = {s.value for s in VacuumActivity}
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
+
+@pytest.fixture
+async def target_vacuums(hass: HomeAssistant) -> None:
+    """Create multiple vacuum entities associated with different targets."""
+    return await target_entities(hass, "vacuum")
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("vacuum"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "states"),
+    [
+        *parametrize_trigger_states(
+            "vacuum.docked",
+            (VacuumActivity.DOCKED,),
+            VACUUM_STATES - {VacuumActivity.DOCKED},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.errored",
+            (VacuumActivity.ERROR,),
+            VACUUM_STATES - {VacuumActivity.ERROR},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.paused_cleaning",
+            (VacuumActivity.PAUSED,),
+            VACUUM_STATES - {VacuumActivity.PAUSED},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.started_cleaning",
+            (VacuumActivity.CLEANING,),
+            VACUUM_STATES - {VacuumActivity.CLEANING},
+        ),
+    ],
+)
+async def test_vacuum_state_trigger_behavior_any(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_vacuums: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    states: list[StateDescription],
+) -> None:
+    """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
+    await async_setup_component(hass, "vacuum", {})
+
+    other_entity_ids = set(target_vacuums) - {entity_id}
+
+    # Set all vacuums, including the tested one, to the initial state
+    for eid in target_vacuums:
+        set_or_remove_state(hass, eid, states[0]["state"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {}, trigger_target_config)
+
+    for state in states[1:]:
+        set_or_remove_state(hass, entity_id, state["state"])
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Check if changing other vacuums also triggers
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, state["state"])
+            await hass.async_block_till_done()
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("vacuum"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "states"),
+    [
+        *parametrize_trigger_states(
+            "vacuum.docked",
+            (VacuumActivity.DOCKED,),
+            VACUUM_STATES - {VacuumActivity.DOCKED},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.errored",
+            (VacuumActivity.ERROR,),
+            VACUUM_STATES - {VacuumActivity.ERROR},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.paused_cleaning",
+            (VacuumActivity.PAUSED,),
+            VACUUM_STATES - {VacuumActivity.PAUSED},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.started_cleaning",
+            (VacuumActivity.CLEANING,),
+            VACUUM_STATES - {VacuumActivity.CLEANING},
+        ),
+    ],
+)
+async def test_vacuum_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_vacuums: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    states: list[StateDescription],
+) -> None:
+    """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
+    await async_setup_component(hass, "vacuum", {})
+
+    other_entity_ids = set(target_vacuums) - {entity_id}
+
+    # Set all vacuums, including the tested one, to the initial state
+    for eid in target_vacuums:
+        set_or_remove_state(hass, eid, states[0]["state"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
+
+    for state in states[1:]:
+        set_or_remove_state(hass, entity_id, state["state"])
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Triggering other vacuums should not cause the trigger to fire again
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, state["state"])
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("vacuum"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "states"),
+    [
+        *parametrize_trigger_states(
+            "vacuum.docked",
+            (VacuumActivity.DOCKED,),
+            VACUUM_STATES - {VacuumActivity.DOCKED},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.errored",
+            (VacuumActivity.ERROR,),
+            VACUUM_STATES - {VacuumActivity.ERROR},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.paused_cleaning",
+            (VacuumActivity.PAUSED,),
+            VACUUM_STATES - {VacuumActivity.PAUSED},
+        ),
+        *parametrize_trigger_states(
+            "vacuum.started_cleaning",
+            (VacuumActivity.CLEANING,),
+            VACUUM_STATES - {VacuumActivity.CLEANING},
+        ),
+    ],
+)
+async def test_vacuum_state_trigger_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_vacuums: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    states: list[StateDescription],
+) -> None:
+    """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
+    await async_setup_component(hass, "vacuum", {})
+
+    other_entity_ids = set(target_vacuums) - {entity_id}
+
+    # Set all vacuums, including the tested one, to the initial state
+    for eid in target_vacuums:
+        set_or_remove_state(hass, eid, states[0]["state"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
+
+    for state in states[1:]:
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, state["state"])
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, state["state"])
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
