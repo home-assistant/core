@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IOmeterConfigEntry) -> b
 
     host = entry.data[CONF_HOST]
     session = async_get_clientsession(hass)
-    client = IOmeterClient(host=host, session=session)
+    client = IOmeterClient(host=host, request_timeout=60, session=session)
     try:
         await client.get_current_status()
     except IOmeterConnectionError as err:
