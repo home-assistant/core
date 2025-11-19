@@ -1,6 +1,6 @@
 """Support for Lutron Caseta switches."""
 
-from typing import Any, List, Union
+from typing import Any
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +26,7 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
-    entities: List[Union[LutronCasetaLight, LutronCasetaSmartAwaySwitch]] = [
+    entities: list[LutronCasetaLight | LutronCasetaSmartAwaySwitch] = [
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
     ]
 
