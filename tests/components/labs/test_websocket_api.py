@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import ANY
+from unittest.mock import ANY, AsyncMock, patch
 
 from homeassistant.components.labs import EVENT_LABS_UPDATED, async_setup
 from homeassistant.components.labs.const import LABS_DATA
@@ -467,3 +467,115 @@ async def test_websocket_update_toggle_multiple_times(
     )
     msg = await client.receive_json()
     assert msg["success"]
+
+
+async def test_websocket_update_with_backup(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test enabling a feature with backup creation."""
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    # Mock the backup manager
+    mock_backup_manager = AsyncMock()
+    mock_backup_manager.async_create_automatic_backup = AsyncMock()
+
+    with patch(
+        "homeassistant.components.labs.async_get_manager",
+        return_value=mock_backup_manager,
+    ):
+        # Enable with backup
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "labs/update",
+                "feature_id": "kitchen_sink.special_repair",
+                "enabled": True,
+                "create_backup": True,
+            }
+        )
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    # Verify backup was created
+    mock_backup_manager.async_create_automatic_backup.assert_called_once()
+
+
+async def test_websocket_update_with_backup_failure(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that backup failure prevents feature enable."""
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    # Mock the backup manager to fail
+    mock_backup_manager = AsyncMock()
+    mock_backup_manager.async_create_automatic_backup = AsyncMock(
+        side_effect=Exception("Backup failed")
+    )
+
+    with patch(
+        "homeassistant.components.labs.async_get_manager",
+        return_value=mock_backup_manager,
+    ):
+        # Try to enable with backup (should fail)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "labs/update",
+                "feature_id": "kitchen_sink.special_repair",
+                "enabled": True,
+                "create_backup": True,
+            }
+        )
+        msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unknown_error"
+    assert "backup" in msg["error"]["message"].lower()
+
+    # Verify feature was NOT enabled
+    store = hass.data[LABS_DATA].store
+    data = await store.async_load()
+    assert data["features"].get("kitchen_sink.special_repair") is not True
+
+
+async def test_websocket_update_disable_ignores_backup(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that disabling ignores the backup parameter."""
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    # Mock the backup manager (should not be called)
+    mock_backup_manager = AsyncMock()
+    mock_backup_manager.async_create_automatic_backup = AsyncMock()
+
+    with patch(
+        "homeassistant.components.labs.async_get_manager",
+        return_value=mock_backup_manager,
+    ):
+        # Disable with backup flag (backup should be ignored)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "labs/update",
+                "feature_id": "kitchen_sink.special_repair",
+                "enabled": False,
+                "create_backup": True,
+            }
+        )
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    # Verify backup was NOT created
+    mock_backup_manager.async_create_automatic_backup.assert_not_called()

@@ -13,6 +13,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.backup import BackupManagerError, async_get_manager
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.generated.labs import LABS_FEATURES
 from homeassistant.helpers import config_validation as cv
@@ -181,6 +182,7 @@ def websocket_list_features(
         vol.Required("type"): "labs/update",
         vol.Required("feature_id"): str,
         vol.Required("enabled"): bool,
+        vol.Optional("create_backup", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -192,6 +194,7 @@ async def websocket_update_feature(
     """Update a lab feature state."""
     feature_id = msg["feature_id"]
     enabled = msg["enabled"]
+    create_backup = msg["create_backup"]
 
     labs_data = hass.data[LABS_DATA]
 
@@ -203,6 +206,19 @@ async def websocket_update_feature(
             f"Feature {feature_id} not found",
         )
         return
+
+    # Create backup if requested and enabling
+    if create_backup and enabled:
+        try:
+            backup_manager = async_get_manager(hass)
+            await backup_manager.async_create_automatic_backup()
+        except BackupManagerError as err:
+            connection.send_error(
+                msg["id"],
+                websocket_api.ERR_UNKNOWN_ERROR,
+                f"Error creating backup: {err}",
+            )
+            return
 
     # Update storage
     labs_data.data["features"][feature_id] = enabled
