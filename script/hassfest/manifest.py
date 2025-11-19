@@ -286,8 +286,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                         vol.Optional("feedback_url"): vol.Url(),
                         vol.Optional("learn_more_url"): vol.Url(),
                         vol.Optional("report_issue_url"): vol.Url(),
-                    },
-                    extra=vol.PREVENT_EXTRA,
+                    }
                 )
             }
         ),

@@ -39,7 +39,6 @@ __all__ = [
     "DOMAIN",
     "EVENT_LABS_UPDATED",
     "async_is_experimental_feature_enabled",
-    "async_setup",
 ]
 
 
