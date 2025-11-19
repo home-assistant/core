@@ -37,7 +37,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import CONF_TURN_OFF, CONF_TURN_ON
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -161,7 +161,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
         if on_script := self._action_scripts.get(CONF_TURN_ON):
-            await self.async_run_script(on_script, context=self._context)
+            await self.async_run_actions(on_script, context=self._context)
         if self._attr_assumed_state:
             self._attr_is_on = True
             self.async_write_ha_state()
@@ -169,7 +169,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
         if off_script := self._action_scripts.get(CONF_TURN_OFF):
-            await self.async_run_script(off_script, context=self._context)
+            await self.async_run_actions(off_script, context=self._context)
         if self._attr_assumed_state:
             self._attr_is_on = False
             self.async_write_ha_state()
@@ -196,9 +196,9 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
 
         # Scripts can be an empty list, therefore we need to check for None
         if (on_action := config.get(CONF_TURN_ON)) is not None:
-            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
+            self.add_actions(CONF_TURN_ON, on_action, name)
         if (off_action := config.get(CONF_TURN_OFF)) is not None:
-            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
+            self.add_actions(CONF_TURN_OFF, off_action, name)
 
     @callback
     def _update_state(self, result):
@@ -254,9 +254,9 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
 
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         if on_action := config.get(CONF_TURN_ON):
-            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
+            self.add_actions(CONF_TURN_ON, on_action, name)
         if off_action := config.get(CONF_TURN_OFF):
-            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
+            self.add_actions(CONF_TURN_OFF, off_action, name)
 
         if CONF_STATE in config:
             self._to_render_simple.append(CONF_STATE)

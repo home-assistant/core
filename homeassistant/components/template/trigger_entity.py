@@ -39,6 +39,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
+        await self.async_setup_actions()
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
             self._process_data()

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -52,7 +52,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -306,7 +305,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
     def _iterate_scripts(
         self, config: dict[str, Any]
-    ) -> Generator[tuple[str, Sequence[dict[str, Any]], ColorMode | None]]:
+    ) -> Generator[tuple[str, list[dict[str, Any]], ColorMode | None]]:
         for action_id, color_mode in (
             (CONF_ON_ACTION, None),
             (CONF_OFF_ACTION, None),
@@ -953,7 +952,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
 
         color_modes = {ColorMode.ONOFF}
         for action_id, action_config, color_mode in self._iterate_scripts(config):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             if color_mode:
                 color_modes.add(color_mode)
 
@@ -1097,7 +1096,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
         script_id, script_params = self.get_registered_script(**kwargs)
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[script_id],
             run_variables=script_params,
             context=self._context,
@@ -1110,13 +1109,13 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
         """Turn the light off."""
         off_script = self._action_scripts[CONF_OFF_ACTION]
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self.async_run_script(
+            await self.async_run_actions(
                 off_script,
                 run_variables={"transition": kwargs[ATTR_TRANSITION]},
                 context=self._context,
             )
         else:
-            await self.async_run_script(off_script, context=self._context)
+            await self.async_run_actions(off_script, context=self._context)
         if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
@@ -1167,7 +1166,7 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
 
         color_modes = {ColorMode.ONOFF}
         for action_id, action_config, color_mode in self._iterate_scripts(config):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             if color_mode:
                 color_modes.add(color_mode)
 
@@ -1236,7 +1235,7 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             # and turn_on is called.
             self._state = True
 
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[script_id],
             run_variables=script_params,
             context=self._context,
@@ -1249,13 +1248,13 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
         """Turn the light off."""
         off_script = self._action_scripts[CONF_OFF_ACTION]
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self.async_run_script(
+            await self.async_run_actions(
                 off_script,
                 run_variables={"transition": kwargs[ATTR_TRANSITION]},
                 context=self._context,
             )
         else:
-            await self.async_run_script(off_script, context=self._context)
+            await self.async_run_actions(off_script, context=self._context)
         if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()

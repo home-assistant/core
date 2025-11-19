@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
+from .const import CONF_MAX, CONF_MIN, CONF_STEP
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -137,7 +137,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
             self._attr_native_value = value
             self.async_write_ha_state()
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
-            await self.async_run_script(
+            await self.async_run_actions(
                 set_value,
                 run_variables={ATTR_VALUE: value},
                 context=self._context,
@@ -163,7 +163,7 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
         if TYPE_CHECKING:
             assert name is not None
 
-        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
+        self.add_actions(CONF_SET_VALUE, config[CONF_SET_VALUE], name)
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -224,11 +224,10 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
-        self.add_script(
+        self.add_actions(
             CONF_SET_VALUE,
             config[CONF_SET_VALUE],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            DOMAIN,
         )
 
     def _handle_coordinator_update(self):

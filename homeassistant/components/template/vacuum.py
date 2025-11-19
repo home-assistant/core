@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -245,7 +245,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
 
     def _iterate_scripts(
         self, config: dict[str, Any]
-    ) -> Generator[tuple[str, Sequence[dict[str, Any]], VacuumEntityFeature | int]]:
+    ) -> Generator[tuple[str, list[dict[str, Any]], VacuumEntityFeature | int]]:
         for action_id, supported_feature in (
             (SERVICE_START, 0),
             (SERVICE_PAUSE, VacuumEntityFeature.PAUSE),
@@ -278,7 +278,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if self._attr_assumed_state:
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[SERVICE_START], context=self._context
         )
 
@@ -288,7 +288,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._attr_activity = VacuumActivity.PAUSED
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_PAUSE):
-            await self.async_run_script(script, context=self._context)
+            await self.async_run_actions(script, context=self._context)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
@@ -296,7 +296,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._attr_activity = VacuumActivity.IDLE
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_STOP):
-            await self.async_run_script(script, context=self._context)
+            await self.async_run_actions(script, context=self._context)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
@@ -304,7 +304,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._attr_activity = VacuumActivity.RETURNING
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
-            await self.async_run_script(script, context=self._context)
+            await self.async_run_actions(script, context=self._context)
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
@@ -312,12 +312,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
-            await self.async_run_script(script, context=self._context)
+            await self.async_run_actions(script, context=self._context)
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         if script := self._action_scripts.get(SERVICE_LOCATE):
-            await self.async_run_script(script, context=self._context)
+            await self.async_run_actions(script, context=self._context)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
@@ -331,7 +331,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             return
 
         if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
-            await self.async_run_script(
+            await self.async_run_actions(
                 script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
             )
 
@@ -395,7 +395,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
     async def async_added_to_hass(self) -> None:
@@ -465,7 +465,7 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
         for key in (CONF_STATE, CONF_FAN_SPEED, CONF_BATTERY_LEVEL):

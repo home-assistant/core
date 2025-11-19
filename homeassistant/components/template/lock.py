@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -162,7 +162,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
 
     def _iterate_scripts(
         self, config: dict[str, Any]
-    ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
+    ) -> Generator[tuple[str, list[dict[str, Any]], LockEntityFeature | int]]:
         for action_id, supported_feature in (
             (CONF_LOCK, 0),
             (CONF_UNLOCK, 0),
@@ -258,7 +258,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[CONF_LOCK],
             run_variables=tpl_vars,
             context=self._context,
@@ -276,7 +276,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[CONF_UNLOCK],
             run_variables=tpl_vars,
             context=self._context,
@@ -294,7 +294,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[CONF_OPEN],
             run_variables=tpl_vars,
             context=self._context,
@@ -335,7 +335,7 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
     @callback
@@ -395,7 +395,7 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
     @callback

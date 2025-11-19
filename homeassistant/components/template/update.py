@@ -34,7 +34,6 @@ from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -263,7 +262,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[CONF_INSTALL],
             run_variables={ATTR_SPECIFIC_VERSION: version, ATTR_BACKUP: backup},
             context=self._context,
@@ -291,7 +290,7 @@ class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
 
         # Scripts can be an empty list, therefore we need to check for None
         if (install_action := config.get(CONF_INSTALL)) is not None:
-            self.add_script(CONF_INSTALL, install_action, name, DOMAIN)
+            self.add_actions(CONF_INSTALL, install_action, name)
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     @property
@@ -389,11 +388,10 @@ class TriggerUpdateEntity(TriggerEntity, AbstractTemplateUpdate):
 
         # Scripts can be an empty list, therefore we need to check for None
         if (install_action := config.get(CONF_INSTALL)) is not None:
-            self.add_script(
+            self.add_actions(
                 CONF_INSTALL,
                 install_action,
                 self._rendered.get(CONF_NAME, DEFAULT_NAME),
-                DOMAIN,
             )
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 

@@ -276,4 +276,6 @@ def async_setup_template_preview[T: TemplateEntity](
         config[CONF_STATE] = config.pop(CONF_VALUE_TEMPLATE)
 
     validated_config = schema(config | {CONF_NAME: name})
-    return state_entity_cls(hass, validated_config, None)
+    return state_entity_cls(
+        hass, {"__is_preview_entity": True, **validated_config}, None
+    )
