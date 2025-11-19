@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival',
-    'unique_id': <ANY>,
+    'unique_id': '01J0000000000000000000000_next_arrival',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
