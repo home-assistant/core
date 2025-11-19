@@ -24,7 +24,7 @@ class BrotherPrinterEntity(CoordinatorEntity[BrotherDataUpdateCoordinator]):
             connections={(CONNECTION_NETWORK_MAC, coordinator.brother.mac)},
             serial_number=coordinator.brother.serial,
             manufacturer="Brother",
-            model=coordinator.brother.model,
+            model_id=coordinator.brother.model,
             name=coordinator.brother.model,
             sw_version=coordinator.brother.firmware,
         )
