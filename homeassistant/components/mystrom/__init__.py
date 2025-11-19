@@ -7,6 +7,7 @@ import logging
 import pymystrom
 from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
+from pymystrom.pir import MyStromPir
 from pymystrom.switch import MyStromSwitch
 
 from homeassistant.const import CONF_HOST, Platform
@@ -17,15 +18,21 @@ from .models import MyStromConfigEntry, MyStromData
 
 PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
+PLATFORMS_MOTION_SENSOR = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_get_device_state(
-    device: MyStromSwitch | MyStromBulb, ip_address: str
+    device: MyStromSwitch | MyStromBulb | MyStromPir, ip_address: str
 ) -> None:
     try:
-        await device.get_state()
+        if isinstance(device, MyStromPir):
+            await device.get_light()
+            await device.get_motion()
+            await device.get_temperatures()
+        else:
+            await device.get_state()
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", ip_address)
         raise ConfigEntryNotReady from err
@@ -33,6 +40,10 @@ async def _async_get_device_state(
 
 def _get_mystrom_bulb(host: str, mac: str) -> MyStromBulb:
     return MyStromBulb(host, mac)
+
+
+def _get_mystrom_pir(host: str) -> MyStromPir:
+    return MyStromPir(host)
 
 
 def _get_mystrom_switch(host: str) -> MyStromSwitch:
@@ -67,6 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> b
                 mac,
             )
             return False
+    elif device_type == 110:
+        device = _get_mystrom_pir(host)
+        platforms = PLATFORMS_MOTION_SENSOR
+        await _async_get_device_state(device, info["ip"])
     else:
         _LOGGER.error("Unsupported myStrom device type: %s", device_type)
         return False
@@ -88,4 +103,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> 
         platforms.extend(PLATFORMS_PLUGS)
     elif device_type in [102, 105]:
         platforms.extend(PLATFORMS_BULB)
+    elif device_type == 110:
+        platforms.extend(PLATFORMS_MOTION_SENSOR)
     return await hass.config_entries.async_unload_platforms(entry, platforms)

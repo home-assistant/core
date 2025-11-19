@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pymystrom.pir import MyStromPir
 from pymystrom.switch import MyStromSwitch
 
 from homeassistant.components.sensor import (
@@ -13,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower, UnitOfTemperature
+from homeassistant.const import LIGHT_LUX, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,33 +24,43 @@ from .models import MyStromConfigEntry
 
 
 @dataclass(frozen=True)
-class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
-    """Class describing mystrom switch sensor entities."""
+class MyStromSensorEntityDescription(SensorEntityDescription):
+    """Class describing mystrom switch and PIR sensor entities."""
 
-    value_fn: Callable[[MyStromSwitch], float | None] = lambda _: None
+    value_fn: Callable[[MyStromPir | MyStromSwitch], float | None] = lambda _: None
 
 
-SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
-    MyStromSwitchSensorEntityDescription(
+SENSOR_TYPES: tuple[MyStromSensorEntityDescription, ...] = (
+    MyStromSensorEntityDescription(
         key="avg_consumption",
         translation_key="avg_consumption",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda device: device.consumedWs,
+        value_fn=lambda device: getattr(device, "consumedWs", None),
     ),
-    MyStromSwitchSensorEntityDescription(
+    MyStromSensorEntityDescription(
         key="consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda device: device.consumption,
+        value_fn=lambda device: getattr(device, "consumption", None),
     ),
-    MyStromSwitchSensorEntityDescription(
+    MyStromSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda device: device.temperature,
+        # the switch property is called "temperature", the PIR property "temperature_compensated"
+        value_fn=lambda device: getattr(
+            device, "temperature", getattr(device, "temperature_compensated", None)
+        ),
+    ),
+    MyStromSensorEntityDescription(
+        key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+        value_fn=lambda device: getattr(device, "intensity", None),
     ),
 )
 
@@ -60,38 +71,40 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    device: MyStromSwitch = entry.runtime_data.device
+    device: MyStromSwitch | MyStromPir = entry.runtime_data.device
+    info = entry.runtime_data.info
 
     async_add_entities(
-        MyStromSwitchSensor(device, entry.title, description)
+        MyStromSensor(device, entry.title, description, info["mac"])
         for description in SENSOR_TYPES
         if description.value_fn(device) is not None
     )
 
 
-class MyStromSwitchSensor(SensorEntity):
+class MyStromSensor(SensorEntity):
     """Representation of the consumption or temperature of a myStrom switch/plug."""
 
-    entity_description: MyStromSwitchSensorEntityDescription
+    entity_description: MyStromSensorEntityDescription
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        device: MyStromSwitch,
+        device: MyStromSwitch | MyStromPir,
         name: str,
-        description: MyStromSwitchSensorEntityDescription,
+        description: MyStromSensorEntityDescription,
+        mac: str,
     ) -> None:
         """Initialize the sensor."""
         self.device = device
         self.entity_description = description
 
-        self._attr_unique_id = f"{device.mac}-{description.key}"
+        self._attr_unique_id = f"{mac}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac)},
+            identifiers={(DOMAIN, mac)},
             name=name,
             manufacturer=MANUFACTURER,
-            sw_version=device.firmware,
+            sw_version=getattr(device, "firmware", None),
         )
 
     @property

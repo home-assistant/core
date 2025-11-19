@@ -38,6 +38,14 @@ def get_default_bulb_state() -> dict[str, Any]:
     }
 
 
+def get_default_pir_state() -> dict[str, Any]:
+    """Get default pir state."""
+    return {
+        "temperature_compensated": 24.87,
+        "intensity": 16,
+    }
+
+
 def get_default_switch_state() -> dict[str, Any]:
     """Get default switch state."""
     return {
@@ -127,6 +135,24 @@ class MyStromBulbMock(MyStromDeviceMock):
         if not self._requested_state:
             return None
         return self._state["on"]
+
+
+class MyStromPirMock(MyStromDeviceMock):
+    """MyStrom Switch mock."""
+
+    @property
+    def temperature_compensated(self) -> str | None:
+        """Return current compensated temperature."""
+        if not self._requested_state:
+            return None
+        return self._state["temperature_compensated"]
+
+    @property
+    def intensity(self) -> str | None:
+        """Return the intensity reported by the light sensor."""
+        if not self._requested_state:
+            return None
+        return self._state["intensity"]
 
 
 class MyStromSwitchMock(MyStromDeviceMock):
