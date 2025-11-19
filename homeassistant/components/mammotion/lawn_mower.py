@@ -12,7 +12,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MammotionConfigEntry, MammotionReportUpdateCoordinator
 from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
@@ -37,17 +37,14 @@ def get_entity_attribute(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MammotionConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Luba config entry."""
-    mammotion_devices = entry.runtime_data
-    entities = []
-    async_add_entities(
-        [
-            MammotionLawnMowerEntity(mower.reporting_coordinator)
-            for mower in mammotion_devices
-        ]
-    )
+    mammotion_devices = entry.runtime_data.mowers
+    entities: list[MammotionLawnMowerEntity] = [
+        MammotionLawnMowerEntity(mower.reporting_coordinator)
+        for mower in mammotion_devices
+    ]
     async_add_entities(entities)
 
 
@@ -130,7 +127,9 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                     translation_domain=DOMAIN, translation_key=trans_key
                 ) from exc
             finally:
-                await self.coordinator.async_request_iot_sync()
+                await self.coordinator.api.async_request_iot_sync(
+                    self.coordinator.device_name
+                )
 
     async def async_pause(self) -> None:
         """Pause mower."""
@@ -158,4 +157,6 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                     translation_domain=DOMAIN, translation_key=trans_key
                 ) from exc
             finally:
-                await self.coordinator.async_request_iot_sync()
+                await self.coordinator.api.async_request_iot_sync(
+                    self.coordinator.device_name
+                )

@@ -5,7 +5,11 @@ from typing import Final
 
 from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError
-from pymammotion.aliyun.cloud_gateway import CheckSessionException, SetupException
+from pymammotion.aliyun.cloud_gateway import (
+    CheckSessionException,
+    DeviceOfflineException,
+    SetupException,
+)
 from pymammotion.mammotion.devices.mammotion_bluetooth import CharacteristicMissingError
 from pymammotion.utility.constant import WorkMode
 
@@ -24,6 +28,7 @@ COMMAND_EXCEPTIONS = (
     CharacteristicMissingError,
     BleakError,
     TimeoutError,
+    DeviceOfflineException,
 )
 
 EXPIRED_CREDENTIAL_EXCEPTIONS = (CheckSessionException, SetupException)
