@@ -126,6 +126,9 @@ def parametrize_trigger_states(
     The target_states and other_states iterables are either iterables of
     states or iterables of (state, attributes) tuples.
 
+    Set `trigger_from_none` to False if the trigger is not expected to fire
+    when the initial state is None.
+
     Returns a list of tuples with (trigger, list of states),
     where states is a list of StateDescription dicts.
     """
