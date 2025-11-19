@@ -1,4 +1,4 @@
-"""Test light trigger."""
+"""Test fan trigger."""
 
 import pytest
 
@@ -21,39 +21,39 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_lights(hass: HomeAssistant) -> None:
-    """Create multiple light entities associated with different targets."""
-    return await target_entities(hass, "light")
+async def target_fans(hass: HomeAssistant) -> None:
+    """Create multiple fan entities associated with different targets."""
+    return await target_entities(hass, "fan")
 
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("light"),
+    parametrize_target_entities("fan"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states("fan.turned_on", (STATE_ON,), (STATE_OFF,)),
+        *parametrize_trigger_states("fan.turned_off", (STATE_OFF,), (STATE_ON,)),
     ],
 )
-async def test_light_state_trigger_behavior_any(
+async def test_fan_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_fans: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[tuple[str, int]],
 ) -> None:
-    """Test that the light state trigger fires when any light state changes to a specific state."""
-    await async_setup_component(hass, "light", {})
+    """Test that the fan state trigger fires when any fan state changes to a specific state."""
+    await async_setup_component(hass, "fan", {})
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_fans) - {entity_id}
 
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    # Set all fans, including the tested fan, to the initial state
+    for eid in target_fans:
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
@@ -67,7 +67,7 @@ async def test_light_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other lights also triggers
+        # Check if changing other fans also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
@@ -77,32 +77,32 @@ async def test_light_state_trigger_behavior_any(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("light"),
+    parametrize_target_entities("fan"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states("fan.turned_on", (STATE_ON,), (STATE_OFF,)),
+        *parametrize_trigger_states("fan.turned_off", (STATE_OFF,), (STATE_ON,)),
     ],
 )
-async def test_light_state_trigger_behavior_first(
+async def test_fan_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_fans: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[tuple[str, int, list[str]]],
 ) -> None:
-    """Test that the light state trigger fires when the first light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
+    """Test that the fan state trigger fires when the first fan changes to a specific state."""
+    await async_setup_component(hass, "fan", {})
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_fans) - {entity_id}
 
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    # Set all fans, including the tested fan, to the initial state
+    for eid in target_fans:
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
@@ -116,7 +116,7 @@ async def test_light_state_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other lights should not cause the trigger to fire again
+        # Triggering other fans should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
@@ -125,32 +125,32 @@ async def test_light_state_trigger_behavior_first(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("light"),
+    parametrize_target_entities("fan"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states("fan.turned_on", (STATE_ON,), (STATE_OFF,)),
+        *parametrize_trigger_states("fan.turned_off", (STATE_OFF,), (STATE_ON,)),
     ],
 )
-async def test_light_state_trigger_behavior_last(
+async def test_fan_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_fans: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[tuple[str, int]],
 ) -> None:
-    """Test that the light state trigger fires when the last light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
+    """Test that the fan state trigger fires when the last fan changes to a specific state."""
+    await async_setup_component(hass, "fan", {})
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_fans) - {entity_id}
 
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    # Set all fans, including the tested fan, to the initial state
+    for eid in target_fans:
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 

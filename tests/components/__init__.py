@@ -301,3 +301,16 @@ async def arm_trigger(
             }
         },
     )
+
+
+def set_or_remove_state(
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str | None,
+    attributes: dict | None = None,
+) -> None:
+    """Set or remove the state of an entity."""
+    if state is None:
+        hass.states.async_remove(entity_id)
+    else:
+        hass.states.async_set(entity_id, state, attributes, force_update=True)

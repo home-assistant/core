@@ -16,6 +16,7 @@ from tests.components import (
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
+    set_or_remove_state,
     target_entities,
 )
 
@@ -31,19 +32,6 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 async def target_alarm_control_panels(hass: HomeAssistant) -> None:
     """Create multiple alarm control panel entities associated with different targets."""
     return await target_entities(hass, "alarm_control_panel")
-
-
-def set_or_remove_state(
-    hass: HomeAssistant,
-    entity_id: str,
-    state: str | None,
-    attributes: dict | None = None,
-) -> None:
-    """Set or clear the state of an entity."""
-    if state is None:
-        hass.states.async_remove(entity_id)
-    else:
-        hass.states.async_set(entity_id, state, attributes, force_update=True)
 
 
 def parametrize_acp_trigger_states(
