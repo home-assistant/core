@@ -6,7 +6,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from libpyvivotek import VivotekCamera
+from libpyvivotek.vivotek import VivotekCamera
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -17,7 +17,6 @@ from homeassistant.components.camera import (
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
@@ -26,22 +25,13 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import VivotekConfigEntry
-from .const import (
-    CONF_FRAMERATE,
-    CONF_SECURITY_LEVEL,
-    CONF_STREAM_PATH,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +45,6 @@ DEFAULT_STREAM_SOURCE = "live.sdp"
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
@@ -81,47 +70,41 @@ async def async_setup_entry(
     stream_source = (
         f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
     )
-    cam_client = entry.runtime_data.cam_client
+    cam_client = entry.runtime_data
     mac_address = await hass.async_add_executor_job(cam_client.get_mac)
     unique_id = format_mac(mac_address)
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, unique_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-    )
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry,
             unique_id=unique_id,
-            title=str(config[CONF_NAME]),
+            title=DEFAULT_NAME,
         )
     async_add_entities([VivotekCam(entry.data, cam_client, stream_source, unique_id)])
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a Vivotek IP Camera from Yaml."""
-    creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
-    cam = VivotekCamera(
-        host=config[CONF_IP_ADDRESS],
-        port=(443 if config[CONF_SSL] else 80),
-        verify_ssl=config[CONF_VERIFY_SSL],
-        usr=config[CONF_USERNAME],
-        pwd=config[CONF_PASSWORD],
-        digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
-        sec_lvl=config[CONF_SECURITY_LEVEL],
-    )
-    stream_source = (
-        f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
-    )
-    unique_id = cam.get_mac()
-    add_entities([VivotekCam(config, cam, stream_source, unique_id)], True)
+# def setup_platform(
+#     hass: HomeAssistant,
+#     config: ConfigType,
+#     add_entities: AddEntitiesCallback,
+#     discovery_info: DiscoveryInfoType | None = None,
+# ) -> None:
+#     """Set up a Vivotek IP Camera from Yaml."""
+#     creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
+#     cam = VivotekCamera(
+#         host=config[CONF_IP_ADDRESS],
+#         port=(443 if config[CONF_SSL] else 80),
+#         verify_ssl=config[CONF_VERIFY_SSL],
+#         usr=config[CONF_USERNAME],
+#         pwd=config[CONF_PASSWORD],
+#         digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
+#         sec_lvl=config[CONF_SECURITY_LEVEL],
+#     )
+#     stream_source = (
+#         f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
+#     )
+#     unique_id = cam.get_mac()
+#     add_entities([VivotekCam(config, cam, stream_source, unique_id)], True)
 
 
 class VivotekCam(Camera):
@@ -146,7 +129,6 @@ class VivotekCam(Camera):
         self._cam_client = cam_client
         self._attr_configuration_url = f"http://{config[CONF_IP_ADDRESS]}"
         self._attr_frame_interval = 1 / config[CONF_FRAMERATE]
-        self._attr_name = config[CONF_NAME]
         self._attr_unique_id = unique_id
         self._stream_source = stream_source
 
@@ -179,15 +161,3 @@ class VivotekCam(Camera):
     async def async_update(self) -> None:
         """Update the entity."""
         await self.hass.async_add_executor_job(self.update)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info."""
-        return DeviceInfo(
-            configuration_url=self._attr_configuration_url,
-            identifiers={(DOMAIN, self._attr_unique_id or "")},
-            manufacturer=MANUFACTURER,
-            model=self._attr_model,
-            name=self._attr_name,
-            serial_number=self._attr_unique_id,
-        )

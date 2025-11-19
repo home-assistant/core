@@ -3,14 +3,13 @@
 import logging
 from typing import Any
 
-from libpyvivotek.vivotek import VivotekCameraError
+from libpyvivotek.vivotek import SECURITY_LEVELS, VivotekCameraError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -19,10 +18,16 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from . import async_build_and_test_cam_client
-from .camera import DEFAULT_NAME, DEFAULT_SECURITY_LEVEL, DEFAULT_STREAM_SOURCE
+from .camera import DEFAULT_NAME, DEFAULT_STREAM_SOURCE
 from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +38,6 @@ DESCRIPTION_PLACEHOLDERS = {
 
 CONF_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_PORT, default=80): cv.port,
         vol.Required(CONF_USERNAME): cv.string,
@@ -44,7 +48,14 @@ CONF_SCHEMA = vol.Schema(
         vol.Required(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Required(CONF_FRAMERATE, default=2): cv.positive_int,
-        vol.Required(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
+        vol.Required(CONF_SECURITY_LEVEL): SelectSelector(
+            SelectSelectorConfig(
+                options=list(SECURITY_LEVELS.keys()),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="security_level",
+                sort=True,
+            ),
+        ),
         vol.Required(
             CONF_STREAM_PATH,
             default=DEFAULT_STREAM_SOURCE,
@@ -72,7 +83,7 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
 
@@ -85,35 +96,6 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the reconfiguration step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                await self._async_test_config(user_input)
-            except VivotekCameraError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data_updates=user_input,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                CONF_SCHEMA, self._get_reconfigure_entry().data
-            ),
-            errors=errors,
-            description_placeholders=DESCRIPTION_PLACEHOLDERS,
-        )
-
     async def async_step_import(
         self, import_data: (dict[str, Any])
     ) -> ConfigFlowResult:
@@ -121,33 +103,26 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]})
 
         _LOGGER.debug("Importing Vivotek camera with data: %s", import_data)
-        user_input = {}
-        if "ip_address" in import_data:
-            user_input[CONF_IP_ADDRESS] = import_data["ip_address"]
-        if "name" in import_data:
-            user_input[CONF_NAME] = import_data["name"]
-        if "username" in import_data:
-            user_input[CONF_USERNAME] = import_data["username"]
-        if "password" in import_data:
-            user_input[CONF_PASSWORD] = import_data["password"]
-        if "authentication" in import_data:
-            user_input[CONF_AUTHENTICATION] = import_data["authentication"]
-        if "ssl" in import_data:
-            user_input[CONF_SSL] = import_data["ssl"]
-        if "verify_ssl" in import_data:
-            user_input[CONF_VERIFY_SSL] = import_data["verify_ssl"]
-        if "framerate" in import_data:
-            user_input[CONF_FRAMERATE] = import_data["framerate"]
-        if "security_level" in import_data:
-            user_input[CONF_SECURITY_LEVEL] = import_data["security_level"]
-        if "stream_path" in import_data:
-            user_input[CONF_STREAM_PATH] = import_data["stream_path"]
+        _input = {
+            CONF_IP_ADDRESS: import_data.get("ip_address"),
+            CONF_USERNAME: import_data.get("username"),
+            CONF_PASSWORD: import_data.get("password"),
+            CONF_AUTHENTICATION: import_data.get("authentication"),
+            CONF_SSL: import_data.get("ssl"),
+            CONF_VERIFY_SSL: import_data.get("verify_ssl"),
+            CONF_FRAMERATE: import_data.get("framerate"),
+            CONF_SECURITY_LEVEL: import_data.get("security_level"),
+            CONF_STREAM_PATH: import_data.get("stream_path"),
+            CONF_PORT: (import_data.get("ssl") and 443) or 80,
+        }
+        user_input = {k: v for k, v in _input.items() if v is not None}
+        try:
+            await async_build_and_test_cam_client(self.hass, user_input)
+        except VivotekCameraError as err:
+            raise ConfigEntryError("Failed to connect to camera") from err
 
-        user_input[CONF_PORT] = (user_input[CONF_SSL] and 443) or 80
-        title = user_input.get(CONF_NAME, DOMAIN)
-        return self.async_create_entry(title=title, data=user_input)
+        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
     async def _async_test_config(self, user_input: dict[str, Any]) -> None:
         """Test if the provided configuration is valid."""
-        assert user_input is not None
         await async_build_and_test_cam_client(self.hass, user_input)
