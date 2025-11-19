@@ -74,4 +74,4 @@ rules:
     status: exempt
     comment: |
       Integration is not making any HTTP requests.
-  strict-typing: todo
+  strict-typing: done

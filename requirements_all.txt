@@ -80,7 +80,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.sunricher_dali
-PySrDaliGateway==0.13.1
+PySrDaliGateway==0.16.2
 
 # homeassistant.components.switchbot
 PySwitchbot==0.73.0
@@ -145,7 +145,7 @@ adb-shell[async]==0.4.4
 adext==0.4.4
 
 # homeassistant.components.adguard
-adguardhome==0.8.0
+adguardhome==0.8.1
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -209,7 +209,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.0
+aioautomower==2.7.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -422,7 +422,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==87
+aiounifi==88
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -500,7 +500,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.69.0
+anthropic==0.73.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -772,7 +772,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==2.45.0
+dbus-fast==3.0.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
@@ -786,6 +786,7 @@ deebot-client==16.3.0
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
+# homeassistant.components.sonos
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
@@ -1076,7 +1077,7 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==7.1.4
+google-nest-sdm==9.0.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1600,7 +1601,7 @@ odp-amsterdam==6.1.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.5.2
+ohme==1.6.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -1612,7 +1613,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.16
+onedrive-personal-sdk==0.0.17
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -2062,7 +2063,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.1.0
+pyicloud==2.2.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
@@ -2149,7 +2150,7 @@ pylitejet==0.6.3
 pylitterbot==2025.0.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.25.0
+pylutron-caseta==0.26.0
 
 # homeassistant.components.lutron
 pylutron==0.2.18
@@ -2268,7 +2269,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.12
+pypck==0.9.5
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2966,7 +2967,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.10.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.13.1
+thermopro-ble==1.1.2
 
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
@@ -3053,7 +3054,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.1.0
+universal-silabs-flasher==0.1.2
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -3086,6 +3087,9 @@ velbus-aio==2025.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
+
+# homeassistant.components.victron_ble
+victron-ble-ha-parser==0.4.9
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
