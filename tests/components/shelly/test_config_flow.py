@@ -2102,8 +2102,9 @@ async def test_bluetooth_discovery_mac_in_manufacturer_data(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     # MAC from manufacturer data: 70d6c297bacc (reversed) = CC:BA:97:C2:D6:70 = CCBA97C2D670
-    # Device name should be formatted as Shelly-<full MAC> to match Gen2 format
-    assert result["description_placeholders"]["name"] == "Shelly-CCBA97C2D670"
+    # Model ID 0x1030 = Shelly 1 Mini Gen4
+    # Device name should use model name from model ID: Shelly1MiniGen4-<MAC>
+    assert result["description_placeholders"]["name"] == "Shelly1MiniGen4-CCBA97C2D670"
 
 
 @pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
