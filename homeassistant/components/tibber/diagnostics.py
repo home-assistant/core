@@ -49,16 +49,24 @@ async def async_get_config_entry_diagnostics(
     error: str | None = None
     try:
         devices = await (await runtime.async_get_client(hass)).get_all_devices()
-    except (
-        ConfigEntryAuthFailed,
-        TimeoutError,
-        aiohttp.ClientError,
-        tibber.InvalidLoginError,
-        tibber.RetryableHttpExceptionError,
-        tibber.FatalHttpExceptionError,
-    ) as err:
+    except ConfigEntryAuthFailed:
         devices = {}
-        error = f"Unexpected error: {type(err).__name__}"
+        error = "Authentication failed"
+    except TimeoutError:
+        devices = {}
+        error = "Timeout error"
+    except aiohttp.ClientError:
+        devices = {}
+        error = "Client error"
+    except tibber.InvalidLoginError:
+        devices = {}
+        error = "Invalid login"
+    except tibber.RetryableHttpExceptionError as err:
+        devices = {}
+        error = f"Retryable HTTP error ({err.status})"
+    except tibber.FatalHttpExceptionError as err:
+        devices = {}
+        error = f"Fatal HTTP error ({err.status})"
 
     return {
         "api_type": API_TYPE_DATA_API,
