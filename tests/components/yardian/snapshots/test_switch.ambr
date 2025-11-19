@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_all_entities[switch.yardian_smart_sprinkler_zone_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.yardian_smart_sprinkler_zone_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 1',
+    'platform': 'yardian',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': 'yid123-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.yardian_smart_sprinkler_zone_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Yardian Smart Sprinkler Zone 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.yardian_smart_sprinkler_zone_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[switch.yardian_smart_sprinkler_zone_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.yardian_smart_sprinkler_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 2',
+    'platform': 'yardian',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': 'yid123-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.yardian_smart_sprinkler_zone_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Yardian Smart Sprinkler Zone 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.yardian_smart_sprinkler_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

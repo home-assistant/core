@@ -1,5 +1,4 @@
 {
-  "title": "Image processing",
   "entity_component": {
     "_": {
       "name": "[%key:component::image_processing::title%]",
@@ -15,8 +14,9 @@
   },
   "services": {
     "scan": {
-      "name": "Scan",
-      "description": "Processes an image immediately."
+      "description": "Processes an image immediately.",
+      "name": "Scan"
     }
-  }
+  },
+  "title": "Image processing"
 }

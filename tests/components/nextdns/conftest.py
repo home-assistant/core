@@ -59,29 +59,31 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_nextdns_client() -> Generator[AsyncMock]:
-    """Mock a NextDNS client."""
-
+def mock_nextdns() -> Generator[AsyncMock]:
+    """Mock the NextDns class."""
     with (
-        patch("homeassistant.components.nextdns.NextDns", autospec=True) as mock_client,
-        patch(
-            "homeassistant.components.nextdns.config_flow.NextDns",
-            new=mock_client,
-        ),
+        patch("homeassistant.components.nextdns.NextDns", autospec=True) as mock_class,
+        patch("homeassistant.components.nextdns.config_flow.NextDns", new=mock_class),
     ):
-        client = mock_client.create.return_value
-        client.clear_logs.return_value = True
-        client.connection_status.return_value = CONNECTION_STATUS
-        client.get_analytics_dnssec.return_value = ANALYTICS_DNSSEC
-        client.get_analytics_encryption.return_value = ANALYTICS_ENCRYPTION
-        client.get_analytics_ip_versions.return_value = ANALYTICS_IP_VERSIONS
-        client.get_analytics_protocols.return_value = ANALYTICS_PROTOCOLS
-        client.get_analytics_status.return_value = ANALYTICS_STATUS
-        client.get_profile_id = Mock(return_value="xyz12")
-        client.get_profile_name = Mock(return_value="Fake Profile")
-        client.get_profiles.return_value = PROFILES
-        client.get_settings.return_value = SETTINGS
-        client.set_setting.return_value = True
-        client.profiles = [ProfileInfo(**PROFILES[0])]
+        yield mock_class
 
-        yield client
+
+@pytest.fixture
+def mock_nextdns_client(mock_nextdns: AsyncMock) -> AsyncMock:
+    """Mock a NextDNS client instance."""
+    client = mock_nextdns.create.return_value
+    client.clear_logs.return_value = True
+    client.connection_status.return_value = CONNECTION_STATUS
+    client.get_analytics_dnssec.return_value = ANALYTICS_DNSSEC
+    client.get_analytics_encryption.return_value = ANALYTICS_ENCRYPTION
+    client.get_analytics_ip_versions.return_value = ANALYTICS_IP_VERSIONS
+    client.get_analytics_protocols.return_value = ANALYTICS_PROTOCOLS
+    client.get_analytics_status.return_value = ANALYTICS_STATUS
+    client.get_profile_id = Mock(return_value="xyz12")
+    client.get_profile_name = Mock(return_value="Fake Profile")
+    client.get_profiles.return_value = PROFILES
+    client.get_settings.return_value = SETTINGS
+    client.set_setting.return_value = True
+    client.profiles = [ProfileInfo(**PROFILES[0])]
+
+    return client

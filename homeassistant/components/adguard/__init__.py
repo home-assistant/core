@@ -45,7 +45,7 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
     {vol.Optional(CONF_FORCE, default=False): cv.boolean}
 )
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 type AdGuardConfigEntry = ConfigEntry[AdGuardData]
 
 

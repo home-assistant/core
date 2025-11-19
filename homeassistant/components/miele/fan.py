@@ -142,14 +142,15 @@ class MieleFan(MieleEntity, FanEntity):
                 await self.api.send_action(
                     self._device_id, {VENTILATION_STEP: ventilation_step}
                 )
-            except ClientResponseError as ex:
+            except ClientResponseError as err:
+                _LOGGER.debug("Error setting fan state for %s: %s", self.entity_id, err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_state_error",
                     translation_placeholders={
                         "entity": self.entity_id,
                     },
-                ) from ex
+                ) from err
             self.device.state_ventilation_step = ventilation_step
             self.async_write_ha_state()
 
@@ -171,6 +172,7 @@ class MieleFan(MieleEntity, FanEntity):
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
+                    "err_status": str(ex.status),
                 },
             ) from ex
 
@@ -188,6 +190,7 @@ class MieleFan(MieleEntity, FanEntity):
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
+                    "err_status": str(ex.status),
                 },
             ) from ex
 

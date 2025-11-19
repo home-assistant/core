@@ -3815,9 +3815,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 try_connection,
                 new_entry_data,
             ):
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data=new_entry_data
-                )
+                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
 
             errors["base"] = "invalid_auth"
 
@@ -3863,7 +3861,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             if can_connect:
                 if is_reconfigure:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reconfigure_entry,
                         data=validated_user_input,
                     )
@@ -4239,7 +4237,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 "entity_name_label": entity_name_label,
                 "platform_label": platform_label,
