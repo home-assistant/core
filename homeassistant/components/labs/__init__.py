@@ -68,14 +68,11 @@ async def _async_scan_all_lab_features(hass: HomeAssistant) -> dict[str, LabFeat
     )
 
     for integration in custom_integrations.values():
-        labs_features = integration.manifest.get("labs_features")
-        if not labs_features or not isinstance(labs_features, dict):
+        if not (labs_features := integration.labs_features):
             continue
 
         # labs_features is a dict[str, dict[str, str]]
         for feature_key, feature_data in labs_features.items():
-            if not isinstance(feature_data, dict):
-                continue
             feature = LabFeature(
                 domain=integration.domain,
                 feature=feature_key,
