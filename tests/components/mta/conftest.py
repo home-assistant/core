@@ -23,6 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_STOP_NAME: "Times Sq - 42 St (N direction)",
         },
         unique_id="1_127N",
+        entry_id="01J0000000000000000000000",
         title="1 Line - Times Sq - 42 St (N direction)",
     )
 
