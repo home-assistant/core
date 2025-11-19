@@ -42,8 +42,9 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
             manufacturer=DEFAULT_NAME,
             sw_version=device_info["currentFwVersion"],
             model=device_info["deviceType"],
-            via_device=via_device,
         )
+        if via_device:
+            self._attr_device_info["via_device"] = via_device
 
 
 class TadoHomeEntity(TadoCoordinatorEntity):
