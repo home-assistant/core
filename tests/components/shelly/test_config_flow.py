@@ -155,16 +155,16 @@ BLE_DISCOVERY_INFO_INVALID_NAME = BluetoothServiceInfoBleak(
 )
 
 BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA = BluetoothServiceInfoBleak(
-    name="CC:BA:97:C2:D6:70",  # MAC address as name (newer devices)
-    address="CC:BA:97:C2:D6:70",
+    name="CC:BA:97:C2:D6:72",  # BLE address as name (newer devices)
+    address="CC:BA:97:C2:D6:72",  # BLE address may differ from device MAC
     rssi=-32,
     manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
     service_uuids=[],
     service_data={},
     source="local",
     device=generate_ble_device(
-        address="CC:BA:97:C2:D6:70",
-        name="CC:BA:97:C2:D6:70",
+        address="CC:BA:97:C2:D6:72",
+        name="CC:BA:97:C2:D6:72",
     ),
     advertisement=generate_advertisement_data(
         manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
