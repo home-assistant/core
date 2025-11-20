@@ -22,9 +22,9 @@
       "state": {
         "auto_emptying": "Auto emptying dust bin",
         "cleaning": "Cleaning",
-        "cleaning_mop_tool": "Cleaning mop pads",
+        "cleaning_mop_pads": "Cleaning mop pads",
         "docked": "Docked",
-        "drying_mop_tool": "Drying mop pads",
+        "drying_mop_pads": "Drying mop pads",
         "error": "[%key:common::state::error%]",
         "idle": "[%key:common::state::idle%]",
         "mopping": "Mopping",

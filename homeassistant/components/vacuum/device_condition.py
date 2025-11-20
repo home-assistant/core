@@ -62,9 +62,20 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == "is_docked":
-        test_states = [VacuumActivity.DOCKED]
+        test_states = [
+            VacuumActivity.DOCKED,
+            VacuumActivity.AUTO_EMPTYING,
+            VacuumActivity.CLEANING_MOPS,
+            VacuumActivity.DRYING_MOPS,
+        ]
     else:
-        test_states = [VacuumActivity.CLEANING, VacuumActivity.RETURNING]
+        test_states = [
+            VacuumActivity.CLEANING,
+            VacuumActivity.MOPPING,
+            VacuumActivity.VACUUMING,
+            VacuumActivity.VACUUMING_AND_MOPPING,
+            VacuumActivity.RETURNING,
+        ]
 
     registry = er.async_get(hass)
     entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])

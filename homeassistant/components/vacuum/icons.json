@@ -23,6 +23,12 @@
     "set_fan_speed": {
       "service": "mdi:fan"
     },
+    "set_water_level": {
+      "service": "mdi:water-opacity"
+    },
+    "set_cleaning_mode": {
+      "service": "mdi:set-merge"
+    },
     "start": {
       "service": "mdi:play"
     },

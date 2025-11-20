@@ -70,9 +70,10 @@ ATTR_FAN_SPEED_LIST = "fan_speed_list"
 ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
 ATTR_CLEANING_MODE = "cleaning_mode"
-ATTR_CLEANING_MODES = "cleaning_modes"
+ATTR_CLEANING_MODE_LIST = "cleaning_mode_list"
+ATTR_WATER_LEVEL = "water_level"
 ATTR_CURRENT_WATER_LEVEL = "water_level"
-ATTR_WATER_LEVELS = "water_levels"
+ATTR_WATER_LEVEL_LIST = "water_level_list"
 ATTR_EMPTY_REQUIRED = "empty_required"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
@@ -192,7 +193,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_WATER_LEVEL,
-        {vol.Required(ATTR_CURRENT_WATER_LEVEL): cv.string},
+        {vol.Required(ATTR_WATER_LEVEL): cv.string},
         "async_set_water_level",
         [VacuumEntityFeature.WATER_LEVEL],
     )
@@ -225,6 +226,7 @@ class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_features",
+    "auto_emptying",
     "battery_level",
     "battery_icon",
     "fan_speed",
@@ -245,7 +247,7 @@ class StateVacuumEntity(
     entity_description: StateVacuumEntityDescription
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_FAN_SPEED_LIST, ATTR_CLEANING_MODES, ATTR_WATER_LEVELS}
+        {ATTR_FAN_SPEED_LIST, ATTR_CLEANING_MODE_LIST, ATTR_WATER_LEVEL_LIST}
     )
 
     _attr_battery_icon: str
@@ -253,9 +255,9 @@ class StateVacuumEntity(
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
     _attr_cleaning_mode: str | None = None
-    _attr_cleaning_modes: list[str] = DEFAULT_CLEANING_MODES
+    _attr_cleaning_modes_list: list[str] = DEFAULT_CLEANING_MODES
     _attr_water_level: str | None = None
-    _attr_water_levels: list[str] = DEFAULT_WATER_LEVELS
+    _attr_water_level_list: list[str] = DEFAULT_WATER_LEVELS
     _attr_empty_required: bool | None = None
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
@@ -401,10 +403,10 @@ class StateVacuumEntity(
             data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         if VacuumEntityFeature.CLEANING_MODE in supported_features:
-            data[ATTR_CLEANING_MODES] = self.cleaning_modes
+            data[ATTR_CLEANING_MODE_LIST] = self.cleaning_modes
 
         if VacuumEntityFeature.WATER_LEVEL in supported_features:
-            data[ATTR_WATER_LEVELS] = self.water_levels
+            data[ATTR_WATER_LEVEL_LIST] = self.water_levels
 
         return data if data else None
 
@@ -426,7 +428,7 @@ class StateVacuumEntity(
     @cached_property
     def cleaning_modes(self) -> list[str]:
         """Get the list of available cleaning modes of the vacuum cleaner."""
-        return self._attr_cleaning_modes
+        return self._attr_cleaning_modes_list
 
     @cached_property
     def water_level(self) -> str | None:
@@ -436,7 +438,7 @@ class StateVacuumEntity(
     @cached_property
     def water_levels(self) -> list[str]:
         """Get the list of available water levels of the vacuum cleaner."""
-        return self._attr_water_levels
+        return self._attr_water_level_list
 
     @property
     def state_attributes(self) -> dict[str, Any]:

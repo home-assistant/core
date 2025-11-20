@@ -24,9 +24,9 @@ class VacuumActivity(StrEnum):
 
     AUTO_EMPTYING = "auto_emptying"
     CLEANING = "cleaning"
-    CLEANING_MOPS = "cleaning_mop_tool"
+    CLEANING_MOPS = "cleaning_mop_pads"
     DOCKED = "docked"
-    DRYING_MOPS = "drying_mop_tool"
+    DRYING_MOPS = "drying_mop_pads"
     ERROR = "error"
     IDLE = "idle"
     MOPPING = "mopping"

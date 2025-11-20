@@ -32,10 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
 VALID_STATES_STATE = {
     VacuumActivity.CLEANING,
+    VacuumActivity.CLEANING_MOPS,
+    VacuumActivity.DRYING_MOPS,
     VacuumActivity.DOCKED,
     VacuumActivity.IDLE,
     VacuumActivity.PAUSED,
     VacuumActivity.RETURNING,
+    VacuumActivity.MOPPING,
+    VacuumActivity.VACUUMING,
+    VacuumActivity.VACUUMING_AND_MOPPING,
 }
 
 
@@ -71,9 +76,20 @@ async def _async_reproduce_state(
             service = SERVICE_TURN_ON
         elif state.state == STATE_OFF:
             service = SERVICE_TURN_OFF
-        elif state.state == VacuumActivity.CLEANING:
+        elif state.state in [
+            VacuumActivity.CLEANING,
+            VacuumActivity.MOPPING,
+            VacuumActivity.VACUUMING,
+            VacuumActivity.VACUUMING_AND_MOPPING,
+        ]:
             service = SERVICE_START
-        elif state.state in [VacuumActivity.DOCKED, VacuumActivity.RETURNING]:
+        elif state.state in [
+            VacuumActivity.DOCKED,
+            VacuumActivity.RETURNING,
+            VacuumActivity.DRYING_MOPS,
+            VacuumActivity.CLEANING_MOPS,
+            VacuumActivity.AUTO_EMPTYING,
+        ]:
             service = SERVICE_RETURN_TO_BASE
         elif state.state == VacuumActivity.IDLE:
             service = SERVICE_STOP

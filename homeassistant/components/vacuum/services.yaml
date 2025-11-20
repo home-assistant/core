@@ -94,3 +94,25 @@ set_fan_speed:
       example: "low"
       selector:
         text:
+
+set_cleaning_mode:
+  target:
+    entity:
+      domain: vacuum
+  fields:
+    cleaning_mode:
+      required: true
+      example: "Vacuuming"
+      selector:
+        text:
+
+set_water_level:
+  target:
+    entity:
+      domain: vacuum
+  fields:
+    water_level:
+      required: true
+      example: "Moist"
+      selector:
+        text:
