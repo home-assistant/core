@@ -16,21 +16,11 @@ from pylamarzocco.const import WidgetType
 from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 import pytest
 
-from homeassistant.components.lamarzocco.const import (
-    CONF_INSTALLATION_KEY,
-    CONF_USE_BLUETOOTH,
-    DOMAIN,
-)
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_INSTALLATION_KEY, async_init_integration
+from . import async_init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -153,24 +143,11 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
 async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities become unavailable when cloud fails and no bluetooth coordinator exists."""
-    # Create config entry WITHOUT Bluetooth (no MAC address)
-    mock_config_entry = MockConfigEntry(
-        title="My LaMarzocco",
-        domain=DOMAIN,
-        version=4,
-        data={
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_TOKEN: "token",
-            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
-        },
-        unique_id=mock_lamarzocco.serial_number,
-    )
-
     await async_init_integration(hass, mock_config_entry)
 
     # Verify no bluetooth coordinator was created
@@ -239,21 +216,9 @@ async def test_bluetooth_coordinator_handles_connection_failure(
 async def test_no_bluetooth_coordinator_without_mac(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test no Bluetooth coordinator is created when MAC address is not available."""
-    mock_config_entry = MockConfigEntry(
-        title="My LaMarzocco",
-        domain=DOMAIN,
-        version=4,
-        data={
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_TOKEN: "token",
-            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
-        },
-        unique_id=mock_lamarzocco.serial_number,
-    )
-
     await async_init_integration(hass, mock_config_entry)
 
     # Verify Bluetooth coordinator was not created
@@ -277,17 +242,13 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     )
 
     # Set initial state - no water issue
-    if WidgetType.CM_NO_WATER in mock_lamarzocco.dashboard.config:
-        del mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER]
+    mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = False
 
     state = hass.states.get(water_tank_sensor)
     assert state
 
     # Simulate Bluetooth update adding water issue
-    def add_water_issue() -> None:
-        mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = True
-
-    mock_lamarzocco.get_dashboard_from_bluetooth.side_effect = add_water_issue
+    mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = True
     mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.dashboard.connected = False
 
