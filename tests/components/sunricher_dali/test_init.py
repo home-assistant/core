@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PySrDaliGateway.exceptions import DaliGatewayError
+import pytest
 
 from homeassistant.components.sunricher_dali.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -29,12 +30,22 @@ async def test_setup_entry_success(
     mock_gateway.connect.assert_called_once()
 
 
-async def test_setup_entry_connection_error_rediscovery_fails(
+@pytest.mark.parametrize(
+    ("discovery_side_effect", "discovery_return_value"),
+    [
+        (DaliGatewayError("Discovery failed"), None),
+        (None, []),
+    ],
+    ids=["rediscovery_fails", "gateway_not_found"],
+)
+async def test_setup_entry_connection_failure_scenarios(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
+    discovery_side_effect: Exception | None,
+    discovery_return_value: list | None,
 ) -> None:
-    """Test setup fails when gateway connection fails and rediscovery also fails."""
+    """Test setup fails when gateway connection fails and rediscovery fails."""
     mock_config_entry.add_to_hass(hass)
     mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
 
@@ -42,9 +53,14 @@ async def test_setup_entry_connection_error_rediscovery_fails(
         "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
     ) as mock_discovery_class:
         mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock(
-            side_effect=DaliGatewayError("Discovery failed")
-        )
+        if discovery_side_effect:
+            mock_discovery.discover_gateways = AsyncMock(
+                side_effect=discovery_side_effect
+            )
+        else:
+            mock_discovery.discover_gateways = AsyncMock(
+                return_value=discovery_return_value
+            )
 
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -53,147 +69,40 @@ async def test_setup_entry_connection_error_rediscovery_fails(
     mock_gateway.connect.assert_called_once()
 
 
-async def test_setup_entry_connection_error_gateway_not_found(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-) -> None:
-    """Test setup fails when gateway not found during rediscovery."""
-    mock_config_entry.add_to_hass(hass)
-    mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
-
-    with patch(
-        "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
-    ) as mock_discovery_class:
-        mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock(return_value=[])
-
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_gateway.connect.assert_called_once()
-    mock_discovery.discover_gateways.assert_called_once_with("6A242121110E")
-
-
-async def test_setup_entry_ip_changed_successful_reconnect(
+@pytest.mark.parametrize(
+    ("new_ip", "reconnect_succeeds", "expected_state"),
+    [
+        ("192.168.1.200", True, ConfigEntryState.LOADED),
+        ("192.168.1.200", False, ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["ip_changed_reconnect_succeeds", "ip_changed_reconnect_fails"],
+)
+async def test_setup_entry_ip_change_scenarios(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
     mock_devices: list[MagicMock],
+    new_ip: str,
+    reconnect_succeeds: bool,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test successful setup when gateway IP changes and reconnection succeeds."""
+    """Test setup when gateway IP changes with different reconnection outcomes."""
     mock_config_entry.add_to_hass(hass)
 
     new_gateway = MagicMock()
     new_gateway.gw_sn = "6A242121110E"
-    new_gateway.gw_ip = "192.168.1.200"
+    new_gateway.gw_ip = new_ip
     new_gateway.port = 1883
     new_gateway.name = "Test Gateway"
-    new_gateway.connect = AsyncMock()
     new_gateway.disconnect = AsyncMock()
     new_gateway.discover_devices = AsyncMock(return_value=mock_devices)
 
-    with (
-        patch(
-            "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
-        ) as mock_discovery_class,
-        patch(
-            "homeassistant.components.sunricher_dali.DaliGateway"
-        ) as mock_gateway_class,
-    ):
-        mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock(return_value=[new_gateway])
-
-        mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
-        mock_gateway_class.side_effect = [mock_gateway, new_gateway]
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
-    mock_gateway.connect.assert_called_once()
-    new_gateway.connect.assert_called_once()
-    new_gateway.discover_devices.assert_called_once()
-
-
-async def test_setup_entry_same_ip_retry_succeeds(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    mock_devices: list[MagicMock],
-) -> None:
-    """Test successful retry when gateway temporarily unavailable but recovers."""
-    mock_config_entry.add_to_hass(hass)
-
-    discovered_gateway = MagicMock()
-    discovered_gateway.gw_sn = "6A242121110E"
-    discovered_gateway.gw_ip = "192.168.1.100"
-
-    with patch(
-        "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
-    ) as mock_discovery_class:
-        mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock(return_value=[discovered_gateway])
-
-        call_count = 0
-
-        def connect_side_effect():
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
-                raise DaliGatewayError("Temporary network issue")
-
-        mock_gateway.connect.side_effect = connect_side_effect
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
-    assert mock_gateway.connect.call_count == 2
-
-
-async def test_setup_entry_same_ip_retry_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-) -> None:
-    """Test setup fails when gateway at same IP cannot connect even after retry."""
-    mock_config_entry.add_to_hass(hass)
-
-    discovered_gateway = MagicMock()
-    discovered_gateway.gw_sn = "6A242121110E"
-    discovered_gateway.gw_ip = "192.168.1.100"
-
-    with patch(
-        "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
-    ) as mock_discovery_class:
-        mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock(return_value=[discovered_gateway])
-        mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
-
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
-    assert mock_gateway.connect.call_count == 2
-
-
-async def test_setup_entry_ip_changed_reconnect_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-) -> None:
-    """Test setup fails when IP changes but reconnection to new IP fails."""
-    mock_config_entry.add_to_hass(hass)
-
-    new_gateway = MagicMock()
-    new_gateway.gw_sn = "6A242121110E"
-    new_gateway.gw_ip = "192.168.1.200"
-    new_gateway.connect = AsyncMock(side_effect=DaliGatewayError("Connection failed"))
+    if reconnect_succeeds:
+        new_gateway.connect = AsyncMock()
+    else:
+        new_gateway.connect = AsyncMock(
+            side_effect=DaliGatewayError("Connection failed")
+        )
 
     with (
         patch(
@@ -209,13 +118,16 @@ async def test_setup_entry_ip_changed_reconnect_fails(
         mock_gateway.connect.side_effect = DaliGatewayError("Initial connection failed")
         mock_gateway_class.side_effect = [mock_gateway, new_gateway]
 
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        setup_result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+    assert setup_result is reconnect_succeeds
+    assert mock_config_entry.state is expected_state
+    assert mock_config_entry.data[CONF_HOST] == new_ip
     mock_gateway.connect.assert_called_once()
     new_gateway.connect.assert_called_once()
+    if reconnect_succeeds:
+        new_gateway.discover_devices.assert_called_once()
 
 
 async def test_setup_entry_discovery_error(
