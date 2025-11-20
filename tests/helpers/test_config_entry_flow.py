@@ -61,9 +61,6 @@ def webhook_flow_conf(hass: HomeAssistant) -> Generator[None]:
         config_entry_flow.register_webhook_flow(
             "test_multiple", "Test Multiple", {}, True
         )
-        config_entry_flow.register_webhook_flow(
-            "test_reconfigure", "Test Reconfigure", {}, False, True
-        )
         yield
 
 
@@ -520,11 +517,11 @@ async def test_webhook_reconfigure_flow(
 ) -> None:
     """Test webhook reconfigure flow."""
     config_entry = MockConfigEntry(
-        domain="test_reconfigure", data={"webhook_id": "12345", "cloudhook": False}
+        domain="test_single", data={"webhook_id": "12345", "cloudhook": False}
     )
     config_entry.add_to_hass(hass)
 
-    flow = config_entries.HANDLERS["test_reconfigure"]()
+    flow = config_entries.HANDLERS["test_single"]()
     flow.hass = hass
     flow.context = {
         "source": config_entries.SOURCE_RECONFIGURE,
@@ -558,11 +555,11 @@ async def test_webhook_reconfigure_cloudhook(
     assert await setup.async_setup_component(hass, "cloud", {})
 
     config_entry = MockConfigEntry(
-        domain="test_reconfigure", data={"webhook_id": "12345", "cloudhook": False}
+        domain="test_single", data={"webhook_id": "12345", "cloudhook": False}
     )
     config_entry.add_to_hass(hass)
 
-    flow = config_entries.HANDLERS["test_reconfigure"]()
+    flow = config_entries.HANDLERS["test_single"]()
     flow.hass = hass
     flow.context = {
         "source": config_entries.SOURCE_RECONFIGURE,

@@ -279,13 +279,16 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             description_placeholders=self._description_placeholder,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a user initiated flow to re-configure a webhook."""
+
+        return await self.async_step_user(user_input)
+
 
 def register_webhook_flow(
-    domain: str,
-    title: str,
-    description_placeholder: dict,
-    allow_multiple: bool = False,
-    reconfigure: bool = False,
+    domain: str, title: str, description_placeholder: dict, allow_multiple: bool = False
 ) -> None:
     """Register flow for webhook integrations."""
 
@@ -294,9 +297,6 @@ def register_webhook_flow(
 
         def __init__(self) -> None:
             super().__init__(domain, title, description_placeholder, allow_multiple)
-
-        if reconfigure:
-            async_step_reconfigure = WebhookFlowHandler.async_step_user
 
     config_entries.HANDLERS.register(domain)(WebhookFlow)
 
