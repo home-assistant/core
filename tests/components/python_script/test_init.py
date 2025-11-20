@@ -204,6 +204,26 @@ logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
     assert "Logging from inside script: 1 3" in caplog.text
 
 
+async def test_using_classes(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that dicts and lists work."""
+    caplog.set_level(logging.INFO)
+    source = """
+class MyClass:
+    def __init__(self, a):
+        self.a = a
+
+myobj = MyClass("test")
+logger.info('Logging from inside script: %s' % (myobj.a))
+    """
+
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_block_till_done()
+
+    assert "Logging from inside script: test" in caplog.text
+
+
 async def test_accessing_forbidden_methods(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
