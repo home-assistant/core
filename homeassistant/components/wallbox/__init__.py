@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
         jwtTokenDrift=UPDATE_INTERVAL,
     )
 
-    if entry.data.get(CHARGER_JWT_TOKEN) and check_token_validity(
+    if CHARGER_JWT_TOKEN in entry.data and check_token_validity(
         jwt_token_ttl=entry.data.get(CHARGER_JWT_TTL, 0),
         jwt_token_drift=UPDATE_INTERVAL,
     ):
