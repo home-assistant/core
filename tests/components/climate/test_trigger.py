@@ -44,6 +44,21 @@ async def target_climates(hass: HomeAssistant) -> None:
             target_states=[HVACMode.OFF],
             other_states=[HVACMode.HEAT],
         ),
+        *parametrize_trigger_states(
+            trigger="climate.turned_on",
+            target_states=[
+                HVACAction.COOLING,
+                HVACAction.DEFROSTING,
+                HVACAction.DRYING,
+                HVACAction.FAN,
+                HVACAction.HEATING,
+                HVACAction.IDLE,
+                HVACAction.PREHEATING,
+            ],
+            other_states=[
+                HVACAction.OFF,
+            ],
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_any(
@@ -148,6 +163,21 @@ async def test_climate_state_attribute_trigger_behavior_any(
             target_states=[HVACMode.OFF],
             other_states=[HVACMode.HEAT],
         ),
+        *parametrize_trigger_states(
+            trigger="climate.turned_on",
+            target_states=[
+                HVACAction.COOLING,
+                HVACAction.DEFROSTING,
+                HVACAction.DRYING,
+                HVACAction.FAN,
+                HVACAction.HEATING,
+                HVACAction.IDLE,
+                HVACAction.PREHEATING,
+            ],
+            other_states=[
+                HVACAction.OFF,
+            ],
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_first(
@@ -249,6 +279,21 @@ async def test_climate_state_attribute_trigger_behavior_first(
             trigger="climate.turned_off",
             target_states=[HVACMode.OFF],
             other_states=[HVACMode.HEAT],
+        ),
+        *parametrize_trigger_states(
+            trigger="climate.turned_on",
+            target_states=[
+                HVACAction.COOLING,
+                HVACAction.DEFROSTING,
+                HVACAction.DRYING,
+                HVACAction.FAN,
+                HVACAction.HEATING,
+                HVACAction.IDLE,
+                HVACAction.PREHEATING,
+            ],
+            other_states=[
+                HVACAction.OFF,
+            ],
         ),
     ],
 )
