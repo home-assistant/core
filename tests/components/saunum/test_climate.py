@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysaunum import SaunumException
@@ -209,20 +208,18 @@ async def test_hvac_mode_error_handling(
         "Communication error"
     )
 
-    # Mock asyncio.sleep to avoid actual delay in tests
-    with patch("homeassistant.components.saunum.climate.asyncio.sleep"):
-        # Try to call the service and expect HomeAssistantError
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_HVAC_MODE,
-                {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
-                blocking=True,
-            )
+    # Try to call the service and expect HomeAssistantError
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
 
-        # Verify the exception has the correct translation key
-        assert exc_info.value.translation_key == "set_hvac_mode_failed"
-        assert exc_info.value.translation_domain == "saunum"
+    # Verify the exception has the correct translation key
+    assert exc_info.value.translation_key == "set_hvac_mode_failed"
+    assert exc_info.value.translation_domain == "saunum"
 
 
 @pytest.mark.usefixtures("init_integration")
