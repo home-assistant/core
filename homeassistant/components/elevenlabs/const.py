@@ -129,4 +129,5 @@ STT_LANGUAGES = [
 STT_MODELS = {
     "scribe_v1": "Scribe v1",
     "scribe_v1_experimental": "Scribe v1 Experimental",
+    "scribe_v2": "Scribe v2 Realtime",
 }
