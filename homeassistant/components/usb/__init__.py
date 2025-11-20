@@ -121,8 +121,28 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
             f"vid and pid must be uppercase, the rest lowercase in matcher {matcher!r}"
         )
 
-    discovery: USBDiscovery = hass.data[DOMAIN]
-    return discovery.async_is_plugged_in(matcher)
+    usb_discovery: USBDiscovery = hass.data[DOMAIN]
+    return any(
+        usb_device_matches_matcher(
+            USBDevice(
+                device=device,
+                vid=vid,
+                pid=pid,
+                serial_number=serial_number,
+                manufacturer=manufacturer,
+                description=description,
+            ),
+            matcher,
+        )
+        for (
+            device,
+            vid,
+            pid,
+            serial_number,
+            manufacturer,
+            description,
+        ) in usb_discovery.seen
+    )
 
 
 @hass_callback
@@ -497,14 +517,6 @@ class USBDiscovery:
                 background=True,
             )
         await self._request_debouncer.async_call()
-
-    @hass_callback
-    def async_is_plugged_in(self, matcher: USBCallbackMatcher) -> bool:
-        """Return True is a USB device is present."""
-        return any(
-            usb_device_matches_matcher(usb_device, matcher)
-            for usb_device in self._last_processed_devices
-        )
 
 
 @websocket_api.require_admin
