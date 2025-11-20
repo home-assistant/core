@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -131,9 +131,7 @@ class PooldoseBinarySensor(PooldoseEntity, BinarySensorEntity):
     entity_description: PooldoseBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        data = self.get_data()
-        if data is not None:
-            return data["value"]
-        return None
+        data = cast(dict, self.get_data())
+        return cast(bool, data["value"])

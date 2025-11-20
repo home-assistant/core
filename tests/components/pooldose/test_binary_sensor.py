@@ -188,6 +188,6 @@ async def test_binary_sensor_missing_from_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Check sensor becomes unknown when not in coordinator data
+    # Check sensor becomes unavailable when not in coordinator data
     flow_alarm_state = hass.states.get("binary_sensor.pool_device_flow_rate")
-    assert flow_alarm_state.state == "unknown"
+    assert flow_alarm_state.state == STATE_UNAVAILABLE
