@@ -2,6 +2,8 @@
 
 from collections.abc import Callable
 
+from pypck.device import DeviceConnection
+
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -10,7 +12,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_DOMAIN_DATA, DOMAIN
 from .helpers import (
     AddressType,
-    DeviceConnectionType,
     InputType,
     LcnConfigEntry,
     generate_unique_id,
@@ -23,7 +24,7 @@ class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
     _attr_has_entity_name = True
-    device_connection: DeviceConnectionType
+    device_connection: DeviceConnection
 
     def __init__(
         self,
@@ -34,7 +35,7 @@ class LcnEntity(Entity):
         self.config = config
         self.config_entry = config_entry
         self.address: AddressType = config[CONF_ADDRESS]
-        self._unregister_for_inputs: Callable | None = None
+        self._unregister_for_inputs: Callable[[], None] | None = None
         self._name: str = config[CONF_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={
