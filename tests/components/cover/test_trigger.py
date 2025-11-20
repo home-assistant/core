@@ -45,7 +45,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {})],
                 other_states=[(CoverState.CLOSED, {})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -55,7 +55,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {})],
                 other_states=[(CoverState.CLOSED, {})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -65,7 +65,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {})],
                 other_states=[(CoverState.CLOSED, {})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -75,7 +75,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {})],
                 other_states=[(CoverState.CLOSED, {})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -86,7 +86,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 100})],
                 other_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 0})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -96,7 +96,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 100})],
                 other_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 0})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -106,7 +106,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 1})],
                 other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
@@ -116,7 +116,7 @@ def parametrize_opened_trigger_states(
                 trigger=trigger,
                 target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 1})],
                 other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
-                extra_attributes=extra_attrs,
+                state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
