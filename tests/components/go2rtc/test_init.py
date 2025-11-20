@@ -936,7 +936,7 @@ async def test_unix_socket_connection(hass: HomeAssistant) -> None:
         assert "connector" in call_kwargs
         connector = call_kwargs["connector"]
         assert isinstance(connector, UnixConnector)
-        assert connector._path == HA_MANAGED_UNIX_SOCKET
+        assert connector.path == HA_MANAGED_UNIX_SOCKET
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
