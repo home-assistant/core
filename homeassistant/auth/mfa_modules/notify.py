@@ -263,12 +263,13 @@ class NotifyAuthModule(MultiFactorAuthModule):
         data = {"message": self._message_template.format(code)}
 
         target_dict: dict[str, Any] | None = None
-        if notify_service == "send_message":
-            # notify entity
-            target_dict = {"entity_id": target}
-        elif target:
-            # legacy notify
-            data["target"] = [target]
+        if target:
+            if notify_service == "send_message":
+                # notify entity
+                target_dict = {"entity_id": [target]}
+            else:
+                # legacy notify
+                data["target"] = [target]
 
         await self.hass.services.async_call(
             "notify",
