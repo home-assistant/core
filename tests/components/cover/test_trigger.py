@@ -86,7 +86,15 @@ def parametrize_opened_trigger_states(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
+        *parametrize_opened_trigger_states("cover.awning_opened", "awning"),
+        *parametrize_opened_trigger_states("cover.blind_opened", "blind"),
+        *parametrize_opened_trigger_states("cover.curtain_opened", "curtain"),
+        *parametrize_opened_trigger_states("cover.door_opened", "door"),
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
+        *parametrize_opened_trigger_states("cover.gate_opened", "gate"),
+        *parametrize_opened_trigger_states("cover.shade_opened", "shade"),
+        *parametrize_opened_trigger_states("cover.shutter_opened", "shutter"),
+        *parametrize_opened_trigger_states("cover.window_opened", "window"),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_any(
@@ -135,7 +143,15 @@ async def test_cover_state_attribute_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
+        *parametrize_opened_trigger_states("cover.awning_opened", "awning"),
+        *parametrize_opened_trigger_states("cover.blind_opened", "blind"),
+        *parametrize_opened_trigger_states("cover.curtain_opened", "curtain"),
+        *parametrize_opened_trigger_states("cover.door_opened", "door"),
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
+        *parametrize_opened_trigger_states("cover.gate_opened", "gate"),
+        *parametrize_opened_trigger_states("cover.shade_opened", "shade"),
+        *parametrize_opened_trigger_states("cover.shutter_opened", "shutter"),
+        *parametrize_opened_trigger_states("cover.window_opened", "window"),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_first(
@@ -188,7 +204,15 @@ async def test_cover_state_attribute_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
+        *parametrize_opened_trigger_states("cover.awning_opened", "awning"),
+        *parametrize_opened_trigger_states("cover.blind_opened", "blind"),
+        *parametrize_opened_trigger_states("cover.curtain_opened", "curtain"),
+        *parametrize_opened_trigger_states("cover.door_opened", "door"),
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
+        *parametrize_opened_trigger_states("cover.gate_opened", "gate"),
+        *parametrize_opened_trigger_states("cover.shade_opened", "shade"),
+        *parametrize_opened_trigger_states("cover.shutter_opened", "shutter"),
+        *parametrize_opened_trigger_states("cover.window_opened", "window"),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_last(
