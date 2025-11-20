@@ -72,24 +72,27 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PooldoseBinarySensorEntityDescription, ...] = 
     PooldoseBinarySensorEntityDescription(
         key="relay_alarm",
         translation_key="relay_alarm",
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PooldoseBinarySensorEntityDescription(
         key="relay_aux1",
         translation_key="relay_aux1",
+        device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     PooldoseBinarySensorEntityDescription(
         key="relay_aux2",
         translation_key="relay_aux2",
+        device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     PooldoseBinarySensorEntityDescription(
         key="relay_aux3",
         translation_key="relay_aux3",
+        device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

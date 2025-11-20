@@ -56,16 +56,16 @@
         "name": "Recirculation"
       },
       "relay_alarm": {
-        "name": "Alarm Relay"
+        "name": "Alarm relay status"
       },
       "relay_aux1": {
-        "name": "Auxiliary relay 1"
+        "name": "Auxiliary relay 1 status"
       },
       "relay_aux2": {
-        "name": "Auxiliary relay 2"
+        "name": "Auxiliary relay 2 status"
       },
       "relay_aux3": {
-        "name": "Auxiliary relay 3"
+        "name": "Auxiliary relay 3 status"
       }
     },
     "sensor": {

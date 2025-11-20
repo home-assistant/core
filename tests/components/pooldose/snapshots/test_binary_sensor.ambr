@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_all_binary_sensors[binary_sensor.pool_device_alarm_relay_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_alarm_relay_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Alarm relay status',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_alarm',
+    'unique_id': 'TEST123456789_relay_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_alarm_relay_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Pool Device Alarm relay status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_alarm_relay_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -41,6 +90,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Auxiliary relay 1 status',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_aux1',
+    'unique_id': 'TEST123456789_relay_aux1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_1_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Pool Device Auxiliary relay 1 status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_1_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -95,6 +193,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_2_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_2_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Auxiliary relay 2 status',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_aux2',
+    'unique_id': 'TEST123456789_relay_aux2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_2_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Pool Device Auxiliary relay 2 status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_2_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -137,6 +284,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Auxiliary relay 3 status',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_aux3',
+    'unique_id': 'TEST123456789_relay_aux3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.pool_device_auxiliary_relay_3_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Pool Device Auxiliary relay 3 status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pool_device_auxiliary_relay_3_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
