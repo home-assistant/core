@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True, kw_only=True)
-class TriggerLookupData:
-    """Data structure for looking up triggers."""
+class _ComponentLookupData:
+    """Helper data structure for looking up automation components."""
 
-    trigger: str
+    component: str
     domains: set[str]
     device_classes: set[str]
     supported_features: list[int]
@@ -50,10 +50,10 @@ class TriggerLookupData:
         return True
 
 
-def _build_trigger_lookup_data(
-    trigger: str, target_description: dict[str, Any]
-) -> TriggerLookupData:
-    """Build trigger lookup data from target description."""
+def _build_component_lookup_data(
+    component: str, target_description: dict[str, Any]
+) -> _ComponentLookupData:
+    """Build automation component lookup data from target description."""
     domains: set[str] = set()
     device_classes: set[str] = set()
     supported_features: list[int] = []
@@ -64,8 +64,8 @@ def _build_trigger_lookup_data(
         device_classes.update(selector_entity.get("device_class", []))
         supported_features.extend(selector_entity.get("supported_features", []))
 
-    return TriggerLookupData(
-        trigger=trigger,
+    return _ComponentLookupData(
+        component=component,
         domains=domains,
         device_classes=device_classes,
         supported_features=supported_features,
@@ -88,39 +88,39 @@ async def _async_get_components_for_target(
     )
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
-    # Build lookup structure: domain -> list of trigger lookup data
-    domain_triggers: dict[str, list[TriggerLookupData]] = {}
-    trigger_count = 0
-    for trigger, description in descriptions.items():
+    # Build lookup structure: domain -> list of trigger/condition/service lookup data
+    domain_components: dict[str, list[_ComponentLookupData]] = {}
+    component_count = 0
+    for component, description in descriptions.items():
         if description is None or CONF_TARGET not in description:
-            _LOGGER.debug("Skipping trigger %s without target description", trigger)
+            _LOGGER.debug("Skipping component %s without target description", component)
             continue
-        domain = trigger.split(".")[0]
-        domain_triggers.setdefault(domain, []).append(
-            _build_trigger_lookup_data(trigger, description[CONF_TARGET])
+        domain = component.split(".")[0]
+        domain_components.setdefault(domain, []).append(
+            _build_component_lookup_data(component, description[CONF_TARGET])
         )
-        trigger_count += 1
+        component_count += 1
 
-    _LOGGER.debug("Domain triggers: %s", domain_triggers)
+    _LOGGER.debug("Domain components: %s", domain_components)
 
-    matched_triggers: set[str] = set()
+    matched_components: set[str] = set()
 
     entity_registry = er.async_get(hass)
     for entity_id in extracted.referenced.union(extracted.indirectly_referenced):
-        if trigger_count == len(matched_triggers):
+        if component_count == len(matched_components):
             break
 
         if (entity_entry := entity_registry.async_get(entity_id)) is None:
             continue
 
         for domain in (entity_entry.domain, entity_entry.platform):
-            for trigger_data in domain_triggers.get(domain, []):
-                if trigger_data.trigger in matched_triggers:
+            for component_data in domain_components.get(domain, []):
+                if component_data.component in matched_components:
                     continue
-                if trigger_data.matches(entity_entry):
-                    matched_triggers.add(trigger_data.trigger)
+                if component_data.matches(entity_entry):
+                    matched_components.add(component_data.component)
 
-    return matched_triggers
+    return matched_components
 
 
 async def async_get_triggers_for_target(
