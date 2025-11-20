@@ -10,16 +10,6 @@ from homeassistant.helpers.trigger import (
 
 from .const import ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
 
-COOLING = "cooling"
-DEFROSTING = "defrosting"
-DRYING = "drying"
-FAN = "fan"
-HEATING = "heating"
-IDLE = "idle"
-OFF = "off"
-PREHEATING = "preheating"
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
     "turned_off": make_entity_state_trigger(DOMAIN, HVACMode.OFF),
     "turned_on": make_conditional_entity_state_trigger(
