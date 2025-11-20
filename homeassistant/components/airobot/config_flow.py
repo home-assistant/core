@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -34,7 +35,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+@dataclass
+class DeviceInfo:
+    """Device information."""
+
+    title: str
+    device_id: str
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceInfo:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -58,9 +67,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise CannotConnect from err
 
     # Use device name or device ID as title
-    title = settings.device_name if settings.device_name else status.device_id
+    title = settings.device_name or status.device_id
 
-    return {"title": title, "device_id": status.device_id}
+    return DeviceInfo(title=title, device_id=status.device_id)
 
 
 class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
@@ -122,7 +131,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 if self._discovered_mac:
                     data[CONF_MAC] = self._discovered_mac
 
-                return self.async_create_entry(title=info["title"], data=data)
+                return self.async_create_entry(title=info.title, data=data)
 
         # Build schema with device_id as default username if available
         return self.async_show_form(
@@ -157,9 +166,9 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Use device ID as unique ID to prevent duplicates
-                await self.async_set_unique_id(info["device_id"])
+                await self.async_set_unique_id(info.device_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=info.title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

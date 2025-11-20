@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from pyairobotrest import AirobotClient
@@ -13,10 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN
 from .models import AirobotData
 
 _LOGGER = logging.getLogger(__name__)
+
+# Update interval - thermostat measures air every 30 seconds
+UPDATE_INTERVAL = timedelta(seconds=30)
 
 type AirobotConfigEntry = ConfigEntry[AirobotDataUpdateCoordinator]
 

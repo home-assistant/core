@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pyairobotrest.const import (
@@ -32,9 +31,12 @@ from . import AirobotConfigEntry
 from .const import DOMAIN
 from .entity import AirobotEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 1
+
+_PRESET_MODE_2_MODE = {
+    PRESET_AWAY: MODE_AWAY,
+    PRESET_HOME: MODE_HOME,
+}
 
 
 async def async_setup_entry(
@@ -137,10 +139,8 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
                     await self.coordinator.client.set_boost_mode(False)
 
                 # Set the mode (HOME or AWAY)
-                if preset_mode == PRESET_HOME:
-                    await self.coordinator.client.set_mode(MODE_HOME)
-                elif preset_mode == PRESET_AWAY:
-                    await self.coordinator.client.set_mode(MODE_AWAY)
+                await self.coordinator.client.set_mode(_PRESET_MODE_2_MODE[preset_mode])
+
         except AirobotError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

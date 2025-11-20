@@ -86,10 +86,6 @@ def mock_airobot_client(
         client = mock_coordinator_client.return_value
         client.get_statuses = AsyncMock(return_value=mock_status)
         client.get_settings = AsyncMock(return_value=mock_settings)
-        client.set_mode = AsyncMock()
-        client.set_home_temperature = AsyncMock()
-        client.set_away_temperature = AsyncMock()
-        client.set_boost_mode = AsyncMock()
 
         # Make config flow client return the same instance
         mock_config_flow_client.return_value = client
