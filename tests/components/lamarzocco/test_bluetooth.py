@@ -33,7 +33,7 @@ async def test_bluetooth_coordinator_setup(
 
     # Verify Bluetooth coordinator was created
     assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is not None
-    assert mock_lamarzocco.get_machine_info_from_bluetooth.called
+    assert mock_lamarzocco.get_model_info_from_bluetooth.called
 
 
 async def test_bluetooth_coordinator_disabled_when_option_false(
@@ -65,6 +65,7 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
 ) -> None:
     """Test Bluetooth coordinator updates based on websocket connection state."""
     await async_init_integration(hass, mock_config_entry_bluetooth)
+    await hass.async_block_till_done()
 
     # Reset call count after initial setup
     mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
@@ -103,7 +104,7 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
 
     # Entities with bt_offline_mode=True
     bt_offline_entities = [
-        f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir",
+        f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty",
         f"switch.{mock_lamarzocco.serial_number}",  # main switch
         f"switch.{mock_lamarzocco.serial_number}_steam_boiler",
         f"switch.{mock_lamarzocco.serial_number}_smart_standby",
@@ -148,7 +149,7 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     assert mock_config_entry.runtime_data.bluetooth_coordinator is None
 
     # Water tank sensor (even with bt_offline_mode=True, needs BT coordinator to work)
-    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
+    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
     state = hass.states.get(water_tank_sensor)
     assert state
     # Initially should be available
@@ -182,7 +183,7 @@ async def test_bluetooth_coordinator_handles_connection_failure(
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor has bt_offline_mode=True
-    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
+    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
     state = hass.states.get(water_tank_sensor)
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -229,7 +230,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor with bt_offline_mode
-    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
+    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
 
     # Set initial state - no water issue
     mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = False
