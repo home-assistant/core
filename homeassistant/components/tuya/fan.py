@@ -53,6 +53,19 @@ TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
 }
 
 
+class _DirectionEnumWrapper(DPCodeEnumWrapper):
+    """Wrapper for fan direction DP code."""
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device status and return the direction string."""
+        if (value := super().read_device_status(device)) and value in {
+            DIRECTION_FORWARD,
+            DIRECTION_REVERSE,
+        }:
+            return value
+        return None
+
+
 def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
     """Check if the device has at least one valid DP code."""
     properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
@@ -85,6 +98,9 @@ async def async_setup_entry(
                     TuyaFanEntity(
                         device,
                         manager,
+                        direction_wrapper=_DirectionEnumWrapper.find_dpcode(
+                            device, _DIRECTION_DPCODES, prefer_function=True
+                        ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, _MODE_DPCODES, prefer_function=True
                         ),
@@ -105,7 +121,6 @@ async def async_setup_entry(
 class TuyaFanEntity(TuyaEntity, FanEntity):
     """Tuya Fan Device."""
 
-    _direction: EnumTypeData | None = None
     _oscillate: DPCode | None = None
     _speed: IntegerTypeData | None = None
     _speeds: EnumTypeData | None = None
@@ -116,13 +131,16 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
+        direction_wrapper: _DirectionEnumWrapper | None,
         mode_wrapper: DPCodeEnumWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
+        self._direction_wrapper = direction_wrapper
         self._mode_wrapper = mode_wrapper
         self._switch_wrapper = switch_wrapper
+
         if mode_wrapper:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = mode_wrapper.type_information.range
@@ -143,10 +161,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
-        if enum_type := find_dpcode(
-            self.device, _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._direction = enum_type
+        if direction_wrapper:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
         if switch_wrapper:
             self._attr_supported_features |= (
@@ -157,11 +172,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Set the preset mode of the fan."""
         await self._async_send_dpcode_update(self._mode_wrapper, preset_mode)
 
-    def set_direction(self, direction: str) -> None:
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if self._direction is None:
-            return
-        self._send_command([{"code": self._direction.dpcode, "value": direction}])
+        await self._async_send_dpcode_update(self._direction_wrapper, direction)
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -244,19 +257,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
-        if (
-            self._direction is None
-            or (value := self.device.status.get(self._direction.dpcode)) is None
-        ):
-            return None
-
-        if value.lower() == DIRECTION_FORWARD:
-            return DIRECTION_FORWARD
-
-        if value.lower() == DIRECTION_REVERSE:
-            return DIRECTION_REVERSE
-
-        return None
+        return self._read_wrapper(self._direction_wrapper)
 
     @property
     def oscillating(self) -> bool | None:
