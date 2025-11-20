@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import pymystrom
@@ -28,9 +29,9 @@ async def _async_get_device_state(
 ) -> None:
     try:
         if isinstance(device, MyStromPir):
-            await device.get_light()
-            await device.get_motion()
-            await device.get_temperatures()
+            await asyncio.gather(
+                device.get_light(), device.get_motion(), device.get_temperatures()
+            )
         else:
             await device.get_state()
     except MyStromConnectionError as err:

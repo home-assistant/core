@@ -138,17 +138,17 @@ class MyStromBulbMock(MyStromDeviceMock):
 
 
 class MyStromPirMock(MyStromDeviceMock):
-    """MyStrom Switch mock."""
+    """MyStrom PIR motion sensor mock."""
 
     @property
-    def temperature_compensated(self) -> str | None:
+    def temperature_compensated(self) -> float | None:
         """Return current compensated temperature."""
         if not self._requested_state:
             return None
         return self._state["temperature_compensated"]
 
     @property
-    def intensity(self) -> str | None:
+    def intensity(self) -> int | None:
         """Return the intensity reported by the light sensor."""
         if not self._requested_state:
             return None
