@@ -29,8 +29,18 @@ _RESPAWN_COOLDOWN = 1
 _GO2RTC_CONFIG_FORMAT = r"""# This file is managed by Home Assistant
 # Do not edit it manually
 
+app:
+  modules: {app_modules}
+
 api:
   listen: "{api_ip}:{api_port}"
+  allow_paths: {api_allow_paths}
+
+# ffmpeg needs the exec module
+# Restrict execution to only ffmpeg binary
+exec:
+  allow_paths:
+    - ffmpeg
 
 rtsp:
   listen: "127.0.0.1:18554"
@@ -39,6 +49,43 @@ webrtc:
   listen: ":18555/tcp"
   ice_servers: []
 """
+
+_APP_MODULES = (
+    "api",
+    "exec",  # Execution module for ffmpeg
+    "ffmpeg",
+    "http",
+    "mjpeg",
+    "onvif",
+    "rtmp",
+    "rtsp",
+    "srtp",
+    "webrtc",
+    "ws",
+)
+
+_API_ALLOW_PATHS = (
+    "/",  # UI static page and version control
+    "/api",  # Main API path
+    "/api/frame.jpeg",  # Snapshot functionality
+    "/api/schemes",  # Supported stream schemes
+    "/api/streams",  # Stream management
+    "/api/webrtc",  # Webrtc functionality
+    "/api/ws",  # Websocket functionality (e.g. webrtc candidates)
+)
+
+# Additional modules when UI is enabled
+_UI_APP_MODULES = (
+    *_APP_MODULES,
+    "debug",
+)
+# Additional api paths when UI is enabled
+_UI_API_ALLOW_PATHS = (
+    *_API_ALLOW_PATHS,
+    "/api/config",  # UI config view
+    "/api/log",  # UI log view
+    "/api/streams.dot",  # UI network view
+)
 
 _LOG_LEVEL_MAP = {
     "TRC": logging.DEBUG,
@@ -61,14 +108,34 @@ class Go2RTCWatchdogError(HomeAssistantError):
     """Raised on watchdog error."""
 
 
-def _create_temp_file(api_ip: str) -> str:
+def _format_list_for_yaml(items: tuple[str, ...]) -> str:
+    """Format a list of strings for yaml config."""
+    if not items:
+        return "[]"
+    formatted_items = ",".join(f'"{item}"' for item in items)
+    return f"[{formatted_items}]"
+
+
+def _create_temp_file(enable_ui: bool) -> str:
     """Create temporary config file."""
+    app_modules: tuple[str, ...] = _APP_MODULES
+    api_paths: tuple[str, ...] = _API_ALLOW_PATHS
+    api_ip = _LOCALHOST_IP
+    if enable_ui:
+        app_modules = _UI_APP_MODULES
+        api_paths = _UI_API_ALLOW_PATHS
+        # Listen on all interfaces for allowing access from all ips
+        api_ip = ""
+
     # Set delete=False to prevent the file from being deleted when the file is closed
     # Linux is clearing tmp folder on reboot, so no need to delete it manually
     with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
         file.write(
             _GO2RTC_CONFIG_FORMAT.format(
-                api_ip=api_ip, api_port=HA_MANAGED_API_PORT
+                api_ip=api_ip,
+                api_port=HA_MANAGED_API_PORT,
+                app_modules=_format_list_for_yaml(app_modules),
+                api_allow_paths=_format_list_for_yaml(api_paths),
             ).encode()
         )
         return file.name
@@ -86,10 +153,7 @@ class Server:
         self._log_buffer: deque[str] = deque(maxlen=_LOG_BUFFER_SIZE)
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
-        self._api_ip = _LOCALHOST_IP
-        if enable_ui:
-            # Listen on all interfaces for allowing access from all ips
-            self._api_ip = ""
+        self._enable_ui = enable_ui
         self._watchdog_task: asyncio.Task | None = None
         self._watchdog_tasks: list[asyncio.Task] = []
 
@@ -104,7 +168,7 @@ class Server:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
         config_file = await self._hass.async_add_executor_job(
-            _create_temp_file, self._api_ip
+            _create_temp_file, self._enable_ui
         )
 
         self._startup_complete.clear()
