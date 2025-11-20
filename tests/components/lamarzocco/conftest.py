@@ -191,9 +191,6 @@ def mock_lamarzocco_bluetooth(device_fixture: ModelName) -> Generator[MagicMock]
         config = load_json_object_fixture("config_micra_bluetooth.json", DOMAIN)
     else:
         config = load_json_object_fixture("config_gs3_bluetooth.json", DOMAIN)
-    schedule = load_json_object_fixture("schedule.json", DOMAIN)
-    settings = load_json_object_fixture("settings.json", DOMAIN)
-    statistics = load_json_object_fixture("statistics.json", DOMAIN)
 
     with (
         patch(
@@ -205,15 +202,10 @@ def mock_lamarzocco_bluetooth(device_fixture: ModelName) -> Generator[MagicMock]
 
         machine_mock.serial_number = SERIAL_DICT[device_fixture]
         machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
-        machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
-        machine_mock.settings = ThingSettings.from_dict(settings)
-        machine_mock.statistics = ThingStatistics.from_dict(statistics)
         machine_mock.dashboard.model_name = device_fixture
         machine_mock.to_dict.return_value = {
             "serial_number": machine_mock.serial_number,
             "dashboard": machine_mock.dashboard.to_dict(),
-            "schedule": machine_mock.schedule.to_dict(),
-            "settings": machine_mock.settings.to_dict(),
         }
         yield machine_mock
 
