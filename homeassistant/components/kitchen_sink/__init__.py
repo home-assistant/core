@@ -123,7 +123,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def _async_labs_updated(event: Event[EventLabsUpdatedData]) -> None:
         """Handle labs feature update event."""
-        if event.data["feature_id"] == "kitchen_sink.special_repair":
+        if (
+            event.data["domain"] == "kitchen_sink"
+            and event.data["preview_feature"] == "special_repair"
+        ):
             _async_update_special_repair(hass)
 
     entry.async_on_unload(

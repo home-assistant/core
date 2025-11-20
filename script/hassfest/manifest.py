@@ -279,7 +279,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
         vol.Optional("single_config_entry"): bool,
-        vol.Optional("labs_features"): vol.Schema(
+        vol.Optional("preview_features"): vol.Schema(
             {
                 cv.slug: vol.Schema(
                     {

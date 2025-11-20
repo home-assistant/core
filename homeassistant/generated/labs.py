@@ -3,7 +3,7 @@
 To update, run python3 -m script.hassfest
 """
 
-LABS_FEATURES = {
+LABS_PREVIEW_FEATURES = {
     "kitchen_sink": {
         "special_repair": {
             "feedback_url": "https://community.home-assistant.io",

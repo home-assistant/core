@@ -266,7 +266,7 @@ class Manifest(TypedDict, total=False):
     loggers: list[str]
     import_executor: bool
     single_config_entry: bool
-    labs_features: dict[str, dict[str, str]]
+    preview_features: dict[str, dict[str, str]]
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -902,9 +902,9 @@ class Integration:
         return self.manifest.get("bluetooth")
 
     @property
-    def labs_features(self) -> dict[str, dict[str, str]] | None:
-        """Return Integration labs features entries."""
-        return self.manifest.get("labs_features")
+    def preview_features(self) -> dict[str, dict[str, str]] | None:
+        """Return Integration preview features entries."""
+        return self.manifest.get("preview_features")
 
     @property
     def dhcp(self) -> list[dict[str, str | bool]] | None:

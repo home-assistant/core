@@ -329,10 +329,12 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=UNDEFINED,
                 require_step_title=False,
             ),
-            vol.Optional("labs_features"): cv.schema_with_slug_keys(
+            vol.Optional("preview_features"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
+                    vol.Optional("enable_confirmation"): translation_value_validator,
+                    vol.Optional("disable_confirmation"): translation_value_validator,
                 },
                 slug_validator=translation_key_validator,
             ),

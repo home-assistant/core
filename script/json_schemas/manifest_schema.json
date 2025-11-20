@@ -356,8 +356,8 @@
         },
         "uniqueItems": true
       },
-      "labs_features": {
-        "description": "Experimental features that can be enabled/disabled by users via the Labs UI.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#labs-features",
+      "preview_features": {
+        "description": "Preview features that can be enabled/disabled by users via the Labs UI.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#preview-features",
         "type": "object",
         "minProperties": 1,
         "additionalProperties": {

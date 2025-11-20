@@ -5,7 +5,7 @@
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/kitchen_sink",
   "iot_class": "calculated",
-  "labs_features": {
+  "preview_features": {
     "special_repair": {
       "feedback_url": "https://community.home-assistant.io",
       "learn_more_url": "https://www.home-assistant.io/integrations/kitchen_sink",

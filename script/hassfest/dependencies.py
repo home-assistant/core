@@ -131,6 +131,7 @@ IGNORE_VIOLATIONS = {
     # This would be a circular dep
     ("http", "network"),
     ("http", "cloud"),
+    ("labs", "backup"),
     # This would be a circular dep
     ("zha", "homeassistant_hardware"),
     ("zha", "homeassistant_sky_connect"),
