@@ -31,9 +31,6 @@
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"
-    },
-    "unsupported_fan_mode": {
-      "message": "Unsupported fan mode: {fan_mode}"
     }
   }
 }

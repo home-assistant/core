@@ -145,13 +145,5 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
                 translation_key="session_not_active",
             )
 
-        if fan_mode not in FAN_MODE_TO_SPEED:
-            raise ServiceValidationError(
-                f"Unsupported fan mode: {fan_mode}",
-                translation_domain=DOMAIN,
-                translation_key="unsupported_fan_mode",
-                translation_placeholders={"fan_mode": fan_mode},
-            )
-
         await self.coordinator.client.async_set_fan_speed(FAN_MODE_TO_SPEED[fan_mode])
         await self.coordinator.async_request_refresh()
