@@ -99,7 +99,15 @@ def make_cover_opened_trigger(
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
+    "awning_opened": make_cover_opened_trigger(CoverDeviceClass.AWNING),
+    "blind_opened": make_cover_opened_trigger(CoverDeviceClass.BLIND),
+    "curtain_opened": make_cover_opened_trigger(CoverDeviceClass.CURTAIN),
+    "door_opened": make_cover_opened_trigger(CoverDeviceClass.DOOR),
     "garage_opened": make_cover_opened_trigger(CoverDeviceClass.GARAGE),
+    "gate_opened": make_cover_opened_trigger(CoverDeviceClass.GATE),
+    "shade_opened": make_cover_opened_trigger(CoverDeviceClass.SHADE),
+    "shutter_opened": make_cover_opened_trigger(CoverDeviceClass.SHUTTER),
+    "window_opened": make_cover_opened_trigger(CoverDeviceClass.WINDOW),
 }
 
 
