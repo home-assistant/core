@@ -3645,7 +3645,7 @@ async def test_get_triggers_for_target(
         label_mqtt_switch.entity_id, labels={label1.label_id}
     )
 
-    async def call_command(target: dict[str, str]) -> Any:
+    async def call_command(target: dict[str, list[str]]) -> Any:
         await websocket_client.send_json_auto_id(
             {"type": "get_triggers_for_target", "target": target}
         )
