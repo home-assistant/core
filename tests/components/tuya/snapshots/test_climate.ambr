@@ -922,7 +922,7 @@
       ]),
       'max_temp': 40.0,
       'min_temp': 5.0,
-      'preset_mode': 'hold',
+      'preset_mode': None,
       'preset_modes': list([
         'holiday',
       ]),
