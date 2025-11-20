@@ -38,84 +38,40 @@ def parametrize_opened_trigger_states(
     """
     extra_attrs = {ATTR_DEVICE_CLASS: device_class}
     return [
-        # States without current position attribute
+        # Test fully_opened = True
         *(
             (s[0], {"fully_opened": True}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
-                target_states=[(CoverState.OPEN, {})],
-                other_states=[(CoverState.CLOSED, {})],
+                target_states=[
+                    (CoverState.OPEN, {}),
+                    (CoverState.OPENING, {}),
+                    (CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}),
+                    (CoverState.OPENING, {ATTR_CURRENT_POSITION: 100}),
+                ],
+                other_states=[
+                    (CoverState.CLOSED, {}),
+                    (CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}),
+                ],
                 state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
         ),
-        *(
-            (s[0], {"fully_opened": True}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[(CoverState.OPENING, {})],
-                other_states=[(CoverState.CLOSED, {})],
-                state_attributes=extra_attrs,
-                trigger_from_none=False,
-            )
-        ),
-        *(
-            (s[0], {}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[(CoverState.OPEN, {})],
-                other_states=[(CoverState.CLOSED, {})],
-                state_attributes=extra_attrs,
-                trigger_from_none=False,
-            )
-        ),
+        # Test fully_opened = False
         *(
             (s[0], {}, *s[1:])
             for s in parametrize_trigger_states(
                 trigger=trigger,
-                target_states=[(CoverState.OPENING, {})],
-                other_states=[(CoverState.CLOSED, {})],
-                state_attributes=extra_attrs,
-                trigger_from_none=False,
-            )
-        ),
-        # States with current position attribute
-        *(
-            (s[0], {"fully_opened": True}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 100})],
-                other_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 0})],
-                state_attributes=extra_attrs,
-                trigger_from_none=False,
-            )
-        ),
-        *(
-            (s[0], {"fully_opened": True}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 100})],
-                other_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 0})],
-                state_attributes=extra_attrs,
-                trigger_from_none=False,
-            )
-        ),
-        *(
-            (s[0], {}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[(CoverState.OPEN, {ATTR_CURRENT_POSITION: 1})],
-                other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
-                state_attributes=extra_attrs,
-                trigger_from_none=False,
-            )
-        ),
-        *(
-            (s[0], {}, *s[1:])
-            for s in parametrize_trigger_states(
-                trigger=trigger,
-                target_states=[(CoverState.OPENING, {ATTR_CURRENT_POSITION: 1})],
-                other_states=[(CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0})],
+                target_states=[
+                    (CoverState.OPEN, {}),
+                    (CoverState.OPENING, {}),
+                    (CoverState.OPEN, {ATTR_CURRENT_POSITION: 1}),
+                    (CoverState.OPENING, {ATTR_CURRENT_POSITION: 1}),
+                ],
+                other_states=[
+                    (CoverState.CLOSED, {}),
+                    (CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),
+                ],
                 state_attributes=extra_attrs,
                 trigger_from_none=False,
             )
@@ -131,42 +87,6 @@ def parametrize_opened_trigger_states(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        # No initial state attribute, doesn't trigger because it's already in target state.
-        (
-            "cover.garage_opened",
-            {"fully_opened": True},
-            [
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {ATTR_DEVICE_CLASS: "garage"},
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 100,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 0,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 100,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 1,
-                },
-            ],
-        ),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_any(
@@ -218,42 +138,6 @@ async def test_cover_state_attribute_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        # No initial state attribute, doesn't trigger because it's already in target state.
-        (
-            "cover.garage_opened",
-            {"fully_opened": True},
-            [
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {ATTR_DEVICE_CLASS: "garage"},
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 100,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 0,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 100,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 1,
-                },
-            ],
-        ),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_first(
@@ -309,42 +193,6 @@ async def test_cover_state_attribute_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        # No initial state attribute, doesn't trigger because it's already in target state.
-        (
-            "cover.garage_opened",
-            {"fully_opened": True},
-            [
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {ATTR_DEVICE_CLASS: "garage"},
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 100,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 0,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 0,
-                },
-                {
-                    "state": CoverState.OPEN,
-                    "attributes": {
-                        ATTR_CURRENT_POSITION: 100,
-                        ATTR_DEVICE_CLASS: "garage",
-                    },
-                    "count": 1,
-                },
-            ],
-        ),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_last(
