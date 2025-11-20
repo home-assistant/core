@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
 from pypck import lcn_defs
-from pypck.module import GroupConnection, ModuleConnection, Serials
+from pypck.device import DeviceConnection, Serials
 import pytest
 
 from homeassistant.components.lcn import PchkConnectionManager
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, load_fixture
 LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 
 
-class MockModuleConnection(ModuleConnection):
+class MockDeviceConnection(DeviceConnection):
     """Fake a LCN module connection."""
 
     request_name = AsyncMock(return_value="TestModule")
@@ -49,12 +49,6 @@ class MockModuleConnection(ModuleConnection):
         self._serials_known.set()
 
 
-class MockGroupConnection(GroupConnection):
-    """Fake a LCN group connection."""
-
-    send_command = AsyncMock(return_value=True)
-
-
 class MockPchkConnectionManager(PchkConnectionManager):
     """Fake connection handler."""
 
@@ -67,15 +61,10 @@ class MockPchkConnectionManager(PchkConnectionManager):
     async def async_close(self) -> None:
         """Mock closing a connection to PCHK."""
 
-    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
-    def get_module_conn(self, addr):
-        """Get LCN module connection."""
-        return super().get_module_conn(addr)
-
-    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
-    def get_group_conn(self, addr):
-        """Get LCN group connection."""
-        return super().get_group_conn(addr)
+    @patch.object(pypck.connection, "DeviceConnection", MockDeviceConnection)
+    def get_device_connection(self, addr):
+        """Get LCN device connection."""
+        return super().get_device_connection(addr)
 
     scan_modules = AsyncMock()
     send_command = AsyncMock()

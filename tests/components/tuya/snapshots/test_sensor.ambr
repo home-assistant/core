@@ -4911,6 +4911,115 @@
     'state': '121.1',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.ake0bre784zriw0uschumidity_indoor',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '72.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.ake0bre784zriw0usctemp_indoor',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.door_garage_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -10267,12 +10376,14 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_time_day-entry]
+# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10280,7 +10391,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.kattenbak_excretion_time_day',
+    'entity_id': 'sensor.kattenbak_excretion_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10295,7 +10406,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Excretion time (day)',
+    'original_name': 'Excretion duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -10305,15 +10416,16 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_time_day-state]
+# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Kattenbak Excretion time (day)',
+      'friendly_name': 'Kattenbak Excretion duration',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kattenbak_excretion_time_day',
+    'entity_id': 'sensor.kattenbak_excretion_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -10367,6 +10479,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.kattenbak_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kattenbak_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cat_litter_box_status',
+    'unique_id': 'tuya.yohkwjjdjlzludd3psmstatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.kattenbak_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kattenbak Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kattenbak_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.keller_current-entry]
@@ -15134,12 +15294,14 @@
     'state': '3.6',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_time_day-entry]
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -15147,7 +15309,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poopy_nano_2_excretion_time_day',
+    'entity_id': 'sensor.poopy_nano_2_excretion_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15162,7 +15324,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Excretion time (day)',
+    'original_name': 'Excretion duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15172,15 +15334,16 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_time_day-state]
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Poopy Nano 2 Excretion time (day)',
+      'friendly_name': 'Poopy Nano 2 Excretion duration',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poopy_nano_2_excretion_time_day',
+    'entity_id': 'sensor.poopy_nano_2_excretion_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -15234,6 +15397,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.poopy_nano_2_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cat_litter_box_status',
+    'unique_id': 'tuya.nyriu7sjgj9oruzmpsmstatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Poopy Nano 2 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.poopy_nano_2_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.production_total_energy-entry]
