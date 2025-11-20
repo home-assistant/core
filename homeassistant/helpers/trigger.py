@@ -261,6 +261,12 @@ BEHAVIOR_ANY: Final = "any"
 
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    {
         vol.Required(CONF_OPTIONS): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
@@ -275,7 +281,7 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain: str
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
     @classmethod
@@ -289,14 +295,13 @@ class EntityTriggerBase(Trigger):
         """Initialize the state trigger."""
         super().__init__(hass, config)
         if TYPE_CHECKING:
-            assert config.options is not None
             assert config.target is not None
-        self._options = config.options
+        self._options = config.options or {}
         self._target = config.target
 
-    def is_from_state(self, state: State) -> bool:
+    def is_from_state(self, from_state: State, to_state: State) -> bool:
         """Check if the state matches the origin state."""
-        return not self.is_to_state(state)
+        return not self.is_to_state(from_state)
 
     @abc.abstractmethod
     def is_to_state(self, state: State) -> bool:
@@ -352,11 +357,11 @@ class EntityTriggerBase(Trigger):
                 return
 
             # The trigger should never fire if the previous state was not the from state
-            if not self.is_from_state(from_state):
+            if not to_state or not self.is_from_state(from_state, to_state):
                 return
 
             # The trigger should never fire if the new state is not the to state
-            if not to_state or not self.is_to_state(to_state):
+            if not self.is_to_state(to_state):
                 return
 
             if behavior == BEHAVIOR_LAST:
@@ -401,9 +406,9 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
     _from_states: set[str]
     _to_states: set[str]
 
-    def is_from_state(self, state: State) -> bool:
+    def is_from_state(self, from_state: State, to_state: State) -> bool:
         """Check if the state matches the origin state."""
-        return state.state in self._from_states
+        return from_state.state in self._from_states
 
     def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""

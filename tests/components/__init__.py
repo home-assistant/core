@@ -249,9 +249,9 @@ async def arm_trigger(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: trigger,
-                    CONF_OPTIONS: {**trigger_options},
                     CONF_TARGET: {**trigger_target},
-                },
+                }
+                | ({CONF_OPTIONS: {**trigger_options}} if trigger_options else {}),
                 "action": {
                     "service": "test.automation",
                     "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
