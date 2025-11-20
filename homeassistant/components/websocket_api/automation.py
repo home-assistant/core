@@ -9,6 +9,9 @@ from typing import Any
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, target as target_helpers
+from homeassistant.helpers.service import (
+    async_get_all_descriptions as async_get_all_service_descriptions,
+)
 from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
 )
@@ -69,21 +72,21 @@ def _build_trigger_lookup_data(
     )
 
 
-async def async_get_triggers_for_target(
-    hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
+async def _async_get_components_for_target(
+    hass: HomeAssistant,
+    target_selector: ConfigType,
+    expand_group: bool,
+    descriptions: dict[str, dict[str, Any] | None],
 ) -> set[str]:
-    """Get triggers for target command.
+    """Get automation components (triggers/conditions/services) for a target.
 
-    This command returns all triggers that can be used on any entity that are currently
-    part of a target.
+    Returns all components that can be used on any entity that are currently part of a target.
     """
     selector_data = target_helpers.TargetSelectorData(target_selector)
     extracted = target_helpers.async_extract_referenced_entity_ids(
         hass, selector_data, expand_group=expand_group
     )
-    _LOGGER.debug("Extracted entities for trigger lookup: %s", extracted)
-
-    descriptions = await async_get_all_trigger_descriptions(hass)
+    _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
     # Build lookup structure: domain -> list of trigger lookup data
     domain_triggers: dict[str, list[TriggerLookupData]] = {}
@@ -118,3 +121,29 @@ async def async_get_triggers_for_target(
                     matched_triggers.add(trigger_data.trigger)
 
     return matched_triggers
+
+
+async def async_get_triggers_for_target(
+    hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
+) -> set[str]:
+    """Get triggers for a target."""
+    descriptions = await async_get_all_trigger_descriptions(hass)
+    return await _async_get_components_for_target(
+        hass, target_selector, expand_group, descriptions
+    )
+
+
+async def async_get_services_for_target(
+    hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
+) -> set[str]:
+    """Get triggers for a target."""
+    descriptions = await async_get_all_service_descriptions(hass)
+    # Flatten domain+name to match trigger/condition format
+    descriptions_flatten = {
+        f"{domain}.{service_name}": desc
+        for domain, services in descriptions.items()
+        for service_name, desc in services.items()
+    }
+    return await _async_get_components_for_target(
+        hass, target_selector, expand_group, descriptions_flatten
+    )
