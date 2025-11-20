@@ -55,6 +55,7 @@ async def test_bluetooth_coordinator_disabled_when_option_false(
     assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is None
 
 
+@pytest.mark.usefixtures()
 async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
