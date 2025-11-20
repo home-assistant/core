@@ -249,9 +249,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
 
         if description.key == "input":
             _, component, component_id = get_rpc_key(key)
-            if not get_rpc_custom_name(coordinator.device, key) and (
-                component.lower() == "input" and component_id.isnumeric()
-            ):
+            if not get_rpc_custom_name(coordinator.device, key):
                 self._attr_translation_placeholders = {
                     "input_number": component_id
                     if get_rpc_number_of_channels(coordinator.device, component) > 1
