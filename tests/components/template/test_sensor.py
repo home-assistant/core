@@ -1160,6 +1160,7 @@ async def test_duplicate_templates(hass: HomeAssistant) -> None:
                             "unique_id": "via_list-id",
                             "device_class": "battery",
                             "unit_of_measurement": "%",
+                            "force_update": "True",
                             "availability": "{{ True }}",
                             "state": "{{ trigger.event.data.beer + 1 }}",
                             "picture": "{{ '/local/dogs.png' }}",
@@ -1228,6 +1229,9 @@ async def test_trigger_entity(
     assert state.attributes.get("unit_of_measurement") == "%"
     assert state.attributes.get("state_class") == "measurement"
     assert state.context is context
+
+    entity = hass.data["entity_components"]["sensor"].get_entity("sensor.via_list")
+    assert entity.force_update is True
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
