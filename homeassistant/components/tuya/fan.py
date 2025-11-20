@@ -23,7 +23,13 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import DPCodeEnumWrapper, EnumTypeData, IntegerTypeData, find_dpcode
+from .models import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    EnumTypeData,
+    IntegerTypeData,
+    find_dpcode,
+)
 from .util import get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
@@ -82,6 +88,9 @@ async def async_setup_entry(
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, _MODE_DPCODES, prefer_function=True
                         ),
+                        switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                            device, _SWITCH_DPCODES, prefer_function=True
+                        ),
                     )
                 )
         async_add_entities(entities)
@@ -100,7 +109,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     _oscillate: DPCode | None = None
     _speed: IntegerTypeData | None = None
     _speeds: EnumTypeData | None = None
-    _switch: DPCode | None = None
     _attr_name = None
 
     def __init__(
@@ -109,13 +117,12 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device_manager: Manager,
         *,
         mode_wrapper: DPCodeEnumWrapper | None,
+        switch_wrapper: DPCodeBooleanWrapper | None,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
         self._mode_wrapper = mode_wrapper
-
-        self._switch = get_dpcode(self.device, _SWITCH_DPCODES)
-
+        self._switch_wrapper = switch_wrapper
         if mode_wrapper:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = mode_wrapper.type_information.range
@@ -141,7 +148,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION
-        if self._switch is not None:
+        if switch_wrapper:
             self._attr_supported_features |= (
                 FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
             )
@@ -181,22 +188,22 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                 ]
             )
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self._send_command([{"code": self._switch, "value": False}])
+        await self._async_send_dpcode_update(self._switch_wrapper, False)
 
-    def turn_on(
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if self._switch is None:
+        if self._switch_wrapper is None:
             return
 
         commands: list[dict[str, str | bool | int]] = [
-            {"code": self._switch, "value": True}
+            self._switch_wrapper.get_update_command(self.device, True)
         ]
 
         if percentage is not None and self._speed is not None:
@@ -221,7 +228,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             commands.append(
                 self._mode_wrapper.get_update_command(self.device, preset_mode)
             )
-        self._send_command(commands)
+        await self._async_send_commands(commands)
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -232,9 +239,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if fan is on."""
-        if self._switch is None:
-            return None
-        return self.device.status.get(self._switch)
+        return self._read_wrapper(self._switch_wrapper)
 
     @property
     def current_direction(self) -> str | None:
