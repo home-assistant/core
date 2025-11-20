@@ -60,35 +60,6 @@ from .server import Server
 _LOGGER = logging.getLogger(__name__)
 
 _FFMPEG = "ffmpeg"
-_SUPPORTED_STREAMS = frozenset(
-    (
-        "bubble",
-        "dvrip",
-        "expr",
-        _FFMPEG,
-        "gopro",
-        "homekit",
-        "http",
-        "https",
-        "httpx",
-        "isapi",
-        "ivideon",
-        "kasa",
-        "nest",
-        "onvif",
-        "roborock",
-        "rtmp",
-        "rtmps",
-        "rtmpx",
-        "rtsp",
-        "rtsps",
-        "rtspx",
-        "tapo",
-        "tcp",
-        "webrtc",
-        "webtorrent",
-    )
-)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -197,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         return False
 
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
+    await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 
@@ -228,16 +200,21 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._session = session
         self._rest_client = rest_client
         self._sessions: dict[str, Go2RtcWsClient] = {}
+        self._supported_schemes: set[str] = set()
 
     @property
     def domain(self) -> str:
         """Return the integration domain of the provider."""
         return DOMAIN
 
+    async def initialize(self) -> None:
+        """Initialize the provider."""
+        self._supported_schemes = await self._rest_client.schemes.list()
+
     @callback
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
-        return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
+        return stream_source.partition(":")[0] in self._supported_schemes
 
     async def async_handle_async_webrtc_offer(
         self,
