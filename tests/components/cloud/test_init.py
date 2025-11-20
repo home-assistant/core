@@ -11,6 +11,7 @@ from homeassistant.components.cloud import (
     CloudNotAvailable,
     CloudNotConnected,
     async_get_or_create_cloudhook,
+    async_listen_cloudhook_deletion,
     async_listen_connection_change,
     async_remote_ui_url,
 )
@@ -311,3 +312,108 @@ async def test_cloud_logout(
     await hass.async_block_till_done()
 
     assert cloud.is_logged_in is False
+
+
+async def test_async_listen_cloudhook_deletion(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
+    """Test async_listen_cloudhook_deletion."""
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    webhook_id = "mock-webhook-id"
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    # Set up initial cloudhooks state
+    await set_cloud_prefs(
+        {
+            PREF_CLOUDHOOKS: {
+                webhook_id: {
+                    "webhook_id": webhook_id,
+                    "cloudhook_id": "random-id",
+                    "cloudhook_url": cloudhook_url,
+                    "managed": True,
+                }
+            }
+        }
+    )
+
+    # Track if deletion callback was called
+    deletion_called = False
+
+    def on_deletion() -> None:
+        """Handle cloudhook deletion."""
+        nonlocal deletion_called
+        deletion_called = True
+
+    # Register the deletion listener
+    unsubscribe = async_listen_cloudhook_deletion(hass, webhook_id, on_deletion)
+
+    # Verify deletion callback not called yet
+    assert not deletion_called
+
+    # Delete the cloudhook by updating prefs
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
+    await hass.async_block_till_done()
+
+    # Verify deletion callback was called
+    assert deletion_called
+
+    # Reset for next test
+    deletion_called = False
+
+    # Add cloudhook back
+    await set_cloud_prefs(
+        {
+            PREF_CLOUDHOOKS: {
+                webhook_id: {
+                    "webhook_id": webhook_id,
+                    "cloudhook_id": "random-id",
+                    "cloudhook_url": cloudhook_url,
+                    "managed": True,
+                }
+            }
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Verify callback not called when cloudhook is added
+    assert not deletion_called
+
+    # Unsubscribe from listener
+    unsubscribe()
+
+    # Delete cloudhook again
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
+    await hass.async_block_till_done()
+
+    # Verify deletion callback was NOT called after unsubscribe
+    assert not deletion_called
+
+
+async def test_async_listen_cloudhook_deletion_no_cloud(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_listen_cloudhook_deletion when cloud is not available."""
+    webhook_id = "mock-webhook-id"
+    deletion_called = False
+
+    def on_deletion() -> None:
+        """Handle cloudhook deletion."""
+        nonlocal deletion_called
+        deletion_called = True
+
+    # Should return a no-op unsubscribe when cloud is not available
+    unsubscribe = async_listen_cloudhook_deletion(hass, webhook_id, on_deletion)
+
+    # Verify it returns a callable
+    assert callable(unsubscribe)
+
+    # Call unsubscribe (should not raise)
+    unsubscribe()
+
+    # Verify deletion callback was never called
+    assert not deletion_called

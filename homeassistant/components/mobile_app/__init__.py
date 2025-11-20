@@ -2,6 +2,7 @@
 
 from contextlib import suppress
 from functools import partial
+import logging
 from typing import Any
 
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -54,6 +55,8 @@ from .http_api import RegistrationsView
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
@@ -134,16 +137,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def clean_cloudhook() -> None:
         """Clean up cloudhook from config entry."""
         if CONF_CLOUDHOOK_URL in entry.data:
-                data = dict(entry.data)
-                data.pop(CONF_CLOUDHOOK_URL)
-                hass.config_entries.async_update_entry(entry, data=data)
+            data = dict(entry.data)
+            data.pop(CONF_CLOUDHOOK_URL)
+            hass.config_entries.async_update_entry(entry, data=data)
+
+    def on_cloudhook_deletion() -> None:
+        """Handle cloudhook deletion."""
+        _LOGGER.debug("Webhook deleted %s", webhook_id)
+        data = dict(entry.data)
+        data.pop(CONF_CLOUDHOOK_URL, None)
+        hass.config_entries.async_update_entry(entry, data=data)
+
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if (
             state is cloud.CloudConnectionState.CLOUD_CONNECTED
             and CONF_CLOUDHOOK_URL not in entry.data
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
-        elif (state is cloud.CloudConnectionState.CLOUD_DISCONNECTED
+        elif (
+            state is cloud.CloudConnectionState.CLOUD_DISCONNECTED
             and not cloud.async_is_logged_in(hass)
         ):
             clean_cloudhook()
@@ -160,6 +172,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
+    entry.async_on_unload(
+        cloud.async_listen_cloudhook_deletion(hass, webhook_id, on_cloudhook_deletion)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -359,3 +359,64 @@ async def test_cloudhook_persists_on_disconnect_when_logged_in(
         # Cloudhook should still exist because user is still logged in
         assert CONF_CLOUDHOOK_URL in config_entry.data
 
+
+async def test_cloudhook_deletion_listener(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test cloudhook deletion listener removes cloudhook from config entry."""
+    webhook_id = "test-webhook-id"
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    cloudhook_deleted_callback = None
+
+    def mock_listen_cloudhook_deletion(hass_instance, wh_id: str, callback):
+        """Mock the cloudhook deletion listener."""
+        nonlocal cloudhook_deleted_callback
+        cloudhook_deleted_callback = callback
+        return lambda: None  # Return unsubscribe function
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_is_logged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_listen_cloudhook_deletion",
+            side_effect=mock_listen_cloudhook_deletion,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        # Cloudhook should exist
+        assert CONF_CLOUDHOOK_URL in config_entry.data
+        # Deletion listener should have been registered
+        assert cloudhook_deleted_callback is not None
+
+        # Simulate cloudhook deletion by calling the callback
+        cloudhook_deleted_callback()
+        await hass.async_block_till_done()
+
+        # Cloudhook should be removed from config entry
+        assert CONF_CLOUDHOOK_URL not in config_entry.data

@@ -69,11 +69,14 @@ from .const import (
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
+    PREF_CLOUDHOOKS,
 )
 from .helpers import FixedSizeQueueLogHandler
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MODE = MODE_PROD
 
@@ -240,6 +243,37 @@ async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
         raise CloudNotAvailable
 
     await hass.data[DATA_CLOUD].cloudhooks.async_delete(webhook_id)
+
+
+@callback
+def async_listen_cloudhook_deletion(
+    hass: HomeAssistant,
+    webhook_id: str,
+    on_deletion: Callable,
+) -> Callable:
+    """Listen for cloudhook deletion and call on_deletion when deleted.
+
+    Args:
+        hass: Home Assistant instance
+        webhook_id: The webhook ID to monitor
+        on_deletion: Callback to call when the cloudhook is deleted
+
+    Returns:
+        Unsubscribe function to stop listening
+    """
+    _LOGGER.debug("Setting up cloudhook deletion listener for %s", webhook_id)
+
+    if DATA_CLOUD not in hass.data:
+        # If cloud is not available, return a no-op unsubscribe
+        return lambda: None
+
+    async def _async_prefs_updated(prefs: CloudPreferences) -> None:
+        """Handle cloud preferences update."""
+        if PREF_CLOUDHOOKS in prefs.last_updated:
+            if webhook_id not in prefs.cloudhooks:
+                on_deletion()
+
+    return hass.data[DATA_CLOUD].client.prefs.async_listen_updates(_async_prefs_updated)
 
 
 @bind_hass
