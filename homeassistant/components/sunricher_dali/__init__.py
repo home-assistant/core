@@ -95,33 +95,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             ) from exc
 
         new_ip = discovered[0].gw_ip
-        if new_ip == current_host:
-            raise ConfigEntryNotReady(
-                f"Gateway found at {current_host} but connection failed"
-            ) from exc
 
-        _LOGGER.info(
-            "Gateway IP changed from %s to %s, updating configuration",
-            current_host,
-            new_ip,
-        )
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_HOST: new_ip}
-        )
+        if new_ip != current_host:
+            _LOGGER.info(
+                "Gateway IP changed from %s to %s, updating configuration",
+                current_host,
+                new_ip,
+            )
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_HOST: new_ip}
+            )
+            gateway = DaliGateway(
+                gw_sn,
+                new_ip,
+                entry.data[CONF_PORT],
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_PASSWORD],
+                name=entry.data[CONF_NAME],
+            )
 
-        gateway = DaliGateway(
-            gw_sn,
-            new_ip,
-            entry.data[CONF_PORT],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            name=entry.data[CONF_NAME],
-        )
         try:
             await gateway.connect()
         except DaliGatewayError as reconnect_exc:
             raise ConfigEntryNotReady(
-                f"Found gateway at {new_ip} but failed to connect"
+                f"Unable to connect to gateway at {new_ip}"
             ) from reconnect_exc
 
     try:
