@@ -85,7 +85,12 @@ async def async_attach_trigger(
             VacuumActivity.VACUUMING_AND_MOPPING,
         ]
     else:
-        to_state = VacuumActivity.DOCKED
+        to_state = [
+            VacuumActivity.DOCKED,
+            VacuumActivity.AUTO_EMPTYING,
+            VacuumActivity.CLEANING_MOPS,
+            VacuumActivity.DRYING_MOPS,
+        ]
 
     state_config = {
         CONF_PLATFORM: "state",

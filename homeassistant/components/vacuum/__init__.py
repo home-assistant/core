@@ -226,7 +226,7 @@ class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_features",
-    "auto_emptying",
+    "auto_empty_count",
     "battery_level",
     "battery_icon",
     "fan_speed",
@@ -250,6 +250,7 @@ class StateVacuumEntity(
         {ATTR_FAN_SPEED_LIST, ATTR_CLEANING_MODE_LIST, ATTR_WATER_LEVEL_LIST}
     )
 
+    _attr_auto_empty_count: int | None = None
     _attr_battery_icon: str
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
@@ -439,6 +440,13 @@ class StateVacuumEntity(
     def water_levels(self) -> list[str]:
         """Get the list of available water levels of the vacuum cleaner."""
         return self._attr_water_level_list
+
+    @cached_property
+    def dust_bag_replacement_required(self) -> bool:
+        """Required base dust collector replacement"""
+        if self._attr_empty_required:
+            return True
+        return False
 
     @property
     def state_attributes(self) -> dict[str, Any]:

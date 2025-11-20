@@ -59,7 +59,6 @@ _DEPRECATED_STATE_VACUUMING_AND_MOPPING = DeprecatedConstantEnum(
 
 
 # These can be removed if no deprecated constant are in this module anymore
-# Adding new states is necessary to mark also possible STATE_
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
 __dir__ = partial(
     dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
