@@ -38,6 +38,9 @@
     }
   },
   "triggers": {
+    "armed": {
+      "trigger": "mdi:shield"
+    },
     "armed_away": {
       "trigger": "mdi:shield-lock"
     },
