@@ -163,7 +163,9 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
-    current_state_wrapper: type[_IsClosedWrapper] = _IsClosedEnumWrapper
+    current_state_wrapper: type[_IsClosedInvertedWrapper | _IsClosedEnumWrapper] = (
+        _IsClosedEnumWrapper
+    )
     current_position: DPCode | tuple[DPCode, ...] | None = None
     instruction_wrapper: type[_InstructionEnumWrapper] = _InstructionEnumWrapper
     position_wrapper: type[_DPCodePercentageMappingWrapper] = (
@@ -314,7 +316,7 @@ async def async_setup_entry(
                         instruction_wrapper=_get_instruction_wrapper(
                             device, description
                         ),
-                        current_state_wrapper=description.current_state_wrapper.find_dpcode(  # type: ignore[attr-defined]
+                        current_state_wrapper=description.current_state_wrapper.find_dpcode(
                             device, description.current_state
                         ),
                         set_position=description.position_wrapper.find_dpcode(
