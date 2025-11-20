@@ -33,6 +33,8 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_EMAIL])
+            self._abort_if_unique_id_configured()
             client = HannaCloudClient()
             try:
                 await self.hass.async_add_executor_job(
@@ -46,9 +48,6 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             if not errors:
-                identifier = user_input[CONF_EMAIL]
-                await self.async_set_unique_id(identifier)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data=user_input,

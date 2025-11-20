@@ -98,16 +98,9 @@ class HannaSensor(HannaEntity, SensorEntity):
         """Initialize a Hanna sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device_identifier}_{description.key}"
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
-        self._attr_translation_key = description.translation_key
-        self._attr_icon = description.icon
-        self._attr_state_class = description.state_class
-        self._attr_device_class = description.device_class
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self.description = description
+        self.entity_description = description
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.get_parameter_value(self.description.key)
+        return self.coordinator.get_parameter_value(self.entity_description.key)

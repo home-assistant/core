@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from hanna_cloud import HannaCloudClient
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_EMAIL, CONF_PASSWORD
 from .coordinator import HannaConfigEntry, HannaDataCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -17,7 +18,7 @@ def _authenticate_and_get_devices(
     api_client: HannaCloudClient,
     email: str,
     password: str,
-) -> list:
+) -> list[dict[str, Any]]:
     """Authenticate and get devices in a single executor job."""
     api_client.authenticate(email, password)
     return api_client.get_devices()

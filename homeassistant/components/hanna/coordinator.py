@@ -34,12 +34,12 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize the Hanna data coordinator."""
         self.api_client = api_client
-        self.readings = None
         self.device_data = device
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{self.device_identifier}",
+            config_entry=config_entry,
             update_interval=timedelta(seconds=30),
         )
 
