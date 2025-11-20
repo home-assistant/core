@@ -1,5 +1,7 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted lights.",
+    "condition_behavior_name": "Behavior",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
     "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
@@ -34,7 +36,9 @@
     "field_white_name": "White",
     "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
     "field_xy_color_name": "XY-color",
-    "section_advanced_fields_name": "Advanced options"
+    "section_advanced_fields_name": "Advanced options",
+    "trigger_behavior_description": "The behavior of the targeted lights to trigger on.",
+    "trigger_behavior_name": "Behavior"
   },
   "conditions": {
     "is_off": {
@@ -42,8 +46,8 @@
       "description_configured": "[%key:component::light::conditions::is_off::description%]",
       "fields": {
         "behavior": {
-          "description": "How the state should match on the targeted lights.",
-          "name": "Behavior"
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
       "name": "If a light is off"
@@ -53,8 +57,8 @@
       "description_configured": "[%key:component::light::conditions::is_on::description%]",
       "fields": {
         "behavior": {
-          "description": "How the state should match on the targeted lights.",
-          "name": "Behavior"
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
       "name": "If a light is on"
@@ -512,8 +516,8 @@
       "description_configured": "[%key:component::light::triggers::turned_off::description%]",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted lights to trigger on.",
-          "name": "Behavior"
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
       "name": "When a light is turned off"
@@ -523,8 +527,8 @@
       "description_configured": "[%key:component::light::triggers::turned_on::description%]",
       "fields": {
         "behavior": {
-          "description": "[%key:component::light::triggers::turned_off::fields::behavior::description%]",
-          "name": "[%key:component::light::triggers::turned_off::fields::behavior::name%]"
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
       "name": "When a light is turned on"

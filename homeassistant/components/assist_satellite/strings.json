@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted assist satellites to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "Assist satellite",
@@ -112,8 +116,8 @@
       "description_configured": "[%key:component::assist_satellite::triggers::idle::description%]",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted assist satellites to trigger on.",
-          "name": "Behavior"
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
         }
       },
       "name": "When an assist satellite becomes idle"
@@ -123,8 +127,8 @@
       "description_configured": "[%key:component::assist_satellite::triggers::listening::description%]",
       "fields": {
         "behavior": {
-          "description": "[%key:component::assist_satellite::triggers::idle::fields::behavior::description%]",
-          "name": "[%key:component::assist_satellite::triggers::idle::fields::behavior::name%]"
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
         }
       },
       "name": "When an assist satellite starts listening"
@@ -134,8 +138,8 @@
       "description_configured": "[%key:component::assist_satellite::triggers::processing::description%]",
       "fields": {
         "behavior": {
-          "description": "[%key:component::assist_satellite::triggers::idle::fields::behavior::description%]",
-          "name": "[%key:component::assist_satellite::triggers::idle::fields::behavior::name%]"
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
         }
       },
       "name": "When an assist satellite is processing"
@@ -145,8 +149,8 @@
       "description_configured": "[%key:component::assist_satellite::triggers::responding::description%]",
       "fields": {
         "behavior": {
-          "description": "[%key:component::assist_satellite::triggers::idle::fields::behavior::description%]",
-          "name": "[%key:component::assist_satellite::triggers::idle::fields::behavior::name%]"
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
         }
       },
       "name": "When an assist satellite is responding"
