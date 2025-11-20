@@ -1745,31 +1745,13 @@ class ConfigEntriesFlowManager(
         If match_context is passed, only return flows with a context that is a
         superset of match_context.
         """
-
-        return bool(
-            self.async_get_matching_discovery_flows(handler, match_context, data)
-        )
-
-    @callback
-    def async_get_matching_discovery_flows(
-        self, handler: str, match_context: ConfigFlowContext, data: Any
-    ) -> list[str]:
-        """Get IDs of existing matching discovery flow in progress.
-
-        A flow with the same handler, context, and data.
-
-        If match_context is passed, only return flows with a context that is a
-        superset of match_context.
-        """
         if not (flows := self._handler_progress_index.get(handler)):
-            return []
+            return False
         match_items = match_context.items()
-
-        return [
-            progress.flow_id
-            for progress in flows
-            if match_items <= progress.context.items() and progress.init_data == data
-        ]
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
 
     @callback
     def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
