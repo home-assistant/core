@@ -62,7 +62,6 @@ async def test_platform_setup_and_discovery(
             {},
             [
                 {"code": "control", "value": "open"},
-                {"code": "percent_control", "value": 0},
             ],
         ),
         (
@@ -70,7 +69,6 @@ async def test_platform_setup_and_discovery(
             {},
             [
                 {"code": "control", "value": "close"},
-                {"code": "percent_control", "value": 100},
             ],
         ),
         (
@@ -229,7 +227,6 @@ async def test_clkg_wltqkykhni0papzj_state(
             {},
             [
                 {"code": "control", "value": "open"},
-                {"code": "percent_control", "value": 100},
             ],
         ),
         (
@@ -244,7 +241,6 @@ async def test_clkg_wltqkykhni0papzj_state(
             {},
             [
                 {"code": "control", "value": "close"},
-                {"code": "percent_control", "value": 0},
             ],
         ),
     ],
