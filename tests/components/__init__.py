@@ -119,6 +119,7 @@ def parametrize_trigger_states(
     trigger: str,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    state_attributes: dict | None = None,
     trigger_from_none: bool = True,
 ) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
@@ -133,13 +134,19 @@ def parametrize_trigger_states(
     where states is a list of StateDescription dicts.
     """
 
+    state_attributes = state_attributes or {}
+
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
     ) -> dict:
         """Return (state, attributes) dict."""
         if isinstance(state, str) or state is None:
-            return {"state": state, "attributes": {}, "count": count}
-        return {"state": state[0], "attributes": state[1], "count": count}
+            return {"state": state, "attributes": state_attributes, "count": count}
+        return {
+            "state": state[0],
+            "attributes": state[1] | state_attributes,
+            "count": count,
+        }
 
     return [
         # Initial state None
