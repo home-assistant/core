@@ -60,7 +60,7 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
@@ -69,7 +69,7 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
             trigger="alarm_control_panel.armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
@@ -78,7 +78,7 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
             trigger="alarm_control_panel.armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
@@ -87,7 +87,7 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
             trigger="alarm_control_panel.armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
@@ -121,13 +121,13 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
 
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
-        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -136,9 +136,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
 
         # Check if changing other alarm control panels also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, state["state"], state["attributes"]
-            )
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -172,7 +170,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
@@ -181,7 +179,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
@@ -190,7 +188,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
@@ -199,7 +197,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
@@ -233,13 +231,13 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
 
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
-        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -248,9 +246,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
 
         # Triggering other alarm control panels should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, state["state"], state["attributes"]
-            )
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -283,7 +279,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
@@ -292,7 +288,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
@@ -301,7 +297,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
@@ -310,7 +306,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            state_attributes={
+            additional_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
@@ -344,20 +340,18 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
 
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
-        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, state["state"], state["attributes"]
-            )
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
