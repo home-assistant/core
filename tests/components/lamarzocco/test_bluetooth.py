@@ -18,11 +18,10 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 from . import async_init_integration, get_bluetooth_service_info
 
-pytestmark = pytest.mark.usefixtures("mock_websocket_terminated")
-
 
 async def test_bluetooth_coordinator_setup(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -38,6 +37,7 @@ async def test_bluetooth_coordinator_setup(
 
 async def test_bluetooth_coordinator_disabled_when_option_false(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -93,6 +93,7 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
 
 async def test_bt_offline_mode_entity_available_when_cloud_fails(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -137,6 +138,7 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
 
 async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
@@ -173,6 +175,7 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
 
 async def test_bluetooth_coordinator_handles_connection_failure(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -208,6 +211,7 @@ async def test_bluetooth_coordinator_handles_connection_failure(
 
 async def test_no_bluetooth_coordinator_without_mac(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -220,6 +224,7 @@ async def test_no_bluetooth_coordinator_without_mac(
 
 async def test_bluetooth_coordinator_triggers_entity_updates(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -270,6 +275,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
 )
 async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
@@ -307,6 +313,7 @@ async def test_bluetooth_is_set_from_discovery(
 
 async def test_disconnect_on_stop(
     hass: HomeAssistant,
+    mock_websocket_terminated: bool,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
