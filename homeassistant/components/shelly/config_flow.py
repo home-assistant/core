@@ -7,7 +7,11 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Final
 
-from aioshelly.ble.manufacturer_data import has_rpc_over_ble
+from aioshelly.ble import get_name_from_model_id
+from aioshelly.ble.manufacturer_data import (
+    has_rpc_over_ble,
+    parse_shelly_manufacturer_data,
+)
 from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
@@ -358,8 +362,35 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
-        # Parse MAC address from the Bluetooth device name
-        if not (mac := mac_address_from_name(discovery_info.name)):
+        # Try to parse MAC address from the Bluetooth device name
+        # If not found, try to get it from manufacturer data
+        device_name = discovery_info.name
+        if (
+            not (mac := mac_address_from_name(device_name))
+            and (
+                parsed := parse_shelly_manufacturer_data(
+                    discovery_info.manufacturer_data
+                )
+            )
+            and (mac_with_colons := parsed.get("mac"))
+            and isinstance(mac_with_colons, str)
+        ):
+            # parse_shelly_manufacturer_data returns MAC with colons (e.g., "CC:BA:97:C2:D6:72")
+            # Convert to format without colons to match mac_address_from_name output
+            mac = mac_with_colons.replace(":", "")
+            # For devices without a Shelly name, use model name from model ID if available
+            # Gen3/4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR"
+            if (
+                (model_id := parsed.get("model_id"))
+                and isinstance(model_id, int)
+                and (model_name := get_name_from_model_id(model_id))
+            ):
+                # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
+                device_name = f"{model_name.replace(' ', '')}-{mac}"
+            else:
+                device_name = f"Shelly-{mac}"
+
+        if not mac:
             return self.async_abort(reason="invalid_discovery_info")
 
         # Check if RPC-over-BLE is enabled - required for WiFi provisioning
@@ -381,10 +412,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.ble_device:
             return self.async_abort(reason="cannot_connect")
 
-        self.device_name = discovery_info.name
+        self.device_name = device_name
         self.context.update(
             {
-                "title_placeholders": {"name": discovery_info.name},
+                "title_placeholders": {"name": device_name},
             }
         )
 

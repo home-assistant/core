@@ -4,6 +4,9 @@
   "bluetooth": [
     {
       "local_name": "Shelly*"
+    },
+    {
+      "manufacturer_id": 2985
     }
   ],
   "codeowners": ["@bieniu", "@thecode", "@chemelli74", "@bdraco"],
