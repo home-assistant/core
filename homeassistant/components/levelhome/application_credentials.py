@@ -19,7 +19,6 @@ from .const import (
     CONF_PARTNER_BASE_URL,
     DEFAULT_OAUTH2_BASE_URL,
     DEFAULT_PARTNER_BASE_URL,
-    DEVICE_CODE_POLL_PATH,
     DOMAIN,
     OAUTH2_AUTHORIZE_PATH,
     OAUTH2_TOKEN_EXCHANGE_PATH,
@@ -30,7 +29,7 @@ class LevelOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
     """Level Lock OAuth2 implementation with PKCE support for token refresh.
     
     Level uses the device code flow where token refresh happens via the
-    partner server's /oauth2/device-code/token endpoint with grant_type=refresh_token.
+    OAuth2 server's /v1/token/exchange endpoint with grant_type=refresh_token.
     """
 
     def __init__(
@@ -46,9 +45,11 @@ class LevelOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
         """Initialize with both OAuth2 and partner server token URLs."""
         super().__init__(hass, domain, client_id, authorize_url, token_url, client_secret)
         self._partner_token_url = partner_token_url
+        # Clear client_secret for PKCE flows
+        self.client_secret = ""
 
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens using the partner server's device code endpoint."""
+        """Refresh tokens using the OAuth2 server's token exchange endpoint."""
         data = {
             "grant_type": "refresh_token",
             "client_id": self.client_id,
@@ -57,12 +58,7 @@ class LevelOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
         if code_verifier := token.get("code_verifier"):
             data["code_verifier"] = code_verifier
 
-        original_token_url = self.token_url
-        self.token_url = self._partner_token_url
-        try:
-            new_token = await self._token_request(data)
-        finally:
-            self.token_url = original_token_url
+        new_token = await self._token_request(data)
 
         if code_verifier:
             new_token["code_verifier"] = code_verifier
@@ -94,13 +90,13 @@ async def async_get_auth_implementation(
 
     We intentionally ignore any provided client secret and use the
     LevelOAuth2Implementation which includes code_verifier in token refresh.
-    Token refresh uses the partner server's device code endpoint.
+    Token refresh uses the OAuth2 server's token exchange endpoint.
     """
     auth_server = await async_get_authorization_server(hass)
     partner_base = (hass.data.get(DOMAIN) or {}).get(
         CONF_PARTNER_BASE_URL
     ) or DEFAULT_PARTNER_BASE_URL
-    partner_token_url = f"{partner_base}{DEVICE_CODE_POLL_PATH}"
+    partner_token_url = f"{partner_base}{OAUTH2_TOKEN_EXCHANGE_PATH}"
 
     return LevelOAuth2Implementation(
         hass,

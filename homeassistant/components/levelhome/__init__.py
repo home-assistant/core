@@ -46,6 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LevelHomeConfigEntry) ->
     client_session = aiohttp_client.async_get_clientsession(hass)
     config_auth = auth_mod.AsyncConfigEntryAuth(client_session, oauth_session)
 
+    _LOGGER.info("Ensuring token is valid before starting WebSocket")
+    await oauth_session.async_ensure_token_valid()
+    _LOGGER.info("Token validated, proceeding with setup")
+
     base_url = (hass.data.get(DOMAIN) or {}).get(
         CONF_PARTNER_BASE_URL
     ) or DEFAULT_PARTNER_BASE_URL
