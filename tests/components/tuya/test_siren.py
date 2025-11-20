@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -42,43 +43,28 @@ async def test_platform_setup_and_discovery(
     "mock_device_code",
     ["sp_sdd5f5f2dl5wydjf"],
 )
-async def test_turn_on(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test turning on."""
-    entity_id = "siren.c9"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: entity_id,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "siren_switch", "value": True}]
-    )
-
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["sp_sdd5f5f2dl5wydjf"],
+    ("service", "expected_commands"),
+    [
+        (
+            SERVICE_TURN_ON,
+            [{"code": "siren_switch", "value": True}],
+        ),
+        (
+            SERVICE_TURN_OFF,
+            [{"code": "siren_switch", "value": False}],
+        ),
+    ],
 )
-async def test_turn_off(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    service: str,
+    expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test turning off."""
+    """Test siren action."""
     entity_id = "siren.c9"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -86,12 +72,12 @@ async def test_turn_off(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "siren_switch", "value": False}]
+        mock_device.id, expected_commands
     )

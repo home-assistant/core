@@ -43,43 +43,28 @@ async def test_platform_setup_and_discovery(
     "mock_device_code",
     ["sfkzq_ed7frwissyqrejic"],
 )
-async def test_open_valve(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test opening a valve."""
-    entity_id = "valve.jie_hashui_fa_valve_1"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "switch_1", "value": True}]
-    )
-
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE])
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["sfkzq_ed7frwissyqrejic"],
+    ("service", "expected_commands"),
+    [
+        (
+            SERVICE_OPEN_VALVE,
+            [{"code": "switch_1", "value": True}],
+        ),
+        (
+            SERVICE_CLOSE_VALVE,
+            [{"code": "switch_1", "value": False}],
+        ),
+    ],
 )
-async def test_close_valve(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    service: str,
+    expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test closing a valve."""
+    """Test valve action."""
     entity_id = "valve.jie_hashui_fa_valve_1"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -87,14 +72,14 @@ async def test_close_valve(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "switch_1", "value": False}]
+        mock_device.id, expected_commands
     )
 
 

@@ -100,7 +100,7 @@ async def test_action(
     service_data: dict[str, Any],
     expected_command: dict[str, Any],
 ) -> None:
-    """Test service action."""
+    """Test vacuum action."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
