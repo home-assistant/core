@@ -12,11 +12,9 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
+from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import WidgetType
-from pylamarzocco.exceptions import (
-    BluetoothConnectionFailed,
-    RequestNotSuccessful,
-)
+from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 import pytest
 
 from homeassistant.components.lamarzocco.const import (
@@ -24,7 +22,14 @@ from homeassistant.components.lamarzocco.const import (
     CONF_USE_BLUETOOTH,
     DOMAIN,
 )
-from homeassistant.const import CONF_MAC, CONF_TOKEN, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_INSTALLATION_KEY, async_init_integration
@@ -45,8 +50,8 @@ def mock_config_entry_bluetooth(
         domain=DOMAIN,
         version=4,
         data={
-            "username": "username",
-            "password": "password",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
             CONF_MAC: mock_ble_device.address,
             CONF_TOKEN: "token",
             CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
@@ -81,7 +86,7 @@ async def test_bluetooth_coordinator_setup(
 
         # Verify Bluetooth coordinator was created
         assert mock_config_entry.runtime_data.bluetooth_coordinator is not None
-        assert mock_lamarzocco.get_machine_info_from_bluetooth.called
+        assert mock_lamarzocco.get_model_info_from_bluetooth.called
 
 
 async def test_bluetooth_coordinator_disabled_when_option_false(
@@ -113,7 +118,7 @@ async def test_bluetooth_coordinator_updates_when_websocket_disconnected(
     mock_lamarzocco: MagicMock,
     mock_ble_device: BLEDevice,
     mock_config_entry_bluetooth: MockConfigEntry,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator fetches data when websocket is disconnected."""
     mock_config_entry = mock_config_entry_bluetooth
@@ -275,9 +280,7 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     assert mock_config_entry.runtime_data.bluetooth_coordinator is None
 
     # Water tank sensor (even with bt_offline_mode=True, needs BT coordinator to work)
-    water_tank_sensor = (
-        f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
-    )
+    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
     state = hass.states.get(water_tank_sensor)
     assert state
     # Initially should be available
@@ -337,7 +340,10 @@ async def test_bluetooth_coordinator_handles_connection_failure(
         await hass.async_block_till_done()
 
         # Verify coordinator handled the error
-        assert mock_config_entry.runtime_data.bluetooth_coordinator.last_update_success is False
+        assert (
+            mock_config_entry.runtime_data.bluetooth_coordinator.last_update_success
+            is False
+        )
 
 
 async def test_no_bluetooth_coordinator_without_mac(
@@ -393,11 +399,11 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
         water_tank_sensor = (
             f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
         )
-        
+
         # Set initial state - no water issue
         if WidgetType.CM_NO_WATER in mock_lamarzocco.dashboard.config:
             del mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER]
-        
+
         state = hass.states.get(water_tank_sensor)
         assert state
 

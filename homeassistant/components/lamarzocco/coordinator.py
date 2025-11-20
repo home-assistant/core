@@ -201,7 +201,7 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     async def _async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
-        await self.device.get_machine_info_from_bluetooth()
+        await self.device.get_model_info_from_bluetooth()
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from Bluetooth endpoint."""
