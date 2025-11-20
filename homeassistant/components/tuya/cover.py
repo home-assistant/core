@@ -242,6 +242,21 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
 }
 
 
+def _get_instruction_wrapper(
+    device: CustomerDevice, description: TuyaCoverEntityDescription
+) -> _InstructionWrapper | None:
+    """Get the instruction wrapper for the cover entity."""
+    if enum_wrapper := description.instruction_wrapper.find_dpcode(
+        device, description.key, prefer_function=True
+    ):
+        return enum_wrapper
+
+    # Fallback to a boolean wrapper if available
+    return _InstructionBooleanWrapper.find_dpcode(
+        device, description.key, prefer_function=True
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -265,11 +280,8 @@ async def async_setup_entry(
                         current_position=description.position_wrapper.find_dpcode(
                             device, description.current_position
                         ),
-                        instruction_wrapper=description.instruction_wrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                        or _InstructionBooleanWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
+                        instruction_wrapper=_get_instruction_wrapper(
+                            device, description
                         ),
                         set_position=description.position_wrapper.find_dpcode(
                             device, description.set_position, prefer_function=True
