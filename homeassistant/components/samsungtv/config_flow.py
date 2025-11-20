@@ -441,7 +441,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._host == self._host  # noqa: SLF001
+        return getattr(other_flow, "_host", None) == self._host
 
     @callback
     def _abort_if_manufacturer_is_not_samsung(self) -> None:

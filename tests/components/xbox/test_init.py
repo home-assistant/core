@@ -7,6 +7,9 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from tests.common import MockConfigEntry
 
@@ -56,8 +59,8 @@ async def test_config_implementation_not_available(
     """Test implementation not available."""
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.xbox.coordinator.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        side_effect=ValueError("Implementation not available"),
+        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
