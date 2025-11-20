@@ -19,7 +19,16 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from . import ATTR_CURRENT_POSITION, CoverDeviceClass, CoverState
 from .const import DOMAIN
 
+ATTR_FULLY_CLOSED: Final = "fully_closed"
 ATTR_FULLY_OPENED: Final = "fully_opened"
+
+COVER_CLOSED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_FULLY_CLOSED, default=False): bool,
+        },
+    }
+)
 
 COVER_OPENED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
     {
@@ -72,6 +81,19 @@ class CoverOpenedClosedTrigger(EntityTriggerBase):
         }
 
 
+class CoverClosedTrigger(CoverOpenedClosedTrigger):
+    """Class for cover closed triggers."""
+
+    _schema = COVER_CLOSED_TRIGGER_SCHEMA
+    _to_states = {CoverState.CLOSED, CoverState.CLOSING}
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the state trigger."""
+        super().__init__(hass, config)
+        if self._options.get(ATTR_FULLY_CLOSED):
+            self._attribute_value = 0
+
+
 class CoverOpenedTrigger(CoverOpenedClosedTrigger):
     """Class for cover opened triggers."""
 
@@ -83,6 +105,19 @@ class CoverOpenedTrigger(CoverOpenedClosedTrigger):
         super().__init__(hass, config)
         if self._options.get(ATTR_FULLY_OPENED):
             self._attribute_value = 100
+
+
+def make_cover_closed_trigger(
+    device_class: CoverDeviceClass | None,
+) -> type[CoverClosedTrigger]:
+    """Create an entity state attribute trigger class."""
+
+    class CustomTrigger(CoverClosedTrigger):
+        """Trigger for entity state changes."""
+
+        _device_class = device_class
+
+    return CustomTrigger
 
 
 def make_cover_opened_trigger(
@@ -99,6 +134,15 @@ def make_cover_opened_trigger(
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
+    "awning_closed": make_cover_closed_trigger(CoverDeviceClass.AWNING),
+    "blind_closed": make_cover_closed_trigger(CoverDeviceClass.BLIND),
+    "curtain_closed": make_cover_closed_trigger(CoverDeviceClass.CURTAIN),
+    "door_closed": make_cover_closed_trigger(CoverDeviceClass.DOOR),
+    "garage_closed": make_cover_closed_trigger(CoverDeviceClass.GARAGE),
+    "gate_closed": make_cover_closed_trigger(CoverDeviceClass.GATE),
+    "shade_closed": make_cover_closed_trigger(CoverDeviceClass.SHADE),
+    "shutter_closed": make_cover_closed_trigger(CoverDeviceClass.SHUTTER),
+    "window_closed": make_cover_closed_trigger(CoverDeviceClass.WINDOW),
     "awning_opened": make_cover_opened_trigger(CoverDeviceClass.AWNING),
     "blind_opened": make_cover_opened_trigger(CoverDeviceClass.BLIND),
     "curtain_opened": make_cover_opened_trigger(CoverDeviceClass.CURTAIN),
