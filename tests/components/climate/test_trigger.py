@@ -143,10 +143,20 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
+            trigger="climate.started_cooling",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
+            trigger="climate.started_drying",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
-        )
+        ),
     ],
 )
 async def test_climate_state_attribute_trigger_behavior_any(
@@ -262,10 +272,20 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
+            trigger="climate.started_cooling",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
+            trigger="climate.started_drying",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
-        )
+        ),
     ],
 )
 async def test_climate_state_attribute_trigger_behavior_first(
@@ -379,10 +399,20 @@ async def test_climate_state_trigger_behavior_last(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
+            trigger="climate.started_cooling",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
+            trigger="climate.started_drying",
+            target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
+            other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+        ),
+        *parametrize_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.OFF, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
-        )
+        ),
     ],
 )
 async def test_climate_state_attribute_trigger_behavior_last(
