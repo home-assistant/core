@@ -8,14 +8,13 @@ import json
 import logging
 from typing import Any, cast
 
-from attr import dataclass
+from automation import async_get_triggers_for_target
 import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
-    CONF_TARGET,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -39,7 +38,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     entity,
-    entity_registry as er,
     target as target_helpers,
     template,
 )
@@ -885,7 +883,7 @@ def handle_extract_from_target(
     {
         vol.Required("type"): "get_triggers_for_target",
         vol.Required("target"): cv.TARGET_FIELDS,
-        vol.Optional("expand_group", default=False): bool,
+        vol.Optional("expand_group", default=True): bool,
     }
 )
 @decorators.async_response
@@ -897,99 +895,9 @@ async def handle_get_triggers_for_target(
     This command returns all triggers that can be used on any entity that are currently
     part of a target.
     """
-    selector_data = target_helpers.TargetSelectorData(msg["target"])
-    extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group=msg["expand_group"]
+    triggers = await async_get_triggers_for_target(
+        hass, msg["target"], msg["expand_group"]
     )
-    _LOGGER.debug("Extracted entities for trigger lookup: %s", extracted)
-
-    descriptions = await async_get_all_trigger_descriptions(hass)
-
-    class TriggerEntityFilter:
-        """Trigger entity filter."""
-
-        domains: list[str]
-        device_classes: list[str]
-        supported_features: list[int]
-
-        def __init__(self, target_description: dict[str, Any]) -> None:
-            """Initialize trigger entity filter."""
-            self.domains = []
-            self.device_classes = []
-            self.supported_features = []
-
-            selector_entities = target_description.get("entity", [])
-            for selector_entity in selector_entities:
-                self.domains.extend(selector_entity.get("domain", []))
-                self.device_classes.extend(selector_entity.get("device_class", []))
-                self.supported_features.extend(
-                    selector_entity.get("supported_features", [])
-                )
-
-        def matches(self, entity_entry: er.RegistryEntry) -> bool:
-            """Return if entity matches the filters."""
-            if self.domains and entity_entry.domain not in self.domains:
-                return False
-            if self.device_classes:
-                entity_device_class = entity_entry.device_class
-                if (
-                    entity_device_class is None
-                    or entity_device_class not in self.device_classes
-                ):
-                    return False
-            if self.supported_features:
-                entity_supported_features = entity_entry.supported_features
-                if entity_supported_features is None or not any(
-                    feature & entity_supported_features
-                    for feature in self.supported_features
-                ):
-                    return False
-            return True
-
-    @dataclass(slots=True, kw_only=True)
-    class TriggerLookupData:
-        """Data structure for looking up triggers."""
-
-        trigger: str
-        filter: TriggerEntityFilter
-        has_entity: bool = False
-
-    domain_triggers: dict[str, list[TriggerLookupData]] = {}
-    for trigger, description in descriptions.items():
-        if description is None or CONF_TARGET not in description:
-            _LOGGER.debug("Skipping trigger %s without target description", trigger)
-            continue
-        domain = trigger.split(".")[0]
-        domain_triggers.setdefault(domain, []).append(
-            TriggerLookupData(
-                trigger=trigger, filter=TriggerEntityFilter(description[CONF_TARGET])
-            )
-        )
-
-    _LOGGER.debug("Domain triggers: %s", domain_triggers)
-
-    def check_trigger_for_entity(domain: str, entity_entry: er.RegistryEntry) -> None:
-        for trigger in domain_triggers.get(domain, []):
-            if trigger.has_entity:
-                continue
-            if trigger.filter.matches(entity_entry):
-                trigger.has_entity = True
-
-    entity_registry = er.async_get(hass)
-    for entity_id in extracted.referenced.union(extracted.indirectly_referenced):
-        if (entity_entry := entity_registry.async_get(entity_id)) is None:
-            continue
-
-        check_trigger_for_entity(entity_entry.domain, entity_entry)
-        if entity_entry.domain != entity_entry.platform:
-            check_trigger_for_entity(entity_entry.platform, entity_entry)
-
-    triggers = {
-        trigger_data.trigger
-        for trigger_list in domain_triggers.values()
-        for trigger_data in trigger_list
-        if trigger_data.has_entity
-    }
 
     connection.send_result(msg["id"], triggers)
 
