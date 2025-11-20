@@ -1,4 +1,8 @@
 {
+  "common": {
+    "garage_trigger_behavior_description": "The behavior of the targeted garage doors to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "close": "Close {entity_name}",
@@ -152,8 +156,8 @@
       "description_configured": "[%key:component::cover::triggers::garage_opened::description%]",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted garage doors to trigger on.",
-          "name": "Behavior"
+          "description": "[%key:component::cover::common::garage_trigger_behavior_description%]",
+          "name": "[%key:component::cover::common::trigger_behavior_name%]"
         },
         "fully_opened": {
           "description": "Require the garage doors to be fully opened before triggering.",

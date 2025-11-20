@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted media players to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "condition_type": {
       "is_buffering": "{entity_name} is buffering",
@@ -381,8 +385,8 @@
       "description_configured": "[%key:component::media_player::triggers::stopped_playing::description%]",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted media players to trigger on.",
-          "name": "Behavior"
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
       "name": "When a media player stops playing"
