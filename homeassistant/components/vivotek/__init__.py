@@ -29,11 +29,11 @@ PLATFORMS = [Platform.CAMERA]
 type VivotekConfigEntry = config_entries.ConfigEntry[VivotekCamera]
 
 
-async def async_build_and_test_cam_client(
-    hass: HomeAssistant, data: dict[str, Any] | MappingProxyType[str, Any]
+def build_cam_client(
+    data: dict[str, Any] | MappingProxyType[str, Any],
 ) -> VivotekCamera:
-    """Build the client and test if the provided configuration is valid."""
-    cam_client = VivotekCamera(
+    """Build the Vivotek camera client from the provided configuration data."""
+    return VivotekCamera(
         host=data[CONF_IP_ADDRESS],
         port=data[CONF_PORT],
         verify_ssl=data[CONF_VERIFY_SSL],
@@ -42,6 +42,13 @@ async def async_build_and_test_cam_client(
         digest_auth=(data[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION),
         sec_lvl=data[CONF_SECURITY_LEVEL],
     )
+
+
+async def async_build_and_test_cam_client(
+    hass: HomeAssistant, data: dict[str, Any] | MappingProxyType[str, Any]
+) -> VivotekCamera:
+    """Build the client and test if the provided configuration is valid."""
+    cam_client = build_cam_client(data)
     await hass.async_add_executor_job(cam_client.get_mac)
 
     return cam_client

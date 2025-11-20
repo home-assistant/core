@@ -50,6 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_CAMERA_BRAND = "VIVOTEK"
 DEFAULT_NAME = "VIVOTEK Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
+DEFAULT_FRAMERATE = 2
 DEFAULT_SECURITY_LEVEL = "admin"
 DEFAULT_STREAM_SOURCE = "live.sdp"
 
@@ -64,7 +65,7 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_FRAMERATE, default=DEFAULT_FRAMERATE): cv.positive_int,
         vol.Optional(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
         vol.Optional(CONF_STREAM_PATH, default=DEFAULT_STREAM_SOURCE): cv.string,
     }
@@ -165,7 +166,7 @@ class VivotekCam(Camera):
         super().__init__()
         self._cam_client = cam_client
         self._attr_configuration_url = f"http://{config[CONF_IP_ADDRESS]}"
-        self._attr_frame_interval = 1 / config[CONF_FRAMERATE]
+        self._attr_frame_interval = 1 / config.get(CONF_FRAMERATE, DEFAULT_FRAMERATE)
         self._attr_unique_id = unique_id
         self._stream_source = stream_source
 
