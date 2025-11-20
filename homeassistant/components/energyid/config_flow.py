@@ -115,8 +115,12 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
                 return
 
         _LOGGER.debug("Polling timeout after %s attempts", MAX_POLLING_ATTEMPTS)
-        # No user notification here - timeout will be handled when user continues
-        # the flow and we check the claim status again
+        # No user notification here because:
+        # 1. User may still be completing the claim process in EnergyID portal
+        # 2. Immediate notification could interrupt their workflow or cause confusion
+        # 3. When user clicks "Submit" to continue, the flow validates claim status
+        #    and will show appropriate error/success messages based on current state
+        # 4. Timeout allows graceful fallback: user can retry claim or see proper error
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
