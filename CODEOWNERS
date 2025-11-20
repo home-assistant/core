@@ -848,6 +848,8 @@ build.json @home-assistant/supervisor
 /tests/components/kraken/ @eifinger
 /homeassistant/components/kulersky/ @emlove
 /tests/components/kulersky/ @emlove
+/homeassistant/components/labs/ @home-assistant/core
+/tests/components/labs/ @home-assistant/core
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lamarzocco/ @zweckj
