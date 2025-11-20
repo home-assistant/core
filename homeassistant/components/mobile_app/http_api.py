@@ -70,9 +70,7 @@ class RegistrationsView(HomeAssistantView):
         webhook_id = secrets.token_hex()
 
         if cloud.async_active_subscription(hass):
-            data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(
-                hass, webhook_id, None
-            )
+            data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(hass, webhook_id)
 
         data[CONF_WEBHOOK_ID] = webhook_id
 

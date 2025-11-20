@@ -141,24 +141,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data.pop(CONF_CLOUDHOOK_URL)
             hass.config_entries.async_update_entry(entry, data=data)
 
-    def on_cloudhook_deletion() -> None:
-        """Handle cloudhook deletion."""
-        _LOGGER.debug("Webhook deleted %s", webhook_id)
-        data = dict(entry.data)
-        data.pop(CONF_CLOUDHOOK_URL, None)
-        hass.config_entries.async_update_entry(entry, data=data)
+    def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
+        """Handle cloudhook changes."""
+        if cloudhook:
+            if (
+                CONF_CLOUDHOOK_URL in entry.data
+                and entry.data[CONF_CLOUDHOOK_URL] == cloudhook[CONF_CLOUDHOOK_URL]
+            ):
+                return
+
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook[CONF_CLOUDHOOK_URL]},
+            )
+        else:
+            clean_cloudhook()
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if (
             state is cloud.CloudConnectionState.CLOUD_CONNECTED
             and CONF_CLOUDHOOK_URL not in entry.data
         ):
-            await async_create_cloud_hook(hass, webhook_id, entry)
+            await async_create_cloud_hook(hass, webhook_id)
         elif (
             state is cloud.CloudConnectionState.CLOUD_DISCONNECTED
             and not cloud.async_is_logged_in(hass)
         ):
             clean_cloudhook()
+
+    entry.async_on_unload(
+        cloud.async_listen_cloudhook_change(hass, webhook_id, on_cloudhook_change)
+    )
 
     if cloud.async_is_logged_in(hass):
         if (
@@ -166,15 +179,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and cloud.async_active_subscription(hass)
             and cloud.async_is_connected(hass)
         ):
-            await async_create_cloud_hook(hass, webhook_id, entry)
+            await async_create_cloud_hook(hass, webhook_id)
     elif CONF_CLOUDHOOK_URL in entry.data:
         # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
-    entry.async_on_unload(
-        cloud.async_listen_cloudhook_deletion(hass, webhook_id, on_cloudhook_deletion)
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

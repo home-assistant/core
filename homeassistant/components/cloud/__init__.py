@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import cast
+from typing import Any, cast
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -246,20 +246,21 @@ async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
 
 
 @callback
-def async_listen_cloudhook_deletion(
+def async_listen_cloudhook_change(
     hass: HomeAssistant,
     webhook_id: str,
-    on_deletion: Callable,
+    on_change: Callable[[dict[str, Any] | None], None],
 ) -> Callable:
-    """Listen for cloudhook deletion and call on_deletion when deleted.
+    """Listen for cloudhook changes for the given webhook and notify when modified or deleted.
 
     Args:
         hass: Home Assistant instance
-        webhook_id: The webhook ID to monitor
-        on_deletion: Callback to call when the cloudhook is deleted
+        webhook_id: The webhook ID to monitor for changes
+        on_change: Callback invoked when the cloudhook changes. Receives the
+            cloudhook when updated, or None when deleted.
 
     Returns:
-        Unsubscribe function to stop listening
+        Callable that unsubscribes from cloudhook change notifications
     """
     _LOGGER.debug("Setting up cloudhook deletion listener for %s", webhook_id)
 
@@ -270,8 +271,7 @@ def async_listen_cloudhook_deletion(
     async def _async_prefs_updated(prefs: CloudPreferences) -> None:
         """Handle cloud preferences update."""
         if PREF_CLOUDHOOKS in prefs.last_updated:
-            if webhook_id not in prefs.cloudhooks:
-                on_deletion()
+            on_change(prefs.cloudhooks.get(webhook_id))
 
     return hass.data[DATA_CLOUD].client.prefs.async_listen_updates(_async_prefs_updated)
 

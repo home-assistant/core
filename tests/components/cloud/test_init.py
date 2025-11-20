@@ -11,7 +11,7 @@ from homeassistant.components.cloud import (
     CloudNotAvailable,
     CloudNotConnected,
     async_get_or_create_cloudhook,
-    async_listen_cloudhook_deletion,
+    async_listen_cloudhook_change,
     async_listen_connection_change,
     async_remote_ui_url,
 )
@@ -314,12 +314,12 @@ async def test_cloud_logout(
     assert cloud.is_logged_in is False
 
 
-async def test_async_listen_cloudhook_deletion(
+async def test_async_listen_cloudhook_change(
     hass: HomeAssistant,
     cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """Test async_listen_cloudhook_deletion."""
+    """Test async_listen_cloudhook_change."""
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
@@ -341,47 +341,40 @@ async def test_async_listen_cloudhook_deletion(
         }
     )
 
-    # Track if deletion callback was called
-    deletion_called = False
+    # Track cloudhook changes
+    changes = []
 
-    def on_deletion() -> None:
-        """Handle cloudhook deletion."""
-        nonlocal deletion_called
-        deletion_called = True
+    def on_change(cloudhook: dict[str, Any] | None) -> None:
+        """Handle cloudhook change."""
+        changes.append(cloudhook)
 
-    # Register the deletion listener
-    unsubscribe = async_listen_cloudhook_deletion(hass, webhook_id, on_deletion)
+    # Register the change listener
+    unsubscribe = async_listen_cloudhook_change(hass, webhook_id, on_change)
 
-    # Verify deletion callback not called yet
-    assert not deletion_called
+    # Verify no changes yet
+    assert len(changes) == 0
 
     # Delete the cloudhook by updating prefs
     await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
     await hass.async_block_till_done()
 
-    # Verify deletion callback was called
-    assert deletion_called
-
-    # Reset for next test
-    deletion_called = False
+    # Verify deletion callback was called with None
+    assert len(changes) == 1
+    assert changes[-1] is None
 
     # Add cloudhook back
-    await set_cloud_prefs(
-        {
-            PREF_CLOUDHOOKS: {
-                webhook_id: {
-                    "webhook_id": webhook_id,
-                    "cloudhook_id": "random-id",
-                    "cloudhook_url": cloudhook_url,
-                    "managed": True,
-                }
-            }
-        }
-    )
+    cloudhook_data = {
+        "webhook_id": webhook_id,
+        "cloudhook_id": "random-id",
+        "cloudhook_url": cloudhook_url,
+        "managed": True,
+    }
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {webhook_id: cloudhook_data}})
     await hass.async_block_till_done()
 
-    # Verify callback not called when cloudhook is added
-    assert not deletion_called
+    # Verify callback called with cloudhook data
+    assert len(changes) == 2
+    assert changes[-1] == cloudhook_data
 
     # Unsubscribe from listener
     unsubscribe()
@@ -390,24 +383,24 @@ async def test_async_listen_cloudhook_deletion(
     await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
     await hass.async_block_till_done()
 
-    # Verify deletion callback was NOT called after unsubscribe
-    assert not deletion_called
+    # Verify change callback was NOT called after unsubscribe
+    assert len(changes) == 2
 
 
-async def test_async_listen_cloudhook_deletion_no_cloud(
+async def test_async_listen_cloudhook_change_no_cloud(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_listen_cloudhook_deletion when cloud is not available."""
+    """Test async_listen_cloudhook_change when cloud is not available."""
     webhook_id = "mock-webhook-id"
-    deletion_called = False
+    change_called = False
 
-    def on_deletion() -> None:
-        """Handle cloudhook deletion."""
-        nonlocal deletion_called
-        deletion_called = True
+    def on_change(cloudhook: dict[str, Any] | None) -> None:
+        """Handle cloudhook change."""
+        nonlocal change_called
+        change_called = True
 
     # Should return a no-op unsubscribe when cloud is not available
-    unsubscribe = async_listen_cloudhook_deletion(hass, webhook_id, on_deletion)
+    unsubscribe = async_listen_cloudhook_change(hass, webhook_id, on_change)
 
     # Verify it returns a callable
     assert callable(unsubscribe)
@@ -415,5 +408,5 @@ async def test_async_listen_cloudhook_deletion_no_cloud(
     # Call unsubscribe (should not raise)
     unsubscribe()
 
-    # Verify deletion callback was never called
-    assert not deletion_called
+    # Verify change callback was never called
+    assert not change_called
