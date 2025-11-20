@@ -67,13 +67,13 @@ async def test_media_player_state_trigger_behavior_any(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(hass, eid, states[0]["state"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state["state"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -82,7 +82,7 @@ async def test_media_player_state_trigger_behavior_any(
 
         # Check if changing other media players also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state["state"])
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -127,13 +127,13 @@ async def test_media_player_state_trigger_behavior_first(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(hass, eid, states[0]["state"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state["state"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -142,7 +142,7 @@ async def test_media_player_state_trigger_behavior_first(
 
         # Triggering other media players should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state["state"])
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -186,18 +186,18 @@ async def test_media_player_state_trigger_behavior_last(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(hass, eid, states[0]["state"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state["state"])
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state["state"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:

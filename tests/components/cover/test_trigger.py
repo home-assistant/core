@@ -187,13 +187,13 @@ async def test_cover_state_attribute_trigger_behavior_any(
 
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
-        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -202,9 +202,7 @@ async def test_cover_state_attribute_trigger_behavior_any(
 
         # Check if changing other covers also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, state["state"], state["attributes"]
-            )
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -274,7 +272,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
 
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
-        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -285,7 +283,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
     )
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -294,9 +292,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
 
         # Triggering other covers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, state["state"], state["attributes"]
-            )
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -365,7 +361,7 @@ async def test_cover_state_attribute_trigger_behavior_last(
 
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
-        set_or_remove_state(hass, eid, states[0]["state"], states[0]["attributes"])
+        set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -374,13 +370,11 @@ async def test_cover_state_attribute_trigger_behavior_last(
 
     for state in states[1:]:
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, state["state"], state["attributes"]
-            )
+            set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state["state"], state["attributes"])
+        set_or_remove_state(hass, entity_id, state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
