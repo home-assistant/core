@@ -579,7 +579,7 @@
     },
     "update": {
       "vehicle_state_software_update_status": {
-        "name": "Update"
+        "name": "[%key:component::update::title%]"
       }
     }
   },
