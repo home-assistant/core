@@ -395,6 +395,21 @@ class EntityStateTriggerBase(EntityTriggerBase):
         return state.state == self._to_state
 
 
+class ConditionalEntityStateTriggerBase(EntityTriggerBase):
+    """Class for entity state changes where the from state is restricted."""
+
+    _from_states: set[str]
+    _to_states: set[str]
+
+    def is_from_state(self, state: State) -> bool:
+        """Check if the state matches the origin state."""
+        return state.state in self._from_states
+
+    def is_to_state(self, state: State) -> bool:
+        """Check if the state matches the target state."""
+        return state.state in self._to_states
+
+
 class EntityStateAttributeTriggerBase(EntityTriggerBase):
     """Trigger for entity state attribute changes."""
 
@@ -416,6 +431,21 @@ def make_entity_state_trigger(
 
         _domain = domain
         _to_state = to_state
+
+    return CustomTrigger
+
+
+def make_conditional_entity_state_trigger(
+    domain: str, *, from_states: set[str], to_states: set[str]
+) -> type[ConditionalEntityStateTriggerBase]:
+    """Create a conditional entity state trigger class."""
+
+    class CustomTrigger(ConditionalEntityStateTriggerBase):
+        """Trigger for conditional entity state changes."""
+
+        _domain = domain
+        _from_states = from_states
+        _to_states = to_states
 
     return CustomTrigger
 

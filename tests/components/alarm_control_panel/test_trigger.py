@@ -40,6 +40,23 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> None:
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed",
+            target_states=[
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+            ],
+            other_states=[
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.DISARMING,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.TRIGGERED,
+            ],
+        ),
+        *parametrize_trigger_states(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
@@ -135,6 +152,23 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed",
+            target_states=[
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+            ],
+            other_states=[
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.DISARMING,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.TRIGGERED,
+            ],
+        ),
+        *parametrize_trigger_states(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
@@ -228,6 +262,23 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed",
+            target_states=[
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+            ],
+            other_states=[
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.DISARMING,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.TRIGGERED,
+            ],
+        ),
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],

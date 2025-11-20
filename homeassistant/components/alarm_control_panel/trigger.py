@@ -6,6 +6,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
     EntityStateTriggerBase,
     Trigger,
+    make_conditional_entity_state_trigger,
     make_entity_state_trigger,
 )
 
@@ -51,6 +52,23 @@ def make_entity_state_trigger_required_features(
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
+    "armed": make_conditional_entity_state_trigger(
+        DOMAIN,
+        from_states={
+            AlarmControlPanelState.ARMING,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.DISARMING,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.TRIGGERED,
+        },
+        to_states={
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_VACATION,
+        },
+    ),
     "armed_away": make_entity_state_trigger_required_features(
         DOMAIN,
         AlarmControlPanelState.ARMED_AWAY,
