@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Email address for your Hanna Cloud account",
+          "password": "Password for your Hanna Cloud account"
+        },
+        "description": "Enter your Hanna Cloud credentials"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "chlorine_flow_rate": {
+        "name": "Chlorine flow rate"
+      },
+      "chlorine_orp_value": {
+        "name": "Chlorine ORP value"
+      },
+      "ph_acid_base_flow_rate": {
+        "name": "pH Acid/Base flow rate"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

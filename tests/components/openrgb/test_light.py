@@ -376,8 +376,7 @@ async def test_turn_on_restores_previous_values(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("light.ene_dram")
     assert state
@@ -428,8 +427,7 @@ async def test_previous_values_updated_on_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify new state
     state = hass.states.get("light.ene_dram")
@@ -444,8 +442,7 @@ async def test_previous_values_updated_on_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify light is off
     state = hass.states.get("light.ene_dram")
@@ -492,8 +489,7 @@ async def test_turn_on_restores_rainbow_after_off(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify light is off
     state = hass.states.get("light.ene_dram")
@@ -543,8 +539,7 @@ async def test_turn_on_restores_rainbow_after_off_by_color(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify light is off
     state = hass.states.get("light.ene_dram")
@@ -777,8 +772,7 @@ async def test_dynamic_device_addition(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check that second light entity was added
     state = hass.states.get("light.new_rgb_device")
@@ -802,9 +796,7 @@ async def test_light_availability(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("light.ene_dram")
     assert state

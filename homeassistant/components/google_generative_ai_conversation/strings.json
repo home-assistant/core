@@ -1,5 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "api": {
         "data": {
@@ -8,170 +17,161 @@
         "description": "Get your API key from [here]({api_key_url})."
       },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Your current API key: {api_key} is no longer valid. Please enter a new valid API key."
+        "description": "Your current API key: {api_key} is no longer valid. Please enter a new valid API key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "config_subentries": {
-    "conversation": {
-      "initiate_flow": {
-        "user": "Add conversation agent",
-        "reconfigure": "Reconfigure conversation agent"
+    "ai_task_data": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
-      "entry_type": "Conversation agent",
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
       "step": {
         "set_options": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "Recommended model settings",
-            "prompt": "[%key:common::config_flow::data::prompt%]",
             "chat_model": "[%key:common::generic::model%]",
-            "temperature": "Temperature",
-            "top_p": "Top P",
-            "top_k": "Top K",
-            "max_tokens": "Maximum tokens to return in response",
-            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-            "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
-            "hate_block_threshold": "Content that is rude, disrespectful, or profane",
-            "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
-            "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
-            "enable_google_search_tool": "Enable Google Search tool"
-          },
-          "data_description": {
-            "prompt": "Instruct how the LLM should respond. This can be a template.",
-            "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\"."
+            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]",
+            "harassment_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::harassment_block_threshold%]",
+            "hate_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::hate_block_threshold%]",
+            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
+            "sexual_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::sexual_block_threshold%]",
+            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
+            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
+            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
           }
         }
-      },
+      }
+    },
+    "conversation": {
       "abort": {
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
+      "entry_type": "Conversation agent",
       "error": {
         "invalid_google_search_option": "Google Search can only be enabled if nothing is selected in the \"Control Home Assistant\" setting."
-      }
-    },
-    "stt": {
-      "initiate_flow": {
-        "user": "Add Speech-to-Text service",
-        "reconfigure": "Reconfigure Speech-to-Text service"
       },
-      "entry_type": "Speech-to-Text",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
       "step": {
         "set_options": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
-            "prompt": "[%key:common::config_flow::data::prompt%]",
             "chat_model": "[%key:common::generic::model%]",
-            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
-            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]",
-            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
-            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
+            "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
+            "enable_google_search_tool": "Enable Google Search tool",
+            "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
+            "hate_block_threshold": "Content that is rude, disrespectful, or profane",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "max_tokens": "Maximum tokens to return in response",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "recommended": "Recommended model settings",
+            "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
+            "temperature": "Temperature",
+            "top_k": "Top K",
+            "top_p": "Top P"
+          },
+          "data_description": {
+            "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\".",
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          }
+        }
+      }
+    },
+    "stt": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Speech-to-Text",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure Speech-to-Text service",
+        "user": "Add Speech-to-Text service"
+      },
+      "step": {
+        "set_options": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]",
             "harassment_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::harassment_block_threshold%]",
             "hate_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::hate_block_threshold%]",
+            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
             "sexual_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::sexual_block_threshold%]",
-            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]"
+            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
+            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
+            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
           },
           "data_description": {
             "prompt": "Instruct how the LLM should transcribe the audio."
           }
         }
-      },
-      "abort": {
-        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
     },
     "tts": {
-      "initiate_flow": {
-        "user": "Add Text-to-Speech service",
-        "reconfigure": "Reconfigure Text-to-Speech service"
+      "abort": {
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Text-to-Speech",
-      "step": {
-        "set_options": {
-          "data": {
-            "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
-            "chat_model": "[%key:common::generic::model%]",
-            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
-            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]",
-            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
-            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
-            "harassment_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::harassment_block_threshold%]",
-            "hate_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::hate_block_threshold%]",
-            "sexual_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::sexual_block_threshold%]",
-            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]"
-          }
-        }
-      },
-      "abort": {
-        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-      }
-    },
-    "ai_task_data": {
       "initiate_flow": {
-        "user": "Add AI task",
-        "reconfigure": "Reconfigure AI task"
+        "reconfigure": "Reconfigure Text-to-Speech service",
+        "user": "Add Text-to-Speech service"
       },
-      "entry_type": "AI task",
       "step": {
         "set_options": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
             "chat_model": "[%key:common::generic::model%]",
-            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
-            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]",
-            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
-            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
+            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]",
             "harassment_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::harassment_block_threshold%]",
             "hate_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::hate_block_threshold%]",
+            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
             "sexual_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::sexual_block_threshold%]",
-            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]"
+            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
+            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
+            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
           }
         }
-      },
-      "abort": {
-        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
     }
   },
   "issues": {
     "deprecated_generate_content": {
-      "title": "Deprecated 'generate_content' action",
-      "description": "Action 'google_generative_ai_conversation.generate_content' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_data' action instead"
+      "description": "Action 'google_generative_ai_conversation.generate_content' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_data' action instead",
+      "title": "Deprecated 'generate_content' action"
     }
   },
   "services": {
     "generate_content": {
-      "name": "Generate content (deprecated)",
       "description": "Generate content from a prompt consisting of text and optionally images (deprecated)",
       "fields": {
-        "prompt": {
-          "name": "Prompt",
-          "description": "The prompt",
-          "example": "Describe what you see in these images"
-        },
         "filenames": {
-          "name": "Attachment filenames",
           "description": "Attachments to add to the prompt (images, PDFs, etc)",
-          "example": "/config/www/image.jpg"
+          "example": "/config/www/image.jpg",
+          "name": "Attachment filenames"
+        },
+        "prompt": {
+          "description": "The prompt",
+          "example": "Describe what you see in these images",
+          "name": "Prompt"
         }
-      }
+      },
+      "name": "Generate content (deprecated)"
     }
   }
 }

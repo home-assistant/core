@@ -703,6 +703,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9",
     },
     {
+        "domain": "shelly",
+        "local_name": "Shelly*",
+    },
+    {
         "domain": "snooz",
         "local_name": "Snooz*",
     },
@@ -844,6 +848,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "togrill",
         "manufacturer_id": 34714,
         "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "victron_ble",
+        "manufacturer_data_start": [
+            16,
+        ],
+        "manufacturer_id": 737,
     },
     {
         "connectable": False,
