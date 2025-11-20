@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import shutil
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -52,6 +53,7 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_UNIX_SOCKET,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
@@ -73,7 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_DATA_GO2RTC: HassKey[str] = HassKey(DOMAIN)
+_DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
@@ -100,8 +102,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return False
 
         # HA will manage the binary
+        session = ClientSession(connector=UnixConnector(path=HA_MANAGED_UNIX_SOCKET))
         server = Server(
-            hass, binary, enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False)
+            hass,
+            binary,
+            session,
+            enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False),
         )
         try:
             await server.start()
@@ -111,12 +117,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         async def on_stop(event: Event) -> None:
             await server.stop()
+            await session.close()
 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+    else:
+        session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = url
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -132,8 +141,9 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Set up go2rtc from a config entry."""
 
-    url = hass.data[_DATA_GO2RTC]
-    session = async_get_clientsession(hass)
+    config = hass.data[_DATA_GO2RTC]
+    url = config.url
+    session = config.session
     client = Go2RtcRestClient(session, url)
     # Validate the server URL
     try:
@@ -342,3 +352,11 @@ class WebRTCProvider(CameraWebRTCProvider):
         for ws_client in self._sessions.values():
             await ws_client.close()
         self._sessions.clear()
+
+
+@dataclass
+class Go2RtcConfig:
+    """Go2rtc configuration."""
+
+    url: str
+    session: ClientSession
