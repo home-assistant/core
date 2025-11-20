@@ -71,6 +71,7 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_BALANCE = "Beosound Balance"
     BEOSOUND_EMERGE = "Beosound Emerge"
     BEOSOUND_LEVEL = "Beosound Level"
+    BEOSOUND_PREMIERE = "Beosound Premiere"
     BEOSOUND_THEATRE = "Beosound Theatre"
 
 
@@ -218,6 +219,7 @@ MODEL_SUPPORT_MAP = {
         BangOlufsenModel.BEOSOUND_BALANCE,
         BangOlufsenModel.BEOSOUND_EMERGE,
         BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_PREMIERE,
         BangOlufsenModel.BEOSOUND_THEATRE,
     )
 }
