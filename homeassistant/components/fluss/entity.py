@@ -1,6 +1,6 @@
 """Base entities for the Fluss+ integration."""
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FlussDataUpdateCoordinator
@@ -10,7 +10,6 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
     """Base class for Fluss entities."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
@@ -21,8 +20,7 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         """Initialize the entity with a device ID and device data."""
         super().__init__(coordinator)
         self.device_id = device_id
-        self._device = device
-        self._attr_unique_id = f"{device_id}"
+        self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
             identifiers={("fluss", device_id)},
             name=device.get("deviceName"),
@@ -31,6 +29,11 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         )
 
     @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.device_id in self.coordinator.data
+
+    @property
     def device(self) -> dict:
         """Return the stored device data."""
-        return self._device
+        return self.coordinator.data[self.device_id]

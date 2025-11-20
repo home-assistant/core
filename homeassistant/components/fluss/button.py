@@ -30,6 +30,8 @@ async def async_setup_entry(
 class FlussButton(FlussEntity, ButtonEntity):
     """Representation of a Fluss button device."""
 
+    _attr_name = None
+
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
