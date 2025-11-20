@@ -389,7 +389,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.17.0
+aioshelly==13.19.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -422,7 +422,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==87
+aiounifi==88
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -1613,7 +1613,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.16
+onedrive-personal-sdk==0.0.17
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
