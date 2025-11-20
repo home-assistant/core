@@ -9,7 +9,7 @@ from homeassistant.helpers.trigger import (
     make_entity_state_trigger,
 )
 
-from .const import ATTR_HVAC_ACTION, DOMAIN, HVACAction
+from .const import ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
 
 COOLING = "cooling"
 DEFROSTING = "defrosting"
@@ -26,16 +26,15 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "turned_on": make_conditional_entity_state_trigger(
         DOMAIN,
         from_states={
-            HVACAction.OFF,
+            HVACMode.OFF,
         },
         to_states={
-            HVACAction.COOLING,
-            HVACAction.DEFROSTING,
-            HVACAction.DRYING,
-            HVACAction.FAN,
-            HVACAction.HEATING,
-            HVACAction.IDLE,
-            HVACAction.PREHEATING,
+            HVACMode.AUTO,
+            HVACMode.COOL,
+            HVACMode.DRY,
+            HVACMode.FAN_ONLY,
+            HVACMode.HEAT,
+            HVACMode.HEAT_COOL,
         },
     ),
     "started_heating": make_entity_state_attribute_trigger(
