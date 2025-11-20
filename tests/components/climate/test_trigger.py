@@ -45,6 +45,20 @@ async def target_climates(hass: HomeAssistant) -> None:
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
+        *parametrize_trigger_states(
+            trigger="climate.turned_on",
+            target_states=[
+                HVACMode.AUTO,
+                HVACMode.COOL,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+            ],
+            other_states=[
+                HVACMode.OFF,
+            ],
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_any(
@@ -149,6 +163,20 @@ async def test_climate_state_attribute_trigger_behavior_any(
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
+        *parametrize_trigger_states(
+            trigger="climate.turned_on",
+            target_states=[
+                HVACMode.AUTO,
+                HVACMode.COOL,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+            ],
+            other_states=[
+                HVACMode.OFF,
+            ],
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_first(
@@ -250,6 +278,20 @@ async def test_climate_state_attribute_trigger_behavior_first(
             trigger="climate.turned_off",
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
+        ),
+        *parametrize_trigger_states(
+            trigger="climate.turned_on",
+            target_states=[
+                HVACMode.AUTO,
+                HVACMode.COOL,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+                HVACMode.HEAT,
+                HVACMode.HEAT_COOL,
+            ],
+            other_states=[
+                HVACMode.OFF,
+            ],
         ),
     ],
 )

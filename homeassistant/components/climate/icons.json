@@ -103,6 +103,9 @@
     },
     "turned_off": {
       "trigger": "mdi:power-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:power-on"
     }
   }
 }

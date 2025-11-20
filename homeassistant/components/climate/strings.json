@@ -319,6 +319,17 @@
         }
       },
       "name": "When a climate is turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when a climate is turned on.",
+      "description_configured": "[%key:component::climate::triggers::turned_on::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate is turned on"
     }
   }
 }
