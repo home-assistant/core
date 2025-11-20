@@ -294,8 +294,30 @@ async def test_camera_image(
     await setup_platform(hass, Platform.CAMERA)
 
     front_camera_mock = mock_ring_devices.get_device(765432)
+    front_camera_mock.async_get_snapshot.return_value = SMALLEST_VALID_JPEG_BYTES
 
     state = hass.states.get("camera.front_live_view")
+    assert state is not None
+
+    # For live_view camera, snapshot should use async_get_snapshot
+    image = await async_get_image(hass, "camera.front_live_view")
+    assert image.content == SMALLEST_VALID_JPEG_BYTES
+    front_camera_mock.async_get_snapshot.assert_called_once()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_camera_last_recording_image(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test last recording camera will return still image from video when available."""
+    await setup_platform(hass, Platform.CAMERA)
+
+    front_camera_mock = mock_ring_devices.get_device(765432)
+
+    state = hass.states.get("camera.front_last_recording")
     assert state is not None
 
     # history not updated yet
@@ -308,7 +330,7 @@ async def test_camera_image(
         ),
         pytest.raises(HomeAssistantError),
     ):
-        image = await async_get_image(hass, "camera.front_live_view")
+        image = await async_get_image(hass, "camera.front_last_recording")
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -321,7 +343,7 @@ async def test_camera_image(
         "homeassistant.components.ring.camera.ffmpeg.async_get_image",
         return_value=SMALLEST_VALID_JPEG_BYTES,
     ):
-        image = await async_get_image(hass, "camera.front_live_view")
+        image = await async_get_image(hass, "camera.front_last_recording")
         assert image.content == SMALLEST_VALID_JPEG_BYTES
 
 
