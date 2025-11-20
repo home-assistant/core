@@ -96,6 +96,10 @@ BLE_MANUFACTURER_DATA_WITH_MAC = {
 # Device WiFi MAC: 70d6c297bacc (little-endian) -> CCBA97C2D670 (reversed to big-endian)
 # BLE MAC is typically device MAC + 2: CCBA97C2D670 + 2 = CC:BA:97:C2:D6:72
 
+BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL = {
+    0x0BA9: bytes.fromhex("0105000b99990a70d6c297bacc")
+}  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x99, 0x99) - unknown model ID, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
+
 BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="ShellyPlus2PM-C049EF8873E8",
     address="AA:BB:CC:DD:EE:FF",
@@ -170,6 +174,26 @@ BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA = BluetoothServiceInfoBleak(
     ),
     advertisement=generate_advertisement_data(
         manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL = BluetoothServiceInfoBleak(
+    name="CC:BA:97:C2:D6:72",  # BLE address as name (newer devices)
+    address="CC:BA:97:C2:D6:72",  # BLE address may differ from device MAC
+    rssi=-32,
+    manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL,
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(
+        address="CC:BA:97:C2:D6:72",
+        name="CC:BA:97:C2:D6:72",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL,
     ),
     time=0,
     connectable=True,
@@ -2105,6 +2129,28 @@ async def test_bluetooth_discovery_mac_in_manufacturer_data(
     # Model ID 0x1030 = Shelly 1 Mini Gen4
     # Device name should use model name from model ID: Shelly1MiniGen4-<MAC>
     assert result["description_placeholders"]["name"] == "Shelly1MiniGen4-CCBA97C2D670"
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_discovery_mac_unknown_model(
+    hass: HomeAssistant,
+) -> None:
+    """Test bluetooth discovery with MAC but unknown model ID."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Should successfully extract MAC from manufacturer data
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    # MAC from manufacturer data: 70d6c297bacc (reversed) = CC:BA:97:C2:D6:70 = CCBA97C2D670
+    # Model ID 0x9999 is unknown - should fall back to generic "Shelly-<MAC>"
+    assert result["description_placeholders"]["name"] == "Shelly-CCBA97C2D670"
 
 
 @pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
