@@ -22,25 +22,5 @@
         "description": "**Three-step process:**\n\n1. Ensure the gateway is powered and on the same network.\n2. Select **Submit** to start discovery (searches for up to 3 minutes)\n3. While discovery is in progress, press the **Reset** button on your Sunricher DALI gateway device **once**.\n\nThe gateway will respond immediately after the button press."
       }
     }
-  },
-  "options": {
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "gateway_not_found": "Gateway not found during refresh. Ensure the gateway is powered on and connected to the network."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "refresh": "Refresh gateway IP and re-discover devices"
-        },
-        "data_description": {
-          "refresh": "Enable this option to refresh the gateway's IP address and re-discover all connected devices, groups, and scenes."
-        },
-        "description": "Configure options for your Sunricher DALI gateway."
-      },
-      "refresh_result": {
-        "description": "Gateway {gateway_sn} has been refreshed.\n\nIP address: {new_ip}\n\nAll devices have been re-discovered."
-      }
-    }
   }
 }

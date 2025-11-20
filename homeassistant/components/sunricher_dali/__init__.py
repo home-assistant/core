@@ -6,6 +6,7 @@ from collections.abc import Sequence
 import logging
 
 from PySrDaliGateway import DaliGateway, Device
+from PySrDaliGateway.discovery import DaliGatewayDiscovery
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant.const import (
@@ -62,22 +63,66 @@ def _remove_missing_devices(
 async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
     """Set up Sunricher DALI from a config entry."""
 
+    gw_sn = entry.data[CONF_SERIAL_NUMBER]
+    current_host = entry.data[CONF_HOST]
+
     gateway = DaliGateway(
-        entry.data[CONF_SERIAL_NUMBER],
-        entry.data[CONF_HOST],
+        gw_sn,
+        current_host,
         entry.data[CONF_PORT],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         name=entry.data[CONF_NAME],
     )
-    gw_sn = gateway.gw_sn
 
     try:
         await gateway.connect()
     except DaliGatewayError as exc:
-        raise ConfigEntryNotReady(
-            "You can try to delete the gateway and add it again"
-        ) from exc
+        _LOGGER.debug(
+            "Failed to connect to gateway at %s, attempting rediscovery", current_host
+        )
+
+        try:
+            discovered = await DaliGatewayDiscovery().discover_gateways(gw_sn)
+        except DaliGatewayError as discovery_exc:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to gateway at {current_host} and rediscovery failed"
+            ) from discovery_exc
+
+        if not discovered:
+            raise ConfigEntryNotReady(
+                f"Gateway with serial number {gw_sn} not found on network"
+            ) from exc
+
+        new_ip = discovered[0].gw_ip
+        if new_ip == current_host:
+            raise ConfigEntryNotReady(
+                f"Gateway found at {current_host} but connection failed"
+            ) from exc
+
+        _LOGGER.info(
+            "Gateway IP changed from %s to %s, updating configuration",
+            current_host,
+            new_ip,
+        )
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_HOST: new_ip}
+        )
+
+        gateway = DaliGateway(
+            gw_sn,
+            new_ip,
+            entry.data[CONF_PORT],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            name=entry.data[CONF_NAME],
+        )
+        try:
+            await gateway.connect()
+        except DaliGatewayError as reconnect_exc:
+            raise ConfigEntryNotReady(
+                f"Found gateway at {new_ip} but failed to connect"
+            ) from reconnect_exc
 
     try:
         devices = await gateway.discover_devices()

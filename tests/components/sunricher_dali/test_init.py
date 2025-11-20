@@ -1,6 +1,6 @@
 """Test the Sunricher DALI integration initialization."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from PySrDaliGateway.exceptions import DaliGatewayError
 
@@ -33,12 +33,21 @@ async def test_setup_entry_connection_error(
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
 ) -> None:
-    """Test setup fails when gateway connection fails."""
+    """Test setup fails when gateway connection fails and rediscovery also fails."""
     mock_config_entry.add_to_hass(hass)
     mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Mock rediscovery to also fail
+    with patch(
+        "PySrDaliGateway.discovery.DaliGatewayDiscovery"
+    ) as mock_discovery_class:
+        mock_discovery = mock_discovery_class.return_value
+        mock_discovery.discover_gateways = AsyncMock(
+            side_effect=DaliGatewayError("Discovery failed")
+        )
+
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_gateway.connect.assert_called_once()
