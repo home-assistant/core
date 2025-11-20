@@ -202,9 +202,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._switch_wrapper is None:
             return
 
-        commands: list[dict[str, str | bool | int]] = []
-        if self._switch_wrapper:
-            commands.append(self._switch_wrapper.get_update_command(self.device, True))
+        commands: list[dict[str, str | bool | int]] = [
+            self._switch_wrapper.get_update_command(self.device, True)
+        ]
 
         if percentage is not None and self._speed is not None:
             commands.append(
