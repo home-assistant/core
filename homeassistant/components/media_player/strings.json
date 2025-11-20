@@ -380,6 +380,28 @@
   },
   "title": "Media player",
   "triggers": {
+    "paused_playing": {
+      "description": "Triggers when a media player paused playing.",
+      "description_configured": "[%key:component::media_player::triggers::paused_playing::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a media player paused playing"
+    },
+    "started_playing": {
+      "description": "Triggers when a media player started playing.",
+      "description_configured": "[%key:component::media_player::triggers::started_playing::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a media player started playing"
+    },
     "stopped_playing": {
       "description": "Triggers when a media player stops playing.",
       "description_configured": "[%key:component::media_player::triggers::stopped_playing::description%]",
@@ -390,6 +412,28 @@
         }
       },
       "name": "When a media player stops playing"
+    },
+    "turned_off": {
+      "description": "Triggers when a media player turned off.",
+      "description_configured": "[%key:component::media_player::triggers::turned_off::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a media player turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when a media player turned on.",
+      "description_configured": "[%key:component::media_player::triggers::turned_on::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a media player turned on"
     }
   }
 }
