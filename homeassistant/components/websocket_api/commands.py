@@ -41,8 +41,11 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.condition import (
+    async_from_config as async_condition_from_config,
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
+    async_validate_condition_config,
+    async_validate_conditions_config,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
@@ -66,7 +69,9 @@ from homeassistant.helpers.service import (
 )
 from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
+    async_initialize_triggers,
     async_subscribe_platform_events as async_subscribe_trigger_platform_events,
+    async_validate_trigger_config,
 )
 from homeassistant.loader import (
     IntegrationNotFound,
@@ -260,11 +265,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    # We do not support templates.
-    target = msg.get("target")
-    if template.is_complex(target):
-        raise vol.Invalid("Templates are not supported here")
-
     try:
         context = connection.context(msg)
         response = await hass.services.async_call(
@@ -273,7 +273,7 @@ async def handle_call_service(
             service_data=msg.get("service_data"),
             blocking=True,
             context=context,
-            target=target,
+            target=msg.get("target"),
             return_response=msg["return_response"],
         )
         result: dict[str, Context | ServiceResponse] = {"context": context}
@@ -890,10 +890,7 @@ async def handle_subscribe_trigger(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe trigger command."""
-    # Circular dep
-    from homeassistant.helpers import trigger  # noqa: PLC0415
-
-    trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
+    trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
 
     @callback
     def forward_triggers(
@@ -910,7 +907,7 @@ async def handle_subscribe_trigger(
         )
 
     connection.subscriptions[msg["id"]] = (
-        await trigger.async_initialize_triggers(
+        await async_initialize_triggers(
             hass,
             trigger_config,
             forward_triggers,
@@ -940,13 +937,10 @@ async def handle_test_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle test condition command."""
-    # Circular dep
-    from homeassistant.helpers import condition  # noqa: PLC0415
-
     # Do static + dynamic validation of the condition
-    config = await condition.async_validate_condition_config(hass, msg["condition"])
+    config = await async_validate_condition_config(hass, msg["condition"])
     # Test the condition
-    check_condition = await condition.async_from_config(hass, config)
+    check_condition = await async_condition_from_config(hass, config)
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )
@@ -1033,16 +1027,16 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    from homeassistant.helpers import condition, script, trigger  # noqa: PLC0415
+    from homeassistant.helpers import script  # noqa: PLC0415
 
     result = {}
 
     for key, schema, validator in (
-        ("triggers", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
+        ("triggers", cv.TRIGGER_SCHEMA, async_validate_trigger_config),
         (
             "conditions",
             cv.CONDITIONS_SCHEMA,
-            condition.async_validate_conditions_config,
+            async_validate_conditions_config,
         ),
         ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):

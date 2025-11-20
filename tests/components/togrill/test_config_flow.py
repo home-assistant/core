@@ -47,6 +47,32 @@ async def test_user_selection(
     assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
 
 
+async def test_user_selection_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can select a device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TOGRILL_SERVICE_INFO.address,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address": TOGRILL_SERVICE_INFO.address},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_failed_connect(
     hass: HomeAssistant,
     mock_client: Mock,

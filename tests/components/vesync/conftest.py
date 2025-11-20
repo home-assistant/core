@@ -32,15 +32,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-def patch_vesync_firmware():
-    """Patch VeSync to disable firmware checks."""
-    with patch(
-        "pyvesync.vesync.VeSync.check_firmware", new=AsyncMock(return_value=True)
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def patch_vesync_login():
     """Patch VeSync login method."""
     with patch("pyvesync.vesync.VeSync.login", new=AsyncMock()):
@@ -54,13 +45,7 @@ def patch_vesync():
         "enabled": True,
     }
 
-    with (
-        patch.multiple(
-            "pyvesync.vesync.VeSync",
-            check_firmware=AsyncMock(return_value=True),
-        ),
-        ExitStack() as stack,
-    ):
+    with ExitStack() as stack:
         for name, value in props.items():
             mock = stack.enter_context(
                 patch.object(VeSync, name, new_callable=PropertyMock)
@@ -163,6 +148,7 @@ def fan_fixture():
         modes=[],
         connection_status="online",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -236,6 +222,7 @@ def humidifier_fixture():
         ),
         connection_status="online",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -271,6 +258,7 @@ def humidifier_300s_fixture():
         ),
         config_module="configModule",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 

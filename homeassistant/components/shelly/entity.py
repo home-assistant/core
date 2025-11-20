@@ -295,10 +295,6 @@ def async_setup_entry_rest(
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
-    # BlockEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
     available: Callable[[Block], bool] | None = None
@@ -311,10 +307,6 @@ class BlockEntityDescription(EntityDescription):
 class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
-    # BlockEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
     sub_key: str | None = None
 
     value: Callable[[Any, Any], Any] | None = None
@@ -323,7 +315,6 @@ class RpcEntityDescription(EntityDescription):
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
-    options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
@@ -332,10 +323,6 @@ class RpcEntityDescription(EntityDescription):
 @dataclass(frozen=True)
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
-
-    # BlockEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
 
@@ -560,7 +547,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self.entity_description = description
 
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
+        self._attr_name = get_rpc_entity_name(
+            coordinator.device, key, description.name, description.role
+        )
         self._last_value = None
         id_key = key.split(":")[-1]
         self._id = int(id_key) if id_key.isnumeric() else None

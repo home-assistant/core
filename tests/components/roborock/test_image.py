@@ -8,6 +8,7 @@ from unittest.mock import patch
 from PIL import Image
 import pytest
 from roborock import RoborockException
+from roborock.data import RoborockStateCode
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
@@ -317,7 +318,7 @@ async def test_map_status_change(
 
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
-    prop.status.state_name = "testing"
+    prop.status.state = RoborockStateCode.docking
     new_map_data = copy.deepcopy(MAP_DATA)
     new_map_data.image = ImageData(
         100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (2, 2)), lambda p: p

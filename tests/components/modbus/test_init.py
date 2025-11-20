@@ -42,6 +42,8 @@ from homeassistant.components.modbus.const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_HIGH,
@@ -51,6 +53,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
@@ -61,6 +64,9 @@ from homeassistant.components.modbus.const import (
     CONF_SWING_MODE_SWING_OFF,
     CONF_SWING_MODE_SWING_ON,
     CONF_SWING_MODE_VALUES,
+    CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_ID,
@@ -78,8 +84,10 @@ from homeassistant.components.modbus.validators import (
     check_config,
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
+    ensure_and_check_conflicting_scales_and_offsets,
     hvac_fixedsize_reglist_validator,
     nan_validator,
+    not_zero_value,
     register_int_list_validator,
     struct_validator,
 )
@@ -93,6 +101,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
@@ -1556,3 +1565,70 @@ async def test_pb_service_write_no_slave(
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        (
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_TARGET_TEMP: 120,
+                CONF_ADDRESS: 117,
+                CONF_SLAVE: 10,
+                CONF_SCAN_INTERVAL: 0,
+                CONF_SCALE: 10,
+                CONF_OFFSET: 20,
+                CONF_CURRENT_TEMP_SCALE: 1,
+            },
+        ),
+        (
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_TARGET_TEMP: 120,
+                CONF_ADDRESS: 117,
+                CONF_SLAVE: 10,
+                CONF_SCAN_INTERVAL: 0,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 20,
+                CONF_CURRENT_TEMP_OFFSET: 0,
+            },
+        ),
+        (
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_TARGET_TEMP: 120,
+                CONF_ADDRESS: 117,
+                CONF_SLAVE: 10,
+                CONF_SCAN_INTERVAL: 0,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 20,
+                CONF_TARGET_TEMP_SCALE: 20,
+            },
+        ),
+        (
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_TARGET_TEMP: 120,
+                CONF_ADDRESS: 117,
+                CONF_SLAVE: 10,
+                CONF_SCAN_INTERVAL: 0,
+                CONF_SCALE: 10,
+                CONF_OFFSET: 20,
+                CONF_TARGET_TEMP_OFFSET: 30,
+            },
+        ),
+    ],
+)
+async def test_ensure_and_check_conflicting_scales_and_offsets(do_config) -> None:
+    """Test ensure_and_check_conflicting_scales_and_offsets."""
+
+    with pytest.raises(vol.Invalid):
+        ensure_and_check_conflicting_scales_and_offsets(do_config[0])
+
+
+async def test_not_zero_value() -> None:
+    """Test not 0 validator validator."""
+
+    with pytest.raises(vol.Invalid):
+        not_zero_value(0, "Value cannot be zero.")
