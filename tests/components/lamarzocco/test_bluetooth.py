@@ -1,12 +1,4 @@
-"""Tests for La Marzocco coordinators.
-
-This test module focuses on the Bluetooth coordinator functionality and ensures:
-1. Bluetooth coordinator is properly set up and manages updates
-2. Entities with bt_offline_mode=True remain available when Bluetooth hardware exists
-3. Graceful degradation when cloud APIs fail but Bluetooth is available
-4. Proper error handling for Bluetooth connection failures
-5. Bluetooth coordinator updates trigger entity state changes
-"""
+"""Tests for La Marzocco Bluetooth connection."""
 
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -39,7 +31,7 @@ async def test_bluetooth_coordinator_setup(
 
     # Verify Bluetooth coordinator was created
     assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is not None
-    assert mock_lamarzocco.get_machine_info_from_bluetooth.called
+    assert mock_lamarzocco.get_model_info_from_bluetooth.called
 
 
 async def test_bluetooth_coordinator_disabled_when_option_false(
@@ -188,9 +180,7 @@ async def test_bluetooth_coordinator_handles_connection_failure(
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor has bt_offline_mode=True
-    water_tank_sensor = (
-        f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
-    )
+    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
     state = hass.states.get(water_tank_sensor)
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -237,9 +227,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor with bt_offline_mode
-    water_tank_sensor = (
-        f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
-    )
+    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_reservoir"
 
     # Set initial state - no water issue
     mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = False
