@@ -667,22 +667,6 @@
     }
   },
   "issues": {
-    "deprecated_binary_fridge_door": {
-      "description": "The refrigerator door binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. Separate entities for cooler and freezer door are available and should be used going forward. Please update your dashboards, templates accordingly and disable the entity to fix this issue.",
-      "title": "Refrigerator door binary sensor deprecated"
-    },
-    "deprecated_binary_fridge_door_scripts": {
-      "description": "The refrigerator door binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. The entity is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts and disable the entity to fix this issue.",
-      "title": "[%key:component::smartthings::issues::deprecated_binary_fridge_door::title%]"
-    },
-    "deprecated_binary_valve": {
-      "description": "The valve binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. A valve entity with controls is available and should be used going forward. Please update your dashboards, templates accordingly and disable the entity to fix this issue.",
-      "title": "Valve binary sensor deprecated"
-    },
-    "deprecated_binary_valve_scripts": {
-      "description": "The valve binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. The entity is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward. Please use the new valve entity in the above automations or scripts and disable the entity to fix this issue.",
-      "title": "[%key:component::smartthings::issues::deprecated_binary_valve::title%]"
-    },
     "deprecated_dhw": {
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nPlease update your dashboards and templates to use the new water heater entity and disable the sensor to fix this issue.",
       "title": "Water heater sensors deprecated"
