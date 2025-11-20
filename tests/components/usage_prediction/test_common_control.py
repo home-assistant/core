@@ -89,7 +89,19 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
             {
                 "domain": "climate",
                 "service": "set_temperature",
-                "service_data": {"entity_id": "climate.thermostat"},
+                "service_data": {
+                    "target": {"entity_id": "climate.thermostat"},
+                },
+            },
+            context=Context(user_id=user_id),
+        )
+        # Check events with non-dict targets do not cause issues.
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE,
+            {
+                "domain": "script",
+                "service": "some_user_script",
+                "service_data": {"target": "42"},
             },
             context=Context(user_id=user_id),
         )

@@ -145,8 +145,10 @@ async def async_predict_common_control(
             continue
 
         entity_ids: str | list[str] | None
-        if (target := service_data.get("target")) and (
-            target_entity_ids := target.get("entity_id")
+        if (
+            (target := service_data.get("target"))
+            and isinstance(target, dict)
+            and (target_entity_ids := target.get("entity_id"))
         ):
             entity_ids = target_entity_ids
         else:
