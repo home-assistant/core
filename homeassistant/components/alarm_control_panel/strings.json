@@ -158,6 +158,17 @@
   },
   "title": "Alarm control panel",
   "triggers": {
+    "armed": {
+      "description": "Triggers when an alarm is armed.",
+      "description_configured": "[%key:component::alarm_control_panel::triggers::armed::description%]",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted alarms to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When an alarm is armed"
+    },
     "armed_away": {
       "description": "Triggers when an alarm is armed away.",
       "description_configured": "[%key:component::alarm_control_panel::triggers::armed_away::description%]",
