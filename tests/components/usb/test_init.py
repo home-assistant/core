@@ -1471,6 +1471,16 @@ async def test_removal_aborts_discovery_flows(
         description="Test Device 4",
     )
 
+    # Used by both test1 and test2
+    device5 = USBDevice(
+        device="/dev/serial/by-id/multi-domain-device",
+        vid="FFFF",
+        pid="EEEE",
+        serial_number="MULTI123",
+        manufacturer="Test Manufacturer 5",
+        description="Device matching multiple domains",
+    )
+
     class TestFlow(config_entries.ConfigFlow):
         VERSION = 1
 
@@ -1498,10 +1508,15 @@ async def test_removal_aborts_discovery_flows(
                 {"domain": "test1", "vid": "ABCD", "pid": "EF01"},
                 # Domain `test2` matches device 3
                 {"domain": "test2", "vid": "AAAA", "pid": "BBBB"},
+                # Both domains match device 5
+                {"domain": "test1", "vid": "FFFF", "pid": "EEEE"},
+                {"domain": "test2", "vid": "FFFF", "pid": "EEEE"},
             ],
         ),
         # All devices are plugged in initially
-        patch_scanned_serial_ports(return_value=[device1, device2, device3, device4]),
+        patch_scanned_serial_ports(
+            return_value=[device1, device2, device3, device4, device5]
+        ),
         mock_config_flow("test1", TestFlow),
         mock_config_flow("test2", TestFlow),
     ):
@@ -1510,12 +1525,32 @@ async def test_removal_aborts_discovery_flows(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        # Discovery will create all three flows
+        # Discovery will create five flows (device5 is matched by both domains)
         flows = hass.config_entries.flow.async_progress()
-        assert len(flows) == 3
+        assert len(flows) == 5
 
-        # Two flows for test1, one for test2
+        # Three flows for test1 (1, 2, 5), two for test2 (3, 5)
         assert sorted([flow["handler"] for flow in flows]) == [
+            "test1",
+            "test1",
+            "test1",
+            "test2",
+            "test2",
+        ]
+
+        # Device 5 is removed
+        with patch_scanned_serial_ports(
+            return_value=[device1, device2, device3, device4]
+        ):
+            await ws_client.send_json({"id": 1, "type": "usb/scan"})
+            response = await ws_client.receive_json()
+            assert response["success"]
+            await hass.async_block_till_done()
+
+        # Both flows for device5 should be aborted (one test1, one test2)
+        remaining_flows = hass.config_entries.flow.async_progress()
+        assert len(remaining_flows) == 3
+        assert sorted([flow["handler"] for flow in remaining_flows]) == [
             "test1",
             "test1",
             "test2",
@@ -1523,7 +1558,7 @@ async def test_removal_aborts_discovery_flows(
 
         # Device 3 disappears
         with patch_scanned_serial_ports(return_value=[device1, device2, device4]):
-            await ws_client.send_json({"id": 1, "type": "usb/scan"})
+            await ws_client.send_json({"id": 2, "type": "usb/scan"})
             response = await ws_client.receive_json()
             assert response["success"]
             await hass.async_block_till_done()
@@ -1538,7 +1573,7 @@ async def test_removal_aborts_discovery_flows(
 
         # Remove the others
         with patch_scanned_serial_ports(return_value=[]):
-            await ws_client.send_json({"id": 2, "type": "usb/scan"})
+            await ws_client.send_json({"id": 3, "type": "usb/scan"})
             response = await ws_client.receive_json()
             assert response["success"]
             await hass.async_block_till_done()
@@ -1548,7 +1583,7 @@ async def test_removal_aborts_discovery_flows(
 
         # Plug one back in and the unused device4
         with patch_scanned_serial_ports(return_value=[device3, device4]):
-            await ws_client.send_json({"id": 3, "type": "usb/scan"})
+            await ws_client.send_json({"id": 4, "type": "usb/scan"})
             response = await ws_client.receive_json()
             assert response["success"]
             await hass.async_block_till_done()
