@@ -1,6 +1,5 @@
 """Provides triggers for climates."""
 
-from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import (
     Trigger,
@@ -22,7 +21,7 @@ PREHEATING = "preheating"
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "turned_off": make_entity_state_trigger(DOMAIN, STATE_OFF),
+    "turned_off": make_entity_state_trigger(DOMAIN, HVACMode.OFF),
     "turned_on": make_conditional_entity_state_trigger(
         DOMAIN,
         from_states={
