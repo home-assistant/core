@@ -136,7 +136,7 @@ async def async_get_triggers_for_target(
 async def async_get_services_for_target(
     hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
 ) -> set[str]:
-    """Get triggers for a target."""
+    """Get services for a target."""
     descriptions = await async_get_all_service_descriptions(hass)
     # Flatten domain+name to match trigger/condition format
     descriptions_flatten = {
