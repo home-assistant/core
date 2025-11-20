@@ -12,7 +12,7 @@ from homeassistant.components.levelhome.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import PARTNER_TOKEN_REFRESH, SERVER_ACCESS_TOKEN
+from .conftest import OAUTH2_TOKEN_REFRESH, SERVER_ACCESS_TOKEN
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -43,9 +43,9 @@ async def test_expired_token_refresh_success(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test expired token is refreshed during setup."""
-    # Mock the partner server token refresh endpoint
+    # Mock the OAuth2 server token refresh endpoint
     aioclient_mock.post(
-        PARTNER_TOKEN_REFRESH,
+        OAUTH2_TOKEN_REFRESH,
         json=SERVER_ACCESS_TOKEN,
     )
 
@@ -88,8 +88,8 @@ async def test_expired_token_refresh_failure_auth_error(
     status: HTTPStatus,
 ) -> None:
     """Test failed token refresh due to auth errors results in setup retry."""
-    # Mock partner server token refresh failure with auth error
-    aioclient_mock.post(PARTNER_TOKEN_REFRESH, status=status)
+    # Mock OAuth2 server token refresh failure with auth error
+    aioclient_mock.post(OAUTH2_TOKEN_REFRESH, status=status)
 
     # Setup should fail - currently results in SETUP_RETRY
     # (Level Lock integration doesn't yet catch ConfigEntryAuthFailed specifically)
@@ -116,8 +116,8 @@ async def test_expired_token_refresh_transient_failure(
     status: HTTPStatus,
 ) -> None:
     """Test transient refresh failures result in setup retry."""
-    # Mock partner server transient failure
-    aioclient_mock.post(PARTNER_TOKEN_REFRESH, status=status)
+    # Mock OAuth2 server transient failure
+    aioclient_mock.post(OAUTH2_TOKEN_REFRESH, status=status)
 
     # Setup should fail with retry state
     assert not await integration_setup()
@@ -137,9 +137,9 @@ async def test_valid_token_no_refresh(
     assert await integration_setup()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # Verify no token refresh calls were made to partner server
+    # Verify no token refresh calls were made to OAuth2 server
     assert not any(
-        call[0] == "POST" and PARTNER_TOKEN_REFRESH in str(call[1])
+        call[0] == "POST" and OAUTH2_TOKEN_REFRESH in str(call[1])
         for call in aioclient_mock.mock_calls
     )
 
