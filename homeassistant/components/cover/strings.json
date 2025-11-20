@@ -1,6 +1,6 @@
 {
   "common": {
-    "garage_trigger_behavior_description": "The behavior of the targeted garage doors to trigger on.",
+    "trigger_behavior_description_garage": "The behavior of the targeted garage doors to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "device_automation": {
@@ -156,7 +156,7 @@
       "description_configured": "[%key:component::cover::triggers::garage_opened::description%]",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::garage_trigger_behavior_description%]",
+          "description": "[%key:component::cover::common::trigger_behavior_description_garage%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
         },
         "fully_opened": {
