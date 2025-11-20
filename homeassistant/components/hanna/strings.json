@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -18,8 +18,7 @@
           "email": "Email address for your Hanna Cloud account",
           "password": "Password for your Hanna Cloud account"
         },
-        "description": "Enter your Hanna Cloud credentials",
-        "title": "Hanna Cloud"
+        "description": "Enter your Hanna Cloud credentials"
       }
     }
   },
@@ -33,9 +32,6 @@
       },
       "chlorine_orp_value": {
         "name": "Chlorine ORP value"
-      },
-      "ph": {
-        "name": "pH"
       },
       "ph_acid_base_flow_rate": {
         "name": "pH Acid/Base flow rate"
