@@ -369,13 +369,15 @@ class USBDiscovery:
         service_info = usb_service_info_from_device(device)
 
         for matcher in matched:
-            for (
-                flow_id
-            ) in self.hass.config_entries.flow.async_get_matching_discovery_flows(
-                matcher["domain"], {"source": config_entries.SOURCE_USB}, service_info
+            for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+                _UsbServiceInfo,
+                lambda flow_service_info: flow_service_info == service_info,
             ):
-                _LOGGER.debug("Aborting existing flow %s", flow_id)
-                self.hass.config_entries.flow.async_abort(flow_id)
+                if matcher["domain"] != flow["handler"]:
+                    continue
+
+                _LOGGER.debug("Aborting existing flow %s", flow["flow_id"])
+                self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     async def _async_process_ports(self, usb_devices: Sequence[USBDevice]) -> None:
         """Process each discovered port."""
