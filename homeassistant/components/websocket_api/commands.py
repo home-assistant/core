@@ -8,7 +8,6 @@ import json
 import logging
 from typing import Any, cast
 
-from automation import async_get_triggers_for_target
 import voluptuous as vol
 
 from homeassistant.auth.models import User
@@ -88,6 +87,7 @@ from homeassistant.setup import (
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
+from .automation import async_get_triggers_for_target
 from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
