@@ -199,7 +199,9 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = INFLUXDB_V1_SCHEMA
 
         return self.async_show_form(
-            step_id="configure_v1", data_schema=schema, errors=errors
+            step_id="configure_v1",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            errors=errors,
         )
 
     async def async_step_configure_v2(
@@ -229,7 +231,9 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = INFLUXDB_V2_SCHEMA
 
         return self.async_show_form(
-            step_id="configure_v2", data_schema=schema, errors=errors
+            step_id="configure_v2",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            errors=errors,
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

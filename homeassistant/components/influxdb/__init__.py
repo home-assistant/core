@@ -205,9 +205,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(
-    conf: dict,
-) -> Callable[[Event], dict[str, Any] | None]:
+def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
@@ -507,7 +505,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
     hass_config = await conf_util.async_hass_config_yaml(hass)
 
     influx_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, {})
-    default_yaml: dict[str, Any] = {
+    default_filter_settings: dict[str, Any] = {
         "entity_globs": [],
         "entities": [],
         "domains": [],
@@ -521,8 +519,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
         ),
         CONF_DEFAULT_MEASUREMENT: influx_yaml.get(CONF_DEFAULT_MEASUREMENT),
         CONF_OVERRIDE_MEASUREMENT: influx_yaml.get(CONF_OVERRIDE_MEASUREMENT),
-        CONF_INCLUDE: influx_yaml.get(CONF_INCLUDE, default_yaml),
-        CONF_EXCLUDE: influx_yaml.get(CONF_EXCLUDE, default_yaml),
+        CONF_INCLUDE: influx_yaml.get(CONF_INCLUDE, default_filter_settings),
+        CONF_EXCLUDE: influx_yaml.get(CONF_EXCLUDE, default_filter_settings),
         CONF_TAGS: influx_yaml.get(CONF_TAGS, {}),
         CONF_TAGS_ATTRIBUTES: influx_yaml.get(CONF_TAGS_ATTRIBUTES, []),
         CONF_IGNORE_ATTRIBUTES: influx_yaml.get(CONF_IGNORE_ATTRIBUTES, []),
