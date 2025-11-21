@@ -49,14 +49,19 @@ class LaMarzoccoBaseEntity(
         super().__init__(coordinator)
         device = coordinator.device
         self._attr_unique_id = f"{device.serial_number}_{key}"
+        sw_version = (
+            device.settings.firmwares[FirmwareType.MACHINE].build_version
+            if FirmwareType.MACHINE in device.settings.firmwares
+            else None
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial_number)},
-            name=device.dashboard.name,
+            name=device.dashboard.name or self.coordinator.config_entry.title,
             manufacturer="La Marzocco",
             model=device.dashboard.model_name.value,
             model_id=device.dashboard.model_code.value,
             serial_number=device.serial_number,
-            sw_version=device.settings.firmwares[FirmwareType.MACHINE].build_version,
+            sw_version=sw_version,
         )
         connections: set[tuple[str, str]] = set()
         if coordinator.config_entry.data.get(CONF_ADDRESS):
@@ -81,8 +86,12 @@ class LaMarzoccoBaseEntity(
             if WidgetType.CM_MACHINE_STATUS in self.coordinator.device.dashboard.config
             else MachineState.OFF
         )
-        return super().available and not (
-            self._unavailable_when_machine_off and machine_state is MachineState.OFF
+        return (
+            super().available
+            and not (
+                self._unavailable_when_machine_off and machine_state is MachineState.OFF
+            )
+            and self.coordinator.actual_update_success
         )
 
 
@@ -98,7 +107,7 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
             self.entity_description.bt_offline_mode
             and self.bluetooth_coordinator is not None
         ):
-            return True
+            return self.bluetooth_coordinator.last_update_success
         if super().available:
             return self.entity_description.available_fn(self.coordinator)
         return False
@@ -112,6 +121,12 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         """Initialize the entity."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
-        if bluetooth_coordinator is not None:
-            bluetooth_coordinator.async_add_listener(self._handle_coordinator_update)
         self.bluetooth_coordinator = bluetooth_coordinator
+
+    async def async_added_to_hass(self) -> None:
+        """Handle when entity is added to hass."""
+        await super().async_added_to_hass()
+        if self.bluetooth_coordinator is not None:
+            self.async_on_remove(
+                self.bluetooth_coordinator.async_add_listener(self.async_write_ha_state)
+            )
