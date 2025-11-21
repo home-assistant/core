@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm-entry]
+# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19,7 +19,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.clim_salon_dust_filter_alarm',
+    'entity_id': 'select.clim_salon_dust_filter_alarm_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,7 +31,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Dust filter alarm',
+    'original_name': 'Dust filter alarm threshold',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -41,10 +41,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm-state]
+# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clim Salon Dust filter alarm',
+      'friendly_name': 'Clim Salon Dust filter alarm threshold',
       'options': list([
         '180',
         '300',
@@ -53,14 +53,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.clim_salon_dust_filter_alarm',
+    'entity_id': 'select.clim_salon_dust_filter_alarm_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm-entry]
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -80,7 +80,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm',
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -92,7 +92,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Dust filter alarm',
+    'original_name': 'Dust filter alarm threshold',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -102,10 +102,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm-state]
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal Dust filter alarm',
+      'friendly_name': 'Aire Dormitorio Principal Dust filter alarm threshold',
       'options': list([
         '180',
         '300',
@@ -114,7 +114,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm',
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

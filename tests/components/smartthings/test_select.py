@@ -200,14 +200,17 @@ async def test_select_option_as_integer(
     """Test selecting an option represented as an integer."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("select.clim_salon_dust_filter_alarm")
+    state = hass.states.get("select.clim_salon_dust_filter_alarm_threshold")
     assert state.state == "500"
     assert all(isinstance(option, str) for option in state.attributes[ATTR_OPTIONS])
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.clim_salon_dust_filter_alarm", ATTR_OPTION: "300"},
+        {
+            ATTR_ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
+            ATTR_OPTION: "300",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

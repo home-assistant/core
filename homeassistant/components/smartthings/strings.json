@@ -162,7 +162,7 @@
         }
       },
       "dust_filter_alarm": {
-        "name": "Dust filter alarm threshold in hours"
+        "name": "Dust filter alarm threshold"
       },
       "flexible_detergent_amount": {
         "name": "Flexible compartment dispense amount",
