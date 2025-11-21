@@ -5,12 +5,13 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
-from homeassistant.components.hisense_connectlife.config_flow import OAuth2FlowHandler
+from homeassistant.components.hisense_connectlife.config_flow import (
+    HisenseOptionsFlowHandler,
+    OAuth2FlowHandler,
+)
 from homeassistant.components.hisense_connectlife.const import DOMAIN
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.asyncio
@@ -32,9 +33,11 @@ async def test_user_step_with_input(mock_hass, mock_oauth2_implementation):
     flow = OAuth2FlowHandler()
     flow.hass = mock_hass
 
-    with patch("homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation") as mock_impl:
+    with patch(
+        "homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation"
+    ) as mock_impl:
         mock_impl.return_value = mock_oauth2_implementation
-        
+
         result = await flow.async_step_user({"confirm_auth": True})
 
         assert result["type"] == FlowResultType.EXTERNAL_STEP
@@ -85,11 +88,15 @@ async def test_authorize_url_fail(mock_hass, mock_oauth2_implementation):
     flow.hass = mock_hass
 
     # Mock implementation that raises exception
-    mock_oauth2_implementation.async_generate_authorize_url.side_effect = Exception("Test error")
+    mock_oauth2_implementation.async_generate_authorize_url.side_effect = Exception(
+        "Test error"
+    )
 
-    with patch("homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation") as mock_impl:
+    with patch(
+        "homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation"
+    ) as mock_impl:
         mock_impl.return_value = mock_oauth2_implementation
-        
+
         result = await flow.async_step_user({"confirm_auth": True})
 
         assert result["type"] == FlowResultType.ABORT
@@ -99,8 +106,6 @@ async def test_authorize_url_fail(mock_hass, mock_oauth2_implementation):
 @pytest.mark.asyncio
 async def test_options_flow(mock_config_entry, mock_hass):
     """Test options flow."""
-    from homeassistant.components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
-
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
 
@@ -114,10 +119,10 @@ async def test_options_flow(mock_config_entry, mock_hass):
 
 
 @pytest.mark.asyncio
-async def test_options_flow_refresh_devices(mock_config_entry, mock_hass, mock_coordinator):
+async def test_options_flow_refresh_devices(
+    mock_config_entry, mock_hass, mock_coordinator
+):
     """Test options flow refresh devices."""
-    from homeassistant.components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
-
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
     mock_config_entry.runtime_data = mock_coordinator
@@ -129,10 +134,10 @@ async def test_options_flow_refresh_devices(mock_config_entry, mock_hass, mock_c
 
 
 @pytest.mark.asyncio
-async def test_options_flow_refresh_token(mock_config_entry, mock_hass, mock_coordinator):
+async def test_options_flow_refresh_token(
+    mock_config_entry, mock_hass, mock_coordinator
+):
     """Test options flow refresh token."""
-    from homeassistant.components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
-
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
     mock_config_entry.runtime_data = mock_coordinator
@@ -151,7 +156,9 @@ async def test_oauth_create_entry_with_error(mock_hass, mock_oauth2_implementati
     flow.flow_impl = mock_oauth2_implementation
 
     # Mock implementation that raises exception
-    mock_oauth2_implementation.async_resolve_external_data.side_effect = Exception("Test error")
+    mock_oauth2_implementation.async_resolve_external_data.side_effect = Exception(
+        "Test error"
+    )
 
     data = {
         "access_token": "test_token",
@@ -208,8 +215,6 @@ async def test_oauth_create_entry_invalid_data(mock_hass, mock_oauth2_implementa
 @pytest.mark.asyncio
 async def test_options_flow_no_coordinator(mock_config_entry, mock_hass):
     """Test options flow when coordinator is not available."""
-    from homeassistant.components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
-
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
     mock_config_entry.runtime_data = None
@@ -221,18 +226,17 @@ async def test_options_flow_no_coordinator(mock_config_entry, mock_hass):
 
 
 @pytest.mark.asyncio
-async def test_options_flow_both_actions(mock_config_entry, mock_hass, mock_coordinator):
+async def test_options_flow_both_actions(
+    mock_config_entry, mock_hass, mock_coordinator
+):
     """Test options flow with both actions selected."""
-    from homeassistant.components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
-
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
     mock_config_entry.runtime_data = mock_coordinator
 
-    result = await flow.async_step_init({
-        "refresh_devices": True,
-        "refresh_token": True
-    })
+    result = await flow.async_step_init(
+        {"refresh_devices": True, "refresh_token": True}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"]["refresh_devices"] is True
@@ -242,16 +246,13 @@ async def test_options_flow_both_actions(mock_config_entry, mock_hass, mock_coor
 @pytest.mark.asyncio
 async def test_options_flow_no_actions(mock_config_entry, mock_hass, mock_coordinator):
     """Test options flow with no actions selected."""
-    from homeassistant.components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
-
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
     mock_config_entry.runtime_data = mock_coordinator
 
-    result = await flow.async_step_init({
-        "refresh_devices": False,
-        "refresh_token": False
-    })
+    result = await flow.async_step_init(
+        {"refresh_devices": False, "refresh_token": False}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"]["refresh_devices"] is False

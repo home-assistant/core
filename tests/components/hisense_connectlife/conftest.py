@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.application_credentials import ApplicationCredentials
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 
 from homeassistant.components.hisense_connectlife.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -158,7 +155,9 @@ def mock_oauth2_implementation():
 @pytest.fixture
 def mock_application_credentials():
     """Mock Application Credentials."""
-    with patch("homeassistant.components.hisense_connectlife.auth.config_entry_oauth2_flow") as mock_oauth2:
+    with patch(
+        "homeassistant.components.hisense_connectlife.auth.config_entry_oauth2_flow"
+    ) as mock_oauth2:
         mock_session = AsyncMock()
         mock_session.async_ensure_token_valid = AsyncMock(
             return_value={

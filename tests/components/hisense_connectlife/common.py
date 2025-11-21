@@ -1,14 +1,12 @@
 """Common test fixtures for Hisense ConnectLife integration."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.application_credentials import ApplicationCredentials
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+import pytest
 
 from homeassistant.components.hisense_connectlife.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -41,7 +39,9 @@ def mock_config_entry():
 @pytest.fixture
 def mock_application_credentials():
     """Mock Application Credentials."""
-    with patch("custom_components.hisense_connectlife.auth.config_entry_oauth2_flow") as mock_oauth2:
+    with patch(
+        "custom_components.hisense_connectlife.auth.config_entry_oauth2_flow"
+    ) as mock_oauth2:
         mock_session = AsyncMock()
         mock_session.async_ensure_token_valid = AsyncMock(
             return_value={
@@ -58,7 +58,9 @@ def mock_application_credentials():
 @pytest.fixture
 def mock_api_client():
     """Mock API client."""
-    with patch("custom_components.hisense_connectlife.api.HisenseApiClient") as mock_client:
+    with patch(
+        "custom_components.hisense_connectlife.api.HisenseApiClient"
+    ) as mock_client:
         mock_instance = AsyncMock()
         mock_instance.async_get_devices = AsyncMock(return_value=[])
         mock_instance.async_control_device = AsyncMock(return_value=True)
@@ -69,7 +71,9 @@ def mock_api_client():
 @pytest.fixture
 def mock_coordinator():
     """Mock data update coordinator."""
-    with patch("custom_components.hisense_connectlife.coordinator.HisenseACPluginDataUpdateCoordinator") as mock_coord:
+    with patch(
+        "custom_components.hisense_connectlife.coordinator.HisenseACPluginDataUpdateCoordinator"
+    ) as mock_coord:
         mock_instance = AsyncMock()
         mock_instance.async_setup = AsyncMock(return_value=True)
         mock_instance.data = {}
