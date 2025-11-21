@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+
 from aiohttp import ClientConnectorError
 from pymammotion import CloudIOTGateway
 from pymammotion.aliyun.model.aep_response import AepResponse
@@ -85,10 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
         credentials.email = account
         credentials.password = password
         try:
-            try:
+            with contextlib.suppress(KeyError):
                 cloud_client = await check_and_restore_cloud(hass, entry)
-            except KeyError:
-                """No entry found"""
             if cloud_client is None:
                 await mammotion.login_and_initiate_cloud(account, password)
             else:
@@ -108,13 +108,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
         aliyun_mqtt_client = mammotion.mqtt_list.get(f"{account}_aliyun")
         mammotion_mqtt_client = mammotion.mqtt_list.get(f"{account}_mammotion")
 
-        if aliyun_mqtt_client or mammotion_mqtt_client:
-            if aliyun_mqtt_client:
-                mqtt_client = aliyun_mqtt_client
-                store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
-            else:
-                mqtt_client = mammotion_mqtt_client
-                store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
+        if aliyun_mqtt_client:
+            mqtt_client = aliyun_mqtt_client
+            store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
+        elif mammotion_mqtt_client:
+            mqtt_client = mammotion_mqtt_client
+            store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
 
         device_list: list[Device] = []
         shimed_cloud_devices = []
@@ -232,7 +231,7 @@ async def check_and_restore_cloud(
 
     if any(
         data is None
-        for data in [
+        for data in (
             auth_data,
             region_data,
             aep_data,
@@ -240,7 +239,7 @@ async def check_and_restore_cloud(
             device_data,
             connect_data,
             mammotion_data,
-        ]
+        )
     ):
         return None
 
@@ -295,10 +294,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         for mower in entry.runtime_data.mowers:
-            try:
+            with contextlib.suppress(TimeoutError):
                 await mower.api.mammotion.remove_device(mower.name)
-            except TimeoutError:
-                """Do nothing as this sometimes occurs with disconnecting BLE."""
     return unload_ok
 
 

@@ -100,8 +100,8 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     def is_online(self) -> bool:
         """Check if device is online."""
         if device := self.api.mammotion.get_device_by_name(self.device_name):
-            return device.state.online or (
-                device.ble is not None and device.ble.client.is_connected
+            return device.state.online or bool(
+                device.ble and device.ble.client and device.ble.client.is_connected
             )
         return False
 
@@ -149,14 +149,13 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevi
                 if device := self.api.mammotion.get_device_by_name(self.device_name):
                     device.state = mower_state
         except InvalidFieldValue:
-            """invalid"""
             self.data = MowingDevice()
             self.api.mammotion.get_device_by_name(self.device_name).state = self.data
 
     async def async_save_data(self, data: MowingDevice) -> None:
         """Get map data from the device."""
         store = MammotionConfigStore(self.hass)
-        current_store = await store.async_load()
+        current_store: dict[str, Any] = await store.async_load() or {}
         current_store[self.device_name] = data.to_dict()
         await store.async_save(current_store)
 

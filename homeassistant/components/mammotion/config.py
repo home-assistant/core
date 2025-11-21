@@ -18,6 +18,6 @@ class MammotionConfigStore(Store):
         version: int = _STORAGE_VERSION,
         minor_version: int = _STORAGE_MINOR_VERSION,
         key: str = _STORAGE_KEY,
-    ):
+    ) -> None:
         """Initialize the configuration store."""
         super().__init__(hass, version=version, minor_version=minor_version, key=key)
