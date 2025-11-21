@@ -199,7 +199,7 @@
         "name": "Altitude above sea level"
       },
       "auto_relock_timer": {
-        "name": "Autorelock time"
+        "name": "Auto-relock time"
       },
       "cook_time": {
         "name": "Cooking time"

@@ -18,17 +18,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
-    """Check flow abort when an entry already exist."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        "xbox", context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
 @pytest.mark.usefixtures(
     "current_request_with_host",
     "xbox_live_client",
@@ -88,6 +77,58 @@ async def test_full_flow(
     assert result["result"].title == "GSR Ae"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort flow when entry is already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": "XboxLive.signin XboxLive.offline_access",
+            "service": "xbox",
+            "token_type": "bearer",
+            "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("xbox_live_client")

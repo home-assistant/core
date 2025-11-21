@@ -239,6 +239,7 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
         angle = kwargs.get(ATTR_TILT_POSITION)
         if angle is not None:
             angle = angle * 180 / 100
+            angle = 180 - angle
         async with self._api_lock:
             await self.hass.async_add_executor_job(
                 self._blind.Set_position,
