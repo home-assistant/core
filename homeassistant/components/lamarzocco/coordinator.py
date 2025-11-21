@@ -106,7 +106,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _internal_async_setup(self) -> None:
         """Actual setup logic."""
-        return
 
     @abstractmethod
     async def _internal_async_update_data(self) -> None:
@@ -118,7 +117,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     cloud_client: LaMarzoccoCloudClient
 
-    async def _async_setup(self) -> None:
+    async def _internal_async_setup(self) -> None:
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
