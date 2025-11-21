@@ -82,8 +82,17 @@
           "stop": "mdi:stop"
         }
       },
+      "soil_level": {
+        "default": "mdi:liquid-spot"
+      },
       "spin_level": {
         "default": "mdi:rotate-right"
+      },
+      "water_level": {
+        "default": "mdi:water-percent"
+      },
+      "water_temperature": {
+        "default": "mdi:water-thermometer"
       }
     },
     "sensor": {
