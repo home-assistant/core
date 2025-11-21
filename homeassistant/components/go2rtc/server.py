@@ -24,7 +24,7 @@ _RESPAWN_COOLDOWN = 1
 
 # Default configuration for HA
 # - Unix socket for secure local communication
-# - Basic auth enabled also for local connections
+# - Basic auth enabled, including local connections
 # - HTTP API only enabled when UI is enabled
 # - Enable rtsp for localhost only as ffmpeg needs it
 # - Clear default ice servers
