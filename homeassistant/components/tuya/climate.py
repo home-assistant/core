@@ -102,20 +102,20 @@ def _get_temperature_wrappers(
 
     # If both temperature values for celsius and fahrenheit are present,
     # use whatever the device is set to, with a fallback to celsius.
-    prefered_temperature_unit = None
+    preferred_temperature_unit = None
     if all(
         dpcode in device.status
         for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_CURRENT_F)
     ) or all(
         dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
     ):
-        prefered_temperature_unit = UnitOfTemperature.CELSIUS
+        preferred_temperature_unit = UnitOfTemperature.CELSIUS
         if any(
             "f" in device.status[dpcode].lower()
             for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
             if isinstance(device.status.get(dpcode), str)
         ):
-            prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            preferred_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     # Figure out current temperature, use preferred unit or what is available
     celsius_type = find_dpcode(
@@ -127,8 +127,10 @@ def _get_temperature_wrappers(
         dptype=DPType.INTEGER,
     )
     if fahrenheit_type and (
-        prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
-        or (prefered_temperature_unit == UnitOfTemperature.CELSIUS and not celsius_type)
+        preferred_temperature_unit == UnitOfTemperature.FAHRENHEIT
+        or (
+            preferred_temperature_unit == UnitOfTemperature.CELSIUS and not celsius_type
+        )
     ):
         temperature_unit = UnitOfTemperature.FAHRENHEIT
         current_temperature_wrapper = DPCodeIntegerWrapper(
@@ -148,8 +150,10 @@ def _get_temperature_wrappers(
         device, DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
     )
     if fahrenheit_type and (
-        prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
-        or (prefered_temperature_unit == UnitOfTemperature.CELSIUS and not celsius_type)
+        preferred_temperature_unit == UnitOfTemperature.FAHRENHEIT
+        or (
+            preferred_temperature_unit == UnitOfTemperature.CELSIUS and not celsius_type
+        )
     ):
         set_temperature_wrapper = DPCodeIntegerWrapper(
             fahrenheit_type.dpcode, fahrenheit_type
