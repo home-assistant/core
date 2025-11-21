@@ -63,21 +63,20 @@ async def test_setup_platform(
 
 
 async def test_setup_platform_connection_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_concord232_binary_sensor_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test platform setup with connection error."""
-    with patch(
-        "homeassistant.components.concord232.binary_sensor.concord232_client.Client"
-    ) as mock_client_class:
-        mock_client_class.side_effect = requests.exceptions.ConnectionError(
-            "Connection failed"
-        )
+    mock_concord232_binary_sensor_client.list_zones.side_effect = (
+        requests.exceptions.ConnectionError("Connection failed")
+    )
 
-        await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-        await hass.async_block_till_done()
+    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
 
-        assert "Unable to connect to Concord232" in caplog.text
-        assert hass.states.get("binary_sensor.zone_1") is None
+    assert "Unable to connect to Concord232" in caplog.text
+    assert hass.states.get("binary_sensor.zone_1") is None
 
 
 async def test_setup_with_exclude_zones(
