@@ -66,6 +66,9 @@
       "remote_control": {
         "name": "Remote control"
       },
+      "sub_remote_control": {
+        "name": "Upper washer remote control"
+      },
       "valve": {
         "name": "Valve"
       }
@@ -635,6 +638,38 @@
       },
       "washer_mode": {
         "name": "Washer mode"
+      },
+      "washer_sub_completion_time": {
+        "name": "Upper washer completion time"
+      },
+      "washer_sub_job_state": {
+        "name": "Upper washer job state",
+        "state": {
+          "ai_rinse": "[%key:component::smartthings::entity::sensor::washer_job_state::state::ai_rinse%]",
+          "ai_spin": "[%key:component::smartthings::entity::sensor::washer_job_state::state::ai_spin%]",
+          "ai_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::ai_wash%]",
+          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "delay_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "finish": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::finish%]",
+          "freeze_protection": "[%key:component::smartthings::entity::sensor::washer_job_state::state::freeze_protection%]",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "pre_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
+          "rinse": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
+          "spin": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::spin%]",
+          "wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]",
+          "weight_sensing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::weight_sensing%]",
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]"
+        }
+      },
+      "washer_sub_machine_state": {
+        "name": "Upper washer machine state",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "stop": "[%key:common::state::stopped%]"
+        }
       },
       "water_consumption": {
         "name": "Water consumption"
