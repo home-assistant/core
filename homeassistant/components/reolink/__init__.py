@@ -58,7 +58,8 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
+DEVICE_UPDATE_INTERVAL_MIN = timedelta(seconds=60)
+DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
@@ -137,9 +138,12 @@ async def async_setup_entry(
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
+    min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
+    update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
+
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
+        async with asyncio.timeout(update_timeout):
             try:
                 await host.update_states()
             except CredentialsInvalidError as err:
@@ -156,7 +160,7 @@ async def async_setup_entry(
 
         host.credential_errors = 0
 
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
+        async with asyncio.timeout(min_timeout):
             await host.renew()
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
@@ -171,7 +175,7 @@ async def async_setup_entry(
 
     async def async_check_firmware_update() -> None:
         """Check for firmware updates."""
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
+        async with asyncio.timeout(min_timeout):
             try:
                 await host.api.check_new_firmware(host.firmware_ch_list)
             except ReolinkError as err:
@@ -197,7 +201,10 @@ async def async_setup_entry(
         config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}",
         update_method=async_device_config_update,
-        update_interval=DEVICE_UPDATE_INTERVAL,
+        update_interval=max(
+            DEVICE_UPDATE_INTERVAL_MIN,
+            DEVICE_UPDATE_INTERVAL_PER_CAM * host.api.num_cameras,
+        ),
     )
     firmware_coordinator = DataUpdateCoordinator(
         hass,
