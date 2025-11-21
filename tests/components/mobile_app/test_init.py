@@ -94,6 +94,14 @@ async def _test_create_cloud_hook(
         cloudhook_change_callback = callback
         return lambda: None  # Return unsubscribe function
 
+    cloud_hook = "https://hook-url"
+
+    async def mock_get_or_create_cloudhook(_hass: HomeAssistant, _webhook_id: str):
+        """Mock creating a cloudhook and trigger the change callback."""
+        assert cloudhook_change_callback is not None
+        cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
+        return cloud_hook
+
     with (
         patch(
             "homeassistant.components.cloud.async_active_subscription",
@@ -103,29 +111,18 @@ async def _test_create_cloud_hook(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch(
             "homeassistant.components.cloud.async_get_or_create_cloudhook",
-            autospec=True,
+            side_effect=mock_get_or_create_cloudhook,
         ) as mock_async_get_or_create_cloudhook,
         patch(
             "homeassistant.components.cloud.async_listen_cloudhook_change",
             side_effect=mock_listen_cloudhook_change,
         ),
     ):
-        cloud_hook = "https://hook-url"
-        mock_async_get_or_create_cloudhook.return_value = cloud_hook
-
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
         assert cloudhook_change_callback is not None
-
-        # Simulate cloudhook creation by calling the callback, but only if there's an active subscription and not already a cloudhook
-        if (
-            async_active_subscription_return_value
-            and CONF_CLOUDHOOK_URL not in config_entry.data
-        ):
-            cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
-            await hass.async_block_till_done()
 
         # Store the callback for use in additional_steps
         hass.data.setdefault("_test", {})["cloudhook_change_callback"] = (
