@@ -12,11 +12,18 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
+    ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -44,21 +51,49 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["kt_5wnlzekkstwcdsvm"],
-)
-@pytest.mark.parametrize(
-    ("service", "service_data", "expected_command"),
+    ("mock_device_code", "entity_id", "service", "service_data", "expected_commands"),
     [
         (
+            "kt_5wnlzekkstwcdsvm",
+            "climate.air_conditioner",
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 22.7},
-            {"code": "temp_set", "value": 23},
+            [{"code": "temp_set", "value": 23}],
         ),
         (
+            "kt_5wnlzekkstwcdsvm",
+            "climate.air_conditioner",
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: 2},
-            {"code": "windspeed", "value": "2"},
+            [{"code": "windspeed", "value": "2"}],
+        ),
+        (
+            "kt_5wnlzekkstwcdsvm",
+            "climate.air_conditioner",
+            SERVICE_TURN_ON,
+            {},
+            [{"code": "switch", "value": True}],
+        ),
+        (
+            "kt_5wnlzekkstwcdsvm",
+            "climate.air_conditioner",
+            SERVICE_TURN_OFF,
+            {},
+            [{"code": "switch", "value": False}],
+        ),
+        (
+            "kt_ibmmirhhq62mmf1g",
+            "climate.master_bedroom_ac",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.COOL},
+            [{"code": "switch", "value": True}, {"code": "mode", "value": "cold"}],
+        ),
+        (
+            "wk_gc1bxoq2hafxpa35",
+            "climate.polotentsosushitel",
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: "holiday"},
+            [{"code": "mode", "value": "holiday"}],
         ),
     ],
 )
@@ -67,12 +102,12 @@ async def test_action(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    entity_id: str,
     service: str,
     service_data: dict[str, Any],
-    expected_command: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test service action."""
-    entity_id = "climate.air_conditioner"
+    """Test climate action."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
@@ -87,7 +122,7 @@ async def test_action(
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [expected_command]
+        mock_device.id, expected_commands
     )
 
 

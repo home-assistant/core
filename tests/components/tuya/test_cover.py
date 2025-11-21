@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -53,48 +54,45 @@ async def test_platform_setup_and_discovery(
     "mock_device_code",
     ["cl_zah67ekd"],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_open_service(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test open service."""
-    entity_id = "cover.kitchen_blinds_curtain"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {
-            ATTR_ENTITY_ID: entity_id,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        [
-            {"code": "control", "value": "open"},
-            {"code": "percent_control", "value": 0},
-        ],
-    )
-
-
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_zah67ekd"],
+    ("service", "service_data", "expected_commands"),
+    [
+        (
+            SERVICE_OPEN_COVER,
+            {},
+            [
+                {"code": "control", "value": "open"},
+            ],
+        ),
+        (
+            SERVICE_CLOSE_COVER,
+            {},
+            [
+                {"code": "control", "value": "close"},
+            ],
+        ),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {
+                ATTR_POSITION: 25,
+            },
+            [
+                {"code": "percent_control", "value": 75},
+            ],
+        ),
+    ],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_close_service(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    service: str,
+    service_data: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test close service."""
+    """Test cover action."""
     entity_id = "cover.kitchen_blinds_curtain"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -102,51 +100,15 @@ async def test_close_service(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
+            **service_data,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        [
-            {"code": "control", "value": "close"},
-            {"code": "percent_control", "value": 100},
-        ],
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_zah67ekd"],
-)
-async def test_set_position(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test set position service (not available on this device)."""
-    entity_id = "cover.kitchen_blinds_curtain"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_POSITION: 25,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        [
-            {"code": "percent_control", "value": 75},
-        ],
+        mock_device.id, expected_commands
     )
 
 
@@ -265,7 +227,6 @@ async def test_clkg_wltqkykhni0papzj_state(
             {},
             [
                 {"code": "control", "value": "open"},
-                {"code": "percent_control", "value": 100},
             ],
         ),
         (
@@ -280,7 +241,6 @@ async def test_clkg_wltqkykhni0papzj_state(
             {},
             [
                 {"code": "control", "value": "close"},
-                {"code": "percent_control", "value": 0},
             ],
         ),
     ],
