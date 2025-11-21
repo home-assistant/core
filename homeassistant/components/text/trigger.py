@@ -1,4 +1,4 @@
-"""Provides triggers for lights."""
+"""Provides triggers for texts."""
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
@@ -31,5 +31,5 @@ TRIGGERS: dict[str, type[Trigger]] = {
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the triggers for lights."""
+    """Return the triggers for texts."""
     return TRIGGERS
