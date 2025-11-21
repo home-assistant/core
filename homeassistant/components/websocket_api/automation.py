@@ -1,4 +1,4 @@
-"""Commands part of Websocket API."""
+"""Automation related helper methods for the Websocket API."""
 
 from __future__ import annotations
 
@@ -8,7 +8,12 @@ from typing import Any
 
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, target as target_helpers
+from homeassistant.helpers import target as target_helpers
+from homeassistant.helpers.entity import (
+    entity_sources,
+    get_device_class,
+    get_supported_features,
+)
 from homeassistant.helpers.service import (
     async_get_all_descriptions as async_get_all_service_descriptions,
 )
@@ -22,27 +27,27 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(slots=True, kw_only=True)
 class _ComponentLookupData:
-    """Helper data structure for looking up automation components."""
+    """Helper class for looking up automation components."""
 
     component: str
     domains: set[str]
     device_classes: set[str]
     supported_features: list[int]
 
-    def matches(self, entity_entry: er.RegistryEntry) -> bool:
+    def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
         """Return if entity matches the filters."""
-        if self.domains and entity_entry.domain not in self.domains:
+        if self.domains and domain not in self.domains:
             return False
         if self.device_classes:
-            entity_device_class = entity_entry.device_class
+            entity_device_class = get_device_class(hass, entity_id)
             if (
                 entity_device_class is None
                 or entity_device_class not in self.device_classes
             ):
                 return False
         if self.supported_features:
-            entity_supported_features = entity_entry.supported_features
-            if entity_supported_features is None or not any(
+            entity_supported_features = get_supported_features(hass, entity_id)
+            if not any(
                 feature & entity_supported_features
                 for feature in self.supported_features
             ):
@@ -103,21 +108,23 @@ async def _async_get_components_for_target(
 
     _LOGGER.debug("Domain components: %s", domain_components)
 
+    entity_infos = entity_sources(hass)
     matched_components: set[str] = set()
-
-    entity_registry = er.async_get(hass)
-    for entity_id in extracted.referenced.union(extracted.indirectly_referenced):
+    for entity_id in extracted.referenced | extracted.indirectly_referenced:
         if component_count == len(matched_components):
             break
 
-        if (entity_entry := entity_registry.async_get(entity_id)) is None:
+        entity_info = entity_infos.get(entity_id)
+        if entity_info is None:
+            _LOGGER.warning("No entity source found for %s", entity_id)
             continue
 
-        for domain in (entity_entry.domain, entity_entry.platform):
+        entity_domain = entity_id.split(".")[0]
+        for domain in (entity_domain, entity_info["domain"]):
             for component_data in domain_components.get(domain, []):
                 if component_data.component in matched_components:
                     continue
-                if component_data.matches(entity_entry):
+                if component_data.matches(hass, entity_id, entity_domain):
                     matched_components.add(component_data.component)
 
     return matched_components

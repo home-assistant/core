@@ -3581,65 +3581,102 @@ async def test_get_triggers_for_target(
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
-    device1 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device1")},
-    )
-
-    device2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device2")},
-    )
-
-    area_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device3")},
-    )
-
-    label2_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device4")},
-    )
-
     kitchen_area = area_registry.async_create("Kitchen")
     living_room_area = area_registry.async_create("Living Room")
     label_area = area_registry.async_create("Bathroom")
     label1 = label_registry.async_create("Test Label 1")
     label2 = label_registry.async_create("Test Label 2")
 
-    # Associate devices with areas and labels
-    device_registry.async_update_device(area_device.id, area_id=kitchen_area.id)
-    device_registry.async_update_device(label2_device.id, labels={label2.label_id})
     area_registry.async_update(label_area.id, labels={label1.label_id})
 
-    # Setup entities with targets
-    device1_entity1 = entity_registry.async_get_or_create(
-        "light", "test", "unique1", device_id=device1.id
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device1")},
     )
-    entity_registry.async_get_or_create(
-        "switch", "test", "unique2", device_id=device1.id
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device2")},
     )
-    entity_registry.async_get_or_create(
-        "sensor", "test", "unique3", device_id=device2.id
+    area_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device3")},
     )
-    entity_registry.async_get_or_create(
-        "light", "test", "unique4", device_id=area_device.id
+    device_registry.async_update_device(area_device.id, area_id=kitchen_area.id)
+
+    label2_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device4")},
     )
-    area_entity = entity_registry.async_get_or_create("switch", "test", "unique5")
-    entity_registry.async_get_or_create(
-        "light", "test", "unique6", device_id=label2_device.id
+    device_registry.async_update_device(label2_device.id, labels={label2.label_id})
+
+    # Create entities
+    not_registry_light = MockEntity(entity_id="light.not_registry")
+    device1_light = MockEntity(
+        entity_id="light.test1",
+        unique_id="test1",
+        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
     )
-    mqtt_light = entity_registry.async_get_or_create("light", "mqtt", "mqtt_light")
-    mqtt_flash_light = entity_registry.async_get_or_create(
-        "light", "mqtt", "mqtt_flash_light", supported_features=LightEntityFeature.FLASH
+    label_device_light = MockEntity(
+        entity_id="light.test4",
+        unique_id="test4",
+        device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
     )
-    label_mqtt_switch = entity_registry.async_get_or_create(
-        "switch", "mqtt", "mqtt_switch"
+    area_light = MockEntity(entity_id="light.test6", unique_id="test6")
+
+    light_platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    light_platform.config_entry = config_entry
+    await light_platform.async_add_entities(
+        [not_registry_light, device1_light, label_device_light, area_light]
     )
+    assert entity_registry.async_get(not_registry_light.entity_id) is None
+
+    device1_switch = MockEntity(
+        entity_id="switch.test2",
+        unique_id="test2",
+        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
+    )
+    area_device_switch = MockEntity(
+        entity_id="switch.test5",
+        unique_id="test5",
+        device_info=dr.DeviceInfo(identifiers=area_device.identifiers),
+    )
+    switch_platform = MockEntityPlatform(hass, domain="switch", platform_name="test")
+    switch_platform.config_entry = config_entry
+    await switch_platform.async_add_entities([device1_switch, area_device_switch])
+
+    device2_entity1 = MockEntity(
+        entity_id="sensor.test3",
+        unique_id="test3",
+        device_info=dr.DeviceInfo(identifiers=device2.identifiers),
+    )
+    sensor_platform = MockEntityPlatform(hass, domain="sensor", platform_name="test")
+    sensor_platform.config_entry = config_entry
+    await sensor_platform.async_add_entities([device2_entity1])
+
+    mqtt_light = MockEntity(entity_id="light.mqtt_light", unique_id="mqtt_light")
+    mqtt_flash_light = MockEntity(
+        entity_id="light.mqtt_flash_light",
+        unique_id="mqtt_flash_light",
+        supported_features=LightEntityFeature.FLASH,
+    )
+
+    mqtt_light_platform = MockEntityPlatform(hass, domain="light", platform_name="mqtt")
+    mqtt_light_platform.config_entry = config_entry
+    await mqtt_light_platform.async_add_entities([mqtt_light, mqtt_flash_light])
+
+    label_mqtt_switch = MockEntity(
+        entity_id="switch.mqtt_switch", unique_id="mqtt_switch"
+    )
+
+    mqtt_switch_platform = MockEntityPlatform(
+        hass, domain="switch", platform_name="mqtt"
+    )
+    mqtt_switch_platform.config_entry = config_entry
+    await mqtt_switch_platform.async_add_entities([label_mqtt_switch])
 
     # Associate entities with areas and labels
     entity_registry.async_update_entity(
-        area_entity.entity_id, area_id=living_room_area.id
+        area_light.entity_id, area_id=living_room_area.id
     )
     entity_registry.async_update_entity(
         label_mqtt_switch.entity_id, labels={label1.label_id}
@@ -3660,6 +3697,10 @@ async def test_get_triggers_for_target(
     # Test entity target - unknown entity
     msg = await call_command({"entity_id": ["light.unknown_entity"]})
     assert_triggers(msg, [])
+
+    # Test entity target - entity not in registry
+    msg = await call_command({"entity_id": ["light.not_registry"]})
+    assert_triggers(msg, ["light.turned_on"])
 
     # Test entity targets
     msg = await call_command(
@@ -3688,7 +3729,7 @@ async def test_get_triggers_for_target(
     # Test mixed target types
     msg = await call_command(
         {
-            "entity_id": [device1_entity1.entity_id],
+            "entity_id": [device1_light.entity_id],
             "device_id": [device2.id],
             "area_id": [kitchen_area.id],
             "label_id": [label1.label_id],
