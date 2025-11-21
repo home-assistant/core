@@ -21,15 +21,9 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    EnumTypeData,
-    find_dpcode,
-)
+from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 from .util import get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
