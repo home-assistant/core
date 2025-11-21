@@ -1,5 +1,8 @@
 {
   "config": {
+    "create_entry": {
+      "default": "Essent dynamic prices have been configured."
+    },
     "step": {
       "user": {
         "description": "Set up Essent dynamic energy price monitoring for the Netherlands. For customers with dynamic pricing contracts only."
