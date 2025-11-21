@@ -62,9 +62,9 @@
         },
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::title%]"
       },
-      "show_z2m_config": {
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_config::description%]",
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_config::title%]"
+      "show_z2m_docs_url": {
+        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_docs_url::description%]",
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_docs_url::title%]"
       },
       "start_otbr_addon": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
@@ -208,9 +208,9 @@
       "reconfigure_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]"
       },
-      "show_z2m_config": {
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_config::description%]",
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_config::title%]"
+      "show_z2m_docs_url": {
+        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_docs_url::description%]",
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::show_z2m_docs_url::title%]"
       },
       "start_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_addon::title%]"
