@@ -3259,7 +3259,7 @@ async def test_extract_from_target(
 ) -> None:
     """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
 
-    async def call_command(target: dict[str, str]) -> Any:
+    async def call_command(target: dict[str, list[str]]) -> Any:
         await websocket_client.send_json_auto_id(
             {"type": "extract_from_target", "target": target}
         )
