@@ -86,7 +86,9 @@ async def _test_create_cloud_hook(
 
     cloudhook_change_callback = None
 
-    def mock_listen_cloudhook_change(hass_instance, wh_id: str, callback):
+    def mock_listen_cloudhook_change(
+        _: HomeAssistant, _webhook_id: str, callback: Callable[[Any], None]
+    ):
         """Mock the cloudhook change listener."""
         nonlocal cloudhook_change_callback
         cloudhook_change_callback = callback
@@ -115,10 +117,11 @@ async def _test_create_cloud_hook(
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
-        # Simulate cloudhook creation by calling the callback, but only if there's no existing cloudhook
+        assert cloudhook_change_callback is not None
+
+        # Simulate cloudhook creation by calling the callback, but only if there's an acive subscription and not already a cloudhook
         if (
-            cloudhook_change_callback
-            and async_active_subscription_return_value
+            async_active_subscription_return_value
             and CONF_CLOUDHOOK_URL not in config_entry.data
         ):
             cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
@@ -216,9 +219,9 @@ async def test_create_cloud_hook_after_connection(
         await hass.async_block_till_done()
 
         # Simulate cloudhook creation by calling the callback
-        if cloudhook_change_callback:
-            cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
-            await hass.async_block_till_done()
+        assert cloudhook_change_callback is not None
+        cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
+        await hass.async_block_till_done()
 
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_called_once_with(
@@ -420,7 +423,9 @@ async def test_cloudhook_change_listener_deletion(
 
     cloudhook_change_callback = None
 
-    def mock_listen_cloudhook_change(hass_instance, wh_id: str, callback):
+    def mock_listen_cloudhook_change(
+        _: HomeAssistant, _webhook_id: str, callback: Callable[[Any], None]
+    ):
         """Mock the cloudhook change listener."""
         nonlocal cloudhook_change_callback
         cloudhook_change_callback = callback
