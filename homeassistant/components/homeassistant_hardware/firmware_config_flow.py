@@ -81,6 +81,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
     BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
+    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]] = []
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
@@ -230,7 +231,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         # Installing new firmware is only truly required if the wrong type is
         # installed: upgrading to the latest release of the current firmware type
         # isn't strictly necessary for functionality.
-        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+        self._probed_firmware_info = await probe_silabs_firmware_info(
+            self._device,
+            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+            application_probe_methods=self.APPLICATION_PROBE_METHODS,
+        )
 
         firmware_install_required = self._probed_firmware_info is None or (
             self._probed_firmware_info.firmware_type != expected_installed_firmware_type
@@ -295,6 +300,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             fw_data=fw_data,
             expected_installed_firmware_type=expected_installed_firmware_type,
             bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+            application_probe_methods=self.APPLICATION_PROBE_METHODS,
             progress_callback=lambda offset, total: self.async_update_progress(
                 offset / total
             ),
