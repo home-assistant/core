@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -29,11 +30,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import (
-    METRIC_SYSTEM,
-    US_CUSTOMARY_SYSTEM,
-    UnitSystem,
-)
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import initialize_entry
 
@@ -41,25 +38,46 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
-@pytest.mark.parametrize(
-    "unit_system",
-    [METRIC_SYSTEM, US_CUSTOMARY_SYSTEM],
-    ids=["metric", "us_customary"],
-)
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
-    unit_system: UnitSystem,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    hass.config.units = unit_system
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
+async def test_us_customary_system(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: list[CustomerDevice],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test platform setup and discovery."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
+
+    for entity in entity_registry.entities.values():
+        state = hass.states.get(entity.entity_id)
+        assert state.attributes == snapshot(
+            name=entity.entity_id,
+            include=props(
+                "current_temperature",
+                "max_temp",
+                "min_temp",
+                "target_temp_step",
+                "temperature",
+            ),
+        )
 
 
 @pytest.mark.parametrize(
