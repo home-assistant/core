@@ -147,6 +147,7 @@ async def test_is_block_momentary_input(
         is False
     )
 
+    monkeypatch.delitem(mock_block_device.settings, "inputs")
     monkeypatch.delitem(mock_block_device.settings, "relays")
     monkeypatch.delitem(mock_block_device.settings, "rollers")
     assert (

@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock, PropertyMock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_EM3
 from aioshelly.exceptions import NotInitialized
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -53,7 +53,7 @@ from . import (
     register_device,
     register_entity,
 )
-from .conftest import MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
+from .conftest import MOCK_BLOCKS, MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
 
 from tests.common import (
     async_fire_time_changed,
@@ -95,6 +95,55 @@ async def test_block_sensor(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-relay_0-power"
+
+
+async def test_block_sensor_em3(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block sensor of EM3."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_emeters", 3)
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "emeters",
+        [
+            {"name": "Grid L1", "appliance_type": "General", "max_power": 0},
+            {"appliance_type": "General", "max_power": 0},
+            {"appliance_type": "General", "max_power": 0},
+        ],
+    )
+    blocks = deepcopy(MOCK_BLOCKS)
+    blocks[5] = Mock(
+        sensor_ids={"power": 20},
+        channel="0",
+        power=20,
+        description="emeter_0",
+        type="emeter",
+    )
+    blocks.append(
+        Mock(
+            sensor_ids={"power": 20},
+            channel="1",
+            power=20,
+            description="emeter_1",
+            type="emeter",
+        )
+    )
+    blocks.append(
+        Mock(
+            sensor_ids={"power": 20},
+            channel="2",
+            power=20,
+            description="emeter_2",
+            type="emeter",
+        )
+    )
+    monkeypatch.setattr(mock_block_device, "blocks", blocks)
+    await init_integration(hass, 1, model=MODEL_EM3)
+
+    assert hass.states.get(f"{SENSOR_DOMAIN}.grid_l1_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_b_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_c_power")
 
 
 async def test_energy_sensor(
