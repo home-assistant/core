@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import ENERGY_TYPE_ELECTRICITY, ENERGY_TYPE_GAS
@@ -22,8 +22,12 @@ PARALLEL_UPDATES = 1
 
 def _parse_tariff_times(tariff: dict[str, Any]) -> tuple[datetime | None, datetime | None]:
     """Parse tariff start/end times and ensure they are timezone-aware."""
-    start = dt_util.parse_datetime(tariff.get("startDateTime"))
-    end = dt_util.parse_datetime(tariff.get("endDateTime"))
+    start_str = tariff.get("startDateTime")
+    end_str = tariff.get("endDateTime")
+
+    # Type narrowing for parse_datetime
+    start = dt_util.parse_datetime(start_str) if isinstance(start_str, str) else None
+    end = dt_util.parse_datetime(end_str) if isinstance(end_str, str) else None
 
     if start and start.tzinfo is None:
         start = dt_util.as_local(start)
@@ -48,20 +52,20 @@ def _format_dt_str(value: str | None) -> str | None:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EssentConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Essent sensors."""
     coordinator: EssentDataUpdateCoordinator = entry.runtime_data
 
-    entities: list[SensorEntity] = []
-
-    for energy_type in [ENERGY_TYPE_ELECTRICITY, ENERGY_TYPE_GAS]:
-        entities.append(EssentCurrentPriceSensor(coordinator, energy_type))
-        entities.append(EssentNextPriceSensor(coordinator, energy_type))
-        if energy_type == ENERGY_TYPE_ELECTRICITY:
-            entities.append(EssentAveragePriceSensor(coordinator, energy_type))
-            entities.append(EssentLowestPriceSensor(coordinator, energy_type))
-            entities.append(EssentHighestPriceSensor(coordinator, energy_type))
+    entities = [
+        EssentCurrentPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY),
+        EssentNextPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY),
+        EssentAveragePriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY),
+        EssentLowestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY),
+        EssentHighestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY),
+        EssentCurrentPriceSensor(coordinator, ENERGY_TYPE_GAS),
+        EssentNextPriceSensor(coordinator, ENERGY_TYPE_GAS),
+    ]
 
     async_add_entities(entities)
 
