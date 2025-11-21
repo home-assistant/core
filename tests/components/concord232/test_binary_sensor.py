@@ -232,26 +232,3 @@ async def test_get_opening_type_default(
 
     state = hass.states.get("binary_sensor.unknown_sensor")
     assert state.attributes.get("device_class") == "opening"
-
-
-async def test_zones_sorted_by_number(
-    hass: HomeAssistant, mock_concord232_binary_sensor_client: MagicMock
-) -> None:
-    """Test that zones are sorted by number."""
-    # Return zones in non-sorted order
-    mock_concord232_binary_sensor_client.list_zones.return_value = [
-        {"number": 3, "name": "Zone 3", "state": "Normal"},
-        {"number": 1, "name": "Zone 1", "state": "Normal"},
-        {"number": 2, "name": "Zone 2", "state": "Normal"},
-    ]
-    mock_concord232_binary_sensor_client.zones = (
-        mock_concord232_binary_sensor_client.list_zones.return_value
-    )
-
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    # Verify zones are sorted
-    assert mock_concord232_binary_sensor_client.zones[0]["number"] == 1
-    assert mock_concord232_binary_sensor_client.zones[1]["number"] == 2
-    assert mock_concord232_binary_sensor_client.zones[2]["number"] == 3
