@@ -1,7 +1,7 @@
 """Tests for La Marzocco Bluetooth connection."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
@@ -57,6 +57,7 @@ async def test_bluetooth_coordinator_disabled_when_option_false(
 
 async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     hass: HomeAssistant,
+    mock_websocket_terminated: PropertyMock,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -64,36 +65,38 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator updates based on websocket connection state."""
-    # Patch websocket_terminated property for this test
-    with patch(
-        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
-        new=False,
-    ):
-        await async_init_integration(hass, mock_config_entry_bluetooth)
-        await hass.async_block_till_done()
+    # Use the fixture to control websocket_terminated property
+    mock_websocket_terminated.return_value = False
 
-        # Reset call count after initial setup
-        mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+    await hass.async_block_till_done()
 
-        # Test 1: When websocket is connected, Bluetooth should skip updates
-        mock_lamarzocco.websocket.connected = True
-        mock_lamarzocco.dashboard.connected = True
+    # Get the bluetooth coordinator
+    coordinator = mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator
+    assert coordinator is not None
 
-        freezer.tick(timedelta(seconds=61))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    # Reset call count after initial setup
+    mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
 
-        assert not mock_lamarzocco.get_dashboard_from_bluetooth.called
+    # Test 1: When websocket is connected, Bluetooth should skip updates
+    mock_lamarzocco.websocket.connected = True
+    mock_lamarzocco.dashboard.connected = True
 
-        # Test 2: When websocket is disconnected, Bluetooth should update
-        mock_lamarzocco.websocket.connected = False
-        mock_lamarzocco.dashboard.connected = False
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        freezer.tick(timedelta(seconds=61))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    assert not mock_lamarzocco.get_dashboard_from_bluetooth.called
 
-        assert mock_lamarzocco.get_dashboard_from_bluetooth.called
+    # Test 2: When websocket is disconnected, Bluetooth should update
+    mock_lamarzocco.websocket.connected = False
+    mock_lamarzocco.dashboard.connected = False
+
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_lamarzocco.get_dashboard_from_bluetooth.called
 
 
 async def test_bt_offline_mode_entity_available_when_cloud_fails(
@@ -182,7 +185,7 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
 
 async def test_bluetooth_coordinator_handles_connection_failure(
     hass: HomeAssistant,
-    mock_websocket_terminated: bool,
+    mock_websocket_terminated: PropertyMock,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
@@ -190,6 +193,9 @@ async def test_bluetooth_coordinator_handles_connection_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator handles connection failures gracefully."""
+    # Start with websocket terminated to ensure Bluetooth coordinator is active
+    mock_websocket_terminated.return_value = True
+
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor has bt_offline_mode=True
@@ -207,12 +213,12 @@ async def test_bluetooth_coordinator_handles_connection_failure(
         BluetoothConnectionFailed("")
     )
 
-    # Trigger update
+    # Trigger Bluetooth coordinator update
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Verify Bluetooth entity becomes unavailable when BT connection fails
+    # now it should be unavailable due to BT failure
     state = hass.states.get(water_tank_sensor)
     assert state
     assert state.state == STATE_UNAVAILABLE

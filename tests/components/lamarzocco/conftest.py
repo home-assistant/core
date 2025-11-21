@@ -1,7 +1,7 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import ModelName
@@ -147,12 +147,13 @@ def mock_ble_device() -> BLEDevice:
 
 
 @pytest.fixture
-def mock_websocket_terminated() -> Generator[bool]:
+def mock_websocket_terminated() -> Generator[PropertyMock]:
     """Mock websocket terminated."""
     with patch(
         "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
-        new=False,
+        new_callable=PropertyMock,
     ) as mock_websocket_terminated:
+        mock_websocket_terminated.return_value = False
         yield mock_websocket_terminated
 
 
