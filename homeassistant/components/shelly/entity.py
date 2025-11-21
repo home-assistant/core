@@ -28,6 +28,7 @@ from .utils import (
     get_block_entity_name,
     get_rpc_device_info,
     get_rpc_entity_name,
+    get_rpc_key,
     get_rpc_key_instances,
     get_rpc_role_by_key,
 )
@@ -551,8 +552,8 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
             coordinator.device, key, description.name, description.role
         )
         self._last_value = None
-        id_key = key.split(":")[-1]
-        self._id = int(id_key) if id_key.isnumeric() else None
+        has_id, _, _id = get_rpc_key(key)
+        self._id = int(_id) if has_id and _id.isnumeric() else None
 
         if description.unit is not None:
             self._attr_native_unit_of_measurement = description.unit(
