@@ -55,8 +55,8 @@ from .utils import (
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_by_role,
+    get_rpc_key_id,
     get_rpc_key_ids,
-    id_from_key,
     is_rpc_thermostat_internal_actuator,
 )
 
@@ -215,7 +215,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         assert self._target_humidity_key is not None
 
         await self.coordinator.device.number_set(
-            id_from_key(self._target_humidity_key), humidity
+            get_rpc_key_id(self._target_humidity_key), humidity
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -224,7 +224,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             assert self._fan_speed_key is not None
 
         await self.coordinator.device.enum_set(
-            id_from_key(self._fan_speed_key), fan_mode
+            get_rpc_key_id(self._fan_speed_key), fan_mode
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -233,14 +233,14 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             assert self._thermostat_enable_key is not None
 
         await self.coordinator.device.boolean_set(
-            id_from_key(self._thermostat_enable_key), hvac_mode != HVACMode.OFF
+            get_rpc_key_id(self._thermostat_enable_key), hvac_mode != HVACMode.OFF
         )
 
         if self._working_mode_key is None or hvac_mode == HVACMode.OFF:
             return
 
         await self.coordinator.device.enum_set(
-            id_from_key(self._working_mode_key),
+            get_rpc_key_id(self._working_mode_key),
             HA_TO_THERMOSTAT_MODE[hvac_mode],
         )
 
@@ -250,7 +250,8 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             assert self._anti_freeze_key is not None
 
         await self.coordinator.device.boolean_set(
-            id_from_key(self._anti_freeze_key), preset_mode == PRESET_FROST_PROTECTION
+            get_rpc_key_id(self._anti_freeze_key),
+            preset_mode == PRESET_FROST_PROTECTION,
         )
 
 
