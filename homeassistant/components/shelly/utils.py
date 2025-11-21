@@ -49,7 +49,6 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -115,20 +114,6 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
         channels = 1
 
     return channels or 1
-
-
-def get_block_entity_name(
-    device: BlockDevice,
-    block: Block | None,
-    name: str | UndefinedType | None = None,
-) -> str | None:
-    """Naming for block based switch and sensors."""
-    channel_name = get_block_channel_name(device, block)
-
-    if name is not UNDEFINED and name:
-        return f"{channel_name} {name.lower()}" if channel_name else name
-
-    return channel_name
 
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
@@ -474,23 +459,6 @@ def get_rpc_sub_device_name(
     return f"{device.name} {component.title()} {component_id}"
 
 
-def get_rpc_entity_name(
-    device: RpcDevice,
-    key: str,
-    name: str | UndefinedType | None = None,
-    role: str | None = None,
-) -> str | None:
-    """Naming for RPC based switch and sensors."""
-    channel_name = get_rpc_channel_name(device, key)
-
-    if name is not UNDEFINED and name:
-        if role and role != ROLE_GENERIC:
-            return name
-        return f"{channel_name} {name.lower()}" if channel_name else name
-
-    return channel_name
-
-
 def get_entity_translation_attributes(
     channel_name: str | None,
     translation_key: str | None,
@@ -834,7 +802,7 @@ async def get_rpc_scripts_event_types(
     script_instances = get_rpc_key_instances(device.status, "script")
     script_events = {}
     for script in script_instances:
-        script_name = get_rpc_entity_name(device, script)
+        script_name = get_rpc_channel_name(device, script)
         if script_name in ignore_scripts:
             continue
 

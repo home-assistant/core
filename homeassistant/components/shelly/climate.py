@@ -51,7 +51,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_shelly_entity,
-    get_block_entity_name,
+    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_by_role,
@@ -440,9 +440,7 @@ class BlockSleepingClimate(
         elif entry is not None:
             self._unique_id = entry.unique_id
         self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
-        self._attr_name = get_block_entity_name(
-            self.coordinator.device, sensor_block, None
-        )
+        self._attr_name = get_block_channel_name(self.coordinator.device, sensor_block)
 
         self._channel = cast(int, self._unique_id.split("_")[1])
 

@@ -20,13 +20,13 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER
+from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
+    get_rpc_channel_name,
     get_rpc_device_info,
-    get_rpc_entity_name,
     get_rpc_key,
     get_rpc_key_instances,
     get_rpc_role_by_key,
@@ -413,9 +413,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
+        self._attr_name = None
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
     def available(self) -> bool:
@@ -541,13 +541,13 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self.attribute = attribute
         self.entity_description = description
 
+        if description.role == ROLE_GENERIC:
+            self._attr_name = get_rpc_channel_name(coordinator.device, key)
+
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
-        self._attr_name = get_rpc_entity_name(
-            coordinator.device, key, description.name, description.role
-        )
         self._last_value = None
-        has_id, _, _id = get_rpc_key(key)
-        self._id = int(_id) if has_id and _id.isnumeric() else None
+        has_id, _, component_id = get_rpc_key(key)
+        self._id = int(component_id) if has_id and component_id.isnumeric() else None
 
         if description.unit is not None:
             self._attr_native_unit_of_measurement = description.unit(
@@ -681,11 +681,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_unique_id = f"{coordinator.mac}-{key}-{attribute}"
         self._last_value = None
 
-        if coordinator.device.initialized:
-            self._attr_name = get_rpc_entity_name(
-                coordinator.device, key, description.name
-            )
-        elif entry is not None:
+        if entry is not None:
             self._attr_name = cast(str, entry.original_name)
 
     async def async_update(self) -> None:
