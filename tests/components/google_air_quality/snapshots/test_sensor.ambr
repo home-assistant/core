@@ -321,7 +321,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'pm10_48_9',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_pm10-state]
@@ -331,7 +331,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Straße Ohne Straßennamen PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strasse_ohne_strassennamen_pm10',
@@ -375,7 +375,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'pm25_48_9',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_pm2_5-state]
@@ -385,7 +385,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Straße Ohne Straßennamen PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strasse_ohne_strassennamen_pm2_5',
