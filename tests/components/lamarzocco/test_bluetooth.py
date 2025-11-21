@@ -10,7 +10,7 @@ from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccess
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH
+from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import async_init_integration, get_bluetooth_service_info
 
@@ -303,6 +304,7 @@ async def test_setup_through_bluetooth_only(
     mock_lamarzocco_bluetooth: MagicMock,
     mock_ble_device_from_address: MagicMock,
     mock_cloud_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
     device_fixture: ModelName,
     entities: list[tuple[str, str]],
     snapshot: SnapshotAssertion,
@@ -334,6 +336,15 @@ async def test_setup_through_bluetooth_only(
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert state == snapshot(name=entity)
+
+    # snapshot device
+    device = device_registry.async_get_device(
+        {(DOMAIN, mock_lamarzocco_bluetooth.serial_number)}
+    )
+    assert device
+    assert device == snapshot(
+        name=f"device_bluetooth_{mock_lamarzocco_bluetooth.serial_number}"
+    )
 
 
 @pytest.mark.parametrize(

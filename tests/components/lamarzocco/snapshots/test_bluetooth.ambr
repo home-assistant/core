@@ -13,6 +13,41 @@
     'state': 'off',
   })
 # ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][device_bluetooth_GS012345]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lamarzocco',
+        'GS012345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'La Marzocco',
+    'model': 'GS3 AV',
+    'model_id': 'GS3AV',
+    'name': 'GS012345',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'GS012345',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_setup_through_bluetooth_only[GS3 AV-entities1][number.GS012345_coffee_target_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -102,6 +137,41 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][device_bluetooth_MR012345]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lamarzocco',
+        'MR012345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'La Marzocco',
+    'model': 'Linea Micra',
+    'model_id': 'LINEAMICRA',
+    'name': 'MR012345',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'MR012345',
+    'sw_version': None,
+    'via_device_id': None,
   })
 # ---
 # name: test_setup_through_bluetooth_only[Linea Micra-entities0][number.MR012345_coffee_target_temperature]
