@@ -130,24 +130,26 @@ def _get_temperature_wrappers(
     current_celsius = _get_temperature_wrapper(
         [temp_current, temp_current_f], CELSIUS_ALIASES
     )
-    current_farenheit = _get_temperature_wrapper(
+    current_fahrenheit = _get_temperature_wrapper(
         [temp_current_f, temp_current], FAHRENHEIT_ALIASES
     )
     set_celsius = _get_temperature_wrapper([temp_set, temp_set_f], CELSIUS_ALIASES)
-    set_farenheit = _get_temperature_wrapper([temp_set_f, temp_set], FAHRENHEIT_ALIASES)
+    set_fahrenheit = _get_temperature_wrapper(
+        [temp_set_f, temp_set], FAHRENHEIT_ALIASES
+    )
 
     # Return early if we have the right wrappers for the system unit
     if system_temperature_unit == UnitOfTemperature.FAHRENHEIT:
         if (
-            (current_farenheit and set_farenheit)
-            or (current_farenheit and not set_celsius)
-            or (set_farenheit and not current_celsius)
+            (current_fahrenheit and set_fahrenheit)
+            or (current_fahrenheit and not set_celsius)
+            or (set_fahrenheit and not current_celsius)
         ):
-            return current_farenheit, set_farenheit, UnitOfTemperature.FAHRENHEIT
+            return current_fahrenheit, set_fahrenheit, UnitOfTemperature.FAHRENHEIT
     if (
         (current_celsius and set_celsius)
-        or (current_celsius and not set_farenheit)
-        or (set_celsius and not current_farenheit)
+        or (current_celsius and not set_fahrenheit)
+        or (set_celsius and not current_fahrenheit)
     ):
         return current_celsius, set_celsius, UnitOfTemperature.CELSIUS
 
