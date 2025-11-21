@@ -768,7 +768,7 @@
     }
   },
   "services": {
-    "kvs_get": {
+    "get_kvs_value": {
       "description": "Get a value from the device's Key-Value Storage.",
       "fields": {
         "device_id": {
@@ -780,7 +780,7 @@
           "name": "Key"
         }
       },
-      "name": "KVS get"
+      "name": "Get KVS value"
     }
   }
 }

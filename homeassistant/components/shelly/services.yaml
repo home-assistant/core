@@ -1,4 +1,4 @@
-kvs_get:
+get_kvs_value:
   fields:
     device_id:
       required: true

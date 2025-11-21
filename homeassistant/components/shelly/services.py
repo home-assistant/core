@@ -23,8 +23,8 @@ from .utils import get_device_entry_gen
 
 ATTR_KEY = "key"
 
-SERVICE_KVS_GET = "kvs_get"
-SERVICE_KVS_GET_SCHEMA = vol.Schema(
+SERVICE_GET_KVS_VALUE = "get_kvs_value"
+SERVICE_GET_KVS_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_KEY): str,
@@ -73,8 +73,8 @@ def async_get_config_entry_for_service_call(
     )
 
 
-async def async_kvs_get(call: ServiceCall) -> ServiceResponse:
-    """Handle the kvs_get service call."""
+async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
+    """Handle the get_kvs_value service call."""
     key = call.data[ATTR_KEY]
     config_entry = async_get_config_entry_for_service_call(call)
 
@@ -113,8 +113,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for Shelly integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_KVS_GET,
-        async_kvs_get,
-        schema=SERVICE_KVS_GET_SCHEMA,
+        SERVICE_GET_KVS_VALUE,
+        async_get_kvs_value,
+        schema=SERVICE_GET_KVS_VALUE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
