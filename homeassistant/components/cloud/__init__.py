@@ -398,16 +398,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
     """Handle preferences updated."""
     cur_pref = cloud.client.prefs.remote_enabled
+    cur_cloudhooks = cloud.client.prefs.cloudhooks
     lock = asyncio.Lock()
 
     # Sync remote connection with prefs
     async def remote_prefs_updated(prefs: CloudPreferences) -> None:
         """Update remote status."""
         nonlocal cur_pref
-
-        async_dispatcher_send(hass, _SIGNAL_CLOUDHOOKS_UPDATED, prefs.cloudhooks)
+        nonlocal cur_cloudhooks
 
         async with lock:
+            if cur_cloudhooks != prefs.cloudhooks:
+                async_dispatcher_send(
+                    hass, _SIGNAL_CLOUDHOOKS_UPDATED, prefs.cloudhooks
+                )
+
             if prefs.remote_enabled == cur_pref:
                 return
 
