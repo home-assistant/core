@@ -8,9 +8,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -103,11 +105,11 @@ async def test_media_player_actions(
 
     # test volume_set action
     await hass.services.async_call(
-        "media_player",
-        "volume_set",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
         {
-            "entity_id": entity_id,
-            "volume_level": 0.5,  # 50% volume
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,  # 50% volume
         },
         blocking=True,
     )
