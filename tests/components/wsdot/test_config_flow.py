@@ -53,10 +53,9 @@ async def test_create_user_entry(
     assert result[CONF_STEP_ID] == SOURCE_USER
 
     # User data; the user entered data and hit submit
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data=VALID_USER_CONFIG,
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=VALID_USER_CONFIG,
     )
 
     assert result[CONF_TYPE] is FlowResultType.CREATE_ENTRY
@@ -131,7 +130,7 @@ async def test_create_import_entry(
     assert result[CONF_TITLE] == "wsdot"
     assert result[CONF_DATA][CONF_API_KEY] == "abcd-5678"
 
-    route = next(iter(result.get("subentries", [])), None)
+    route = result["result"]
     assert route is not None
     assert route["subentry_type"] == SUBENTRY_TRAVEL_TIMES
     assert route[CONF_TITLE] == "Seattle-Bellevue via I-90 (EB AM)"
@@ -142,15 +141,10 @@ async def test_create_import_entry(
 async def test_integration_already_exists(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we only allow a single config flow."""
-    first_config_flow = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data=VALID_USER_CONFIG,
-    )
-
-    assert first_config_flow[CONF_TYPE] is FlowResultType.CREATE_ENTRY
+    mock_config_entry.add_to_hass(hass)
 
     duplicate_config_flow = await hass.config_entries.flow.async_init(
         DOMAIN,

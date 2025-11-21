@@ -44,26 +44,36 @@ def mock_config_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_config_entry(mock_config_data) -> MockConfigEntry:
+def mock_subentries() -> list[ConfigSubentryData]:
+    """Mock subentries."""
+    return [
+        ConfigSubentryData(
+            subentry_type="travel_time",
+            title="I-90 EB",
+            data={
+                CONF_ID: 96,
+                CONF_NAME: "Seattle-Bellevue via I-90 (EB AM)",
+            },
+        )
+    ]
+
+
+@pytest.fixture
+def mock_config_entry(mock_config_data: dict[str, Any], mock_subentries: list[ConfigSubentryData]) -> MockConfigEntry:
     """Mock a wsdot config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data=mock_config_data,
+        subentries_data=mock_subentries,
     )
 
 
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
-    mock_config_data: MockConfigEntry,
-    subentries: list[dict[str, Any]],
+    mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up wsdot integration with subentries for testing."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=mock_config_data,
-        subentries_data=subentries,
-    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
