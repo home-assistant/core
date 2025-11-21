@@ -1,7 +1,7 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import ModelName
@@ -143,9 +143,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 @pytest.fixture
 def mock_ble_device() -> BLEDevice:
     """Return a mock BLE device."""
-    return BLEDevice(
-        "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
-    )
+    return BLEDevice("00:00:00:00:00:00", "GS_GS012345", details={"path": "path"})
 
 
 @pytest.fixture
@@ -166,7 +164,7 @@ def mock_bluetooth_client() -> Generator[MagicMock]:
         autospec=True,
     ) as mock_bt_client_cls:
         mock_bt_client = mock_bt_client_cls.return_value
-        from unittest.mock import AsyncMock
+
         mock_bt_client.disconnect = AsyncMock()
         yield mock_bt_client
 
