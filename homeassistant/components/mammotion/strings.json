@@ -42,9 +42,9 @@
         "data": {
           "account_name": "Mammotion email or account number",
           "password": "Mammotion account password",
-          "use_wifi": "Use Wi-Fi (un-tick and submit to use Bluetooth)"
+          "use_wifi": "Use Wi-Fi (deselect to use Bluetooth)"
         },
-        "description": "Enter your Mammotion account email or id and password",
+        "description": "Enter your Mammotion account email or ID and password",
         "title": "Connect to Wi-Fi"
       }
     }
@@ -78,7 +78,7 @@
       "init": {
         "data": {
           "stay_connected_bluetooth": "Keep Bluetooth connected",
-          "title": "Update Configuration"
+          "title": "Update configuration"
         }
       }
     }
