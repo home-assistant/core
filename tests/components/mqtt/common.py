@@ -600,6 +600,23 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
         "optimistic": True,
     },
 }
+MOCK_SUBENTRY_TEXT_COMPONENT = {
+    "09261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "text",
+        "name": "MOTD",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "mode": "password",
+        "pattern": "^[a-z_]*$",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
 
 MOCK_SUBENTRY_AVAILABILITY_DATA = {
     "availability": {
@@ -724,6 +741,10 @@ MOCK_SIREN_SUBENTRY_DATA = {
 MOCK_SWITCH_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
+}
+MOCK_TEXT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TEXT_COMPONENT,
 }
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
