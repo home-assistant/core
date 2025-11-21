@@ -1,0 +1,76 @@
+{
+  "prices": [
+    {
+      "date": "2025-11-16",
+      "unit": "kWh",
+      "tariffs": [
+        {
+          "startDateTime": "2025-11-16T09:00:00",
+          "endDateTime": "2025-11-16T10:00:00",
+          "totalAmount": 0.2000,
+          "totalAmountEx": 0.1653,
+          "totalAmountVat": 0.0347,
+          "groups": [
+            {"type": "MARKET_PRICE", "amount": 0.1200},
+            {"type": "PURCHASING_FEE", "amount": 0.0300},
+            {"type": "TAX", "amount": 0.0500}
+          ]
+        },
+        {
+          "startDateTime": "2025-11-16T10:00:00",
+          "endDateTime": "2025-11-16T11:00:00",
+          "totalAmount": 0.2500,
+          "totalAmountEx": 0.2066,
+          "totalAmountVat": 0.0434,
+          "groups": [
+            {"type": "MARKET_PRICE", "amount": 0.1700},
+            {"type": "PURCHASING_FEE", "amount": 0.0300},
+            {"type": "TAX", "amount": 0.0500}
+          ]
+        },
+        {
+          "startDateTime": "2025-11-16T11:00:00",
+          "endDateTime": "2025-11-16T12:00:00",
+          "totalAmount": 0.2200,
+          "totalAmountEx": 0.1818,
+          "totalAmountVat": 0.0382,
+          "groups": [
+            {"type": "MARKET_PRICE", "amount": 0.1400},
+            {"type": "PURCHASING_FEE", "amount": 0.0300},
+            {"type": "TAX", "amount": 0.0500}
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2025-11-17",
+      "unit": "kWh",
+      "tariffs": [
+        {
+          "startDateTime": "2025-11-17T00:00:00",
+          "endDateTime": "2025-11-17T01:00:00",
+          "totalAmount": 0.2100,
+          "totalAmountEx": 0.1736,
+          "totalAmountVat": 0.0364,
+          "groups": [
+            {"type": "MARKET_PRICE", "amount": 0.1300},
+            {"type": "PURCHASING_FEE", "amount": 0.0300},
+            {"type": "TAX", "amount": 0.0500}
+          ]
+        },
+        {
+          "startDateTime": "2025-11-17T01:00:00",
+          "endDateTime": "2025-11-17T02:00:00",
+          "totalAmount": 0.2150,
+          "totalAmountEx": 0.1777,
+          "totalAmountVat": 0.0373,
+          "groups": [
+            {"type": "MARKET_PRICE", "amount": 0.1350},
+            {"type": "PURCHASING_FEE", "amount": 0.0300},
+            {"type": "TAX", "amount": 0.0500}
+          ]
+        }
+      ]
+    }
+  ]
+}
