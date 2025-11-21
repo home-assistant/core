@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper
 
 SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
@@ -64,9 +65,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 entities.extend(
-                    TuyaSirenEntity(device, manager, description)
+                    TuyaSirenEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -89,21 +94,23 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
+        dpcode_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if siren is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        return self._dpcode_wrapper.read_device_status(self.device)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        await self._async_send_dpcode_update(self._dpcode_wrapper, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._send_command([{"code": self.entity_description.key, "value": False}])
+        await self._async_send_dpcode_update(self._dpcode_wrapper, False)
