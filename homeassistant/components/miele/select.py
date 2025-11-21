@@ -98,7 +98,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return the list of available options."""
-        return list(
+        return sorted(
             {MieleModes(x).name.lower() for x in self.action.modes}
             | {self.current_option if self.current_option is not None else "normal"}
         )
