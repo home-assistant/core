@@ -80,7 +80,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.16.2
 
 # homeassistant.components.switchbot
-PySwitchbot==0.73.0
+PySwitchbot==0.74.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -648,6 +648,9 @@ colorthief==0.2.1
 
 # homeassistant.components.compit
 compit-inext-api==0.3.1
+
+# homeassistant.components.concord232
+concord232==0.15.1
 
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
