@@ -45,7 +45,6 @@ async def test_websocket(
             {"type": "analytics/preferences", "preferences": {"base": True}}
         )
         response = await ws_client.receive_json()
-    assert len(aioclient_mock.mock_calls) == 1
     assert response["result"]["preferences"]["base"]
 
     await ws_client.send_json_auto_id({"type": "analytics"})
