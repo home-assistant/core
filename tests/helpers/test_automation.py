@@ -177,4 +177,6 @@ async def test_move_schema_fields_to_options(
 async def test_move_options_fields_to_top_level(config, expected_config) -> None:
     """Test moving options fields to top-level."""
     base_schema = vol.Schema({vol.Required("platform"): str})
+    original_config = config.copy()
     assert move_options_fields_to_top_level(config, base_schema) == expected_config
+    assert config == original_config  # Ensure original config is not modified

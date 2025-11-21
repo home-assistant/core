@@ -206,7 +206,13 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
-_CONDITION_SCHEMA = cv.CONDITION_BASE_FULL_SCHEMA.extend(
+_CONDITION_BASE_SCHEMA = vol.Schema(
+    {
+        **cv.CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): str,
+    }
+)
+_CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_OPTIONS): object,
         vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
@@ -1046,7 +1052,7 @@ async def async_validate_condition_config(
             raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
         return await condition_class.async_validate_complete_config(hass, config)
 
-    config = move_options_fields_to_top_level(config, cv.CONDITION_BASE_FULL_SCHEMA)
+    config = move_options_fields_to_top_level(config, _CONDITION_BASE_SCHEMA)
 
     if condition_key in ("numeric_state", "state"):
         validator = cast(
