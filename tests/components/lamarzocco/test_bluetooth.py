@@ -292,12 +292,21 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("device_fixture", "entities"),
+    [
+        (ModelName.LINEA_MICRA, MICRA_BT_OFFLINE_ENTITIES),
+        (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
+    ],
+)
 async def test_setup_through_bluetooth_only(
     hass: HomeAssistant,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_lamarzocco_bluetooth: MagicMock,
     mock_ble_device_from_address: MagicMock,
     mock_cloud_client: MagicMock,
+    device_fixture: ModelName,
+    entities: list[tuple[str, str]],
 ) -> None:
     """Test we can setup without a cloud connection."""
 
@@ -317,11 +326,15 @@ async def test_setup_through_bluetooth_only(
     assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is not None
     assert mock_lamarzocco_bluetooth.get_model_info_from_bluetooth.called
 
-    # Verify an entity works
-    main_switch = f"switch.{mock_lamarzocco_bluetooth.serial_number}"
-    state = hass.states.get(main_switch)
-    assert state
-    assert state.state == STATE_ON
+    # Check all Bluetooth entities are available
+    for entity_id in entities:
+        state = hass.states.get(
+            build_entitiy_id(
+                entity_id[0], mock_lamarzocco_bluetooth.serial_number, entity_id[1]
+            )
+        )
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

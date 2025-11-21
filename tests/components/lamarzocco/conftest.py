@@ -206,7 +206,7 @@ def mock_config_entry_bluetooth(
 ) -> MockConfigEntry:
     """Return a mocked config entry with Bluetooth enabled."""
     return MockConfigEntry(
-        title="My LaMarzocco",
+        title=mock_lamarzocco.serial_number,
         domain=DOMAIN,
         version=4,
         data=USER_INPUT

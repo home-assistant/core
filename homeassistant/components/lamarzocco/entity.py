@@ -57,7 +57,7 @@ class LaMarzoccoBaseEntity(
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial_number)},
-            name=device.dashboard.name,
+            name=device.dashboard.name or self.coordinator.config_entry.title,
             manufacturer="La Marzocco",
             model=device.dashboard.model_name.value,
             model_id=device.dashboard.model_code.value,
