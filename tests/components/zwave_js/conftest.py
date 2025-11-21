@@ -329,7 +329,7 @@ def ge_12730_state_fixture() -> dict[str, Any]:
 @pytest.fixture(name="jasco_14314_state", scope="package")
 def jasco_14314_state_fixture() -> dict[str, Any]:
     """Load the Jasco 14314 node state fixture data."""
-    return load_json_object_fixture("jasco_14314_state.json", DOMAIN)
+    return load_json_object_fixture("fan_jasco_14314_state.json", DOMAIN)
 
 
 @pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")

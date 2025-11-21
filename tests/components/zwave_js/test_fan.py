@@ -446,11 +446,14 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN
 
-async def test_jasco_14314_fan(hass: HomeAssistant, client, jasco_14314, integration) -> None:
+
+async def test_jasco_14314_fan(
+    hass: HomeAssistant, client, jasco_14314, integration
+) -> None:
     """Test a Jasco 14314 fan with 3 fixed speeds."""
     node = jasco_14314
     node_id = 24
-    entity_id = "fan.in_wall_smart_fan_control"
+    entity_id = "fan.in_wall_fan_speed_control_500s"
 
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
@@ -493,12 +496,12 @@ async def test_jasco_14314_fan(hass: HomeAssistant, client, jasco_14314, integra
         return state.attributes[ATTR_PERCENTAGE]
 
     # This device has the speeds:
-    # low = 1-32, med = 34-66, high = 67-99
+    # low = 1-32, med = 33-66, high = 67-99
     percentages_to_zwave_speeds = [
         [[0], [0]],
-        [range(1, 33), range(1, 33)],
-        [range(33, 67), range(33, 67)],
-        [range(67, 101), range(67, 100)],
+        [range(1, 34), range(1, 33)],  # percentages 1-33 → zwave 1-32
+        [range(34, 68), range(33, 67)],  # percentages 34-67 → zwave 33-66
+        [range(68, 101), range(67, 100)],  # percentages 68-100 → zwave 67-99
     ]
 
     for percentages, zwave_speeds in percentages_to_zwave_speeds:
@@ -535,6 +538,7 @@ async def test_jasco_14314_fan(hass: HomeAssistant, client, jasco_14314, integra
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN
+
 
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
