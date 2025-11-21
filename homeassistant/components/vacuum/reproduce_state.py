@@ -30,6 +30,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
+# All valid states that can be used with state
 VALID_STATES_STATE = {
     VacuumActivity.AUTO_EMPTYING,
     VacuumActivity.CLEANING,
