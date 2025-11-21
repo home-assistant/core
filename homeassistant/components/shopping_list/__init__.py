@@ -201,7 +201,44 @@ class ShoppingData:
     async def async_add(
         self, name: str | None, complete: bool = False, context: Context | None = None
     ) -> dict[str, JsonValueType]:
-        """Add a shopping list item."""
+        """Add a shopping list item.
+
+        If an item with the same name already exists (case-insensitive, trimmed),
+        we avoid creating a duplicate:
+
+        - If the existing item is complete, we "revive" it (set complete = False).
+        - If the existing item is already active, we return it unchanged.
+        """
+        # Normalise the incoming name for duplicate detection
+        if isinstance(name, str):
+            normalized = name.strip().casefold()
+        else:
+            normalized = ""
+
+        existing: dict[str, JsonValueType] | None = None
+
+        if normalized:
+            for itm in self.items:
+                existing_name = cast(str, (itm.get("name") or "")).strip().casefold()
+                if existing_name == normalized:
+                    existing = itm
+                    break
+
+        if existing is not None:
+            # If existing item is complete, "revive" it
+            if cast(bool, existing.get("complete")):
+                existing["complete"] = False
+                await self.hass.async_add_executor_job(self.save)
+                self._async_notify()
+                self.hass.bus.async_fire(
+                    EVENT_SHOPPING_LIST_UPDATED,
+                    {"action": "update", "item": existing},
+                    context=context,
+                )
+            # If already active, do nothing extra – just return it
+            return existing
+
+        # No existing item found – create a new one
         item: dict[str, JsonValueType] = {
             "name": name,
             "id": uuid.uuid4().hex,
