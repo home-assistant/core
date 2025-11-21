@@ -84,11 +84,11 @@ async def test_media_player_actions(
 
     # test mute_volume action (from idle state)
     await hass.services.async_call(
-        "media_player",
-        "volume_mute",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
         {
-            "entity_id": entity_id,
-            "is_volume_muted": True,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
     )
