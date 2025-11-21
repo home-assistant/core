@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, cast
 
@@ -21,75 +20,70 @@ from .entity import PooldoseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, kw_only=True)
-class PooldoseBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes PoolDose binary sensor entity."""
-
-
-BINARY_SENSOR_DESCRIPTIONS: tuple[PooldoseBinarySensorEntityDescription, ...] = (
-    PooldoseBinarySensorEntityDescription(
+BINARY_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
         key="pump_alarm",
         translation_key="pump_alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="ph_level_alarm",
         translation_key="ph_level_alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="orp_level_alarm",
         translation_key="orp_level_alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="flow_rate_alarm",
         translation_key="flow_rate_alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="alarm_ofa_ph",
         translation_key="alarm_ofa_ph",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="alarm_ofa_orp",
         translation_key="alarm_ofa_orp",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="alarm_ofa_cl",
         translation_key="alarm_ofa_cl",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="relay_alarm",
         translation_key="relay_alarm",
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="relay_aux1",
         translation_key="relay_aux1",
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="relay_aux2",
         translation_key="relay_aux2",
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    PooldoseBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="relay_aux3",
         translation_key="relay_aux3",
         device_class=BinarySensorDeviceClass.POWER,
@@ -127,8 +121,6 @@ async def async_setup_entry(
 
 class PooldoseBinarySensor(PooldoseEntity, BinarySensorEntity):
     """Binary sensor entity for the Seko PoolDose Python API."""
-
-    entity_description: PooldoseBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool:
