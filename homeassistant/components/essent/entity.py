@@ -1,4 +1,5 @@
 """Base entity for Essent integration."""
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

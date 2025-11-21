@@ -129,8 +129,10 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
 
         now = dt_util.utcnow()
         current_hour = now.replace(minute=0, second=0, microsecond=0)
-        candidate = current_hour + UPDATE_INTERVAL + timedelta(
-            minutes=self._api_fetch_minute_offset
+        candidate = (
+            current_hour
+            + UPDATE_INTERVAL
+            + timedelta(minutes=self._api_fetch_minute_offset)
         )
         if candidate <= now:
             candidate = candidate + UPDATE_INTERVAL

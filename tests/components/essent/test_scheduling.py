@@ -15,8 +15,11 @@ from homeassistant.components.essent.coordinator import EssentDataUpdateCoordina
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_json_object_fixture
-
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 # Don't use the autouse fixture that disables scheduling
 pytestmark = [
@@ -150,13 +153,12 @@ async def test_api_refresh_fires_at_offset(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator: EssentDataUpdateCoordinator = entry.runtime_data
     initial_call_count = aioclient_mock.call_count
 
     # Move to next hour + offset (13:15:00)
-    next_trigger = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(
-        hours=1, minutes=15
-    )
+    next_trigger = dt_util.utcnow().replace(
+        minute=0, second=0, microsecond=0
+    ) + timedelta(hours=1, minutes=15)
     freezer.move_to(next_trigger)
     async_fire_time_changed(hass, next_trigger)
     await hass.async_block_till_done()
@@ -227,9 +229,9 @@ async def test_schedule_reschedules_itself(
     assert coordinator.listener_tick_scheduled
 
     # Fire API refresh
-    next_trigger = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(
-        hours=1, minutes=15
-    )
+    next_trigger = dt_util.utcnow().replace(
+        minute=0, second=0, microsecond=0
+    ) + timedelta(hours=1, minutes=15)
     freezer.move_to(next_trigger)
     async_fire_time_changed(hass, next_trigger)
     await hass.async_block_till_done()

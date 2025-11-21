@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+
 from homeassistant.core import HomeAssistant
 
 from .coordinator import EssentConfigEntry, EssentDataUpdateCoordinator

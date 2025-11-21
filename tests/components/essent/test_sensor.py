@@ -5,14 +5,16 @@ from __future__ import annotations
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.core import HomeAssistant
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 pytestmark = [
-    pytest.mark.usefixtures("entity_registry_enabled_by_default", "disable_coordinator_schedules"),
+    pytest.mark.usefixtures(
+        "entity_registry_enabled_by_default", "disable_coordinator_schedules"
+    ),
     pytest.mark.freeze_time("2025-11-16 10:30:00+01:00"),
 ]
 
@@ -21,7 +23,7 @@ async def test_sensor_states(
     hass: HomeAssistant, aioclient_mock, essent_api_response: dict
 ) -> None:
     """Test the sensor states and attributes."""
-    entry = await setup_integration(hass, aioclient_mock, essent_api_response)
+    await setup_integration(hass, aioclient_mock, essent_api_response)
 
     elec_current = hass.states.get("sensor.essent_electricity_current_price")
     elec_next = hass.states.get("sensor.essent_electricity_next_price")

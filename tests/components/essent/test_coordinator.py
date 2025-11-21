@@ -36,9 +36,7 @@ async def test_coordinator_fetch_success(
     assert data["electricity"]["max_price"] == 0.25
 
 
-async def test_coordinator_fetch_failure(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
+async def test_coordinator_fetch_failure(hass: HomeAssistant, aioclient_mock) -> None:
     """Test failed data fetch."""
     aioclient_mock.get(API_ENDPOINT, status=500)
     coordinator = EssentDataUpdateCoordinator(hass)
@@ -47,9 +45,7 @@ async def test_coordinator_fetch_failure(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_invalid_json(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
+async def test_coordinator_invalid_json(hass: HomeAssistant, aioclient_mock) -> None:
     """Test invalid JSON response."""
     aioclient_mock.get(API_ENDPOINT, text="not json", status=200)
     coordinator = EssentDataUpdateCoordinator(hass)
@@ -58,9 +54,7 @@ async def test_coordinator_invalid_json(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_no_prices(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
+async def test_coordinator_no_prices(hass: HomeAssistant, aioclient_mock) -> None:
     """Test response with no price data."""
     aioclient_mock.get(API_ENDPOINT, json={"prices": []})
     coordinator = EssentDataUpdateCoordinator(hass)
@@ -69,9 +63,7 @@ async def test_coordinator_no_prices(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_no_tariffs(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
+async def test_coordinator_no_tariffs(hass: HomeAssistant, aioclient_mock) -> None:
     """Test response with no tariffs."""
     aioclient_mock.get(
         API_ENDPOINT,
@@ -91,9 +83,7 @@ async def test_coordinator_no_tariffs(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_no_amounts(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
+async def test_coordinator_no_amounts(hass: HomeAssistant, aioclient_mock) -> None:
     """Test response with tariffs but no usable amounts."""
     aioclient_mock.get(
         API_ENDPOINT,
@@ -102,7 +92,9 @@ async def test_coordinator_no_amounts(
                 {
                     "date": "2025-11-16",
                     "electricity": {
-                        "tariffs": [{"startDateTime": "2025-11-16T00:00:00"}]  # No totalAmount
+                        "tariffs": [
+                            {"startDateTime": "2025-11-16T00:00:00"}
+                        ]  # No totalAmount
                     },
                     "gas": {"tariffs": [{"totalAmount": 0.82}]},
                 }
@@ -115,9 +107,7 @@ async def test_coordinator_no_amounts(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_no_unit(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
+async def test_coordinator_no_unit(hass: HomeAssistant, aioclient_mock) -> None:
     """Test response with no unit information."""
     aioclient_mock.get(
         API_ENDPOINT,

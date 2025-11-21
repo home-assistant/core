@@ -6,10 +6,10 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
-
-from . import setup_integration
 
 pytestmark = [
     pytest.mark.freeze_time("2025-11-16 12:00:00+01:00"),
@@ -26,9 +26,7 @@ async def test_diagnostics(
     """Test diagnostics for config entry."""
     entry = await setup_integration(hass, aioclient_mock, essent_api_response)
 
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, entry
-    )
+    diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert diagnostics["last_update_success"] is True
     assert diagnostics["coordinator_data"] is not None

@@ -22,7 +22,7 @@ async def set_time_zone(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-def fixed_minute_offset() -> Generator[None, None, None]:
+def fixed_minute_offset() -> Generator[None]:
     """Use a predictable API fetch minute offset."""
     with patch(
         "homeassistant.components.essent.coordinator.random.randint", return_value=5

@@ -1,13 +1,11 @@
 """Sensor platform for Essent integration."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,7 +18,9 @@ from .entity import EssentEntity
 PARALLEL_UPDATES = 1
 
 
-def _parse_tariff_times(tariff: dict[str, Any]) -> tuple[datetime | None, datetime | None]:
+def _parse_tariff_times(
+    tariff: dict[str, Any],
+) -> tuple[datetime | None, datetime | None]:
     """Parse tariff start/end times and ensure they are timezone-aware."""
     start_str = tariff.get("startDateTime")
     end_str = tariff.get("endDateTime")
@@ -143,9 +143,7 @@ class EssentCurrentPriceSensor(EssentEntity, SensorEntity):
                     "market_price": groups.get("MARKET_PRICE"),
                     "purchasing_fee": groups.get("PURCHASING_FEE"),
                     "tax": groups.get("TAX"),
-                    "start_time": _format_dt_str(
-                        current_tariff.get("startDateTime")
-                    ),
+                    "start_time": _format_dt_str(current_tariff.get("startDateTime")),
                     "end_time": _format_dt_str(current_tariff.get("endDateTime")),
                 }
             )
