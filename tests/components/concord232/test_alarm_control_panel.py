@@ -146,23 +146,33 @@ async def test_alarm_disarm_invalid_code(
     assert "Invalid code given" in caplog.text
 
 
-async def test_alarm_arm_home(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
+@pytest.mark.parametrize(
+    ("service", "expected_arm_call"),
+    [
+        (SERVICE_ALARM_ARM_HOME, "stay"),
+        (SERVICE_ALARM_ARM_AWAY, "away"),
+    ],
+)
+async def test_alarm_arm(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    service: str,
+    expected_arm_call: str,
 ) -> None:
-    """Test arm home service."""
+    """Test arm service."""
     await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
+        service,
         {
             ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
             ATTR_CODE: "1234",
         },
         blocking=True,
     )
-    mock_concord232_client.arm.assert_called_once_with("stay")
+    mock_concord232_client.arm.assert_called_once_with(expected_arm_call)
 
 
 async def test_alarm_arm_home_silent_mode(
@@ -184,63 +194,6 @@ async def test_alarm_arm_home_silent_mode(
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with("stay", "silent")
-
-
-async def test_alarm_arm_home_with_code(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test arm home service with code."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
-        },
-        blocking=True,
-    )
-    mock_concord232_client.arm.assert_called_once_with("stay")
-
-
-async def test_alarm_arm_away(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test arm away service."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
-        },
-        blocking=True,
-    )
-    mock_concord232_client.arm.assert_called_once_with("away")
-
-
-async def test_alarm_arm_away_with_code(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test arm away service with code."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
-        },
-        blocking=True,
-    )
-    mock_concord232_client.arm.assert_called_once_with("away")
 
 
 async def test_update_state_disarmed(
