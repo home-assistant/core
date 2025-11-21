@@ -212,11 +212,21 @@ async def test_update_state_disarmed(
     assert state.state == AlarmControlPanelState.DISARMED
 
 
-async def test_update_state_armed_home(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
+@pytest.mark.parametrize(
+    ("arming_level", "expected_state"),
+    [
+        ("Home", AlarmControlPanelState.ARMED_HOME),
+        ("Away", AlarmControlPanelState.ARMED_AWAY),
+    ],
+)
+async def test_update_state_armed(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    arming_level: str,
+    expected_state: str,
 ) -> None:
-    """Test update when alarm is armed home."""
-    mock_concord232_client.list_partitions.return_value = [{"arming_level": "Home"}]
+    """Test update when alarm is armed."""
+    mock_concord232_client.list_partitions.return_value = [{"arming_level": arming_level}]
     mock_concord232_client.partitions = (
         mock_concord232_client.list_partitions.return_value
     )
@@ -232,30 +242,7 @@ async def test_update_state_armed_home(
     await hass.async_block_till_done()
 
     state = hass.states.get("alarm_control_panel.test_alarm")
-    assert state.state == AlarmControlPanelState.ARMED_HOME
-
-
-async def test_update_state_armed_away(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test update when alarm is armed away."""
-    mock_concord232_client.list_partitions.return_value = [{"arming_level": "Away"}]
-    mock_concord232_client.partitions = (
-        mock_concord232_client.list_partitions.return_value
-    )
-    mock_concord232_client.list_zones.return_value = [
-        {"number": 1, "name": "Zone 1", "state": "Normal"},
-    ]
-
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    # Trigger update
-    await async_update_entity(hass, "alarm_control_panel.test_alarm")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("alarm_control_panel.test_alarm")
-    assert state.state == AlarmControlPanelState.ARMED_AWAY
+    assert state.state == expected_state
 
 
 async def test_update_connection_error(
