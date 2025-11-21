@@ -1,17 +1,15 @@
 """Constants for the Hisense AC Plugin integration."""
-from typing import Final, Dict, Any, NamedTuple
+
 from dataclasses import dataclass
+from typing import NamedTuple
+
 from homeassistant.components.climate import ClimateEntityFeature, HVACMode
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     SWING_OFF,
     SWING_VERTICAL,
-    SWING_HORIZONTAL,
-    SWING_BOTH,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform
 
 DOMAIN = "hisense_connectlife"
 DOMAINW = "hisense_we_plugin"
@@ -39,7 +37,9 @@ WEBSOCKET_RECONNECT_INTERVAL = 30  # seconds
 # API Endpoints
 API_DEVICE_LIST = "/clife-svc/pu/get_device_status_list"
 API_GET_PROPERTY_LTST = "/clife-svc/get_property_list"  # Get device property list
-API_QUERY_STATIC_DATA = "/clife-svc/pu/query_static_data"  # Get device property list using puId
+API_QUERY_STATIC_DATA = (
+    "/clife-svc/pu/query_static_data"  # Get device property list using puId
+)
 API_DEVICE_CONTROL = "/device/pu/property/set"
 API_SELF_CHECK = "/basic/self_check/info"  # Get fault information
 API_GET_HOUR_POWER = "/clife-svc/pu/get_hour_power"  # Get power consumption information
@@ -58,12 +58,16 @@ MIN_TEMP = 16
 MAX_TEMP = 30
 MIN_TEMP_WATER = 16
 MAX_TEMP_WATER = 30
+
+
 # Device Types
 class DeviceType(NamedTuple):
     """Device type definition."""
+
     type_code: str
     feature_code: str
     description: str
+
 
 # Known device types
 DEVICE_TYPES = {
@@ -74,9 +78,11 @@ DEVICE_TYPES = {
     # Add more device types here as needed
 }
 
+
 # Status Keys
 class StatusKey:
     """Status keys for device properties."""
+
     POWER = "t_power"
     MODE = "t_work_mode"  # Changed from t_mode to t_work_mode
     FAN_SPEED = "t_fan_speed"
@@ -174,7 +180,7 @@ MODE_FAN_ONLY = "fan_only"
 MODE_HEAT = "heat"
 MODE_ECO = "eco"
 MODE_BOOST = "boost"
-OPERATION_MODE_ECO  = "eco"
+OPERATION_MODE_ECO = "eco"
 OPERATION_MODE_VACATION = "vacation"
 # Fan Modes
 FAN_AUTO = "auto"
@@ -186,15 +192,19 @@ FAN_HIGH = "high"
 FAN_ULTRA_HIGH = "ultra_high"
 SFAN_ULTRA_HIGH = "medium_high"
 
+
 # Message Types
 class MessageType:
     """Message type constants."""
+
     DEVICE_STATUS = "status_devicestatus"
     DEVICE_NOTIFY = "device_to_app_notify"
+
 
 # AC Types
 class ACType:
     """AC type constants."""
+
     SPLIT_AC = "split_ac"
     WINDOW_AC = "window_ac"
     PORTABLE_AC = "portable_ac"
@@ -203,9 +213,11 @@ class ACType:
     DUCKED_TYPE_AC = "ducked_type_ac"
     DHW = "dhw"
 
+
 @dataclass
 class DeviceConfiguration:
     """Device configuration class."""
+
     min_temp: float = DEFAULT_MIN_TEMP
     max_temp: float = DEFAULT_MAX_TEMP
     target_temp_step: float = 1.0
