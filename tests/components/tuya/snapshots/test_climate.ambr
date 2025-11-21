@@ -50,7 +50,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.0,
-      'fan_mode': 1,
+      'fan_mode': None,
       'fan_modes': list([
         '1',
         '2',
@@ -419,7 +419,7 @@
 # name: test_platform_setup_and_discovery[climate.el_termostato_de_la_cocina-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 4.5,
+      'current_temperature': 45.0,
       'friendly_name': 'El termostato de la cocina',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -922,7 +922,7 @@
       ]),
       'max_temp': 40.0,
       'min_temp': 5.0,
-      'preset_mode': 'hold',
+      'preset_mode': None,
       'preset_modes': list([
         'holiday',
       ]),
@@ -1134,7 +1134,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 24.0,
-      'fan_mode': 2,
+      'fan_mode': None,
       'fan_modes': list([
         '1',
         '2',
