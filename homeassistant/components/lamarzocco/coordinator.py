@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from asyncio import Task
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
