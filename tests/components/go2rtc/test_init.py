@@ -3,8 +3,9 @@
 from collections.abc import Awaitable, Callable
 import logging
 from typing import NamedTuple
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from aiohttp import UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
@@ -38,11 +39,13 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_UNIX_SOCKET,
     RECOMMENDED_VERSION,
 )
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
+from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
@@ -215,7 +218,9 @@ async def test_setup_go_binary(
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
 
     def after_setup() -> None:
-        server.assert_called_once_with(hass, "/usr/bin/go2rtc", enable_ui=ui_enabled)
+        server.assert_called_once_with(
+            hass, "/usr/bin/go2rtc", ANY, enable_ui=ui_enabled
+        )
         server_start.assert_called_once()
 
     await _test_setup_and_signaling(
@@ -905,3 +910,53 @@ async def test_stream_orientation_with_generic_camera(
             rest_client,
             "ffmpeg:https://test.stream/video.m3u8#video=h264#audio=copy#raw=-vf vflip",
         )
+
+
+@pytest.mark.usefixtures(
+    "mock_get_binary",
+    "mock_is_docker_env",
+    "mock_go2rtc_entry",
+    "rest_client",
+    "server",
+)
+async def test_unix_socket_connection(hass: HomeAssistant) -> None:
+    """Test Unix socket is used for HA-managed go2rtc instances."""
+    config = {DOMAIN: {}}
+
+    with patch("homeassistant.components.go2rtc.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Verify ClientSession was created with UnixConnector
+        mock_session_cls.assert_called_once()
+        call_kwargs = mock_session_cls.call_args[1]
+        assert "connector" in call_kwargs
+        connector = call_kwargs["connector"]
+        assert isinstance(connector, UnixConnector)
+        assert connector.path == HA_MANAGED_UNIX_SOCKET
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        mock_session.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("rest_client", "server")
+async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> None:
+    """Test Unix socket is not used for custom go2rtc instances."""
+    config = {DOMAIN: {CONF_URL: "http://localhost:1984/"}}
+
+    with patch(
+        "homeassistant.components.go2rtc.async_get_clientsession"
+    ) as mock_get_session:
+        mock_session = AsyncMock()
+        mock_get_session.return_value = mock_session
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Verify standard clientsession was used, not UnixConnector
+        mock_get_session.assert_called_once_with(hass)

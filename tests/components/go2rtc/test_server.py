@@ -23,9 +23,15 @@ def enable_ui() -> bool:
 
 
 @pytest.fixture
-def server(hass: HomeAssistant, enable_ui: bool) -> Server:
+def mock_session() -> AsyncMock:
+    """Fixture to provide a mock ClientSession."""
+    return AsyncMock()
+
+
+@pytest.fixture
+def server(hass: HomeAssistant, mock_session: AsyncMock, enable_ui: bool) -> Server:
     """Fixture to initialize the Server."""
-    return Server(hass, binary=TEST_BINARY, enable_ui=enable_ui)
+    return Server(hass, binary=TEST_BINARY, session=mock_session, enable_ui=enable_ui)
 
 
 @pytest.fixture
