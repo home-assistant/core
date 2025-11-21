@@ -404,10 +404,10 @@ class StateVacuumEntity(
             data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         if VacuumEntityFeature.CLEANING_MODE in supported_features:
-            data[ATTR_CLEANING_MODE_LIST] = self.cleaning_modes
+            data[ATTR_CLEANING_MODE_LIST] = self.cleaning_modes_list
 
         if VacuumEntityFeature.WATER_LEVEL in supported_features:
-            data[ATTR_WATER_LEVEL_LIST] = self.water_levels
+            data[ATTR_WATER_LEVEL_LIST] = self.water_level_list
 
         return data if data else None
 
@@ -427,7 +427,7 @@ class StateVacuumEntity(
         return self._attr_cleaning_mode
 
     @cached_property
-    def cleaning_modes(self) -> list[str]:
+    def cleaning_modes_list(self) -> list[str]:
         """Get the list of available cleaning modes of the vacuum cleaner."""
         return self._attr_cleaning_modes_list
 
@@ -437,12 +437,12 @@ class StateVacuumEntity(
         return self._attr_water_level
 
     @cached_property
-    def water_levels(self) -> list[str]:
+    def water_level_list(self) -> list[str]:
         """Get the list of available water levels of the vacuum cleaner."""
         return self._attr_water_level_list
 
     @cached_property
-    def dust_bag_replacement_required(self) -> bool:
+    def is_dock_empty_required(self) -> bool:
         """Required base dust collector replacement"""
         if self._attr_empty_required:
             return True
