@@ -213,7 +213,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.0
+aioautomower==2.7.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -426,7 +426,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==87
+aiounifi==88
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -545,7 +545,7 @@ asusrouter==1.21.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.45.0
+async-upnp-client==0.46.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1062,7 +1062,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.2.1
+go2rtc-client==0.3.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1201,7 +1201,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251105.0
+home-assistant-frontend==20251105.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.11.7
@@ -1618,7 +1618,7 @@ odp-amsterdam==6.1.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.5.2
+ohme==1.6.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -1630,7 +1630,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.16
+onedrive-personal-sdk==0.0.17
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -2087,7 +2087,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.1.0
+pyicloud==2.2.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
@@ -2405,7 +2405,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.3.3
+pysmartthings==3.3.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2456,7 +2456,7 @@ pythinkingcleaner==0.0.3
 python-MotionMount==2.3.0
 
 # homeassistant.components.awair
-python-awair==0.2.4
+python-awair==0.2.5
 
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
@@ -3036,7 +3036,7 @@ total-connect-client==2025.5
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.4
+tplink-omada-client==1.5.3
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3084,7 +3084,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.37
+universal-silabs-flasher==0.1.2
 
 # homeassistant.components.upb
 upb-lib==0.6.1

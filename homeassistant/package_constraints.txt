@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.45.0
+async-upnp-client==0.46.0
 atomicwrites-homeassistant==1.4.1
 attrs==25.4.0
 audioop-lts==0.2.1
@@ -33,13 +33,13 @@ cryptography==46.0.2
 dbus-fast==2.44.5
 file-read-backwards==2.0.0
 fnv-hash-fast==1.6.0
-go2rtc-client==0.2.1
+go2rtc-client==0.3.0
 ha-ffmpeg==3.2.2
 habluetooth==5.7.0
 hass-nabucasa==1.5.1
 hassil==3.4.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20251105.0
+home-assistant-frontend==20251105.1
 home-assistant-intents==2025.11.7
 httpx==0.28.1
 ifaddr==0.2.0
