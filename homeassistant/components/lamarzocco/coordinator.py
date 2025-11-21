@@ -9,7 +9,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pylamarzocco import LaMarzoccoCloudClient, LaMarzoccoMachine
+from pylamarzocco import (
+    LaMarzoccoBluetoothClient,
+    LaMarzoccoCloudClient,
+    LaMarzoccoMachine,
+)
 from pylamarzocco.exceptions import (
     AuthFail,
     BluetoothConnectionFailed,
@@ -51,12 +55,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
     websocket_terminated = True
+    actual_update_success = False
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
         device: LaMarzoccoMachine,
+        bluetooth_client: LaMarzoccoBluetoothClient | None = None,
         cloud_client: LaMarzoccoCloudClient | None = None,
     ) -> None:
         """Initialize coordinator."""
@@ -69,6 +75,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
         self.cloud_client = cloud_client
+        self.bluetooth_client = bluetooth_client
 
     async def __handle_internal_update(
         self, func: Callable[[], Coroutine[Any, Any, None]]
@@ -78,22 +85,27 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             await func()
         except AuthFail as ex:
             _LOGGER.debug("Authentication failed", exc_info=True)
+            self.actual_update_success = False
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
+            self.actual_update_success = False
             # if no bluetooth coordinator, this is a fatal error
             # otherwise, bluetooth may still work
-            if self.config_entry.runtime_data.bluetooth_coordinator is None:
+            if self.bluetooth_client is None:
                 raise UpdateFailed(
                     translation_domain=DOMAIN, translation_key="api_error"
                 ) from ex
         except BluetoothConnectionFailed as err:
+            self.actual_update_success = False
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="bluetooth_connection_failed",
             ) from err
+        else:
+            self.actual_update_success = True
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
     async def _async_setup(self) -> None:

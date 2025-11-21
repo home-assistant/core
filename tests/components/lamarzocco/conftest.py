@@ -132,6 +132,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
             "schedule": machine_mock.schedule.to_dict(),
             "settings": machine_mock.settings.to_dict(),
         }
+        machine_mock.websocket.disconnect = AsyncMock()
         yield machine_mock
 
 
@@ -172,30 +173,30 @@ def mock_ble_device_from_address(
 
 
 @pytest.fixture
-def mock_lamarzocco_bluetooth(device_fixture: ModelName) -> Generator[MagicMock]:
+def mock_lamarzocco_bluetooth(mock_lamarzocco: MagicMock) -> MagicMock:
     """Return a mocked LM client with Bluetooth config."""
 
-    if device_fixture == ModelName.LINEA_MICRA:
+    if mock_lamarzocco.dashboard.model_name == ModelName.LINEA_MICRA:
         config = load_json_object_fixture("config_micra_bluetooth.json", DOMAIN)
     else:
         config = load_json_object_fixture("config_gs3_bluetooth.json", DOMAIN)
 
-    with (
-        patch(
-            "homeassistant.components.lamarzocco.LaMarzoccoMachine",
-            autospec=True,
-        ) as machine_mock_init,
-    ):
-        machine_mock = machine_mock_init.return_value
-
-        machine_mock.serial_number = SERIAL_DICT[device_fixture]
-        machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
-        machine_mock.dashboard.model_name = device_fixture
-        machine_mock.to_dict.return_value = {
-            "serial_number": machine_mock.serial_number,
-            "dashboard": machine_mock.dashboard.to_dict(),
-        }
-        yield machine_mock
+    mock_lamarzocco.dashboard = ThingDashboardConfig.from_dict(config)
+    mock_lamarzocco.dashboard.model_name = mock_lamarzocco.dashboard.model_name
+    mock_lamarzocco.schedule = ThingSchedulingSettings(
+        serial_number=mock_lamarzocco.serial_number
+    )
+    mock_lamarzocco.settings = ThingSettings(
+        serial_number=mock_lamarzocco.serial_number
+    )
+    mock_lamarzocco.statistics = ThingStatistics(
+        serial_number=mock_lamarzocco.serial_number
+    )
+    mock_lamarzocco.to_dict.return_value = {
+        "serial_number": mock_lamarzocco.serial_number,
+        "dashboard": mock_lamarzocco.dashboard.to_dict(),
+    }
+    return mock_lamarzocco
 
 
 @pytest.fixture

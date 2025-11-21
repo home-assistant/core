@@ -49,6 +49,12 @@ class LaMarzoccoBaseEntity(
         super().__init__(coordinator)
         device = coordinator.device
         self._attr_unique_id = f"{device.serial_number}_{key}"
+        sw_version = (
+            device.settings.firmwares[FirmwareType.MACHINE].build_version
+            if device.settings is not None
+            and FirmwareType.MACHINE in device.settings.firmwares
+            else None
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial_number)},
             name=device.dashboard.name,
@@ -56,7 +62,7 @@ class LaMarzoccoBaseEntity(
             model=device.dashboard.model_name.value,
             model_id=device.dashboard.model_code.value,
             serial_number=device.serial_number,
-            sw_version=device.settings.firmwares[FirmwareType.MACHINE].build_version,
+            sw_version=sw_version,
         )
         connections: set[tuple[str, str]] = set()
         if coordinator.config_entry.data.get(CONF_ADDRESS):
@@ -81,8 +87,12 @@ class LaMarzoccoBaseEntity(
             if WidgetType.CM_MACHINE_STATUS in self.coordinator.device.dashboard.config
             else MachineState.OFF
         )
-        return super().available and not (
-            self._unavailable_when_machine_off and machine_state is MachineState.OFF
+        return (
+            super().available
+            and not (
+                self._unavailable_when_machine_off and machine_state is MachineState.OFF
+            )
+            and self.coordinator.actual_update_success
         )
 
 

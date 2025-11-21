@@ -23,6 +23,35 @@ from . import async_init_integration, get_bluetooth_service_info
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+# Entities with bt_offline_mode=True
+BLUETOOTH_ONLY_BASE_ENTITIES = [
+    ("binary_sensor", "water_tank_empty"),
+    ("switch", ""),
+    ("switch", "steam_boiler"),
+    ("switch", "smart_standby_enabled"),
+    ("number", "smart_standby_time"),
+]
+
+MICRA_BT_OFFLINE_ENTITIES = [
+    *BLUETOOTH_ONLY_BASE_ENTITIES,
+    ("select", "steam_level"),
+]
+GS3_BT_OFFLINE_ENTITIES = [
+    *BLUETOOTH_ONLY_BASE_ENTITIES,
+    ("number", "coffee_target_temperature"),
+]
+
+
+def build_entitiy_id(
+    platform: str,
+    serial_number: str,
+    entity_suffix: str,
+) -> str:
+    """Build full entity ID."""
+    if entity_suffix:
+        return f"{platform}.{serial_number}_{entity_suffix}"
+    return f"{platform}.{serial_number}"
+
 
 async def test_bluetooth_coordinator_setup(
     hass: HomeAssistant,
@@ -96,31 +125,31 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     assert mock_lamarzocco.get_dashboard_from_bluetooth.called
 
 
+@pytest.mark.parametrize(
+    ("device_fixture", "entities"),
+    [
+        (ModelName.LINEA_MICRA, MICRA_BT_OFFLINE_ENTITIES),
+        (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
+    ],
+)
 async def test_bt_offline_mode_entity_available_when_cloud_fails(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    device_fixture: ModelName,
+    entities: list[tuple[str, str]],
 ) -> None:
     """Test entities with bt_offline_mode=True remain available when cloud coordinators fail."""
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
-    # Entities with bt_offline_mode=True
-    bt_offline_entities = [
-        f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty",
-        f"switch.{mock_lamarzocco.serial_number}",  # main switch
-        f"switch.{mock_lamarzocco.serial_number}_steam_boiler",
-        f"switch.{mock_lamarzocco.serial_number}_smart_standby",
-        f"select.{mock_lamarzocco.serial_number}_steam_level",
-        f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature",
-        f"number.{mock_lamarzocco.serial_number}_smart_standby_time",
-    ]
-
     # Check all entities are initially available
-    for entity_id in bt_offline_entities:
-        state = hass.states.get(entity_id)
-        if state:  # Entity may not exist if not supported by model
-            assert state.state != STATE_UNAVAILABLE
+    for entity_id in entities:
+        state = hass.states.get(
+            build_entitiy_id(entity_id[0], mock_lamarzocco.serial_number, entity_id[1])
+        )
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
     # Simulate cloud coordinator failures
     mock_lamarzocco.websocket.connected = False
@@ -132,10 +161,12 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
     await hass.async_block_till_done()
 
     # All bt_offline_mode entities should still be available
-    for entity_id in bt_offline_entities:
-        state = hass.states.get(entity_id)
-        if state:  # Entity may not exist if not supported by model
-            assert state.state != STATE_UNAVAILABLE
+    for entity_id in entities:
+        state = hass.states.get(
+            build_entitiy_id(entity_id[0], mock_lamarzocco.serial_number, entity_id[1])
+        )
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
@@ -256,6 +287,38 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     await hass.async_block_till_done()
 
     # Verify entity state was updated
+    state = hass.states.get(main_switch)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_setup_through_bluetooth_only(
+    hass: HomeAssistant,
+    mock_config_entry_bluetooth: MockConfigEntry,
+    mock_lamarzocco_bluetooth: MagicMock,
+    mock_ble_device_from_address: MagicMock,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test we can setup without a cloud connection."""
+
+    # Simulate cloud connection failures
+    mock_cloud_client.async_get_access_token.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco_bluetooth.get_dashboard.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco_bluetooth.get_coffee_and_flush_counter.side_effect = (
+        RequestNotSuccessful("")
+    )
+    mock_lamarzocco_bluetooth.get_schedule.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco_bluetooth.get_settings.side_effect = RequestNotSuccessful("")
+
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+    assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+
+    # Verify Bluetooth coordinator was created
+    assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is not None
+    assert mock_lamarzocco_bluetooth.get_model_info_from_bluetooth.called
+
+    # Verify an entity works
+    main_switch = f"switch.{mock_lamarzocco_bluetooth.serial_number}"
     state = hass.states.get(main_switch)
     assert state
     assert state.state == STATE_ON
