@@ -90,13 +90,25 @@
     "flow_rate_alarm": {
       "value": false
     },
-    "alarm_relay": {
+    "relay_alarm": {
       "value": true
     },
     "relay_aux1": {
       "value": false
     },
     "relay_aux2": {
+      "value": false
+    },
+    "relay_aux3": {
+      "value": false
+    },
+    "alarm_ofa_ph": {
+      "value": false
+    },
+    "alarm_ofa_orp": {
+      "value": false
+    },
+    "alarm_ofa_cl": {
       "value": false
     }
   },
