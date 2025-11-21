@@ -21,13 +21,5 @@
         "title": "Marstek Energy Storage"
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Configure Marstek integration options",
-        "title": "Marstek Options"
-      }
-    }
   }
 }

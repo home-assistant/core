@@ -44,6 +44,8 @@ def mock_socket():
         mock_instance.sendto = MagicMock()
         mock_instance.close = MagicMock()
         mock_instance.getsockname = MagicMock(return_value=("0.0.0.0", 30000))
+        # Make socket appear non-blocking for asyncio
+        mock_instance.getblocking = MagicMock(return_value=False)
         yield mock_instance
 
 

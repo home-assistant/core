@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
@@ -42,19 +42,16 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_index = int(user_input["device"])
             device = self.discovered_devices[device_index]
 
-            # Check if device is already configured (use IP as unique identifier)
-            unique_id = device["ip"] or device["mac"]
-            _LOGGER.info(
-                "Check device uniqueness: IP=%s, MAC=%s, unique_id=%s",
-                device["ip"],
-                device["mac"],
-                unique_id,
-            )
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            # Check if device is already configured using host/mac
+            self._async_abort_entries_match({CONF_HOST: device["ip"]})
+            if device.get("mac"):
+                self._async_abort_entries_match({CONF_MAC: device["mac"]})
+                # Use MAC address as unique_id if available
+                await self.async_set_unique_id(format_mac(device["mac"]))
+                self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=f"Marstek {device['device_type']} v{device['version']} ({device['ip']})",
+                title=f"Marstek {device['device_type']} ({device['ip']})",
                 data={
                     CONF_HOST: device["ip"],
                     CONF_MAC: device["mac"],
@@ -159,23 +156,3 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise
 
         return []
-
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> config_entries.ConfigFlowResult:
-        """Handle zeroconf discovery."""
-        # This would be used if we implement mDNS discovery in the future
-        return await self.async_step_user()
-
-
-class MarstekOptionsFlow(config_entries.OptionsFlow):
-    """Handle Marstek options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Manage the options."""
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({}),
-        )

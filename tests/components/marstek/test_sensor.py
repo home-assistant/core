@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+import json
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.marstek.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import create_mock_udp_client
+from . import MOCK_ES_MODE_RESPONSE, create_mock_udp_client
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -23,11 +24,22 @@ async def test_sensor_setup(
     mock_config_entry.add_to_hass(hass)
     mock_client = create_mock_udp_client()
 
-    with patch("pymarstek.MarstekUDPClient", return_value=mock_client):
-        # Setup
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN]["udp_client"] = mock_client
+    # Override send_request to return immediately
+    async def mock_send_request(message, *args, **kwargs):
+        try:
+            msg = json.loads(message)
+            if msg.get("method") == "ES.GetMode":
+                return MOCK_ES_MODE_RESPONSE
+        except (json.JSONDecodeError, KeyError, AttributeError):
+            pass
+        return MOCK_ES_MODE_RESPONSE
 
+    mock_client.send_request = AsyncMock(side_effect=mock_send_request)
+    mock_client._listen_task = None
+
+    with patch(
+        "homeassistant.components.marstek.MarstekUDPClient", return_value=mock_client
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -67,10 +79,22 @@ async def test_coordinator_creates_sensors(
     mock_config_entry.add_to_hass(hass)
     mock_client = create_mock_udp_client()
 
-    with patch("pymarstek.MarstekUDPClient", return_value=mock_client):
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN]["udp_client"] = mock_client
+    # Override send_request to return immediately
+    async def mock_send_request(message, *args, **kwargs):
+        try:
+            msg = json.loads(message)
+            if msg.get("method") == "ES.GetMode":
+                return MOCK_ES_MODE_RESPONSE
+        except (json.JSONDecodeError, KeyError, AttributeError):
+            pass
+        return MOCK_ES_MODE_RESPONSE
 
+    mock_client.send_request = AsyncMock(side_effect=mock_send_request)
+    mock_client._listen_task = None
+
+    with patch(
+        "homeassistant.components.marstek.MarstekUDPClient", return_value=mock_client
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -92,13 +116,24 @@ async def test_polling_paused(
     mock_config_entry.add_to_hass(hass)
     mock_client = create_mock_udp_client()
 
+    # Override send_request to return immediately
+    async def mock_send_request(message, *args, **kwargs):
+        try:
+            msg = json.loads(message)
+            if msg.get("method") == "ES.GetMode":
+                return MOCK_ES_MODE_RESPONSE
+        except (json.JSONDecodeError, KeyError, AttributeError):
+            pass
+        return MOCK_ES_MODE_RESPONSE
+
+    mock_client.send_request = AsyncMock(side_effect=mock_send_request)
+    mock_client._listen_task = None
     # Setup mock to return paused status
     mock_client.is_polling_paused.return_value = True
 
-    with patch("pymarstek.MarstekUDPClient", return_value=mock_client):
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN]["udp_client"] = mock_client
-
+    with patch(
+        "homeassistant.components.marstek.MarstekUDPClient", return_value=mock_client
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

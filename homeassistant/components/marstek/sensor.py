@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import MarstekConfigEntry, MarstekRuntimeData
+from . import MarstekConfigEntry
 from .const import DOMAIN
 from .coordinator import MarstekDataUpdateCoordinator
 
@@ -275,11 +275,7 @@ async def async_setup_entry(
     device_ip = config_entry.data["host"]
     _LOGGER.info("Setting up Marstek sensors: %s", device_ip)
 
-    runtime_data = config_entry.runtime_data
-    if runtime_data is None:
-        runtime_data = MarstekRuntimeData(hass.data[DOMAIN]["udp_client"])
-        config_entry.runtime_data = runtime_data
-    udp_client = runtime_data.udp_client
+    udp_client = config_entry.runtime_data
 
     device_info = {
         "ip": config_entry.data["host"],
