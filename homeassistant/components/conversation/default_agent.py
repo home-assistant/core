@@ -38,9 +38,11 @@ from home_assistant_intents import (
     ErrorKey,
     FuzzyConfig,
     FuzzyLanguageResponses,
+    LanguageScores,
     get_fuzzy_config,
     get_fuzzy_language,
     get_intents,
+    get_language_scores,
     get_languages,
 )
 import yaml
@@ -59,6 +61,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -74,7 +77,12 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent_manager import get_agent_manager
 from .chat_log import AssistantContent, ChatLog
-from .const import DOMAIN, ConversationEntityFeature
+from .const import (
+    DOMAIN,
+    METADATA_CUSTOM_FILE,
+    METADATA_CUSTOM_SENTENCE,
+    ConversationEntityFeature,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
@@ -88,8 +96,6 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
-METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
-METADATA_CUSTOM_FILE = "hass_custom_file"
 METADATA_FUZZY_MATCH = "hass_fuzzy_match"
 
 ERROR_SENTINEL = object()
@@ -199,10 +205,9 @@ class IntentCache:
 async def async_setup_default_agent(
     hass: HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
-    config_intents: dict[str, Any],
 ) -> None:
     """Set up entity registry listener for the default agent."""
-    agent = DefaultAgent(hass, config_intents)
+    agent = DefaultAgent(hass)
     await entity_component.async_add_entities([agent])
     await get_agent_manager(hass).async_setup_default_agent(agent)
 
@@ -227,14 +232,14 @@ class DefaultAgent(ConversationEntity):
     _attr_name = "Home Assistant"
     _attr_supported_features = ConversationEntityFeature.CONTROL
 
-    def __init__(self, hass: HomeAssistant, config_intents: dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents | object] = {}
         self._load_intents_lock = asyncio.Lock()
 
-        # intent -> [sentences]
-        self._config_intents: dict[str, Any] = config_intents
+        # Intents from common conversation config
+        self._config_intents: dict[str, Any] = {}
 
         # Sentences that will trigger a callback (skipping intent recognition)
         self._triggers_details: list[TriggerDetails] = []
@@ -342,6 +347,81 @@ class DefaultAgent(ConversationEntity):
         )
 
         return result
+
+    async def async_debug_recognize(
+        self, user_input: ConversationInput
+    ) -> dict[str, Any] | None:
+        """Debug recognize from user input."""
+        result_dict: dict[str, Any] | None = None
+
+        if trigger_result := await self.async_recognize_sentence_trigger(user_input):
+            result_dict = {
+                # Matched a user-defined sentence trigger.
+                # We can't provide the response here without executing the
+                # trigger.
+                "match": True,
+                "source": "trigger",
+                "sentence_template": trigger_result.sentence_template or "",
+            }
+        elif intent_result := await self.async_recognize_intent(user_input):
+            successful_match = not intent_result.unmatched_entities
+            result_dict = {
+                # Name of the matching intent (or the closest)
+                "intent": {
+                    "name": intent_result.intent.name,
+                },
+                # Slot values that would be received by the intent
+                "slots": {  # direct access to values
+                    entity_key: entity.text or entity.value
+                    for entity_key, entity in intent_result.entities.items()
+                },
+                # Extra slot details, such as the originally matched text
+                "details": {
+                    entity_key: {
+                        "name": entity.name,
+                        "value": entity.value,
+                        "text": entity.text,
+                    }
+                    for entity_key, entity in intent_result.entities.items()
+                },
+                # Entities/areas/etc. that would be targeted
+                "targets": {},
+                # True if match was successful
+                "match": successful_match,
+                # Text of the sentence template that matched (or was closest)
+                "sentence_template": "",
+                # When match is incomplete, this will contain the best slot guesses
+                "unmatched_slots": _get_unmatched_slots(intent_result),
+                # True if match was not exact
+                "fuzzy_match": False,
+            }
+
+            if successful_match:
+                result_dict["targets"] = {
+                    state.entity_id: {"matched": is_matched}
+                    for state, is_matched in _get_debug_targets(
+                        self.hass, intent_result
+                    )
+                }
+
+            if intent_result.intent_sentence is not None:
+                result_dict["sentence_template"] = intent_result.intent_sentence.text
+
+            if intent_result.intent_metadata:
+                # Inspect metadata to determine if this matched a custom sentence
+                if intent_result.intent_metadata.get(METADATA_CUSTOM_SENTENCE):
+                    result_dict["source"] = "custom"
+                    result_dict["file"] = intent_result.intent_metadata.get(
+                        METADATA_CUSTOM_FILE
+                    )
+                else:
+                    result_dict["source"] = "builtin"
+
+                result_dict["fuzzy_match"] = intent_result.intent_metadata.get(
+                    METADATA_FUZZY_MATCH, False
+                )
+
+        return result_dict
 
     async def _async_handle_message(
         self,
@@ -690,7 +770,16 @@ class DefaultAgent(ConversationEntity):
         if lang_intents.fuzzy_matcher is None:
             return None
 
-        fuzzy_result = lang_intents.fuzzy_matcher.match(user_input.text)
+        context_area: str | None = None
+        satellite_area, _ = self._get_satellite_area_and_device(
+            user_input.satellite_id, user_input.device_id
+        )
+        if satellite_area:
+            context_area = satellite_area.name
+
+        fuzzy_result = lang_intents.fuzzy_matcher.match(
+            user_input.text, context_area=context_area
+        )
         if fuzzy_result is None:
             return None
 
@@ -948,6 +1037,14 @@ class DefaultAgent(ConversationEntity):
         # Intents have changed, so we must clear the cache
         self._intent_cache.clear()
 
+    @callback
+    def update_config_intents(self, intents: dict[str, Any]) -> None:
+        """Update config intents."""
+        self._config_intents = intents
+
+        # Intents have changed, so we must clear the cache
+        self._intent_cache.clear()
+
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
@@ -1072,33 +1169,10 @@ class DefaultAgent(ConversationEntity):
                     custom_sentences_path,
                 )
 
-        # Load sentences from HA config for default language only
-        if self._config_intents and (
-            self.hass.config.language in (language, language_variant)
-        ):
-            hass_config_path = self.hass.config.path()
-            merge_dict(
-                intents_dict,
-                {
-                    "intents": {
-                        intent_name: {
-                            "data": [
-                                {
-                                    "sentences": sentences,
-                                    "metadata": {
-                                        METADATA_CUSTOM_SENTENCE: True,
-                                        METADATA_CUSTOM_FILE: hass_config_path,
-                                    },
-                                }
-                            ]
-                        }
-                        for intent_name, sentences in self._config_intents.items()
-                    }
-                },
-            )
-            _LOGGER.debug(
-                "Loaded intents from configuration.yaml",
-            )
+        merge_dict(
+            intents_dict,
+            self._config_intents,
+        )
 
         if not intents_dict:
             return None
@@ -1162,12 +1236,15 @@ class DefaultAgent(ConversationEntity):
             intent_slot_list_names=self._fuzzy_config.slot_list_names,
             slot_combinations={
                 intent_name: {
-                    combo_key: [
-                        SlotCombinationInfo(
-                            name_domains=(set(name_domains) if name_domains else None)
-                        )
-                    ]
-                    for combo_key, name_domains in intent_combos.items()
+                    combo_key: SlotCombinationInfo(
+                        context_area=combo_info.context_area,
+                        name_domains=(
+                            set(combo_info.name_domains)
+                            if combo_info.name_domains
+                            else None
+                        ),
+                    )
+                    for combo_key, combo_info in intent_combos.items()
                 }
                 for intent_name, intent_combos in self._fuzzy_config.slot_combinations.items()
             },
@@ -1529,6 +1606,10 @@ class DefaultAgent(ConversationEntity):
             return None
         return response
 
+    async def async_get_language_scores(self) -> dict[str, LanguageScores]:
+        """Get support scores per language."""
+        return await self.hass.async_add_executor_job(get_language_scores)
+
 
 def _make_error_result(
     language: str,
@@ -1725,3 +1806,75 @@ def _collect_list_references(expression: Expression, list_names: set[str]) -> No
     elif isinstance(expression, ListReference):
         # {list}
         list_names.add(expression.slot_name)
+
+
+def _get_debug_targets(
+    hass: HomeAssistant,
+    result: RecognizeResult,
+) -> Iterable[tuple[State, bool]]:
+    """Yield state/is_matched pairs for a hassil recognition."""
+    entities = result.entities
+
+    name: str | None = None
+    area_name: str | None = None
+    domains: set[str] | None = None
+    device_classes: set[str] | None = None
+    state_names: set[str] | None = None
+
+    if "name" in entities:
+        name = str(entities["name"].value)
+
+    if "area" in entities:
+        area_name = str(entities["area"].value)
+
+    if "domain" in entities:
+        domains = set(cv.ensure_list(entities["domain"].value))
+
+    if "device_class" in entities:
+        device_classes = set(cv.ensure_list(entities["device_class"].value))
+
+    if "state" in entities:
+        # HassGetState only
+        state_names = set(cv.ensure_list(entities["state"].value))
+
+    if (
+        (name is None)
+        and (area_name is None)
+        and (not domains)
+        and (not device_classes)
+        and (not state_names)
+    ):
+        # Avoid "matching" all entities when there is no filter
+        return
+
+    states = intent.async_match_states(
+        hass,
+        name=name,
+        area_name=area_name,
+        domains=domains,
+        device_classes=device_classes,
+    )
+
+    for state in states:
+        # For queries, a target is "matched" based on its state
+        is_matched = (state_names is None) or (state.state in state_names)
+        yield state, is_matched
+
+
+def _get_unmatched_slots(
+    result: RecognizeResult,
+) -> dict[str, str | int | float]:
+    """Return a dict of unmatched text/range slot entities."""
+    unmatched_slots: dict[str, str | int | float] = {}
+    for entity in result.unmatched_entities_list:
+        if isinstance(entity, UnmatchedTextEntity):
+            if entity.text == MISSING_ENTITY:
+                # Don't report <missing> since these are just missing context
+                # slots.
+                continue
+
+            unmatched_slots[entity.name] = entity.text
+        elif isinstance(entity, UnmatchedRangeEntity):
+            unmatched_slots[entity.name] = entity.value
+
+    return unmatched_slots

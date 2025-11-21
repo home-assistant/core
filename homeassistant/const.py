@@ -3,17 +3,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import partial
 from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
-from .helpers.deprecation import (
-    DeprecatedConstantEnum,
-    EnumWithDeprecatedMembers,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
@@ -24,7 +16,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -488,13 +480,6 @@ class UnitOfReactivePower(StrEnum):
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
 
-_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
-    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-    "2025.9",
-)
-"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
-
-
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
@@ -614,6 +599,7 @@ class UnitOfFrequency(StrEnum):
 class UnitOfPressure(StrEnum):
     """Pressure units."""
 
+    MILLIPASCAL = "mPa"
     PA = "Pa"
     HPA = "hPa"
     KPA = "kPa"
@@ -665,6 +651,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
     LITERS_PER_SECOND = "L/s"
+    GALLONS_PER_HOUR = "gal/h"
     GALLONS_PER_MINUTE = "gal/min"
     MILLILITERS_PER_SECOND = "mL/s"
 
@@ -684,13 +671,6 @@ class UnitOfArea(StrEnum):
     HECTARES = "ha"
 
 
-_DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstantEnum(
-    UnitOfArea.SQUARE_METERS,
-    "2025.12",
-)
-"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
-
-
 # Mass units
 class UnitOfMass(StrEnum):
     """Mass units."""
@@ -704,35 +684,13 @@ class UnitOfMass(StrEnum):
     STONES = "st"
 
 
-class UnitOfConductivity(
-    StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
-    },
-):
+class UnitOfConductivity(StrEnum):
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
     MICROSIEMENS_PER_CM = "μS/cm"
     MILLISIEMENS_PER_CM = "mS/cm"
 
-    # Deprecated aliases
-    SIEMENS = "S/cm"
-    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "μS/cm"
-    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
-    MILLISIEMENS = "mS/cm"
-    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
-
-
-_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS_PER_CM,
-    "2025.11",
-)
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -1035,10 +993,3 @@ FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 # This is not a hard limit, but caches and other
 # data structures will be pre-allocated to this size
 MAX_EXPECTED_ENTITY_IDS: Final = 16384
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

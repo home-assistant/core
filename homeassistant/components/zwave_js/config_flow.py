@@ -124,6 +124,14 @@ RF_REGIONS = [
     "USA",
 ]
 
+# USB devices to ignore in serial port selection (non-Z-Wave devices)
+# Format: (manufacturer, description)
+IGNORED_USB_DEVICES = {
+    ("Nabu Casa", "SkyConnect v1.0"),
+    ("Nabu Casa", "Home Assistant Connect ZBT-1"),
+    ("Nabu Casa", "ZBT-2"),
+}
+
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
     """Return a schema for the manual step."""
@@ -155,6 +163,9 @@ def get_usb_ports() -> dict[str, str]:
     ports = list_ports.comports()
     port_descriptions = {}
     for port in ports:
+        if (port.manufacturer, port.description) in IGNORED_USB_DEVICES:
+            continue
+
         vid: str | None = None
         pid: str | None = None
         if port.vid is not None and port.pid is not None:
@@ -956,6 +967,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 }
             )
+            if self.restart_addon:
+                manager = get_addon_manager(self.hass)
+                await manager.async_stop_addon()
 
         self._abort_if_unique_id_configured(
             updates={
@@ -1524,10 +1538,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # And use the add-on
                 and existing_entry.data.get(CONF_USE_ADDON)
             ):
+                manager = get_addon_manager(self.hass)
                 await self._async_set_addon_config(
                     {CONF_ADDON_SOCKET: discovery_info.socket_path}
                 )
-                # Reloading will sync add-on options to config entry data
+                if self.restart_addon:
+                    await manager.async_stop_addon()
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={
+                        **existing_entry.data,
+                        CONF_SOCKET_PATH: discovery_info.socket_path,
+                    },
+                )
                 self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
                 return self.async_abort(reason="already_configured")
 

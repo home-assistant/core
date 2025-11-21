@@ -269,27 +269,36 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up climate device."""
+    """Set up climate entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        async_setup_rpc_entry(hass, config_entry, async_add_entities)
-        return
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
+
+
+@callback
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
     if coordinator.device.initialized:
-        async_setup_climate_entities(async_add_entities, coordinator)
+        _async_setup_block_climate_entities(async_add_entities, coordinator)
     else:
-        async_restore_climate_entities(
+        _async_restore_block_climate_entities(
             hass, config_entry, async_add_entities, coordinator
         )
 
 
 @callback
-def async_setup_climate_entities(
+def _async_setup_block_climate_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
-    """Set up online climate devices."""
+    """Set up online BLOCK climate devices."""
 
     device_block: Block | None = None
     sensor_block: Block | None = None
@@ -310,13 +319,13 @@ def async_setup_climate_entities(
 
 
 @callback
-def async_restore_climate_entities(
+def _async_restore_block_climate_entities(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
-    """Restore sleeping climate devices."""
+    """Restore sleeping BLOCK climate devices."""
 
     ent_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
@@ -332,7 +341,7 @@ def async_restore_climate_entities(
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -740,17 +749,13 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.call_rpc(
-            "Thermostat.SetConfig",
-            {"config": {"id": self._id, "target_C": kwargs[ATTR_TEMPERATURE]}},
+        await self.coordinator.device.climate_set_target_temperature(
+            self._id, kwargs[ATTR_TEMPERATURE]
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
-        await self.call_rpc(
-            "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
-        )
+        await self.coordinator.device.climate_set_hvac_mode(self._id, str(hvac_mode))
 
 
 class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):

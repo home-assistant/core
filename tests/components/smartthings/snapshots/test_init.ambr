@@ -653,6 +653,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_oven_0107x]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '199d7863-ad04-793d-176d-658f10062575',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-KS-OVEN-0107X',
+    'model_id': None,
+    'name': 'Kitchen oven',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AKS-WW-TP1-22-OVEN-1_40250221',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_range_0101x]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -994,6 +1025,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_wm_dw_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '7ff318f3-3772-524d-3c9f-72fcd26413ed',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_DW_TP1_21_COMMON',
+    'model_id': None,
+    'name': 'Dishwasher',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'DA_DW_TP1_21_COMMON_30250513',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_wm_sc_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1084,6 +1146,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_wd_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '3d39866c-7716-5259-44f0-fd7025efd85f',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_TP1_21_COMMON',
+    'model_id': None,
+    'name': 'Trockner',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'DA_WM_TP1_21_COMMON_30250508',
     'via_device_id': None,
   })
 # ---
@@ -1211,6 +1304,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_wm_wm_100002]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'C097276D-C8D4-0000-0000-000000000000',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP6X_WV60M9900AV',
+    'model_id': None,
+    'name': 'Washer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[ecobee_sensor]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1328,6 +1452,37 @@
     'model': None,
     'model_id': None,
     'name': 'Fake fan',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[gas_detector]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'd830b46f-f094-4560-b8c3-7690032fdb4c',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Gas Detector',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

@@ -56,6 +56,14 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         on_fn=lambda device: device.toggle_display(True),
         off_fn=lambda device: device.toggle_display(False),
     ),
+    VeSyncSwitchEntityDescription(
+        key="child_lock",
+        is_on=lambda device: device.state.child_lock,
+        exists_fn=(lambda device: rgetattr(device, "state.child_lock") is not None),
+        translation_key="child_lock",
+        on_fn=lambda device: device.toggle_child_lock(True),
+        off_fn=lambda device: device.toggle_child_lock(False),
+    ),
 )
 
 

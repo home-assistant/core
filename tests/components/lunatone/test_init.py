@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import BASE_URL, VERSION, setup_integration
+from . import BASE_URL, PRODUCT_NAME, VERSION, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -33,6 +33,7 @@ async def test_load_unload_config_entry(
     assert device_entry.manufacturer == "Lunatone"
     assert device_entry.sw_version == VERSION
     assert device_entry.configuration_url == BASE_URL
+    assert device_entry.model == PRODUCT_NAME
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
