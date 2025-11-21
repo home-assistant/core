@@ -77,19 +77,7 @@ jobs:
 
             # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
-
-            # Add additional pip wheel build constraints
-            echo "PIP_CONSTRAINT=build_constraints.txt"
           ) > .env_file
-
-      - name: Write pip wheel build constraints
-        run: |
-          (
-            # ninja 1.11.1.2 + 1.11.1.3 seem to be broken on at least armhf
-            # this caused the numpy builds to fail
-            # https://github.com/scikit-build/ninja-python-distributions/issues/274
-            echo "ninja==1.11.1.1"
-          ) > build_constraints.txt
 
       - name: Upload env_file
         uses: &actions-upload-artifact actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
@@ -97,13 +85,6 @@ jobs:
           name: env_file
           path: ./.env_file
           include-hidden-files: true
-          overwrite: true
-
-      - name: Upload build_constraints
-        uses: *actions-upload-artifact
-        with:
-          name: build_constraints
-          path: ./build_constraints.txt
           overwrite: true
 
       - name: Upload requirements_diff
@@ -138,13 +119,6 @@ jobs:
           - os: ubuntu-latest
           - arch: aarch64
             os: ubuntu-24.04-arm
-        exclude:
-          - abi: cp314
-            arch: armv7
-          - abi: cp314
-            arch: armhf
-          - abi: cp314
-            arch: i386
     steps:
       - *checkout
 
@@ -153,12 +127,6 @@ jobs:
         uses: &actions-download-artifact actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: env_file
-
-      - &download-build-constraints
-        name: Download build_constraints
-        uses: *actions-download-artifact
-        with:
-          name: build_constraints
 
       - &download-requirements-diff
         name: Download requirements_diff
@@ -199,7 +167,7 @@ jobs:
       - *checkout
 
       - *download-env-file
-      - *download-build-constraints
+
       - *download-requirements-diff
 
       - name: Download requirements_all_wheels
@@ -209,10 +177,6 @@ jobs:
 
       - name: Adjust build env
         run: |
-          if [ "${{ matrix.arch }}" = "i386" ]; then
-            echo "NPY_DISABLE_SVML=1" >> .env_file
-          fi
-
           # Do not pin numpy in wheels building
           sed -i "/numpy/d" homeassistant/package_constraints.txt
           # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine

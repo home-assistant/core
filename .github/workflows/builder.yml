@@ -88,10 +88,6 @@ jobs:
       fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
-        exclude:
-          - arch: armv7
-          - arch: armhf
-          - arch: i386
     steps:
       - name: Checkout the repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0

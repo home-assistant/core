@@ -52,26 +52,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
-    # Pandas has issues building on armhf, it is expected they
-    # will drop the platform in the near future (they consider it
-    # "flimsy" on 386). The following packages depend on pandas,
-    # so we comment them out.
-    "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_armv7": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
     "wheels_amd64": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_i386": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
@@ -220,10 +201,6 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1134
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
-
-# rpds-py frequently updates cargo causing build failures
-# No wheels upstream available for armhf & armv7
-rpds-py==0.26.0
 
 # Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
 num2words==0.5.14
