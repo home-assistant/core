@@ -56,8 +56,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
     location as loc_helper,
@@ -78,7 +76,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default, resolve_area_id
+from .helpers import raise_no_default
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -1244,103 +1242,6 @@ def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | N
     return None
 
 
-def areas(hass: HomeAssistant) -> Iterable[str | None]:
-    """Return all areas."""
-    return list(ar.async_get(hass).areas)
-
-
-def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area ID from an area name, alias, device id, or entity id."""
-    return resolve_area_id(hass, lookup_value)
-
-
-def _get_area_name(area_reg: ar.AreaRegistry, valid_area_id: str) -> str:
-    """Get area name from valid area ID."""
-    area = area_reg.async_get_area(valid_area_id)
-    assert area
-    return area.name
-
-
-def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area name from an area id, device id, or entity id."""
-    area_reg = ar.async_get(hass)
-    if area := area_reg.async_get_area(lookup_value):
-        return area.name
-
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            # If entity has an area ID, get the area name for that
-            if entity.area_id:
-                return _get_area_name(area_reg, entity.area_id)
-            # If entity has a device ID and the device exists with an area ID, get the
-            # area name for that
-            if (
-                entity.device_id
-                and (device := dev_reg.async_get(entity.device_id))
-                and device.area_id
-            ):
-                return _get_area_name(area_reg, device.area_id)
-
-    if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-        return _get_area_name(area_reg, device.area_id)
-
-    return None
-
-
-def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
-    """Return entities for a given area ID or name."""
-    _area_id: str | None
-    # if area_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if area_name(hass, area_id_or_name) is None:
-        _area_id = area_id(hass, area_id_or_name)
-    else:
-        _area_id = area_id_or_name
-    if _area_id is None:
-        return []
-    ent_reg = er.async_get(hass)
-    entity_ids = [
-        entry.entity_id for entry in er.async_entries_for_area(ent_reg, _area_id)
-    ]
-    dev_reg = dr.async_get(hass)
-    # We also need to add entities tied to a device in the area that don't themselves
-    # have an area specified since they inherit the area from the device.
-    entity_ids.extend(
-        [
-            entity.entity_id
-            for device in dr.async_entries_for_area(dev_reg, _area_id)
-            for entity in er.async_entries_for_device(ent_reg, device.id)
-            if entity.area_id is None
-        ]
-    )
-    return entity_ids
-
-
-def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
-    """Return device IDs for a given area ID or name."""
-    _area_id: str | None
-    # if area_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if area_name(hass, area_id_or_name) is not None:
-        _area_id = area_id_or_name
-    else:
-        _area_id = area_id(hass, area_id_or_name)
-    if _area_id is None:
-        return []
-    dev_reg = dr.async_get(hass)
-    entries = dr.async_entries_for_area(dev_reg, _area_id)
-    return [entry.id for entry in entries]
-
-
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
     """Find closest entity.
 
@@ -2182,6 +2083,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
+        self.add_extension("homeassistant.helpers.template.extensions.AreaExtension")
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.CollectionExtension"
@@ -2275,22 +2177,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return func(hass, *args, **kwargs)
 
             return jinja_context(wrapper)
-
-        # Area extensions
-
-        self.globals["areas"] = hassfunction(areas)
-
-        self.globals["area_id"] = hassfunction(area_id)
-        self.filters["area_id"] = self.globals["area_id"]
-
-        self.globals["area_name"] = hassfunction(area_name)
-        self.filters["area_name"] = self.globals["area_name"]
-
-        self.globals["area_entities"] = hassfunction(area_entities)
-        self.filters["area_entities"] = self.globals["area_entities"]
-
-        self.globals["area_devices"] = hassfunction(area_devices)
-        self.filters["area_devices"] = self.globals["area_devices"]
 
         # Integration extensions
 
