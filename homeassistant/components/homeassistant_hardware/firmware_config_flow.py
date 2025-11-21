@@ -80,7 +80,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
-    ZIGBEE_FLOW_CONTROL = "hardware"
     BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
     APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]] = []
 
@@ -467,7 +466,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "port": {
                     "path": self._device,
                     "baudrate": self.ZIGBEE_BAUDRATE,
-                    "flow_control": self.ZIGBEE_FLOW_CONTROL,
+                    "flow_control": "hardware",
                 },
                 "radio_type": "ezsp",
                 "flow_strategy": self._zigbee_flow_strategy,
