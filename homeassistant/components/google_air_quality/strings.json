@@ -3,28 +3,6 @@
     "unable_to_fetch": "Unable to access the Google API. See the debug logs for more details."
   },
   "config": {
-    "step": {
-      "user": {
-        "description": "This integration provides air quality data from Google. You need an API-Key for setting up the integration. Read the [instructions]({more_info_url}) for more details.",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "The API key provided by Google."
-        },
-        "sections": {
-          "api_key_options": {
-            "name": "Optional API key options",
-            "data": {
-              "referrer": "HTTP referrer"
-            },
-            "data_description": {
-              "referrer": "Specify this only if the API key has a [website application restriction](https://developers.google.com/maps/api-security-best-practices#restricting-api-keys)"
-            }
-          }
-        }
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -34,54 +12,63 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key provided by Google."
+        },
+        "description": "This integration provides air quality data from Google. You need an API-Key for setting up the integration. Read the [instructions]({more_info_url}) for more details.",
+        "sections": {
+          "api_key_options": {
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction](https://developers.google.com/maps/api-security-best-practices#restricting-api-keys)"
+            },
+            "name": "Optional API key options"
+          }
+        }
+      }
     }
   },
   "config_subentries": {
     "location": {
-      "step": {
-        "user": {
-          "title": "Air quality data location",
-          "description": "Select the coordinates for which you want to create an entry.",
-          "data": {
-            "location": "[%key:common::config_flow::data::location%]"
-          }
-        }
-      },
       "abort": {
-        "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]",
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
+      },
+      "entry_type": "Air quality location",
+      "error": {
+        "no_data_for_location": "Information is unavailable for this location. Please try a different location.",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
         "user": "Add location"
       },
-      "entry_type": "Air quality location",
-      "error": {
-        "unknown": "[%key:common::config_flow::error::unknown%]",
-        "no_data_for_location": "Information is unavailable for this location. Please try a different location."
+      "step": {
+        "user": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "description": "Select the coordinates for which you want to create an entry.",
+          "title": "Air quality data location"
+        }
       }
-    }
-  },
-  "exceptions": {
-    "unable_to_fetch": {
-      "message": "[%key:component::google_air_quality::common::unable_to_fetch%]"
     }
   },
   "entity": {
     "sensor": {
-      "uaqi_category": {
-        "name": "UAQI category",
-        "state": {
-          "excellent_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::excellent_air_quality%]",
-          "good_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::good_air_quality%]",
-          "low_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::low_air_quality%]",
-          "moderate_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::moderate_air_quality%]",
-          "poor_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::poor_air_quality%]"
-        }
+      "local_aqi": {
+        "name": "{local_aqi} AQI"
       },
       "local_category": {
         "name": "{local_aqi} category",
         "state": {
-          "10_33": "10-33% of guideline",
           "1_blue": "1 - Blue",
           "1_green": "1 - Green",
           "1a_very_good_air_quality": "1A - Very good air quality",
@@ -93,14 +80,15 @@
           "2_yellow": "3 - Yellow",
           "2a_acceptable_air_quality": "2A - Acceptable air quality",
           "2b_acceptable_air_quality": "2B - Acceptable air quality",
-          "33_66": "33-66% of guideline",
           "3_green": "3 - Green",
           "3a_aggravated_air_quality": "3A - Aggravated air quality",
           "3b_bad_air_quality": "3B - Bad air quality",
           "4_yellow_watch": "4 - Yellow/Watch",
           "5_orange_alert": "5 - Orange/Alert",
-          "66_100": "66-100% of guideline",
           "6_red_alert": "6 - Red/Alert+",
+          "10_33": "10-33% of guideline",
+          "33_66": "33-66% of guideline",
+          "66_100": "66-100% of guideline",
           "above_average_air_pollution": "Above average air pollution",
           "acceptable": "Acceptable",
           "acceptable_air_quality": "Acceptable air quality",
@@ -187,32 +175,15 @@
           "warning_air_pollution": "Warning level air pollution"
         }
       },
-      "uaqi": {
-        "name": "Universal Air Quality Index"
-      },
-      "local_aqi": {
-        "name": "{local_aqi} AQI"
-      },
-      "uaqi_dominant_pollutant": {
-        "name": "UAQI dominant pollutant",
-        "state": {
-          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
-          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
-          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
-          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
-          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
-          "pm25": "[%key:component::sensor::entity_component::pm25::name%]"
-        }
-      },
       "local_dominant_pollutant": {
         "name": "{local_aqi} dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
           "o3": "[%key:component::sensor::entity_component::ozone::name%]",
-          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
           "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
-          "pm25": "[%key:component::sensor::entity_component::pm25::name%]"
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
       },
       "nitrogen_dioxide": {
@@ -223,7 +194,36 @@
       },
       "sulphur_dioxide": {
         "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      },
+      "uaqi": {
+        "name": "Universal Air Quality Index"
+      },
+      "uaqi_category": {
+        "name": "UAQI category",
+        "state": {
+          "excellent_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::excellent_air_quality%]",
+          "good_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::good_air_quality%]",
+          "low_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::low_air_quality%]",
+          "moderate_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::moderate_air_quality%]",
+          "poor_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::poor_air_quality%]"
+        }
+      },
+      "uaqi_dominant_pollutant": {
+        "name": "UAQI dominant pollutant",
+        "state": {
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
       }
+    }
+  },
+  "exceptions": {
+    "unable_to_fetch": {
+      "message": "[%key:component::google_air_quality::common::unable_to_fetch%]"
     }
   }
 }
