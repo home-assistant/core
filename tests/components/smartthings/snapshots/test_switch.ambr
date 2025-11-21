@@ -47,7 +47,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_none-entry]
+# name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.ar_varanda_none',
+    'entity_id': 'switch.ar_varanda_sound_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Sound effect',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -82,13 +82,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_none-state]
+# name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ar Varanda None',
+      'friendly_name': 'Ar Varanda Sound effect',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.ar_varanda_none',
+    'entity_id': 'switch.ar_varanda_sound_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -143,7 +143,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_none-entry]
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +156,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.aire_dormitorio_principal_none',
+    'entity_id': 'switch.aire_dormitorio_principal_sound_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -168,7 +168,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Sound effect',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -178,13 +178,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_none-state]
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal None',
+      'friendly_name': 'Aire Dormitorio Principal Sound effect',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.aire_dormitorio_principal_none',
+    'entity_id': 'switch.aire_dormitorio_principal_sound_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
