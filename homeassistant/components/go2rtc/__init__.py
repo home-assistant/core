@@ -154,7 +154,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         auth = BasicAuth(username, password)
         # HA will manage the binary
-        # Manual created session (not using the helper) need to be closed manually
+        # Manually created session (not using the helper) needs to be closed manually
         # See on_stop listener below
         session = ClientSession(
             connector=UnixConnector(path=HA_MANAGED_UNIX_SOCKET), auth=auth
