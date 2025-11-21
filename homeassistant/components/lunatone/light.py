@@ -191,21 +191,20 @@ class LunatoneLineBroadcastLight(
 
         assert self.unique_id
         line_device = self.coordinator.data.lines[str(line)].device
+        extra_info: dict = {}
         if line_device.serial != coordinator_info.data.device.serial:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self.unique_id)},
-                name=f"DALI Line {line}",
-                via_device=(DOMAIN, str(coordinator_info.data.device.serial)),
+            extra_info.update(
                 serial_number=str(line_device.serial),
                 hw_version=line_device.pcb,
                 model_id=f"{line_device.article_number}{line_device.article_info}",
             )
-        else:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self.unique_id)},
-                name=f"DALI Line {line}",
-                via_device=(DOMAIN, str(coordinator_info.data.device.serial)),
-            )
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=f"DALI Line {line}",
+            via_device=(DOMAIN, str(coordinator_info.data.device.serial)),
+            **extra_info,
+        )
 
     @property
     def available(self) -> bool:
