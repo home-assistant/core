@@ -24,6 +24,7 @@ _RESPAWN_COOLDOWN = 1
 
 # Default configuration for HA
 # - Unix socket for secure local communication
+# - Basic auth enabled also for local connections
 # - HTTP API only enabled when UI is enabled
 # - Enable rtsp for localhost only as ffmpeg needs it
 # - Clear default ice servers
@@ -37,6 +38,9 @@ api:
   listen: "{listen_config}"
   unix_listen: "{unix_socket}"
   allow_paths: {api_allow_paths}
+  local_auth: true
+  username: {username}
+  password: {password}
 
 # ffmpeg needs the exec module
 # Restrict execution to only ffmpeg binary
@@ -118,7 +122,7 @@ def _format_list_for_yaml(items: tuple[str, ...]) -> str:
     return f"[{formatted_items}]"
 
 
-def _create_temp_file(enable_ui: bool) -> str:
+def _create_temp_file(enable_ui: bool, username: str, password: str) -> str:
     """Create temporary config file."""
     app_modules: tuple[str, ...] = _APP_MODULES
     api_paths: tuple[str, ...] = _API_ALLOW_PATHS
@@ -142,6 +146,8 @@ def _create_temp_file(enable_ui: bool) -> str:
                 unix_socket=HA_MANAGED_UNIX_SOCKET,
                 app_modules=_format_list_for_yaml(app_modules),
                 api_allow_paths=_format_list_for_yaml(api_paths),
+                username=username,
+                password=password,
             ).encode()
         )
         return file.name
@@ -157,15 +163,19 @@ class Server:
         session: ClientSession,
         *,
         enable_ui: bool = False,
+        username: str,
+        password: str,
     ) -> None:
         """Initialize the server."""
         self._hass = hass
         self._binary = binary
         self._session = session
+        self._enable_ui = enable_ui
+        self._username = username
+        self._password = password
         self._log_buffer: deque[str] = deque(maxlen=_LOG_BUFFER_SIZE)
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
-        self._enable_ui = enable_ui
         self._watchdog_task: asyncio.Task | None = None
         self._watchdog_tasks: list[asyncio.Task] = []
 
@@ -180,7 +190,7 @@ class Server:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
         config_file = await self._hass.async_add_executor_job(
-            _create_temp_file, self._enable_ui
+            _create_temp_file, self._enable_ui, self._username, self._password
         )
 
         self._startup_complete.clear()
