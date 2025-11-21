@@ -53,6 +53,14 @@
         "readyStartTime": null
       },
       "tutorialUrl": null
+    },
+    {
+      "code": "CMNoWater",
+      "index": 1,
+      "output": {
+        "allarm": false
+      },
+      "tutorialUrl": null
     }
   ],
   "invalidWidgets": [],

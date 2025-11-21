@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import MachineMode, ModelName, WidgetType
 from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH
 from homeassistant.config_entries import ConfigEntryState
@@ -307,6 +308,7 @@ async def test_setup_through_bluetooth_only(
     mock_cloud_client: MagicMock,
     device_fixture: ModelName,
     entities: list[tuple[str, str]],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we can setup without a cloud connection."""
 
@@ -328,13 +330,13 @@ async def test_setup_through_bluetooth_only(
 
     # Check all Bluetooth entities are available
     for entity_id in entities:
-        state = hass.states.get(
-            build_entitiy_id(
-                entity_id[0], mock_lamarzocco_bluetooth.serial_number, entity_id[1]
-            )
+        entity = build_entitiy_id(
+            entity_id[0], mock_lamarzocco_bluetooth.serial_number, entity_id[1]
         )
+        state = hass.states.get(entity)
         assert state
         assert state.state != STATE_UNAVAILABLE
+        assert state == snapshot(name=entity)
 
 
 @pytest.mark.parametrize(
