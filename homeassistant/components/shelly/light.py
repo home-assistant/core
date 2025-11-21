@@ -51,6 +51,7 @@ from .utils import (
     async_remove_orphaned_entities,
     brightness_to_percentage,
     get_device_entry_gen,
+    get_rpc_key_id,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     percentage_to_brightness,
@@ -535,7 +536,7 @@ LIGHTS: Final = {
         key="switch",
         sub_key="output",
         removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
-            config, int(key.split(":")[-1])
+            config, get_rpc_key_id(key)
         ),
         entity_class=RpcShellySwitchAsLight,
     ),
