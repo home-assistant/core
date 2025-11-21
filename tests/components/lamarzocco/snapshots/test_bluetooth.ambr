@@ -10,7 +10,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_setup_through_bluetooth_only[GS3 AV-entities1][number.GS012345_coffee_target_temperature]
@@ -29,7 +29,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '95.0',
+    'state': '98.0',
   })
 # ---
 # name: test_setup_through_bluetooth_only[GS3 AV-entities1][number.GS012345_smart_standby_time]
@@ -104,6 +104,25 @@
     'state': 'on',
   })
 # ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][number.MR012345_coffee_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'MR012345 Coffee target temperature',
+      'max': 104,
+      'min': 85,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mr012345_coffee_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '94.0',
+  })
+# ---
 # name: test_setup_through_bluetooth_only[Linea Micra-entities0][number.MR012345_smart_standby_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -138,7 +157,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '2',
   })
 # ---
 # name: test_setup_through_bluetooth_only[Linea Micra-entities0][switch.MR012345]

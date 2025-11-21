@@ -29,6 +29,7 @@ BLUETOOTH_ONLY_BASE_ENTITIES = [
     ("binary_sensor", "water_tank_empty"),
     ("switch", ""),
     ("switch", "steam_boiler"),
+    ("number", "coffee_target_temperature"),
     ("switch", "smart_standby_enabled"),
     ("number", "smart_standby_time"),
 ]
@@ -36,10 +37,6 @@ BLUETOOTH_ONLY_BASE_ENTITIES = [
 MICRA_BT_OFFLINE_ENTITIES = [
     *BLUETOOTH_ONLY_BASE_ENTITIES,
     ("select", "steam_level"),
-]
-GS3_BT_OFFLINE_ENTITIES = [
-    *BLUETOOTH_ONLY_BASE_ENTITIES,
-    ("number", "coffee_target_temperature"),
 ]
 
 
@@ -130,7 +127,7 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     ("device_fixture", "entities"),
     [
         (ModelName.LINEA_MICRA, MICRA_BT_OFFLINE_ENTITIES),
-        (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
+        (ModelName.GS3_AV, BLUETOOTH_ONLY_BASE_ENTITIES),
     ],
 )
 async def test_bt_offline_mode_entity_available_when_cloud_fails(
@@ -297,7 +294,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     ("device_fixture", "entities"),
     [
         (ModelName.LINEA_MICRA, MICRA_BT_OFFLINE_ENTITIES),
-        (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
+        (ModelName.GS3_AV, BLUETOOTH_ONLY_BASE_ENTITIES),
     ],
 )
 async def test_setup_through_bluetooth_only(

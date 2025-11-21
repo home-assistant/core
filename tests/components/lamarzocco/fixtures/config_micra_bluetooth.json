@@ -48,7 +48,7 @@
         "status": "StandBy",
         "enabled": true,
         "enabledSupported": true,
-        "targetLevel": "Level3",
+        "targetLevel": "Level2",
         "targetLevelSupported": true,
         "readyStartTime": null
       },
@@ -58,7 +58,7 @@
       "code": "CMNoWater",
       "index": 1,
       "output": {
-        "allarm": false
+        "allarm": true
       },
       "tutorialUrl": null
     }
