@@ -1,7 +1,7 @@
 """Tests for La Marzocco Bluetooth connection."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
@@ -14,9 +14,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 from . import async_init_integration, get_bluetooth_service_info
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_bluetooth_coordinator_setup(
@@ -151,7 +151,9 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     assert mock_config_entry.runtime_data.bluetooth_coordinator is None
 
     # Water tank sensor (even with bt_offline_mode=True, needs BT coordinator to work)
-    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
+    water_tank_sensor = (
+        f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
+    )
     state = hass.states.get(water_tank_sensor)
     assert state
     # Initially should be available
@@ -186,7 +188,9 @@ async def test_bluetooth_coordinator_handles_connection_failure(
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor has bt_offline_mode=True
-    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
+    water_tank_sensor = (
+        f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
+    )
     state = hass.states.get(water_tank_sensor)
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -235,7 +239,9 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
     # Water tank sensor with bt_offline_mode
-    water_tank_sensor = f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
+    water_tank_sensor = (
+        f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
+    )
 
     # Set initial state - no water issue
     mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = False
