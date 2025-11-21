@@ -649,6 +649,9 @@ colorthief==0.2.1
 # homeassistant.components.compit
 compit-inext-api==0.3.1
 
+# homeassistant.components.concord232
+concord232==0.15.1
+
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
