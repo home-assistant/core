@@ -1,5 +1,6 @@
 """Provides triggers for texts."""
 
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
@@ -22,7 +23,7 @@ class TextChangedTrigger(EntityTriggerBase):
 
     def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
-        return True
+        return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

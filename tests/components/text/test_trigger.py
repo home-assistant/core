@@ -63,6 +63,7 @@ async def target_texts(hass: HomeAssistant) -> None:
                 {"state": STATE_UNAVAILABLE, "attributes": {}, "count": 0},
                 {"state": "bar", "attributes": {}, "count": 0},
                 {"state": "baz", "attributes": {}, "count": 1},
+                {"state": STATE_UNAVAILABLE, "attributes": {}, "count": 0},
             ],
         ),
         (
@@ -71,6 +72,7 @@ async def target_texts(hass: HomeAssistant) -> None:
                 {"state": STATE_UNKNOWN, "attributes": {}, "count": 0},
                 {"state": "bar", "attributes": {}, "count": 0},
                 {"state": "baz", "attributes": {}, "count": 1},
+                {"state": STATE_UNKNOWN, "attributes": {}, "count": 0},
             ],
         ),
     ],
