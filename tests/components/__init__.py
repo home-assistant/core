@@ -242,6 +242,8 @@ async def arm_trigger(
     # Local include to avoid importing the automation component unnecessarily
     from homeassistant.components import automation  # noqa: PLC0415
 
+    options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
+
     await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -251,7 +253,7 @@ async def arm_trigger(
                     CONF_PLATFORM: trigger,
                     CONF_TARGET: {**trigger_target},
                 }
-                | ({CONF_OPTIONS: {**trigger_options}} if trigger_options else {}),
+                | options,
                 "action": {
                     "service": "test.automation",
                     "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
