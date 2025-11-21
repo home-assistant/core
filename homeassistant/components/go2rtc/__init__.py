@@ -75,7 +75,7 @@ _AUTH = "auth"
 
 
 def _validate_auth(config: dict) -> dict:
-    """Validate that username and password are only set with a URL or when CONF_DEBUG_UI is true."""
+    """Validate that username and password are only set when a URL is configured or when debug UI is enabled."""
     auth_exists = CONF_USERNAME in config
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
