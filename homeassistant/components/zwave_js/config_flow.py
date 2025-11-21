@@ -28,6 +28,7 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_USB,
+    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -1516,6 +1517,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hassio")
 
         if discovery_info.zwave_home_id:
+            existing_entry: ConfigEntry | None = None
             if (
                 (
                     current_config_entries := self._async_current_entries(
@@ -1535,23 +1537,25 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 # Only update existing entries that are configured via sockets
                 and existing_entry.data.get(CONF_SOCKET_PATH)
-                # And use the add-on
-                and existing_entry.data.get(CONF_USE_ADDON)
             ):
-                manager = get_addon_manager(self.hass)
-                await self._async_set_addon_config(
-                    {CONF_ADDON_SOCKET: discovery_info.socket_path}
-                )
-                if self.restart_addon:
-                    await manager.async_stop_addon()
-                self.hass.config_entries.async_update_entry(
-                    existing_entry,
-                    data={
-                        **existing_entry.data,
-                        CONF_SOCKET_PATH: discovery_info.socket_path,
-                    },
-                )
-                self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+                # Only update config if we're using the add-on
+                if existing_entry.data.get(CONF_USE_ADDON):
+                    manager = get_addon_manager(self.hass)
+                    await self._async_set_addon_config(
+                        {CONF_ADDON_SOCKET: discovery_info.socket_path}
+                    )
+                    if self.restart_addon:
+                        await manager.async_stop_addon()
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry,
+                        data={
+                            **existing_entry.data,
+                            CONF_SOCKET_PATH: discovery_info.socket_path,
+                        },
+                    )
+                    self.hass.config_entries.async_schedule_reload(
+                        existing_entry.entry_id
+                    )
                 return self.async_abort(reason="already_configured")
 
             # We are not aborting if home ID configured here, we just want to make sure that it's set

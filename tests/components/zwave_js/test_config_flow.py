@@ -1421,6 +1421,47 @@ async def test_esphome_discovery_already_configured(
     assert stop_addon.call_args == call("core_zwave_js")
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
+async def test_esphome_discovery_already_configured_unmanaged_addon(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    stop_addon: AsyncMock,
+) -> None:
+    """Test ESPHome discovery success path."""
+    addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
+    addon_options["another_key"] = "should_not_be_touched"
+
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://existing-device:6053",
+            "use_addon": False,
+            "integration_created_addon": False,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Data did not get updated. Since we don't use the addon, we don't update the data
+    assert entry.data == {
+        CONF_SOCKET_PATH: "esphome://existing-device:6053",
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+
+
 @pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 async def test_esphome_discovery_usb_same_home_id(
     hass: HomeAssistant,
