@@ -552,7 +552,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) ->
     """Unload a config entry."""
     influx_thread = entry.runtime_data
 
-    influx_thread.shutdown()
+    # Run shutdown in the executor so the event loop isn't blocked
+    await hass.async_add_executor_job(influx_thread.shutdown)
 
     return True
 
