@@ -397,24 +397,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
     """Register handler for cloud preferences updates."""
-    cur_pref = cloud.client.prefs.remote_enabled
+    cur_remote_enabled = cloud.client.prefs.remote_enabled
     cur_cloudhooks = cloud.client.prefs.cloudhooks
     lock = asyncio.Lock()
 
     async def on_prefs_updated(prefs: CloudPreferences) -> None:
         """Handle cloud preferences updates."""
-        nonlocal cur_pref
+        nonlocal cur_remote_enabled
         nonlocal cur_cloudhooks
 
+        # Lock protects cur_ state variables from concurrent updates
         async with lock:
             if cur_cloudhooks != prefs.cloudhooks:
                 cur_cloudhooks = prefs.cloudhooks
                 async_dispatcher_send(hass, _SIGNAL_CLOUDHOOKS_UPDATED, cur_cloudhooks)
 
-            if prefs.remote_enabled == cur_pref:
+            if prefs.remote_enabled == cur_remote_enabled:
                 return
 
-            if cur_pref := prefs.remote_enabled:
+            if cur_remote_enabled := prefs.remote_enabled:
                 await cloud.remote.connect()
             else:
                 await cloud.remote.disconnect()

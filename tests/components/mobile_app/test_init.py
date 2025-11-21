@@ -68,7 +68,9 @@ async def _test_create_cloud_hook(
     hass_admin_user: MockUser,
     additional_config: dict[str, Any],
     async_active_subscription_return_value: bool,
-    additional_steps: Callable[[ConfigEntry, Mock, str], Awaitable[None]],
+    additional_steps: Callable[
+        [ConfigEntry, Mock, str, Callable[[Any], None]], Awaitable[None]
+    ],
 ) -> None:
     config_entry = MockConfigEntry(
         data={
@@ -124,13 +126,11 @@ async def _test_create_cloud_hook(
 
         assert cloudhook_change_callback is not None
 
-        # Store the callback for use in additional_steps
-        hass.data.setdefault("_test", {})["cloudhook_change_callback"] = (
-            cloudhook_change_callback
-        )
-
         await additional_steps(
-            config_entry, mock_async_get_or_create_cloudhook, cloud_hook
+            config_entry,
+            mock_async_get_or_create_cloudhook,
+            cloud_hook,
+            cloudhook_change_callback,
         )
 
 
@@ -141,7 +141,10 @@ async def test_create_cloud_hook_on_setup(
     """Test creating a cloud hook during setup."""
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        cloud_hook: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_called_once_with(
@@ -161,7 +164,10 @@ async def test_remove_cloudhook(
     """Test removing a cloud hook when config entry is removed."""
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        cloud_hook: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         webhook_id = config_entry.data[CONF_WEBHOOK_ID]
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
@@ -185,7 +191,10 @@ async def test_create_cloud_hook_aleady_exists(
     cloud_hook = "https://hook-url-already-exists"
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, _: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        _: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_not_called()
@@ -202,21 +211,18 @@ async def test_create_cloud_hook_after_connection(
     """Test creating a cloud hook when connected to the cloud."""
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        cloud_hook: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         assert CONF_CLOUDHOOK_URL not in config_entry.data
         mock_create_cloudhook.assert_not_called()
-
-        # Get the callback from test data
-        cloudhook_change_callback = hass.data.get("_test", {}).get(
-            "cloudhook_change_callback"
-        )
 
         async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
 
         # Simulate cloudhook creation by calling the callback
-        assert cloudhook_change_callback is not None
         cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
         await hass.async_block_till_done()
 
