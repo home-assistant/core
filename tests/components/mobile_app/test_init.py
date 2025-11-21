@@ -119,7 +119,7 @@ async def _test_create_cloud_hook(
 
         assert cloudhook_change_callback is not None
 
-        # Simulate cloudhook creation by calling the callback, but only if there's an acive subscription and not already a cloudhook
+        # Simulate cloudhook creation by calling the callback, but only if there's an active subscription and not already a cloudhook
         if (
             async_active_subscription_return_value
             and CONF_CLOUDHOOK_URL not in config_entry.data
