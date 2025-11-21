@@ -148,7 +148,7 @@
     'attributes': ReadOnlyDict({
       'direction': 'forward',
       'friendly_name': 'ceiling fan/Light v2',
-      'percentage': 20,
+      'percentage': 21,
       'percentage_step': 1.0,
       'preset_mode': None,
       'preset_modes': None,
