@@ -35,6 +35,8 @@ PARALLEL_UPDATES = 0
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
+CLEANING_MODE = "cleaning_mode"
+WATER_LEVEL = "water_level"
 STATE = "state"
 
 STATE_IDLE = "idle"
@@ -43,6 +45,12 @@ STATE_ERROR = "error"
 STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
+STATE_MOPPING = "mopping"
+STATE_VACUUMING = "vacuuming"
+STATE_VACUUMING_AND_MOPPING = "vacuuming_and_mopping"
+STATE_AUTO_EMPTYING = "auto_emptying"
+STATE_CLEANING_MOPS = "cleaning_mop_pads"
+STATE_DRYING_MOPS = "drying_mop_pads"
 
 POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_IDLE: VacuumActivity.IDLE,
@@ -51,6 +59,12 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_PAUSED: VacuumActivity.PAUSED,
     STATE_RETURNING: VacuumActivity.RETURNING,
     STATE_CLEANING: VacuumActivity.CLEANING,
+    STATE_MOPPING: VacuumActivity.MOPPING,
+    STATE_VACUUMING: VacuumActivity.VACUUMING,
+    STATE_VACUUMING_AND_MOPPING: VacuumActivity.VACUUMING_AND_MOPPING,
+    STATE_AUTO_EMPTYING: VacuumActivity.AUTO_EMPTYING,
+    STATE_CLEANING_MOPS: VacuumActivity.CLEANING_MOPS,
+    STATE_DRYING_MOPS: VacuumActivity.DRYING_MOPS,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -59,11 +73,16 @@ CONF_PAYLOAD_TURN_OFF = "payload_turn_off"
 CONF_PAYLOAD_RETURN_TO_BASE = "payload_return_to_base"
 CONF_PAYLOAD_STOP = "payload_stop"
 CONF_PAYLOAD_CLEAN_SPOT = "payload_clean_spot"
+CONF_PAYLOAD_CLEANING_MODE = "payload_cleaning_mode"
 CONF_PAYLOAD_LOCATE = "payload_locate"
 CONF_PAYLOAD_START = "payload_start"
 CONF_PAYLOAD_PAUSE = "payload_pause"
 CONF_SET_FAN_SPEED_TOPIC = "set_fan_speed_topic"
+CONF_SET_CLEANING_MODE_TOPIC = "set_cleaning_mode_topic"
+CONF_SET_WATER_LEVEL_TOPIC = "set_water_level_topic"
 CONF_FAN_SPEED_LIST = "fan_speed_list"
+CONF_CLEANING_MODE_LIST = "cleaning_mode_list"
+CONF_WATER_LEVEL_LIST = "water_level_list"
 CONF_SEND_COMMAND_TOPIC = "send_command_topic"
 
 DEFAULT_NAME = "MQTT State Vacuum"
@@ -91,6 +110,12 @@ SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
     VacuumEntityFeature.SEND_COMMAND: "send_command",
     VacuumEntityFeature.LOCATE: "locate",
     VacuumEntityFeature.CLEAN_SPOT: "clean_spot",
+    VacuumEntityFeature.AUTO_EMPTY: "auto_emptying",
+    VacuumEntityFeature.CLEANING_MODE: "cleaning_mode",
+    VacuumEntityFeature.WATER_LEVEL: "water_level",
+    VacuumEntityFeature.MOP: "mop",
+    VacuumEntityFeature.MOP_VACUUM: "mop_vacuum",
+    VacuumEntityFeature.DRYING_MOP: "drying_mop",
 }
 
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
@@ -128,6 +153,7 @@ _FEATURE_PAYLOADS = {
     VacuumEntityFeature.STOP: CONF_PAYLOAD_STOP,
     VacuumEntityFeature.PAUSE: CONF_PAYLOAD_PAUSE,
     VacuumEntityFeature.CLEAN_SPOT: CONF_PAYLOAD_CLEAN_SPOT,
+    VacuumEntityFeature.CLEANING_MODE: CONF_PAYLOAD_CLEANING_MODE,
     VacuumEntityFeature.LOCATE: CONF_PAYLOAD_LOCATE,
     VacuumEntityFeature.RETURN_HOME: CONF_PAYLOAD_RETURN_TO_BASE,
 }
@@ -137,6 +163,8 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
         vacuum.ATTR_BATTERY_ICON,
         vacuum.ATTR_BATTERY_LEVEL,
         vacuum.ATTR_FAN_SPEED,
+        vacuum.ATTR_CLEANING_MODE,
+        vacuum.ATTR_CURRENT_WATER_LEVEL,
     }
 )
 
@@ -146,6 +174,12 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_CLEANING_MODE_LIST, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_WATER_LEVEL_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
@@ -160,7 +194,9 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_PAUSE, default=DEFAULT_PAYLOAD_PAUSE): cv.string,
         vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
         vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SET_CLEANING_MODE_TOPIC): valid_publish_topic,
         vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SET_WATER_LEVEL_TOPIC): valid_publish_topic,
         vol.Optional(CONF_STATE_TOPIC): valid_publish_topic,
         vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS): vol.All(
             cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]
@@ -199,6 +235,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     _command_topic: str | None
     _set_fan_speed_topic: str | None
+    _set_cleaning_mode_topic: str | None
+    _set_water_level_topic: str | None
     _send_command_topic: str | None
     _payloads: dict[str, str | None]
 
@@ -220,7 +258,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config: ConfigType) -> None:
-        """(Re)Setup the entity."""
+        """(Re)Set up the entity."""
 
         def _strings_to_services(
             strings: list[str], string_to_service: dict[str, VacuumEntityFeature]
@@ -236,8 +274,16 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        cleaning_mode_list = config[CONF_CLEANING_MODE_LIST]
+        if cleaning_mode_list:
+            self._attr_cleaning_modes_list = cleaning_mode_list
+        water_level_list = config[CONF_WATER_LEVEL_LIST]
+        if water_level_list:
+            self._attr_water_level_list = water_level_list
         self._command_topic = config.get(CONF_COMMAND_TOPIC)
         self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
+        self._set_cleaning_mode_topic = config.get(CONF_SET_CLEANING_MODE_TOPIC)
+        self._set_water_level_topic = config.get(CONF_SET_WATER_LEVEL_TOPIC)
         self._send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
 
         self._payloads = {
@@ -279,6 +325,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Update the entity state attributes."""
         self._state_attrs.update(payload)
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
+        self._attr_cleaning_mode = self._state_attrs.get(CLEANING_MODE)
+        self._attr_water_level = self._state_attrs.get(WATER_LEVEL)
         # Use of the battery feature was deprecated in HA Core 2025.8
         # and will be removed with HA Core 2026.2
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
@@ -302,7 +350,13 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
+            {
+                "_attr_battery_level",
+                "_attr_fan_speed",
+                "_attr_activity",
+                "_attr_cleaning_mode",
+                "_attr_water_level",
+            },
         )
 
     async def _subscribe_topics(self) -> None:
@@ -351,6 +405,28 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         ):
             return
         await self.async_publish_with_config(self._set_fan_speed_topic, fan_speed)
+
+    async def async_set_cleaning_mode(self, cleaning_mode: str, **kwargs: Any) -> None:
+        """Set cleaning mode."""
+        if (
+            self._set_cleaning_mode_topic is None
+            or (self.supported_features & VacuumEntityFeature.CLEANING_MODE == 0)
+            or (cleaning_mode not in self.cleaning_modes)
+        ):
+            return
+        await self.async_publish_with_config(
+            self._set_cleaning_mode_topic, cleaning_mode
+        )
+
+    async def async_set_water_level(self, water_level: str, **kwargs: Any) -> None:
+        """Set water level."""
+        if (
+            self._set_water_level_topic is None
+            or (self.supported_features & VacuumEntityFeature.WATER_LEVEL == 0)
+            or (water_level not in self.water_levels)
+        ):
+            return
+        await self.async_publish_with_config(self._set_water_level_topic, water_level)
 
     async def async_send_command(
         self,
