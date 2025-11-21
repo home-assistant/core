@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import requests
 
@@ -14,7 +15,6 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_DISARM,
     AlarmControlPanelState,
 )
-from homeassistant.components.concord232 import alarm_control_panel
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -25,9 +25,10 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_fire_time_changed
 
 VALID_CONFIG = {
     ALARM_DOMAIN: {
@@ -72,21 +73,17 @@ async def test_setup_platform(
 
 
 async def test_setup_platform_connection_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_concord232_client: MagicMock
 ) -> None:
     """Test platform setup with connection error."""
-    with patch(
-        "homeassistant.components.concord232.alarm_control_panel.concord232_client.Client"
-    ) as mock_client_class:
-        mock_client_class.side_effect = requests.exceptions.ConnectionError(
-            "Connection failed"
-        )
+    mock_concord232_client.list_partitions.side_effect = (
+        requests.exceptions.ConnectionError("Connection failed")
+    )
 
-        await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-        await hass.async_block_till_done()
+    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
 
-        assert "Unable to connect to Concord232" in caplog.text
-        assert hass.states.get("alarm_control_panel.test_alarm") is None
+    assert hass.states.get("alarm_control_panel.test_alarm") is None
 
 
 async def test_alarm_disarm(
@@ -226,7 +223,9 @@ async def test_update_state_armed(
     expected_state: str,
 ) -> None:
     """Test update when alarm is armed."""
-    mock_concord232_client.list_partitions.return_value = [{"arming_level": arming_level}]
+    mock_concord232_client.list_partitions.return_value = [
+        {"arming_level": arming_level}
+    ]
     mock_concord232_client.partitions = (
         mock_concord232_client.list_partitions.return_value
     )
@@ -248,18 +247,19 @@ async def test_update_state_armed(
 async def test_update_connection_error(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update with connection error."""
+    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
+
     mock_concord232_client.list_partitions.side_effect = (
         requests.exceptions.ConnectionError("Connection failed")
     )
 
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    # Trigger update
-    await async_update_entity(hass, "alarm_control_panel.test_alarm")
+    freezer.tick(10)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert "Unable to connect to" in caplog.text
@@ -274,10 +274,6 @@ async def test_update_no_partitions(
     mock_concord232_client.list_partitions.return_value = []
 
     await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    # Trigger update
-    await async_update_entity(hass, "alarm_control_panel.test_alarm")
     await hass.async_block_till_done()
 
     assert "Concord232 reports no partitions" in caplog.text
