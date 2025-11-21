@@ -5972,7 +5972,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Second cavity Completion time',
+    'original_name': 'Second cavity completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5986,7 +5986,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Vulcan Second cavity Completion time',
+      'friendly_name': 'Vulcan Second cavity completion time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vulcan_second_cavity_completion_time',
@@ -6041,7 +6041,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Second cavity Job state',
+    'original_name': 'Second cavity job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6055,7 +6055,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Vulcan Second cavity Job state',
+      'friendly_name': 'Vulcan Second cavity job state',
       'options': list([
         'cleaning',
         'cooking',
@@ -6115,7 +6115,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Second cavity Machine state',
+    'original_name': 'Second cavity machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6129,7 +6129,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Vulcan Second cavity Machine state',
+      'friendly_name': 'Vulcan Second cavity machine state',
       'options': list([
         'ready',
         'running',
@@ -6197,7 +6197,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Second cavity Oven mode',
+    'original_name': 'Second cavity oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6211,7 +6211,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Vulcan Second cavity Oven mode',
+      'friendly_name': 'Vulcan Second cavity oven mode',
       'options': list([
         'conventional',
         'bake',
@@ -6276,7 +6276,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Second cavity Setpoint',
+    'original_name': 'Second cavity setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6290,7 +6290,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Vulcan Second cavity Setpoint',
+      'friendly_name': 'Vulcan Second cavity setpoint',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -6331,7 +6331,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Second cavity Temperature',
+    'original_name': 'Second cavity temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6345,7 +6345,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Vulcan Second cavity Temperature',
+      'friendly_name': 'Vulcan Second cavity temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
