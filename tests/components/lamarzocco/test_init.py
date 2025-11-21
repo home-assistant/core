@@ -1,9 +1,8 @@
 """Test initialization of lamarzocco."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from bleak.backends.device import BLEDevice
-from pylamarzocco.const import FirmwareType, ModelName
+from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
 import pytest
@@ -24,12 +23,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from . import (
-    MOCK_INSTALLATION_KEY,
-    USER_INPUT,
-    async_init_integration,
-    get_bluetooth_service_info,
-)
+from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry
 
