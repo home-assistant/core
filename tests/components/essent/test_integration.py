@@ -9,7 +9,10 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-pytestmark = pytest.mark.freeze_time("2025-11-16 10:30:00+01:00")
+pytestmark = [
+    pytest.mark.freeze_time("2025-11-16 10:30:00+01:00"),
+    pytest.mark.usefixtures("disable_coordinator_schedules"),
+]
 
 
 async def test_full_integration_setup(

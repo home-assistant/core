@@ -11,8 +11,10 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
-pytestmark = pytest.mark.freeze_time("2025-11-16 10:30:00+01:00")
+pytestmark = [
+    pytest.mark.usefixtures("entity_registry_enabled_by_default", "disable_coordinator_schedules"),
+    pytest.mark.freeze_time("2025-11-16 10:30:00+01:00"),
+]
 
 
 async def test_sensor_states(

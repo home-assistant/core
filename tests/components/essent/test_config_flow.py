@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.essent.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("disable_coordinator_schedules")
 
 
 async def test_form(hass: HomeAssistant) -> None:

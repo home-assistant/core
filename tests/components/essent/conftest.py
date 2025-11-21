@@ -30,9 +30,9 @@ def fixed_minute_offset() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def disable_coordinator_schedules(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Disable scheduler callbacks during tests."""
+    """Disable scheduler callbacks during tests (opt-in via usefixtures)."""
     monkeypatch.setattr(
         "homeassistant.components.essent.coordinator.EssentDataUpdateCoordinator.start_schedules",
         lambda self: None,
