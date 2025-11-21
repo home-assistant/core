@@ -417,7 +417,7 @@ async def test_reset_issues_supervisor_restart(
             "data": {
                 "event": "supervisor_update",
                 "update_key": "supervisor",
-                "data": {},
+                "data": {"startup": "complete"},
             },
         }
     )
@@ -429,6 +429,50 @@ async def test_reset_issues_supervisor_restart(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_no_reset_issues_supervisor_update_found(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Issues do not reset because a supervisor update was found."""
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[UnsupportedReason.OS],
+    )
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+
+    mock_resolution_info(supervisor_client)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
 
 
 @pytest.mark.usefixtures("all_setup_requests")
@@ -468,7 +512,7 @@ async def test_reasons_added_and_removed(
             "data": {
                 "event": "supervisor_update",
                 "update_key": "supervisor",
-                "data": {},
+                "data": {"startup": "complete"},
             },
         }
     )

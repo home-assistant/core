@@ -1,15 +1,49 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "camera_creds": "You have to set both username and password",
+      "cannot_connect": "Connection error: {error}",
+      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
+      "invalid_auth": "Unable to authenticate: {error}",
+      "invalid_camera_auth": "Camera stream authentication failed"
+    },
     "flow_title": "{name} {model} ({host})",
     "step": {
-      "user": {
-        "description": "If you leave the host empty, discovery will be used to find devices.",
+      "camera_auth_confirm": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "live_view": "Enable camera live view",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your TP-Link device."
-        }
+          "live_view": "Enabling live view will create the live view camera entity and requires your camera account credentials.",
+          "password": "Your camera account password configured for the device in the Tapo app.",
+          "username": "Your camera account username configured for the device in the Tapo app."
+        },
+        "description": "Input device camera account credentials.",
+        "title": "Set camera account credentials"
+      },
+      "discovery_auth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]",
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]"
+        },
+        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
+        "title": "Authenticate"
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} {model} ({host})?"
       },
       "pick_device": {
         "data": {
@@ -19,92 +53,63 @@
           "device": "Pick the TP-Link device to add."
         }
       },
-      "discovery_confirm": {
-        "description": "Do you want to set up {name} {model} ({host})?"
-      },
-      "user_auth_confirm": {
-        "title": "Authenticate",
-        "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "Your TP-Link cloud username which is the full email and is case-sensitive.",
-          "password": "Your TP-Link cloud password which is case-sensitive."
-        }
-      },
-      "discovery_auth_confirm": {
-        "title": "Authenticate",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
-          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
-        }
-      },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
-          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
-        }
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]",
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]"
+        },
+        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "reconfigure": {
-        "title": "Reconfigure TPLink entry",
-        "description": "Update your configuration for device {mac}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "[%key:component::tplink::config::step::user::data_description::host%]"
-        }
+        },
+        "description": "Update your configuration for device {mac}",
+        "title": "Reconfigure TPLink entry"
       },
-      "camera_auth_confirm": {
-        "title": "Set camera account credentials",
-        "description": "Input device camera account credentials.",
+      "user": {
         "data": {
-          "live_view": "Enable camera live view",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "live_view": "Enabling live view will create the live view camera entity and requires your camera account credentials.",
-          "username": "Your camera account username configured for the device in the Tapo app.",
-          "password": "Your camera account password configured for the device in the Tapo app."
-        }
+          "host": "Hostname or IP address of your TP-Link device."
+        },
+        "description": "If you leave the host empty, discovery will be used to find devices."
+      },
+      "user_auth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your TP-Link cloud password which is case-sensitive.",
+          "username": "Your TP-Link cloud username which is the full email and is case-sensitive."
+        },
+        "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
+        "title": "Authenticate"
       }
-    },
-    "error": {
-      "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "Unable to authenticate: {error}",
-      "invalid_camera_auth": "Camera stream authentication failed",
-      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
-      "camera_creds": "You have to set both username and password"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "device": {
+    "unnamed_device": {
+      "name": "Unnamed {model}"
     }
   },
   "entity": {
     "binary_sensor": {
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
       "humidity_warning": {
         "name": "Humidity warning"
-      },
-      "temperature_warning": {
-        "name": "Temperature warning"
       },
       "overheated": {
         "name": "Overheated"
@@ -112,8 +117,8 @@
       "overloaded": {
         "name": "Overloaded"
       },
-      "cloud_connection": {
-        "name": "Cloud connection"
+      "temperature_warning": {
+        "name": "Temperature warning"
       },
       "water_alert": {
         "name": "[%key:component::binary_sensor::entity_component::moisture::name%]",
@@ -124,11 +129,17 @@
       }
     },
     "button": {
-      "test_alarm": {
-        "name": "Test alarm"
+      "charging_contacts_reset": {
+        "name": "Reset charging contacts consumable"
       },
-      "stop_alarm": {
-        "name": "Stop alarm"
+      "filter_reset": {
+        "name": "Reset filter consumable"
+      },
+      "main_brush_reset": {
+        "name": "Reset main brush consumable"
+      },
+      "pair": {
+        "name": "Pair new device"
       },
       "pan_left": {
         "name": "Pan left"
@@ -136,32 +147,26 @@
       "pan_right": {
         "name": "Pan right"
       },
-      "tilt_up": {
-        "name": "Tilt up"
-      },
-      "tilt_down": {
-        "name": "Tilt down"
-      },
-      "pair": {
-        "name": "Pair new device"
-      },
-      "unpair": {
-        "name": "Unpair device"
-      },
-      "main_brush_reset": {
-        "name": "Reset main brush consumable"
+      "sensor_reset": {
+        "name": "Reset sensor consumable"
       },
       "side_brush_reset": {
         "name": "Reset side brush consumable"
       },
-      "sensor_reset": {
-        "name": "Reset sensor consumable"
+      "stop_alarm": {
+        "name": "Stop alarm"
       },
-      "filter_reset": {
-        "name": "Reset filter consumable"
+      "test_alarm": {
+        "name": "Test alarm"
       },
-      "charging_contacts_reset": {
-        "name": "Reset charging contacts consumable"
+      "tilt_down": {
+        "name": "Tilt down"
+      },
+      "tilt_up": {
+        "name": "Tilt up"
+      },
+      "unpair": {
+        "name": "Unpair device"
       }
     },
     "camera": {
@@ -169,71 +174,85 @@
         "name": "Live view"
       }
     },
-    "select": {
-      "light_preset": {
-        "name": "Light preset"
+    "number": {
+      "auto_off_minutes": {
+        "name": "Turn off in"
       },
+      "clean_count": {
+        "name": "Clean count"
+      },
+      "pan_step": {
+        "name": "Pan degrees"
+      },
+      "power_protection_threshold": {
+        "name": "Power protection"
+      },
+      "smooth_transition_off": {
+        "name": "Smooth off"
+      },
+      "smooth_transition_on": {
+        "name": "Smooth on"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "tilt_step": {
+        "name": "Tilt degrees"
+      }
+    },
+    "select": {
       "alarm_sound": {
         "name": "Alarm sound"
       },
       "alarm_volume": {
         "name": "Alarm volume"
+      },
+      "light_preset": {
+        "name": "Light preset"
       }
     },
     "sensor": {
-      "current_consumption": {
-        "name": "Current consumption"
-      },
-      "consumption_total": {
-        "name": "Total consumption"
-      },
-      "consumption_today": {
-        "name": "Today's consumption"
-      },
-      "consumption_this_month": {
-        "name": "This month's consumption"
-      },
-      "on_since": {
-        "name": "On since"
-      },
-      "ssid": {
-        "name": "SSID"
-      },
-      "signal_level": {
-        "name": "Signal level"
-      },
-      "device_time": {
-        "name": "Device time"
-      },
-      "water_alert_timestamp": {
-        "name": "Last water leak alert"
+      "alarm_source": {
+        "name": "Alarm source"
       },
       "auto_off_at": {
         "name": "Auto-off at"
       },
-      "report_interval": {
-        "name": "Report interval"
+      "charging_contacts_remaining": {
+        "name": "Charging contacts remaining"
       },
-      "alarm_source": {
-        "name": "Alarm source"
+      "charging_contacts_used": {
+        "name": "Charging contacts used"
       },
       "clean_area": {
         "name": "Cleaning area"
       },
-      "clean_time": {
-        "name": "Cleaning time"
-      },
       "clean_progress": {
         "name": "Cleaning progress"
       },
-      "total_clean_area": {
-        "name": "Total cleaning area"
+      "clean_time": {
+        "name": "Cleaning time"
       },
-      "total_clean_time": {
-        "name": "Total cleaning time"
+      "consumption_this_month": {
+        "name": "This month's consumption"
       },
-      "total_clean_count": {
-        "name": "Total cleaning count"
+      "consumption_today": {
+        "name": "Today's consumption"
+      },
+      "consumption_total": {
+        "name": "Total consumption"
+      },
+      "current_consumption": {
+        "name": "Current consumption"
+      },
+      "device_time": {
+        "name": "Device time"
+      },
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "filter_used": {
+        "name": "Filter used"
       },
       "last_clean_area": {
         "name": "Last cleaned area"
@@ -250,17 +269,11 @@
       "main_brush_used": {
         "name": "Main brush used"
       },
-      "side_brush_remaining": {
-        "name": "Side brush remaining"
+      "on_since": {
+        "name": "On since"
       },
-      "side_brush_used": {
-        "name": "Side brush used"
-      },
-      "filter_remaining": {
-        "name": "Filter remaining"
-      },
-      "filter_used": {
-        "name": "Filter used"
+      "report_interval": {
+        "name": "Report interval"
       },
       "sensor_remaining": {
         "name": "Sensor remaining"
@@ -268,51 +281,69 @@
       "sensor_used": {
         "name": "Sensor used"
       },
-      "charging_contacts_remaining": {
-        "name": "Charging contacts remaining"
+      "side_brush_remaining": {
+        "name": "Side brush remaining"
       },
-      "charging_contacts_used": {
-        "name": "Charging contacts used"
+      "side_brush_used": {
+        "name": "Side brush used"
+      },
+      "signal_level": {
+        "name": "Signal level"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "total_clean_area": {
+        "name": "Total cleaning area"
+      },
+      "total_clean_count": {
+        "name": "Total cleaning count"
+      },
+      "total_clean_time": {
+        "name": "Total cleaning time"
       },
       "vacuum_error": {
         "name": "Error",
         "state": {
+          "batterylow": "Low on battery",
+          "dustbinremoved": "Missing dust bin",
+          "lidarblocked": "Lidar blocked",
+          "mainbrushstuck": "Main brush stuck",
           "ok": "No error",
           "sidebrushstuck": "Side brush stuck",
-          "mainbrushstuck": "Main brush stuck",
-          "wheelblocked": "Wheel blocked",
           "trapped": "Unable to move",
           "trappedcliff": "Unable to move (cliff sensor)",
-          "dustbinremoved": "Missing dust bin",
-          "unabletomove": "Unable to move",
-          "lidarblocked": "Lidar blocked",
           "unabletofinddock": "Unable to find dock",
-          "batterylow": "Low on battery",
-          "unknowninternal": "Unknown error, report to upstream"
+          "unabletomove": "Unable to move",
+          "unknowninternal": "Unknown error, report to upstream",
+          "wheelblocked": "Wheel blocked"
         }
+      },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
       }
     },
     "switch": {
-      "led": {
-        "name": "LED"
+      "auto_off_enabled": {
+        "name": "Auto-off enabled"
       },
       "auto_update_enabled": {
         "name": "Auto-update enabled"
       },
-      "auto_off_enabled": {
-        "name": "Auto-off enabled"
+      "baby_cry_detection": {
+        "name": "Baby cry detection"
       },
-      "smooth_transitions": {
-        "name": "Smooth transitions"
-      },
-      "fan_sleep_mode": {
-        "name": "Fan sleep mode"
+      "carpet_boost": {
+        "name": "Carpet boost"
       },
       "child_lock": {
         "name": "Child lock"
       },
-      "pir_enabled": {
-        "name": "Motion sensor"
+      "fan_sleep_mode": {
+        "name": "Fan sleep mode"
+      },
+      "led": {
+        "name": "LED"
       },
       "motion_detection": {
         "name": "Motion detection"
@@ -320,40 +351,14 @@
       "person_detection": {
         "name": "Person detection"
       },
+      "pir_enabled": {
+        "name": "Motion sensor"
+      },
+      "smooth_transitions": {
+        "name": "Smooth transitions"
+      },
       "tamper_detection": {
         "name": "Tamper detection"
-      },
-      "baby_cry_detection": {
-        "name": "Baby cry detection"
-      },
-      "carpet_boost": {
-        "name": "Carpet boost"
-      }
-    },
-    "number": {
-      "smooth_transition_on": {
-        "name": "Smooth on"
-      },
-      "smooth_transition_off": {
-        "name": "Smooth off"
-      },
-      "auto_off_minutes": {
-        "name": "Turn off in"
-      },
-      "temperature_offset": {
-        "name": "Temperature offset"
-      },
-      "power_protection_threshold": {
-        "name": "Power protection"
-      },
-      "pan_step": {
-        "name": "Pan degrees"
-      },
-      "tilt_step": {
-        "name": "Tilt degrees"
-      },
-      "clean_count": {
-        "name": "Clean count"
       }
     },
     "vacuum": {
@@ -361,10 +366,10 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "max": "Max",
               "quiet": "Quiet",
               "standard": "Standard",
               "turbo": "Turbo",
-              "max": "Max",
               "ultra": "Ultra"
             }
           }
@@ -372,129 +377,124 @@
       }
     }
   },
-  "device": {
-    "unnamed_device": {
-      "name": "Unnamed {model}"
-    }
-  },
-  "services": {
-    "sequence_effect": {
-      "name": "Sequence effect",
-      "description": "Sets a sequence effect.",
-      "fields": {
-        "sequence": {
-          "name": "Sequence",
-          "description": "List of HSV sequences (Max 16)."
-        },
-        "segments": {
-          "name": "Segments",
-          "description": "List of segments (0 for all)."
-        },
-        "brightness": {
-          "name": "Brightness",
-          "description": "Initial brightness."
-        },
-        "duration": {
-          "name": "Duration",
-          "description": "Duration."
-        },
-        "repeat_times": {
-          "name": "Repetitions",
-          "description": "Repetitions (0 for continuous)."
-        },
-        "transition": {
-          "name": "Transition",
-          "description": "Transition."
-        },
-        "spread": {
-          "name": "Spread",
-          "description": "Speed of spread."
-        },
-        "direction": {
-          "name": "Direction",
-          "description": "Direction."
-        }
-      }
-    },
-    "random_effect": {
-      "name": "Random effect",
-      "description": "Sets a random effect.",
-      "fields": {
-        "init_states": {
-          "name": "Initial states",
-          "description": "Initial HSV sequence."
-        },
-        "backgrounds": {
-          "name": "Backgrounds",
-          "description": "[%key:component::tplink::services::sequence_effect::fields::sequence::description%]"
-        },
-        "segments": {
-          "name": "Segments",
-          "description": "List of segments (0 for all)."
-        },
-        "brightness": {
-          "name": "Brightness",
-          "description": "[%key:component::tplink::services::sequence_effect::fields::brightness::description%]"
-        },
-        "duration": {
-          "name": "Duration",
-          "description": "[%key:component::tplink::services::sequence_effect::fields::duration::description%]"
-        },
-        "transition": {
-          "name": "Transition",
-          "description": "[%key:component::tplink::services::sequence_effect::fields::transition::description%]"
-        },
-        "fadeoff": {
-          "name": "Fade off",
-          "description": "Fade off."
-        },
-        "hue_range": {
-          "name": "Hue range",
-          "description": "Range of hue."
-        },
-        "saturation_range": {
-          "name": "Saturation range",
-          "description": "Range of saturation."
-        },
-        "brightness_range": {
-          "name": "Brightness range",
-          "description": "Range of brightness."
-        },
-        "transition_range": {
-          "name": "Transition range",
-          "description": "Range of transition."
-        },
-        "random_seed": {
-          "name": "Random seed",
-          "description": "Random seed."
-        }
-      }
-    }
-  },
   "exceptions": {
-    "device_timeout": {
-      "message": "Timeout communicating with the device {func}: {exc}"
+    "device_authentication": {
+      "message": "Device authentication error {func}: {exc}"
     },
     "device_error": {
       "message": "Unable to communicate with the device {func}: {exc}"
     },
-    "device_authentication": {
-      "message": "Device authentication error {func}: {exc}"
+    "device_timeout": {
+      "message": "Timeout communicating with the device {func}: {exc}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
     },
     "set_custom_effect": {
       "message": "Error trying to set custom effect {effect}: {exc}"
     },
     "unexpected_device": {
       "message": "Unexpected device found at {host}; expected {expected}, found {found}"
-    },
-    "invalid_alarm_duration": {
-      "message": "Invalid duration {duration} available: 1-{duration_max}s"
     }
   },
   "issues": {
     "deprecated_entity": {
-      "title": "Detected deprecated {platform} entity usage",
-      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
+      "title": "Detected deprecated {platform} entity usage"
+    }
+  },
+  "services": {
+    "random_effect": {
+      "description": "Sets a random effect.",
+      "fields": {
+        "backgrounds": {
+          "description": "[%key:component::tplink::services::sequence_effect::fields::sequence::description%]",
+          "name": "Backgrounds"
+        },
+        "brightness": {
+          "description": "[%key:component::tplink::services::sequence_effect::fields::brightness::description%]",
+          "name": "Brightness"
+        },
+        "brightness_range": {
+          "description": "Range of brightness.",
+          "name": "Brightness range"
+        },
+        "duration": {
+          "description": "[%key:component::tplink::services::sequence_effect::fields::duration::description%]",
+          "name": "Duration"
+        },
+        "fadeoff": {
+          "description": "Fade off.",
+          "name": "Fade off"
+        },
+        "hue_range": {
+          "description": "Range of hue.",
+          "name": "Hue range"
+        },
+        "init_states": {
+          "description": "Initial HSV sequence.",
+          "name": "Initial states"
+        },
+        "random_seed": {
+          "description": "Random seed.",
+          "name": "Random seed"
+        },
+        "saturation_range": {
+          "description": "Range of saturation.",
+          "name": "Saturation range"
+        },
+        "segments": {
+          "description": "List of segments (0 for all).",
+          "name": "Segments"
+        },
+        "transition": {
+          "description": "[%key:component::tplink::services::sequence_effect::fields::transition::description%]",
+          "name": "Transition"
+        },
+        "transition_range": {
+          "description": "Range of transition.",
+          "name": "Transition range"
+        }
+      },
+      "name": "Random effect"
+    },
+    "sequence_effect": {
+      "description": "Sets a sequence effect.",
+      "fields": {
+        "brightness": {
+          "description": "Initial brightness.",
+          "name": "Brightness"
+        },
+        "direction": {
+          "description": "Direction.",
+          "name": "Direction"
+        },
+        "duration": {
+          "description": "Duration.",
+          "name": "Duration"
+        },
+        "repeat_times": {
+          "description": "Repetitions (0 for continuous).",
+          "name": "Repetitions"
+        },
+        "segments": {
+          "description": "List of segments (0 for all).",
+          "name": "Segments"
+        },
+        "sequence": {
+          "description": "List of HSV sequences (Max 16).",
+          "name": "Sequence"
+        },
+        "spread": {
+          "description": "Speed of spread.",
+          "name": "Spread"
+        },
+        "transition": {
+          "description": "Transition.",
+          "name": "Transition"
+        }
+      },
+      "name": "Sequence effect"
     }
   }
 }

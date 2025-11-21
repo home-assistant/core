@@ -3,8 +3,8 @@
   "name": "Husqvarna Automower BLE",
   "bluetooth": [
     {
-      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-      "connectable": true
+      "connectable": true,
+      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
     }
   ],
   "codeowners": ["@alistair23"],
@@ -12,5 +12,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower_ble",
   "iot_class": "local_polling",
-  "requirements": ["automower-ble==0.2.7", "gardena-bluetooth==1.6.0"]
+  "requirements": ["automower-ble==0.2.8", "gardena-bluetooth==1.6.0"]
 }

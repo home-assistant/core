@@ -127,7 +127,7 @@ class GarageDoorOpener(HomeAccessory):
         self.async_update_state(state)
 
     @callback
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def run(self) -> None:
         """Handle accessory driver started event.
 

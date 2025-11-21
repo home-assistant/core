@@ -72,6 +72,12 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewBytesReceived": 12045,
         },
     },
+    "LANConfigSecurity1": {
+        "X_AVM-DE_GetCurrentUser": {
+            "NewX_AVM-DE_CurrentUsername": "fake_user",
+            "NewX_AVM-DE_CurrentUserRights": "<rights><path>BoxAdmin</path><access>readwrite</access><path>Phone</path><access>readwrite</access><path>Dial</path><access>readwrite</access><path>NAS</path><access>none</access><path>HomeAuto</path><access>readwrite</access><path>App</path><access>readwrite</access></rights>",
+        }
+    },
     "Layer3Forwarding1": {
         "GetDefaultConnectionService": {
             "NewDefaultConnectionService": "1.WANPPPConnection.1"
