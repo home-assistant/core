@@ -916,7 +916,7 @@ gios==6.1.2
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.2.1
+go2rtc-client==0.3.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1003,6 +1003,9 @@ habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
 habluetooth==5.7.0
+
+# homeassistant.components.hanna
+hanna-cloud==0.0.6
 
 # homeassistant.components.cloud
 hass-nabucasa==1.5.1

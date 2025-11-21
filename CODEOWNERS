@@ -629,6 +629,8 @@ build.json @home-assistant/supervisor
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @tr4nt0r
 /tests/components/habitica/ @tr4nt0r
+/homeassistant/components/hanna/ @bestycame
+/tests/components/hanna/ @bestycame
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
@@ -848,6 +850,8 @@ build.json @home-assistant/supervisor
 /tests/components/kraken/ @eifinger
 /homeassistant/components/kulersky/ @emlove
 /tests/components/kulersky/ @emlove
+/homeassistant/components/labs/ @home-assistant/core
+/tests/components/labs/ @home-assistant/core
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lamarzocco/ @zweckj
