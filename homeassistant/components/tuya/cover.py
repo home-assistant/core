@@ -20,9 +20,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, find_dpcode
+from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 from .util import get_dpcode
 
 
@@ -73,6 +73,60 @@ class _ControlBackModePercentageMappingWrapper(_DPCodePercentageMappingWrapper):
         return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
 
 
+class _InstructionWrapper:
+    """Default wrapper for sending open/close/stop instructions."""
+
+    def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        return None
+
+    def get_close_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        return None
+
+    def get_stop_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        return None
+
+
+class _InstructionBooleanWrapper(DPCodeBooleanWrapper, _InstructionWrapper):
+    """Wrapper for boolean-based open/close instructions."""
+
+    def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        return {"code": self.dpcode, "value": True}
+
+    def get_close_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        return {"code": self.dpcode, "value": False}
+
+
+class _InstructionEnumWrapper(DPCodeEnumWrapper, _InstructionWrapper):
+    """Wrapper for enum-based open/close/stop instructions."""
+
+    open_instruction = "open"
+    close_instruction = "close"
+    stop_instruction = "stop"
+
+    def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        if self.open_instruction in self.type_information.range:
+            return {"code": self.dpcode, "value": self.open_instruction}
+        return None
+
+    def get_close_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        if self.close_instruction in self.type_information.range:
+            return {"code": self.dpcode, "value": self.close_instruction}
+        return None
+
+    def get_stop_command(self, device: CustomerDevice) -> dict[str, Any] | None:
+        if self.stop_instruction in self.type_information.range:
+            return {"code": self.dpcode, "value": self.stop_instruction}
+        return None
+
+
+class _SpecialInstructionEnumWrapper(_InstructionEnumWrapper):
+    """Wrapper for enum-based instructions with special values (FZ/ZZ/STOP)."""
+
+    open_instruction = "FZ"
+    close_instruction = "ZZ"
+    stop_instruction = "STOP"
+
+
 @dataclass(frozen=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
@@ -80,13 +134,11 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state: DPCode | tuple[DPCode, ...] | None = None
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
+    instruction_wrapper: type[_InstructionEnumWrapper] = _InstructionEnumWrapper
     position_wrapper: type[_DPCodePercentageMappingWrapper] = (
         _InvertedPercentageMappingWrapper
     )
     set_position: DPCode | None = None
-    open_instruction_value: str = "open"
-    close_instruction_value: str = "close"
-    stop_instruction_value: str = "stop"
 
 
 COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -147,9 +199,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
-            open_instruction_value="FZ",
-            close_instruction_value="ZZ",
-            stop_instruction_value="STOP",
+            instruction_wrapper=_SpecialInstructionEnumWrapper,
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -192,6 +242,21 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
 }
 
 
+def _get_instruction_wrapper(
+    device: CustomerDevice, description: TuyaCoverEntityDescription
+) -> _InstructionWrapper | None:
+    """Get the instruction wrapper for the cover entity."""
+    if enum_wrapper := description.instruction_wrapper.find_dpcode(
+        device, description.key, prefer_function=True
+    ):
+        return enum_wrapper
+
+    # Fallback to a boolean wrapper if available
+    return _InstructionBooleanWrapper.find_dpcode(
+        device, description.key, prefer_function=True
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -214,6 +279,9 @@ async def async_setup_entry(
                         description,
                         current_position=description.position_wrapper.find_dpcode(
                             device, description.current_position
+                        ),
+                        instruction_wrapper=_get_instruction_wrapper(
+                            device, description
                         ),
                         set_position=description.position_wrapper.find_dpcode(
                             device, description.set_position, prefer_function=True
@@ -253,6 +321,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         description: TuyaCoverEntityDescription,
         *,
         current_position: _DPCodePercentageMappingWrapper | None = None,
+        instruction_wrapper: _InstructionWrapper | None = None,
         set_position: _DPCodePercentageMappingWrapper | None = None,
         tilt_position: _DPCodePercentageMappingWrapper | None = None,
     ) -> None:
@@ -263,24 +332,17 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position
+        self._instruction_wrapper = instruction_wrapper
         self._set_position = set_position
         self._tilt_position = tilt_position
 
-        # Check if this cover is based on a switch or has controls
-        if get_dpcode(self.device, description.key):
-            if device.function[description.key].type == "Boolean":
-                self._attr_supported_features |= (
-                    CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-                )
-            elif enum_type := find_dpcode(
-                self.device, description.key, dptype=DPType.ENUM, prefer_function=True
-            ):
-                if description.open_instruction_value in enum_type.range:
-                    self._attr_supported_features |= CoverEntityFeature.OPEN
-                if description.close_instruction_value in enum_type.range:
-                    self._attr_supported_features |= CoverEntityFeature.CLOSE
-                if description.stop_instruction_value in enum_type.range:
-                    self._attr_supported_features |= CoverEntityFeature.STOP
+        if instruction_wrapper:
+            if instruction_wrapper.get_open_command(device) is not None:
+                self._attr_supported_features |= CoverEntityFeature.OPEN
+            if instruction_wrapper.get_close_command(device) is not None:
+                self._attr_supported_features |= CoverEntityFeature.CLOSE
+            if instruction_wrapper.get_stop_command(device) is not None:
+                self._attr_supported_features |= CoverEntityFeature.STOP
 
         self._current_state = get_dpcode(self.device, description.current_state)
 
@@ -321,60 +383,42 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         return None
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        value: bool | str = True
-        if find_dpcode(
-            self.device,
-            self.entity_description.key,
-            dptype=DPType.ENUM,
-            prefer_function=True,
+        if self._instruction_wrapper and (
+            command := self._instruction_wrapper.get_open_command(self.device)
         ):
-            value = self.entity_description.open_instruction_value
-
-        commands: list[dict[str, str | int]] = [
-            {"code": self.entity_description.key, "value": value}
-        ]
+            await self._async_send_commands([command])
+            return
 
         if self._set_position is not None:
-            commands.append(self._set_position.get_update_command(self.device, 100))
+            await self._async_send_commands(
+                [self._set_position.get_update_command(self.device, 100)]
+            )
 
-        self._send_command(commands)
-
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        value: bool | str = False
-        if find_dpcode(
-            self.device,
-            self.entity_description.key,
-            dptype=DPType.ENUM,
-            prefer_function=True,
+        if self._instruction_wrapper and (
+            command := self._instruction_wrapper.get_close_command(self.device)
         ):
-            value = self.entity_description.close_instruction_value
-
-        commands: list[dict[str, str | int]] = [
-            {"code": self.entity_description.key, "value": value}
-        ]
+            await self._async_send_commands([command])
+            return
 
         if self._set_position is not None:
-            commands.append(self._set_position.get_update_command(self.device, 0))
-
-        self._send_command(commands)
+            await self._async_send_commands(
+                [self._set_position.get_update_command(self.device, 0)]
+            )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_send_dpcode_update(self._set_position, kwargs[ATTR_POSITION])
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._send_command(
-            [
-                {
-                    "code": self.entity_description.key,
-                    "value": self.entity_description.stop_instruction_value,
-                }
-            ]
-        )
+        if self._instruction_wrapper and (
+            command := self._instruction_wrapper.get_stop_command(self.device)
+        ):
+            await self._async_send_commands([command])
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
