@@ -45,7 +45,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
-    websocket_terminated = True
+    _websocket_task: Task | None = None
 
     def __init__(
         self,
@@ -64,6 +64,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
         self.cloud_client = cloud_client
+
+    @property
+    def websocket_terminated(self) -> bool:
+        """Return True if the websocket task is terminated or not running."""
+        if self._websocket_task is None:
+            return True
+        return self._websocket_task.done()
 
     async def __handle_internal_update(
         self, func: Callable[[], Coroutine[Any, Any, None]]
@@ -115,10 +122,11 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         # ensure token stays valid; does nothing if token is still valid
         await self.cloud_client.async_get_access_token()
 
-        if self.device.websocket.connected:
+        # Only skip websocket reconnection if it's currently connected and the task is still running
+        if self.device.websocket.connected and not self.websocket_terminated:
             return
 
-        self.config_entry.async_create_background_task(
+        self._websocket_task = self.config_entry.async_create_background_task(
             hass=self.hass,
             target=self.connect_websocket(),
             name="lm_websocket_task",
@@ -137,7 +145,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         _LOGGER.debug("Init WebSocket in background task")
 
-        self.websocket_terminated = False
         self.async_update_listeners()
 
         @callback
@@ -151,7 +158,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             disconnect_callback=self.async_update_listeners,
         )
 
-        self.websocket_terminated = True
         self.async_update_listeners()
 
 
