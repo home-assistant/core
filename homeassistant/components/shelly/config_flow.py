@@ -550,6 +550,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             None,
             None,
             device_mac=self.unique_id,
+            port=port,
         )
         device: RpcDevice | None = None
         try:
