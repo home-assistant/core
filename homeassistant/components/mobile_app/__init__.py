@@ -2,7 +2,6 @@
 
 from contextlib import suppress
 from functools import partial
-import logging
 from typing import Any
 
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -55,8 +54,6 @@ from .http_api import RegistrationsView
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
@@ -162,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             state is cloud.CloudConnectionState.CLOUD_CONNECTED
             and CONF_CLOUDHOOK_URL not in entry.data
         ):
-            await async_create_cloud_hook(hass, webhook_id)
+            await async_create_cloud_hook(hass, webhook_id, entry)
         elif (
             state is cloud.CloudConnectionState.CLOUD_DISCONNECTED
             and not cloud.async_is_logged_in(hass)
@@ -179,7 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and cloud.async_active_subscription(hass)
             and cloud.async_is_connected(hass)
         ):
-            await async_create_cloud_hook(hass, webhook_id)
+            await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
         # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
         clean_cloudhook()

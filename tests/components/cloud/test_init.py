@@ -387,26 +387,55 @@ async def test_async_listen_cloudhook_change(
     assert len(changes) == 2
 
 
-async def test_async_listen_cloudhook_change_no_cloud(
+async def test_async_listen_cloudhook_change_cloud_setup_later(
     hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """Test async_listen_cloudhook_change when cloud is not available."""
+    """Test async_listen_cloudhook_change works when cloud is set up after listener registration."""
     webhook_id = "mock-webhook-id"
-    change_called = False
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    # Track cloudhook changes
+    changes: list[dict[str, Any] | None] = []
 
     def on_change(cloudhook: dict[str, Any] | None) -> None:
         """Handle cloudhook change."""
-        nonlocal change_called
-        change_called = True
+        changes.append(cloudhook)
 
-    # Should return a no-op unsubscribe when cloud is not available
+    # Register listener BEFORE cloud is set up
     unsubscribe = async_listen_cloudhook_change(hass, webhook_id, on_change)
 
     # Verify it returns a callable
     assert callable(unsubscribe)
 
-    # Call unsubscribe (should not raise)
+    # No changes yet since cloud isn't set up
+    assert len(changes) == 0
+
+    # Now set up cloud
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    # Add a cloudhook - this should trigger the listener
+    cloudhook_data = {
+        "webhook_id": webhook_id,
+        "cloudhook_id": "random-id",
+        "cloudhook_url": cloudhook_url,
+        "managed": True,
+    }
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {webhook_id: cloudhook_data}})
+    await hass.async_block_till_done()
+
+    # Verify the listener received the update
+    assert len(changes) == 1
+    assert changes[-1] == cloudhook_data
+
+    # Unsubscribe and verify no more updates
     unsubscribe()
 
-    # Verify change callback was never called
-    assert not change_called
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
+    await hass.async_block_till_done()
+
+    # Should not receive update after unsubscribe
+    assert len(changes) == 1
