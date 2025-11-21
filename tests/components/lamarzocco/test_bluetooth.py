@@ -63,7 +63,6 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator updates based on websocket connection state."""
-    # Use the fixture to control websocket_terminated property
     mock_lamarzocco.websocket.connected = False
 
     await async_init_integration(hass, mock_config_entry_bluetooth)
