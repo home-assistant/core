@@ -24,7 +24,6 @@ def mock_concord232_client() -> Generator[MagicMock]:
             {"number": 1, "name": "Zone 1", "state": "Normal"},
             {"number": 2, "name": "Zone 2", "state": "Normal"},
         ]
-        mock_instance.partitions = mock_instance.list_partitions.return_value
 
         yield mock_instance
 
