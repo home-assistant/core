@@ -68,11 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
     stay_connected_ble = entry.data.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
 
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_STAY_CONNECTED_BLUETOOTH: stay_connected_ble},
-        )
+    hass.config_entries.async_update_entry(
+        entry,
+        options={CONF_STAY_CONNECTED_BLUETOOTH: stay_connected_ble},
+    )
 
     stay_connected_ble = entry.options.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
 
