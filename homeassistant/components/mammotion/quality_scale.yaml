@@ -68,7 +68,6 @@ rules:
     comment: |
       Does not have any repairs
   stale-devices: done
-
   # Platinum
   async-dependency: todo
   inject-websession: todo
