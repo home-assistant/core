@@ -31,7 +31,7 @@ from .entity import (
     async_setup_entry_rpc,
     rpc_call,
 )
-from .utils import get_device_entry_gen
+from .utils import get_block_entity_name, get_device_entry_gen
 
 PARALLEL_UPDATES = 0
 
@@ -120,6 +120,9 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         """Initialize block cover."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = get_block_entity_name(
+            coordinator.device, block, description.name
+        )
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         if self.coordinator.device.settings["rollers"][0]["positioning"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION

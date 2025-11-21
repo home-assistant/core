@@ -32,6 +32,7 @@ from .utils import (
     async_remove_shelly_entity,
     get_block_channel,
     get_block_custom_name,
+    get_block_entity_name,
     get_block_number_of_channels,
     get_device_entry_gen,
     get_rpc_custom_name,
@@ -201,7 +202,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
-        if hasattr(self, "_attr_name") and not (
+        if not (
             (single := is_block_single_device(coordinator.device, block))
             and get_block_custom_name(coordinator.device, block)
         ):
@@ -212,7 +213,10 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
                 else ""
             }
 
-            delattr(self, "_attr_name")
+            if hasattr(self, "_attr_name"):
+                delattr(self, "_attr_name")
+        else:
+            self._attr_name = get_block_entity_name(coordinator.device, block)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

@@ -50,6 +50,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     brightness_to_percentage,
+    get_block_entity_name,
     get_device_entry_gen,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
@@ -120,6 +121,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         """Initialize block light."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = get_block_entity_name(coordinator.device, block)
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         self._attr_supported_color_modes = set()
         self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE

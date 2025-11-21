@@ -42,6 +42,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_block_entity_name,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
@@ -470,6 +471,9 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         """Initialize relay switch."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = get_block_entity_name(
+            coordinator.device, block, description.name
+        )
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property

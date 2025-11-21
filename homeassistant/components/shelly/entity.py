@@ -25,7 +25,6 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
-    get_block_entity_name,
     get_rpc_device_info,
     get_rpc_entity_name,
     get_rpc_key,
@@ -372,7 +371,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.block = block
-        self._attr_name = get_block_entity_name(coordinator.device, block)
+
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
@@ -468,9 +467,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
         self.entity_description = description
 
         self._attr_unique_id: str = f"{super().unique_id}-{self.attribute}"
-        self._attr_name = get_block_entity_name(
-            coordinator.device, block, description.name
-        )
 
     @property
     def attribute_value(self) -> StateType:
@@ -508,9 +504,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self.block_coordinator = coordinator
         self.attribute = attribute
         self.entity_description = description
-        self._attr_name = get_block_entity_name(
-            coordinator.device, None, description.name
-        )
+
         self._attr_unique_id = f"{coordinator.mac}-{attribute}"
         self._attr_device_info = get_entity_block_device_info(coordinator)
         self._last_value = None
@@ -626,9 +620,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         if block is not None:
             self._attr_unique_id = (
                 f"{self.coordinator.mac}-{block.description}-{attribute}"
-            )
-            self._attr_name = get_block_entity_name(
-                coordinator.device, block, description.name
             )
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
