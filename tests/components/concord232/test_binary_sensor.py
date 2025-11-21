@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
+import datetime
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import requests
 
@@ -151,7 +152,9 @@ async def test_zone_state_faulted(
 
 
 async def test_zone_update_refresh(
-    hass: HomeAssistant, mock_concord232_binary_sensor_client: MagicMock
+    hass: HomeAssistant,
+    mock_concord232_binary_sensor_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that zone updates refresh the client data."""
     mock_concord232_binary_sensor_client.list_zones.return_value = [
@@ -171,8 +174,8 @@ async def test_zone_update_refresh(
     mock_concord232_binary_sensor_client.list_zones.return_value = new_zones
     mock_concord232_binary_sensor_client.zones = new_zones
 
-    # Trigger update - need to wait a bit for the time check to pass
-    await asyncio.sleep(0.1)
+    # Trigger update - advance time to pass the 1 second threshold
+    freezer.tick(datetime.timedelta(seconds=2))
     await async_update_entity(hass, "binary_sensor.zone_1")
     await hass.async_block_till_done()
 
