@@ -117,9 +117,6 @@ def _get_temperature_wrappers(
         ):
             prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    # Default to System Temperature Unit
-    temperature_unit = system_temperature_unit
-
     # Figure out current temperature, use preferred unit or what is available
     celsius_type = find_dpcode(
         device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
