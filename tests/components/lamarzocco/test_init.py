@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import FirmwareType, ModelName
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
@@ -196,11 +197,27 @@ async def test_config_flow_entry_migration_downgrade(
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("ble_device", "has_client"),
+    [
+        (None, False),
+        (
+            BLEDevice(
+                address="aa:bb:cc:dd:ee:ff",
+                name="name",
+                details={},
+            ),
+            True,
+        ),
+    ],
+)
 async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
+    ble_device: BLEDevice | None,
+    has_client: bool,
 ) -> None:
     """Check we can fill a device from discovery info."""
 
@@ -216,13 +233,17 @@ async def test_bluetooth_is_set_from_discovery(
         patch(
             "homeassistant.components.lamarzocco.LaMarzoccoMachine"
         ) as mock_machine_class,
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
     ):
         mock_machine_class.return_value = mock_lamarzocco
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
     assert mock_machine_class.call_count == 1
     _, kwargs = mock_machine_class.call_args
-    assert kwargs["bluetooth_client"] is not None
+    assert (kwargs["bluetooth_client"] is not None) == has_client
 
     assert mock_config_entry.data[CONF_MAC] == service_info.address
     assert mock_config_entry.data[CONF_TOKEN] == "token"
@@ -312,6 +333,50 @@ async def test_device(
     device = device_registry.async_get(entry.device_id)
     assert device
     assert device == snapshot
+
+
+async def test_disconnect_on_stop(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we close the connection with the La Marzocco when Home Assistants stops."""
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data=USER_INPUT
+        | {
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+            autospec=True,
+        ) as mock_bt_client_cls,
+    ):
+        mock_bt_client = mock_bt_client_cls.return_value
+        mock_bt_client.disconnect = AsyncMock()
+
+        await async_init_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        mock_bt_client.disconnect.assert_awaited_once()
 
 
 async def test_websocket_reconnects_after_termination(
