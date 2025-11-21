@@ -95,7 +95,7 @@ async def test_text_state_trigger_behavior_any(
         set_or_remove_state(hass, eid, states[0])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, {}, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
         set_or_remove_state(hass, entity_id, state)

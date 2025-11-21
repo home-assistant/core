@@ -235,7 +235,10 @@ def parametrize_trigger_states(
 
 
 async def arm_trigger(
-    hass: HomeAssistant, trigger: str, trigger_options: dict, trigger_target: dict
+    hass: HomeAssistant,
+    trigger: str,
+    trigger_options: dict | None,
+    trigger_target: dict,
 ) -> None:
     """Arm the specified trigger, call service test.automation when it triggers."""
 
