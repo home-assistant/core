@@ -78,17 +78,15 @@ def mock_airobot_client(
     with (
         patch(
             "homeassistant.components.airobot.coordinator.AirobotClient", autospec=True
-        ) as mock_coordinator_client,
+        ) as mock_client,
         patch(
-            "homeassistant.components.airobot.config_flow.AirobotClient", autospec=True
-        ) as mock_config_flow_client,
+            "homeassistant.components.airobot.config_flow.AirobotClient",
+            new=mock_client,
+        ),
     ):
-        client = mock_coordinator_client.return_value
-        client.get_statuses = AsyncMock(return_value=mock_status)
-        client.get_settings = AsyncMock(return_value=mock_settings)
-
-        # Make config flow client return the same instance
-        mock_config_flow_client.return_value = client
+        client = mock_client.return_value
+        client.get_statuses.return_value = mock_status
+        client.get_settings.return_value = mock_settings
         yield client
 
 

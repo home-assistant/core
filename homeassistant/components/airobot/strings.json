@@ -40,7 +40,7 @@
       "message": "Failed to set preset mode to {preset_mode}."
     },
     "set_temperature_failed": {
-      "message": "Failed to set temperature to {temperature}°C."
+      "message": "Failed to set temperature to {temperature}."
     }
   }
 }

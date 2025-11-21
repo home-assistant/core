@@ -80,16 +80,12 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_base}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
     mock_airobot_client.get_settings.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Thermostat"
@@ -97,7 +93,7 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_unique_id(
+async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
