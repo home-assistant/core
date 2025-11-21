@@ -51,8 +51,7 @@ class LaMarzoccoBaseEntity(
         self._attr_unique_id = f"{device.serial_number}_{key}"
         sw_version = (
             device.settings.firmwares[FirmwareType.MACHINE].build_version
-            if device.settings is not None
-            and FirmwareType.MACHINE in device.settings.firmwares
+            if FirmwareType.MACHINE in device.settings.firmwares
             else None
         )
         self._attr_device_info = DeviceInfo(
