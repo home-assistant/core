@@ -89,9 +89,7 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
             {
                 "domain": "climate",
                 "service": "set_temperature",
-                "service_data": {
-                    "target": {"entity_id": "climate.thermostat"},
-                },
+                "service_data": {"entity_id": "climate.thermostat"},
             },
             context=Context(user_id=user_id),
         )
