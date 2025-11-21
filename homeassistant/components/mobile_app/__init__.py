@@ -141,10 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
         """Handle cloudhook changes."""
         if cloudhook:
-            if (
-                CONF_CLOUDHOOK_URL in entry.data
-                and entry.data[CONF_CLOUDHOOK_URL] == cloudhook[CONF_CLOUDHOOK_URL]
-            ):
+            if entry.data.get(CONF_CLOUDHOOK_URL) == cloudhook[CONF_CLOUDHOOK_URL]:
                 return
 
             hass.config_entries.async_update_entry(

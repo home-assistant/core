@@ -86,7 +86,9 @@ SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
     "CLOUD_CONNECTION_STATE"
 )
 
-SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType("CLOUDHOOKS_UPDATED")
+_SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType(
+    "CLOUDHOOKS_UPDATED"
+)
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
 
@@ -258,7 +260,7 @@ def async_listen_cloudhook_change(
         on_change(cloudhooks.get(webhook_id))
 
     return async_dispatcher_connect(
-        hass, SIGNAL_CLOUDHOOKS_UPDATED, _handle_cloudhooks_updated
+        hass, _SIGNAL_CLOUDHOOKS_UPDATED, _handle_cloudhooks_updated
     )
 
 
@@ -403,7 +405,7 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
         """Update remote status."""
         nonlocal cur_pref
 
-        async_dispatcher_send(hass, SIGNAL_CLOUDHOOKS_UPDATED, prefs.cloudhooks)
+        async_dispatcher_send(hass, _SIGNAL_CLOUDHOOKS_UPDATED, prefs.cloudhooks)
 
         async with lock:
             if prefs.remote_enabled == cur_pref:
