@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_time_changed
@@ -219,6 +218,7 @@ async def test_update_state_disarmed(
 async def test_update_state_armed(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     arming_level: str,
     expected_state: str,
 ) -> None:
@@ -237,7 +237,8 @@ async def test_update_state_armed(
     await hass.async_block_till_done()
 
     # Trigger update
-    await async_update_entity(hass, "alarm_control_panel.test_alarm")
+    freezer.tick(10)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("alarm_control_panel.test_alarm")
