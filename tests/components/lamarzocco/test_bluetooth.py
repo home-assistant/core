@@ -64,31 +64,36 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator updates based on websocket connection state."""
-    await async_init_integration(hass, mock_config_entry_bluetooth)
-    await hass.async_block_till_done()
+    # Patch websocket_terminated property for this test
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new=False,
+    ):
+        await async_init_integration(hass, mock_config_entry_bluetooth)
+        await hass.async_block_till_done()
 
-    # Reset call count after initial setup
-    mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
+        # Reset call count after initial setup
+        mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
 
-    # Test 1: When websocket is connected, Bluetooth should skip updates
-    mock_lamarzocco.websocket.connected = True
-    mock_lamarzocco.dashboard.connected = True
+        # Test 1: When websocket is connected, Bluetooth should skip updates
+        mock_lamarzocco.websocket.connected = True
+        mock_lamarzocco.dashboard.connected = True
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    assert not mock_lamarzocco.get_dashboard_from_bluetooth.called
+        assert not mock_lamarzocco.get_dashboard_from_bluetooth.called
 
-    # Test 2: When websocket is disconnected, Bluetooth should update
-    mock_lamarzocco.websocket.connected = False
-    mock_lamarzocco.dashboard.connected = False
+        # Test 2: When websocket is disconnected, Bluetooth should update
+        mock_lamarzocco.websocket.connected = False
+        mock_lamarzocco.dashboard.connected = False
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    assert mock_lamarzocco.get_dashboard_from_bluetooth.called
+        assert mock_lamarzocco.get_dashboard_from_bluetooth.called
 
 
 async def test_bt_offline_mode_entity_available_when_cloud_fails(
