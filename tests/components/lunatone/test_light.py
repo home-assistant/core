@@ -220,3 +220,18 @@ async def test_line_broadcast_available_status(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unavailable"
+
+
+async def test_line_broadcast_line_present(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_dali_broadcast: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if the broadcast light line is present."""
+    mock_lunatone_dali_broadcast.line = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.async_entity_ids("light")

@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -184,7 +185,8 @@ class LunatoneLineBroadcastLight(
         self._coordinator_devices = coordinator_devices
         self._broadcast = broadcast
 
-        assert broadcast.line is not None
+        if broadcast.line is None:
+            raise PlatformNotReady("Broadcast line not yet available")
         line = broadcast.line
 
         self._attr_unique_id = f"{coordinator_info.data.device.serial}-line{line}"
