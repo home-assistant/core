@@ -5,13 +5,18 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
-from pylamarzocco.const import ModelName, WidgetType
+from pylamarzocco.const import MachineMode, ModelName, WidgetType
 from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 import pytest
 
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, get_bluetooth_service_info
@@ -247,21 +252,20 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator updates trigger entity state updates."""
+    mock_lamarzocco.dashboard.config[
+        WidgetType.CM_MACHINE_STATUS
+    ].mode = MachineMode.STANDBY
     await async_init_integration(hass, mock_config_entry_bluetooth)
 
-    # Water tank sensor with bt_offline_mode
-    water_tank_sensor = (
-        f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
-    )
-
-    # Set initial state - no water issue
-    mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = False
-
-    state = hass.states.get(water_tank_sensor)
+    main_switch = f"switch.{mock_lamarzocco.serial_number}"
+    state = hass.states.get(main_switch)
     assert state
+    assert state.state == STATE_OFF
 
     # Simulate Bluetooth update adding water issue
-    mock_lamarzocco.dashboard.config[WidgetType.CM_NO_WATER] = True
+    mock_lamarzocco.dashboard.config[
+        WidgetType.CM_MACHINE_STATUS
+    ].mode = MachineMode.BREWING_MODE
     mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.dashboard.connected = False
 
@@ -271,7 +275,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     await hass.async_block_till_done()
 
     # Verify entity state was updated
-    state = hass.states.get(water_tank_sensor)
+    state = hass.states.get(main_switch)
     assert state
     assert state.state == STATE_ON
 
