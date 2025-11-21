@@ -29,6 +29,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import initialize_entry
 
@@ -36,15 +41,22 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
+@pytest.mark.parametrize(
+    "unit_system",
+    [METRIC_SYSTEM, US_CUSTOMARY_SYSTEM],
+    ids=["metric", "us_customary"],
+)
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
+    unit_system: UnitSystem,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
+    hass.config.units = unit_system
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
