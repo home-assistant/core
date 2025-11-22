@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import LevelControl
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,6 +24,8 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+endpoint_id = 1
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -72,7 +75,7 @@ async def test_media_player_actions(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
-        endpoint_id=1,
+        endpoint_id=endpoint_id,
         command=clusters.OnOff.Commands.Off(),
     )
     matter_client.send_device_command.reset_mock()
@@ -91,13 +94,13 @@ async def test_media_player_actions(
     # First command unmutes
     assert matter_client.send_device_command.call_args_list[0] == call(
         node_id=matter_node.node_id,
-        endpoint_id=1,
+        endpoint_id=endpoint_id,
         command=clusters.OnOff.Commands.On(),
     )
     # Second command sets volume
     assert matter_client.send_device_command.call_args_list[1] == call(
         node_id=matter_node.node_id,
-        endpoint_id=1,
+        endpoint_id=endpoint_id,
         command=clusters.LevelControl.Commands.MoveToLevel(level=127),  # 50%
     )
     matter_client.send_device_command.reset_mock()
@@ -128,7 +131,7 @@ async def test_volume_mute_off(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
-        endpoint_id=1,
+        endpoint_id=endpoint_id,
         command=clusters.OnOff.Commands.On(),
     )
 
@@ -150,7 +153,9 @@ async def test_volume_level_none(
 
     # Set CurrentLevel attribute to None to simulate unavailable attribute
     # LevelControl cluster ID: 8, CurrentLevel attribute ID: 0
-    set_node_attribute(matter_node, 1, 8, 0, None)
+    set_node_attribute(
+        matter_node, endpoint_id, LevelControl.id, LevelControl.Attributes.CurrentLevel, None
+    )
     await trigger_subscription_callback(hass, matter_client)
 
     # Verify state remains unchanged when volume is None
