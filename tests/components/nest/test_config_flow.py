@@ -409,11 +409,100 @@ def mock_pubsub_api_responses_fixture(
     return mock_responses
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [True, False])
+@pytest.mark.parametrize(
+    (
+        "sdm_managed_topic",
+        "user_managed_topics",
+        "subscriptions",
+        "topic_args",
+        "expected_config_entry_data",
+    ),
+    [
+        (
+            True,
+            [],
+            [],
+            {"selected_topic": "create_new_topic"},
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": "create_new_topic",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "selected_subscription": f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                "subscriber_id_imported": True,
+            },
+        ),
+    ],
+    ids=[
+        "sdm-managed-topic",
+        "existing-topics-ignored",
+        "user-managed-topic",
+        "user-managed-topic-existing-subscription",
+    ],
+)
 async def test_full_flow(
     hass: HomeAssistant,
     oauth: OAuthFixture,
     mock_pubsub_api_responses: MockPubSubAPIResponses,
+    topic_args: dict[str, str],
+    expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Check full flow."""
     mock_pubsub_api_responses.sdm_managed_topic = True
@@ -426,7 +515,8 @@ async def test_full_flow(
 
     result = await oauth.async_configure(result, None)
     result = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
+        result,
+        **topic_args,
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("context", {}).get("unique_id") == PROJECT_ID
@@ -441,13 +531,12 @@ async def test_full_flow(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
             "type": "Bearer",
         },
+        **expected_config_entry_data,
     }
 
 
@@ -612,7 +701,7 @@ async def test_config_flow_restart(
     }
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [True, False])
+@pytest.mark.parametrize(("sdm_managed_topic"), [True])
 async def test_config_flow_wrong_project_id(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -669,7 +758,7 @@ async def test_config_flow_wrong_project_id(
     }
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [True, False])
+@pytest.mark.parametrize(("sdm_managed_topic"), [True])
 @pytest.mark.parametrize(
     ("create_subscription_status"),
     [HTTPStatus.NOT_FOUND, HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.UNAUTHORIZED],
