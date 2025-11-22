@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA,
+    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
     EntityTriggerBase,
     Trigger,
     TriggerConfig,
@@ -21,7 +21,7 @@ from .const import DOMAIN
 
 ATTR_FULLY_OPENED: Final = "fully_opened"
 
-COVER_OPENED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+COVER_OPENED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
     {
         vol.Required(CONF_OPTIONS): {
             vol.Required(ATTR_FULLY_OPENED, default=False): bool,

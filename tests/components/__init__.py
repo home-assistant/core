@@ -235,12 +235,17 @@ def parametrize_trigger_states(
 
 
 async def arm_trigger(
-    hass: HomeAssistant, trigger: str, trigger_options: dict, trigger_target: dict
+    hass: HomeAssistant,
+    trigger: str,
+    trigger_options: dict | None,
+    trigger_target: dict,
 ) -> None:
     """Arm the specified trigger, call service test.automation when it triggers."""
 
     # Local include to avoid importing the automation component unnecessarily
     from homeassistant.components import automation  # noqa: PLC0415
+
+    options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
 
     await async_setup_component(
         hass,
@@ -249,9 +254,9 @@ async def arm_trigger(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: trigger,
-                    CONF_OPTIONS: {**trigger_options},
                     CONF_TARGET: {**trigger_target},
-                },
+                }
+                | options,
                 "action": {
                     "service": "test.automation",
                     "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
