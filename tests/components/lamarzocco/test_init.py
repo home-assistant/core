@@ -282,13 +282,11 @@ async def test_websocket_reconnects_after_termination(
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
     freezer: FrozenDateTimeFactory,
-    websocket_terminated: PropertyMock,
+    mock_websocket_terminated: PropertyMock,
 ) -> None:
     """Test the websocket reconnects after background task terminates."""
-    # Setup: websocket connected initially
-    mock_websocket = MagicMock()
-    mock_websocket.closed = False
-    mock_lamarzocco.websocket = WebSocketDetails(mock_websocket, None)
+    # Setup: websocket disconnected initially
+    mock_websocket_terminated.return_value = True
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -296,7 +294,7 @@ async def test_websocket_reconnects_after_termination(
     assert mock_lamarzocco.connect_dashboard_websocket.call_count == 1
 
     # Simulate websocket disconnection (e.g., after internet outage)
-    mock_websocket.closed = True
+    mock_websocket_terminated.return_value = True
 
     # Trigger the coordinator's update (which runs every 60 seconds)
     freezer.tick(timedelta(seconds=61))
