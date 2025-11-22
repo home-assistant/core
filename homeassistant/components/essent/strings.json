@@ -5,6 +5,11 @@
         "description": "Set up Essent dynamic energy price monitoring for the Netherlands. For customers with dynamic pricing contracts only."
       }
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_data": "Received invalid data from Essent",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "abort": {
       "already_configured": "Essent integration is already configured",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"

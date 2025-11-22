@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from essent_dynamic_pricing import (
+    EssentClient,
+    EssentConnectionError,
+    EssentDataError,
+    EssentResponseError,
+)
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -18,4 +26,19 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        client = EssentClient(async_get_clientsession(self.hass))
+        errors: dict[str, str] = {}
+
+        try:
+            await client.async_get_prices()
+        except (EssentConnectionError, EssentResponseError):
+            errors["base"] = "cannot_connect"
+        except EssentDataError:
+            errors["base"] = "invalid_data"
+        except Exception:  # noqa: BLE001
+            errors["base"] = "unknown"
+
+        if errors:
+            return self.async_show_form(step_id="user", errors=errors)
+
         return self.async_create_entry(title="Essent", data={})
