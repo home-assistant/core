@@ -46,7 +46,6 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
     ATTR_TARGET,
-    ATTR_TIMEOUT,
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
@@ -121,7 +120,6 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
                 ATTR_KEYBOARD: ["/command1, /command2", "/command3"],
                 ATTR_MESSAGE: "test_message",
                 ATTR_PARSER: ParseMode.HTML,
-                ATTR_TIMEOUT: 15,
                 ATTR_DISABLE_NOTIF: True,
                 ATTR_DISABLE_WEB_PREV: True,
                 ATTR_MESSAGE_TAG: "mock_tag",
@@ -1077,7 +1075,6 @@ async def test_edit_message_media(
                 ATTR_MEDIA_TYPE: media_type,
                 ATTR_MESSAGEID: 12345,
                 ATTR_CHAT_ID: 123456,
-                ATTR_TIMEOUT: 10,
                 ATTR_KEYBOARD_INLINE: "/mock",
             },
             blocking=True,
@@ -1092,7 +1089,6 @@ async def test_edit_message_media(
     assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(
         [[InlineKeyboardButton(callback_data="/mock", text="MOCK")]]
     )
-    assert mock.call_args[1]["read_timeout"] == 10
 
 
 async def test_edit_message(
