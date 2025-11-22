@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Self
 
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
@@ -64,32 +64,31 @@ class _ComponentLookupData:
     component: str
     filters: list[_EntityFilter]
 
+    @classmethod
+    def build_component_lookup_data(
+        cls, component: str, target_description: dict[str, Any]
+    ) -> Self:
+        """Build automation component lookup data from target description."""
+        filters: list[_EntityFilter] = []
+
+        entity_filters_config = target_description.get("entity", [])
+        for entity_filter_config in entity_filters_config:
+            entity_filter = _EntityFilter(
+                domains=set(entity_filter_config.get("domain", [])),
+                device_classes=set(entity_filter_config.get("device_class", [])),
+                supported_features=set(
+                    entity_filter_config.get("supported_features", [])
+                ),
+            )
+            filters.append(entity_filter)
+
+        return cls(component=component, filters=filters)
+
     def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
         """Return if entity matches ANY of the filters."""
         if not self.filters:
             return True
         return any(f.matches(hass, entity_id, domain) for f in self.filters)
-
-
-def _build_component_lookup_data(
-    component: str, target_description: dict[str, Any]
-) -> _ComponentLookupData:
-    """Build automation component lookup data from target description."""
-    filters: list[_EntityFilter] = []
-
-    entity_filters_config = target_description.get("entity", [])
-    for entity_filter_config in entity_filters_config:
-        entity_filter = _EntityFilter(
-            domains=set(entity_filter_config.get("domain", [])),
-            device_classes=set(entity_filter_config.get("device_class", [])),
-            supported_features=set(entity_filter_config.get("supported_features", [])),
-        )
-        filters.append(entity_filter)
-
-    return _ComponentLookupData(
-        component=component,
-        filters=filters,
-    )
 
 
 async def _async_get_components_for_target(
@@ -117,7 +116,9 @@ async def _async_get_components_for_target(
             continue
         domain = component.split(".")[0]
         domain_components.setdefault(domain, []).append(
-            _build_component_lookup_data(component, description[CONF_TARGET])
+            _ComponentLookupData.build_component_lookup_data(
+                component, description[CONF_TARGET]
+            )
         )
         component_count += 1
 
