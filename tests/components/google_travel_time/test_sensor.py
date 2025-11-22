@@ -46,7 +46,7 @@ def mock_update_empty_fixture(routes_mock: AsyncMock) -> AsyncMock:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
     assert (
         hass.states.get("sensor.google_travel_time").attributes["attribution"]
         == "Powered by Google"
@@ -99,7 +99,7 @@ async def test_sensor_empty_response(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_departure_time(hass: HomeAssistant) -> None:
     """Test that sensor works for departure time."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
 
 
 @pytest.mark.parametrize(
@@ -120,7 +120,7 @@ async def test_sensor_departure_time(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     """Test that sensor works for arrival time."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
 
 
 @pytest.mark.parametrize(
