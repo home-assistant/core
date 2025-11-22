@@ -13,7 +13,6 @@ RUN \
         libavcodec-dev \
         libavdevice-dev \
         libavutil-dev \
-        libgammu-dev \
         libswscale-dev \
         libswresample-dev \
         libavfilter-dev \
@@ -34,9 +33,11 @@ WORKDIR /usr/src
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN uv python install 3.13.2
-
 USER vscode
+
+COPY .python-version ./
+RUN uv python install
+
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
 RUN uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

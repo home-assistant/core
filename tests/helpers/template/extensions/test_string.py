@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import template
+
+from tests.helpers.template.helpers import render
 
 
 def test_ordinal(hass: HomeAssistant) -> None:
@@ -20,63 +21,48 @@ def test_ordinal(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | ordinal }}}}") == expected
 
 
 def test_slugify(hass: HomeAssistant) -> None:
     """Test the slugify filter."""
     # Test as global function
-    assert (
-        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
-        == "home_assistant"
-    )
+    assert render(hass, '{{ slugify("Home Assistant") }}') == "home_assistant"
 
     # Test as filter
-    assert (
-        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
-        == "home_assistant"
-    )
+    assert render(hass, '{{ "Home Assistant" | slugify }}') == "home_assistant"
 
     # Test with custom separator as global
-    assert (
-        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
-        == "home-assistant"
-    )
+    assert render(hass, '{{ slugify("Home Assistant", "-") }}') == "home-assistant"
 
     # Test with custom separator as filter
-    assert (
-        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
-        == "home-assistant"
-    )
+    assert render(hass, '{{ "Home Assistant" | slugify("-") }}') == "home-assistant"
 
 
 def test_urlencode(hass: HomeAssistant) -> None:
     """Test the urlencode method."""
     # Test with dictionary
-    tpl = template.Template(
-        "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}",
-        hass,
+
+    result = render(
+        hass, "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}"
     )
-    assert tpl.async_render() == "foo=x%26y&bar=42"
+    assert result == "foo=x%26y&bar=42"
 
     # Test with string
-    tpl = template.Template(
-        "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}",
-        hass,
+
+    result = render(
+        hass, "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"
     )
-    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
+    assert result == "the%20quick%20brown%20fox%20%3D%20true"
 
 
 def test_string_functions_with_non_string_input(hass: HomeAssistant) -> None:
     """Test string functions with non-string input (automatic conversion)."""
     # Test ordinal with integer
-    assert template.Template("{{ 42 | ordinal }}", hass).async_render() == "42nd"
+    assert render(hass, "{{ 42 | ordinal }}") == "42nd"
 
     # Test slugify with integer - Note: Jinja2 may return integer for simple cases
-    result = template.Template("{{ 123 | slugify }}", hass).async_render()
+    result = render(hass, "{{ 123 | slugify }}")
     # Accept either string or integer result for simple numeric cases
     assert result in ["123", 123]
 
@@ -94,10 +80,7 @@ def test_ordinal_edge_cases(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in teens_tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | ordinal }}}}") == expected
 
     # Test other numbers ending in 1, 2, 3
     other_tests = [
@@ -110,10 +93,7 @@ def test_ordinal_edge_cases(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in other_tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | ordinal }}}}") == expected
 
 
 def test_slugify_various_separators(hass: HomeAssistant) -> None:
@@ -127,38 +107,27 @@ def test_slugify_various_separators(hass: HomeAssistant) -> None:
 
     for text, separator, expected in test_cases:
         # Test as global function
-        assert (
-            template.Template(
-                f'{{{{ slugify("{text}", "{separator}") }}}}', hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f'{{{{ slugify("{text}", "{separator}") }}}}') == expected
 
         # Test as filter
-        assert (
-            template.Template(
-                f'{{{{ "{text}" | slugify("{separator}") }}}}', hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f'{{{{ "{text}" | slugify("{separator}") }}}}') == expected
 
 
 def test_urlencode_various_types(hass: HomeAssistant) -> None:
     """Test urlencode with various data types."""
     # Test with nested dictionary values
-    tpl = template.Template(
-        "{% set data = {'key': 'value with spaces', 'num': 123} %}{{ data | urlencode }}",
+    result = render(
         hass,
+        "{% set data = {'key': 'value with spaces', 'num': 123} %}{{ data | urlencode }}",
     )
-    result = tpl.async_render()
     # URL encoding can have different order, so check both parts are present
     # Note: urllib.parse.urlencode uses + for spaces in form data
     assert "key=value+with+spaces" in result
     assert "num=123" in result
 
     # Test with special characters
-    tpl = template.Template(
-        "{% set data = {'special': 'a+b=c&d'} %}{{ data | urlencode }}",
-        hass,
+
+    result = render(
+        hass, "{% set data = {'special': 'a+b=c&d'} %}{{ data | urlencode }}"
     )
-    assert tpl.async_render() == "special=a%2Bb%3Dc%26d"
+    assert result == "special=a%2Bb%3Dc%26d"

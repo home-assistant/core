@@ -118,6 +118,9 @@
     "pm25": {
       "default": "mdi:molecule"
     },
+    "pm4": {
+      "default": "mdi:molecule"
+    },
     "power": {
       "default": "mdi:flash"
     },
@@ -152,6 +155,9 @@
       "default": "mdi:molecule"
     },
     "temperature": {
+      "default": "mdi:thermometer"
+    },
+    "temperature_delta": {
       "default": "mdi:thermometer"
     },
     "timestamp": {

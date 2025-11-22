@@ -19,7 +19,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_smart_home,
 )
-from homeassistant.components.camera.webrtc import async_register_ice_servers
+from homeassistant.components.camera import async_register_ice_servers
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback

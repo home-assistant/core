@@ -211,8 +211,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "caldav": AwesomeVersion("1.6.0"),  # None -- GPL -- ['GNU General Public License (GPL)', 'Apache Software License']  # https://github.com/python-caldav/caldav
-    "xbox-webapi": AwesomeVersion("2.1.0"),  # None -- GPL -- ['MIT License']
 }
 # fmt: on
 

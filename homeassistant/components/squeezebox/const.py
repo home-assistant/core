@@ -1,7 +1,6 @@
 """Constants for the Squeezebox component."""
 
 CONF_HTTPS = "https"
-DISCOVERY_TASK = "discovery_task"
 DOMAIN = "squeezebox"
 DEFAULT_PORT = 9000
 PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"

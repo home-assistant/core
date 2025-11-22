@@ -56,19 +56,13 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
     entity_registry as er,
-    floor_registry as fr,
     issue_registry as ir,
-    label_registry as lr,
     location as loc_helper,
 )
-from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.translation import async_translate_state
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
@@ -196,29 +190,6 @@ def async_setup(hass: HomeAssistant) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
     return True
-
-
-@bind_hass
-@deprecated_function(
-    "automatic setting of Template.hass introduced by HA Core PR #89242",
-    breaks_in_ha_version="2025.10",
-)
-def attach(hass: HomeAssistant, obj: Any) -> None:
-    """Recursively attach hass to all template instances in list and dict."""
-    return _attach(hass, obj)
-
-
-def _attach(hass: HomeAssistant, obj: Any) -> None:
-    """Recursively attach hass to all template instances in list and dict."""
-    if isinstance(obj, list):
-        for child in obj:
-            _attach(hass, child)
-    elif isinstance(obj, collections.abc.Mapping):
-        for child_key, child_value in obj.items():
-            _attach(hass, child_key)
-            _attach(hass, child_value)
-    elif isinstance(obj, Template):
-        obj.hass = hass
 
 
 def render_complex(
@@ -561,15 +532,16 @@ class Template:
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
 
+        template_render_thread = ThreadWithException(target=_render_template)
         try:
-            template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
             async with asyncio.timeout(timeout):
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            template_render_thread.raise_exc(TimeoutError)
+            if template_render_thread.is_alive():
+                template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
             template_render_thread.join()
@@ -1192,13 +1164,6 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return list(found.values())
 
 
-def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
-    """Get entity ids for entities tied to a device."""
-    entity_reg = er.async_get(hass)
-    entries = er.async_entries_for_device(entity_reg, _device_id)
-    return [entry.entity_id for entry in entries]
-
-
 def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     """Get entity ids for entities tied to an integration/domain.
 
@@ -1240,65 +1205,6 @@ def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
     return None
 
 
-def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
-    """Get a device ID from an entity ID or device name."""
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get(entity_id_or_device_name)
-    if entity is not None:
-        return entity.device_id
-
-    dev_reg = dr.async_get(hass)
-    return next(
-        (
-            device_id
-            for device_id, device in dev_reg.devices.items()
-            if (name := device.name_by_user or device.name)
-            and (str(entity_id_or_device_name) == name)
-        ),
-        None,
-    )
-
-
-def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the device name from an device id, or entity id."""
-    device_reg = dr.async_get(hass)
-    if device := device_reg.async_get(lookup_value):
-        return device.name_by_user or device.name
-
-    ent_reg = er.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            if entity.device_id and (device := device_reg.async_get(entity.device_id)):
-                return device.name_by_user or device.name
-
-    return None
-
-
-def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
-    """Get the device specific attribute."""
-    device_reg = dr.async_get(hass)
-    if not isinstance(device_or_entity_id, str):
-        raise TemplateError("Must provide a device or entity ID")
-    device = None
-    if (
-        "." in device_or_entity_id
-        and (_device_id := device_id(hass, device_or_entity_id)) is not None
-    ):
-        device = device_reg.async_get(_device_id)
-    elif "." not in device_or_entity_id:
-        device = device_reg.async_get(device_or_entity_id)
-    if device is None or not hasattr(device, attr_name):
-        return None
-    return getattr(device, attr_name)
-
-
 def config_entry_attr(
     hass: HomeAssistant, config_entry_id_: str, attr_name: str
 ) -> Any:
@@ -1317,18 +1223,15 @@ def config_entry_attr(
     return getattr(config_entry, attr_name)
 
 
-def is_device_attr(
-    hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
-) -> bool:
-    """Test if a device's attribute is a specific value."""
-    return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
-
-
 def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
     """Return all open issues."""
     current_issues = ir.async_get(hass).issues
     # Use JSON for safe representation
-    return {k: v.to_json() for (k, v) in current_issues.items()}
+    return {
+        key: issue_entry.to_json()
+        for (key, issue_entry) in current_issues.items()
+        if issue_entry.active
+    }
 
 
 def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
@@ -1337,295 +1240,6 @@ def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | N
     if result:
         return result.to_json()
     return None
-
-
-def floors(hass: HomeAssistant) -> Iterable[str | None]:
-    """Return all floors."""
-    floor_registry = fr.async_get(hass)
-    return [floor.floor_id for floor in floor_registry.async_list_floors()]
-
-
-def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
-    """Get the floor ID from a floor or area name, alias, device id, or entity id."""
-    floor_registry = fr.async_get(hass)
-    lookup_str = str(lookup_value)
-    if floor := floor_registry.async_get_floor_by_name(lookup_str):
-        return floor.floor_id
-    floors_list = floor_registry.async_get_floors_by_alias(lookup_str)
-    if floors_list:
-        return floors_list[0].floor_id
-
-    if aid := area_id(hass, lookup_value):
-        area_reg = ar.async_get(hass)
-        if area := area_reg.async_get_area(aid):
-            return area.floor_id
-
-    return None
-
-
-def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the floor name from a floor id."""
-    floor_registry = fr.async_get(hass)
-    if floor := floor_registry.async_get_floor(lookup_value):
-        return floor.name
-
-    if aid := area_id(hass, lookup_value):
-        area_reg = ar.async_get(hass)
-        if (
-            (area := area_reg.async_get_area(aid))
-            and area.floor_id
-            and (floor := floor_registry.async_get_floor(area.floor_id))
-        ):
-            return floor.name
-
-    return None
-
-
-def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
-    """Return area IDs for a given floor ID or name."""
-    _floor_id: str | None
-    # If floor_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if floor_name(hass, floor_id_or_name) is not None:
-        _floor_id = floor_id_or_name
-    else:
-        _floor_id = floor_id(hass, floor_id_or_name)
-    if _floor_id is None:
-        return []
-
-    area_reg = ar.async_get(hass)
-    entries = ar.async_entries_for_floor(area_reg, _floor_id)
-    return [entry.id for entry in entries if entry.id]
-
-
-def floor_entities(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
-    """Return entity_ids for a given floor ID or name."""
-    return [
-        entity_id
-        for area_id in floor_areas(hass, floor_id_or_name)
-        for entity_id in area_entities(hass, area_id)
-    ]
-
-
-def areas(hass: HomeAssistant) -> Iterable[str | None]:
-    """Return all areas."""
-    return list(ar.async_get(hass).areas)
-
-
-def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area ID from an area name, alias, device id, or entity id."""
-    area_reg = ar.async_get(hass)
-    lookup_str = str(lookup_value)
-    if area := area_reg.async_get_area_by_name(lookup_str):
-        return area.id
-    areas_list = area_reg.async_get_areas_by_alias(lookup_str)
-    if areas_list:
-        return areas_list[0].id
-
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            # If entity has an area ID, return that
-            if entity.area_id:
-                return entity.area_id
-            # If entity has a device ID, return the area ID for the device
-            if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
-                return device.area_id
-
-    # Check if this could be a device ID
-    if device := dev_reg.async_get(lookup_value):
-        return device.area_id
-
-    return None
-
-
-def _get_area_name(area_reg: ar.AreaRegistry, valid_area_id: str) -> str:
-    """Get area name from valid area ID."""
-    area = area_reg.async_get_area(valid_area_id)
-    assert area
-    return area.name
-
-
-def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area name from an area id, device id, or entity id."""
-    area_reg = ar.async_get(hass)
-    if area := area_reg.async_get_area(lookup_value):
-        return area.name
-
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            # If entity has an area ID, get the area name for that
-            if entity.area_id:
-                return _get_area_name(area_reg, entity.area_id)
-            # If entity has a device ID and the device exists with an area ID, get the
-            # area name for that
-            if (
-                entity.device_id
-                and (device := dev_reg.async_get(entity.device_id))
-                and device.area_id
-            ):
-                return _get_area_name(area_reg, device.area_id)
-
-    if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-        return _get_area_name(area_reg, device.area_id)
-
-    return None
-
-
-def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
-    """Return entities for a given area ID or name."""
-    _area_id: str | None
-    # if area_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if area_name(hass, area_id_or_name) is None:
-        _area_id = area_id(hass, area_id_or_name)
-    else:
-        _area_id = area_id_or_name
-    if _area_id is None:
-        return []
-    ent_reg = er.async_get(hass)
-    entity_ids = [
-        entry.entity_id for entry in er.async_entries_for_area(ent_reg, _area_id)
-    ]
-    dev_reg = dr.async_get(hass)
-    # We also need to add entities tied to a device in the area that don't themselves
-    # have an area specified since they inherit the area from the device.
-    entity_ids.extend(
-        [
-            entity.entity_id
-            for device in dr.async_entries_for_area(dev_reg, _area_id)
-            for entity in er.async_entries_for_device(ent_reg, device.id)
-            if entity.area_id is None
-        ]
-    )
-    return entity_ids
-
-
-def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
-    """Return device IDs for a given area ID or name."""
-    _area_id: str | None
-    # if area_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if area_name(hass, area_id_or_name) is not None:
-        _area_id = area_id_or_name
-    else:
-        _area_id = area_id(hass, area_id_or_name)
-    if _area_id is None:
-        return []
-    dev_reg = dr.async_get(hass)
-    entries = dr.async_entries_for_area(dev_reg, _area_id)
-    return [entry.id for entry in entries]
-
-
-def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
-    """Return all labels, or those from a area ID, device ID, or entity ID."""
-    label_reg = lr.async_get(hass)
-    if lookup_value is None:
-        return list(label_reg.labels)
-
-    ent_reg = er.async_get(hass)
-
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    lookup_value = str(lookup_value)
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            return list(entity.labels)
-
-    # Check if this could be a device ID
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get(lookup_value):
-        return list(device.labels)
-
-    # Check if this could be a area ID
-    area_reg = ar.async_get(hass)
-    if area := area_reg.async_get_area(lookup_value):
-        return list(area.labels)
-
-    return []
-
-
-def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
-    """Get the label ID from a label name."""
-    label_reg = lr.async_get(hass)
-    if label := label_reg.async_get_label_by_name(str(lookup_value)):
-        return label.label_id
-    return None
-
-
-def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the label name from a label ID."""
-    label_reg = lr.async_get(hass)
-    if label := label_reg.async_get_label(lookup_value):
-        return label.name
-    return None
-
-
-def label_description(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the label description from a label ID."""
-    label_reg = lr.async_get(hass)
-    if label := label_reg.async_get_label(lookup_value):
-        return label.description
-    return None
-
-
-def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
-    """Get the label ID from a label name or ID."""
-    # If label_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early.
-    if label_name(hass, label_id_or_name) is not None:
-        return label_id_or_name
-    return label_id(hass, label_id_or_name)
-
-
-def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return areas for a given label ID or name."""
-    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
-        return []
-    area_reg = ar.async_get(hass)
-    entries = ar.async_entries_for_label(area_reg, _label_id)
-    return [entry.id for entry in entries]
-
-
-def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return device IDs for a given label ID or name."""
-    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
-        return []
-    dev_reg = dr.async_get(hass)
-    entries = dr.async_entries_for_label(dev_reg, _label_id)
-    return [entry.id for entry in entries]
-
-
-def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return entities for a given label ID or name."""
-    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
-        return []
-    ent_reg = er.async_get(hass)
-    entries = er.async_entries_for_label(ent_reg, _label_id)
-    return [entry.entity_id for entry in entries]
 
 
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
@@ -2469,11 +2083,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
+        self.add_extension("homeassistant.helpers.template.extensions.AreaExtension")
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
@@ -2560,39 +2178,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return jinja_context(wrapper)
 
-        # Area extensions
-
-        self.globals["areas"] = hassfunction(areas)
-
-        self.globals["area_id"] = hassfunction(area_id)
-        self.filters["area_id"] = self.globals["area_id"]
-
-        self.globals["area_name"] = hassfunction(area_name)
-        self.filters["area_name"] = self.globals["area_name"]
-
-        self.globals["area_entities"] = hassfunction(area_entities)
-        self.filters["area_entities"] = self.globals["area_entities"]
-
-        self.globals["area_devices"] = hassfunction(area_devices)
-        self.filters["area_devices"] = self.globals["area_devices"]
-
-        # Floor extensions
-
-        self.globals["floors"] = hassfunction(floors)
-        self.filters["floors"] = self.globals["floors"]
-
-        self.globals["floor_id"] = hassfunction(floor_id)
-        self.filters["floor_id"] = self.globals["floor_id"]
-
-        self.globals["floor_name"] = hassfunction(floor_name)
-        self.filters["floor_name"] = self.globals["floor_name"]
-
-        self.globals["floor_areas"] = hassfunction(floor_areas)
-        self.filters["floor_areas"] = self.globals["floor_areas"]
-
-        self.globals["floor_entities"] = hassfunction(floor_entities)
-        self.filters["floor_entities"] = self.globals["floor_entities"]
-
         # Integration extensions
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
@@ -2605,46 +2190,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
-        # Device extensions
-
-        self.globals["device_name"] = hassfunction(device_name)
-        self.filters["device_name"] = self.globals["device_name"]
-
-        self.globals["device_attr"] = hassfunction(device_attr)
-        self.filters["device_attr"] = self.globals["device_attr"]
-
-        self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = self.globals["device_entities"]
-
-        self.globals["is_device_attr"] = hassfunction(is_device_attr)
-        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
-
-        self.globals["device_id"] = hassfunction(device_id)
-        self.filters["device_id"] = self.globals["device_id"]
-
-        # Label extensions
-
-        self.globals["labels"] = hassfunction(labels)
-        self.filters["labels"] = self.globals["labels"]
-
-        self.globals["label_id"] = hassfunction(label_id)
-        self.filters["label_id"] = self.globals["label_id"]
-
-        self.globals["label_name"] = hassfunction(label_name)
-        self.filters["label_name"] = self.globals["label_name"]
-
-        self.globals["label_description"] = hassfunction(label_description)
-        self.filters["label_description"] = self.globals["label_description"]
-
-        self.globals["label_areas"] = hassfunction(label_areas)
-        self.filters["label_areas"] = self.globals["label_areas"]
-
-        self.globals["label_devices"] = hassfunction(label_devices)
-        self.filters["label_devices"] = self.globals["label_devices"]
-
-        self.globals["label_entities"] = hassfunction(label_entities)
-        self.filters["label_entities"] = self.globals["label_entities"]
 
         # Issue extensions
 
@@ -2667,19 +2212,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_id",
                 "area_name",
                 "closest",
-                "device_attr",
-                "device_id",
                 "distance",
                 "expand",
-                "floor_id",
-                "floor_name",
                 "has_value",
-                "is_device_attr",
                 "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
-                "label_id",
-                "label_name",
                 "now",
                 "relative_time",
                 "state_attr",
@@ -2694,13 +2232,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_id",
                 "area_name",
                 "closest",
-                "device_id",
                 "expand",
-                "floor_id",
-                "floor_name",
                 "has_value",
-                "label_id",
-                "label_name",
             ]
             hass_tests = [
                 "has_value",
