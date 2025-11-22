@@ -275,6 +275,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         elif event.type == assist_pipeline.PipelineEventType.TTS_START:
             # Text-to-speech text
             if event.data:
+                # Save Text-to-speech 
+                self.hass.states.async_set("wyoming.respoinse_text", event.data["tts_input"])
+                
                 # Inform client of text
                 self.config_entry.async_create_background_task(
                     self.hass,
