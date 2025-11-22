@@ -61,7 +61,7 @@ async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> 
         hass,
         entry,
         ent_reg,
-        ("essent_electricity_next_price", "essent_gas_next_price"),
+        ("electricity_next_price", "gas_next_price"),
     )
 
     def _state(unique_id: str):
@@ -71,10 +71,10 @@ async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> 
         assert state is not None
         return state
 
-    elec_current = _state("essent_electricity_current_price")
-    elec_next = _state("essent_electricity_next_price")
-    gas_current = _state("essent_gas_current_price")
-    gas_next = _state("essent_gas_next_price")
+    elec_current = _state("electricity_current_price")
+    elec_next = _state("electricity_next_price")
+    gas_current = _state("gas_current_price")
+    gas_next = _state("gas_next_price")
 
     assert elec_current is not None
     assert float(elec_current.state) == 0.25
@@ -109,7 +109,7 @@ async def test_sensor_states_with_different_timezone(
         hass,
         entry,
         ent_reg,
-        ("essent_electricity_next_price", "essent_gas_next_price"),
+        ("electricity_next_price", "gas_next_price"),
     )
 
     def _state(unique_id: str):
@@ -119,8 +119,8 @@ async def test_sensor_states_with_different_timezone(
         assert state is not None
         return state
 
-    elec_current = _state("essent_electricity_current_price")
-    elec_next = _state("essent_electricity_next_price")
+    elec_current = _state("electricity_current_price")
+    elec_next = _state("electricity_next_price")
 
     assert elec_current is not None
     assert float(elec_current.state) == 0.25
@@ -142,7 +142,7 @@ async def test_sensor_updates_when_time_moves(
         hass,
         entry,
         ent_reg,
-        ("essent_electricity_next_price", "essent_gas_next_price"),
+        ("electricity_next_price", "gas_next_price"),
     )
 
     # Move within today's tariffs
@@ -150,7 +150,7 @@ async def test_sensor_updates_when_time_moves(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    entity_id = ent_reg.async_get_entity_id("sensor", "essent", "essent_electricity_current_price")
+    entity_id = ent_reg.async_get_entity_id("sensor", "essent", "electricity_current_price")
     assert entity_id is not None
     elec_current = hass.states.get(entity_id)
     assert elec_current is not None
@@ -162,10 +162,10 @@ async def test_sensor_updates_when_time_moves(
     await hass.async_block_till_done()
 
     entity_id_current = ent_reg.async_get_entity_id(
-        "sensor", "essent", "essent_electricity_current_price"
+        "sensor", "essent", "electricity_current_price"
     )
     entity_id_next = ent_reg.async_get_entity_id(
-        "sensor", "essent", "essent_electricity_next_price"
+        "sensor", "essent", "electricity_next_price"
     )
     assert entity_id_current is not None
     assert entity_id_next is not None
@@ -188,11 +188,11 @@ async def test_electricity_lowest_price_sensor(
         hass,
         entry,
         ent_reg,
-        ("essent_electricity_lowest_price_today",),
+        ("electricity_lowest_price_today",),
     )
 
     entity_id = ent_reg.async_get_entity_id(
-        "sensor", "essent", "essent_electricity_lowest_price_today"
+        "sensor", "essent", "electricity_lowest_price_today"
     )
     assert entity_id is not None
     sensor = hass.states.get(entity_id)
@@ -210,11 +210,11 @@ async def test_electricity_highest_price_sensor(
         hass,
         entry,
         ent_reg,
-        ("essent_electricity_highest_price_today",),
+        ("electricity_highest_price_today",),
     )
 
     entity_id = ent_reg.async_get_entity_id(
-        "sensor", "essent", "essent_electricity_highest_price_today"
+        "sensor", "essent", "electricity_highest_price_today"
     )
     assert entity_id is not None
     sensor = hass.states.get(entity_id)
@@ -290,16 +290,16 @@ async def test_current_price_breakdown_sensors(
     ent_reg = er.async_get(hass)
 
     breakdown_unique_ids = (
-        "essent_electricity_current_price_ex_vat",
-        "essent_electricity_current_price_vat",
-        "essent_electricity_current_price_market_price",
-        "essent_electricity_current_price_purchasing_fee",
-        "essent_electricity_current_price_tax",
-        "essent_gas_current_price_ex_vat",
-        "essent_gas_current_price_vat",
-        "essent_gas_current_price_market_price",
-        "essent_gas_current_price_purchasing_fee",
-        "essent_gas_current_price_tax",
+        "electricity_current_price_ex_vat",
+        "electricity_current_price_vat",
+        "electricity_current_price_market_price",
+        "electricity_current_price_purchasing_fee",
+        "electricity_current_price_tax",
+        "gas_current_price_ex_vat",
+        "gas_current_price_vat",
+        "gas_current_price_market_price",
+        "gas_current_price_purchasing_fee",
+        "gas_current_price_tax",
     )
 
     breakdown_entities: list[str] = []

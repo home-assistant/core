@@ -221,7 +221,7 @@ class EssentSensor(EssentEntity, SensorEntity):
         super().__init__(coordinator, energy_type)
         self.entity_description = description
         energy_type_value = energy_type.value
-        self._attr_unique_id = f"essent_{energy_type_value}_{description.key}"
+        self._attr_unique_id = f"{energy_type_value}_{description.key}"
         self._attr_translation_key = (
             f"{energy_type_value}_{description.translation_key}"
         )
