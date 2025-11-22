@@ -57,6 +57,12 @@ def gas_api_response() -> dict[str, Any]:
     return load_json_object_fixture("gas_api_response.json", "essent")
 
 
+@pytest.fixture
+def partial_gas_api_response() -> dict[str, Any]:
+    """Load sample response missing gas for tomorrow."""
+    return load_json_object_fixture("partial_gas_api_response.json", "essent")
+
+
 class _MockResponse:
     """Simple mock response for client normalization in tests."""
 

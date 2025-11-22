@@ -1,0 +1,44 @@
+{
+  "prices": [
+    {
+      "date": "2025-11-21",
+      "electricity": {
+        "energyType": "electricity",
+        "unitOfMeasurement": "kWh",
+        "tariffs": [
+          {
+            "startDateTime": "2025-11-21T00:00:00",
+            "endDateTime": "2025-11-21T01:00:00",
+            "totalAmount": 0.26743
+          }
+        ]
+      },
+      "gas": {
+        "energyType": "gas",
+        "unitOfMeasurement": "m³",
+        "tariffs": [
+          {
+            "startDateTime": "2025-11-21T00:00:00",
+            "endDateTime": "2025-11-21T01:00:00",
+            "totalAmount": 1.1457
+          }
+        ]
+      }
+    },
+    {
+      "date": "2025-11-22",
+      "electricity": {
+        "energyType": "electricity",
+        "unitOfMeasurement": "kWh",
+        "tariffs": [
+          {
+            "startDateTime": "2025-11-22T00:00:00",
+            "endDateTime": "2025-11-22T01:00:00",
+            "totalAmount": 0.24679
+          }
+        ]
+      },
+      "gas": null
+    }
+  ]
+}
