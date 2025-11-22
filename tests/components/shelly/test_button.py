@@ -521,6 +521,12 @@ async def test_rpc_smoke_mute_alarm_button(
     mock_rpc_device.mock_update()
     mock_rpc_device.smoke_mute_alarm.assert_called_once_with(0)
 
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
 
 @pytest.mark.parametrize(("action", "value"), [("turn_on", True), ("turn_off", False)])
 async def test_wall_display_screen_buttons(

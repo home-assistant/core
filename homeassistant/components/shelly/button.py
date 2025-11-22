@@ -48,6 +48,7 @@ from .utils import (
     format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_key_id,
     get_rpc_key_ids,
     get_rpc_key_instances,
     get_rpc_role_by_key,
@@ -420,8 +421,7 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
 
-        _id = int(self.key.split(":")[-1])
-        await self.coordinator.device.smoke_mute_alarm(_id)
+        await self.coordinator.device.smoke_mute_alarm(get_rpc_key_id(self.key))
 
     @property
     def available(self) -> bool:
