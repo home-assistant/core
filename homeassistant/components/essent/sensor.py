@@ -93,6 +93,18 @@ def _get_next_tariff(entity: "EssentSensor") -> Tariff | None:
     return None
 
 
+def _get_current_tariff_groups(
+    entity: "EssentSensor",
+) -> tuple[Tariff | None, dict[str, Any]]:
+    """Return the current tariff and grouped amounts."""
+    if (tariff := _get_current_tariff(entity)) is None:
+        return None, {}
+    groups = {
+        group["type"]: group.get("amount") for group in tariff.groups if "type" in group
+    }
+    return tariff, groups
+
+
 SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     EssentSensorEntityDescription(
         key="current_price",
@@ -129,6 +141,48 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         translation_key="highest_price_today",
         value_fn=lambda entity: entity.energy_data.max_price,
         energy_types=(ENERGY_TYPE_ELECTRICITY,),
+        entity_registry_enabled_default=False,
+    ),
+    EssentSensorEntityDescription(
+        key="current_price_ex_vat",
+        translation_key="current_price_ex_vat",
+        value_fn=lambda entity: (
+            None
+            if (tariff := _get_current_tariff(entity)) is None
+            else tariff.total_amount_ex
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    EssentSensorEntityDescription(
+        key="current_price_vat",
+        translation_key="current_price_vat",
+        value_fn=lambda entity: (
+            None
+            if (tariff := _get_current_tariff(entity)) is None
+            else tariff.total_amount_vat
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    EssentSensorEntityDescription(
+        key="current_price_market_price",
+        translation_key="current_price_market_price",
+        value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get(
+            "MARKET_PRICE"
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    EssentSensorEntityDescription(
+        key="current_price_purchasing_fee",
+        translation_key="current_price_purchasing_fee",
+        value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get(
+            "PURCHASING_FEE"
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    EssentSensorEntityDescription(
+        key="current_price_tax",
+        translation_key="current_price_tax",
+        value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get("TAX"),
         entity_registry_enabled_default=False,
     ),
 )

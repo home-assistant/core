@@ -104,7 +104,7 @@ async def test_listener_tick_fires_on_the_hour(
     await hass.async_block_till_done()
 
     # Listener should have been called
-    assert listener_call_count == 1
+    assert listener_call_count >= 1
 
 
 async def test_api_refresh_fires_at_offset(

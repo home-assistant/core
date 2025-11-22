@@ -40,6 +40,36 @@
       },
       "electricity_highest_price_today": {
         "name": "Highest electricity price today"
+      },
+      "electricity_current_price_ex_vat": {
+        "name": "Current electricity price excl. VAT"
+      },
+      "electricity_current_price_vat": {
+        "name": "Current electricity VAT"
+      },
+      "electricity_current_price_market_price": {
+        "name": "Current electricity market price"
+      },
+      "electricity_current_price_purchasing_fee": {
+        "name": "Current electricity purchasing fee"
+      },
+      "electricity_current_price_tax": {
+        "name": "Current electricity tax"
+      },
+      "gas_current_price_ex_vat": {
+        "name": "Current gas price excl. VAT"
+      },
+      "gas_current_price_vat": {
+        "name": "Current gas VAT"
+      },
+      "gas_current_price_market_price": {
+        "name": "Current gas market price"
+      },
+      "gas_current_price_purchasing_fee": {
+        "name": "Current gas purchasing fee"
+      },
+      "gas_current_price_tax": {
+        "name": "Current gas tax"
       }
     }
   }

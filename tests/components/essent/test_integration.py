@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
@@ -20,13 +21,21 @@ async def test_full_integration_setup(
 ) -> None:
     """Test complete integration setup and unload."""
     entry = await setup_integration(hass, essent_api_response)
+    ent_reg = er.async_get(hass)
 
     assert entry.state == ConfigEntryState.LOADED
 
-    assert hass.states.get("sensor.essent_electricity_current_price") is not None
-    assert hass.states.get("sensor.essent_electricity_next_price") is not None
-    assert hass.states.get("sensor.essent_gas_current_price") is not None
-    assert hass.states.get("sensor.essent_gas_next_price") is not None
+    def _state(unique_id: str) -> str | None:
+        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        return state.state
+
+    assert _state("essent_electricity_current_price") is not None
+    assert _state("essent_electricity_next_price") is not None
+    assert _state("essent_gas_current_price") is not None
+    assert _state("essent_gas_next_price") is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
