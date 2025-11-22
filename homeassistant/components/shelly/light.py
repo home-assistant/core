@@ -50,7 +50,6 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     brightness_to_percentage,
-    get_block_channel_name,
     get_device_entry_gen,
     get_rpc_channel_name,
     is_block_channel_type_light,
