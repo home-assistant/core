@@ -224,9 +224,6 @@ class EssentSensor(EssentEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"essent_{energy_type}_{description.key}"
         self._attr_translation_key = f"{energy_type}_{description.translation_key}"
-        self._attr_entity_registry_enabled_default = (
-            description.entity_registry_enabled_default
-        )
 
     @property
     def native_value(self) -> float | None:
