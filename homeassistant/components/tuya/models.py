@@ -11,8 +11,26 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.util.json import json_loads, json_loads_object
 
-from .const import DPCode, DPType
+from .const import LOGGER, DPCode, DPType
 from .util import parse_dptype, remap_value
+
+# Dictionary to track logged warnings to avoid spamming logs
+# Keyed by device ID
+DEVICE_WARNINGS: dict[str, set[str]] = {}
+
+
+def _should_log_warning(device_id: str, warning_key: str) -> bool:
+    """Check if a warning has already been logged for a device and add it if not.
+
+    Returns: False if the warning was already logged, True if it was added.
+    """
+    if (device_warnings := DEVICE_WARNINGS.get(device_id)) is None:
+        device_warnings = set()
+        DEVICE_WARNINGS[device_id] = device_warnings
+    if warning_key in device_warnings:
+        return False
+    DEVICE_WARNINGS[device_id].add(warning_key)
+    return True
 
 
 @dataclass(kw_only=True)
@@ -285,11 +303,22 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
         Values outside of the list defined by the Enum type information will
         return None.
         """
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
-            return raw_value
-        return None
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        if raw_value not in self.type_information.range:
+            if _should_log_warning(
+                device.id, f"enum_out_range|{self.dpcode}|{raw_value}"
+            ):
+                LOGGER.warning(
+                    "Found invalid enum value `%s` for datapoint `%s` in product id `%s`,"
+                    " expected one of `%s`; please report this defect to Tuya support",
+                    raw_value,
+                    self.dpcode,
+                    device.product_id,
+                    self.type_information.range,
+                )
+            return None
+        return raw_value
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
