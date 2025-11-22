@@ -18,25 +18,28 @@
   "entity": {
     "sensor": {
       "electricity_current_price": {
-        "name": "Electricity current price"
+        "name": "Current electricity price"
       },
       "gas_current_price": {
-        "name": "Gas current price"
+        "name": "Current gas price"
       },
       "electricity_next_price": {
-        "name": "Electricity next price"
+        "name": "Next electricity price"
       },
       "gas_next_price": {
-        "name": "Gas next price"
+        "name": "Next gas price"
       },
       "electricity_average_today": {
-        "name": "Electricity average today"
+        "name": "Average electricity price today"
+      },
+      "gas_average_today": {
+        "name": "Average gas price today"
       },
       "electricity_lowest_price_today": {
-        "name": "Electricity lowest price today"
+        "name": "Lowest electricity price today"
       },
       "electricity_highest_price_today": {
-        "name": "Electricity highest price today"
+        "name": "Highest electricity price today"
       }
     }
   }

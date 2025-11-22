@@ -153,7 +153,6 @@ def _extreme_attrs(entity: "EssentSensor", target: float) -> dict[str, Any]:
 SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     EssentSensorEntityDescription(
         key="current_price",
-        name="current price",
         translation_key="current_price",
         value_fn=lambda entity: (
             None
@@ -164,7 +163,6 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     ),
     EssentSensorEntityDescription(
         key="next_price",
-        name="next price",
         translation_key="next_price",
         value_fn=lambda entity: (
             None
@@ -175,14 +173,12 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     ),
     EssentSensorEntityDescription(
         key="average_today",
-        name="average today",
         translation_key="average_today",
         value_fn=lambda entity: entity.energy_data.avg_price,
         attrs_fn=_average_attrs,
     ),
     EssentSensorEntityDescription(
         key="lowest_price_today",
-        name="lowest price today",
         translation_key="lowest_price_today",
         value_fn=lambda entity: entity.energy_data.min_price,
         attrs_fn=lambda entity: _extreme_attrs(entity, entity.energy_data.min_price),
@@ -191,7 +187,6 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     ),
     EssentSensorEntityDescription(
         key="highest_price_today",
-        name="highest price today",
         translation_key="highest_price_today",
         value_fn=lambda entity: entity.energy_data.max_price,
         attrs_fn=lambda entity: _extreme_attrs(entity, entity.energy_data.max_price),
@@ -236,7 +231,6 @@ class EssentSensor(EssentEntity, SensorEntity):
         super().__init__(coordinator, energy_type)
         self.entity_description = description
         self._attr_unique_id = f"essent_{energy_type}_{description.key}"
-        self._attr_name = f"{energy_type.capitalize()} {description.name}"
         self._attr_translation_key = f"{energy_type}_{description.translation_key}"
         self._attr_entity_registry_enabled_default = (
             description.entity_registry_enabled_default
