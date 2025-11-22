@@ -52,6 +52,7 @@ from .utils import (
     brightness_to_percentage,
     get_device_entry_gen,
     get_rpc_channel_name,
+    get_rpc_key_id,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     percentage_to_brightness,
@@ -121,7 +122,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         """Initialize block light."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
-        self._attr_name = get_block_channel_name(coordinator.device, block)
+        self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         self._attr_supported_color_modes = set()
         self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
@@ -538,7 +539,7 @@ LIGHTS: Final = {
         key="switch",
         sub_key="output",
         removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
-            config, int(key.split(":")[-1])
+            config, get_rpc_key_id(key)
         ),
         entity_class=RpcShellySwitchAsLight,
     ),

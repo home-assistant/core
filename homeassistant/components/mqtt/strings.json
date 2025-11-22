@@ -974,17 +974,17 @@
             "text_advanced_settings": {
               "data": {
                 "max": "Maximum length",
-                "min": "Mininum length",
+                "min": "Minimum length",
                 "mode": "Mode",
                 "pattern": "Pattern"
               },
               "data_description": {
                 "max": "Maximum length of the text input",
-                "min": "Mininum length of the text input",
+                "min": "Minimum length of the text input",
                 "mode": "Mode of the text input",
                 "pattern": "A valid regex pattern"
               },
-              "name": "Advanced text settings"
+              "name": "Advanced text entity settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""

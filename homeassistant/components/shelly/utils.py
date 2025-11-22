@@ -515,11 +515,6 @@ def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
     return cast(str, keys_dict[key].get("role", ROLE_GENERIC))
 
 
-def id_from_key(key: str) -> int:
-    """Return id from key."""
-    return int(key.split(":")[-1])
-
-
 def is_rpc_momentary_input(
     config: dict[str, Any], status: dict[str, Any], key: str
 ) -> bool:
