@@ -93,63 +93,6 @@ def _get_next_tariff(entity: "EssentSensor") -> Tariff | None:
     return None
 
 
-def _current_price_attrs(entity: "EssentSensor") -> dict[str, Any]:
-    """Build attributes for the current price."""
-    if (tariff := _get_current_tariff(entity)) is None:
-        return {}
-    groups = {
-        group["type"]: group.get("amount") for group in tariff.groups if "type" in group
-    }
-    return {
-        "price_ex_vat": tariff.total_amount_ex,
-        "vat": tariff.total_amount_vat,
-        "market_price": groups.get("MARKET_PRICE"),
-        "purchasing_fee": groups.get("PURCHASING_FEE"),
-        "tax": groups.get("TAX"),
-        "start_time": _format_dt_str(tariff.start),
-        "end_time": _format_dt_str(tariff.end),
-    }
-
-
-def _next_price_attrs(entity: "EssentSensor") -> dict[str, Any]:
-    """Build attributes for the next price."""
-    if (tariff := _get_next_tariff(entity)) is None:
-        return {}
-    groups = {
-        group["type"]: group.get("amount") for group in tariff.groups if "type" in group
-    }
-    return {
-        "price_ex_vat": tariff.total_amount_ex,
-        "vat": tariff.total_amount_vat,
-        "market_price": groups.get("MARKET_PRICE"),
-        "purchasing_fee": groups.get("PURCHASING_FEE"),
-        "tax": groups.get("TAX"),
-        "start_time": _format_dt_str(tariff.start),
-        "end_time": _format_dt_str(tariff.end),
-    }
-
-
-def _average_attrs(entity: "EssentSensor") -> dict[str, Any]:
-    """Build attributes for the average price."""
-    data = entity.energy_data
-    return {
-        "min_price": data.min_price,
-        "max_price": data.max_price,
-    }
-
-
-def _extreme_attrs(entity: "EssentSensor", target: float) -> dict[str, Any]:
-    """Build attributes for lowest/highest prices."""
-    data = entity.energy_data
-    for tariff in data.tariffs:
-        if tariff.total_amount == target:
-            return {
-                "start": _format_dt_str(tariff.start),
-                "end": _format_dt_str(tariff.end),
-            }
-    return {}
-
-
 SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     EssentSensorEntityDescription(
         key="current_price",
@@ -159,7 +102,6 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             if (tariff := _get_current_tariff(entity)) is None
             else tariff.total_amount
         ),
-        attrs_fn=_current_price_attrs,
     ),
     EssentSensorEntityDescription(
         key="next_price",
@@ -169,19 +111,16 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             if (tariff := _get_next_tariff(entity)) is None
             else tariff.total_amount
         ),
-        attrs_fn=_next_price_attrs,
     ),
     EssentSensorEntityDescription(
         key="average_today",
         translation_key="average_today",
         value_fn=lambda entity: entity.energy_data.avg_price,
-        attrs_fn=_average_attrs,
     ),
     EssentSensorEntityDescription(
         key="lowest_price_today",
         translation_key="lowest_price_today",
         value_fn=lambda entity: entity.energy_data.min_price,
-        attrs_fn=lambda entity: _extreme_attrs(entity, entity.energy_data.min_price),
         energy_types=(ENERGY_TYPE_ELECTRICITY,),
         entity_registry_enabled_default=False,
     ),
@@ -189,7 +128,6 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="highest_price_today",
         translation_key="highest_price_today",
         value_fn=lambda entity: entity.energy_data.max_price,
-        attrs_fn=lambda entity: _extreme_attrs(entity, entity.energy_data.max_price),
         energy_types=(ENERGY_TYPE_ELECTRICITY,),
         entity_registry_enabled_default=False,
     ),

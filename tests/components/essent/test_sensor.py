@@ -46,9 +46,6 @@ async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> 
     assert elec_current is not None
     assert float(elec_current.state) == 0.25
     assert elec_current.attributes["unit_of_measurement"] == "€/kWh"
-    assert elec_current.attributes["market_price"] == 0.17
-    assert elec_current.attributes["purchasing_fee"] == 0.03
-    assert elec_current.attributes["tax"] == 0.05
 
     assert elec_next is not None
     assert float(elec_next.state) == 0.22
@@ -133,8 +130,6 @@ async def test_electricity_lowest_price_sensor(
     sensor = hass.states.get("sensor.essent_electricity_lowest_price_today")
     assert sensor is not None
     assert float(sensor.state) == 0.2
-    assert "09:00:00" in sensor.attributes["start"]
-    assert "10:00:00" in sensor.attributes["end"]
 
 
 async def test_electricity_highest_price_sensor(
@@ -153,8 +148,6 @@ async def test_electricity_highest_price_sensor(
     sensor = hass.states.get("sensor.essent_electricity_highest_price_today")
     assert sensor is not None
     assert float(sensor.state) == 0.25
-    assert "10:00:00" in sensor.attributes["start"]
-    assert "11:00:00" in sensor.attributes["end"]
 
 
 async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
