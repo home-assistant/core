@@ -50,6 +50,7 @@ PLATFORMS: Final = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
