@@ -1062,3 +1062,27 @@ async def test_reload(
 
     # Check that we can add a new derivative sensor
     assert hass.states.get("sensor.derivative_new")
+
+
+async def test_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test YAML-based derivative with unique id."""
+    source_id = "sensor.source"
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": source_id,
+            "unique_id": "my unique id",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    entity_id = "sensor.derivative"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "my unique id"
