@@ -153,7 +153,7 @@
           "device_selection": "Customize specific devices"
         },
         "data_description": {
-          "clear_device_options": "Use this to reset all device specific options to default values.",
+          "clear_device_options": "Use this to reset all device-specific options to default values.",
           "device_selection": "Customize behavior of individual devices."
         },
         "description": "Select what configuration steps to process",
