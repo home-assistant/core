@@ -575,7 +575,7 @@ automower-ble==0.2.8
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==13.1.0
+av==16.0.1
 
 # homeassistant.components.avea
 avea==1.6.1
