@@ -47,36 +47,6 @@ async def test_media_player(
 
 
 @pytest.mark.parametrize("node_fixture", ["speaker"])
-async def test_volume_mute_on(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-    node_fixture: str,
-) -> None:
-    """Test muting the media player."""
-    entity_id = "media_player.mock_speaker"
-    state = hass.states.get(entity_id)
-    assert state is not None
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_VOLUME_MUTED: True,
-        },
-        blocking=True,
-    )
-
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.OnOff.Commands.Off(),
-    )
-
-
-@pytest.mark.parametrize("node_fixture", ["speaker"])
 async def test_media_player_actions(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -131,6 +101,36 @@ async def test_media_player_actions(
         command=clusters.LevelControl.Commands.MoveToLevel(level=127),  # 50%
     )
     matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize("node_fixture", ["speaker"])
+async def test_volume_mute_off(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    node_fixture: str,
+) -> None:
+    """Test unmuting the media player."""
+    entity_id = "media_player.mock_speaker"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.On(),
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["speaker"])
