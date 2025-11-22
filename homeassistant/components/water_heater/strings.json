@@ -58,7 +58,7 @@
     },
     "operation_list_not_defined": {
       "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
-    } 
+    }
   },
   "services": {
     "set_away_mode": {
