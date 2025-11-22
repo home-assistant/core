@@ -33,7 +33,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 @pytest.fixture
 def register_test_integration(
     hass: HomeAssistant, config_flow_fixture: None
-) -> Generator:
+) -> MockConfigEntry:
     """Provide a mocked integration for tests."""
 
     config_entry = MockConfigEntry(domain="test")
