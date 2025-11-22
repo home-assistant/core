@@ -7,7 +7,11 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Final
 
-from aioshelly.ble.manufacturer_data import has_rpc_over_ble
+from aioshelly.ble import get_name_from_model_id
+from aioshelly.ble.manufacturer_data import (
+    has_rpc_over_ble,
+    parse_shelly_manufacturer_data,
+)
 from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
@@ -179,6 +183,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
+    disable_ap_after_provision: bool = True
+    disable_ble_rpc_after_provision: bool = True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -358,8 +364,35 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
-        # Parse MAC address from the Bluetooth device name
-        if not (mac := mac_address_from_name(discovery_info.name)):
+        # Try to parse MAC address from the Bluetooth device name
+        # If not found, try to get it from manufacturer data
+        device_name = discovery_info.name
+        if (
+            not (mac := mac_address_from_name(device_name))
+            and (
+                parsed := parse_shelly_manufacturer_data(
+                    discovery_info.manufacturer_data
+                )
+            )
+            and (mac_with_colons := parsed.get("mac"))
+            and isinstance(mac_with_colons, str)
+        ):
+            # parse_shelly_manufacturer_data returns MAC with colons (e.g., "CC:BA:97:C2:D6:72")
+            # Convert to format without colons to match mac_address_from_name output
+            mac = mac_with_colons.replace(":", "")
+            # For devices without a Shelly name, use model name from model ID if available
+            # Gen3/4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR"
+            if (
+                (model_id := parsed.get("model_id"))
+                and isinstance(model_id, int)
+                and (model_name := get_name_from_model_id(model_id))
+            ):
+                # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
+                device_name = f"{model_name.replace(' ', '')}-{mac}"
+            else:
+                device_name = f"Shelly-{mac}"
+
+        if not mac:
             return self.async_abort(reason="invalid_discovery_info")
 
         # Check if RPC-over-BLE is enabled - required for WiFi provisioning
@@ -381,10 +414,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.ble_device:
             return self.async_abort(reason="cannot_connect")
 
-        self.device_name = discovery_info.name
+        self.device_name = device_name
         self.context.update(
             {
-                "title_placeholders": {"name": discovery_info.name},
+                "title_placeholders": {"name": device_name},
             }
         )
 
@@ -395,10 +428,20 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm bluetooth provisioning."""
         if user_input is not None:
+            self.disable_ap_after_provision = user_input.get("disable_ap", True)
+            self.disable_ble_rpc_after_provision = user_input.get(
+                "disable_ble_rpc", True
+            )
             return await self.async_step_wifi_scan()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("disable_ap", default=True): bool,
+                    vol.Optional("disable_ble_rpc", default=True): bool,
+                }
+            ),
             description_placeholders={
                 "name": self.context["title_placeholders"]["name"]
             },
@@ -489,6 +532,62 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={"ssid": self.selected_ssid},
         )
+
+    async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
+        """Disable AP and/or BLE RPC after successful WiFi provisioning.
+
+        Must be called via IP after device is on WiFi, not via BLE.
+        """
+        if (
+            not self.disable_ap_after_provision
+            and not self.disable_ble_rpc_after_provision
+        ):
+            return
+
+        # Connect to device via IP
+        options = ConnectionOptions(
+            host,
+            None,
+            None,
+            device_mac=self.unique_id,
+            port=port,
+        )
+        device: RpcDevice | None = None
+        try:
+            device = await RpcDevice.create(
+                async_get_clientsession(self.hass), None, options
+            )
+            await device.initialize()
+
+            restart_required = False
+
+            # Disable WiFi AP if requested
+            if self.disable_ap_after_provision:
+                result = await device.wifi_setconfig(ap_enable=False)
+                LOGGER.debug("Disabled WiFi AP on %s", host)
+                restart_required = restart_required or result.get(
+                    "restart_required", False
+                )
+
+            # Disable BLE RPC if requested (keep BLE enabled for sensors/buttons)
+            if self.disable_ble_rpc_after_provision:
+                result = await device.ble_setconfig(enable=True, enable_rpc=False)
+                LOGGER.debug("Disabled BLE RPC on %s", host)
+                restart_required = restart_required or result.get(
+                    "restart_required", False
+                )
+
+            # Restart device once if either operation requires it
+            if restart_required:
+                await device.trigger_reboot(delay_ms=1000)
+        except (TimeoutError, DeviceConnectionError, RpcCallError) as err:
+            LOGGER.warning(
+                "Failed to secure device after provisioning at %s: %s", host, err
+            )
+            # Don't fail the flow - device is already on WiFi and functional
+        finally:
+            if device:
+                await device.shutdown()
 
     async def _async_provision_wifi_and_wait_for_zeroconf(
         self, mac: str, password: str, state: ProvisioningState
@@ -582,6 +681,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not device_info[CONF_MODEL]:
             return self.async_abort(reason="firmware_not_fully_provisioned")
+
+        # Secure device after provisioning if requested (disable AP/BLE)
+        await self._async_secure_device_after_provision(self.host, self.port)
 
         # User just provisioned this device - create entry directly without confirmation
         return self.async_create_entry(
