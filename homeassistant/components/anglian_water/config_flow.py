@@ -8,7 +8,11 @@ from typing import Any
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import BaseAuth, MSOB2CAuth
-from pyanglianwater.exceptions import SelfAssertedError, SmartMeterUnavailableError
+from pyanglianwater.exceptions import (
+    InvalidAccountIdError,
+    SelfAssertedError,
+    SmartMeterUnavailableError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,7 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_ACCOUNT_NUMBER): selector.TextSelector(),
     }
 )
 
@@ -43,7 +46,7 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     _aw = AnglianWater(authenticator=auth)
     try:
         await _aw.validate_smart_meter()
-    except SmartMeterUnavailableError:
+    except (InvalidAccountIdError, SmartMeterUnavailableError):
         return "smart_meter_unavailable"
     return auth
 
@@ -65,6 +68,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass,
                         cookie_jar=CookieJar(quote_cookie=False),
                     ),
+                    account_number=user_input.get(CONF_ACCOUNT_NUMBER),
                 )
             )
             if isinstance(validation_response, BaseAuth):
@@ -83,7 +87,15 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
             if validation_response == "smart_meter_unavailable":
-                return self.async_abort(reason=validation_response)
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA.extend(
+                        {
+                            vol.Required(CONF_ACCOUNT_NUMBER): selector.TextSelector(),
+                        }
+                    ),
+                    errors={"base": validation_response},
+                )
             errors["base"] = validation_response
 
         return self.async_show_form(
