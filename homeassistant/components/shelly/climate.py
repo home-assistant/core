@@ -54,6 +54,7 @@ from .utils import (
     get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_rpc_key_by_role,
     get_rpc_key_ids,
     id_from_key,
@@ -693,9 +694,11 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
-        super().__init__(coordinator, f"thermostat:{id_}")
+        key = f"thermostat:{id_}"
+        super().__init__(coordinator, key)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
         self._id = id_
-        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
+        self._thermostat_type = coordinator.device.config[key].get(
             "type", "heating"
         )
         if self._thermostat_type == "cooling":
@@ -771,8 +774,9 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
-
-        super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
+        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
+        super().__init__(coordinator, key)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
         self._id = id_
         self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]

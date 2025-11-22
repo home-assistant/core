@@ -413,7 +413,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_name = None
+
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
 
