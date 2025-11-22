@@ -8,6 +8,7 @@ from essent_dynamic_pricing import EssentDataError, EssentResponseError
 from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from tests.common import MockConfigEntry
 
 pytestmark = [
     pytest.mark.freeze_time("2025-11-16 12:00:00+01:00"),
@@ -19,7 +20,8 @@ async def test_coordinator_fetch_success(
     hass: HomeAssistant, patch_essent_client, essent_normalized_data
 ) -> None:
     """Test successful data fetch."""
-    coordinator = EssentDataUpdateCoordinator(hass)
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
 
     data = await coordinator._async_update_data()
 
@@ -37,7 +39,8 @@ async def test_coordinator_fetch_success(
 async def test_coordinator_fetch_failure(hass: HomeAssistant, patch_essent_client) -> None:
     """Test failed data fetch."""
     patch_essent_client.async_get_prices.side_effect = EssentResponseError("boom")
-    coordinator = EssentDataUpdateCoordinator(hass)
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
 
     with pytest.raises(UpdateFailed, match="boom"):
         await coordinator._async_update_data()
@@ -46,7 +49,8 @@ async def test_coordinator_fetch_failure(hass: HomeAssistant, patch_essent_clien
 async def test_coordinator_data_error(hass: HomeAssistant, patch_essent_client) -> None:
     """Test data errors from the client."""
     patch_essent_client.async_get_prices.side_effect = EssentDataError("bad data")
-    coordinator = EssentDataUpdateCoordinator(hass)
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
 
     with pytest.raises(UpdateFailed, match="bad data"):
         await coordinator._async_update_data()
