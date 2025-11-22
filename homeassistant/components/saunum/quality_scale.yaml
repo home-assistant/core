@@ -60,10 +60,12 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: exempt
     comment: Integration controls a single device; no dynamic device discovery needed.

@@ -32,7 +32,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Saunum Leil Sauna"
+    assert result["title"] == "Saunum"
     assert result["data"] == TEST_USER_INPUT
 
 
@@ -74,7 +74,7 @@ async def test_form_errors(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Saunum Leil Sauna"
+    assert result["title"] == "Saunum"
     assert result["data"] == TEST_USER_INPUT
 
 
