@@ -1136,6 +1136,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "cosori": {
+      "name": "Cosori",
+      "integration_type": "virtual",
+      "supported_by": "vesync"
+    },
     "cozytouch": {
       "name": "Atlantic Cozytouch",
       "integration_type": "virtual",
@@ -1380,12 +1385,6 @@
       "name": "DNS IP",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "dominos": {
-      "name": "Dominos Pizza",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "doods": {
@@ -1737,11 +1736,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "enmax": {
-      "name": "Enmax Energy",
-      "integration_type": "virtual",
-      "supported_by": "opower"
     },
     "enocean": {
       "name": "EnOcean",
@@ -2456,6 +2450,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling"
         },
+        "google_weather": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Weather"
+        },
         "google_wifi": {
           "integration_type": "hub",
           "config_flow": false,
@@ -2567,6 +2567,12 @@
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hanna": {
+      "name": "Hanna",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3417,7 +3423,7 @@
       "name": "LCN",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_polling"
     },
     "ld2410_ble": {
       "name": "LD2410 BLE",
@@ -5694,7 +5700,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "RuuviTag BLE"
+          "name": "Ruuvi BLE"
         }
       }
     },
@@ -5754,8 +5760,13 @@
       "name": "Satel Integra",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_push",
-      "single_config_entry": true
+      "iot_class": "local_push"
+    },
+    "saunum": {
+      "name": "Saunum Leil",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "schlage": {
       "name": "Schlage",
@@ -6418,8 +6429,8 @@
       "iot_class": "calculated",
       "single_config_entry": true
     },
-    "sunricher_dali_center": {
-      "name": "DALI Center",
+    "sunricher_dali": {
+      "name": "Sunricher DALI",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7185,6 +7196,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vagner_pool": {
+      "name": "V\u00c1GNER POOL",
+      "integration_type": "virtual",
+      "supported_by": "pooldose"
+    },
     "vallox": {
       "name": "Vallox",
       "integration_type": "hub",
@@ -7266,11 +7282,22 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "victron_remote_monitoring": {
-      "name": "Victron Remote Monitoring",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+    "victron": {
+      "name": "Victron",
+      "integrations": {
+        "victron_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Victron BLE"
+        },
+        "victron_remote_monitoring": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Victron Remote Monitoring"
+        }
+      }
     },
     "vilfo": {
       "name": "Vilfo Router",

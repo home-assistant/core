@@ -1921,6 +1921,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[ake0bre784zriw0usc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ake0bre784zriw0usc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Pro Breeze 20L Compressor Dehumidifier',
+    'model_id': 'u0wirz487erb0eka',
+    'name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ao3z3oeyvepe8o3xqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -4525,6 +4556,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[jgsopsvzh2ec3itjzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'jgsopsvzh2ec3itjzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Osprey Smart Plug',
+    'model_id': 'jti3ce2hzvsposgj',
+    'name': 'Dehumidifier ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[jlduh7vigcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5362,6 +5424,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[nyriu7sjgj9oruzmpsm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'nyriu7sjgj9oruzmpsm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Poopy Nano 2',
+    'model_id': 'mzuro9jgjs7uiryn',
+    'name': 'Poopy Nano 2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[o5kqedcacfng0plpnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5541,6 +5634,37 @@
     'model': 'Heat Pump',
     'model_id': 'db81ge24jctwx8lo',
     'name': 'Hot Water Heat Pump',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[oq9ksabjz6tip49tkw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'oq9ksabjz6tip49tkw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'WiFi Knob Thermostat',
+    'model_id': 't94pit6zjbask9qo',
+    'name': 'Floor Thermostat Kitchen',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -6106,6 +6230,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[qt0o5jlatiqf2rscps]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'qt0o5jlatiqf2rscps',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Security Camera ',
+    'model_id': 'csr2fqitalj5o0tq',
+    'name': 'Intercom',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[queafegmhhmtivdxjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6375,7 +6530,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Remote controller (unsupported)',
+    'model': 'Remote controller',
     'model_id': 'bngwdjsr',
     'name': 'Télécommande lumières ZigBee',
     'name_by_user': None,
@@ -7246,6 +7401,37 @@
     'model': 'Smart Socket',
     'model_id': 'wifvoilfrqeo6hvu',
     'name': 'Licht drucker',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[vADxMzNytofrgbm4zc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'vADxMzNytofrgbm4zc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Plug',
+    'model_id': '4mbgrfotyNzMxDAv',
+    'name': 'Air Purifier ',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -8269,6 +8455,37 @@
     'model': '4-TH',
     'model_id': 'gc4b1mdw7kebtuyz',
     'name': 'pid_relay_2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[zzz87dkfce6pdqxwtk]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'zzz87dkfce6pdqxwtk',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Air Conditioner',
+    'model_id': 'wxqdp6ecfkd78zzz',
+    'name': 'Mini-Split',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

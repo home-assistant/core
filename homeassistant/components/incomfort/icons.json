@@ -20,6 +20,11 @@
         }
       }
     },
+    "sensor": {
+      "rf_message_rssi": {
+        "default": "mdi:signal"
+      }
+    },
     "water_heater": {
       "boiler": {
         "state": {

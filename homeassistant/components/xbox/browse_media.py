@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
-from xbox.webapi.api.provider.catalog.models import (
+from pythonxbox.api.client import XboxLiveClient
+from pythonxbox.api.provider.catalog.const import HOME_APP_IDS
+from pythonxbox.api.provider.catalog.models import (
     AlternateIdType,
     CatalogResponse,
     FieldsTemplate,
     Image,
 )
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.smartglass.models import (
     InstalledPackage,
     InstalledPackagesList,
 )
@@ -42,7 +42,6 @@ TYPE_MAP = {
 async def build_item_response(
     client: XboxLiveClient,
     device_id: str,
-    tv_configured: bool,
     media_content_type: str,
     media_content_id: str,
 ) -> BrowseMedia | None:
@@ -82,29 +81,6 @@ async def build_item_response(
                 thumbnail=None if home_thumb is None else home_thumb.uri,
             )
         )
-
-        # Add TV if configured
-        if tv_configured:
-            tv_catalog: CatalogResponse = (
-                await client.catalog.get_product_from_alternate_id(
-                    SYSTEM_PFN_ID_MAP["Microsoft.Xbox.LiveTV_8wekyb3d8bbwe"][id_type],
-                    id_type,
-                )
-            )
-            tv_thumb = _find_media_image(
-                tv_catalog.products[0].localized_properties[0].images
-            )
-            children.append(
-                BrowseMedia(
-                    media_class=MediaClass.APP,
-                    media_content_id="TV",
-                    media_content_type=MediaType.APP,
-                    title="Live TV",
-                    can_play=True,
-                    can_expand=False,
-                    thumbnail=None if tv_thumb is None else tv_thumb.uri,
-                )
-            )
 
         content_types = sorted(
             {app.content_type for app in apps.result if app.content_type in TYPE_MAP}
@@ -154,10 +130,10 @@ async def build_item_response(
     )
 
 
-def item_payload(item: InstalledPackage, images: dict[str, list[Image]]):
+def item_payload(item: InstalledPackage, images: dict[str, list[Image]]) -> BrowseMedia:
     """Create response payload for a single media item."""
     thumbnail = None
-    image = _find_media_image(images.get(item.one_store_product_id, []))
+    image = _find_media_image(images.get(item.one_store_product_id, []))  # type: ignore[arg-type]
     if image is not None:
         thumbnail = image.uri
         if thumbnail[0] == "/":
@@ -165,9 +141,9 @@ def item_payload(item: InstalledPackage, images: dict[str, list[Image]]):
 
     return BrowseMedia(
         media_class=TYPE_MAP[item.content_type].cls,
-        media_content_id=item.one_store_product_id,
+        media_content_id=item.one_store_product_id,  # type: ignore[arg-type]
         media_content_type=TYPE_MAP[item.content_type].type,
-        title=item.name,
+        title=item.name,  # type: ignore[arg-type]
         can_play=True,
         can_expand=False,
         thumbnail=thumbnail,
