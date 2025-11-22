@@ -1,6 +1,7 @@
 """Configuration for Saunum Leil integration tests."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from pysaunum import SaunumData
@@ -11,6 +12,16 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def patch_delayed_refresh_seconds() -> Generator[None]:
+    """Patch DELAYED_REFRESH_SECONDS to 0 to avoid delays in tests."""
+    with patch(
+        "homeassistant.components.saunum.climate.DELAYED_REFRESH_SECONDS",
+        timedelta(seconds=0),
+    ):
+        yield
 
 
 @pytest.fixture

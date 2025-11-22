@@ -38,6 +38,7 @@ FLOWS = {
         "airgradient",
         "airly",
         "airnow",
+        "airobot",
         "airos",
         "airq",
         "airthings",
