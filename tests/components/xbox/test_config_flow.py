@@ -480,10 +480,10 @@ async def test_add_friend_flow_config_entry_not_loaded(
 
 
 @pytest.mark.usefixtures("xbox_live_client")
-async def test_unique_id_migration(
+async def test_unique_id_and_friends_migration(
     hass: HomeAssistant,
 ) -> None:
-    """Test config entry unique_id migration."""
+    """Test config entry unique_id migration and favorite to subentry migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home Assistant Cloud",
@@ -515,8 +515,9 @@ async def test_unique_id_migration(
     assert config_entry.minor_version == 3
     assert config_entry.unique_id == "271958441785640"
     assert config_entry.title == "GSR Ae"
-    assert len(config_entry.subentries) == 2
 
+    # Assert favorite friends migrated to subentries
+    assert len(config_entry.subentries) == 2
     subentries = list(config_entry.subentries.values())
     assert subentries[0].unique_id == "2533274838782903"
     assert subentries[0].title == "Ikken Hissatsuu"
