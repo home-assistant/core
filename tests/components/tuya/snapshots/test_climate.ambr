@@ -1375,11 +1375,11 @@
 # ---
 # name: test_us_customary_system[climate.air_conditioner]
   ReadOnlyDict({
-    'current_temperature': 72,
-    'max_temp': 187,
-    'min_temp': 61,
+    'current_temperature': 22,
+    'max_temp': 86,
+    'min_temp': 16,
     'target_temp_step': 1.0,
-    'temperature': 73,
+    'temperature': 23,
   })
 # ---
 # name: test_us_customary_system[climate.anbau]
@@ -1435,11 +1435,11 @@
 # ---
 # name: test_us_customary_system[climate.floor_thermostat_kitchen]
   ReadOnlyDict({
-    'current_temperature': 68,
-    'max_temp': 95,
-    'min_temp': 41,
+    'current_temperature': -4,
+    'max_temp': 66,
+    'min_temp': 12,
     'target_temp_step': 1.0,
-    'temperature': 36,
+    'temperature': 4,
   })
 # ---
 # name: test_us_customary_system[climate.geti_solar_pv_water_heater]
@@ -1470,11 +1470,11 @@
 # ---
 # name: test_us_customary_system[climate.mini_split]
   ReadOnlyDict({
-    'current_temperature': 156,
-    'max_temp': 194,
-    'min_temp': 61,
+    'current_temperature': 69,
+    'max_temp': 90,
+    'min_temp': 16,
     'target_temp_step': 1.0,
-    'temperature': 151,
+    'temperature': 66,
   })
 # ---
 # name: test_us_customary_system[climate.mr_pure]
@@ -1487,10 +1487,10 @@
 # ---
 # name: test_us_customary_system[climate.polotentsosushitel]
   ReadOnlyDict({
-    'current_temperature': 78,
+    'current_temperature': 32,
     'max_temp': 104,
     'min_temp': 41,
-    'target_temp_step': 0.5,
+    'target_temp_step': 1.0,
     'temperature': 41,
   })
 # ---
