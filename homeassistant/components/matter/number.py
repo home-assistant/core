@@ -176,8 +176,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
-        # allow None value to account for 'default' value
-        allow_none_value=True,
+        allow_none_value=True,  # allow None value to account for 'default' value
         not_device_type=(device_types.Speaker,),
     ),
     MatterDiscoverySchema(
