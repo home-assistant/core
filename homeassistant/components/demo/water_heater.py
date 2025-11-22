@@ -112,7 +112,6 @@ class DemoWaterHeater(WaterHeaterEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
