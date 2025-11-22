@@ -1450,10 +1450,86 @@ async def test_set_message_reaction(
     )
 
 
+@pytest.mark.parametrize(
+    ("service", "input"),
+    [
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_MESSAGE: "test_message",
+                ATTR_MESSAGE_THREAD_ID: "123",
+            },
+        ),
+        (
+            SERVICE_SEND_PHOTO,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_ANIMATION,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_DOCUMENT,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_VOICE,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_STICKER,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_STICKER_ID: "1",
+                ATTR_MESSAGE_THREAD_ID: "123",
+            },
+        ),
+        (
+            SERVICE_SEND_POLL,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_QUESTION: "Question",
+                ATTR_OPTIONS: ["Yes", "No"],
+            },
+        ),
+        (
+            SERVICE_SEND_LOCATION,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_MESSAGE: "test_message",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_LONGITUDE: "1.123",
+                ATTR_LATITUDE: "1.123",
+            },
+        ),
+    ],
+)
 async def test_send_message_multi_target(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    service: str,
+    input: dict[str, Any],
 ) -> None:
     """Test send message for entries with multiple chat_ids."""
 
@@ -1465,14 +1541,18 @@ async def test_send_message_multi_target(
     # 123456 is the default target since it is the first in the list
     # This test checks that the message is sent to the right target
 
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_TARGET: 654321, ATTR_MESSAGE: "test_message"},
-        blocking=True,
-        return_response=True,
-    )
+    hass.config.allowlist_external_dirs.add("/media/")
+    with patch(
+        "homeassistant.components.telegram_bot.bot._read_file_as_bytesio",
+        _read_file_as_bytesio_mock,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            service,
+            input,
+            blocking=True,
+            return_response=True,
+        )
 
     await hass.async_block_till_done()
-    assert response["chats"][0]["chat_id"] == 654321
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 654321, "message_id": 12345}]}
