@@ -82,31 +82,28 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.role != ROLE_GENERIC:
-            if not description.role and description.key == "input":
-                _, component, component_id = get_rpc_key(key)
-                if not get_rpc_custom_name(coordinator.device, key) and (
-                    component.lower() == "input" and component_id.isnumeric()
-                ):
+        if not description.role:
+            if description.key == "input":
+                if custom_name := get_rpc_custom_name(coordinator.device, key):
+                    self._attr_name = custom_name
+                else:
+                    _, _, component_id = get_rpc_key(key)
                     self._attr_translation_placeholders = {"input_number": component_id}
                     self._attr_translation_key = "input_with_number"
-                else:
-                    return
-
-        if not description.role and description.key != "input":
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
+            else:
+                translation_placeholders, translation_key = (
+                    get_entity_translation_attributes(
+                        get_rpc_channel_name(coordinator.device, key),
+                        description.translation_key,
+                        description.device_class,
+                        self._default_to_device_class_name(),
+                    )
                 )
-            )
 
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
+                if translation_placeholders:
+                    self._attr_translation_placeholders = translation_placeholders
+                    if translation_key:
+                        self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool:
