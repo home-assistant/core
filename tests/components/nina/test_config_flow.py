@@ -199,7 +199,10 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
-                CONF_FILTERS: {},
+                CONF_FILTERS: {
+                    CONF_HEADLINE_FILTER: ".*corona.*",
+                    CONF_AREA_FILTER: ".*",
+                },
             },
         )
 
@@ -273,7 +276,10 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
-                CONF_FILTERS: {},
+                CONF_FILTERS: {
+                    CONF_HEADLINE_FILTER: ".*corona.*",
+                    CONF_AREA_FILTER: ".*",
+                },
             },
         )
 

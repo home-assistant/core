@@ -21,7 +21,6 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
-    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
@@ -86,38 +85,25 @@ def prepare_user_input(
     return user_input
 
 
-def create_schema(
-    regions: dict[str, dict[str, Any]], existing_data: dict[str, Any] | None = None
-) -> vol.Schema:
+def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
     """Create the schema for the flows."""
-    if existing_data is None:
-        existing_data = {}
-
     schema_dict: VolDictType = {
         **{
-            vol.Optional(
-                region, default=existing_data.get(region, [])
-            ): cv.multi_select(regions[region])
+            vol.Optional(region): cv.multi_select(regions[region])
             for region in CONST_REGIONS
         },
         vol.Required(
             CONF_MESSAGE_SLOTS,
-            default=existing_data.get(CONF_MESSAGE_SLOTS, 5),
+            default=5,
         ): vol.All(int, vol.Range(min=1, max=20)),
         vol.Required(CONF_FILTERS): section(
             vol.Schema(
                 {
                     vol.Optional(
                         CONF_HEADLINE_FILTER,
-                        default=existing_data.get(CONF_FILTERS, {}).get(
-                            CONF_HEADLINE_FILTER, NO_MATCH_REGEX
-                        ),
                     ): cv.string,
                     vol.Optional(
                         CONF_AREA_FILTER,
-                        default=existing_data.get(CONF_FILTERS, {}).get(
-                            CONF_AREA_FILTER, ALL_MATCH_REGEX
-                        ),
                     ): cv.string,
                 }
             )
@@ -280,8 +266,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             errors["base"] = "no_selection"
 
+        schema_with_suggested = self.add_suggested_values_to_schema(
+            create_schema(self.regions), self.data
+        )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=create_schema(self.regions, self.data),
+            data_schema=schema_with_suggested,
             errors=errors,
         )
