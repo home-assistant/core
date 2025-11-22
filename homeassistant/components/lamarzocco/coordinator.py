@@ -150,7 +150,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         if self.device.websocket.connected and not self.websocket_terminated:
             return
 
-        self.config_entry.async_create_background_task(
+        self._websocket_task = self.config_entry.async_create_background_task(
             hass=self.hass,
             target=self.connect_websocket(),
             name="lm_websocket_task",
