@@ -11,17 +11,17 @@ from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
     LabsStorage,
     async_is_preview_feature_enabled,
-    async_setup,
 )
-from homeassistant.components.labs.const import LABS_DATA, LabPreviewFeature
+from homeassistant.components.labs.const import DOMAIN, LABS_DATA, LabPreviewFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import Integration
+from homeassistant.setup import async_setup_component
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test the Labs integration setup."""
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Verify WebSocket commands are registered
@@ -40,7 +40,7 @@ async def test_async_is_preview_feature_enabled_nonexistent(
     hass: HomeAssistant,
 ) -> None:
     """Test checking if non-existent preview feature is enabled."""
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(
@@ -68,7 +68,7 @@ async def test_async_is_preview_feature_enabled_when_enabled(
         },
     }
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
@@ -82,7 +82,7 @@ async def test_async_is_preview_feature_enabled_when_disabled(
     # Load kitchen_sink integration so preview feature exists
     hass.config.components.add("kitchen_sink")
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
@@ -143,7 +143,7 @@ async def test_storage_cleanup_stale_features(
         "data": {"preview_feature_status": features_to_store},
     }
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Verify expected features are preserved
@@ -160,7 +160,7 @@ async def test_event_fired_on_preview_feature_update(hass: HomeAssistant) -> Non
     # Load kitchen_sink integration
     hass.config.components.add("kitchen_sink")
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     events = []
@@ -215,7 +215,7 @@ async def test_async_is_preview_feature_enabled(
         },
     }
 
-    await async_setup(hass, {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(hass, domain, preview_feature)
@@ -224,10 +224,10 @@ async def test_async_is_preview_feature_enabled(
 
 async def test_multiple_setups_idempotent(hass: HomeAssistant) -> None:
     """Test that calling async_setup multiple times is safe."""
-    result1 = await async_setup(hass, {})
+    result1 = await async_setup_component(hass, DOMAIN, {})
     assert result1 is True
 
-    result2 = await async_setup(hass, {})
+    result2 = await async_setup_component(hass, DOMAIN, {})
     assert result2 is True
 
     # Verify store is still accessible
@@ -246,7 +246,7 @@ async def test_storage_load_missing_preview_feature_status_key(
         "data": {},  # Missing preview_feature_status
     }
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Should initialize correctly - verify no feature is enabled
@@ -343,7 +343,7 @@ async def test_custom_integration_with_preview_features(
         "homeassistant.components.labs.async_get_custom_components",
         return_value={"custom_test": mock_integration},
     ):
-        assert await async_setup(hass, {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     # Verify the custom integration's preview feature can be checked
@@ -375,13 +375,13 @@ async def test_preview_feature_is_built_in_flag(
             "homeassistant.components.labs.async_get_custom_components",
             return_value={"custom_test": mock_integration},
         ):
-            assert await async_setup(hass, {})
+            assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
         feature_key = "custom_test.custom_feature"
     else:
         # Load built-in kitchen_sink integration
         hass.config.components.add("kitchen_sink")
-        assert await async_setup(hass, {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         feature_key = "kitchen_sink.special_repair"
 
