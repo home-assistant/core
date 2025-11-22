@@ -18,7 +18,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import snapshot_matter_entities
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -127,3 +131,31 @@ async def test_media_player_actions(
         command=clusters.LevelControl.Commands.MoveToLevel(level=127),  # 50%
     )
     matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize("node_fixture", ["speaker"])
+async def test_volume_level_none(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test handling of None volume level."""
+    entity_id = "media_player.mock_speaker"
+
+    # Get initial state
+    state = hass.states.get(entity_id)
+    assert state is not None
+    initial_volume = state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL)
+    initial_muted = state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
+
+    # Set CurrentLevel attribute to None to simulate unavailable attribute
+    # LevelControl cluster ID: 8, CurrentLevel attribute ID: 0
+    set_node_attribute(matter_node, 1, 8, 0, None)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # Verify state remains unchanged when volume is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # Volume and mute state should not have been updated
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == initial_volume
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) == initial_muted
