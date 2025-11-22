@@ -1,0 +1,509 @@
+# serializer version: 1
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_gateway_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'away',
+        'full',
+        'vacation',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.adam_gateway_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gateway mode',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gateway_mode',
+    'unique_id': 'da224107914542988a88561b4452b0f6-select_gateway_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_gateway_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Adam Gateway mode',
+      'options': list([
+        'away',
+        'full',
+        'vacation',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.adam_gateway_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'full',
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_regulation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'bleeding_hot',
+        'bleeding_cold',
+        'off',
+        'heating',
+        'cooling',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.adam_regulation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Regulation mode',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'regulation_mode',
+    'unique_id': 'da224107914542988a88561b4452b0f6-select_regulation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_regulation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Adam Regulation mode',
+      'options': list([
+        'bleeding_hot',
+        'bleeding_cold',
+        'off',
+        'heating',
+        'cooling',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.adam_regulation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cooling',
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Badkamer',
+        'Test',
+        'Vakantie',
+        'Weekschema',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.bathroom_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': 'f871b8c4d63549319221e294e4f88074-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Bathroom Thermostat schedule',
+      'options': list([
+        'Badkamer',
+        'Test',
+        'Vakantie',
+        'Weekschema',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bathroom_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Badkamer',
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Badkamer',
+        'Test',
+        'Vakantie',
+        'Weekschema',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.living_room_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': 'f2bf9048bef64cc5b6d5110154e33c81-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living room Thermostat schedule',
+      'options': list([
+        'Badkamer',
+        'Test',
+        'Vakantie',
+        'Weekschema',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.living_room_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.badkamer_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.badkamer_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '08963fec7c53423ca5680aa4cb502c63-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.badkamer_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Badkamer Thermostat schedule',
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.badkamer_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Badkamer Schema',
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.bios_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.bios_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '12493538af164a409c6a1c79e38afe1c-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.bios_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Bios Thermostat schedule',
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bios_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.jessie_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.jessie_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '82fa13f017d240daa0d0ea1775420f24-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.jessie_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Jessie Thermostat schedule',
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.jessie_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'CV Jessie',
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.woonkamer_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.woonkamer_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': 'c50f167537524366a5af7aa3942feb1e-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.woonkamer_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Woonkamer Thermostat schedule',
+      'options': list([
+        'CV Roan',
+        'Bios Schema met Film Avond',
+        'GF7  Woonkamer',
+        'Badkamer Schema',
+        'CV Jessie',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.woonkamer_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'GF7  Woonkamer',
+  })
+# ---

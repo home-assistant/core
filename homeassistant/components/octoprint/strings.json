@@ -1,68 +1,84 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "auth_failed": "Failed to retrieve API key",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "flow_title": "OctoPrint printer: {host}",
+    "progress": {
+      "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
+    },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "path": "Application path",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your printer."
         }
-      },
-      "reauth_confirm": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]"
-        }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "auth_failed": "Failed to retrieve API key",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
-    "progress": {
-      "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
+    }
+  },
+  "entity": {
+    "number": {
+      "bed_temperature": {
+        "name": "Bed temperature"
+      },
+      "extruder_n_temperature": {
+        "name": "Extruder {n} temperature"
+      },
+      "extruder_temperature": {
+        "name": "Extruder temperature"
+      }
     }
   },
   "exceptions": {
+    "error_setting_temperature": {
+      "message": "Error setting target {tool} temperature"
+    },
     "missing_client": {
       "message": "No client for device ID: {device_id}"
     }
   },
   "services": {
     "printer_connect": {
-      "name": "Connect to a printer",
       "description": "Instructs the OctoPrint server to connect to a printer.",
       "fields": {
-        "device_id": {
-          "name": "Server",
-          "description": "The server that should connect."
+        "baudrate": {
+          "description": "Baud rate.",
+          "name": "Baudrate"
         },
-        "profile_name": {
-          "name": "Profile name",
-          "description": "Printer profile to connect with."
+        "device_id": {
+          "description": "The server that should connect.",
+          "name": "Server"
         },
         "port": {
-          "name": "Serial port",
-          "description": "Port name to connect on."
+          "description": "Port name to connect on.",
+          "name": "Serial port"
         },
-        "baudrate": {
-          "name": "Baudrate",
-          "description": "Baud rate."
+        "profile_name": {
+          "description": "Printer profile to connect with.",
+          "name": "Profile name"
         }
-      }
+      },
+      "name": "Connect to a printer"
     }
   }
 }

@@ -75,7 +75,6 @@ class BroadcastIntentHandler(intent.IntentHandler):
         )
 
         response = intent_obj.create_response()
-        response.response_type = intent.IntentResponseType.ACTION_DONE
         response.async_set_results(
             success_results=[
                 intent.IntentResponseTarget(

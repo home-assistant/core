@@ -30,6 +30,7 @@ from .const import (
     INTENSIVE_LEVEL_OPTIONS,
     PROGRAMS_TRANSLATION_KEYS_MAP,
     SPIN_SPEED_OPTIONS,
+    SUCTION_POWER_OPTIONS,
     TEMPERATURE_OPTIONS,
     TRANSLATION_KEYS_PROGRAMS_MAP,
     VARIO_PERFECT_OPTIONS,
@@ -166,6 +167,16 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         values_translation_key={
             value: translation_key
             for translation_key, value in CLEANING_MODE_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_SUCTION_POWER,
+        translation_key="suction_power",
+        options=list(SUCTION_POWER_OPTIONS),
+        translation_key_values=SUCTION_POWER_OPTIONS,
+        values_translation_key={
+            value: translation_key
+            for translation_key, value in SUCTION_POWER_OPTIONS.items()
         },
     ),
     HomeConnectSelectEntityDescription(

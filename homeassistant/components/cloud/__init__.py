@@ -53,7 +53,7 @@ from .const import (
     CONF_ACME_SERVER,
     CONF_ALEXA,
     CONF_ALIASES,
-    CONF_CLOUDHOOK_SERVER,
+    CONF_API_SERVER,
     CONF_COGNITO_CLIENT_ID,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
@@ -115,26 +115,37 @@ GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
     {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
 )
 
+_BASE_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COGNITO_CLIENT_ID): str,
+        vol.Optional(CONF_USER_POOL_ID): str,
+        vol.Optional(CONF_REGION): str,
+        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
+        vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
+        vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
+        vol.Optional(CONF_ACCOUNTS_SERVER): str,
+        vol.Optional(CONF_ACME_SERVER): str,
+        vol.Optional(CONF_API_SERVER): str,
+        vol.Optional(CONF_RELAYER_SERVER): str,
+        vol.Optional(CONF_REMOTESTATE_SERVER): str,
+        vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(
-                    [MODE_DEV, MODE_PROD]
-                ),
-                vol.Optional(CONF_COGNITO_CLIENT_ID): str,
-                vol.Optional(CONF_USER_POOL_ID): str,
-                vol.Optional(CONF_REGION): str,
-                vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
-                vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-                vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
-                vol.Optional(CONF_ACCOUNTS_SERVER): str,
-                vol.Optional(CONF_ACME_SERVER): str,
-                vol.Optional(CONF_CLOUDHOOK_SERVER): str,
-                vol.Optional(CONF_RELAYER_SERVER): str,
-                vol.Optional(CONF_REMOTESTATE_SERVER): str,
-                vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
-            }
+        DOMAIN: vol.Any(
+            _BASE_CONFIG_SCHEMA.extend(
+                {
+                    vol.Required(CONF_MODE): vol.In([MODE_DEV]),
+                    vol.Required(CONF_API_SERVER): str,
+                }
+            ),
+            _BASE_CONFIG_SCHEMA.extend(
+                {
+                    vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In([MODE_PROD]),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,

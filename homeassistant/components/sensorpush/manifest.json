@@ -3,12 +3,12 @@
   "name": "SensorPush",
   "bluetooth": [
     {
-      "local_name": "SensorPush*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "SensorPush*"
     },
     {
-      "local_name": "s",
       "connectable": false,
+      "local_name": "s",
       "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9"
     }
   ],

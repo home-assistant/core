@@ -502,6 +502,9 @@ KEEP_CAPABILITY_QUIRK: dict[
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
+        lambda status: status[Attribute.LIGHTING].value is not None
+    ),
 }
 
 

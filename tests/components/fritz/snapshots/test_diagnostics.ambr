@@ -12,6 +12,11 @@
         }),
       ]),
       'connection_type': 'WANPPPConnection',
+      'cpu_temperatures': list([
+        69,
+        68,
+        67,
+      ]),
       'current_firmware': '7.29',
       'discovered_services': list([
         'DeviceInfo1',

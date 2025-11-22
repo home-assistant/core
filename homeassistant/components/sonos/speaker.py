@@ -275,6 +275,29 @@ class SonosSpeaker:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
 
+    def update_soco_int_attribute(
+        self, soco_attribute: str, speaker_attribute: str
+    ) -> int | None:
+        """Update an integer attribute from SoCo and set it on the speaker.
+
+        Returns the integer value if successful, otherwise None. Do not call from
+        async context as it is a blocking function.
+        """
+        value: int | None = None
+        if (state := getattr(self.soco, soco_attribute, None)) is None:
+            _LOGGER.error("Missing value for %s", speaker_attribute)
+        else:
+            try:
+                value = int(state)
+            except (TypeError, ValueError):
+                _LOGGER.error(
+                    "Invalid value for %s %s",
+                    speaker_attribute,
+                    state,
+                )
+        setattr(self, speaker_attribute, value)
+        return value
+
     #
     # Properties
     #
@@ -599,7 +622,12 @@ class SonosSpeaker:
 
         for enum_var in (ATTR_DIALOG_LEVEL,):
             if enum_var in variables:
-                setattr(self, f"{enum_var}_enum", variables[enum_var])
+                try:
+                    setattr(self, f"{enum_var}_enum", int(variables[enum_var]))
+                except ValueError:
+                    _LOGGER.error(
+                        "Invalid value for %s %s", enum_var, variables[enum_var]
+                    )
 
         self.async_write_entity_states()
 

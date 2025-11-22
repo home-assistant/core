@@ -1,5 +1,13 @@
 {
   "entity": {
+    "event": {
+      "lightning_strike_event": {
+        "default": "mdi:weather-lightning"
+      },
+      "precip_start_event": {
+        "default": "mdi:weather-rainy"
+      }
+    },
     "sensor": {
       "lightning_average_distance": {
         "default": "mdi:lightning-bolt"

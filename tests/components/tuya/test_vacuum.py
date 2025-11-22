@@ -6,9 +6,8 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -25,7 +24,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.VACUUM])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -43,7 +42,7 @@ async def test_platform_setup_and_discovery(
 )
 async def test_return_home(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:

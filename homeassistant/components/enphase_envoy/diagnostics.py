@@ -118,7 +118,6 @@ async def async_get_config_entry_diagnostics(
         device_dict.pop("_cache", None)
         # This can be removed when suggested_area is removed from DeviceEntry
         device_dict.pop("_suggested_area")
-        device_dict.pop("is_new", None)
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial

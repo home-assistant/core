@@ -6,7 +6,15 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from telegram import Bot, Chat, ChatFullInfo, Message, User
+from telegram import (
+    AcceptedGiftTypes,
+    Bot,
+    Chat,
+    ChatFullInfo,
+    Message,
+    User,
+    WebhookInfo,
+)
 from telegram.constants import AccentColor, ChatType
 
 from homeassistant.components.telegram_bot import (
@@ -74,11 +82,22 @@ def mock_register_webhook() -> Generator[None]:
     """Mock calls made by telegram_bot when (de)registering webhook."""
     with (
         patch(
-            "homeassistant.components.telegram_bot.webhooks.PushBot.register_webhook",
-            return_value=True,
+            "homeassistant.components.telegram_bot.webhooks.Bot.delete_webhook",
+            AsyncMock(),
         ),
         patch(
-            "homeassistant.components.telegram_bot.webhooks.PushBot.deregister_webhook",
+            "homeassistant.components.telegram_bot.webhooks.Bot.get_webhook_info",
+            AsyncMock(
+                return_value=WebhookInfo(
+                    url="mock url",
+                    last_error_date=datetime.now(),
+                    has_custom_certificate=False,
+                    pending_update_count=0,
+                )
+            ),
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.Bot.set_webhook",
             return_value=True,
         ),
     ):
@@ -95,6 +114,7 @@ def mock_external_calls() -> Generator[None]:
         type="PRIVATE",
         max_reaction_count=100,
         accent_color_id=AccentColor.COLOR_000,
+        accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
     )
     test_user = User(123456, "Testbot", True, "mock last name", "mock username")
     message = Message(
@@ -112,9 +132,6 @@ def mock_external_calls() -> Generator[None]:
             """Initialize BotMock instance."""
             super().__init__(*args, **kwargs)
             self._bot_user = test_user
-
-        async def delete_webhook(self) -> bool:
-            return True
 
     with (
         patch("homeassistant.components.telegram_bot.bot.Bot", BotMock),
@@ -257,10 +274,17 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="123456",
                 data={CONF_CHAT_ID: 123456},
-                subentry_id="mock_id",
+                subentry_id="mock_id1",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
-                title="mock chat",
-            )
+                title="mock chat 1",
+            ),
+            ConfigSubentryData(
+                unique_id="654321",
+                data={CONF_CHAT_ID: 654321},
+                subentry_id="mock_id2",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat 2",
+            ),
         ],
     )
 

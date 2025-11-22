@@ -253,14 +253,14 @@ _LOGGER = logging.getLogger(__name__)
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm10",
                     "friendly_name": "Test Device 18B2 Pm10",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "7170",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm25",
                     "friendly_name": "Test Device 18B2 Pm25",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "3090",
                 },
@@ -296,7 +296,7 @@ _LOGGER = logging.getLogger(__name__)
                         "sensor.test_device_18b2_volatile_organic_compounds"
                     ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "307",
                 },
@@ -607,14 +607,14 @@ async def test_v1_sensors(
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm10",
                     "friendly_name": "Test Device 18B2 Pm10",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "7170",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm25",
                     "friendly_name": "Test Device 18B2 Pm25",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "3090",
                 },
@@ -650,7 +650,7 @@ async def test_v1_sensors(
                         "sensor.test_device_18b2_volatile_organic_compounds"
                     ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "307",
                 },

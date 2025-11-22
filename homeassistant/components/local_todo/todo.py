@@ -132,7 +132,7 @@ class LocalTodoListEntity(TodoListEntity):
         self._store = store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
-        self._attr_name = name.capitalize()
+        self._attr_name = name
         self._attr_unique_id = unique_id
 
     def _new_todo_store(self) -> TodoStore:
@@ -196,11 +196,11 @@ class LocalTodoListEntity(TodoListEntity):
             item_idx: dict[str, int] = {itm.uid: idx for idx, itm in enumerate(todos)}
             if uid not in item_idx:
                 raise HomeAssistantError(
-                    "Item '{uid}' not found in todo list {self.entity_id}"
+                    f"Item '{uid}' not found in todo list {self.entity_id}"
                 )
             if previous_uid and previous_uid not in item_idx:
                 raise HomeAssistantError(
-                    "Item '{previous_uid}' not found in todo list {self.entity_id}"
+                    f"Item '{previous_uid}' not found in todo list {self.entity_id}"
                 )
             dst_idx = item_idx[previous_uid] + 1 if previous_uid else 0
             src_idx = item_idx[uid]

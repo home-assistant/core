@@ -8,7 +8,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
+_PLATFORMS: list[Platform] = [
+    Platform.EVENT,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.NUMBER,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ToGrillConfigEntry) -> bool:

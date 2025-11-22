@@ -455,11 +455,15 @@ async def test_hassio_discovery_flow_yellow(
     [
         (
             "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
-            "Home Assistant SkyConnect (Silicon Labs Multiprotocol)",
+            "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)",
         ),
         (
             "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
             "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)",
+        ),
+        (
+            "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE58A94-if00",
+            "Home Assistant Connect ZBT-2 (Silicon Labs Multiprotocol)",
         ),
     ],
 )
@@ -556,14 +560,16 @@ async def test_hassio_discovery_flow_2x_addons(
 
     assert results[0]["type"] is FlowResultType.CREATE_ENTRY
     assert (
-        results[0]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+        results[0]["title"]
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
     )
     assert results[0]["data"] == expected_data
     assert results[0]["options"] == {}
 
     assert results[1]["type"] is FlowResultType.CREATE_ENTRY
     assert (
-        results[1]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+        results[1]["title"]
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
     )
     assert results[1]["data"] == expected_data_2
     assert results[1]["options"] == {}
@@ -574,7 +580,8 @@ async def test_hassio_discovery_flow_2x_addons(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert (
-        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+        config_entry.title
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
     )
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
@@ -582,7 +589,8 @@ async def test_hassio_discovery_flow_2x_addons(
     assert config_entry.data == expected_data_2
     assert config_entry.options == {}
     assert (
-        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+        config_entry.title
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
     )
     assert config_entry.unique_id == HASSIO_DATA_2.uuid
 
@@ -641,7 +649,8 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
 
     assert results[0]["type"] is FlowResultType.CREATE_ENTRY
     assert (
-        results[0]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+        results[0]["title"]
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
     )
     assert results[0]["data"] == expected_data
     assert results[0]["options"] == {}
@@ -653,7 +662,8 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert (
-        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+        config_entry.title
+        == "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)"
     )
     assert config_entry.unique_id == HASSIO_DATA.uuid
 

@@ -242,7 +242,7 @@ class ScheduleStorageCollection(DictStorageCollection):
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
-        return item | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
     async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""

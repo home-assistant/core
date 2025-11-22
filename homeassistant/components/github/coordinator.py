@@ -167,6 +167,6 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.unsubscribe)
 
-    def unsubscribe(self, *args) -> None:
+    def unsubscribe(self, *args: Any) -> None:
         """Unsubscribe to repository events."""
         self._client.repos.events.unsubscribe(subscription_id=self._subscription_id)

@@ -57,6 +57,8 @@ from .api import (
     _get_manager,
     async_address_present,
     async_ble_device_from_address,
+    async_clear_address_from_match_history,
+    async_current_scanners,
     async_discovered_service_info,
     async_get_advertisement_callback,
     async_get_fallback_availability_interval,
@@ -111,9 +113,10 @@ __all__ = [
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "HaBluetoothConnector",
-    "HomeAssistantRemoteScanner",
     "async_address_present",
     "async_ble_device_from_address",
+    "async_clear_address_from_match_history",
+    "async_current_scanners",
     "async_discovered_service_info",
     "async_get_advertisement_callback",
     "async_get_fallback_availability_interval",
@@ -385,10 +388,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
     passive = entry.options.get(CONF_PASSIVE)
+    adapters = await manager.async_get_bluetooth_adapters()
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()
-    adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     if entry.title == address:
         hass.config_entries.async_update_entry(

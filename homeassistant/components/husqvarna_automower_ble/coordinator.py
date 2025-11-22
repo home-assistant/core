@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from automower_ble.mower import Mower
+from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address
 
@@ -62,7 +63,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
         )
 
         try:
-            if not await self.mower.connect(device):
+            if await self.mower.connect(device) is not ResponseResult.OK:
                 raise UpdateFailed("Failed to connect")
         except BleakError as err:
             raise UpdateFailed("Failed to connect") from err

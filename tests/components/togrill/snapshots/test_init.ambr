@@ -16,6 +16,10 @@
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
+      tuple(
+        'togrill',
+        '00000000-0000-0000-0000-000000000001',
+      ),
     }),
     'labels': set({
     }),

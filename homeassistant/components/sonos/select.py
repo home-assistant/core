@@ -59,9 +59,11 @@ async def async_setup_entry(
         for select_data in SELECT_TYPES:
             if select_data.speaker_model == speaker.model_name.upper():
                 if (
-                    state := getattr(speaker.soco, select_data.soco_attribute, None)
-                ) is not None:
-                    setattr(speaker, select_data.speaker_attribute, state)
+                    speaker.update_soco_int_attribute(
+                        select_data.soco_attribute, select_data.speaker_attribute
+                    )
+                    is not None
+                ):
                     features.append(select_data)
         return features
 
@@ -105,8 +107,9 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
     @soco_error()
     def poll_state(self) -> None:
         """Poll the device for the current state."""
-        state = getattr(self.soco, self.soco_attribute)
-        setattr(self.speaker, self.speaker_attribute, state)
+        self.speaker.update_soco_int_attribute(
+            self.soco_attribute, self.speaker_attribute
+        )
 
     @property
     def current_option(self) -> str | None:

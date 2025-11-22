@@ -2,7 +2,7 @@
   "domain": "person",
   "name": "Person",
   "codeowners": [],
-  "dependencies": ["image_upload", "http"],
+  "dependencies": ["image_upload", "http", "zone"],
   "documentation": "https://www.home-assistant.io/integrations/person",
   "integration_type": "system",
   "iot_class": "calculated",

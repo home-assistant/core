@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
+import re
 from typing import Any
 
 from aiocomelit import (
@@ -25,23 +26,22 @@ from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
-DEFAULT_PIN = 111111
-
+DEFAULT_PIN = "111111"
 
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
         vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.positive_int})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.string})
 STEP_RECONFIGURE = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
     }
 )
 
@@ -50,6 +50,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     api: ComelitCommonApi
+
+    if not re.fullmatch(r"[0-9]{4,10}", data[CONF_PIN]):
+        raise InvalidPin
 
     session = await async_client_session(hass)
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
@@ -101,6 +104,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except InvalidPin:
+            errors["base"] = "invalid_pin"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -142,6 +147,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except InvalidPin:
+                errors["base"] = "invalid_pin"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -185,6 +192,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except InvalidPin:
+            errors["base"] = "invalid_pin"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -206,3 +215,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidPin(HomeAssistantError):
+    """Error to indicate an invalid pin."""

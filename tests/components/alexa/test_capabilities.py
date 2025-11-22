@@ -383,7 +383,7 @@ async def test_api_remote_set_power_state(
         },
     )
 
-    _, msg = await assert_request_calls_service(
+    _, _msg = await assert_request_calls_service(
         "Alexa.PowerController",
         target_name,
         "remote#test",

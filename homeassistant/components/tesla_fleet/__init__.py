@@ -134,7 +134,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 api = tesla.vehicles.createSigned(vin)
             else:
                 api = tesla.vehicles.createFleet(vin)
-            coordinator = TeslaFleetVehicleDataCoordinator(hass, entry, api, product)
+            coordinator = TeslaFleetVehicleDataCoordinator(
+                hass, entry, api, product, Scope.VEHICLE_LOCATION in scopes
+            )
 
             await coordinator.async_config_entry_first_refresh()
 
@@ -179,7 +181,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
 
             await live_coordinator.async_config_entry_first_refresh()
-            await history_coordinator.async_config_entry_first_refresh()
             await info_coordinator.async_config_entry_first_refresh()
 
             # Create energy site model

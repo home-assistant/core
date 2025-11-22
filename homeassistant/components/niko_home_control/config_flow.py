@@ -39,6 +39,25 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     MINOR_VERSION = 2
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            error = await test_connection(user_input[CONF_HOST])
+            if not error:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+            errors["base"] = error
+
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=DATA_SCHEMA, errors=errors
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

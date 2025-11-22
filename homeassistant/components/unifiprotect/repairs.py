@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import cast
 
 from uiprotect import ProtectApiClient
-from uiprotect.data import Bootstrap, Camera, ModelType
+from uiprotect.data import Bootstrap, Camera
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -114,16 +114,7 @@ class RTSPRepair(ProtectRepair):
 
     async def _enable_rtsp(self) -> None:
         camera = await self._get_camera()
-        bootstrap = await self._get_boostrap()
-        user = bootstrap.users.get(bootstrap.auth_user_id)
-        if not user or not camera.can_write(user):
-            return
-
-        channel = camera.channels[0]
-        channel.is_rtsp_enabled = True
-        await self._api.update_device(
-            ModelType.CAMERA, camera.id, {"channels": camera.unifi_dict()["channels"]}
-        )
+        await camera.create_rtsps_streams(qualities="high")
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None

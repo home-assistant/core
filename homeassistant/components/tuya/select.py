@@ -11,16 +11,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
-    # Curtain
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
-    "cl": (
+SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
+    DeviceCategory.CL: (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
             entity_category=EntityCategory.CONFIG,
@@ -32,18 +29,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="curtain_mode",
         ),
     ),
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
+    DeviceCategory.CO2BJ: (
         SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Dehumidifier
-    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
-    "cs": (
+    DeviceCategory.CS: (
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
@@ -55,49 +48,40 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Odor Eliminator-Pro
-    # Undocumented, see https://github.com/orgs/home-assistant/discussions/79
-    "cwjwq": (
+    DeviceCategory.CWJWQ: (
         SelectEntityDescription(
             key=DPCode.WORK_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="odor_elimination_mode",
         ),
     ),
-    # Multi-functional Sensor
-    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
-    "dgnbj": (
+    DeviceCategory.DGNBJ: (
         SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Electric Blanket
-    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
-    "dr": (
+    DeviceCategory.DR: (
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Level",
             icon="mdi:thermometer-lines",
             translation_key="blanket_level",
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL_1,
-            name="Side A Level",
             icon="mdi:thermometer-lines",
-            translation_key="blanket_level",
+            translation_key="indexed_blanket_level",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL_2,
-            name="Side B Level",
             icon="mdi:thermometer-lines",
-            translation_key="blanket_level",
+            translation_key="indexed_blanket_level",
+            translation_placeholders={"index": "2"},
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45vs7vkge
-    "fs": (
+    DeviceCategory.FS: (
         SelectEntityDescription(
             key=DPCode.FAN_VERTICAL,
             entity_category=EntityCategory.CONFIG,
@@ -119,9 +103,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": (
+    DeviceCategory.JSQ: (
         SelectEntityDescription(
             key=DPCode.SPRAY_MODE,
             entity_category=EntityCategory.CONFIG,
@@ -148,9 +130,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
-    # Coffee maker
-    # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
-    "kfj": (
+    DeviceCategory.KFJ: (
         SelectEntityDescription(
             key=DPCode.CUP_NUMBER,
             translation_key="cups",
@@ -170,9 +150,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="mode",
         ),
     ),
-    # Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-    "kg": (
+    DeviceCategory.KG: (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
@@ -184,9 +162,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="light_mode",
         ),
     ),
-    # Air Purifier
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
-    "kj": (
+    DeviceCategory.KJ: (
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
@@ -198,17 +174,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
-    # Heater
-    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
-    "qn": (
+    DeviceCategory.QN: (
         SelectEntityDescription(
             key=DPCode.LEVEL,
             translation_key="temperature_level",
         ),
     ),
-    # Robot Vacuum
-    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
-    "sd": (
+    DeviceCategory.SD: (
         SelectEntityDescription(
             key=DPCode.CISTERN,
             entity_category=EntityCategory.CONFIG,
@@ -225,8 +197,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="vacuum_mode",
         ),
     ),
-    # Smart Water Timer
-    "sfkzq": (
+    DeviceCategory.SFKZQ: (
         # Irrigation will not be run within this set delay period
         SelectEntityDescription(
             key=DPCode.WEATHER_DELAY,
@@ -234,9 +205,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sgbj": (
+    DeviceCategory.SGBJ: (
         SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
@@ -248,9 +217,19 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SJZ: (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            translation_key="desk_level",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.UP_DOWN,
+            translation_key="desk_up_down",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.SP: (
         SelectEntityDescription(
             key=DPCode.IPC_WORK_MODE,
             entity_category=EntityCategory.CONFIG,
@@ -282,17 +261,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="motion_sensitivity",
         ),
     ),
-    # Fingerbot
-    "szjqr": (
+    DeviceCategory.SZJQR: (
         SelectEntityDescription(
             key=DPCode.MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="fingerbot_mode",
         ),
     ),
-    # IoT Switch?
-    # Note: Undocumented
-    "tdq": (
+    DeviceCategory.TDQ: (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
@@ -304,9 +280,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="light_mode",
         ),
     ),
-    # Dimmer Switch
-    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
-    "tgkg": (
+    DeviceCategory.TGKG: (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
@@ -336,9 +310,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_placeholders={"index": "3"},
         ),
     ),
-    # Dimmer
-    # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
-    "tgq": (
+    DeviceCategory.TGQ: (
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
@@ -352,19 +324,23 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_placeholders={"index": "2"},
         ),
     ),
+    DeviceCategory.XNYJCN: (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="inverter_work_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-SELECTS["cz"] = SELECTS["kg"]
+SELECTS[DeviceCategory.CZ] = SELECTS[DeviceCategory.KG]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
-# Undocumented, see https://github.com/home-assistant/core/issues/132844
-SELECTS["dghsxj"] = SELECTS["sp"]
+SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
 
 # Power Socket (duplicate of `kg`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-SELECTS["pc"] = SELECTS["kg"]
+SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
 
 async def async_setup_entry(
@@ -373,24 +349,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya select dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya select."""
         entities: list[TuyaSelectEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SELECTS.get(device.category):
                 entities.extend(
-                    TuyaSelectEntity(device, hass_data.manager, description)
+                    TuyaSelectEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)

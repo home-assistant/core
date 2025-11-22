@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from yalexs.activity import ActivityType, ActivityTypes
-from yalexs.lock import Lock, LockStatus
+from yalexs.activity import ActivityType
+from yalexs.lock import Lock, LockOperation, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
@@ -50,30 +49,25 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        if self._data.push_updates_connected:
-            await self._data.async_lock_async(self._device_id, self._hyper_bridge)
-            return
-        await self._call_lock_operation(self._data.async_lock)
+        await self._perform_lock_operation(LockOperation.LOCK)
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open/unlatch the device."""
-        if self._data.push_updates_connected:
-            await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
-            return
-        await self._call_lock_operation(self._data.async_unlatch)
+        await self._perform_lock_operation(LockOperation.OPEN)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        if self._data.push_updates_connected:
-            await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
-            return
-        await self._call_lock_operation(self._data.async_unlock)
+        await self._perform_lock_operation(LockOperation.UNLOCK)
 
-    async def _call_lock_operation(
-        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
-    ) -> None:
+    async def _perform_lock_operation(self, operation: LockOperation) -> None:
+        """Perform a lock operation."""
         try:
-            activities = await lock_operation(self._device_id)
+            activities = await self._data.async_operate_lock(
+                self._device_id,
+                operation,
+                self._data.push_updates_connected,
+                self._hyper_bridge,
+            )
         except ClientResponseError as err:
             if err.status == LOCK_JAMMED_ERR:
                 self._detail.lock_status = LockStatus.JAMMED

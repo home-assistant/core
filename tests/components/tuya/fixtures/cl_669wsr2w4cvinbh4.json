@@ -1,0 +1,138 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "VIVIDSTORM SCREEN",
+  "category": "cl",
+  "product_id": "669wsr2w4cvinbh4",
+  "product_name": "VIVIDSTORM SCREEN",
+  "online": true,
+  "sub": false,
+  "time_zone": "-05:00",
+  "active_time": "2025-08-15T17:34:27+00:00",
+  "create_time": "2025-08-15T17:34:27+00:00",
+  "update_time": "2025-08-15T17:34:27+00:00",
+  "function": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close", "continue"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "back"]
+      }
+    },
+    "border": {
+      "type": "Enum",
+      "value": {
+        "range": ["up", "down", "up_delete", "down_delete", "remove_top_bottom"]
+      }
+    }
+  },
+  "status_range": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close", "continue"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "percent_state": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "back"]
+      }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["opening", "closing"]
+      }
+    },
+    "countdown_left": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "time_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "ms",
+        "min": 0,
+        "max": 120000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "situation_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["fully_open", "fully_close"]
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["motor_fault"]
+      }
+    },
+    "border": {
+      "type": "Enum",
+      "value": {
+        "range": ["up", "down", "up_delete", "down_delete", "remove_top_bottom"]
+      }
+    }
+  },
+  "status": {
+    "control": "open",
+    "percent_control": 0,
+    "percent_state": 0,
+    "control_back_mode": "forward",
+    "work_state": "opening",
+    "countdown_left": 0,
+    "time_total": 0,
+    "situation_set": "fully_open",
+    "fault": 0,
+    "border": "down"
+  },
+  "set_up": true,
+  "support_local": true
+}

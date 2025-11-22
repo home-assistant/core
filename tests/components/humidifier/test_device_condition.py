@@ -363,6 +363,7 @@ async def test_if_state_legacy(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -376,6 +377,7 @@ async def test_if_state_legacy(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -417,6 +419,7 @@ async def test_if_state_legacy(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -430,6 +433,7 @@ async def test_if_state_legacy(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -533,6 +537,7 @@ async def test_capabilities(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -546,6 +551,7 @@ async def test_capabilities(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -587,6 +593,7 @@ async def test_capabilities(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],
@@ -600,6 +607,7 @@ async def test_capabilities(
                 {
                     "name": "for",
                     "optional": True,
+                    "required": False,
                     "type": "positive_time_period_dict",
                 }
             ],

@@ -74,6 +74,17 @@ async def test_buttons(
     )
     assert len(mock_fully_kiosk.loadStartUrl.mock_calls) == 1
 
+    entry = entity_registry.async_get("button.amazon_fire_clear_browser_cache")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-clearCache"
+    await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_clear_browser_cache"},
+        blocking=True,
+    )
+    assert len(mock_fully_kiosk.clearCache.mock_calls) == 1
+
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry

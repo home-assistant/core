@@ -339,16 +339,7 @@ async def test_removing_chime(
     ),
     [
         (
-            TEST_MAC,
             f"{TEST_MAC}_firmware",
-            f"{TEST_MAC}",
-            f"{TEST_MAC}",
-            Platform.UPDATE,
-            False,
-            False,
-        ),
-        (
-            TEST_MAC,
             f"{TEST_UID}_firmware",
             f"{TEST_MAC}",
             f"{TEST_UID}",

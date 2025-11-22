@@ -13,6 +13,8 @@ from openai.types.responses import (
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionWebSearch,
+    ResponseImageGenCallCompletedEvent,
+    ResponseImageGenCallPartialImageEvent,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
@@ -29,7 +31,9 @@ from openai.types.responses import (
     ResponseWebSearchCallInProgressEvent,
     ResponseWebSearchCallSearchingEvent,
 )
+from openai.types.responses.response_code_interpreter_tool_call import OutputLogs
 from openai.types.responses.response_function_web_search import ActionSearch
+from openai.types.responses.response_output_item import ImageGenerationCall
 from openai.types.responses.response_reasoning_item import Summary
 
 
@@ -153,6 +157,7 @@ def create_function_tool_call_item(
         ResponseFunctionCallArgumentsDoneEvent(
             arguments="".join(arguments),
             item_id=id,
+            name=name,
             output_index=output_index,
             sequence_number=0,
             type="response.function_call_arguments.done",
@@ -320,7 +325,7 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
 
 
 def create_code_interpreter_item(
-    id: str, code: str | list[str], output_index: int
+    id: str, code: str | list[str], output_index: int, logs: str | None = None
 ) -> list[ResponseStreamEvent]:
     """Create a message item."""
     if isinstance(code, str):
@@ -388,7 +393,7 @@ def create_code_interpreter_item(
                     id=id,
                     code=code,
                     container_id=container_id,
-                    outputs=None,
+                    outputs=[OutputLogs(type="logs", logs=logs)] if logs else None,
                     status="completed",
                     type="code_interpreter_call",
                 ),
@@ -400,3 +405,45 @@ def create_code_interpreter_item(
     )
 
     return events
+
+
+def create_image_gen_call_item(
+    id: str, output_index: int, logs: str | None = None
+) -> list[ResponseStreamEvent]:
+    """Create a message item."""
+    return [
+        ResponseImageGenCallPartialImageEvent(
+            item_id=id,
+            output_index=output_index,
+            partial_image_b64="QQ==",
+            partial_image_index=0,
+            sequence_number=0,
+            type="response.image_generation_call.partial_image",
+            size="1536x1024",
+            quality="medium",
+            background="transparent",
+            output_format="png",
+        ),
+        ResponseImageGenCallCompletedEvent(
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.image_generation_call.completed",
+        ),
+        ResponseOutputItemDoneEvent(
+            item=ImageGenerationCall(
+                id=id,
+                result="QQ==",
+                status="completed",
+                type="image_generation_call",
+                background="transparent",
+                output_format="png",
+                quality="medium",
+                revised_prompt="Mock revised prompt.",
+                size="1536x1024",
+            ),
+            output_index=output_index,
+            sequence_number=0,
+            type="response.output_item.done",
+        ),
+    ]

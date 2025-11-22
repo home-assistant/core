@@ -137,9 +137,9 @@ class RepairsFlowIndexView(FlowManagerIndexView):
                 "Handler does not support user", HTTPStatus.BAD_REQUEST
             )
 
-        result = self._prepare_result_json(result)
-
-        return self.json(result)
+        return self.json(
+            self._prepare_result_json(result),
+        )
 
 
 class RepairsFlowResourceView(FlowManagerResourceView):

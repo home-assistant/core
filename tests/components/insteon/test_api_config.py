@@ -68,7 +68,7 @@ async def test_get_modem_schema_hub(
 ) -> None:
     """Test getting the Insteon PLM modem configuration schema."""
 
-    ws_client, devices, _, _ = await async_mock_setup(
+    ws_client, _devices, _, _ = await async_mock_setup(
         hass,
         hass_ws_client,
         config_data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},

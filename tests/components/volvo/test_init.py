@@ -21,6 +21,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("mock_api")
 async def test_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -38,6 +39,7 @@ async def test_setup(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("mock_api")
 async def test_token_refresh_success(
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -61,7 +63,6 @@ async def test_token_refresh_success(
 @pytest.mark.parametrize(
     ("token_response"),
     [
-        (HTTPStatus.FORBIDDEN),
         (HTTPStatus.INTERNAL_SERVER_ERROR),
         (HTTPStatus.NOT_FOUND),
     ],
@@ -80,15 +81,23 @@ async def test_token_refresh_fail(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("token_response"),
+    [
+        (HTTPStatus.BAD_REQUEST),
+        (HTTPStatus.FORBIDDEN),
+    ],
+)
 async def test_token_refresh_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     setup_integration: Callable[[], Awaitable[bool]],
+    token_response: HTTPStatus,
 ) -> None:
     """Test where token refresh indicates unauthorized."""
 
-    aioclient_mock.post(TOKEN_URL, status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.post(TOKEN_URL, status=token_response)
 
     assert not await setup_integration()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

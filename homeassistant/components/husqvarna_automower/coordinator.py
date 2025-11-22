@@ -30,9 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
-PONG_TIMEOUT = timedelta(seconds=90)
-PING_INTERVAL = timedelta(seconds=10)
-PING_TIMEOUT = timedelta(seconds=5)
+PING_INTERVAL = 60
+
 type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
@@ -56,13 +55,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             update_interval=SCAN_INTERVAL,
         )
         self.api = api
-        self.ws_connected: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
+        self.websocket_callbacks: list[Callable[[bool], None]] = []
         self._watchdog_task: asyncio.Task | None = None
 
     @override
@@ -71,31 +70,31 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._on_data_update()
         super().async_update_listeners()
 
+    async def _async_setup(self) -> None:
+        """Initialize websocket connection and callbacks."""
+        await self.api.connect()
+        self.api.register_data_callback(self.handle_websocket_updates)
+
+        def start_watchdog() -> None:
+            if self._watchdog_task is not None and not self._watchdog_task.done():
+                _LOGGER.debug("Cancelling previous watchdog task")
+                self._watchdog_task.cancel()
+            self._watchdog_task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._pong_watchdog(),
+                "websocket_watchdog",
+            )
+
+        self.api.register_ws_ready_callback(start_watchdog)
+
     async def _async_update_data(self) -> MowerDictionary:
-        """Subscribe for websocket and poll data from the API."""
-        if not self.ws_connected:
-            await self.api.connect()
-            self.api.register_data_callback(self.handle_websocket_updates)
-            self.ws_connected = True
-
-            def start_watchdog() -> None:
-                if self._watchdog_task is not None and not self._watchdog_task.done():
-                    _LOGGER.debug("Cancelling previous watchdog task")
-                    self._watchdog_task.cancel()
-                self._watchdog_task = self.config_entry.async_create_background_task(
-                    self.hass,
-                    self._pong_watchdog(),
-                    "websocket_watchdog",
-                )
-
-            self.api.register_ws_ready_callback(start_watchdog)
+        """Poll data from the API."""
         try:
-            data = await self.api.get_status()
+            return await self.api.get_status()
         except ApiError as err:
             raise UpdateFailed(err) from err
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
-        return data
 
     @callback
     def _on_data_update(self) -> None:
@@ -183,14 +182,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 "Failed to listen to websocket. Trying to reconnect: %s",
                 err,
             )
-        if not hass.is_stopping:
-            await asyncio.sleep(self.reconnect_time)
-            self.reconnect_time = min(self.reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-            entry.async_create_background_task(
-                hass,
-                self.client_listen(hass, entry, automower_client),
-                "reconnect_task",
-            )
 
     def _should_poll(self) -> bool:
         """Return True if at least one mower is connected and at least one is not OFF."""
@@ -199,14 +190,19 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         )
 
     async def _pong_watchdog(self) -> None:
+        """Watchdog to check for pong messages."""
         _LOGGER.debug("Watchdog started")
         try:
             while True:
                 _LOGGER.debug("Sending ping")
-                self.websocket_alive = await self.api.send_empty_message()
-                _LOGGER.debug("Ping result: %s", self.websocket_alive)
+                is_alive = await self.api.send_empty_message()
+                _LOGGER.debug("Ping result: %s", is_alive)
+                if self.websocket_alive != is_alive:
+                    self.websocket_alive = is_alive
+                    for ws_callback in self.websocket_callbacks:
+                        ws_callback(is_alive)
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(PING_INTERVAL)
                 _LOGGER.debug("Websocket alive %s", self.websocket_alive)
                 if not self.websocket_alive:
                     _LOGGER.debug("No pong received → restart polling")
