@@ -92,6 +92,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                     self._attr_translation_placeholders = {"input_number": component_id}
                     self._attr_translation_key = "input_with_number"
                 else:
+                    self._attr_name = get_rpc_channel_name(coordinator.device, key)
                     return
 
             if hasattr(self, "_attr_name"):
