@@ -14,9 +14,6 @@ from homeassistant.helpers.entity import (
     get_device_class,
     get_supported_features,
 )
-from homeassistant.helpers.service import (
-    async_get_all_descriptions as async_get_all_service_descriptions,
-)
 from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
 )
@@ -151,20 +148,4 @@ async def async_get_triggers_for_target(
     descriptions = await async_get_all_trigger_descriptions(hass)
     return _async_get_automation_components_for_target(
         hass, target_selector, expand_group, descriptions
-    )
-
-
-async def async_get_services_for_target(
-    hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
-) -> set[str]:
-    """Get services for a target."""
-    descriptions = await async_get_all_service_descriptions(hass)
-    # Flatten domain+name to match trigger/condition format
-    descriptions_flatten = {
-        f"{domain}.{service_name}": desc
-        for domain, services in descriptions.items()
-        for service_name, desc in services.items()
-    }
-    return _async_get_automation_components_for_target(
-        hass, target_selector, expand_group, descriptions_flatten
     )
