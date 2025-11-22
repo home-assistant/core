@@ -3554,7 +3554,9 @@ async def test_get_triggers_for_target(
         light_message:
           target:
             entity:
-              domain: light
+              - domain: light
+              - domain: sensor
+                device_class: illuminance
         light_flash:
           target:
             entity:
@@ -3644,15 +3646,6 @@ async def test_get_triggers_for_target(
     switch_platform.config_entry = config_entry
     await switch_platform.async_add_entities([device1_switch, area_device_switch])
 
-    device2_entity1 = MockEntity(
-        entity_id="sensor.test3",
-        unique_id="test3",
-        device_info=dr.DeviceInfo(identifiers=device2.identifiers),
-    )
-    sensor_platform = MockEntityPlatform(hass, domain="sensor", platform_name="test")
-    sensor_platform.config_entry = config_entry
-    await sensor_platform.async_add_entities([device2_entity1])
-
     mqtt_light = MockEntity(entity_id="light.mqtt_light", unique_id="mqtt_light")
     mqtt_flash_light = MockEntity(
         entity_id="light.mqtt_flash_light",
@@ -3673,6 +3666,18 @@ async def test_get_triggers_for_target(
     )
     mqtt_switch_platform.config_entry = config_entry
     await mqtt_switch_platform.async_add_entities([label_mqtt_switch])
+
+    device2_mqtt_sensor = MockEntity(
+        entity_id="sensor.mqtt_sensor",
+        unique_id="mqtt_sensor",
+        device_class="illuminance",
+        device_info=dr.DeviceInfo(identifiers=device2.identifiers),
+    )
+    mqtt_sensor_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="mqtt"
+    )
+    mqtt_sensor_platform.config_entry = config_entry
+    await mqtt_sensor_platform.async_add_entities([device2_mqtt_sensor])
 
     # Associate entities with areas and labels
     entity_registry.async_update_entity(
@@ -3716,7 +3721,16 @@ async def test_get_triggers_for_target(
 
     # Test device target - multiple devices
     msg = await call_command({"device_id": [device1.id, device2.id]})
-    assert_triggers(msg, ["light.turned_on", "sensor.turned_on", "switch.turned_on"])
+    assert_triggers(
+        msg,
+        [
+            "light.turned_on",
+            "mqtt",
+            "mqtt.light_message",
+            "sensor.turned_on",
+            "switch.turned_on",
+        ],
+    )
 
     # Test area target - multiple areas
     msg = await call_command({"area_id": [kitchen_area.id, living_room_area.id]})
@@ -3736,5 +3750,12 @@ async def test_get_triggers_for_target(
         }
     )
     assert_triggers(
-        msg, ["light.turned_on", "mqtt", "sensor.turned_on", "switch.turned_on"]
+        msg,
+        [
+            "light.turned_on",
+            "mqtt",
+            "mqtt.light_message",
+            "sensor.turned_on",
+            "switch.turned_on",
+        ],
     )

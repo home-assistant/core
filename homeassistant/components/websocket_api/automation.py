@@ -26,18 +26,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True, kw_only=True)
-class _ComponentLookupData:
-    """Helper class for looking up automation components."""
+class _EntityFilter:
+    """Single entity filter configuration with AND logic for criteria."""
 
-    component: str
     domains: set[str]
     device_classes: set[str]
     supported_features: list[int]
 
     def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
-        """Return if entity matches the filters."""
+        """Return if entity matches all criteria in this filter."""
         if self.domains and domain not in self.domains:
             return False
+
         if self.device_classes:
             entity_device_class = get_device_class(hass, entity_id)
             if (
@@ -45,6 +45,7 @@ class _ComponentLookupData:
                 or entity_device_class not in self.device_classes
             ):
                 return False
+
         if self.supported_features:
             entity_supported_features = get_supported_features(hass, entity_id)
             if not any(
@@ -52,28 +53,42 @@ class _ComponentLookupData:
                 for feature in self.supported_features
             ):
                 return False
+
         return True
+
+
+@dataclass(slots=True, kw_only=True)
+class _ComponentLookupData:
+    """Helper class for looking up automation components."""
+
+    component: str
+    filters: list[_EntityFilter]
+
+    def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
+        """Return if entity matches ANY of the filters."""
+        if not self.filters:
+            return True
+        return any(f.matches(hass, entity_id, domain) for f in self.filters)
 
 
 def _build_component_lookup_data(
     component: str, target_description: dict[str, Any]
 ) -> _ComponentLookupData:
     """Build automation component lookup data from target description."""
-    domains: set[str] = set()
-    device_classes: set[str] = set()
-    supported_features: list[int] = []
+    filters: list[_EntityFilter] = []
 
-    selector_entities = target_description.get("entity", [])
-    for selector_entity in selector_entities:
-        domains.update(selector_entity.get("domain", []))
-        device_classes.update(selector_entity.get("device_class", []))
-        supported_features.extend(selector_entity.get("supported_features", []))
+    entity_filters_config = target_description.get("entity", [])
+    for entity_filter_config in entity_filters_config:
+        entity_filter = _EntityFilter(
+            domains=set(entity_filter_config.get("domain", [])),
+            device_classes=set(entity_filter_config.get("device_class", [])),
+            supported_features=list(entity_filter_config.get("supported_features", [])),
+        )
+        filters.append(entity_filter)
 
     return _ComponentLookupData(
         component=component,
-        domains=domains,
-        device_classes=device_classes,
-        supported_features=supported_features,
+        filters=filters,
     )
 
 
