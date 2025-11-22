@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
-from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
@@ -21,7 +20,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE, ROLE_GENERIC
-from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -93,9 +92,6 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                     self._attr_translation_key = "input_with_number"
                 else:
                     return
-
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
 
         if not description.role and description.key != "input":
             translation_placeholders, translation_key = (
@@ -455,19 +451,6 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
 
     entity_description: BlockBinarySensorDescription
 
-    def __init__(
-        self,
-        coordinator: ShellyBlockCoordinator,
-        block: Block,
-        attribute: str,
-        description: BlockBinarySensorDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, block, attribute, description)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
     @property
     def is_on(self) -> bool:
         """Return true if sensor state is on."""
@@ -478,18 +461,6 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     """Represent a REST binary sensor entity."""
 
     entity_description: RestBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyBlockCoordinator,
-        attribute: str,
-        description: RestBinarySensorDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, attribute, description)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     @property
     def is_on(self) -> bool:
@@ -503,20 +474,6 @@ class BlockSleepingBinarySensor(
     """Represent a block sleeping binary sensor."""
 
     entity_description: BlockBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyBlockCoordinator,
-        block: Block | None,
-        attribute: str,
-        description: BlockBinarySensorDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, block, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -554,9 +511,6 @@ class RpcSleepingBinarySensor(
         super().__init__(coordinator, key, attribute, description, entry)
 
         if coordinator.device.initialized:
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
-
             translation_placeholders, translation_key = (
                 get_entity_translation_attributes(
                     get_rpc_channel_name(coordinator.device, key),
