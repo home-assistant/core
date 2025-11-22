@@ -208,6 +208,9 @@
       },
       "honk_flash": {
         "name": "Honk & flash"
+      },
+      "lock_reduced_guard": {
+        "name": "Lock reduced guard"
       }
     },
     "device_tracker": {
