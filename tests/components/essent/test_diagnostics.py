@@ -20,11 +20,10 @@ pytestmark = [
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    aioclient_mock,
     essent_api_response: dict,
 ) -> None:
     """Test diagnostics for config entry."""
-    entry = await setup_integration(hass, aioclient_mock, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
 
     diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 

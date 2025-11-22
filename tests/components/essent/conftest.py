@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.essent.const import API_ENDPOINT, DOMAIN
+from essent_dynamic_pricing import EssentClient
+from homeassistant.components.essent.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -57,14 +57,57 @@ def gas_api_response() -> dict[str, Any]:
     return load_json_object_fixture("gas_api_response.json", "essent")
 
 
+class _MockResponse:
+    """Simple mock response for client normalization in tests."""
+
+    def __init__(self, body: dict[str, Any]) -> None:
+        self.status = 200
+        self._body = body
+
+    async def text(self) -> str:
+        """Return body as text."""
+        return repr(self._body)
+
+    async def json(self) -> dict[str, Any]:
+        """Return JSON body."""
+        return self._body
+
+
+class _MockSession:
+    """Mock session returning the given response."""
+
+    def __init__(self, body: dict[str, Any]) -> None:
+        self._response = _MockResponse(body)
+
+    async def get(self, *args: Any, **kwargs: Any) -> _MockResponse:
+        """Return the mock response."""
+        return self._response
+
+
+@pytest.fixture
+async def essent_normalized_data(essent_api_response: dict[str, Any]) -> dict[str, Any]:
+    """Normalize the sample API payload using the library client."""
+    client = EssentClient(_MockSession(essent_api_response))
+    return await client.async_get_prices()
+
+
+@pytest.fixture(autouse=True)
+def patch_essent_client(essent_normalized_data: dict[str, Any]) -> Generator:
+    """Patch EssentClient to avoid real HTTP during tests."""
+    mock_client = AsyncMock()
+    mock_client.async_get_prices.return_value = essent_normalized_data
+    with patch(
+        "homeassistant.components.essent.coordinator.EssentClient",
+        return_value=mock_client,
+    ):
+        yield mock_client
+
+
 async def setup_integration(
     hass: HomeAssistant,
-    aioclient_mock: ClientSessionGenerator,
     response: dict[str, Any],
 ) -> MockConfigEntry:
     """Set up the Essent integration for testing."""
-    aioclient_mock.get(API_ENDPOINT, json=response)
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Essent",

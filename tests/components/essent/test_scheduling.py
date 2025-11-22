@@ -10,16 +10,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.essent.const import API_ENDPOINT, DOMAIN
+from homeassistant.components.essent.const import DOMAIN
 from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Don't use the autouse fixture that disables scheduling
 pytestmark = [
@@ -46,12 +42,9 @@ async def test_start_schedules_activates_both_schedulers(
     hass: HomeAssistant,
     setup_timezone,
     mock_random_offset,
-    aioclient_mock,
+    patch_essent_client,
 ) -> None:
     """Test that start_schedules activates both API and listener schedulers."""
-    essent_api_response = load_json_object_fixture("essent_api_response.json", DOMAIN)
-    aioclient_mock.get(API_ENDPOINT, json=essent_api_response)
-
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -71,12 +64,9 @@ async def test_start_schedules_respects_disable_polling(
     hass: HomeAssistant,
     setup_timezone,
     mock_random_offset,
-    aioclient_mock,
+    patch_essent_client,
 ) -> None:
     """Test that scheduling respects pref_disable_polling."""
-    essent_api_response = load_json_object_fixture("essent_api_response.json", DOMAIN)
-    aioclient_mock.get(API_ENDPOINT, json=essent_api_response)
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -100,13 +90,9 @@ async def test_listener_tick_fires_on_the_hour(
     hass: HomeAssistant,
     setup_timezone,
     mock_random_offset,
-    aioclient_mock,
     freezer,
 ) -> None:
     """Test that listener tick fires exactly on the hour."""
-    essent_api_response = load_json_object_fixture("essent_api_response.json", DOMAIN)
-    aioclient_mock.get(API_ENDPOINT, json=essent_api_response)
-
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -140,20 +126,17 @@ async def test_api_refresh_fires_at_offset(
     hass: HomeAssistant,
     setup_timezone,
     mock_random_offset,
-    aioclient_mock,
+    patch_essent_client,
     freezer,
 ) -> None:
     """Test that API refresh fires at the random minute offset."""
-    essent_api_response = load_json_object_fixture("essent_api_response.json", DOMAIN)
-    aioclient_mock.get(API_ENDPOINT, json=essent_api_response)
-
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    initial_call_count = aioclient_mock.call_count
+    initial_call_count = patch_essent_client.async_get_prices.call_count
 
     # Move to next hour + offset (13:15:00)
     next_trigger = dt_util.utcnow().replace(
@@ -164,19 +147,16 @@ async def test_api_refresh_fires_at_offset(
     await hass.async_block_till_done()
 
     # API should have been called again
-    assert aioclient_mock.call_count > initial_call_count
+    assert patch_essent_client.async_get_prices.call_count > initial_call_count
 
 
 async def test_shutdown_cancels_schedules(
     hass: HomeAssistant,
     setup_timezone,
     mock_random_offset,
-    aioclient_mock,
+    patch_essent_client,
 ) -> None:
     """Test that shutdown properly cancels scheduled tasks."""
-    essent_api_response = load_json_object_fixture("essent_api_response.json", DOMAIN)
-    aioclient_mock.get(API_ENDPOINT, json=essent_api_response)
-
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -202,13 +182,9 @@ async def test_schedule_reschedules_itself(
     hass: HomeAssistant,
     setup_timezone,
     mock_random_offset,
-    aioclient_mock,
     freezer,
 ) -> None:
     """Test that schedules reschedule themselves after firing."""
-    essent_api_response = load_json_object_fixture("essent_api_response.json", DOMAIN)
-    aioclient_mock.get(API_ENDPOINT, json=essent_api_response)
-
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 

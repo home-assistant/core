@@ -20,10 +20,10 @@ pytestmark = [
 
 
 async def test_sensor_states(
-    hass: HomeAssistant, aioclient_mock, essent_api_response: dict
+    hass: HomeAssistant, essent_api_response: dict
 ) -> None:
     """Test the sensor states and attributes."""
-    await setup_integration(hass, aioclient_mock, essent_api_response)
+    await setup_integration(hass, essent_api_response)
 
     elec_current = hass.states.get("sensor.essent_electricity_current_price")
     elec_next = hass.states.get("sensor.essent_electricity_next_price")
@@ -52,12 +52,11 @@ async def test_sensor_states(
 
 async def test_sensor_updates_when_time_moves(
     hass: HomeAssistant,
-    aioclient_mock,
     essent_api_response: dict,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors update when time moves forward."""
-    entry = await setup_integration(hass, aioclient_mock, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
     coordinator = entry.runtime_data
 
     # Move within today's tariffs
@@ -84,10 +83,10 @@ async def test_sensor_updates_when_time_moves(
 
 
 async def test_electricity_lowest_price_sensor(
-    hass: HomeAssistant, aioclient_mock, essent_api_response: dict
+    hass: HomeAssistant, essent_api_response: dict
 ) -> None:
     """Test lowest price sensor for electricity."""
-    entry = await setup_integration(hass, aioclient_mock, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
     entity_id = "sensor.essent_electricity_lowest_price_today"
     ent_reg = er.async_get(hass)
     reg_entry = ent_reg.async_get(entity_id)
@@ -104,10 +103,10 @@ async def test_electricity_lowest_price_sensor(
 
 
 async def test_electricity_highest_price_sensor(
-    hass: HomeAssistant, aioclient_mock, essent_api_response: dict
+    hass: HomeAssistant, essent_api_response: dict
 ) -> None:
     """Test highest price sensor for electricity."""
-    entry = await setup_integration(hass, aioclient_mock, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
     entity_id = "sensor.essent_electricity_highest_price_today"
     ent_reg = er.async_get(hass)
     reg_entry = ent_reg.async_get(entity_id)

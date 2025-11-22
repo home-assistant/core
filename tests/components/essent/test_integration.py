@@ -16,10 +16,10 @@ pytestmark = [
 
 
 async def test_full_integration_setup(
-    hass: HomeAssistant, aioclient_mock, essent_api_response: dict
+    hass: HomeAssistant, essent_api_response: dict
 ) -> None:
     """Test complete integration setup and unload."""
-    entry = await setup_integration(hass, aioclient_mock, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
 
     assert entry.state == ConfigEntryState.LOADED
 
