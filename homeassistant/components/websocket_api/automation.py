@@ -89,26 +89,27 @@ class _AutomationComponentLookupData:
         return any(f.matches(hass, entity_id, domain) for f in self.filters)
 
 
-async def _async_get_automation_components_for_target(
+def _async_get_automation_components_for_target(
     hass: HomeAssistant,
-    target_selector: ConfigType,
+    target_selection: ConfigType,
     expand_group: bool,
-    descriptions: dict[str, dict[str, Any] | None],
+    component_descriptions: dict[str, dict[str, Any] | None],
 ) -> set[str]:
     """Get automation components (triggers/conditions/services) for a target.
 
     Returns all components that can be used on any entity that are currently part of a target.
     """
-    selector_data = target_helpers.TargetSelectorData(target_selector)
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group=expand_group
+        hass,
+        target_helpers.TargetSelectorData(target_selection),
+        expand_group=expand_group,
     )
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
     # Build lookup structure: domain -> list of trigger/condition/service lookup data
     domain_components: dict[str, list[_AutomationComponentLookupData]] = {}
     component_count = 0
-    for component, description in descriptions.items():
+    for component, description in component_descriptions.items():
         if description is None or CONF_TARGET not in description:
             _LOGGER.debug("Skipping component %s without target description", component)
             continue
@@ -124,6 +125,7 @@ async def _async_get_automation_components_for_target(
     matched_components: set[str] = set()
     for entity_id in extracted.referenced | extracted.indirectly_referenced:
         if component_count == len(matched_components):
+            # All automation components matched already, so we don't need to iterate further
             break
 
         entity_info = entity_infos.get(entity_id)
@@ -147,7 +149,7 @@ async def async_get_triggers_for_target(
 ) -> set[str]:
     """Get triggers for a target."""
     descriptions = await async_get_all_trigger_descriptions(hass)
-    return await _async_get_automation_components_for_target(
+    return _async_get_automation_components_for_target(
         hass, target_selector, expand_group, descriptions
     )
 
@@ -163,6 +165,6 @@ async def async_get_services_for_target(
         for domain, services in descriptions.items()
         for service_name, desc in services.items()
     }
-    return await _async_get_automation_components_for_target(
+    return _async_get_automation_components_for_target(
         hass, target_selector, expand_group, descriptions_flatten
     )
