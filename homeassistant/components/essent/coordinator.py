@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-import random
 
 from essent_dynamic_pricing import (
     EssentClient,
@@ -42,90 +41,34 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=None,  # explicit scheduling
+            update_interval=None
+            if config_entry.pref_disable_polling
+            else UPDATE_INTERVAL,
         )
         self._client = EssentClient(async_get_clientsession(hass))
-        self._unsub_data: Callable[[], None] | None = None
         self._unsub_listener: Callable[[], None] | None = None
-        # Random minute offset for API fetches (0-59 minutes)
-        self._api_fetch_minute_offset = random.randint(0, 59)
-
-    @property
-    def api_fetch_minute_offset(self) -> int:
-        """Return the configured minute offset for API fetches."""
-        return self._api_fetch_minute_offset
-
-    @property
-    def api_refresh_scheduled(self) -> bool:
-        """Return whether the API refresh task is scheduled."""
-        return self._unsub_data is not None
 
     @property
     def listener_tick_scheduled(self) -> bool:
         """Return whether the listener tick task is scheduled."""
         return self._unsub_listener is not None
 
-    def start_schedules(self) -> None:
-        """Start both API fetch and listener tick schedules.
-
-        This should be called after the first successful data fetch.
-        Schedules will continue running regardless of API success/failure.
-        """
+    def start_listener_schedule(self) -> None:
+        """Start listener tick schedule after first successful data fetch."""
         if self.config_entry.pref_disable_polling:
-            _LOGGER.debug("Polling disabled by config entry, not starting schedules")
+            _LOGGER.debug("Polling disabled by config entry, not starting listener")
             return
-
-        if self._unsub_data or self._unsub_listener:
+        if self._unsub_listener:
             return
-
-        _LOGGER.info(
-            "Starting schedules: API fetch every hour at minute %d, "
-            "listener updates on the hour",
-            self._api_fetch_minute_offset,
-        )
-        self._schedule_data_refresh()
+        _LOGGER.info("Starting listener updates on the hour")
         self._schedule_listener_tick()
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         await super().async_shutdown()
-        if self._unsub_data:
-            self._unsub_data()
-            self._unsub_data = None
         if self._unsub_listener:
             self._unsub_listener()
             self._unsub_listener = None
-
-    def _schedule_data_refresh(self) -> None:
-        """Schedule next data fetch at a random minute offset within the hour."""
-        if self._unsub_data:
-            self._unsub_data()
-
-        now = dt_util.utcnow()
-        current_hour = now.replace(minute=0, second=0, microsecond=0)
-        candidate = (
-            current_hour
-            + UPDATE_INTERVAL
-            + timedelta(minutes=self._api_fetch_minute_offset)
-        )
-        if candidate <= now:
-            candidate = candidate + UPDATE_INTERVAL
-
-        _LOGGER.debug(
-            "Scheduling next API fetch for %s (offset: %d minutes)",
-            candidate,
-            self._api_fetch_minute_offset,
-        )
-
-        @callback
-        def _handle(_: datetime) -> None:
-            """Handle the scheduled API refresh trigger."""
-            self._unsub_data = None
-            self.hass.async_create_task(self.async_request_refresh())
-            # Reschedule for next hour regardless of success/failure
-            self._schedule_data_refresh()
-
-        self._unsub_data = async_track_point_in_utc_time(self.hass, _handle, candidate)
 
     def _schedule_listener_tick(self) -> None:
         """Schedule listener updates on the hour to advance cached tariffs."""

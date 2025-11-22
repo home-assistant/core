@@ -21,20 +21,11 @@ async def set_time_zone(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("Europe/Amsterdam")
 
 
-@pytest.fixture(autouse=True)
-def fixed_minute_offset() -> Generator[None]:
-    """Use a predictable API fetch minute offset."""
-    with patch(
-        "homeassistant.components.essent.coordinator.random.randint", return_value=5
-    ):
-        yield
-
-
 @pytest.fixture
 def disable_coordinator_schedules(monkeypatch: pytest.MonkeyPatch) -> None:
     """Disable scheduler callbacks during tests (opt-in via usefixtures)."""
     monkeypatch.setattr(
-        "homeassistant.components.essent.coordinator.EssentDataUpdateCoordinator.start_schedules",
+        "homeassistant.components.essent.coordinator.EssentDataUpdateCoordinator.start_listener_schedule",
         lambda self: None,
     )
 

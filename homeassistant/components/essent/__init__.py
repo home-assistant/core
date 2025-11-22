@@ -15,9 +15,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EssentConfigEntry) -> bo
     coordinator = EssentDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    # Start independent schedules for API fetch and listener updates
-    # These will continue running regardless of API success/failure
-    coordinator.start_schedules()
+    # Start listener updates on the hour to advance cached tariffs
+    coordinator.start_listener_schedule()
 
     entry.async_on_unload(coordinator.async_shutdown)
     entry.runtime_data = coordinator

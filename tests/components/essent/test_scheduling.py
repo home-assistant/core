@@ -5,12 +5,10 @@ This module tests the scheduling logic properly using HA's time utilities.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from unittest.mock import patch
-
+from datetime import timedelta
 import pytest
 
-from homeassistant.components.essent.const import DOMAIN
+from homeassistant.components.essent.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -29,22 +27,12 @@ async def setup_timezone(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("Europe/Amsterdam")
 
 
-@pytest.fixture
-def mock_random_offset():
-    """Mock random offset to be predictable."""
-    with patch(
-        "homeassistant.components.essent.coordinator.random.randint", return_value=15
-    ):
-        yield
-
-
 async def test_start_schedules_activates_both_schedulers(
     hass: HomeAssistant,
     setup_timezone,
-    mock_random_offset,
     patch_essent_client,
 ) -> None:
-    """Test that start_schedules activates both API and listener schedulers."""
+    """Test that listener scheduler activates and polling is configured."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -54,16 +42,14 @@ async def test_start_schedules_activates_both_schedulers(
 
     coordinator: EssentDataUpdateCoordinator = entry.runtime_data
 
-    # Schedules should be active after setup
-    assert coordinator.api_refresh_scheduled
+    # Listener schedule should be active after setup
     assert coordinator.listener_tick_scheduled
-    assert coordinator.api_fetch_minute_offset == 15
+    assert coordinator.update_interval == UPDATE_INTERVAL
 
 
 async def test_start_schedules_respects_disable_polling(
     hass: HomeAssistant,
     setup_timezone,
-    mock_random_offset,
     patch_essent_client,
 ) -> None:
     """Test that scheduling respects pref_disable_polling."""
@@ -82,14 +68,13 @@ async def test_start_schedules_respects_disable_polling(
     coordinator: EssentDataUpdateCoordinator = entry.runtime_data
 
     # Schedules should NOT be active when polling is disabled
-    assert not coordinator.api_refresh_scheduled
     assert not coordinator.listener_tick_scheduled
+    assert coordinator.update_interval is None
 
 
 async def test_listener_tick_fires_on_the_hour(
     hass: HomeAssistant,
     setup_timezone,
-    mock_random_offset,
     freezer,
 ) -> None:
     """Test that listener tick fires exactly on the hour."""
@@ -125,11 +110,10 @@ async def test_listener_tick_fires_on_the_hour(
 async def test_api_refresh_fires_at_offset(
     hass: HomeAssistant,
     setup_timezone,
-    mock_random_offset,
     patch_essent_client,
     freezer,
 ) -> None:
-    """Test that API refresh fires at the random minute offset."""
+    """Test that API refresh fires on schedule."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -138,10 +122,10 @@ async def test_api_refresh_fires_at_offset(
 
     initial_call_count = patch_essent_client.async_get_prices.call_count
 
-    # Move to next hour + offset (13:15:00)
+    # Move to next hour (13:00:00) since coordinator uses update_interval
     next_trigger = dt_util.utcnow().replace(
         minute=0, second=0, microsecond=0
-    ) + timedelta(hours=1, minutes=15)
+    ) + timedelta(hours=1)
     freezer.move_to(next_trigger)
     async_fire_time_changed(hass, next_trigger)
     await hass.async_block_till_done()
@@ -153,7 +137,6 @@ async def test_api_refresh_fires_at_offset(
 async def test_shutdown_cancels_schedules(
     hass: HomeAssistant,
     setup_timezone,
-    mock_random_offset,
     patch_essent_client,
 ) -> None:
     """Test that shutdown properly cancels scheduled tasks."""
@@ -166,7 +149,6 @@ async def test_shutdown_cancels_schedules(
     coordinator: EssentDataUpdateCoordinator = entry.runtime_data
 
     # Schedules should be active
-    assert coordinator.api_refresh_scheduled
     assert coordinator.listener_tick_scheduled
 
     # Unload the integration (triggers shutdown)
@@ -174,14 +156,12 @@ async def test_shutdown_cancels_schedules(
     await hass.async_block_till_done()
 
     # Schedules should be cancelled
-    assert not coordinator.api_refresh_scheduled
     assert not coordinator.listener_tick_scheduled
 
 
 async def test_schedule_reschedules_itself(
     hass: HomeAssistant,
     setup_timezone,
-    mock_random_offset,
     freezer,
 ) -> None:
     """Test that schedules reschedule themselves after firing."""
@@ -207,53 +187,10 @@ async def test_schedule_reschedules_itself(
     # Fire API refresh
     next_trigger = dt_util.utcnow().replace(
         minute=0, second=0, microsecond=0
-    ) + timedelta(hours=1, minutes=15)
+    ) + timedelta(hours=1)
     freezer.move_to(next_trigger)
     async_fire_time_changed(hass, next_trigger)
     await hass.async_block_till_done()
-
-    # Schedule should still be active (rescheduled)
-    assert coordinator.api_refresh_scheduled
-
-
-async def test_schedule_refresh_replaces_existing_unsub(
-    hass: HomeAssistant,
-    setup_timezone,
-    monkeypatch: pytest.MonkeyPatch,
-    freezer,
-) -> None:
-    """Ensure scheduling cancels previous callback and handles past candidate."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    coordinator: EssentDataUpdateCoordinator = entry.runtime_data
-    cancelled: list[str] = []
-
-    def fake_unsub() -> None:
-        cancelled.append("cancelled")
-
-    scheduled: list[datetime] = []
-
-    def fake_track(_hass, _cb, when):
-        scheduled.append(when)
-        return lambda: cancelled.append("new_cancelled")
-
-    # Force candidate into the past to hit the adjustment branch
-    coordinator._api_fetch_minute_offset = -120
-    coordinator._unsub_data = fake_unsub
-    monkeypatch.setattr(
-        "homeassistant.components.essent.coordinator.async_track_point_in_utc_time",
-        fake_track,
-    )
-
-    coordinator._schedule_data_refresh()
-
-    assert "cancelled" in cancelled
-    assert scheduled
-    assert scheduled[0] >= dt_util.utcnow()
 
 
 async def test_listener_schedule_replaces_existing_unsub(
