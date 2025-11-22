@@ -70,6 +70,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
     )
 
     def __init__(self, url, name, code, mode):
@@ -87,6 +88,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
         """Update values from API."""
         try:
             part = self._alarm.list_partitions()[0]
+            zones = self._alarm.list_zones()
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to %(host)s: %(reason)s",
@@ -96,7 +98,12 @@ class Concord232Alarm(AlarmControlPanelEntity):
         except IndexError:
             _LOGGER.error("Concord232 reports no partitions")
             return
-
+        self._attr_extra_state_attributes = {}
+        for zone in zones:
+            if zone["state"] == "Unknown":
+                self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
+                self._attr_extra_state_attributes["triggered_by"] = zone["name"]
+                return
         if part["arming_level"] == "Off":
             self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif "Home" in part["arming_level"]:
