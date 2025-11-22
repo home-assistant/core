@@ -50,6 +50,28 @@ async def test_sensor_states(
     assert gas_next.attributes["unit_of_measurement"] == "€/m³"
 
 
+async def test_sensor_states_with_different_timezone(
+    hass: HomeAssistant,
+    essent_api_response: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors still match tariffs when HA timezone differs."""
+    await hass.config.async_set_time_zone("America/New_York")
+    await hass.async_block_till_done()
+    freezer.move_to("2025-11-16 04:30:00-05:00")
+
+    await setup_integration(hass, essent_api_response)
+
+    elec_current = hass.states.get("sensor.essent_electricity_current_price")
+    elec_next = hass.states.get("sensor.essent_electricity_next_price")
+
+    assert elec_current is not None
+    assert float(elec_current.state) == 0.25
+
+    assert elec_next is not None
+    assert float(elec_next.state) == 0.22
+
+
 async def test_sensor_updates_when_time_moves(
     hass: HomeAssistant,
     essent_api_response: dict,

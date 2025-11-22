@@ -16,37 +16,38 @@ from .coordinator import EssentConfigEntry, EssentDataUpdateCoordinator
 from .entity import EssentEntity
 
 PARALLEL_UPDATES = 1
+ESSENT_TIME_ZONE = dt_util.get_time_zone("Europe/Amsterdam") or dt_util.UTC
+
+
+def _parse_tariff_datetime(value: Any) -> datetime | None:
+    """Parse a tariff timestamp in the Essent time zone."""
+    if not isinstance(value, str):
+        return None
+    parsed = dt_util.parse_datetime(value)
+    if not parsed:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=ESSENT_TIME_ZONE)
+    return parsed.astimezone(ESSENT_TIME_ZONE)
 
 
 def _parse_tariff_times(
     tariff: dict[str, Any],
 ) -> tuple[datetime | None, datetime | None]:
     """Parse tariff start/end times and ensure they are timezone-aware."""
-    start_str = tariff.get("startDateTime")
-    end_str = tariff.get("endDateTime")
-
-    # Type narrowing for parse_datetime
-    start = dt_util.parse_datetime(start_str) if isinstance(start_str, str) else None
-    end = dt_util.parse_datetime(end_str) if isinstance(end_str, str) else None
-
-    if start and start.tzinfo is None:
-        start = dt_util.as_local(start)
-    if end and end.tzinfo is None:
-        end = dt_util.as_local(end)
-
-    return start, end
+    return (
+        _parse_tariff_datetime(tariff.get("startDateTime")),
+        _parse_tariff_datetime(tariff.get("endDateTime")),
+    )
 
 
 def _format_dt_str(value: str | None) -> str | None:
-    """Format a datetime string as local ISO, falling back to original."""
+    """Format a datetime string in the Essent time zone, falling back to original."""
     if not value:
         return None
-    parsed = dt_util.parse_datetime(value)
-    if not parsed:
-        return value
-    if parsed.tzinfo is None:
-        parsed = dt_util.as_local(parsed)
-    return parsed.isoformat()
+    if parsed := _parse_tariff_datetime(value):
+        return parsed.isoformat()
+    return value
 
 
 async def async_setup_entry(
