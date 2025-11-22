@@ -157,43 +157,6 @@ async def test_electricity_highest_price_sensor(
     assert "11:00:00" in sensor.attributes["end"]
 
 
-async def test_sensors_handle_missing_data(hass: HomeAssistant) -> None:
-    """Sensors should handle missing coordinator data gracefully."""
-    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
-    coordinator = EssentDataUpdateCoordinator(hass, entry)
-    coordinator.data = None
-
-    current = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"]
-    )
-    next_sensor = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"]
-    )
-    avg = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["average_today"])
-    low = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["lowest_price_today"]
-    )
-    high = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["highest_price_today"]
-    )
-
-    assert current.native_value is None
-    assert next_sensor.native_value is None
-    assert avg.native_value is None
-    assert low.native_value is None
-    assert high.native_value is None
-    assert current.native_unit_of_measurement == "€/kWh"
-    assert next_sensor.native_unit_of_measurement == "€/kWh"
-    assert avg.native_unit_of_measurement == "€/kWh"
-    assert low.native_unit_of_measurement == "€/kWh"
-    assert high.native_unit_of_measurement == "€/kWh"
-    assert current.extra_state_attributes == {}
-    assert next_sensor.extra_state_attributes == {}
-    assert avg.extra_state_attributes == {}
-    assert low.extra_state_attributes == {}
-    assert high.extra_state_attributes == {}
-
-
 async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
     """Sensors should return None/{} when no tariffs are present."""
     entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")

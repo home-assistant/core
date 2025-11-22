@@ -30,8 +30,6 @@ class EssentEntity(CoordinatorEntity[EssentDataUpdateCoordinator]):
         )
 
     @property
-    def energy_data(self) -> EnergyData | None:
+    def energy_data(self) -> EnergyData:
         """Return the energy data for this entity."""
-        if (data := self.coordinator.data) is None:
-            return None
-        return getattr(data, self.energy_type)
+        return getattr(self.coordinator.data, self.energy_type)

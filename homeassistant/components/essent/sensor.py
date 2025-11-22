@@ -69,8 +69,7 @@ class EssentSensorEntityDescription(SensorEntityDescription):
 
 def _get_all_tariffs(entity: "EssentSensor") -> list[Tariff]:
     """Return tariffs for both today and tomorrow."""
-    if (data := entity.energy_data) is None:
-        return []
+    data = entity.energy_data
     return [*data.tariffs, *data.tariffs_tomorrow]
 
 
@@ -132,8 +131,7 @@ def _next_price_attrs(entity: "EssentSensor") -> dict[str, Any]:
 
 def _average_attrs(entity: "EssentSensor") -> dict[str, Any]:
     """Build attributes for the average price."""
-    if (data := entity.energy_data) is None:
-        return {}
+    data = entity.energy_data
     return {
         "min_price": data.min_price,
         "max_price": data.max_price,
@@ -142,8 +140,7 @@ def _average_attrs(entity: "EssentSensor") -> dict[str, Any]:
 
 def _extreme_attrs(entity: "EssentSensor", target: float) -> dict[str, Any]:
     """Build attributes for lowest/highest prices."""
-    if (data := entity.energy_data) is None:
-        return {}
+    data = entity.energy_data
     for tariff in data.tariffs:
         if tariff.total_amount == target:
             return {
@@ -180,23 +177,15 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="average_today",
         name="average today",
         translation_key="average_today",
-        value_fn=lambda entity: None
-        if (data := entity.energy_data) is None
-        else data.avg_price,
+        value_fn=lambda entity: entity.energy_data.avg_price,
         attrs_fn=_average_attrs,
     ),
     EssentSensorEntityDescription(
         key="lowest_price_today",
         name="lowest price today",
         translation_key="lowest_price_today",
-        value_fn=lambda entity: None
-        if (data := entity.energy_data) is None
-        else data.min_price,
-        attrs_fn=lambda entity: (
-            {}
-            if (data := entity.energy_data) is None
-            else _extreme_attrs(entity, data.min_price)
-        ),
+        value_fn=lambda entity: entity.energy_data.min_price,
+        attrs_fn=lambda entity: _extreme_attrs(entity, entity.energy_data.min_price),
         energy_types=(ENERGY_TYPE_ELECTRICITY,),
         entity_registry_enabled_default=False,
     ),
@@ -204,14 +193,8 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="highest_price_today",
         name="highest price today",
         translation_key="highest_price_today",
-        value_fn=lambda entity: None
-        if (data := entity.energy_data) is None
-        else data.max_price,
-        attrs_fn=lambda entity: (
-            {}
-            if (data := entity.energy_data) is None
-            else _extreme_attrs(entity, data.max_price)
-        ),
+        value_fn=lambda entity: entity.energy_data.max_price,
+        attrs_fn=lambda entity: _extreme_attrs(entity, entity.energy_data.max_price),
         energy_types=(ENERGY_TYPE_ELECTRICITY,),
         entity_registry_enabled_default=False,
     ),
@@ -267,10 +250,7 @@ class EssentSensor(EssentEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
-        if (data := self.energy_data) is None:
-            return f"{CURRENCY_EURO}/kWh"
-        unit = data.unit
-        return f"{CURRENCY_EURO}/{unit}"
+        return f"{CURRENCY_EURO}/{self.energy_data.unit}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
