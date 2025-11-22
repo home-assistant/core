@@ -1,12 +1,3 @@
-# Code improvements from PR review feedback:
-# 1. Replace bare Exception catches in __init__.py with specific growattServer exceptions
-# 2. Remove _LOGGER.error calls in coordinator.py when raising UpdateFailed (choose one, not both)
-# 3. Update server URL dropdown to show regional descriptions (e.g., 'China', 'United States') instead of raw URLs
-# 4. Add serial_number field to DeviceInfo in sensor, number, and switch platforms using device_id/serial_id
-# 5. Replace custom precision field with suggested_display_precision to preserve full data granularity
-# 6. Merge GrowattRequiredKeysMixin into GrowattSensorEntityDescription using kw_only=True
-# 7. Add EntityCategory.DIAGNOSTIC to temperature and other diagnostic sensors
-
 rules:
   # Bronze
   action-setup: done
@@ -31,17 +22,25 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: todo
+    comment: Update server URL dropdown to show regional descriptions (e.g., 'China', 'United States') instead of raw URLs.
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable:
+    status: todo
+    comment: Replace bare Exception catches in __init__.py with specific growattServer exceptions.
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable:
+    status: todo
+    comment: Remove _LOGGER.error calls in coordinator.py when raising UpdateFailed (choose one, not both).
   parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
 
   # Gold
-  devices: done
+  devices:
+    status: todo
+    comment: Add serial_number field to DeviceInfo in sensor, number, and switch platforms using device_id/serial_id.
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -53,8 +52,12 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: done
+  entity-category:
+    status: todo
+    comment: Add EntityCategory.DIAGNOSTIC to temperature and other diagnostic sensors. Merge GrowattRequiredKeysMixin into GrowattSensorEntityDescription using kw_only=True.
+  entity-device-class:
+    status: todo
+    comment: Replace custom precision field with suggested_display_precision to preserve full data granularity.
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo
