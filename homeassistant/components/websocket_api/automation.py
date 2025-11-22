@@ -58,16 +58,14 @@ class _EntityFilter:
 
 
 @dataclass(slots=True, kw_only=True)
-class _ComponentLookupData:
+class _AutomationComponentLookupData:
     """Helper class for looking up automation components."""
 
     component: str
     filters: list[_EntityFilter]
 
     @classmethod
-    def build_component_lookup_data(
-        cls, component: str, target_description: dict[str, Any]
-    ) -> Self:
+    def create(cls, component: str, target_description: dict[str, Any]) -> Self:
         """Build automation component lookup data from target description."""
         filters: list[_EntityFilter] = []
 
@@ -91,7 +89,7 @@ class _ComponentLookupData:
         return any(f.matches(hass, entity_id, domain) for f in self.filters)
 
 
-async def _async_get_components_for_target(
+async def _async_get_automation_components_for_target(
     hass: HomeAssistant,
     target_selector: ConfigType,
     expand_group: bool,
@@ -108,7 +106,7 @@ async def _async_get_components_for_target(
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
     # Build lookup structure: domain -> list of trigger/condition/service lookup data
-    domain_components: dict[str, list[_ComponentLookupData]] = {}
+    domain_components: dict[str, list[_AutomationComponentLookupData]] = {}
     component_count = 0
     for component, description in descriptions.items():
         if description is None or CONF_TARGET not in description:
@@ -116,13 +114,11 @@ async def _async_get_components_for_target(
             continue
         domain = component.split(".")[0]
         domain_components.setdefault(domain, []).append(
-            _ComponentLookupData.build_component_lookup_data(
-                component, description[CONF_TARGET]
-            )
+            _AutomationComponentLookupData.create(component, description[CONF_TARGET])
         )
         component_count += 1
 
-    _LOGGER.debug("Domain components: %s", domain_components)
+    _LOGGER.debug("Automation components per domain: %s", domain_components)
 
     entity_infos = entity_sources(hass)
     matched_components: set[str] = set()
@@ -151,7 +147,7 @@ async def async_get_triggers_for_target(
 ) -> set[str]:
     """Get triggers for a target."""
     descriptions = await async_get_all_trigger_descriptions(hass)
-    return await _async_get_components_for_target(
+    return await _async_get_automation_components_for_target(
         hass, target_selector, expand_group, descriptions
     )
 
@@ -167,6 +163,6 @@ async def async_get_services_for_target(
         for domain, services in descriptions.items()
         for service_name, desc in services.items()
     }
-    return await _async_get_components_for_target(
+    return await _async_get_automation_components_for_target(
         hass, target_selector, expand_group, descriptions_flatten
     )
