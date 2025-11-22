@@ -892,7 +892,7 @@ async def handle_get_triggers_for_target(
 ) -> None:
     """Handle get triggers for target command.
 
-    This command returns all triggers that can be used on any entity that are currently
+    This command returns all triggers that can be used with any entities that are currently
     part of a target.
     """
     triggers = await async_get_triggers_for_target(
