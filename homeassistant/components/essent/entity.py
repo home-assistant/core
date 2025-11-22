@@ -1,5 +1,6 @@
 """Base entity for Essent integration."""
 
+from essent_dynamic_pricing.models import EnergyData
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,14 +22,16 @@ class EssentEntity(CoordinatorEntity[EssentDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.energy_type = energy_type
-        entry_identifier = (
-            coordinator.config_entry.entry_id
-            if coordinator.config_entry is not None
-            else "essent_dynamic_prices"
-        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_identifier)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name="Essent",
             manufacturer="Essent",
         )
+
+    @property
+    def energy_data(self) -> EnergyData | None:
+        """Return the energy data for this entity."""
+        if (data := self.coordinator.data) is None:
+            return None
+        return getattr(data, self.energy_type)

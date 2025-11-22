@@ -6,7 +6,6 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import random
-from typing import Any
 
 from essent_dynamic_pricing import (
     EssentClient,
@@ -27,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-EssentData = dict[str, Any]
+EssentData = EssentPrices
 type EssentConfigEntry = ConfigEntry["EssentDataUpdateCoordinator"]
 
 
@@ -165,7 +164,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
         """Fetch data from API."""
         try:
             prices: EssentPrices = await self._client.async_get_prices()
-            return prices.to_dict()
+            return prices
         except EssentConnectionError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except EssentResponseError as err:

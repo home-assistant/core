@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from essent_dynamic_pricing import EssentClient
+from essent_dynamic_pricing import EssentClient, EssentPrices
 from homeassistant.components.essent.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -85,7 +85,9 @@ class _MockSession:
 
 
 @pytest.fixture
-async def essent_normalized_data(essent_api_response: dict[str, Any]) -> dict[str, Any]:
+async def essent_normalized_data(
+    essent_api_response: dict[str, Any],
+) -> EssentPrices:
     """Normalize the sample API payload using the library client."""
     client = EssentClient(_MockSession(essent_api_response))
     return await client.async_get_prices()

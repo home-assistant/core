@@ -25,15 +25,17 @@ async def test_coordinator_fetch_success(
 
     data = await coordinator._async_update_data()
 
-    assert data == essent_normalized_data.to_dict()
-    assert len(data["electricity"]["tariffs"]) == 3
-    assert len(data["electricity"]["tariffs_tomorrow"]) == 1
-    assert len(data["gas"]["tariffs"]) == 3
-    assert data["electricity"]["unit"] == "kWh"
-    assert data["gas"]["unit"] == "m³"
-    assert data["electricity"]["min_price"] == 0.2
-    assert round(data["electricity"]["avg_price"], 4) == 0.2233
-    assert data["electricity"]["max_price"] == 0.25
+    assert data == essent_normalized_data
+    elec = data.electricity
+    gas = data.gas
+    assert len(elec.tariffs) == 3
+    assert len(elec.tariffs_tomorrow) == 1
+    assert len(gas.tariffs) == 3
+    assert elec.unit == "kWh"
+    assert gas.unit == "m³"
+    assert elec.min_price == 0.2
+    assert round(elec.avg_price, 4) == 0.2233
+    assert elec.max_price == 0.25
 
 
 async def test_coordinator_fetch_failure(hass: HomeAssistant, patch_essent_client) -> None:
