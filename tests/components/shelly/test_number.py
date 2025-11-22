@@ -18,6 +18,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
     NumberMode,
 )
+from homeassistant.components.shelly import number
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -25,6 +26,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     Platform,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -32,6 +34,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, patch_platforms, register_device, register_entity
+from .conftest import MOCK_SETTINGS
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -615,3 +618,222 @@ async def test_cury_number_entity(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_block_auto_off_number(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test block auto_off number entity."""
+    # Mock relay settings with auto_off
+    settings = deepcopy(MOCK_SETTINGS)
+    settings["relays"][0]["auto_off"] = 300
+    monkeypatch.setattr(mock_block_device, "settings", settings)
+    # Block object needs the attribute in sensor_ids and as an attribute for entity creation check
+    # Get existing sensor_ids dict and add auto_off
+    existing_sensor_ids = getattr(mock_block_device.blocks[0], "sensor_ids", {})
+    if not isinstance(existing_sensor_ids, dict):
+        existing_sensor_ids = {}
+    new_sensor_ids = {**existing_sensor_ids, "auto_off": 300}
+    monkeypatch.setattr(mock_block_device.blocks[0], "sensor_ids", new_sensor_ids)
+    monkeypatch.setattr(mock_block_device.blocks[0], "auto_off", 300)
+
+    await init_integration(hass, 1)
+
+    entity_id = f"{NUMBER_DOMAIN}.test_name_channel_1_auto_off"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "300"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
+    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MAX) == 86400
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-relay_0-auto_off"
+
+    # Test setting value
+    mock_block_device.http_request = AsyncMock(return_value={})
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 600},
+        blocking=True,
+    )
+    mock_block_device.http_request.assert_called_once_with(
+        "get", "settings/relay/0", {"auto_off": 600}
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_block_auto_on_number(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test block auto_on number entity."""
+    # Mock relay settings with auto_on
+    settings = deepcopy(MOCK_SETTINGS)
+    settings["relays"][0]["auto_on"] = 180
+    monkeypatch.setattr(mock_block_device, "settings", settings)
+    # Block object needs the attribute in sensor_ids and as an attribute for entity creation check
+    # Get existing sensor_ids dict and add auto_on
+    existing_sensor_ids = getattr(mock_block_device.blocks[0], "sensor_ids", {})
+    if not isinstance(existing_sensor_ids, dict):
+        existing_sensor_ids = {}
+    new_sensor_ids = {**existing_sensor_ids, "auto_on": 180}
+    monkeypatch.setattr(mock_block_device.blocks[0], "sensor_ids", new_sensor_ids)
+    monkeypatch.setattr(mock_block_device.blocks[0], "auto_on", 180)
+
+    await init_integration(hass, 1)
+
+    entity_id = f"{NUMBER_DOMAIN}.test_name_channel_1_auto_on"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "180"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-relay_0-auto_on"
+
+    # Test disabled timer (value 0)
+    settings["relays"][0]["auto_on"] = 0
+    monkeypatch.setattr(mock_block_device, "settings", settings)
+    mock_block_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_auto_off_number(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC auto_off number entity."""
+    config = deepcopy(mock_rpc_device.config)
+    config["switch:0"]["auto_off"] = 300
+    # Ensure switch:0 is not excluded by removal_condition
+    # Set consumption_types to empty or ensure channel 0 is not "light"
+    if "sys" not in config:
+        config["sys"] = {}
+    if "ui_data" not in config["sys"]:
+        config["sys"]["ui_data"] = {}
+    config["sys"]["ui_data"]["consumption_types"] = []
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    # Override supported function to allow entity creation even if sub_key not in status
+    object.__setattr__(
+        number.RPC_NUMBERS["auto_off"],
+        "supported",
+        lambda status: True,
+    )
+    # Override removal_condition to prevent entity removal
+    object.__setattr__(
+        number.RPC_NUMBERS["auto_off"],
+        "removal_condition",
+        lambda config, status, key: False,
+    )
+    # Remove cover:0 from status to ensure switch:0 is found by get_rpc_key_instances
+    status = deepcopy(mock_rpc_device.status)
+    status.pop("cover:0", None)
+    # Ensure sys.relay_in_thermostat is False
+    if "sys" not in status:
+        status["sys"] = {}
+    status["sys"]["relay_in_thermostat"] = False
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    # RPC timer number entities use "None" as entity ID when channel name is None
+    entity_id = f"{NUMBER_DOMAIN}.test_name_none"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "300"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
+    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MAX) == 86400
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-auto_off"
+
+    # Test setting value
+    mock_rpc_device.call_rpc = AsyncMock(return_value={})
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 600},
+        blocking=True,
+    )
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "Switch.SetConfig", {"id": 0, "auto_off": 600}
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_auto_on_number(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC auto_on number entity."""
+    config = deepcopy(mock_rpc_device.config)
+    config["switch:0"]["auto_on"] = 180
+    # Ensure switch:0 is not excluded by removal_condition
+    # Set consumption_types to empty or ensure channel 0 is not "light"
+    if "sys" not in config:
+        config["sys"] = {}
+    if "ui_data" not in config["sys"]:
+        config["sys"]["ui_data"] = {}
+    config["sys"]["ui_data"]["consumption_types"] = []
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    # Override supported function to allow entity creation even if sub_key not in status
+    object.__setattr__(
+        number.RPC_NUMBERS["auto_on"],
+        "supported",
+        lambda status: True,
+    )
+    # Override removal_condition to prevent entity removal
+    object.__setattr__(
+        number.RPC_NUMBERS["auto_on"],
+        "removal_condition",
+        lambda config, status, key: False,
+    )
+    # Remove cover:0 from status to ensure switch:0 is found by get_rpc_key_instances
+    status = deepcopy(mock_rpc_device.status)
+    status.pop("cover:0", None)
+    # Ensure sys.relay_in_thermostat is False
+    if "sys" not in status:
+        status["sys"] = {}
+    status["sys"]["relay_in_thermostat"] = False
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    # RPC timer number entities use "None" as entity ID when channel name is None
+    # Find the entity by unique_id since entity_id might have a suffix if other entities exist
+    entry = entity_registry.async_get_entity_id(
+        NUMBER_DOMAIN, DOMAIN, "123456789ABC-switch:0-auto_on"
+    )
+    assert entry is not None
+    entity_id = entry
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "180"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-auto_on"
+
+    # Test disabled timer (value 0)
+    config["switch:0"]["auto_on"] = 0
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
