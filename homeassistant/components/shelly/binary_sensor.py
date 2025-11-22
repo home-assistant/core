@@ -83,7 +83,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+        if description.role != ROLE_GENERIC:
             if not description.role and description.key == "input":
                 _, component, component_id = get_rpc_key(key)
                 if not get_rpc_custom_name(coordinator.device, key) and (
@@ -94,7 +94,8 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                 else:
                     return
 
-            delattr(self, "_attr_name")
+            if hasattr(self, "_attr_name"):
+                delattr(self, "_attr_name")
 
         if not description.role and description.key != "input":
             translation_placeholders, translation_key = (

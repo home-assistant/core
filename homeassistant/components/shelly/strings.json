@@ -31,7 +31,16 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?"
+        "data": {
+          "disable_ap": "Disable WiFi access point after provisioning",
+          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
+        },
+        "data_description": {
+          "disable_ap": "For improved security, disable the WiFi access point after successfully connecting to your network.",
+          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after WiFi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
+        },
+        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?",
+        "title": "Provision WiFi via Bluetooth"
       },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
