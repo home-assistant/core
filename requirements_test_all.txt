@@ -1027,7 +1027,7 @@ here-routing==1.2.0
 here-transit==1.2.1
 
 # homeassistant.components.hinen_power
-hinen-open-api==1.0.0
+hinen-open-api==1.0.1
 
 # homeassistant.components.hko
 hko==0.3.2
