@@ -9,7 +9,6 @@ from typing import Any, Callable
 from essent_dynamic_pricing.models import Tariff
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -207,7 +206,6 @@ async def async_setup_entry(
 class EssentSensor(EssentEntity, SensorEntity):
     """Generic Essent sensor driven by entity descriptions."""
 
-    _attr_device_class = SensorDeviceClass.MONETARY
     _attr_state_class = None
     _attr_suggested_display_precision = 3
 
