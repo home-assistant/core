@@ -16,10 +16,7 @@ from homeassistant.components.essent.sensor import (
     _format_dt_str,
     _parse_tariff_datetime,
 )
-from homeassistant.components.essent.const import (
-    ENERGY_TYPE_ELECTRICITY,
-    ENERGY_TYPE_GAS,
-)
+from homeassistant.components.essent.const import EnergyType
 from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
 from tests.common import MockConfigEntry
 from . import setup_integration
@@ -208,16 +205,16 @@ async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
     coordinator.data = prices
 
     current = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"]
+        coordinator, EnergyType.ELECTRICITY, _DESCS["current_price"]
     )
     next_sensor = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"]
+        coordinator, EnergyType.ELECTRICITY, _DESCS["next_price"]
     )
     low = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["lowest_price_today"]
+        coordinator, EnergyType.ELECTRICITY, _DESCS["lowest_price_today"]
     )
     high = EssentSensor(
-        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["highest_price_today"]
+        coordinator, EnergyType.ELECTRICITY, _DESCS["highest_price_today"]
     )
 
     assert current.native_value is None

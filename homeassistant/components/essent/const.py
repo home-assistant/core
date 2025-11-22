@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import Final
 
 DOMAIN: Final = "essent"
 UPDATE_INTERVAL: Final = timedelta(hours=1)
 ATTRIBUTION: Final = "Data provided by Essent"
 
-# Energy types
-ENERGY_TYPE_ELECTRICITY: Final = "electricity"
-ENERGY_TYPE_GAS: Final = "gas"
+
+class EnergyType(StrEnum):
+    """Supported energy types for Essent pricing."""
+
+    ELECTRICITY = "electricity"
+    GAS = "gas"
+
 
 # Price group types
 PRICE_GROUP_MARKET: Final = "MARKET_PRICE"

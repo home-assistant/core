@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import ENERGY_TYPE_ELECTRICITY, ENERGY_TYPE_GAS
+from .const import EnergyType
 from .coordinator import EssentConfigEntry, EssentDataUpdateCoordinator
 from .entity import EssentEntity
 
@@ -61,10 +61,9 @@ def _format_dt_str(value: str | None) -> str | None:
 class EssentSensorEntityDescription(SensorEntityDescription):
     """Describe an Essent sensor."""
 
-    value_fn: Callable[[EssentData], float | None]
-    attrs_fn: Callable[[EssentData], dict[str, Any]] | None = None
-    energy_types: tuple[str, ...] = (ENERGY_TYPE_ELECTRICITY, ENERGY_TYPE_GAS)
-    entity_registry_enabled_default: bool = True
+    value_fn: Callable[[EssentSensor], float | None]
+    attrs_fn: Callable[[EssentSensor], dict[str, Any]] | None = None
+    energy_types: tuple[EnergyType, ...] = (EnergyType.ELECTRICITY, EnergyType.GAS)
 
 
 def _get_all_tariffs(entity: "EssentSensor") -> list[Tariff]:
@@ -133,14 +132,14 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="lowest_price_today",
         translation_key="lowest_price_today",
         value_fn=lambda entity: entity.energy_data.min_price,
-        energy_types=(ENERGY_TYPE_ELECTRICITY,),
+        energy_types=(EnergyType.ELECTRICITY,),
         entity_registry_enabled_default=False,
     ),
     EssentSensorEntityDescription(
         key="highest_price_today",
         translation_key="highest_price_today",
         value_fn=lambda entity: entity.energy_data.max_price,
-        energy_types=(ENERGY_TYPE_ELECTRICITY,),
+        energy_types=(EnergyType.ELECTRICITY,),
         entity_registry_enabled_default=False,
     ),
     EssentSensorEntityDescription(
@@ -195,13 +194,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Essent sensors."""
     coordinator = entry.runtime_data
-    entities: list[EssentSensor] = []
-
-    for description in SENSORS:
-        for energy_type in description.energy_types:
-            entities.append(EssentSensor(coordinator, energy_type, description))
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            EssentSensor(coordinator, energy_type, description)
+            for description in SENSORS
+            for energy_type in description.energy_types
+        ]
+    )
 
 
 class EssentSensor(EssentEntity, SensorEntity):
@@ -216,14 +215,17 @@ class EssentSensor(EssentEntity, SensorEntity):
     def __init__(
         self,
         coordinator: EssentDataUpdateCoordinator,
-        energy_type: str,
+        energy_type: EnergyType,
         description: EssentSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, energy_type)
         self.entity_description = description
-        self._attr_unique_id = f"essent_{energy_type}_{description.key}"
-        self._attr_translation_key = f"{energy_type}_{description.translation_key}"
+        energy_type_value = energy_type.value
+        self._attr_unique_id = f"essent_{energy_type_value}_{description.key}"
+        self._attr_translation_key = (
+            f"{energy_type_value}_{description.translation_key}"
+        )
 
     @property
     def native_value(self) -> float | None:

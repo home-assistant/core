@@ -4,7 +4,7 @@ from essent_dynamic_pricing.models import EnergyData
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, EnergyType
 from .coordinator import EssentDataUpdateCoordinator
 
 
@@ -17,7 +17,7 @@ class EssentEntity(CoordinatorEntity[EssentDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: EssentDataUpdateCoordinator,
-        energy_type: str,
+        energy_type: EnergyType,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -32,4 +32,4 @@ class EssentEntity(CoordinatorEntity[EssentDataUpdateCoordinator]):
     @property
     def energy_data(self) -> EnergyData:
         """Return the energy data for this entity."""
-        return getattr(self.coordinator.data, self.energy_type)
+        return getattr(self.coordinator.data, self.energy_type.value)
