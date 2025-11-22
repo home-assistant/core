@@ -1,0 +1,5 @@
+{
+  "domain": "energenie",
+  "name": "Energenie",
+  "integrations": ["energenie_power_sockets", "energenie_mi_home"]
+}
