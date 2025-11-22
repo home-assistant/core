@@ -9,8 +9,10 @@ from typing import Any, Callable
 from essent_dynamic_pricing.models import Tariff
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
@@ -151,6 +153,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             else tariff.total_amount_ex
         ),
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EssentSensorEntityDescription(
         key="current_price_vat",
@@ -161,6 +164,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             else tariff.total_amount_vat
         ),
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EssentSensorEntityDescription(
         key="current_price_market_price",
@@ -169,6 +173,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             "MARKET_PRICE"
         ),
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EssentSensorEntityDescription(
         key="current_price_purchasing_fee",
@@ -177,12 +182,14 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             "PURCHASING_FEE"
         ),
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EssentSensorEntityDescription(
         key="current_price_tax",
         translation_key="current_price_tax",
         value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get("TAX"),
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -206,7 +213,7 @@ async def async_setup_entry(
 class EssentSensor(EssentEntity, SensorEntity):
     """Generic Essent sensor driven by entity descriptions."""
 
-    _attr_state_class = None
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 3
 
     entity_description: EssentSensorEntityDescription
