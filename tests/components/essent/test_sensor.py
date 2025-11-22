@@ -10,12 +10,9 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from homeassistant.components.essent import sensor as essent_sensor
 from homeassistant.components.essent.sensor import (
-    EssentAveragePriceSensor,
-    EssentCurrentPriceSensor,
-    EssentHighestPriceSensor,
-    EssentLowestPriceSensor,
-    EssentNextPriceSensor,
+    EssentSensor,
     _format_dt_str,
     _parse_tariff_datetime,
 )
@@ -26,6 +23,8 @@ from homeassistant.components.essent.const import (
 from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
 from tests.common import MockConfigEntry
 from . import setup_integration
+
+_DESCS = {desc.key: desc for desc in essent_sensor.SENSORS}
 
 pytestmark = [
     pytest.mark.usefixtures(
@@ -166,11 +165,15 @@ async def test_sensors_handle_missing_data(hass: HomeAssistant) -> None:
     coordinator = EssentDataUpdateCoordinator(hass, entry)
     coordinator.data = None
 
-    current = EssentCurrentPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    next_sensor = EssentNextPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    avg = EssentAveragePriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    low = EssentLowestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    high = EssentHighestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    current = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"])
+    next_sensor = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"])
+    avg = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["average_today"])
+    low = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["lowest_price_today"]
+    )
+    high = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["highest_price_today"]
+    )
 
     assert current.native_value is None
     assert next_sensor.native_value is None
@@ -213,10 +216,14 @@ async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
     )
     coordinator.data = prices
 
-    current = EssentCurrentPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    next_sensor = EssentNextPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    low = EssentLowestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
-    high = EssentHighestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    current = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"])
+    next_sensor = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"])
+    low = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["lowest_price_today"]
+    )
+    high = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["highest_price_today"]
+    )
 
     assert current.native_value is None
     assert next_sensor.native_value is None
