@@ -279,7 +279,7 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                     translation_key="hsv_addresses",
                     schema={
                         vol.Required(CONF_GA_HUE): GASelector(
-                            write_required=True, valid_dpt="5.001"
+                            write_required=True, valid_dpt="5.003"
                         ),
                         vol.Required(CONF_GA_SATURATION): GASelector(
                             write_required=True, valid_dpt="5.001"
