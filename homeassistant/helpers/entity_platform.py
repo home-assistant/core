@@ -341,9 +341,7 @@ class EntityPlatform:
                         self.domain,
                     )
                 else:
-                    learn_more_url = (
-                        f"https://www.home-assistant.io/integrations/{self.platform_name}/"
-                    )
+                    learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
             platform_key = f"platform: {self.platform_name}"
             yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
