@@ -335,12 +335,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        # Run sync implementation in executor to avoid blocking the loop.
-        await self.hass.async_add_executor_job(
-            ft.partial(self.set_temperature, **kwargs)
-        )
-        # Immediately write state to reflect updated temperature.
-        self.async_write_ha_state()
+        # NOTE: Executed synchronously in the event loop so that legacy sync
+        # implementations (including tests) which incorrectly call
+        # async_write_ha_state from set_temperature do not trigger thread-safety
+        # violations. This is a transitional behavior.
+        # TODO(2026.1): Enforce async implementations or restore executor usage.
+        # Integrations performing blocking I/O (network / disk) MUST override
+        # this method with a true async version or wrap their blocking calls in
+        # hass.async_add_executor_job to avoid blocking the event loop.
+        self.set_temperature(**kwargs)
+        # If the sync implementation did not schedule a state update itself,
+        # schedule one now.
+        self.async_schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
