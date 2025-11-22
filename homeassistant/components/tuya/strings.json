@@ -117,6 +117,12 @@
       }
     },
     "event": {
+      "doorbell_message": {
+        "name": "Doorbell message"
+      },
+      "doorbell_picture": {
+        "name": "Doorbell picture"
+      },
       "numbered_button": {
         "name": "Button {button_number}",
         "state_attributes": {

@@ -214,6 +214,9 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
             (dp_type := device.function.get(key)) and dp_type.type == "Json"
         ):
             device.status[key] = json_dumps(value)
+        if value == "**REDACTED**":
+            # It was redacted, which may cause issue with b64decode
+            device.status[key] = ""
     return device
 
 
