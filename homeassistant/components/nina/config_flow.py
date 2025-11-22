@@ -88,12 +88,12 @@ def prepare_user_input(
 
 def create_schema(
     regions: dict[str, dict[str, Any]], existing_data: dict[str, Any] | None = None
-) -> VolDictType:
+) -> vol.Schema:
     """Create the schema for the flows."""
     if existing_data is None:
         existing_data = {}
 
-    return {
+    schema_dict: VolDictType = {
         **{
             vol.Optional(
                 region, default=existing_data.get(region, [])
@@ -123,6 +123,8 @@ def create_schema(
             )
         ),
     }
+
+    return vol.Schema(schema_dict)
 
 
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -182,7 +184,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(create_schema(self.regions)),
+            data_schema=create_schema(self.regions),
             errors=errors,
         )
 
@@ -280,6 +282,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(create_schema(self.regions, self.data)),
+            data_schema=create_schema(self.regions, self.data),
             errors=errors,
         )
