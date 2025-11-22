@@ -1004,9 +1004,7 @@ async def test_source_unit_change(
         assert state.attributes.get("unit_of_measurement") == "dogs/s"
 
 
-async def test_reload(
-    hass: HomeAssistant,
-) -> None:
+async def test_reload(hass: HomeAssistant) -> None:
     """Test hot-reloading derivative YAML sensors."""
     hass.state = ha.CoreState.not_running
     hass.states.async_set("sensor.energy", "0.0")
