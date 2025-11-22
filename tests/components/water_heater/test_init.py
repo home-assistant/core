@@ -265,6 +265,7 @@ async def test_target_temp(
             if ATTR_TARGET_TEMP_HIGH in kwargs:
                 self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
                 self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+            self.async_write_ha_state()
 
     test_heater = MockWaterHeaterEntityTemp(
         name="Test",
@@ -343,6 +344,7 @@ async def test_target_temp_range(
             if ATTR_TARGET_TEMP_HIGH in kwargs:
                 self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
                 self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+            self.async_write_ha_state()
 
     test_heater = MockWaterHeaterEntityTemp(
         name="Test",
