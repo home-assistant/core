@@ -335,9 +335,11 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.hass.async_add_executor_job(
-            ft.partial(self.set_temperature, **kwargs)
-        )
+        # Execute directly in the event loop so that any attribute changes
+        # (and resulting propcache invalidations) remain thread-safe.
+        # Integrations performing blocking I/O must override this method
+        # with an async implementation or keep the original executor pattern.
+        self.set_temperature(**kwargs)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
