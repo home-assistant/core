@@ -14,7 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from homeassistant.components.essent.sensor import _format_dt_str, _parse_tariff_datetime
+from homeassistant.components.essent.sensor import (
+    _format_dt_str,
+    _parse_tariff_datetime,
+)
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 from . import setup_integration
@@ -113,7 +116,9 @@ async def test_average_price_sensors(
     await setup_integration(hass)
     ent_reg = er.async_get(hass)
 
-    elec_id = ent_reg.async_get_entity_id("sensor", "essent", "electricity_average_today")
+    elec_id = ent_reg.async_get_entity_id(
+        "sensor", "essent", "electricity_average_today"
+    )
     gas_id = ent_reg.async_get_entity_id("sensor", "essent", "gas_average_today")
     assert elec_id is not None
     assert gas_id is not None
@@ -187,9 +192,9 @@ async def test_sensor_updates_when_time_moves(
 
     assert float(_state("electricity_current_price").state) == 0.25
 
-    next_listener = (
-        dt_util.now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-    )
+    next_listener = dt_util.now().replace(
+        minute=0, second=0, microsecond=0
+    ) + timedelta(hours=1)
     freezer.move_to(next_listener)
     async_fire_time_changed(hass, next_listener)
     await hass.async_block_till_done()
