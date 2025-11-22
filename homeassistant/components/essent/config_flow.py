@@ -36,7 +36,8 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.async_get_prices()
         except (EssentConnectionError, EssentResponseError):
             errors["base"] = "cannot_connect"
-        except EssentDataError:
+        except EssentDataError as err:
+            _LOGGER.warning("Received invalid data while validating Essent: %s", err)
             errors["base"] = "invalid_data"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected error while validating the connection")
