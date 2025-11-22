@@ -36,6 +36,8 @@ from .entity import (
     check_deprecated_entity,
 )
 
+PARALLEL_UPDATES = 0
+
 MAP_JOIN_RESTRICTIONS = {
     "local": "invite_only",
     "followed": "joinable",

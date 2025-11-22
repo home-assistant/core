@@ -25,6 +25,8 @@ from .browse_media import build_item_response
 from .coordinator import XboxConfigEntry
 from .entity import XboxConsoleBaseEntity
 
+PARALLEL_UPDATES = 1
+
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
