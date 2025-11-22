@@ -219,7 +219,7 @@ async def test_device_class(
 )
 async def test_unique_id(
     hass: HomeAssistant,
-    mock_concord232_client: MagicMock,  # noqa: ARG001
+    mock_concord232_client: MagicMock,
     entity_registry: er.EntityRegistry,
     entity_id: str,
     expected_unique_id: str,
