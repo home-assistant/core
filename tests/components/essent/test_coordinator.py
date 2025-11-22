@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 import pytest
-from essent_dynamic_pricing import EssentDataError, EssentResponseError
+from essent_dynamic_pricing import (
+    EssentConnectionError,
+    EssentDataError,
+    EssentError,
+    EssentResponseError,
+)
 
 from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
@@ -55,4 +60,28 @@ async def test_coordinator_data_error(hass: HomeAssistant, patch_essent_client) 
     coordinator = EssentDataUpdateCoordinator(hass, entry)
 
     with pytest.raises(UpdateFailed, match="bad data"):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_connection_error(
+    hass: HomeAssistant, patch_essent_client
+) -> None:
+    """Test connection errors raise UpdateFailed with context."""
+    patch_essent_client.async_get_prices.side_effect = EssentConnectionError("fail")
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
+
+    with pytest.raises(UpdateFailed, match="Error communicating with API: fail"):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_generic_essent_error(
+    hass: HomeAssistant, patch_essent_client
+) -> None:
+    """Test unexpected Essent errors are wrapped."""
+    patch_essent_client.async_get_prices.side_effect = EssentError("boom")
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
+
+    with pytest.raises(UpdateFailed, match="Unexpected Essent error"):
         await coordinator._async_update_data()

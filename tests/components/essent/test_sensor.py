@@ -5,10 +5,26 @@ from __future__ import annotations
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from essent_dynamic_pricing.models import EnergyData, EssentPrices
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from homeassistant.components.essent.sensor import (
+    EssentAveragePriceSensor,
+    EssentCurrentPriceSensor,
+    EssentHighestPriceSensor,
+    EssentLowestPriceSensor,
+    EssentNextPriceSensor,
+    _format_dt_str,
+    _parse_tariff_datetime,
+)
+from homeassistant.components.essent.const import (
+    ENERGY_TYPE_ELECTRICITY,
+    ENERGY_TYPE_GAS,
+)
+from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
+from tests.common import MockConfigEntry
 from . import setup_integration
 
 pytestmark = [
@@ -142,3 +158,84 @@ async def test_electricity_highest_price_sensor(
     assert float(sensor.state) == 0.25
     assert "10:00:00" in sensor.attributes["start"]
     assert "11:00:00" in sensor.attributes["end"]
+
+
+async def test_sensors_handle_missing_data(hass: HomeAssistant) -> None:
+    """Sensors should handle missing coordinator data gracefully."""
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
+    coordinator.data = None
+
+    current = EssentCurrentPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    next_sensor = EssentNextPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    avg = EssentAveragePriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    low = EssentLowestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    high = EssentHighestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+
+    assert current.native_value is None
+    assert next_sensor.native_value is None
+    assert avg.native_value is None
+    assert low.native_value is None
+    assert high.native_value is None
+    assert current.native_unit_of_measurement == "€/kWh"
+    assert next_sensor.native_unit_of_measurement == "€/kWh"
+    assert avg.native_unit_of_measurement == "€/kWh"
+    assert low.native_unit_of_measurement == "€/kWh"
+    assert high.native_unit_of_measurement == "€/kWh"
+    assert current.extra_state_attributes == {}
+    assert next_sensor.extra_state_attributes == {}
+    assert avg.extra_state_attributes == {}
+    assert low.extra_state_attributes == {}
+    assert high.extra_state_attributes == {}
+
+
+async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
+    """Sensors should return None/{} when no tariffs are present."""
+    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
+    coordinator = EssentDataUpdateCoordinator(hass, entry)
+    prices = EssentPrices(
+        electricity=EnergyData(
+            tariffs=[],
+            tariffs_tomorrow=[],
+            unit="kWh",
+            min_price=0,
+            avg_price=0,
+            max_price=0,
+        ),
+        gas=EnergyData(
+            tariffs=[],
+            tariffs_tomorrow=[],
+            unit="m³",
+            min_price=0,
+            avg_price=0,
+            max_price=0,
+        ),
+    )
+    coordinator.data = prices
+
+    current = EssentCurrentPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    next_sensor = EssentNextPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    low = EssentLowestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+    high = EssentHighestPriceSensor(coordinator, ENERGY_TYPE_ELECTRICITY)
+
+    assert current.native_value is None
+    assert next_sensor.native_value is None
+    assert current.extra_state_attributes == {}
+    assert next_sensor.extra_state_attributes == {}
+    assert low.extra_state_attributes == {}
+    assert high.extra_state_attributes == {}
+
+
+def test_parse_tariff_datetime_and_formatting() -> None:
+    """Ensure helper functions cover edge cases."""
+    assert _parse_tariff_datetime(None) is None
+    assert _parse_tariff_datetime("invalid") is None
+
+    naive = "2025-11-16T10:00:00"
+    parsed = _parse_tariff_datetime(naive)
+    assert parsed is not None
+    assert parsed.tzinfo is not None
+
+    assert _format_dt_str(None) is None
+    assert _format_dt_str("invalid") == "invalid"
+    assert _format_dt_str(naive).endswith("+01:00")

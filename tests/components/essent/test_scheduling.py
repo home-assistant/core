@@ -5,7 +5,7 @@ This module tests the scheduling logic properly using HA's time utilities.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -214,3 +214,75 @@ async def test_schedule_reschedules_itself(
 
     # Schedule should still be active (rescheduled)
     assert coordinator.api_refresh_scheduled
+
+
+async def test_schedule_refresh_replaces_existing_unsub(
+    hass: HomeAssistant,
+    setup_timezone,
+    monkeypatch: pytest.MonkeyPatch,
+    freezer,
+) -> None:
+    """Ensure scheduling cancels previous callback and handles past candidate."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator: EssentDataUpdateCoordinator = entry.runtime_data
+    cancelled: list[str] = []
+
+    def fake_unsub() -> None:
+        cancelled.append("cancelled")
+
+    scheduled: list[datetime] = []
+
+    def fake_track(_hass, _cb, when):
+        scheduled.append(when)
+        return lambda: cancelled.append("new_cancelled")
+
+    # Force candidate into the past to hit the adjustment branch
+    coordinator._api_fetch_minute_offset = -120
+    coordinator._unsub_data = fake_unsub
+    monkeypatch.setattr(
+        "homeassistant.components.essent.coordinator.async_track_point_in_utc_time",
+        fake_track,
+    )
+
+    coordinator._schedule_data_refresh()
+
+    assert "cancelled" in cancelled
+    assert scheduled
+    assert scheduled[0] >= dt_util.utcnow()
+
+
+async def test_listener_schedule_replaces_existing_unsub(
+    hass: HomeAssistant,
+    setup_timezone,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ensure listener scheduling cancels the previous callback."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator: EssentDataUpdateCoordinator = entry.runtime_data
+    cancelled: list[str] = []
+
+    def fake_unsub() -> None:
+        cancelled.append("listener_cancelled")
+
+    def fake_track(_hass, _cb, when):
+        return lambda: cancelled.append("new_listener_cancelled")
+
+    coordinator._unsub_listener = fake_unsub
+    monkeypatch.setattr(
+        "homeassistant.components.essent.coordinator.async_track_point_in_utc_time",
+        fake_track,
+    )
+
+    coordinator._schedule_listener_tick()
+
+    assert "listener_cancelled" in cancelled
