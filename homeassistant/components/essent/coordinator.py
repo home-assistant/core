@@ -161,8 +161,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
     async def _async_update_data(self) -> EssentData:
         """Fetch data from API."""
         try:
-            prices: EssentPrices = await self._client.async_get_prices()
-            return prices
+            return await self._client.async_get_prices()
         except EssentConnectionError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except EssentResponseError as err:
