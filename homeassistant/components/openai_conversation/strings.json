@@ -36,9 +36,9 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::max_tokens%]",
+            "store_logs": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::store_logs%]",
             "temperature": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::temperature%]",
-            "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::top_p%]",
-            "store_logs": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::store_logs%]"
+            "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::top_p%]"
           },
           "title": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::title%]"
         },
@@ -90,9 +90,9 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "Maximum tokens to return in response",
+            "store_logs": "Store logs",
             "temperature": "Temperature",
-            "top_p": "Top P",
-            "store_logs": "Store logs"
+            "top_p": "Top P"
           },
           "title": "Advanced settings"
         },
