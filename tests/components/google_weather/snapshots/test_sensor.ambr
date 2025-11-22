@@ -55,6 +55,62 @@
     'state': '13.1',
   })
 # ---
+# name: test_sensor[sensor.home_atmospheric_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_atmospheric_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
+    'original_icon': None,
+    'original_name': 'Atmospheric pressure',
+    'platform': 'google_weather',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'home-subentry-id_airpressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_sensor[sensor.home_atmospheric_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'atmospheric_pressure',
+      'friendly_name': 'Home Atmospheric pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_atmospheric_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1019.16',
+  })
+# ---
 # name: test_sensor[sensor.home_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -107,7 +163,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[sensor.home_dew_point_temperature-entry]
+# name: test_sensor[sensor.home_dew_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -122,7 +178,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_dew_point_temperature',
+    'entity_id': 'sensor.home_dew_point',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -137,7 +193,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Dew point temperature',
+    'original_name': 'Dew point',
     'platform': 'google_weather',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -147,16 +203,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.home_dew_point_temperature-state]
+# name: test_sensor[sensor.home_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Home Dew point temperature',
+      'friendly_name': 'Home Dew point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_dew_point_temperature',
+    'entity_id': 'sensor.home_dew_point',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -251,7 +307,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
+    'translation_key': None,
     'unique_id': 'home-subentry-id_relativehumidity',
     'unit_of_measurement': '%',
   })
@@ -272,7 +328,7 @@
     'state': '42',
   })
 # ---
-# name: test_sensor[sensor.home_precipitation-entry]
+# name: test_sensor[sensor.home_precipitation_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -287,7 +343,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_precipitation',
+    'entity_id': 'sensor.home_precipitation_intensity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -302,26 +358,26 @@
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
-    'original_name': 'Precipitation',
+    'original_name': 'Precipitation intensity',
     'platform': 'google_weather',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'precipitation_qpf',
+    'translation_key': None,
     'unique_id': 'home-subentry-id_precipitation_qpf',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor[sensor.home_precipitation-state]
+# name: test_sensor[sensor.home_precipitation_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'Home Precipitation',
+      'friendly_name': 'Home Precipitation intensity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_precipitation',
+    'entity_id': 'sensor.home_precipitation_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -378,62 +434,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.home_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'google_weather',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pressure',
-    'unique_id': 'home-subentry-id_airpressure',
-    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
-  })
-# ---
-# name: test_sensor[sensor.home_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'atmospheric_pressure',
-      'friendly_name': 'Home Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1019.16',
   })
 # ---
 # name: test_sensor[sensor.home_temperature-entry]
@@ -788,7 +788,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_direction',
+    'translation_key': None,
     'unique_id': 'home-subentry-id_wind_direction',
     'unit_of_measurement': '°',
   })
@@ -900,7 +900,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed',
+    'translation_key': None,
     'unique_id': 'home-subentry-id_wind_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })

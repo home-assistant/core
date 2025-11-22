@@ -135,7 +135,7 @@ async def test_sensor_imperial_units(
     assert float(state.state) == pytest.approx(9.94194)
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.MILES
 
-    state = hass.states.get("sensor.home_pressure")
+    state = hass.states.get("sensor.home_atmospheric_pressure")
     assert state
     assert float(state.state) == pytest.approx(30.09578)
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.INHG
