@@ -34,7 +34,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import broadcast, polling, webhooks
@@ -414,6 +414,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         msgtype = service.service
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
+
+        if ATTR_TIMEOUT in kwargs:
+            entity_id = "fragment"
+            origin = service.context.origin_event
+            if origin:
+                # script or automation
+                entity_id = origin.data["entity_id"]
+
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_timeout_parameter",
+                breaks_in_ha_version="2026.5.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_timeout_parameter",
+                translation_placeholders={
+                    "integration_title": "Telegram Bot",
+                    "action": f"{DOMAIN}.{msgtype}",
+                    "entity_id": entity_id,
+                },
+                learn_more_url="https://github.com/home-assistant/core/pull/155198",
+            )
 
         config_entry_id: str | None = service.data.get(CONF_CONFIG_ENTRY_ID)
         config_entry: TelegramBotConfigEntry | None = None
