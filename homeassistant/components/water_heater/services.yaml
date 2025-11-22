@@ -41,6 +41,7 @@ set_temperature:
           max: 250
           step: 0.1
           mode: box
+          unit_of_measurement: "°"
     target_temp_low:
       filter:
         supported_features:
@@ -52,6 +53,7 @@ set_temperature:
           max: 250
           step: 0.1
           mode: box
+          unit_of_measurement: "°"
     operation_mode:
       example: eco
       selector:
