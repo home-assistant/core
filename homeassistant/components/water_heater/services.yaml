@@ -26,8 +26,9 @@ set_temperature:
       selector:
         number:
           min: 0
-          max: 100
+          max: 250
           step: 0.5
+          mode: box
           unit_of_measurement: "°"
     target_temp_high:
       filter:

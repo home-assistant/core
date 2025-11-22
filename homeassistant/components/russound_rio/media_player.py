@@ -13,6 +13,7 @@ from aiorussound.models import PlayStatus, Source
 from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -23,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RussoundConfigEntry
+from . import RussoundConfigEntry, media_browser
 from .const import DOMAIN, RUSSOUND_MEDIA_TYPE_PRESET, SELECT_SOURCE_DELAY
 from .entity import RussoundBaseEntity, command
 
@@ -65,7 +66,8 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
-        MediaPlayerEntityFeature.VOLUME_SET
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
@@ -264,3 +266,13 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
                 translation_placeholders={"preset_id": media_id},
             )
         await self._zone.restore_preset(preset_id)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the media browsing helper."""
+        return await media_browser.async_browse_media(
+            self.hass, self._client, media_content_id, media_content_type, self._zone
+        )

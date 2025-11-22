@@ -41,13 +41,13 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
@@ -75,7 +75,7 @@ LOCK_COMMON_SCHEMA = vol.Schema(
 )
 
 LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+    make_template_entity_common_modern_schema(LOCK_DOMAIN, DEFAULT_NAME).schema
 )
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(

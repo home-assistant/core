@@ -126,7 +126,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 55
+    assert len(triggers) == 57
     assert triggers == unordered(expected_triggers)
 
 
@@ -277,15 +277,22 @@ async def test_get_trigger_capabilities(
                 "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
             {
                 "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            },
         ]
     }
     triggers = await async_get_device_automations(
@@ -347,15 +354,22 @@ async def test_get_trigger_capabilities_legacy(
                 "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
             {
                 "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            },
         ]
     }
     triggers = await async_get_device_automations(

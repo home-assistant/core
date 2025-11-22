@@ -1,0 +1,78 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Sove",
+  "category": "kt",
+  "product_id": "vdadlnmsorlhw4td",
+  "product_name": "YFA-05C",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-07T11:44:00+00:00",
+  "create_time": "2025-07-07T11:44:00+00:00",
+  "update_time": "2025-07-07T11:44:00+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 16,
+        "max": 86,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "windspeed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 16,
+        "max": 86,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -7,
+        "max": 110,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "windspeed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "temp_set": 16,
+    "temp_current": 24,
+    "windspeed": 2
+  },
+  "set_up": true,
+  "support_local": true
+}

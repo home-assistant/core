@@ -35,6 +35,6 @@ DEFAULT_PHONEBOOK = 0
 DEFAULT_NAME = "Phone"
 
 DOMAIN: Final = "fritzbox_callmonitor"
-MANUFACTURER: Final = "AVM"
+MANUFACTURER: Final = "FRITZ!"
 
 PLATFORMS = [Platform.SENSOR]

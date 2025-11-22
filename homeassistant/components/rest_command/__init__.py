@@ -10,8 +10,10 @@ from typing import Any
 import aiohttp
 from aiohttp import hdrs
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_PASSWORD,
@@ -20,6 +22,8 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
@@ -48,6 +52,7 @@ SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_INSECURE_CIPHER = "insecure_cipher"
+CONF_SKIP_URL_ENCODING = "skip_url_encoding"
 
 COMMAND_SCHEMA = vol.Schema(
     {
@@ -56,6 +61,9 @@ COMMAND_SCHEMA = vol.Schema(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_PAYLOAD): cv.template,
@@ -63,6 +71,7 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_INSECURE_CIPHER, default=False): cv.boolean,
+        vol.Optional(CONF_SKIP_URL_ENCODING, default=False): cv.boolean,
     }
 )
 
@@ -107,12 +116,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         method = command_config[CONF_METHOD]
 
         template_url = command_config[CONF_URL]
+        skip_url_encoding = command_config[CONF_SKIP_URL_ENCODING]
 
         auth = None
+        digest_middleware = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, "")
-            auth = aiohttp.BasicAuth(username, password=password)
+            if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+                digest_middleware = aiohttp.DigestAuthMiddleware(username, password)
+            else:
+                auth = aiohttp.BasicAuth(username, password=password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
@@ -155,12 +169,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
             try:
+                # Prepare request kwargs
+                request_kwargs = {
+                    "data": payload,
+                    "headers": headers or None,
+                    "timeout": timeout,
+                }
+
+                # Add authentication
+                if auth is not None:
+                    request_kwargs["auth"] = auth
+                elif digest_middleware is not None:
+                    request_kwargs["middlewares"] = (digest_middleware,)
+
                 async with getattr(websession, method)(
-                    request_url,
-                    data=payload,
-                    auth=auth,
-                    headers=headers or None,
-                    timeout=timeout,
+                    URL(request_url, encoded=skip_url_encoding),
+                    **request_kwargs,
                 ) as response:
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(

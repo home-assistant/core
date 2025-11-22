@@ -1,0 +1,55 @@
+{
+  "entity": {
+    "fan": {
+      "air_purifier": {
+        "default": "mdi:air-purifier",
+        "state": {
+          "off": "mdi:air-purifier-off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:auto-mode",
+              "normal": "mdi:fan",
+              "pet": "mdi:paw",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "drying_filter": "mdi:water-remove",
+              "high": "mdi:water-plus",
+              "low": "mdi:water-outline",
+              "medium": "mdi:water",
+              "quiet": "mdi:volume-off",
+              "target_humidity": "mdi:target"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "light_level": {
+        "default": "mdi:brightness-7",
+        "state": {
+          "1": "mdi:brightness-1",
+          "2": "mdi:brightness-1",
+          "3": "mdi:brightness-1",
+          "4": "mdi:brightness-1",
+          "5": "mdi:brightness-2",
+          "6": "mdi:brightness-3",
+          "7": "mdi:brightness-4",
+          "8": "mdi:brightness-5",
+          "9": "mdi:brightness-6",
+          "10": "mdi:brightness-7"
+        }
+      }
+    }
+  }
+}

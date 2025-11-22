@@ -56,11 +56,9 @@ class RainMachineEntity(CoordinatorEntity[RainMachineDataUpdateCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, self._data.controller.mac)},
             name=self._data.controller.name.capitalize(),
             manufacturer="RainMachine",
-            model=(
-                f"Version {self._version_coordinator.data['hwVer']} "
-                f"(API: {self._version_coordinator.data['apiVer']})"
-            ),
-            sw_version=self._version_coordinator.data["swVer"],
+            hw_version=self._version_coordinator.data["hwVer"],
+            sw_version=f"{self._version_coordinator.data['swVer']} "
+            f"(API: {self._version_coordinator.data['apiVer']})",
         )
 
     @callback

@@ -1,0 +1,107 @@
+{
+  "components": {
+    "charge": {
+      "powerMeter": {
+        "power": {
+          "value": 0,
+          "unit": "W",
+          "timestamp": "2025-10-02T12:21:29.196Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "start": "2025-10-02T12:20:00Z",
+            "end": "2025-10-02T12:25:00Z",
+            "energy": 29765947,
+            "deltaEnergy": 0
+          },
+          "timestamp": "2025-10-02T12:26:24.729Z"
+        }
+      }
+    },
+    "discharge": {
+      "powerMeter": {
+        "power": {
+          "value": 0,
+          "unit": "W",
+          "timestamp": "2025-10-02T11:41:20.556Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "start": "2025-10-02T12:20:00Z",
+            "end": "2025-10-02T12:25:00Z",
+            "energy": 27827062,
+            "deltaEnergy": 0
+          },
+          "timestamp": "2025-10-02T12:26:24.729Z"
+        }
+      }
+    },
+    "main": {
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-10-02T11:56:25.223Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-10-02T11:56:25.223Z"
+        }
+      },
+      "rivertalent14263.adaptiveEnergyUsageState": {
+        "stormWatchEnabled": {
+          "value": true,
+          "timestamp": "2024-07-16T12:40:19.190Z"
+        },
+        "stormWatchActive": {
+          "value": false,
+          "timestamp": "2024-07-16T12:40:19.190Z"
+        },
+        "gridStatusSupport": {
+          "value": true,
+          "timestamp": "2024-07-16T12:40:19.190Z"
+        },
+        "stormWatchSupport": {
+          "value": true,
+          "timestamp": "2025-09-17T18:31:31.669Z"
+        },
+        "energyUsageState": {
+          "value": null
+        },
+        "gridStatusStatus": {
+          "value": "on-grid",
+          "timestamp": "2025-09-17T18:31:31.669Z"
+        }
+      },
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 35,
+          "unit": "%",
+          "timestamp": "2025-10-02T11:41:20.556Z"
+        },
+        "type": {
+          "value": null
+        }
+      }
+    }
+  }
+}

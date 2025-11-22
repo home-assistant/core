@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BSBLanConfigEntry, BSBLanData
-from .coordinator import BSBLanCoordinatorData
+from .coordinator import BSBLanFastData
 from .entity import BSBLanEntity
 
 PARALLEL_UPDATES = 1
@@ -27,7 +27,8 @@ PARALLEL_UPDATES = 1
 class BSBLanSensorEntityDescription(SensorEntityDescription):
     """Describes BSB-Lan sensor entity."""
 
-    value_fn: Callable[[BSBLanCoordinatorData], StateType]
+    value_fn: Callable[[BSBLanFastData], StateType]
+    exists_fn: Callable[[BSBLanFastData], bool] = lambda data: True
 
 
 SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
@@ -37,7 +38,12 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.sensor.current_temperature.value,
+        value_fn=lambda data: (
+            data.sensor.current_temperature.value
+            if data.sensor.current_temperature is not None
+            else None
+        ),
+        exists_fn=lambda data: data.sensor.current_temperature is not None,
     ),
     BSBLanSensorEntityDescription(
         key="outside_temperature",
@@ -45,7 +51,12 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.sensor.outside_temperature.value,
+        value_fn=lambda data: (
+            data.sensor.outside_temperature.value
+            if data.sensor.outside_temperature is not None
+            else None
+        ),
+        exists_fn=lambda data: data.sensor.outside_temperature is not None,
     ),
 )
 
@@ -57,7 +68,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up BSB-Lan sensor based on a config entry."""
     data = entry.runtime_data
-    async_add_entities(BSBLanSensor(data, description) for description in SENSOR_TYPES)
+
+    # Only create sensors for available data points
+    entities = [
+        BSBLanSensor(data, description)
+        for description in SENSOR_TYPES
+        if description.exists_fn(data.fast_coordinator.data)
+    ]
+
+    if entities:
+        async_add_entities(entities)
 
 
 class BSBLanSensor(BSBLanEntity, SensorEntity):
@@ -71,10 +91,10 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
         description: BSBLanSensorEntityDescription,
     ) -> None:
         """Initialize BSB-Lan sensor."""
-        super().__init__(data.coordinator, data)
+        super().__init__(data.fast_coordinator, data)
         self.entity_description = description
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
-        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
+        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
 
     @property
     def native_value(self) -> StateType:

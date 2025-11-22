@@ -42,7 +42,6 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         self.last_update = time()
         self.username = entry.data["username"]
         self.password = entry.data["password"]
-        self.hass = hass
         self.name = entry.data["name"]
         self.id = entry.data["id"]
         super().__init__(

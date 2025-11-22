@@ -5,15 +5,17 @@ from typing import Required, TypedDict, cast
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_GET_FORECAST
+from .const import DOMAIN, SERVICE_GET_FORECAST
 from .coordinator import StookwijzerConfigEntry
 
 SERVICE_GET_FORECAST_SCHEMA = vol.Schema(
@@ -50,7 +52,8 @@ def async_get_entry(
     return cast(StookwijzerConfigEntry, entry)
 
 
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Stookwijzer integration."""
 
     async def async_get_forecast(call: ServiceCall) -> ServiceResponse | None:

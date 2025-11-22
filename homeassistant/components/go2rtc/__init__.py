@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import shutil
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -30,8 +31,10 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_register_webrtc_provider,
+    get_dynamic_camera_stream_settings,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
+from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -50,6 +53,7 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_UNIX_SOCKET,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
@@ -57,35 +61,7 @@ from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
 
-_SUPPORTED_STREAMS = frozenset(
-    (
-        "bubble",
-        "dvrip",
-        "expr",
-        "ffmpeg",
-        "gopro",
-        "homekit",
-        "http",
-        "https",
-        "httpx",
-        "isapi",
-        "ivideon",
-        "kasa",
-        "nest",
-        "onvif",
-        "roborock",
-        "rtmp",
-        "rtmps",
-        "rtmpx",
-        "rtsp",
-        "rtsps",
-        "rtspx",
-        "tapo",
-        "tcp",
-        "webrtc",
-        "webtorrent",
-    )
-)
+_FFMPEG = "ffmpeg"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -99,7 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_DATA_GO2RTC: HassKey[str] = HassKey(DOMAIN)
+_DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
@@ -126,8 +102,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return False
 
         # HA will manage the binary
+        session = ClientSession(connector=UnixConnector(path=HA_MANAGED_UNIX_SOCKET))
         server = Server(
-            hass, binary, enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False)
+            hass,
+            binary,
+            session,
+            enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False),
         )
         try:
             await server.start()
@@ -137,12 +117,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         async def on_stop(event: Event) -> None:
             await server.stop()
+            await session.close()
 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+    else:
+        session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = url
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -158,8 +141,9 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Set up go2rtc from a config entry."""
 
-    url = hass.data[_DATA_GO2RTC]
-    session = async_get_clientsession(hass)
+    config = hass.data[_DATA_GO2RTC]
+    url = config.url
+    session = config.session
     client = Go2RtcRestClient(session, url)
     # Validate the server URL
     try:
@@ -194,6 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         return False
 
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
+    await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 
@@ -225,16 +210,21 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._session = session
         self._rest_client = rest_client
         self._sessions: dict[str, Go2RtcWsClient] = {}
+        self._supported_schemes: set[str] = set()
 
     @property
     def domain(self) -> str:
         """Return the integration domain of the provider."""
         return DOMAIN
 
+    async def initialize(self) -> None:
+        """Initialize the provider."""
+        self._supported_schemes = await self._rest_client.schemes.list()
+
     @callback
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
-        return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
+        return stream_source.partition(":")[0] in self._supported_schemes
 
     async def async_handle_async_webrtc_offer(
         self,
@@ -315,6 +305,32 @@ class WebRTCProvider(CameraWebRTCProvider):
             await self.teardown()
             raise HomeAssistantError("Stream source is not supported by go2rtc")
 
+        camera_prefs = await get_dynamic_camera_stream_settings(
+            self._hass, camera.entity_id
+        )
+        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
+            # Camera orientation manually set by user
+            if not stream_source.startswith(_FFMPEG):
+                stream_source = _FFMPEG + ":" + stream_source
+            stream_source += "#video=h264#audio=copy"
+            match camera_prefs.orientation:
+                case Orientation.MIRROR:
+                    stream_source += "#raw=-vf hflip"
+                case Orientation.ROTATE_180:
+                    stream_source += "#rotate=180"
+                case Orientation.FLIP:
+                    stream_source += "#raw=-vf vflip"
+                case Orientation.ROTATE_LEFT_AND_FLIP:
+                    # Cannot use any filter when using raw one
+                    stream_source += "#raw=-vf transpose=2,vflip"
+                case Orientation.ROTATE_LEFT:
+                    stream_source += "#rotate=-90"
+                case Orientation.ROTATE_RIGHT_AND_FLIP:
+                    # Cannot use any filter when using raw one
+                    stream_source += "#raw=-vf transpose=1,vflip"
+                case Orientation.ROTATE_RIGHT:
+                    stream_source += "#rotate=90"
+
         streams = await self._rest_client.streams.list()
 
         if (stream := streams.get(camera.entity_id)) is None or not any(
@@ -336,3 +352,11 @@ class WebRTCProvider(CameraWebRTCProvider):
         for ws_client in self._sessions.values():
             await ws_client.close()
         self._sessions.clear()
+
+
+@dataclass
+class Go2RtcConfig:
+    """Go2rtc configuration."""
+
+    url: str
+    session: ClientSession

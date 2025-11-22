@@ -25,7 +25,7 @@
     'name': 'Pool 1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'W1122333044455',
     'sw_version': '1.7.1-stable',
     'via_device_id': None,
   })
@@ -56,7 +56,7 @@
     'name': 'Pool 2',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'W2233304445566',
     'sw_version': '1.7.1-stable',
     'via_device_id': None,
   })

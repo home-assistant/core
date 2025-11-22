@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from aiohttp import ClientError, ClientResponseError
+from pymiele import MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -10,6 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -43,7 +45,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
     """Set up Miele from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
@@ -66,7 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch
-    coordinator = MieleDataUpdateCoordinator(hass, entry, auth)
+    api = MieleAPI(auth)
+    coordinator = MieleDataUpdateCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

@@ -10,7 +10,12 @@ from typing import Any, Final, cast
 from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
@@ -200,7 +205,9 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
         name = self.nanoleaf.name
 
-        await self.async_set_unique_id(name)
+        await self.async_set_unique_id(
+            name, raise_on_progress=self.source != SOURCE_USER
+        )
         self._abort_if_unique_id_configured({CONF_HOST: self.nanoleaf.host})
 
         if discovery_integration_import:

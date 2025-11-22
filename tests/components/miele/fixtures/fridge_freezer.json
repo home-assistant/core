@@ -110,5 +110,82 @@
       "ecoFeedback": null,
       "batteryLevel": null
     }
+  },
+  "DummyAppliance_Fridge_Freezer_Offline": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 21,
+        "value_localized": "Fridge freezer"
+      },
+      "deviceName": "",
+      "protocolVersion": 203,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "00",
+        "techType": "KFN 7734 C",
+        "matNumber": "12336150",
+        "swids": []
+      },
+      "xkmIdentLabel": {
+        "techType": "EK037LHBM",
+        "releaseVersion": "32.33"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 255,
+        "value_localized": "Not connected",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [],
+      "startTime": [],
+      "targetTemperature": [],
+      "coreTargetTemperature": [],
+      "temperature": [],
+      "coreTemperature": [],
+      "remoteEnable": {
+        "fullRemoteControl": false,
+        "smartGrid": false,
+        "mobileStart": null
+      },
+      "ambientLight": null,
+      "light": null,
+      "elapsedTime": [],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": null,
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
   }
 }

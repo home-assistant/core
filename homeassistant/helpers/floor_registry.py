@@ -54,8 +54,8 @@ class FloorRegistryStoreData(TypedDict):
 class EventFloorRegistryUpdatedData(TypedDict):
     """Event data for when the floor registry is updated."""
 
-    action: Literal["create", "remove", "update"]
-    floor_id: str
+    action: Literal["create", "remove", "update", "reorder"]
+    floor_id: str | None
 
 
 type EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
@@ -105,8 +105,7 @@ class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
     def _index_entry(self, key: str, entry: FloorEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
-        for alias in entry.aliases:
-            normalized_alias = normalize_name(alias)
+        for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
@@ -116,8 +115,7 @@ class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if aliases := entry.aliases:
-            for alias in aliases:
-                normalized_alias = normalize_name(alias)
+            for normalized_alias in {normalize_name(alias) for alias in aliases}:
                 self._unindex_entry_value(key, normalized_alias, self._aliases_index)
 
     def get_floors_for_alias(self, alias: str) -> list[FloorEntry]:
@@ -262,6 +260,28 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         )
 
         return new
+
+    @callback
+    def async_reorder(self, floor_ids: list[str]) -> None:
+        """Reorder floors."""
+        self.hass.verify_event_loop_thread("floor_registry.async_reorder")
+
+        if set(floor_ids) != set(self.floors.data.keys()):
+            raise ValueError(
+                "The floor_ids list must contain all existing floor IDs exactly once"
+            )
+
+        reordered_data = {
+            floor_id: self.floors.data[floor_id] for floor_id in floor_ids
+        }
+        self.floors.data.clear()
+        self.floors.data.update(reordered_data)
+
+        self.async_schedule_save()
+        self.hass.bus.async_fire_internal(
+            EVENT_FLOOR_REGISTRY_UPDATED,
+            EventFloorRegistryUpdatedData(action="reorder", floor_id=None),
+        )
 
     async def async_load(self) -> None:
         """Load the floor registry."""

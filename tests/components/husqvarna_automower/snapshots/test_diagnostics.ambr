@@ -3,6 +3,7 @@
   dict({
     'battery': dict({
       'battery_percent': 100,
+      'remaining_charging_time': 309.0,
     }),
     'calendar': dict({
       'tasks': list([

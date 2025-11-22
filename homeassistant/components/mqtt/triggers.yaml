@@ -1,6 +1,6 @@
 # Describes the format for MQTT triggers
 
-mqtt:
+_:
   fields:
     payload:
       example: "on"

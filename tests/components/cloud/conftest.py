@@ -55,7 +55,10 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         # Attributes set in the constructor without parameters.
         # We spec the mocks with the real classes
         # and set constructor attributes or mock properties as needed.
-        mock_cloud.google_report_state = MagicMock(spec=GoogleReportState)
+        mock_cloud.google_report_state = MagicMock(
+            spec=GoogleReportState,
+            request_sync=AsyncMock(),
+        )
         mock_cloud.cloudhooks = MagicMock(spec=Cloudhooks)
         mock_cloud.remote = MagicMock(
             spec=RemoteUI,
@@ -74,6 +77,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         mock_cloud.payments = MagicMock(
             spec=payments_api.PaymentsApi,
             subscription_info=AsyncMock(),
+            migrate_paypal_agreement=AsyncMock(),
         )
         mock_cloud.ice_servers = MagicMock(
             spec=IceServers,

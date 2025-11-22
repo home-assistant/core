@@ -1619,9 +1619,10 @@ async def test_transitions_brightness_only(hass: HomeAssistant) -> None:
     bulb.get_color.reset_mock()
 
     # Ensure we force an update after the transition
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
-    assert len(bulb.get_color.calls) == 2
+    with _patch_discovery(device=bulb):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
+        assert len(bulb.get_color.calls) == 2
 
 
 async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
@@ -1714,9 +1715,10 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     bulb.get_color.reset_mock()
 
     # Ensure we force an update after the transition
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
-    assert len(bulb.get_color.calls) == 2
+    with _patch_discovery(device=bulb):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
+        assert len(bulb.get_color.calls) == 2
 
     bulb.set_power.reset_mock()
     bulb.set_color.reset_mock()
@@ -2142,7 +2144,12 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     assert bulb.set_power.calls[0][0][0] is True
     bulb.set_power.reset_mock()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON

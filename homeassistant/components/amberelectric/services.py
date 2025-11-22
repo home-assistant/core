@@ -4,11 +4,13 @@ from amberelectric.models.channel import ChannelType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.selector import ConfigEntrySelector
@@ -16,7 +18,6 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_CHANNEL_TYPE,
-    ATTR_CONFIG_ENTRY_ID,
     CONTROLLED_LOAD_CHANNEL,
     DOMAIN,
     FEED_IN_CHANNEL,
@@ -102,7 +103,8 @@ def get_forecasts(channel_type: str, data: dict) -> list[JsonValueType]:
     return results
 
 
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amber integration."""
 
     async def handle_get_forecasts(call: ServiceCall) -> ServiceResponse:

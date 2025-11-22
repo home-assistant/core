@@ -849,7 +849,8 @@
     }),
     'info': dict({
       'manufacturer': 'Miele',
-      'model': 'FNS 28463 E ed/',
+      'model': 'Freezer',
+      'model_id': 'FNS 28463 E ed/',
     }),
     'miele_data': dict({
       'actions': dict({

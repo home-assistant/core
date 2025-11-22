@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import LOGGER, REQUEST_TIMEOUT
 from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
@@ -82,7 +82,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             "grid": {},
         }
         try:
-            data = self._api.get_current_prices(self.site_id, next=288)
+            data = self._api.get_current_prices(
+                self.site_id,
+                next=288,
+                _request_timeout=REQUEST_TIMEOUT,
+            )
             intervals = [interval.actual_instance for interval in data]
         except ApiException as api_exception:
             raise UpdateFailed("Missing price data, skipping update") from api_exception

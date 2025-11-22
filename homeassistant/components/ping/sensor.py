@@ -71,6 +71,17 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         value_fn=lambda result: result.data.get("min"),
         has_fn=lambda result: "min" in result.data,
     ),
+    PingSensorEntityDescription(
+        key="jitter",
+        translation_key="jitter",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: result.data.get("jitter"),
+        has_fn=lambda result: "jitter" in result.data,
+    ),
 )
 
 

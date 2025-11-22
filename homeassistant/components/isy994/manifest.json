@@ -27,8 +27,8 @@
   "requirements": ["pyisy==3.4.1"],
   "ssdp": [
     {
-      "manufacturer": "Universal Devices Inc.",
-      "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1"
+      "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
+      "manufacturer": "Universal Devices Inc."
     }
   ]
 }

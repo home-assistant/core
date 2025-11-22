@@ -6,10 +6,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.amberelectric.const import DOMAIN, SERVICE_GET_FORECASTS
-from homeassistant.components.amberelectric.services import (
-    ATTR_CHANNEL_TYPE,
-    ATTR_CONFIG_ENTRY_ID,
-)
+from homeassistant.components.amberelectric.services import ATTR_CHANNEL_TYPE
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 

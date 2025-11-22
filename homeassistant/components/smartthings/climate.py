@@ -14,6 +14,9 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    PRESET_BOOST,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -97,11 +100,25 @@ HEAT_PUMP_AC_MODE_TO_HA = {
     "heat": HVACMode.HEAT,
 }
 
+PRESET_MODE_TO_HA = {
+    "off": PRESET_NONE,
+    "windFree": "wind_free",
+    "sleep": PRESET_SLEEP,
+    "windFreeSleep": "wind_free_sleep",
+    "speed": PRESET_BOOST,
+    "quiet": "quiet",
+    "longWind": "long_wind",
+    "smart": "smart",
+    "motionIndirect": "motion_indirect",
+    "motionDirect": "motion_direct",
+}
+
+HA_MODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_HA.items()}
+
 HA_MODE_TO_HEAT_PUMP_AC_MODE = {v: k for k, v in HEAT_PUMP_AC_MODE_TO_HA.items()}
 
 WIND = "wind"
 FAN = "fan"
-WINDFREE = "windFree"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -363,6 +380,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _attr_name = None
+    _attr_translation_key = "air_conditioner"
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
@@ -577,14 +595,13 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the preset mode."""
+        """Return the current preset mode."""
         if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
             mode = self.get_attribute_value(
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
                 Attribute.AC_OPTIONAL_MODE,
             )
-            if mode == WINDFREE:
-                return WINDFREE
+            return PRESET_MODE_TO_HA.get(mode)
         return None
 
     def _determine_preset_modes(self) -> list[str] | None:
@@ -594,16 +611,24 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
                 Attribute.SUPPORTED_AC_OPTIONAL_MODE,
             )
-            if supported_modes and WINDFREE in supported_modes:
-                return [WINDFREE]
+            modes = []
+            for mode in supported_modes:
+                if (ha_mode := PRESET_MODE_TO_HA.get(mode)) is not None:
+                    modes.append(ha_mode)
+                else:
+                    _LOGGER.warning(
+                        "Unknown preset mode: %s, please report at https://github.com/home-assistant/core/issues",
+                        mode,
+                    )
+            return modes
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set special modes (currently only windFree is supported)."""
+        """Set optional AC modes."""
         await self.execute_device_command(
             Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
             Command.SET_AC_OPTIONAL_MODE,
-            argument=preset_mode,
+            argument=HA_MODE_TO_PRESET_MODE[preset_mode],
         )
 
     def _determine_hvac_modes(self) -> list[HVACMode]:

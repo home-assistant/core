@@ -17,6 +17,9 @@ from pyhap.const import (
 from homeassistant.components import button, input_button
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
+    CONF_MAX as INPUT_NUMBER_CONF_MAX,
+    CONF_MIN as INPUT_NUMBER_CONF_MIN,
+    CONF_STEP as INPUT_NUMBER_CONF_STEP,
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
@@ -65,6 +68,9 @@ from .const import (
     CHAR_VALVE_TYPE,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
+    PROP_MAX_VALUE,
+    PROP_MIN_STEP,
+    PROP_MIN_VALUE,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -93,6 +99,17 @@ VALVE_TYPE: dict[str, ValveInfo] = {
     TYPE_SPRINKLER: ValveInfo(CATEGORY_SPRINKLER, 1),
     TYPE_VALVE: ValveInfo(CATEGORY_FAUCET, 0),
 }
+
+VALVE_LINKED_DURATION_PROPERTIES = {
+    INPUT_NUMBER_CONF_MIN,
+    INPUT_NUMBER_CONF_MAX,
+    INPUT_NUMBER_CONF_STEP,
+}
+
+VALVE_DURATION_MIN_DEFAULT = 0
+VALVE_DURATION_MAX_DEFAULT = 3600
+VALVE_DURATION_STEP_DEFAULT = 1
+VALVE_REMAINING_TIME_MAX_DEFAULT = 60 * 60 * 48
 
 
 ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "input_button", "scene", "script"}
@@ -312,6 +329,18 @@ class ValveBase(HomeAccessory):
                 CHAR_SET_DURATION,
                 value=self.get_duration(),
                 setter_callback=self.set_duration,
+                # Properties are set to match the linked duration entity configuration
+                properties={
+                    PROP_MIN_VALUE: self._get_linked_duration_property(
+                        INPUT_NUMBER_CONF_MIN, VALVE_DURATION_MIN_DEFAULT
+                    ),
+                    PROP_MAX_VALUE: self._get_linked_duration_property(
+                        INPUT_NUMBER_CONF_MAX, VALVE_DURATION_MAX_DEFAULT
+                    ),
+                    PROP_MIN_STEP: self._get_linked_duration_property(
+                        INPUT_NUMBER_CONF_STEP, VALVE_DURATION_STEP_DEFAULT
+                    ),
+                },
             )
 
         if CHAR_REMAINING_DURATION in self.chars:
@@ -319,7 +348,16 @@ class ValveBase(HomeAccessory):
                 "%s: Add characteristic %s", self.entity_id, CHAR_REMAINING_DURATION
             )
             self.char_remaining_duration = serv_valve.configure_char(
-                CHAR_REMAINING_DURATION, getter_callback=self.get_remaining_duration
+                CHAR_REMAINING_DURATION,
+                getter_callback=self.get_remaining_duration,
+                properties={
+                    # Default remaining time maxValue to 48 hours if not set via linked default duration.
+                    # pyhap truncates the remaining time to maxValue of the characteristic (pyhap default is 1 hour).
+                    # This can potentially show a remaining duration that is lower than the actual remaining duration.
+                    PROP_MAX_VALUE: self._get_linked_duration_property(
+                        INPUT_NUMBER_CONF_MAX, VALVE_REMAINING_TIME_MAX_DEFAULT
+                    ),
+                },
             )
 
         # Set the state so it is in sync on initial
@@ -337,12 +375,12 @@ class ValveBase(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        self._update_duration_chars()
         current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+        self._update_duration_chars()
 
     def _update_duration_chars(self) -> None:
         """Update valve duration related properties if characteristics are available."""
@@ -387,12 +425,12 @@ class ValveBase(HomeAccessory):
             _LOGGER.debug(
                 "%s: No linked end time entity state available", self.entity_id
             )
-            return self.get_duration()
+            return self.get_duration() if self.char_in_use.value else 0
 
         end_time = dt_util.parse_datetime(end_time_state)
         if end_time is None:
             _LOGGER.debug("%s: Cannot parse linked end time entity", self.entity_id)
-            return self.get_duration()
+            return self.get_duration() if self.char_in_use.value else 0
 
         remaining_time = (end_time - dt_util.utcnow()).total_seconds()
         return max(int(remaining_time), 0)
@@ -405,6 +443,20 @@ class ValveBase(HomeAccessory):
         if state is None:
             return None
         return state.state
+
+    def _get_linked_duration_property(self, attr: str, fallback_value: int) -> int:
+        """Get property from linked duration entity attribute."""
+        if attr not in VALVE_LINKED_DURATION_PROPERTIES:
+            return fallback_value
+        if self.linked_duration_entity is None:
+            return fallback_value
+        state = self.hass.states.get(self.linked_duration_entity)
+        if state is None:
+            return fallback_value
+        attr_value = state.attributes.get(attr, fallback_value)
+        if attr_value is None:
+            return fallback_value
+        return int(attr_value)
 
 
 @TYPES.register("ValveSwitch")

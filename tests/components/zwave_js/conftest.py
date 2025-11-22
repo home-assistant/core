@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 import copy
 import io
+import logging
 from typing import Any, cast
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
@@ -425,6 +426,12 @@ def lock_popp_electric_strike_lock_control_state_fixture() -> dict[str, Any]:
 def fortrezz_ssa1_siren_state_fixture() -> dict[str, Any]:
     """Load the fortrezz ssa1 siren node state fixture data."""
     return load_json_object_fixture("fortrezz_ssa1_siren_state.json", DOMAIN)
+
+
+@pytest.fixture(name="fortrezz_ssa2_siren_state", scope="package")
+def fortrezz_ssa2_siren_state_fixture() -> dict[str, Any]:
+    """Load the fortrezz ssa2 siren node state fixture data."""
+    return load_json_object_fixture("fortrezz_ssa2_siren_state.json", DOMAIN)
 
 
 @pytest.fixture(name="fortrezz_ssa3_siren_state", scope="package")
@@ -919,6 +926,7 @@ async def integration_fixture(
     hass: HomeAssistant,
     client: MagicMock,
     platforms: list[Platform],
+    caplog: pytest.LogCaptureFixture,
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
@@ -932,6 +940,11 @@ async def integration_fixture(
         await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
+
+    # Make sure no errors logged during setup.
+    # Eg. unique id collisions are only logged as errors and not raised,
+    # and may not cause tests to fail otherwise.
+    assert not any(record.levelno == logging.ERROR for record in caplog.records)
 
     return entry
 
@@ -1214,6 +1227,14 @@ def lock_popp_electric_strike_lock_control_fixture(
 def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state) -> Node:
     """Mock a fortrezz ssa1 siren node."""
     node = Node(client, copy.deepcopy(fortrezz_ssa1_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fortrezz_ssa2_siren")
+def fortrezz_ssa2_siren_fixture(client, fortrezz_ssa2_siren_state) -> Node:
+    """Mock a fortrezz ssa2 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa2_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

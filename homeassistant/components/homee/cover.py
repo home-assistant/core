@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeNodeEntity
+from .helpers import setup_homee_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,18 +78,25 @@ def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
     return COVER_DEVICE_PROFILES.get(node.profile)
 
 
+async def add_cover_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee cover entities."""
+    async_add_entities(
+        HomeeCover(node, config_entry) for node in nodes if is_cover_node(node)
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the homee platform for the cover integration."""
 
-    async_add_devices(
-        HomeeCover(node, config_entry)
-        for node in config_entry.runtime_data.nodes
-        if is_cover_node(node)
-    )
+    await setup_homee_platform(add_cover_entities, async_add_entities, config_entry)
 
 
 def is_cover_node(node: HomeeNode) -> bool:

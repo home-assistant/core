@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             identifiers={(DOMAIN, api.config.bridge_id)},
             manufacturer="Signify",
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
         # create persistent notification if we found a bridge version with security vulnerability
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             },
             manufacturer=api.config.bridge_device.product_data.manufacturer_name,
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
 

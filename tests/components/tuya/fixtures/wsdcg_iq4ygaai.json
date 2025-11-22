@@ -1,0 +1,45 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bassin",
+  "category": "wsdcg",
+  "product_id": "iq4ygaai",
+  "product_name": "Temperature Sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-19T12:20:32+00:00",
+  "create_time": "2025-07-19T12:20:32+00:00",
+  "update_time": "2025-07-19T12:20:32+00:00",
+  "function": {},
+  "status_range": {
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 1990,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "va_temperature": 217,
+    "battery_percentage": 100
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -52,7 +52,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '38',
+    'state': '90.0',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_battery_capacity-entry]
@@ -128,7 +128,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_ex30_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -229,63 +229,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'disconnected',
-  })
-# ---
-# name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_limit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.volvo_ex30_charging_limit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Charging limit',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'charging_current_limit',
-    'unique_id': 'yv1abcdefg1234567_charging_current_limit',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_limit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Volvo EX30 Charging limit',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.volvo_ex30_charging_limit',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '32',
+    'state': 'connected',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power-entry]
@@ -341,7 +285,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '0',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power_status-entry]
@@ -351,6 +295,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -390,6 +336,8 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo EX30 Charging power status',
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -399,7 +347,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_power_available',
+    'state': 'fault',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_status-entry]
@@ -465,7 +413,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'done',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_type-entry]
@@ -525,7 +473,59 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'none',
+    'state': 'ac',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo EX30 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_empty_battery-entry]
@@ -581,7 +581,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '90',
+    'state': '250',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_service-entry]
@@ -693,7 +693,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_odometer-entry]
@@ -750,6 +750,82 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_target_battery_charge_level-entry]
@@ -1052,6 +1128,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -1268,7 +1347,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_s90_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1310,6 +1389,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'available',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo S90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_distance_to_empty_tank-entry]
@@ -1534,6 +1665,82 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
   })
 # ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_engine_service-entry]
@@ -1784,6 +1991,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -2053,7 +2263,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_xc40_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -2266,7 +2476,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1386',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power_status-entry]
@@ -2276,6 +2486,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -2315,6 +2527,8 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging power status',
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -2453,6 +2667,58 @@
     'state': 'ac',
   })
 # ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2506,7 +2772,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '220',
+    'state': '250',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_service-entry]
@@ -2675,6 +2941,82 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_target_battery_charge_level-entry]
@@ -2977,6 +3319,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -3117,6 +3462,1100 @@
     'state': '3822.9',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'yv1abcdefg1234567_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Volvo XC60 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '87.3',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_battery_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.volvo_xc60_battery_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Battery capacity',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_capacity',
+    'unique_id': 'yv1abcdefg1234567_battery_capacity',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_battery_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy_storage',
+      'friendly_name': 'Volvo XC60 Battery capacity',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.832',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_car_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'available',
+        'car_in_use',
+        'no_internet',
+        'ota_installation_in_progress',
+        'power_saving_mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.volvo_xc60_car_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Car connection',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'availability',
+    'unique_id': 'yv1abcdefg1234567_availability',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_car_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Car connection',
+      'options': list([
+        'available',
+        'car_in_use',
+        'no_internet',
+        'ota_installation_in_progress',
+        'power_saving_mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_car_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'available',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_charging_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'connected',
+        'disconnected',
+        'fault',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_charging_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging connection status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charger_connection_status',
+    'unique_id': 'yv1abcdefg1234567_charger_connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_charging_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Charging connection status',
+      'options': list([
+        'connected',
+        'disconnected',
+        'fault',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_charging_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disconnected',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charging',
+        'discharging',
+        'done',
+        'error',
+        'idle',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'yv1abcdefg1234567_charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Charging status',
+      'options': list([
+        'charging',
+        'discharging',
+        'done',
+        'error',
+        'idle',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC60 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_empty_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_distance_to_empty_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to empty battery',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_empty_battery',
+    'unique_id': 'yv1abcdefg1234567_distance_to_empty_battery',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_empty_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC60 Distance to empty battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_distance_to_empty_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_empty_tank-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_distance_to_empty_tank',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to empty tank',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_empty_tank',
+    'unique_id': 'yv1abcdefg1234567_distance_to_empty_tank',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_empty_tank-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC60 Distance to empty tank',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_distance_to_empty_tank',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '920',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_distance_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_service',
+    'unique_id': 'yv1abcdefg1234567_distance_to_service',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC60 Distance to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_distance_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29000',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_fuel_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_fuel_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
+    'original_icon': None,
+    'original_name': 'Fuel amount',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fuel_amount',
+    'unique_id': 'yv1abcdefg1234567_fuel_amount',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_fuel_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volume_storage',
+      'friendly_name': 'Volvo XC60 Fuel amount',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_fuel_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47.3',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_odometer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_odometer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Odometer',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'odometer',
+    'unique_id': 'yv1abcdefg1234567_odometer',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_odometer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC60 Odometer',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_odometer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30000',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_target_battery_charge_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_target_battery_charge_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target battery charge level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_battery_charge_level',
+    'unique_id': 'yv1abcdefg1234567_target_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_target_battery_charge_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC60 Target battery charge level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_target_battery_charge_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_time_to_engine_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_time_to_engine_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to engine service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_time_to_engine_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC60 Time to engine service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_time_to_engine_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_time_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_time_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'time_to_service',
+    'unique_id': 'yv1abcdefg1234567_time_to_service',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_time_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC60 Time to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_time_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '690',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_automatic_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_trip_automatic_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Trip automatic distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_automatic',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_automatic_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC60 Trip automatic distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_trip_automatic_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_manual_average_fuel_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_trip_manual_average_fuel_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trip manual average fuel consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_fuel_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_fuel_consumption',
+    'unit_of_measurement': 'L/100 km',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_manual_average_fuel_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC60 Trip manual average fuel consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'L/100 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_trip_manual_average_fuel_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_manual_average_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_trip_manual_average_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Trip manual average speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed',
+    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_manual_average_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo XC60 Trip manual average speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_trip_manual_average_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_manual_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_trip_manual_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Trip manual distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_manual',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_manual',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_manual_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC60 Trip manual distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_trip_manual_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '219.7',
+  })
+# ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3193,7 +4632,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_xc90_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -3235,6 +4674,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'available',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_distance_to_empty_tank-entry]
@@ -3459,6 +4950,82 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_time_to_engine_service-entry]
@@ -3709,6 +5276,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -3847,5 +5417,1443 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '178.9',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'yv1abcdefg1234567_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Volvo XC90 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '87.3',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_battery_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.volvo_xc90_battery_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Battery capacity',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_capacity',
+    'unique_id': 'yv1abcdefg1234567_battery_capacity',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_battery_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy_storage',
+      'friendly_name': 'Volvo XC90 Battery capacity',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.819',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_car_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'available',
+        'car_in_use',
+        'no_internet',
+        'ota_installation_in_progress',
+        'power_saving_mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.volvo_xc90_car_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Car connection',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'availability',
+    'unique_id': 'yv1abcdefg1234567_availability',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_car_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Car connection',
+      'options': list([
+        'available',
+        'car_in_use',
+        'no_internet',
+        'ota_installation_in_progress',
+        'power_saving_mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_car_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'available',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'connected',
+        'disconnected',
+        'fault',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_charging_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging connection status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charger_connection_status',
+    'unique_id': 'yv1abcdefg1234567_charger_connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Charging connection status',
+      'options': list([
+        'connected',
+        'disconnected',
+        'fault',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_charging_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disconnected',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_power_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'fault',
+        'power_available_but_not_activated',
+        'providing_power',
+        'no_power_available',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_charging_power_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging power status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_power_status',
+    'unique_id': 'yv1abcdefg1234567_charging_power_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_power_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Charging power status',
+      'options': list([
+        'fault',
+        'power_available_but_not_activated',
+        'providing_power',
+        'no_power_available',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_charging_power_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_power_available',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charging',
+        'discharging',
+        'done',
+        'error',
+        'idle',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'yv1abcdefg1234567_charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Charging status',
+      'options': list([
+        'charging',
+        'discharging',
+        'done',
+        'error',
+        'idle',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ac',
+        'dc',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_charging_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging type',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_type',
+    'unique_id': 'yv1abcdefg1234567_charging_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_charging_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Charging type',
+      'options': list([
+        'ac',
+        'dc',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_charging_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_empty_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_distance_to_empty_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to empty battery',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_empty_battery',
+    'unique_id': 'yv1abcdefg1234567_distance_to_empty_battery',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_empty_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC90 Distance to empty battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_distance_to_empty_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '43',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_empty_tank-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_distance_to_empty_tank',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to empty tank',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_empty_tank',
+    'unique_id': 'yv1abcdefg1234567_distance_to_empty_tank',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_empty_tank-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC90 Distance to empty tank',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_distance_to_empty_tank',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '804',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_distance_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_service',
+    'unique_id': 'yv1abcdefg1234567_distance_to_service',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC90 Distance to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_distance_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29000',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_estimated_charging_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_estimated_charging_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Estimated charging time',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_charging_time',
+    'unique_id': 'yv1abcdefg1234567_estimated_charging_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_estimated_charging_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC90 Estimated charging time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_estimated_charging_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_fuel_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_fuel_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
+    'original_icon': None,
+    'original_name': 'Fuel amount',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fuel_amount',
+    'unique_id': 'yv1abcdefg1234567_fuel_amount',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_fuel_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volume_storage',
+      'friendly_name': 'Volvo XC90 Fuel amount',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_fuel_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47.3',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_odometer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_odometer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Odometer',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'odometer',
+    'unique_id': 'yv1abcdefg1234567_odometer',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_odometer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC90 Odometer',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_odometer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30000',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_target_battery_charge_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_target_battery_charge_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target battery charge level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_battery_charge_level',
+    'unique_id': 'yv1abcdefg1234567_target_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_target_battery_charge_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Target battery charge level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_target_battery_charge_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_time_to_engine_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_time_to_engine_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to engine service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_time_to_engine_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC90 Time to engine service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_time_to_engine_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_time_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_time_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'time_to_service',
+    'unique_id': 'yv1abcdefg1234567_time_to_service',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_time_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Volvo XC90 Time to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_time_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '690',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_automatic_average_fuel_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_automatic_average_fuel_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trip automatic average fuel consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_fuel_consumption_automatic',
+    'unique_id': 'yv1abcdefg1234567_average_fuel_consumption_automatic',
+    'unit_of_measurement': 'L/100 km',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_automatic_average_fuel_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Trip automatic average fuel consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'L/100 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_automatic_average_fuel_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_automatic_average_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_automatic_average_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Trip automatic average speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed_automatic',
+    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_automatic_average_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo XC90 Trip automatic average speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_automatic_average_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_automatic_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_automatic_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Trip automatic distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_automatic',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_automatic_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC90 Trip automatic distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_automatic_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.7',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_average_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_average_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trip manual average energy consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_energy_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_energy_consumption',
+    'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_average_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Trip manual average energy consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_average_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.9',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_average_fuel_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_average_fuel_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trip manual average fuel consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_fuel_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_fuel_consumption',
+    'unit_of_measurement': 'L/100 km',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_average_fuel_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Trip manual average fuel consumption',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'L/100 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_average_fuel_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_average_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_average_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Trip manual average speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed',
+    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_average_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo XC90 Trip manual average speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_average_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Trip manual distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_manual',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_manual',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_trip_manual_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC90 Trip manual distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_trip_manual_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5935.8',
   })
 # ---

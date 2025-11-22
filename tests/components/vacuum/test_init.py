@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
+import logging
 from types import ModuleType
 from typing import Any
 
@@ -50,25 +51,6 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
 def test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumEntityFeature, "SUPPORT_")
-)
-@pytest.mark.parametrize(
-    "module",
-    [vacuum],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.10"
-    )
 
 
 @pytest.mark.parametrize(
@@ -437,11 +419,13 @@ async def test_vacuum_deprecated_state_does_not_break_state(
     assert state.state == "cleaning"
 
 
-@pytest.mark.usefixtures("mock_as_custom_component")
-async def test_vacuum_log_deprecated_battery_properties(
+@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
+async def test_vacuum_log_deprecated_battery_using_properties(
     hass: HomeAssistant,
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
+    is_built_in: bool,
+    log_warnings: int,
 ) -> None:
     """Test incorrectly using battery properties logs warning."""
 
@@ -449,7 +433,7 @@ async def test_vacuum_log_deprecated_battery_properties(
         """Mocked vacuum entity."""
 
         @property
-        def activity(self) -> str:
+        def activity(self) -> VacuumActivity:
             """Return the state of the entity."""
             return VacuumActivity.CLEANING
 
@@ -477,7 +461,7 @@ async def test_vacuum_log_deprecated_battery_properties(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
-        built_in=False,
+        built_in=is_built_in,
     )
     setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -486,26 +470,27 @@ async def test_vacuum_log_deprecated_battery_properties(
     assert state is not None
 
     assert (
-        "Detected that custom integration 'test' is setting the battery_icon which has been deprecated."
-        " Integration test should implement a sensor instead with a correct device class and link it"
-        " to the same device. This will stop working in Home Assistant 2026.8,"
-        " please report it to the author of the 'test' custom integration"
-        in caplog.text
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == log_warnings
     )
+
     assert (
-        "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
-        " Integration test should implement a sensor instead with a correct device class and link it"
-        " to the same device. This will stop working in Home Assistant 2026.8,"
-        " please report it to the author of the 'test' custom integration"
+        "integration 'test' is setting the battery_icon which has been deprecated."
         in caplog.text
-    )
+    ) != is_built_in
+    assert (
+        "integration 'test' is setting the battery_level which has been deprecated."
+        in caplog.text
+    ) != is_built_in
 
 
-@pytest.mark.usefixtures("mock_as_custom_component")
-async def test_vacuum_log_deprecated_battery_properties_using_attr(
+@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
+async def test_vacuum_log_deprecated_battery_using_attr(
     hass: HomeAssistant,
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
+    is_built_in: bool,
+    log_warnings: int,
 ) -> None:
     """Test incorrectly using _attr_battery_* attribute does log issue and raise repair."""
 
@@ -531,7 +516,7 @@ async def test_vacuum_log_deprecated_battery_properties_using_attr(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
-        built_in=False,
+        built_in=is_built_in,
     )
     setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -541,47 +526,51 @@ async def test_vacuum_log_deprecated_battery_properties_using_attr(
     entity.start()
 
     assert (
-        "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
-        " Integration test should implement a sensor instead with a correct device class and link it to"
-        " the same device. This will stop working in Home Assistant 2026.8,"
-        " please report it to the author of the 'test' custom integration"
-        in caplog.text
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == log_warnings
     )
+
     assert (
-        "Detected that custom integration 'test' is setting the battery_icon which has been deprecated."
-        " Integration test should implement a sensor instead with a correct device class and link it to"
-        " the same device. This will stop working in Home Assistant 2026.8,"
-        " please report it to the author of the 'test' custom integration"
+        "integration 'test' is setting the battery_level which has been deprecated."
         in caplog.text
-    )
+    ) != is_built_in
+    assert (
+        "integration 'test' is setting the battery_icon which has been deprecated."
+        in caplog.text
+    ) != is_built_in
 
     await async_start(hass, entity.entity_id)
 
     caplog.clear()
+
     await async_start(hass, entity.entity_id)
+
     # Test we only log once
     assert (
-        "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
-        not in caplog.text
-    )
-    assert (
-        "Detected that custom integration 'test' is setting the battery_icon which has been deprecated."
-        not in caplog.text
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == 0
     )
 
 
-@pytest.mark.usefixtures("mock_as_custom_component")
+@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 1)])
 async def test_vacuum_log_deprecated_battery_supported_feature(
     hass: HomeAssistant,
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
+    is_built_in: bool,
+    log_warnings: int,
 ) -> None:
     """Test incorrectly setting battery supported feature logs warning."""
 
-    entity = MockVacuum(
-        name="Testing",
-        entity_id="vacuum.test",
-    )
+    class MockVacuum(StateVacuumEntity):
+        """Mock vacuum class."""
+
+        _attr_supported_features = (
+            VacuumEntityFeature.STATE | VacuumEntityFeature.BATTERY
+        )
+        _attr_name = "Testing"
+
+    entity = MockVacuum()
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
@@ -592,7 +581,7 @@ async def test_vacuum_log_deprecated_battery_supported_feature(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
-        built_in=False,
+        built_in=is_built_in,
     )
     setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -601,12 +590,13 @@ async def test_vacuum_log_deprecated_battery_supported_feature(
     assert state is not None
 
     assert (
-        "Detected that custom integration 'test' is setting the battery supported feature"
-        " which has been deprecated. Integration test should remove this as part of migrating"
-        " the battery level and icon to a sensor. This will stop working in Home Assistant 2026.8"
-        ", please report it to the author of the 'test' custom integration"
-        in caplog.text
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == log_warnings
     )
+
+    assert (
+        "integration 'test' is setting the battery supported feature" in caplog.text
+    ) != is_built_in
 
 
 async def test_vacuum_not_log_deprecated_battery_properties_during_init(
@@ -624,7 +614,7 @@ async def test_vacuum_not_log_deprecated_battery_properties_during_init(
             self._attr_battery_level = 50
 
         @property
-        def activity(self) -> str:
+        def activity(self) -> VacuumActivity:
             """Return the state of the entity."""
             return VacuumActivity.CLEANING
 
@@ -635,6 +625,6 @@ async def test_vacuum_not_log_deprecated_battery_properties_during_init(
     assert entity.battery_level == 50
 
     assert (
-        "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
-        not in caplog.text
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == 0
     )

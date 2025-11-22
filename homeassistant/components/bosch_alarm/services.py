@@ -9,12 +9,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_CONFIG_ENTRY_ID, ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE_TIME
+from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE_TIME
 from .types import BoschAlarmConfigEntry
 
 

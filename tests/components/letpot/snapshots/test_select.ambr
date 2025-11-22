@@ -1,0 +1,229 @@
+# serializer version: 1
+# name: test_all_entities[LPH31][select.garden_light_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_light_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light brightness',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_brightness',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_light_brightness_low_high',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH31][select.garden_light_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Light brightness',
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garden_light_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_all_entities[LPH31][select.garden_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'flower',
+        'vegetable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light mode',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_light_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH31][select.garden_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Light mode',
+      'options': list([
+        'flower',
+        'vegetable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garden_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vegetable',
+  })
+# ---
+# name: test_all_entities[LPH62][select.garden_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'flower',
+        'vegetable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light mode',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH62ABCD_light_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH62][select.garden_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Light mode',
+      'options': list([
+        'flower',
+        'vegetable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garden_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vegetable',
+  })
+# ---
+# name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'fahrenheit',
+        'celsius',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_temperature_unit_on_display',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature unit on display',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_temperature_unit',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH62ABCD_display_temperature_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Temperature unit on display',
+      'options': list([
+        'fahrenheit',
+        'celsius',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garden_temperature_unit_on_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'celsius',
+  })
+# ---

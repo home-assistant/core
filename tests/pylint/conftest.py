@@ -138,3 +138,24 @@ def decorator_checker_fixture(hass_decorator, linter) -> BaseChecker:
     type_hint_checker = hass_decorator.HassDecoratorChecker(linter)
     type_hint_checker.module = "homeassistant.components.pylint_test"
     return type_hint_checker
+
+
+@pytest.fixture(name="hass_enforce_greek_micro_char", scope="package")
+def hass_enforce_greek_micro_checker_fixture() -> ModuleType:
+    """Fixture to the content for the hass_enforce_greek_micro_char check."""
+    return _load_plugin_from_file(
+        "hass_enforce_greek_micro_char",
+        "pylint/plugins/hass_enforce_greek_micro_char.py",
+    )
+
+
+@pytest.fixture(name="enforce_greek_micro_char_checker")
+def enforce_greek_micro_char_checker_fixture(
+    hass_enforce_greek_micro_char, linter
+) -> BaseChecker:
+    """Fixture to provide a hass_enforce_greek_micro_char checker."""
+    enforce_greek_micro_char_checker = (
+        hass_enforce_greek_micro_char.HassEnforceGreekMicroCharChecker(linter)
+    )
+    enforce_greek_micro_char_checker.module = "homeassistant.components.pylint_test"
+    return enforce_greek_micro_char_checker

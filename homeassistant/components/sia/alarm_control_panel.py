@@ -47,7 +47,7 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "CP": AlarmControlPanelState.ARMED_AWAY,
         "CQ": AlarmControlPanelState.ARMED_AWAY,
         "CS": AlarmControlPanelState.ARMED_AWAY,
-        "CF": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        "CF": AlarmControlPanelState.ARMED_AWAY,
         "NP": AlarmControlPanelState.DISARMED,
         "NO": AlarmControlPanelState.DISARMED,
         "OA": AlarmControlPanelState.DISARMED,

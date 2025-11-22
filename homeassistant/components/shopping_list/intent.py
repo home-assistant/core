@@ -60,7 +60,6 @@ class CompleteItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech_slots({"completed_items": complete_items})
-        response.response_type = intent.IntentResponseType.ACTION_DONE
 
         return response
 

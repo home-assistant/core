@@ -1885,6 +1885,39 @@ async def test_optimistic_option(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("count", "fan_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        fan.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

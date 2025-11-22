@@ -1,0 +1,122 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "61",
+  "app_type": "smartlife",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Lounge Dark Blind",
+  "model": null,
+  "category": "cl",
+  "product_id": "3r8gc33pnqsxfe1g",
+  "product_name": "Blinds Controller",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:00",
+  "active_time": "2022-01-01T20:55:54+00:00",
+  "create_time": "2021-07-26T15:33:42+00:00",
+  "update_time": "2022-02-12T10:40:15+00:00",
+  "function": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_back": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1", "2", "3", "4"]
+      }
+    }
+  },
+  "status_range": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "percent_state": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_back": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["opening", "closing"]
+      }
+    },
+    "countdown": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1", "2", "3", "4"]
+      }
+    },
+    "countdown_left": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "time_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "ms",
+        "min": 0,
+        "max": 120000,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "control": "open",
+    "percent_control": 0,
+    "percent_state": 0,
+    "control_back": true,
+    "work_state": "opening",
+    "countdown": "cancel",
+    "countdown_left": 0,
+    "time_total": 25400
+  }
+}

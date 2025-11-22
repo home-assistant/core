@@ -142,12 +142,14 @@ async def test_cloud_command(
 
 
 @pytest.mark.parametrize(
-    ("in_cleaning_int", "expected_command"),
+    ("in_cleaning_int", "in_returning_int", "expected_command"),
     [
-        (0, RoborockCommand.APP_START),
-        (1, RoborockCommand.APP_START),
-        (2, RoborockCommand.RESUME_ZONED_CLEAN),
-        (3, RoborockCommand.RESUME_SEGMENT_CLEAN),
+        (0, 1, RoborockCommand.APP_CHARGE),
+        (0, 0, RoborockCommand.APP_START),
+        (1, 0, RoborockCommand.APP_START),
+        (2, 0, RoborockCommand.RESUME_ZONED_CLEAN),
+        (3, 0, RoborockCommand.RESUME_SEGMENT_CLEAN),
+        (4, 0, RoborockCommand.APP_RESUME_BUILD_MAP),
     ],
 )
 async def test_resume_cleaning(
@@ -155,11 +157,13 @@ async def test_resume_cleaning(
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
     in_cleaning_int: int,
+    in_returning_int: int,
     expected_command: RoborockCommand,
 ) -> None:
     """Test resuming clean on start button when a clean is paused."""
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = in_cleaning_int
+    prop.status.in_returning = in_returning_int
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         return_value=prop,

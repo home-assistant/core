@@ -91,6 +91,7 @@ from .const import (
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -102,9 +103,11 @@ from .const import (
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
     CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_SOCKET_PATH,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
+    ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -115,11 +118,7 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import (
-    ZwaveDiscoveryInfo,
-    async_discover_node_values,
-    async_discover_single_value,
-)
+from .discovery import async_discover_node_values, async_discover_single_value
 from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
@@ -131,7 +130,7 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .models import ZwaveJSConfigEntry, ZwaveJSData
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
@@ -509,7 +508,7 @@ class ControllerEvents:
             )
         )
 
-        await self.async_check_preprovisioned_device(node)
+        await self.async_check_pre_provisioned_device(node)
 
         if node.is_controller_node:
             # Create a controller status sensor for each device
@@ -637,8 +636,8 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
-    async def async_check_preprovisioned_device(self, node: ZwaveNode) -> None:
-        """Check if the node was preprovisioned and update the device registry."""
+    async def async_check_pre_provisioned_device(self, node: ZwaveNode) -> None:
+        """Check if the node was pre-provisioned and update the device registry."""
         provisioning_entry = (
             await self.driver_events.driver.controller.async_get_provisioning_entry(
                 node.node_id
@@ -648,29 +647,37 @@ class ControllerEvents:
             provisioning_entry
             and provisioning_entry.additional_properties
             and "device_id" in provisioning_entry.additional_properties
-        ):
-            preprovisioned_device = self.dev_reg.async_get(
-                provisioning_entry.additional_properties["device_id"]
+            and (
+                pre_provisioned_device := self.dev_reg.async_get(
+                    provisioning_entry.additional_properties["device_id"]
+                )
             )
+            and (dsk_identifier := (DOMAIN, f"provision_{provisioning_entry.dsk}"))
+            in pre_provisioned_device.identifiers
+        ):
+            driver = self.driver_events.driver
+            device_id = get_device_id(driver, node)
+            device_id_ext = get_device_id_ext(driver, node)
+            new_identifiers = pre_provisioned_device.identifiers.copy()
+            new_identifiers.remove(dsk_identifier)
+            new_identifiers.add(device_id)
+            if device_id_ext:
+                new_identifiers.add(device_id_ext)
 
-            if preprovisioned_device:
-                dsk = provisioning_entry.dsk
-                dsk_identifier = (DOMAIN, f"provision_{dsk}")
-
-                # If the pre-provisioned device has the DSK identifier, remove it
-                if dsk_identifier in preprovisioned_device.identifiers:
-                    driver = self.driver_events.driver
-                    device_id = get_device_id(driver, node)
-                    device_id_ext = get_device_id_ext(driver, node)
-                    new_identifiers = preprovisioned_device.identifiers.copy()
-                    new_identifiers.remove(dsk_identifier)
-                    new_identifiers.add(device_id)
-                    if device_id_ext:
-                        new_identifiers.add(device_id_ext)
-                    self.dev_reg.async_update_device(
-                        preprovisioned_device.id,
-                        new_identifiers=new_identifiers,
-                    )
+            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+                # If a device entry is registered with the node ID based identifiers,
+                # just remove the device entry with the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+            else:
+                # Add the node ID based identifiers to the device entry
+                # with the DSK identifier and remove the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    new_identifiers=new_identifiers,
+                )
 
     async def async_register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""
@@ -768,7 +775,7 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
         await asyncio.gather(
@@ -850,8 +857,8 @@ class NodeEvents:
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
-        disc_info: ZwaveDiscoveryInfo,
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+        disc_info: PlatformZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
         platform = disc_info.platform
@@ -893,7 +900,9 @@ class NodeEvents:
         )
 
     async def async_on_value_added(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # If node isn't ready or a device for this node doesn't already exist, we can
@@ -1028,7 +1037,9 @@ class NodeEvents:
 
     @callback
     def async_on_value_updated_fire_event(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # Get the discovery info for the value that was updated. If there is
@@ -1166,7 +1177,16 @@ async def async_ensure_addon_running(
     except AddonError as err:
         raise ConfigEntryNotReady(err) from err
 
-    usb_path: str = entry.data[CONF_USB_PATH]
+    addon_has_lr = (
+        addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION
+    )
+    addon_has_esphome = (
+        addon_info.version
+        and AwesomeVersion(addon_info.version) >= ESPHOME_ADDON_VERSION
+    )
+
+    usb_path: str | None = entry.data[CONF_USB_PATH]
+    socket_path: str | None = entry.data.get(CONF_SOCKET_PATH)
     # s0_legacy_key was saved as network_key before s2 was added.
     s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
     if not s0_legacy_key:
@@ -1178,15 +1198,18 @@ async def async_ensure_addon_running(
     lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
     addon_config = {
-        CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
         CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
-    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
+    if usb_path is not None:
+        addon_config[CONF_ADDON_DEVICE] = usb_path
+    if addon_has_lr:
         addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
         addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
+    if addon_has_esphome and socket_path is not None:
+        addon_config[CONF_ADDON_SOCKET] = socket_path
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
@@ -1203,7 +1226,7 @@ async def async_ensure_addon_running(
         raise ConfigEntryNotReady
 
     addon_options = addon_info.options
-    addon_device = addon_options[CONF_ADDON_DEVICE]
+    addon_device = addon_options.get(CONF_ADDON_DEVICE)
     # s0_legacy_key was saved as network_key before s2 was added.
     addon_s0_legacy_key = addon_options.get(CONF_ADDON_S0_LEGACY_KEY, "")
     if not addon_s0_legacy_key:
@@ -1227,9 +1250,7 @@ async def async_ensure_addon_running(
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
 
-    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
-        LR_ADDON_VERSION
-    ):
+    if addon_has_lr:
         addon_lr_s2_access_control_key = addon_options.get(
             CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
         )
@@ -1240,6 +1261,11 @@ async def async_ensure_addon_running(
             updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
         if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
             updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
+    if addon_has_esphome:
+        addon_socket = addon_options.get(CONF_ADDON_SOCKET)
+        if socket_path != addon_socket:
+            updates[CONF_SOCKET_PATH] = addon_socket
 
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})

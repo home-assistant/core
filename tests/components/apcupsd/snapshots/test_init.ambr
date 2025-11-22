@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_async_setup_entry[status0][device_MyUPS_XXXXXXXXXXXX]
+# name: test_async_setup_entry[mock_request_status0-mocked-config-entry-id][device_MyUPS_XXXXXXXXXXXX]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -25,12 +25,12 @@
     'name': 'MyUPS',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'XXXXXXXXXXXX',
     'sw_version': '3.14.14 (31 May 2016) unknown',
     'via_device_id': None,
   })
 # ---
-# name: test_async_setup_entry[status1][device_APC UPS_XXXX]
+# name: test_async_setup_entry[mock_request_status1-mocked-config-entry-id][device_APC UPS_XXXX]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -56,12 +56,12 @@
     'name': 'APC UPS',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'XXXX',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
-# name: test_async_setup_entry[status2][device_APC UPS_<no serial>]
+# name: test_async_setup_entry[mock_request_status2-mocked-config-entry-id][device_APC UPS_<no serial>]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -92,7 +92,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_async_setup_entry[status3][device_APC UPS_Blank]
+# name: test_async_setup_entry[mock_request_status3-mocked-config-entry-id][device_APC UPS_Blank]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
