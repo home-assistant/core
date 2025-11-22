@@ -212,9 +212,6 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
                 and get_block_number_of_channels(coordinator.device, block) > 1
                 else ""
             }
-
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
         else:
             self._attr_name = get_block_channel_name(coordinator.device, block)
 
