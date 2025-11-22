@@ -699,9 +699,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         super().__init__(coordinator, key)
         self._attr_name = get_rpc_channel_name(coordinator.device, key)
         self._id = id_
-        self._thermostat_type = coordinator.device.config[key].get(
-            "type", "heating"
-        )
+        self._thermostat_type = coordinator.device.config[key].get("type", "heating")
         if self._thermostat_type == "cooling":
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
