@@ -312,6 +312,7 @@ async def test_setup_through_bluetooth_only(
     """Test we can setup without a cloud connection."""
 
     # Simulate cloud connection failures
+    mock_cloud_client.get_thing_settings.side_effect = RequestNotSuccessful("")
     mock_cloud_client.async_get_access_token.side_effect = RequestNotSuccessful("")
     mock_lamarzocco_bluetooth.get_dashboard.side_effect = RequestNotSuccessful("")
     mock_lamarzocco_bluetooth.get_coffee_and_flush_counter.side_effect = (

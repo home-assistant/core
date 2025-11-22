@@ -73,38 +73,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         client=create_client_session(hass),
     )
 
-    try:
-        settings = await cloud_client.get_thing_settings(serial)
-    except AuthFail as ex:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from ex
-    except (RequestNotSuccessful, TimeoutError) as ex:
-        _LOGGER.debug(ex, exc_info=True)
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="api_error"
-        ) from ex
-
-    gateway_version = version.parse(
-        settings.firmwares[FirmwareType.GATEWAY].build_version
-    )
-
-    if gateway_version < version.parse("v5.0.9"):
-        # incompatible gateway firmware, create an issue
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "unsupported_gateway_firmware",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="unsupported_gateway_firmware",
-            translation_placeholders={"gateway_version": str(gateway_version)},
-        )
-
     # initialize Bluetooth
     bluetooth_client: LaMarzoccoBluetoothClient | None = None
     if entry.options.get(CONF_USE_BLUETOOTH, True) and (
-        token := (entry.data.get(CONF_TOKEN) or settings.ble_auth_token)
+        token := entry.data.get(CONF_TOKEN)
     ):
         if CONF_MAC not in entry.data:
             for discovery_info in async_discovered_service_info(hass):
@@ -146,6 +118,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                 _LOGGER.info(
                     "Bluetooth device not found during lamarzocco setup, continuing with cloud only"
                 )
+    try:
+        settings = await cloud_client.get_thing_settings(serial)
+    except AuthFail as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from ex
+    except (RequestNotSuccessful, TimeoutError) as ex:
+        _LOGGER.debug(ex, exc_info=True)
+        if not bluetooth_client:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from ex
+        _LOGGER.debug("Cloud failed, continuing with Bluetooth only", exc_info=True)
+    else:
+        gateway_version = version.parse(
+            settings.firmwares[FirmwareType.GATEWAY].build_version
+        )
+
+        if gateway_version < version.parse("v5.0.9"):
+            # incompatible gateway firmware, create an issue
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "unsupported_gateway_firmware",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="unsupported_gateway_firmware",
+                translation_placeholders={"gateway_version": str(gateway_version)},
+            )
+        # Update BLE Token if exists
+        if settings.ble_auth_token:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_TOKEN: settings.ble_auth_token,
+                },
+            )
 
     device = LaMarzoccoMachine(
         serial_number=entry.unique_id,
