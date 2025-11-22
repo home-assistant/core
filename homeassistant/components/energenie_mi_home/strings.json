@@ -26,11 +26,6 @@
       "light": {
         "name": "Light"
       }
-    },
-    "switch": {
-      "switch": {
-        "name": "Switch"
-      }
     }
   }
 }

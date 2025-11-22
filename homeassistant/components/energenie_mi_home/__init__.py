@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import MiHomeConfigEntry, MiHomeCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
+_PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MiHomeConfigEntry) -> bool:
