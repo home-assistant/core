@@ -31,7 +31,7 @@ from .entity import (
     async_setup_entry_rpc,
     rpc_call,
 )
-from .utils import get_block_channel_name, get_device_entry_gen, get_rpc_channel_name
+from .utils import get_device_entry_gen, get_rpc_channel_name
 
 PARALLEL_UPDATES = 0
 
