@@ -43,7 +43,9 @@ async def test_coordinator_fetch_success(
     assert elec.max_price == 0.25
 
 
-async def test_coordinator_fetch_failure(hass: HomeAssistant, patch_essent_client) -> None:
+async def test_coordinator_fetch_failure(
+    hass: HomeAssistant, patch_essent_client
+) -> None:
     """Test failed data fetch."""
     patch_essent_client.async_get_prices.side_effect = EssentResponseError("boom")
     entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")

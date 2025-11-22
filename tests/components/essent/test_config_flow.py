@@ -23,11 +23,14 @@ pytestmark = pytest.mark.usefixtures("disable_coordinator_schedules")
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we can create an entry."""
-    with patch(
-        "homeassistant.components.essent.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.essent.config_flow.EssentClient.async_get_prices",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.essent.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.essent.config_flow.EssentClient.async_get_prices",
+            return_value={},
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

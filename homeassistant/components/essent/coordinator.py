@@ -35,9 +35,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
 
     config_entry: EssentConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: EssentConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: EssentConfigEntry) -> None:
         """Initialize."""
         super().__init__(
             hass,

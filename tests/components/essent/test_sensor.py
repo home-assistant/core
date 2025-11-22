@@ -34,9 +34,7 @@ pytestmark = [
 ]
 
 
-async def test_sensor_states(
-    hass: HomeAssistant, essent_api_response: dict
-) -> None:
+async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> None:
     """Test the sensor states and attributes."""
     await setup_integration(hass, essent_api_response)
 
@@ -165,8 +163,12 @@ async def test_sensors_handle_missing_data(hass: HomeAssistant) -> None:
     coordinator = EssentDataUpdateCoordinator(hass, entry)
     coordinator.data = None
 
-    current = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"])
-    next_sensor = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"])
+    current = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"]
+    )
+    next_sensor = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"]
+    )
     avg = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["average_today"])
     low = EssentSensor(
         coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["lowest_price_today"]
@@ -216,8 +218,12 @@ async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
     )
     coordinator.data = prices
 
-    current = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"])
-    next_sensor = EssentSensor(coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"])
+    current = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["current_price"]
+    )
+    next_sensor = EssentSensor(
+        coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["next_price"]
+    )
     low = EssentSensor(
         coordinator, ENERGY_TYPE_ELECTRICITY, _DESCS["lowest_price_today"]
     )

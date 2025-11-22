@@ -170,7 +170,9 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         name="next price",
         translation_key="next_price",
         value_fn=lambda entity: (
-            None if (tariff := _get_next_tariff(entity)) is None else tariff.total_amount
+            None
+            if (tariff := _get_next_tariff(entity)) is None
+            else tariff.total_amount
         ),
         attrs_fn=_next_price_attrs,
     ),
