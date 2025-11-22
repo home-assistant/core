@@ -19,6 +19,7 @@ from homeassistant.components.concord232.binary_sensor import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_time_changed
@@ -174,6 +175,14 @@ async def test_zone_update_refresh(
             BinarySensorDeviceClass.MOTION,
         ),
         ("SMOKE Sensor", "binary_sensor.smoke_sensor", BinarySensorDeviceClass.SMOKE),
+        ("KEY Sensor", "binary_sensor.key_sensor", BinarySensorDeviceClass.SAFETY),
+        ("DOOR Sensor", "binary_sensor.door_sensor", BinarySensorDeviceClass.DOOR),
+        (
+            "WINDOW Sensor",
+            "binary_sensor.window_sensor",
+            BinarySensorDeviceClass.WINDOW,
+        ),
+        ("SOUND Sensor", "binary_sensor.sound_sensor", BinarySensorDeviceClass.SOUND),
         (
             "Unknown Sensor",
             "binary_sensor.unknown_sensor",
@@ -188,7 +197,7 @@ async def test_device_class(
     entity_id: str,
     expected_device_class: BinarySensorDeviceClass,
 ) -> None:
-    """Test zone type detection for motion sensor."""
+    """Test zone type detection from sensor name."""
     mock_concord232_client.list_zones.return_value = [
         {"number": 1, "name": sensor_name, "state": "Normal"},
     ]
@@ -199,3 +208,26 @@ async def test_device_class(
 
     state = hass.states.get(entity_id)
     assert state.attributes.get("device_class") == expected_device_class
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "expected_unique_id"),
+    [
+        ("binary_sensor.zone_1", "1"),
+        ("binary_sensor.zone_2", "2"),
+    ],
+)
+async def test_unique_id(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,  # noqa: ARG001
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    expected_unique_id: str,
+) -> None:
+    """Test that unique_id is set correctly."""
+    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == expected_unique_id

@@ -278,3 +278,30 @@ async def test_update_no_partitions(
     await hass.async_block_till_done()
 
     assert "Concord232 reports no partitions" in caplog.text
+
+
+async def test_update_triggered_by_unknown_zone(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update when zone has Unknown state triggers alarm."""
+    mock_concord232_client.list_partitions.return_value = [{"arming_level": "Off"}]
+    mock_concord232_client.partitions = (
+        mock_concord232_client.list_partitions.return_value
+    )
+    mock_concord232_client.list_zones.return_value = [
+        {"number": 1, "name": "Zone 1", "state": "Unknown"},
+    ]
+
+    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
+
+    # Trigger update
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_alarm")
+    assert state.state == AlarmControlPanelState.TRIGGERED
+    assert state.attributes.get("triggered_by") == "Zone 1"
