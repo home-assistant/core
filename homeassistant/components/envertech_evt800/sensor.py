@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import EnvertechEVT800ConfigEntry
 from .coordinator import EnvertechEVT800Coordinator
@@ -197,37 +198,29 @@ class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
         evt800: pyenvertechevt800.EnvertechEVT800,
         coordinator: EnvertechEVT800Coordinator,
         config_entry: ConfigEntry[Any],
-        description: SensorEntityDescription | None,
+        description: SensorEntityDescription,
         name: str,
         value: Any,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(evt800, coordinator, config_entry)
-        if description is not None:
-            self.entity_description = description
-        else:
-            self._attr_name = name
-
-        self._value = value
-        self._device = evt800
+        self.entity_description = description
         self._key = name
-
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{config_entry.unique_id}-{name}"
-        self._attr_native_value = self._device.data[self._key]
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Return the state of the sensor."""
-        self._attr_native_value = self._device.data[self._key]
-        self.async_write_ha_state()
+        """Handle an update from the coordinator."""
         super()._handle_coordinator_update()
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the native value of the sensor."""
+        return self.evt800.data.get(self._key)
 
     @property
     def available(self) -> bool:
         """Unavailable if evt800 isn't connected."""
         return (
-            self._device.online
-            and self._device.data[self._key] is not None
-            and super().available
+            self.evt800.online and self.native_value is not None and super().available
         )

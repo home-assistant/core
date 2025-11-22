@@ -22,7 +22,7 @@ class EnvertechEVT800Coordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         client: pyenvertechevt800.EnvertechEVT800,
-        config_entry: ConfigEntry,
+        config_entry: ConfigEntry[pyenvertechevt800.EnvertechEVT800],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

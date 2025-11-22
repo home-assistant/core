@@ -26,14 +26,8 @@ async def async_setup_entry(
         evt800,
         entry,
     )
-    coordinator.async_set_updated_data(evt800.data)
+
     await coordinator.async_config_entry_first_refresh()
-
-    async def async_close_session():
-        """Close the session."""
-        evt800.stop()
-
-    entry.async_on_unload(async_close_session)
 
     entry.runtime_data = coordinator
 

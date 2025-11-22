@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import pyenvertechevt800
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,9 +15,6 @@ SCHEMA_DEVICE = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_TYPE, default=TYPE_TCP_SERVER_MODE): vol.In(
-            TYPE_TCP_SERVER_MODE
-        ),
     }
 )
 
@@ -43,7 +41,16 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._data[CONF_IP_ADDRESS] = user_input[CONF_IP_ADDRESS]
             self._data[CONF_PORT] = user_input[CONF_PORT]
-            self._data[CONF_TYPE] = user_input[CONF_TYPE]
+            self._data[CONF_TYPE] = TYPE_TCP_SERVER_MODE
+
+            evt800 = pyenvertechevt800.EnvertechEVT800(
+                user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
+            )
+
+            canConnect = await evt800.test_connection()
+
+            if not canConnect:
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(
