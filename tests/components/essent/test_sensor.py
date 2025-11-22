@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from unittest.mock import AsyncMock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -9,24 +12,15 @@ from essent_dynamic_pricing.models import EnergyData, EssentPrices
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from homeassistant.components.essent import sensor as essent_sensor
-from homeassistant.components.essent.sensor import (
-    EssentSensor,
-    _format_dt_str,
-    _parse_tariff_datetime,
-)
-from homeassistant.components.essent.const import EnergyType
-from homeassistant.components.essent.coordinator import EssentDataUpdateCoordinator
-from tests.common import MockConfigEntry
+from homeassistant.components.essent.sensor import _format_dt_str, _parse_tariff_datetime
+from tests.common import MockConfigEntry, async_fire_time_changed
+
 from . import setup_integration
 
-_DESCS = {desc.key: desc for desc in essent_sensor.SENSORS}
-
 pytestmark = [
-    pytest.mark.usefixtures(
-        "entity_registry_enabled_by_default", "disable_coordinator_schedules"
-    ),
+    pytest.mark.usefixtures("entity_registry_enabled_by_default"),
     pytest.mark.freeze_time("2025-11-16 10:30:00+01:00"),
 ]
 
@@ -53,9 +47,9 @@ async def _enable_unique_ids(
         await hass.async_block_till_done()
 
 
-async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> None:
+async def test_sensor_states(hass: HomeAssistant) -> None:
     """Test the sensor states and attributes."""
-    entry = await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass)
     ent_reg = er.async_get(hass)
     await _enable_unique_ids(
         hass,
@@ -93,9 +87,50 @@ async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> 
     assert gas_next.attributes["unit_of_measurement"] == "€/m³"
 
 
+async def test_average_price_sensors(
+    hass: HomeAssistant, patch_essent_client: AsyncMock
+) -> None:
+    """Test average price sensors for electricity and gas."""
+    patch_essent_client.async_get_prices.return_value = EssentPrices(
+        electricity=EnergyData(
+            tariffs=[],
+            tariffs_tomorrow=[],
+            unit="kWh",
+            min_price=0.1,
+            avg_price=0.123,
+            max_price=0.9,
+        ),
+        gas=EnergyData(
+            tariffs=[],
+            tariffs_tomorrow=[],
+            unit="m³",
+            min_price=0.2,
+            avg_price=0.678,
+            max_price=1.2,
+        ),
+    )
+
+    await setup_integration(hass)
+    ent_reg = er.async_get(hass)
+
+    elec_id = ent_reg.async_get_entity_id("sensor", "essent", "electricity_average_today")
+    gas_id = ent_reg.async_get_entity_id("sensor", "essent", "gas_average_today")
+    assert elec_id is not None
+    assert gas_id is not None
+
+    elec = hass.states.get(elec_id)
+    gas = hass.states.get(gas_id)
+    assert elec is not None
+    assert gas is not None
+
+    assert float(elec.state) == 0.123
+    assert elec.attributes["unit_of_measurement"] == "€/kWh"
+    assert float(gas.state) == 0.678
+    assert gas.attributes["unit_of_measurement"] == "€/m³"
+
+
 async def test_sensor_states_with_different_timezone(
     hass: HomeAssistant,
-    essent_api_response: dict,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors still match tariffs when HA timezone differs."""
@@ -103,7 +138,7 @@ async def test_sensor_states_with_different_timezone(
     await hass.async_block_till_done()
     freezer.move_to("2025-11-16 04:30:00-05:00")
 
-    entry = await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass)
     ent_reg = er.async_get(hass)
     await _enable_unique_ids(
         hass,
@@ -131,13 +166,11 @@ async def test_sensor_states_with_different_timezone(
 
 async def test_sensor_updates_when_time_moves(
     hass: HomeAssistant,
-    essent_api_response: dict,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors update when time moves forward."""
-    entry = await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass)
     ent_reg = er.async_get(hass)
-    coordinator = entry.runtime_data
     await _enable_unique_ids(
         hass,
         entry,
@@ -145,44 +178,76 @@ async def test_sensor_updates_when_time_moves(
         ("electricity_next_price", "gas_next_price"),
     )
 
-    # Move within today's tariffs
-    freezer.move_to("2025-11-16 11:30:00+01:00")
-    coordinator.async_update_listeners()
+    def _state(unique_id: str):
+        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        return state
+
+    assert float(_state("electricity_current_price").state) == 0.25
+
+    next_listener = (
+        dt_util.now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    )
+    freezer.move_to(next_listener)
+    async_fire_time_changed(hass, next_listener)
     await hass.async_block_till_done()
 
-    entity_id = ent_reg.async_get_entity_id("sensor", "essent", "electricity_current_price")
-    assert entity_id is not None
-    elec_current = hass.states.get(entity_id)
-    assert elec_current is not None
-    assert float(elec_current.state) == 0.22
+    assert float(_state("electricity_current_price").state) == 0.22
 
-    # Move into tomorrow's tariffs
-    freezer.move_to("2025-11-17 00:30:00+01:00")
-    coordinator.async_update_listeners()
+    next_day = dt_util.now() + timedelta(days=1)
+    midnight_local = next_day.replace(hour=0, minute=30, second=0, microsecond=0)
+    freezer.move_to(midnight_local)
+    async_fire_time_changed(hass, midnight_local)
     await hass.async_block_till_done()
 
-    entity_id_current = ent_reg.async_get_entity_id(
-        "sensor", "essent", "electricity_current_price"
-    )
-    entity_id_next = ent_reg.async_get_entity_id(
-        "sensor", "essent", "electricity_next_price"
-    )
-    assert entity_id_current is not None
-    assert entity_id_next is not None
-    elec_current = hass.states.get(entity_id_current)
-    elec_next = hass.states.get(entity_id_next)
+    assert float(_state("electricity_current_price").state) == 0.21
+    assert _state("electricity_next_price").state == STATE_UNKNOWN
 
-    assert elec_current is not None
-    assert float(elec_current.state) == 0.21
-    assert elec_next is not None
-    assert elec_next.state == STATE_UNKNOWN
+
+async def test_gas_next_price_missing_tomorrow_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    patch_essent_client: AsyncMock,
+    partial_gas_normalized_data: EssentPrices,
+) -> None:
+    """Gas next price should be unknown when tomorrow's tariffs are missing."""
+    freezer.move_to("2025-11-21 00:30:00+01:00")
+    patch_essent_client.async_get_prices.return_value = partial_gas_normalized_data
+
+    entry = await setup_integration(hass)
+    ent_reg = er.async_get(hass)
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        ("electricity_next_price", "gas_next_price"),
+    )
+
+    def _state(unique_id: str):
+        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        return state
+
+    gas_current = _state("gas_current_price")
+    assert float(gas_current.state) == pytest.approx(1.1457)
+    assert gas_current.attributes["unit_of_measurement"] == "€/m³"
+
+    gas_next = _state("gas_next_price")
+    assert gas_next.state == STATE_UNKNOWN
+
+    elec_next = _state("electricity_next_price")
+    assert float(elec_next.state) == pytest.approx(0.24679)
 
 
 async def test_electricity_lowest_price_sensor(
-    hass: HomeAssistant, essent_api_response: dict
+    hass: HomeAssistant,
 ) -> None:
     """Test lowest price sensor for electricity."""
-    entry = await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass)
     ent_reg = er.async_get(hass)
     await _enable_unique_ids(
         hass,
@@ -201,10 +266,10 @@ async def test_electricity_lowest_price_sensor(
 
 
 async def test_electricity_highest_price_sensor(
-    hass: HomeAssistant, essent_api_response: dict
+    hass: HomeAssistant,
 ) -> None:
     """Test highest price sensor for electricity."""
-    entry = await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass)
     ent_reg = er.async_get(hass)
     await _enable_unique_ids(
         hass,
@@ -222,11 +287,11 @@ async def test_electricity_highest_price_sensor(
     assert float(sensor.state) == 0.25
 
 
-async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
+async def test_sensors_handle_empty_tariffs(
+    hass: HomeAssistant, patch_essent_client
+) -> None:
     """Sensors should return None/{} when no tariffs are present."""
-    entry = MockConfigEntry(domain="essent", data={}, unique_id="essent")
-    coordinator = EssentDataUpdateCoordinator(hass, entry)
-    prices = EssentPrices(
+    patch_essent_client.async_get_prices.return_value = EssentPrices(
         electricity=EnergyData(
             tariffs=[],
             tariffs_tomorrow=[],
@@ -244,27 +309,36 @@ async def test_sensors_handle_empty_tariffs(hass: HomeAssistant) -> None:
             max_price=0,
         ),
     )
-    coordinator.data = prices
-
-    current = EssentSensor(
-        coordinator, EnergyType.ELECTRICITY, _DESCS["current_price"]
-    )
-    next_sensor = EssentSensor(
-        coordinator, EnergyType.ELECTRICITY, _DESCS["next_price"]
-    )
-    low = EssentSensor(
-        coordinator, EnergyType.ELECTRICITY, _DESCS["lowest_price_today"]
-    )
-    high = EssentSensor(
-        coordinator, EnergyType.ELECTRICITY, _DESCS["highest_price_today"]
+    entry = await setup_integration(hass)
+    ent_reg = er.async_get(hass)
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        (
+            "electricity_next_price",
+            "electricity_lowest_price_today",
+            "electricity_highest_price_today",
+        ),
     )
 
-    assert current.native_value is None
-    assert next_sensor.native_value is None
-    assert current.extra_state_attributes == {}
-    assert next_sensor.extra_state_attributes == {}
-    assert low.extra_state_attributes == {}
-    assert high.extra_state_attributes == {}
+    def _state(unique_id: str):
+        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        return state
+
+    assert _state("electricity_current_price").state == STATE_UNKNOWN
+    assert _state("electricity_next_price").state == STATE_UNKNOWN
+
+    lowest = _state("electricity_lowest_price_today")
+    highest = _state("electricity_highest_price_today")
+
+    assert float(lowest.state) == 0
+    assert float(highest.state) == 0
+    assert lowest.attributes["unit_of_measurement"] == "€/kWh"
+    assert highest.attributes["unit_of_measurement"] == "€/kWh"
 
 
 def test_parse_tariff_datetime_and_formatting() -> None:
@@ -283,10 +357,10 @@ def test_parse_tariff_datetime_and_formatting() -> None:
 
 
 async def test_current_price_breakdown_sensors(
-    hass: HomeAssistant, essent_api_response: dict
+    hass: HomeAssistant,
 ) -> None:
     """Current price breakdown sensors are disabled by default and return values when enabled."""
-    entry = await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass)
     ent_reg = er.async_get(hass)
 
     breakdown_unique_ids = (

@@ -22,15 +22,6 @@ async def set_time_zone(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def disable_coordinator_schedules(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Disable scheduler callbacks during tests (opt-in via usefixtures)."""
-    monkeypatch.setattr(
-        "homeassistant.components.essent.coordinator.EssentDataUpdateCoordinator.start_listener_schedule",
-        lambda self: None,
-    )
-
-
-@pytest.fixture
 def essent_api_response() -> dict[str, Any]:
     """Combined response helper for full integration tests."""
     return load_json_object_fixture("essent_api_response.json", "essent")
@@ -90,8 +81,17 @@ async def essent_normalized_data(
     return await client.async_get_prices()
 
 
+@pytest.fixture
+async def partial_gas_normalized_data(
+    partial_gas_api_response: dict[str, Any],
+) -> EssentPrices:
+    """Normalize the gas sample that lacks tariffs for tomorrow."""
+    client = EssentClient(_MockSession(partial_gas_api_response))
+    return await client.async_get_prices()
+
+
 @pytest.fixture(autouse=True)
-def patch_essent_client(essent_normalized_data: dict[str, Any]) -> Generator:
+def patch_essent_client(essent_normalized_data: EssentPrices) -> Generator:
     """Patch EssentClient to avoid real HTTP during tests."""
     mock_client = AsyncMock()
     mock_client.async_get_prices.return_value = essent_normalized_data
@@ -104,7 +104,8 @@ def patch_essent_client(essent_normalized_data: dict[str, Any]) -> Generator:
 
 async def setup_integration(
     hass: HomeAssistant,
-    response: dict[str, Any],
+    *,
+    pref_disable_polling: bool = False,
 ) -> MockConfigEntry:
     """Set up the Essent integration for testing."""
     entry = MockConfigEntry(
@@ -112,6 +113,7 @@ async def setup_integration(
         title="Essent",
         data={},
         unique_id=DOMAIN,
+        pref_disable_polling=pref_disable_polling,
     )
     entry.add_to_hass(hass)
 

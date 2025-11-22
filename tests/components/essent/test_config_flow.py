@@ -18,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("disable_coordinator_schedules")
-
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we can create an entry."""
