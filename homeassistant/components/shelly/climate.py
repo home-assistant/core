@@ -51,10 +51,8 @@ from .entity import (
 )
 from .utils import (
     async_remove_shelly_entity,
-    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_rpc_channel_name,
     get_rpc_key_by_role,
     get_rpc_key_id,
     get_rpc_key_ids,
@@ -442,7 +440,7 @@ class BlockSleepingClimate(
         elif entry is not None:
             self._unique_id = entry.unique_id
         self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
-        self._attr_name = get_block_channel_name(self.coordinator.device, sensor_block)
+        self._attr_name = None  # Main device entity
 
         self._channel = cast(int, self._unique_id.split("_")[1])
 
@@ -697,7 +695,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         """Initialize."""
         key = f"thermostat:{id_}"
         super().__init__(coordinator, key)
-        self._attr_name = get_rpc_channel_name(coordinator.device, key)
+        self._attr_name = None  # Main device entity
         self._id = id_
         self._thermostat_type = coordinator.device.config[key].get("type", "heating")
         if self._thermostat_type == "cooling":
@@ -775,7 +773,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         """Initialize."""
         key = f"{BLU_TRV_IDENTIFIER}:{id_}"
         super().__init__(coordinator, key)
-        self._attr_name = get_rpc_channel_name(coordinator.device, key)
+        self._attr_name = None  # Main device entity
         self._id = id_
         self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]
