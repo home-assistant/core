@@ -119,5 +119,71 @@ async def test_migrate_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4  # Updated to latest version
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+async def test_migrate_entry_customer_id(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+) -> None:
+    """Test migration of entry without customer_info to add fallback."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Amazon Test Account",
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_LOGIN_DATA: {
+                "session": "test-session",
+                CONF_SITE: "https://www.amazon.com",
+                # customer_info is missing (simulating old entry)
+            },
+        },
+        unique_id=TEST_USERNAME,
+        version=1,
+        minor_version=3,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 4
+    assert "customer_info" in config_entry.data[CONF_LOGIN_DATA]
+    assert config_entry.data[CONF_LOGIN_DATA]["customer_info"]["user_id"] is not None
+
+
+async def test_migrate_entry_preserves_existing_customer_id(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+) -> None:
+    """Test migration preserves existing customer_info if present."""
+    existing_user_id = "existing_user_123"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Amazon Test Account",
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_LOGIN_DATA: {
+                "session": "test-session",
+                CONF_SITE: "https://www.amazon.com",
+                "customer_info": {
+                    "user_id": existing_user_id,
+                },
+            },
+        },
+        unique_id=TEST_USERNAME,
+        version=1,
+        minor_version=3,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+    # Should preserve the existing customer_info
+    assert config_entry.data[CONF_LOGIN_DATA]["customer_info"]["user_id"] == existing_user_id

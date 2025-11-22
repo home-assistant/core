@@ -20,6 +20,7 @@ from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_LOGIN_DATA, DOMAIN
+from .utils import get_fallback_user_id
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     {
@@ -45,7 +46,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_PASSWORD],
     )
 
-    return await api.login_mode_interactive(data[CONF_CODE])
+    result = await api.login_mode_interactive(data[CONF_CODE])
+    
+    # Check if customer_info is missing or incomplete
+    if not result.get("customer_info") or not result["customer_info"].get("user_id"):
+        fallback_user_id = get_fallback_user_id(
+            data[CONF_USERNAME], 
+            data.get(CONF_LOGIN_DATA)
+        )
+        result["customer_info"] = {"user_id": fallback_user_id}
+        _LOGGER.warning(
+            "Customer info not available from API, using fallback user ID: %s", 
+            fallback_user_id
+        )
+    
+    return result
 
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
