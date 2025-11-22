@@ -451,7 +451,10 @@ async def async_service_temperature_set(
             translation_key="missing_target_temperature_entity_feature",
         )
     if (
-        ATTR_TARGET_TEMP_LOW in service_call.data
+        (
+            ATTR_TARGET_TEMP_LOW in service_call.data
+            or ATTR_TARGET_TEMP_HIGH in service_call.data
+        )
         and not entity.supported_features
         & WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
     ):

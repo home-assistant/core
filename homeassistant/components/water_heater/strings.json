@@ -77,18 +77,6 @@
         "operation_mode": {
           "description": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::description%]",
           "name": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::name%]"
-        },
-        "target_temp_high": {
-          "description": "The max temperature setpoint.",
-          "name": "Upper target temperature"
-        },
-        "target_temp_low": {
-          "description": "The min temperature setpoint.",
-          "name": "Lower target temperature"
-        },
-        "temperature": {
-          "description": "New target temperature for the water heater.",
-          "name": "Temperature"
         }
       },
       "name": "Set operation mode"
@@ -99,6 +87,14 @@
         "operation_mode": {
           "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation.",
           "name": "Operation mode"
+        },
+        "target_temp_high": {
+          "description": "The max temperature setpoint.",
+          "name": "Upper target temperature"
+        },
+        "target_temp_low": {
+          "description": "The min temperature setpoint.",
+          "name": "Lower target temperature"
         },
         "temperature": {
           "description": "New target temperature for the water heater.",
