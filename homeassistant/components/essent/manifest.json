@@ -10,7 +10,7 @@
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
   "requirements": [
-    "essent-dynamic-pricing==0.2.1"
+    "essent-dynamic-pricing==0.2.3"
   ],
   "single_config_entry": true
 }
