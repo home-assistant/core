@@ -231,7 +231,7 @@ class StreamMuxer:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = container.add_stream_from_template(template=input_astream)
+            output_astream = container.add_stream_from_template(input_astream)
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
