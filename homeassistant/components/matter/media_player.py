@@ -92,10 +92,13 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
             clusters.LevelControl.Attributes.CurrentLevel
         )
         LOGGER.debug(
-            "matter_volume: %f for %s",
+            "matter_volume: %s for %s",
             matter_volume,
             self.entity_id,
         )
+        if matter_volume is None:
+            # Attribute unavailable, cannot determine volume state
+            return
         if matter_volume == 0:
             self._attr_is_volume_muted = True
         # Convert Matter CurrentLevel (0-254) to HA volume level (0-1)
