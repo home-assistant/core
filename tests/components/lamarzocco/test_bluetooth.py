@@ -348,7 +348,7 @@ async def test_setup_through_bluetooth_only(
 
 
 @pytest.mark.parametrize(
-    ("ble_device", "has_client"),
+    ("mock_ble_device", "has_client"),
     [
         (None, False),
         (
@@ -366,8 +366,9 @@ async def test_bluetooth_is_set_from_discovery(
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
-    ble_device: BLEDevice | None,
+    mock_ble_device: BLEDevice | None,
     has_client: bool,
+    mock_ble_device_from_address: MagicMock,
 ) -> None:
     """Check we can fill a device from discovery info."""
     service_info = get_bluetooth_service_info(
@@ -382,10 +383,6 @@ async def test_bluetooth_is_set_from_discovery(
         patch(
             "homeassistant.components.lamarzocco.LaMarzoccoMachine"
         ) as mock_machine_class,
-        patch(
-            "homeassistant.components.lamarzocco.async_ble_device_from_address",
-            return_value=ble_device,
-        ),
     ):
         mock_machine_class.return_value = mock_lamarzocco
         await async_init_integration(hass, mock_config_entry)
