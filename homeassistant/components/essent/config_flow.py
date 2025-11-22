@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from essent_dynamic_pricing import (
@@ -15,6 +16,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,6 +39,7 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
         except EssentDataError:
             errors["base"] = "invalid_data"
         except Exception:  # noqa: BLE001
+            _LOGGER.exception("Unexpected error while validating the connection")
             errors["base"] = "unknown"
 
         if errors:
