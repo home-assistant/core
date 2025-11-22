@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import astuple, dataclass
+from dataclasses import asdict, astuple, dataclass
 import logging
 import string
 from typing import Any, cast
@@ -64,9 +64,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
     entityfilter,
     state as state_helper,
+)
+from homeassistant.helpers.area_registry import (
+    EVENT_AREA_REGISTRY_UPDATED,
+    EventAreaRegistryUpdatedData,
 )
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
@@ -140,6 +147,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
@@ -147,6 +158,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component_config,
         override_metric,
         default_metric,
+        area_registry,
+        device_registry,
+        entity_registry,
     )
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
@@ -154,6 +168,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_ENTITY_REGISTRY_UPDATED,
         metrics.handle_entity_registry_updated,
     )
+    hass.bus.listen(EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated)
 
     for state in hass.states.all():
         if entity_filter(state.entity_id):
@@ -178,6 +193,15 @@ class MetricNameWithLabelValues:
     label_values: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class AreaInfo:
+    """Class containing area information, to be cached."""
+
+    area_id: str
+    area_name: str | None = None
+    area_normalized_name: str | None = None
+
+
 class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
@@ -189,6 +213,9 @@ class PrometheusMetrics:
         component_config: EntityValues,
         override_metric: str | None,
         default_metric: str | None,
+        area_registry: ar.AreaRegistry,
+        device_registry: dr.DeviceRegistry,
+        entity_registry: er.EntityRegistry,
     ) -> None:
         """Initialize Prometheus Metrics."""
         self._component_config = component_config
@@ -215,6 +242,18 @@ class PrometheusMetrics:
             defaultdict(set)
         )
         self._climate_units = climate_units
+
+        self.area_registry = area_registry
+        self.area_cache: dict[str, AreaInfo] = {}
+        for area in area_registry.async_list_areas():
+            self.area_cache[area.id] = AreaInfo(
+                area.id, area.name, area.normalized_name
+            )
+
+        self.device_registry = device_registry
+        self.entity_registry = entity_registry
+        # Populated on-demand, invalidated in handle_entity_registry_updated
+        self.entity_area_cache: dict[str, str | None] = {}
 
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
@@ -295,8 +334,41 @@ class PrometheusMetrics:
             elif "disabled_by" in changes:
                 metrics_entity_id = entity_id
 
+            if entity_id and "area_id" in changes:
+                _LOGGER.debug(
+                    "Entity %s got a new area: %s. Invalidating entity->area cache",
+                    entity_id,
+                    changes["area_id"],
+                )
+                del self.entity_area_cache[entity_id]
+
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
+
+    def handle_area_registry_updated(
+        self, event: Event[EventAreaRegistryUpdatedData]
+    ) -> None:
+        """Listen for changes to areas and update the cache."""
+
+        area_id = event.data["area_id"]
+        action = event.data["action"]
+
+        _LOGGER.debug("Handling area update for %s (%s)", area_id, action)
+
+        if action == "remove":
+            del self.area_cache[area_id]
+            return
+
+        area = self.area_registry.async_get_area(area_id)
+        if area is None:
+            _LOGGER.error(
+                "Got area event %s for %s, but it is not found in AreaRegistry",
+                action,
+                area_id,
+            )
+            return
+
+        self.area_cache[area.id] = AreaInfo(area.id, area.name, area.normalized_name)
 
     def _remove_labelsets(
         self,
@@ -384,24 +456,88 @@ class PrometheusMetrics:
             value = None
         return value
 
-    @staticmethod
     def _labels(
+        self,
         state: State,
         extra_labels: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         if extra_labels is None:
             extra_labels = {}
+
         labels = {
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            # Have to set the keys, because a metric cannot have variable labels
+            "area_id": "",
+            "area_name": "",
+            "area_normalized_name": "",
         }
+
+        labels.update(**self._make_area_labels(state.entity_id))
+
         if not labels.keys().isdisjoint(extra_labels.keys()):
             conflicting_keys = labels.keys() & extra_labels.keys()
             raise ValueError(
                 f"extra_labels contains conflicting keys: {conflicting_keys}"
             )
+
         return labels | extra_labels
+
+    def _make_area_labels(self, entity_id: str) -> dict[str, str]:
+        defaults = {
+            # Have to set the keys, because a metric cannot have variable labels
+            "area_id": "",
+            "area_name": "",
+            "area_normalized_name": "",
+        }
+
+        if entity_id not in self.entity_area_cache:
+            entity = self.entity_registry.async_get(entity_id)
+            if entity is None:
+                _LOGGER.error("Cannot find RegistryEntry for entity %s", entity_id)
+                return defaults
+
+            if entity.area_id is None and entity.device_id is not None:
+                _LOGGER.debug(
+                    "Entity has no area, but has device, looking up device's area"
+                )
+                device = self.device_registry.async_get(entity.device_id)
+                if device is None:
+                    _LOGGER.error(
+                        "Cannot find device for entity %s (device id=%s)",
+                        entity_id,
+                        entity.device_id,
+                    )
+                    return defaults
+
+                _LOGGER.debug(
+                    "Caching area for entity: %s -> %s", entity_id, device.area_id
+                )
+                self.entity_area_cache[entity_id] = device.area_id
+            else:
+                _LOGGER.debug(
+                    "Caching area for entity: %s -> %s", entity_id, entity.area_id
+                )
+                self.entity_area_cache[entity_id] = entity.area_id
+
+        entity_area_id = self.entity_area_cache[entity_id]
+        if entity_area_id is None:
+            _LOGGER.debug("No area for entity %s", entity_id)
+            return defaults
+
+        if entity_area_id not in self.area_cache:
+            area = self.area_registry.async_get_area(entity_area_id)
+            if area is None:
+                _LOGGER.error("Cannot find area %s in AreaRegistry", entity_area_id)
+                return defaults
+            self.area_cache[area.id] = AreaInfo(
+                area.id, area.name, area.normalized_name
+            )
+
+        area_info = self.area_cache[entity_area_id]
+
+        return asdict(area_info)
 
     def _battery(self, state: State) -> None:
         if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is None:
