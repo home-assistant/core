@@ -1,7 +1,9 @@
 """Test initialization of lamarzocco."""
 
-from unittest.mock import AsyncMock, MagicMock
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
@@ -25,7 +27,7 @@ from homeassistant.helpers import (
 
 from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -273,3 +275,33 @@ async def test_device(
     device = device_registry.async_get(entry.device_id)
     assert device
     assert device == snapshot
+
+
+async def test_websocket_reconnects_after_termination(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    websocket_terminated: PropertyMock,
+) -> None:
+    """Test the websocket reconnects after background task terminates."""
+    # Setup: websocket connected initially
+    mock_websocket = MagicMock()
+    mock_websocket.closed = False
+    mock_lamarzocco.websocket = WebSocketDetails(mock_websocket, None)
+
+    await async_init_integration(hass, mock_config_entry)
+
+    # Verify initial websocket connection was attempted
+    assert mock_lamarzocco.connect_dashboard_websocket.call_count == 1
+
+    # Simulate websocket disconnection (e.g., after internet outage)
+    mock_websocket.closed = True
+
+    # Trigger the coordinator's update (which runs every 60 seconds)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify websocket reconnection was attempted
+    assert mock_lamarzocco.connect_dashboard_websocket.call_count == 2

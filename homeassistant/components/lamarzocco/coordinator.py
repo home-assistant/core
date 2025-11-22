@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from asyncio import Task
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -54,7 +55,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
-    websocket_terminated = True
     actual_update_success = False
 
     def __init__(
@@ -76,6 +76,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device = device
         self.cloud_client = cloud_client
         self.bluetooth_client = bluetooth_client
+        self._websocket_task: Task | None = None
+
+    @property
+    def websocket_terminated(self) -> bool:
+        """Return True if the websocket task is terminated or not running."""
+        if self._websocket_task is None:
+            return True
+        return self._websocket_task.done()
 
     async def __handle_internal_update(
         self, func: Callable[[], Coroutine[Any, Any, None]]
@@ -139,7 +147,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         # ensure token stays valid; does nothing if token is still valid
         await self.cloud_client.async_get_access_token()
 
-        if self.device.websocket.connected:
+        if self.device.websocket.connected and not self.websocket_terminated:
             return
 
         self.config_entry.async_create_background_task(
@@ -161,7 +169,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         _LOGGER.debug("Init WebSocket in background task")
 
-        self.websocket_terminated = False
         self.async_update_listeners()
 
         await self.device.connect_dashboard_websocket(
@@ -170,7 +177,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             disconnect_callback=self.async_update_listeners,
         )
 
-        self.websocket_terminated = True
         self.async_update_listeners()
 
 

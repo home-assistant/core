@@ -1,7 +1,7 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import ModelName
@@ -132,6 +132,9 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
             "schedule": machine_mock.schedule.to_dict(),
             "settings": machine_mock.settings.to_dict(),
         }
+        machine_mock.connect_dashboard_websocket = AsyncMock()
+        machine_mock.websocket = MagicMock()
+        machine_mock.websocket.connected = True
         machine_mock.websocket.disconnect = AsyncMock()
         yield machine_mock
 
@@ -217,3 +220,14 @@ def mock_config_entry_bluetooth(
         },
         unique_id=mock_lamarzocco.serial_number,
     )
+
+
+@pytest.fixture
+def mock_websocket_terminated() -> Generator[PropertyMock]:
+    """Mock websocket terminated."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new_callable=PropertyMock,
+    ) as mock_websocket_terminated:
+        mock_websocket_terminated.return_value = False
+        yield mock_websocket_terminated
