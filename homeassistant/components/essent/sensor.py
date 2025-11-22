@@ -61,8 +61,8 @@ def _format_dt_str(value: str | None) -> str | None:
 class EssentSensorEntityDescription(SensorEntityDescription):
     """Describe an Essent sensor."""
 
-    value_fn: Callable[["EssentSensor"], float | None]
-    attrs_fn: Callable[["EssentSensor"], dict[str, Any]] | None = None
+    value_fn: Callable[[EssentData], float | None]
+    attrs_fn: Callable[[EssentData], dict[str, Any]] | None = None
     energy_types: tuple[str, ...] = (ENERGY_TYPE_ELECTRICITY, ENERGY_TYPE_GAS)
     entity_registry_enabled_default: bool = True
 
