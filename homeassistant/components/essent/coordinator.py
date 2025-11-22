@@ -34,10 +34,10 @@ type EssentConfigEntry = ConfigEntry["EssentDataUpdateCoordinator"]
 class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
     """Class to manage fetching Essent data."""
 
-    config_entry: EssentConfigEntry | None
+    config_entry: EssentConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: EssentConfigEntry | None = None
+        self, hass: HomeAssistant, config_entry: EssentConfigEntry
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -74,7 +74,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
         This should be called after the first successful data fetch.
         Schedules will continue running regardless of API success/failure.
         """
-        if self.config_entry and self.config_entry.pref_disable_polling:
+        if self.config_entry.pref_disable_polling:
             _LOGGER.debug("Polling disabled by config entry, not starting schedules")
             return
 
