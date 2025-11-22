@@ -253,9 +253,7 @@ async def test_setup_api_panel(
         "component_name": "custom",
         "icon": None,
         "title": None,
-        "url_path": "hassio",
-        "require_admin": True,
-        "config_panel_domain": None,
+        "default_visible": True,
         "config": {
             "_panel_custom": {
                 "embed_iframe": True,
@@ -264,6 +262,9 @@ async def test_setup_api_panel(
                 "trust_external": False,
             }
         },
+        "url_path": "hassio",
+        "require_admin": True,
+        "config_panel_domain": None,
     }
 
 
