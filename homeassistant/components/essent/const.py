@@ -6,9 +6,6 @@ from datetime import timedelta
 from typing import Final
 
 DOMAIN: Final = "essent"
-API_ENDPOINT: Final = (
-    "https://www.essent.nl/api/public/tariffmanagement/dynamic-prices/v1/"
-)
 UPDATE_INTERVAL: Final = timedelta(hours=1)
 ATTRIBUTION: Final = "Data provided by Essent"
 
