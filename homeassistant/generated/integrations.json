@@ -1387,12 +1387,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "dominos": {
-      "name": "Dominos Pizza",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "doods": {
       "name": "DOODS - Dedicated Open Object Detection Service",
       "integration_type": "hub",
