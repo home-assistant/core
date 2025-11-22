@@ -31,10 +31,38 @@ pytestmark = [
 ]
 
 
+async def _enable_unique_ids(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    ent_reg: er.EntityRegistry,
+    unique_ids: tuple[str, ...],
+) -> None:
+    """Enable disabled entities and reload when needed."""
+    updated = False
+    for unique_id in unique_ids:
+        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
+        assert entity_id is not None
+        reg_entry = ent_reg.async_get(entity_id)
+        assert reg_entry is not None
+        if reg_entry.disabled_by:
+            ent_reg.async_update_entity(entity_id, disabled_by=None)
+            updated = True
+
+    if updated:
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
 async def test_sensor_states(hass: HomeAssistant, essent_api_response: dict) -> None:
     """Test the sensor states and attributes."""
-    await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
     ent_reg = er.async_get(hass)
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        ("essent_electricity_next_price", "essent_gas_next_price"),
+    )
 
     def _state(unique_id: str):
         entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
@@ -75,8 +103,14 @@ async def test_sensor_states_with_different_timezone(
     await hass.async_block_till_done()
     freezer.move_to("2025-11-16 04:30:00-05:00")
 
-    await setup_integration(hass, essent_api_response)
+    entry = await setup_integration(hass, essent_api_response)
     ent_reg = er.async_get(hass)
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        ("essent_electricity_next_price", "essent_gas_next_price"),
+    )
 
     def _state(unique_id: str):
         entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
@@ -104,6 +138,12 @@ async def test_sensor_updates_when_time_moves(
     entry = await setup_integration(hass, essent_api_response)
     ent_reg = er.async_get(hass)
     coordinator = entry.runtime_data
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        ("essent_electricity_next_price", "essent_gas_next_price"),
+    )
 
     # Move within today's tariffs
     freezer.move_to("2025-11-16 11:30:00+01:00")
@@ -144,16 +184,17 @@ async def test_electricity_lowest_price_sensor(
     """Test lowest price sensor for electricity."""
     entry = await setup_integration(hass, essent_api_response)
     ent_reg = er.async_get(hass)
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        ("essent_electricity_lowest_price_today",),
+    )
+
     entity_id = ent_reg.async_get_entity_id(
         "sensor", "essent", "essent_electricity_lowest_price_today"
     )
     assert entity_id is not None
-    reg_entry = ent_reg.async_get(entity_id)
-    assert reg_entry is not None
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
-
     sensor = hass.states.get(entity_id)
     assert sensor is not None
     assert float(sensor.state) == 0.2
@@ -165,16 +206,17 @@ async def test_electricity_highest_price_sensor(
     """Test highest price sensor for electricity."""
     entry = await setup_integration(hass, essent_api_response)
     ent_reg = er.async_get(hass)
+    await _enable_unique_ids(
+        hass,
+        entry,
+        ent_reg,
+        ("essent_electricity_highest_price_today",),
+    )
+
     entity_id = ent_reg.async_get_entity_id(
         "sensor", "essent", "essent_electricity_highest_price_today"
     )
     assert entity_id is not None
-    reg_entry = ent_reg.async_get(entity_id)
-    assert reg_entry is not None
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
-
     sensor = hass.states.get(entity_id)
     assert sensor is not None
     assert float(sensor.state) == 0.25

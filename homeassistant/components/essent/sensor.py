@@ -122,6 +122,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
             if (tariff := _get_next_tariff(entity)) is None
             else tariff.total_amount
         ),
+        entity_registry_enabled_default=False,
     ),
     EssentSensorEntityDescription(
         key="average_today",

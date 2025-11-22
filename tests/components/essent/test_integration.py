@@ -23,6 +23,20 @@ async def test_full_integration_setup(
     entry = await setup_integration(hass, essent_api_response)
     ent_reg = er.async_get(hass)
 
+    updated = False
+    for unique_id in ("essent_electricity_next_price", "essent_gas_next_price"):
+        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
+        assert entity_id is not None
+        reg_entry = ent_reg.async_get(entity_id)
+        assert reg_entry is not None
+        if reg_entry.disabled_by:
+            ent_reg.async_update_entity(entity_id, disabled_by=None)
+            updated = True
+
+    if updated:
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
     assert entry.state == ConfigEntryState.LOADED
 
     def _state(unique_id: str) -> str | None:
