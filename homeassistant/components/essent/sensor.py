@@ -140,7 +140,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Essent sensors."""
-    coordinator: EssentDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     entities: list[EssentSensor] = []
 
     for description in SENSORS:
