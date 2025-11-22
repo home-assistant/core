@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -73,7 +73,7 @@ async def test_api_failure(
     mock_miele_client.send_action.assert_called_once()
 
 
-async def test_wrong_option(
+async def test_invalid_option(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
     setup_platform: MockConfigEntry,
@@ -82,7 +82,7 @@ async def test_wrong_option(
     mock_miele_client.send_action.side_effect = ClientResponseError(Mock(), Mock())
 
     with pytest.raises(
-        HomeAssistantError, match=f'Invalid option: "normal" on {ENTITY_ID}'
+        ServiceValidationError, match=f'Invalid option: "normal" on {ENTITY_ID}'
     ):
         await hass.services.async_call(
             TEST_PLATFORM,
