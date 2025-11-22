@@ -73,7 +73,39 @@ def async_setup_block_attribute_entities(
     assert coordinator.device.blocks
 
     for block in coordinator.device.blocks:
+        # For timer numbers (auto_off/auto_on), create entities for relay blocks
+        # even if not in sensor_ids, since values come from settings["relays"][channel]
+        if block.type == "relay":
+            for timer_attr in ("auto_off", "auto_on"):
+                description = sensors.get((cast(str, block.type), timer_attr))
+                if description is None:
+                    continue
+                # Filter out non-existing sensors
+                if description.models and coordinator.model not in description.models:
+                    continue
+                # Check if entity should be removed
+                if description.removal_condition and description.removal_condition(
+                    coordinator.device.settings, block
+                ):
+                    entity_class = get_block_entity_class(sensor_class, description)
+                    domain = entity_class.__module__.split(".")[-1]
+                    unique_id = entity_class(
+                        coordinator, block, timer_attr, description
+                    ).unique_id
+                    LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
+                    async_remove_shelly_entity(hass, domain, unique_id)
+                else:
+                    entity_class = get_block_entity_class(sensor_class, description)
+                    entities.append(
+                        entity_class(coordinator, block, timer_attr, description)
+                    )
+
+        # Process other sensors/numbers from sensor_ids
         for sensor_id in block.sensor_ids:
+            # Skip timer numbers as they're handled above
+            if sensor_id in ("auto_off", "auto_on"):
+                continue
+
             description = sensors.get((cast(str, block.type), sensor_id))
             if description is None:
                 continue
@@ -90,15 +122,17 @@ def async_setup_block_attribute_entities(
             if description.removal_condition and description.removal_condition(
                 coordinator.device.settings, block
             ):
-                domain = sensor_class.__module__.split(".")[-1]
-                unique_id = sensor_class(
+                entity_class = get_block_entity_class(sensor_class, description)
+                domain = entity_class.__module__.split(".")[-1]
+                unique_id = entity_class(
                     coordinator, block, sensor_id, description
                 ).unique_id
                 LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
+                entity_class = get_block_entity_class(sensor_class, description)
                 entities.append(
-                    sensor_class(coordinator, block, sensor_id, description)
+                    entity_class(coordinator, block, sensor_id, description)
                 )
 
     if not entities:
@@ -132,8 +166,9 @@ def async_restore_block_attribute_entities(
         block_type = entry.unique_id.split("-")[-2].split("_")[0]
 
         if description := sensors.get((block_type, attribute)):
+            entity_class = get_block_entity_class(sensor_class, description)
             entities.append(
-                sensor_class(coordinator, None, attribute, description, entry)
+                entity_class(coordinator, None, attribute, description, entry)
             )
 
     if not entities:
@@ -301,6 +336,7 @@ class BlockEntityDescription(EntityDescription):
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     models: set[str] | None = None
+    entity_class: Callable | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -708,6 +744,16 @@ def get_entity_class(
     sensor_class: Callable, description: RpcEntityDescription
 ) -> Callable:
     """Return entity class."""
+    if description.entity_class is not None:
+        return description.entity_class
+
+    return sensor_class
+
+
+def get_block_entity_class(
+    sensor_class: Callable, description: BlockEntityDescription
+) -> Callable:
+    """Return entity class for Block entities."""
     if description.entity_class is not None:
         return description.entity_class
 

@@ -328,6 +328,18 @@
       "apparent_power_with_channel_name": {
         "name": "{channel_name} apparent power"
       },
+      "auto_off": {
+        "name": "Auto-off"
+      },
+      "auto_off_with_channel_name": {
+        "name": "{channel_name} auto-off"
+      },
+      "auto_on": {
+        "name": "Auto-on"
+      },
+      "auto_on_with_channel_name": {
+        "name": "{channel_name} auto-on"
+      },
       "average_temperature": {
         "name": "Average temperature"
       },
@@ -507,6 +519,18 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "timer_duration": {
+        "name": "Timer duration"
+      },
+      "timer_duration_with_channel_name": {
+        "name": "{channel_name} timer duration"
+      },
+      "timer_remaining": {
+        "name": "Timer remaining"
+      },
+      "timer_remaining_with_channel_name": {
+        "name": "{channel_name} timer remaining"
       },
       "valve_position": {
         "name": "Valve position"

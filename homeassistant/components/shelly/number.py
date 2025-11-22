@@ -19,7 +19,12 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,14 +49,19 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    get_block_entity_class,
     rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_entity_translation_attributes,
     get_virtual_component_ids,
     get_virtual_component_unit,
+    is_block_exclude_from_relay,
+    is_rpc_exclude_from_relay,
     is_view_for_platform,
 )
 
@@ -181,6 +191,173 @@ class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
         self.async_write_ha_state()
 
 
+class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
+    """Represent a block sleeping number."""
+
+    entity_description: BlockNumberDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block | None,
+        attribute: str,
+        description: BlockNumberDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        self.restored_data: NumberExtraStoredData | None = None
+        super().__init__(coordinator, block, attribute, description, entry)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.restored_data = await self.async_get_last_number_data()
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        if self.block is not None:
+            return cast(float, self.attribute_value)
+
+        if self.restored_data is None:
+            return None
+
+        return cast(float, self.restored_data.native_value)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set value."""
+        # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
+        await self._set_state_full_path(
+            self.entity_description.rest_path,
+            {self.entity_description.rest_arg: value},
+        )
+        self.async_write_ha_state()
+
+    async def _set_state_full_path(self, path: str, params: Any) -> Any:
+        """Set block state (HTTP request)."""
+        LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
+        try:
+            return await self.coordinator.device.http_request("get", path, params)
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+
+
+class BlockRelayTimerNumber(BlockSleepingNumber):
+    """Represent a Block relay timer configuration number."""
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block | None,
+        attribute: str,
+        description: BlockNumberDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize timer number."""
+        # Call parent __init__ which sets _attr_name, then we'll delete it and use translation keys
+        # This allows proper initialization of all parent classes
+        super().__init__(coordinator, block, attribute, description, entry)
+
+        # Delete _attr_name set by parent and use translation keys instead
+        # Translation keys support internationalization and channel name placeholders
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
+
+        # Set up translation key with channel name support
+        if block is not None:
+            channel_name = get_block_channel_name(coordinator.device, block)
+            translation_placeholders, translation_key = (
+                get_entity_translation_attributes(
+                    channel_name,
+                    description.translation_key,
+                    None,  # No device_class for numbers
+                    False,
+                )
+            )
+            if translation_placeholders:
+                self._attr_translation_placeholders = translation_placeholders
+            if translation_key:
+                self._attr_translation_key = translation_key
+            elif description.translation_key:
+                self._attr_translation_key = description.translation_key
+
+            # Ensure has_entity_name is set for proper naming
+            self._attr_has_entity_name = True
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Return the suggested object ID for entity ID generation."""
+        # Use description.translation_key directly to avoid _with_channel_name suffix
+        # The default would use _attr_translation_key ("auto_off_with_channel_name")
+        # which translates to "{channel_name} auto-off", creating redundant entity IDs
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.translation_key
+        ):
+            return self.entity_description.translation_key
+        return super().suggested_object_id
+
+    @property
+    def native_value(self) -> float | None:
+        """Return timer value."""
+        if self.block is not None:
+            relay_settings = self.coordinator.device.settings.get("relays", [])
+            if isinstance(relay_settings, list) and self.block.channel is not None:
+                channel_settings = relay_settings[int(self.block.channel)]
+                timer_value = channel_settings.get(self.attribute, 0)
+                return cast(float, timer_value) if timer_value > 0 else None
+
+        if self.restored_data is None:
+            return None
+
+        return cast(float, self.restored_data.native_value)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set timer value."""
+        if self.block is None or self.block.channel is None:
+            return
+
+        channel = int(self.block.channel)
+        await self.coordinator.device.http_request(
+            "get",
+            f"settings/relay/{channel}",
+            {self.attribute: int(value)},
+        )
+        self.async_write_ha_state()
+
+
+class RpcSwitchTimerNumber(RpcNumber):
+    """Represent a RPC switch timer configuration number."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return timer value."""
+        # Read from config, not status
+        timer_value = self.coordinator.device.config[self.key].get(self.attribute, 0)
+        return cast(float, timer_value) if timer_value > 0 else None
+
+    @rpc_call
+    async def async_set_native_value(self, value: float) -> None:
+        """Set timer value."""
+        await self.coordinator.device.call_rpc(
+            "Switch.SetConfig",
+            {"id": self._id, self.attribute: int(value)},
+        )
+
+
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
@@ -194,6 +371,30 @@ NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
         mode=NumberMode.SLIDER,
         rest_path="thermostat/0",
         rest_arg="pos",
+    ),
+    ("relay", "auto_off"): BlockNumberDescription(
+        key="relay|auto_off",
+        translation_key="auto_off",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=86400,
+        native_step=1,
+        mode=NumberMode.BOX,
+        removal_condition=is_block_exclude_from_relay,
+        entity_class=BlockRelayTimerNumber,
+    ),
+    ("relay", "auto_on"): BlockNumberDescription(
+        key="relay|auto_on",
+        translation_key="auto_on",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=86400,
+        native_step=1,
+        mode=NumberMode.BOX,
+        removal_condition=is_block_exclude_from_relay,
+        entity_class=BlockRelayTimerNumber,
     ),
 }
 
@@ -333,6 +534,34 @@ RPC_NUMBERS: Final = {
         and right.get("vial", {}).get("level", -1) != -1,
         entity_class=RpcCuryIntensityNumber,
     ),
+    "auto_off": RpcNumberDescription(
+        key="switch",
+        sub_key="auto_off",
+        translation_key="auto_off",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=86400,
+        native_step=1,
+        mode=NumberMode.BOX,
+        removal_condition=is_rpc_exclude_from_relay,
+        method="switch_set_config",  # Not used, overridden in entity_class
+        entity_class=RpcSwitchTimerNumber,
+    ),
+    "auto_on": RpcNumberDescription(
+        key="switch",
+        sub_key="auto_on",
+        translation_key="auto_on",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=86400,
+        native_step=1,
+        mode=NumberMode.BOX,
+        removal_condition=is_rpc_exclude_from_relay,
+        method="switch_set_config",  # Not used, overridden in entity_class
+        entity_class=RpcSwitchTimerNumber,
+    ),
 }
 
 
@@ -349,6 +578,52 @@ async def async_setup_entry(
 
 
 @callback
+def _async_setup_block_timer_numbers(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up timer number entities for BLOCK device."""
+    coordinator = config_entry.runtime_data.block
+    assert coordinator
+
+    if not coordinator.device.initialized:
+        return
+
+    entities = []
+    assert coordinator.device.blocks
+
+    for block in coordinator.device.blocks:
+        if block.type != "relay":
+            continue
+
+        # Add auto_off timer number if available
+        auto_off_desc = NUMBERS.get(("relay", "auto_off"))
+        if auto_off_desc is not None:
+            # Check if entity should be removed
+            if auto_off_desc.removal_condition and auto_off_desc.removal_condition(
+                coordinator.device.settings, block
+            ):
+                continue
+            entity_class = get_block_entity_class(BlockSleepingNumber, auto_off_desc)
+            entities.append(entity_class(coordinator, block, "auto_off", auto_off_desc))
+
+        # Add auto_on timer number if available
+        auto_on_desc = NUMBERS.get(("relay", "auto_on"))
+        if auto_on_desc is not None:
+            # Check if entity should be removed
+            if auto_on_desc.removal_condition and auto_on_desc.removal_condition(
+                coordinator.device.settings, block
+            ):
+                continue
+            entity_class = get_block_entity_class(BlockSleepingNumber, auto_on_desc)
+            entities.append(entity_class(coordinator, block, "auto_on", auto_on_desc))
+
+    if entities:
+        async_add_entities(entities)
+
+
+@callback
 def _async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
@@ -356,6 +631,16 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
+        async_setup_entry_attribute_entities(
+            hass,
+            config_entry,
+            async_add_entities,
+            NUMBERS,
+            BlockSleepingNumber,
+        )
+    else:
+        # For non-sleeping devices, set up timer numbers through normal mechanism
+        # This ensures proper entity naming and translation key handling
         async_setup_entry_attribute_entities(
             hass,
             config_entry,
@@ -392,67 +677,3 @@ def _async_setup_rpc_entry(
         virtual_number_ids,
         "number",
     )
-
-
-class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
-    """Represent a block sleeping number."""
-
-    entity_description: BlockNumberDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyBlockCoordinator,
-        block: Block | None,
-        attribute: str,
-        description: BlockNumberDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        self.restored_data: NumberExtraStoredData | None = None
-        super().__init__(coordinator, block, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.restored_data = await self.async_get_last_number_data()
-
-    @property
-    def native_value(self) -> float | None:
-        """Return value of number."""
-        if self.block is not None:
-            return cast(float, self.attribute_value)
-
-        if self.restored_data is None:
-            return None
-
-        return cast(float, self.restored_data.native_value)
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set value."""
-        # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
-        await self._set_state_full_path(
-            self.entity_description.rest_path,
-            {self.entity_description.rest_arg: value},
-        )
-        self.async_write_ha_state()
-
-    async def _set_state_full_path(self, path: str, params: Any) -> Any:
-        """Set block state (HTTP request)."""
-        LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
-        try:
-            return await self.coordinator.device.http_request("get", path, params)
-        except DeviceConnectionError as err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except InvalidAuthError:
-            await self.coordinator.async_shutdown_device_and_start_reauth()

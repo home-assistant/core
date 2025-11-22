@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from datetime import datetime, timedelta
+import time
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -37,10 +39,12 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -56,10 +60,12 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    get_entity_block_device_info,
     get_entity_rpc_device_info,
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
@@ -213,6 +219,280 @@ class RpcBluTrvSensor(RpcSensor):
         self._attr_device_info = get_blu_trv_device_info(
             coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
+
+
+def _format_duration(seconds: int | None) -> str | None:
+    """Format seconds as HH:MM:SS."""
+    if seconds is None:
+        return None
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
+class BlockRelayTimerSensor(CoordinatorEntity[ShellyBlockCoordinator], SensorEntity):
+    """Represent a Block relay timer sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockSensorDescription,
+    ) -> None:
+        """Initialize timer sensor."""
+        super().__init__(coordinator)
+        self.block = block
+        self.attribute = attribute
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.mac}-{block.description}-{attribute}"
+        self._update_unsub: CALLBACK_TYPE | None = None
+        self._attr_device_info = get_entity_block_device_info(coordinator, block)
+
+        # Set up translation key with channel name support
+        channel_name = get_block_channel_name(coordinator.device, block)
+        translation_placeholders, translation_key = get_entity_translation_attributes(
+            channel_name,
+            description.translation_key,
+            description.device_class,
+            False,
+        )
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
+        if translation_key:
+            self._attr_translation_key = translation_key
+        elif description.translation_key:
+            self._attr_translation_key = description.translation_key
+
+        # Override device_class, state_class, and unit to allow formatted string display
+        self._attr_device_class = None
+        self._attr_state_class = None
+        self._attr_native_unit_of_measurement = None
+
+    def _get_raw_timer_value(self) -> int | None:
+        """Get raw timer value in seconds."""
+        # Timer data comes from REST status endpoint
+        relay_status = self.coordinator.device.status.get("relay", {})
+        if isinstance(relay_status, list) and self.block.channel is not None:
+            channel_status = relay_status[int(self.block.channel)]
+        elif isinstance(relay_status, dict):
+            channel_status = relay_status.get(str(self.block.channel), {})
+        else:
+            return None
+
+        timer_value = channel_status.get(self.attribute)
+        if timer_value is None or timer_value == 0:
+            return None
+
+        return int(timer_value)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return timer value as formatted HH:MM:SS string."""
+        raw_value = self._get_raw_timer_value()
+        if raw_value is None:
+            return None
+        # Return formatted string for display
+        return _format_duration(raw_value)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes with raw seconds."""
+        raw_value = self._get_raw_timer_value()
+        if raw_value is None:
+            return {}
+        return {"seconds": raw_value}
+
+    # pylint: disable-next=hass-missing-super-call
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
+        self.async_on_remove(self._cancel_update_interval)
+        self._check_and_schedule_updates()
+
+    @callback
+    def _cancel_update_interval(self) -> None:
+        """Cancel the update interval subscription."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+
+    @callback
+    def _update_timer_state(self, _: datetime) -> None:
+        """Update timer state every second."""
+        self.async_write_ha_state()
+
+    @callback
+    def _check_and_schedule_updates(self) -> None:
+        """Check timer state and schedule/cancel per-second updates."""
+        timer_active = self._get_raw_timer_value() is not None
+
+        if timer_active and self._update_unsub is None:
+            # Timer is active, start per-second updates
+            self._update_unsub = async_track_time_interval(
+                self.hass,
+                self._update_timer_state,
+                timedelta(seconds=1),
+            )
+        elif not timer_active and self._update_unsub is not None:
+            # Timer stopped, cancel updates
+            self._cancel_update_interval()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Handle device update."""
+        self._check_and_schedule_updates()
+        self.async_write_ha_state()
+
+
+class RpcSwitchTimerSensor(ShellyRpcAttributeEntity, SensorEntity):
+    """Represent a RPC switch timer sensor."""
+
+    entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize timer sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_unique_id = f"{coordinator.mac}-{key}-{attribute}"
+        self._time_offset: float = 0.0
+        self._last_timer_started_at: float | None = None
+        self._update_unsub: CALLBACK_TYPE | None = None
+
+        # Set up translation key with channel name support
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
+
+        translation_placeholders, translation_key = get_entity_translation_attributes(
+            get_rpc_channel_name(coordinator.device, key),
+            description.translation_key,
+            description.device_class,
+            False,
+        )
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
+        if translation_key:
+            self._attr_translation_key = translation_key
+        elif description.translation_key:
+            self._attr_translation_key = description.translation_key
+
+        # Override device_class, state_class, and unit to allow formatted string display
+        self._attr_device_class = None
+        self._attr_state_class = None
+        self._attr_native_unit_of_measurement = None
+
+    def _get_raw_timer_value(self) -> int | None:
+        """Get raw timer value in seconds."""
+        if self.attribute == "timer_remaining":
+            # Calculate timer_remaining from timer_started_at and timer_duration
+            timer_started_at = self.status.get("timer_started_at")
+            timer_duration = self.status.get("timer_duration")
+
+            # Handle time offset tracking
+            if timer_started_at is not None and timer_started_at > 0:
+                if self._last_timer_started_at is None:
+                    # Timer just started: calculate time offset
+                    self._time_offset = timer_started_at - time.time()
+                    self._last_timer_started_at = timer_started_at
+                else:
+                    # Timer still active: update last seen value
+                    self._last_timer_started_at = timer_started_at
+            elif self._last_timer_started_at is not None:
+                # Timer just stopped: reset offset
+                self._time_offset = 0.0
+                self._last_timer_started_at = None
+
+            # Calculate remaining time
+            if (
+                timer_started_at is None
+                or timer_started_at == 0
+                or timer_duration is None
+            ):
+                return None
+
+            # Use offset-adjusted current time to match device's time reference
+            current_time = time.time()
+            device_current_time = current_time + self._time_offset
+            elapsed = device_current_time - timer_started_at
+            timer_remaining = timer_duration - elapsed
+
+            if timer_remaining <= 0:
+                return None
+
+            return int(timer_remaining)
+
+        # For timer_duration, read directly from status
+        timer_value = self.status.get(self.attribute)
+        if timer_value is None or timer_value == 0:
+            return None
+
+        return int(timer_value)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return timer value as formatted HH:MM:SS string."""
+        raw_value = self._get_raw_timer_value()
+        if raw_value is None:
+            return None
+        # Return formatted string for display
+        return _format_duration(raw_value)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes with raw seconds."""
+        raw_value = self._get_raw_timer_value()
+        if raw_value is None:
+            return {}
+        return {"seconds": raw_value}
+
+    # pylint: disable-next=hass-missing-super-call
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
+        self.async_on_remove(self._cancel_update_interval)
+        self._check_and_schedule_updates()
+
+    @callback
+    def _cancel_update_interval(self) -> None:
+        """Cancel the update interval subscription."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+
+    @callback
+    def _update_timer_state(self, _: datetime) -> None:
+        """Update timer state every second."""
+        self.async_write_ha_state()
+
+    @callback
+    def _check_and_schedule_updates(self) -> None:
+        """Check timer state and schedule/cancel per-second updates."""
+        timer_active = self._get_raw_timer_value() is not None
+
+        if timer_active and self._update_unsub is None:
+            # Timer is active, start per-second updates
+            self._update_unsub = async_track_time_interval(
+                self.hass,
+                self._update_timer_state,
+                timedelta(seconds=1),
+            )
+        elif not timer_active and self._update_unsub is not None:
+            # Timer stopped, cancel updates
+            self._cancel_update_interval()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Handle device update."""
+        self._check_and_schedule_updates()
+        self.async_write_ha_state()
 
 
 SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -1730,6 +2010,32 @@ RPC_SENSORS: Final = {
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
     ),
+    "timer_remaining": RpcSensorDescription(
+        key="switch",
+        sub_key="timer_remaining",
+        translation_key="timer_remaining",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda status, _: status if status and status > 0 else None,
+        supported=lambda status: True,
+        entity_class=RpcSwitchTimerSensor,
+    ),
+    "timer_duration": RpcSensorDescription(
+        key="switch",
+        sub_key="timer_duration",
+        translation_key="timer_duration",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda status, _: status if status and status > 0 else None,
+        supported=lambda status: True,
+        entity_class=RpcSwitchTimerSensor,
+    ),
 }
 
 
@@ -1743,6 +2049,66 @@ async def async_setup_entry(
         return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return _async_setup_block_entry(hass, config_entry, async_add_entities)
+
+
+@callback
+def _async_setup_block_timer_sensors(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up timer sensor entities for BLOCK device."""
+    coordinator = config_entry.runtime_data.block
+    assert coordinator
+
+    if not coordinator.device.initialized:
+        return
+
+    entities = []
+    assert coordinator.device.blocks
+
+    for block in coordinator.device.blocks:
+        if block.type != "relay":
+            continue
+
+        # Add timer_remaining sensor
+        entities.append(
+            BlockRelayTimerSensor(
+                coordinator,
+                block,
+                "timer_remaining",
+                BlockSensorDescription(
+                    key="relay|timer_remaining",
+                    translation_key="timer_remaining",
+                    native_unit_of_measurement=UnitOfTime.SECONDS,
+                    device_class=SensorDeviceClass.DURATION,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    entity_registry_enabled_default=False,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                ),
+            )
+        )
+
+        # Add timer_duration sensor
+        entities.append(
+            BlockRelayTimerSensor(
+                coordinator,
+                block,
+                "timer_duration",
+                BlockSensorDescription(
+                    key="relay|timer_duration",
+                    translation_key="timer_duration",
+                    native_unit_of_measurement=UnitOfTime.SECONDS,
+                    device_class=SensorDeviceClass.DURATION,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    entity_registry_enabled_default=False,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                ),
+            )
+        )
+
+    if entities:
+        async_add_entities(entities)
 
 
 @callback
@@ -1771,6 +2137,7 @@ def _async_setup_block_entry(
         async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
         )
+        _async_setup_block_timer_sensors(hass, config_entry, async_add_entities)
 
 
 @callback
