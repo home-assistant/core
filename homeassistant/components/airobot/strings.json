@@ -11,14 +11,12 @@
     "step": {
       "dhcp_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The thermostat password.",
-          "username": "The thermostat Device ID (e.g., T01XXXXXX)."
+          "password": "The thermostat password."
         },
-        "description": "Airobot thermostat discovered at {host}. Enter your credentials to complete setup. Find the Device ID and password in the thermostat settings menu under Connectivity → Mobile app."
+        "description": "Airobot thermostat {device_id} discovered at {host}. Enter the password to complete setup. Find the password in the thermostat settings menu under Connectivity → Mobile app."
       },
       "user": {
         "data": {

@@ -135,12 +135,15 @@ async def test_dhcp_discovery(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "dhcp_confirm"
-    assert result["description_placeholders"] == {"host": "192.168.1.100"}
+    assert result["description_placeholders"] == {
+        "host": "192.168.1.100",
+        "device_id": "T01A1B2C3",
+    }
 
-    # Complete the flow by providing credentials
+    # Complete the flow by providing password only
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "T01A1B2C3", CONF_PASSWORD: "test-password"},
+        {CONF_PASSWORD: "test-password"},
     )
     await hass.async_block_till_done()
 
@@ -183,7 +186,7 @@ async def test_dhcp_discovery_errors(
     mock_airobot_client.get_statuses.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_USERNAME: "T01D4E5F6", CONF_PASSWORD: "wrong"},
+        user_input={CONF_PASSWORD: "wrong"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_base}
@@ -192,7 +195,7 @@ async def test_dhcp_discovery_errors(
     mock_airobot_client.get_statuses.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_USERNAME: "T01D4E5F6", CONF_PASSWORD: "test-password"},
+        user_input={CONF_PASSWORD: "test-password"},
     )
     await hass.async_block_till_done()
 

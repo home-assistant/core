@@ -110,10 +110,10 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Combine discovered host with user-provided credentials
+            # Combine discovered host and device_id with user-provided password
             data = {
                 CONF_HOST: self._discovered_host,
-                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_USERNAME: self._discovered_device_id,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
@@ -133,18 +133,18 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(title=info.title, data=data)
 
-        # Build schema with device_id as default username if available
+        # Only ask for password since we already have the device_id from discovery
         return self.async_show_form(
             step_id="dhcp_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=self._discovered_device_id
-                    ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
-            description_placeholders={"host": self._discovered_host or ""},
+            description_placeholders={
+                "host": self._discovered_host or "",
+                "device_id": self._discovered_device_id or "",
+            },
             errors=errors,
         )
 

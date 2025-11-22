@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import CONF_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -25,8 +26,13 @@ class AirobotEntity(CoordinatorEntity[AirobotDataUpdateCoordinator]):
 
         self._attr_unique_id = status.device_id
 
+        connections = set()
+        if (mac := coordinator.config_entry.data.get(CONF_MAC)) is not None:
+            connections.add((CONNECTION_NETWORK_MAC, mac))
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, status.device_id)},
+            connections=connections,
             name=settings.device_name or status.device_id,
             manufacturer="Airobot",
             model="Thermostat",

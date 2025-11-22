@@ -12,7 +12,7 @@ from pyairobotrest.models import (
 import pytest
 
 from homeassistant.components.airobot.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -99,6 +99,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "192.168.1.100",
             CONF_USERNAME: "T01A1B2C3",
             CONF_PASSWORD: "test-password",
+            CONF_MAC: "aa:bb:cc:dd:ee:ff",
         },
         unique_id="T01A1B2C3",
     )
