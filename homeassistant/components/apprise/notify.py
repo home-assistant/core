@@ -20,14 +20,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_FILE_URL
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FILE = "config"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_URL): vol.All(cv.ensure_list, [str]),
-        vol.Optional(CONF_FILE): cv.string,
+        vol.Optional(CONF_FILE_URL): cv.string,
     }
 )
 
@@ -39,25 +40,31 @@ def get_service(
 ) -> AppriseNotificationService | None:
     """Get the Apprise notification service."""
     # Create our Apprise Instance (reference our asset)
+    _LOGGER.debug("Apprise discovery_info: %s", discovery_info)
+
+    if not discovery_info:
+        return None
+
     a_obj = apprise.Apprise()
 
-    if config.get(CONF_FILE):
+    if CONF_FILE_URL in discovery_info:
         # Sourced from a Configuration File
         a_config = apprise.AppriseConfig()
-        if not a_config.add(config[CONF_FILE]):
-            _LOGGER.error("Invalid Apprise config url provided")
-            return None
+        conf_urls = discovery_info[CONF_FILE_URL]
+        if isinstance(conf_urls, str):
+            conf_urls = [conf_urls]
+        for url in conf_urls:
+            a_config.add(url)
 
-        if not a_obj.add(a_config):
-            _LOGGER.error("Invalid Apprise config url provided")
-            return None
+        a_obj.add(a_config)
 
     # Ordered list of URLs
-    if urls := config.get(CONF_URL):
-        for entry in urls:
-            if not a_obj.add(entry):
-                _LOGGER.error("One or more specified Apprise URL(s) are invalid")
-                return None
+    if CONF_URL in discovery_info:
+        urls = discovery_info[CONF_URL]
+        if isinstance(urls, str):
+            urls = [urls]
+        for url in urls:
+            a_obj.add(url)
 
     return AppriseNotificationService(a_obj)
 
