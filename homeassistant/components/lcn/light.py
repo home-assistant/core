@@ -149,8 +149,11 @@ class LcnOutputLight(LcnEntity, LightEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_output(
-            self.output, SCAN_INTERVAL.seconds
+        self._attr_available = (
+            await self.device_connection.request_status_output(
+                self.output, SCAN_INTERVAL.seconds
+            )
+            is not None
         )
 
     def input_received(self, input_obj: InputType) -> None:
@@ -200,12 +203,15 @@ class LcnRelayLight(LcnEntity, LightEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
+        self._attr_available = (
+            await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
+            is not None
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.output.value)
         self.async_write_ha_state()
