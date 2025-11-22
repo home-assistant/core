@@ -693,11 +693,12 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
-        key = f"thermostat:{id_}"
-        super().__init__(coordinator, key)
+        super().__init__(coordinator, f"thermostat:{id_}")
         self._attr_name = None  # Main device entity
         self._id = id_
-        self._thermostat_type = coordinator.device.config[key].get("type", "heating")
+        self._thermostat_type = coordinator.device.config[self.key].get(
+            "type", "heating"
+        )
         if self._thermostat_type == "cooling":
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
@@ -771,8 +772,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
-        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
-        super().__init__(coordinator, key)
+        super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._attr_name = None  # Main device entity
         self._id = id_
         self._config = coordinator.device.config[self.key]
