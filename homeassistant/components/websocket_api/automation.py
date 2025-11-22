@@ -31,7 +31,7 @@ class _EntityFilter:
 
     domains: set[str]
     device_classes: set[str]
-    supported_features: list[int]
+    supported_features: set[int]
 
     def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
         """Return if entity matches all criteria in this filter."""
@@ -82,7 +82,7 @@ def _build_component_lookup_data(
         entity_filter = _EntityFilter(
             domains=set(entity_filter_config.get("domain", [])),
             device_classes=set(entity_filter_config.get("device_class", [])),
-            supported_features=list(entity_filter_config.get("supported_features", [])),
+            supported_features=set(entity_filter_config.get("supported_features", [])),
         )
         filters.append(entity_filter)
 
