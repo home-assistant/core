@@ -137,6 +137,37 @@ async def test_volume_mute_off(
 
 
 @pytest.mark.parametrize("node_fixture", ["speaker"])
+async def test_volume_set_zero(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    node_fixture: str,
+) -> None:
+    """Test setting volume to 0 sends only Off (mute) command."""
+    entity_id = "media_player.mock_speaker"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.0,
+        },
+        blocking=True,
+    )
+
+    # Should only send the Off command (mute) and return early
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["speaker"])
 async def test_volume_level_none(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -154,7 +185,11 @@ async def test_volume_level_none(
     # Set CurrentLevel attribute to None to simulate unavailable attribute
     # LevelControl cluster ID: 8, CurrentLevel attribute ID: 0
     set_node_attribute(
-        matter_node, endpoint_id, LevelControl.id, LevelControl.Attributes.CurrentLevel, None
+        matter_node,
+        endpoint_id,
+        LevelControl.id,
+        0,  # CurrentLevel attribute id
+        None,
     )
     await trigger_subscription_callback(hass, matter_client)
 
@@ -164,3 +199,28 @@ async def test_volume_level_none(
     # Volume and mute state should not have been updated
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == initial_volume
     assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) == initial_muted
+
+
+@pytest.mark.parametrize("node_fixture", ["speaker"])
+async def test_volume_current_level_zero(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that CurrentLevel == 0 sets muted state to True."""
+    entity_id = "media_player.mock_speaker"
+
+    # Ensure we start from a non-zero level to see the transition
+    set_node_attribute(matter_node, 1, LevelControl.id, 0, 100)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is False
+
+    # Set CurrentLevel to 0 (Matter spec: 0 represents off for LevelControl)
+    set_node_attribute(matter_node, 1, LevelControl.id, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # Entity should report muted when level is 0
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
