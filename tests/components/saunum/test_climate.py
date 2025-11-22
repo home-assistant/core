@@ -25,7 +25,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.saunum.climate import LeilSaunaClimate
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -332,13 +331,14 @@ async def test_fan_mode_session_not_active_error(
 
     entity_id = "climate.saunum_leil"
 
-    # Get the climate entity
-    entity = hass.data["entity_components"]["climate"].get_entity(entity_id)
-    assert isinstance(entity, LeilSaunaClimate)
-
     # Try to set fan mode and expect error
     with pytest.raises(
         ServiceValidationError,
         match="Cannot change fan mode when sauna session is not active",
     ):
-        await entity.async_set_fan_mode(FAN_HIGH)
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+            blocking=True,
+        )
