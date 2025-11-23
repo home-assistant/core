@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .const import OTBR_DOMAIN, Z2M_EMBER_DOCS_URL, ZHA_DOMAIN
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -456,7 +456,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._hardware_name is not None
 
         if self._zigbee_integration == ZigbeeIntegration.OTHER:
-            return self._async_flow_finished()
+            return await self.async_step_show_z2m_docs_url()
 
         result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
@@ -474,6 +474,21 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
         return self._continue_zha_flow(result)
+
+    async def async_step_show_z2m_docs_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show Zigbee2MQTT documentation link."""
+        if user_input is not None:
+            return self._async_flow_finished()
+
+        return self.async_show_form(
+            step_id="show_z2m_docs_url",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "z2m_docs_url": Z2M_EMBER_DOCS_URL,
+            },
+        )
 
     @callback
     def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
