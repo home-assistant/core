@@ -7,17 +7,11 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
-from aiohue.v2.models.scene import (
-    Scene as HueScene,
-    ScenePut as HueScenePut,
-)
+from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 import voluptuous as vol
 
-from homeassistant.components.scene import (
-    ATTR_TRANSITION,
-    Scene as BaseScene,
-)
+from homeassistant.components.scene import ATTR_TRANSITION, Scene as BaseScene
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
