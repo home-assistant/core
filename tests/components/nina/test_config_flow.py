@@ -107,7 +107,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "NINA"
-        assert result["data"] == deepcopy(DUMMY_DATA) | {
+        assert result["data"] == DUMMY_DATA | {
             CONF_REGIONS: {
                 "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
             }
@@ -139,7 +139,7 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "NINA"
-        assert result["data"] == deepcopy(DUMMY_DATA) | {
+        assert result["data"] == DUMMY_DATA | {
             CONF_REGIONS: {
                 "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
             }
@@ -210,8 +210,8 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         assert result["data"] == {}
 
         assert dict(config_entry.data) == {
-            CONF_FILTERS: deepcopy(DUMMY_DATA[CONF_FILTERS]),
-            CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
+            CONF_FILTERS: DUMMY_DATA[CONF_FILTERS],
+            CONF_MESSAGE_SLOTS: DUMMY_DATA[CONF_MESSAGE_SLOTS],
             CONST_REGION_A_TO_D: ["072350000000_1"],
             CONST_REGION_E_TO_H: [],
             CONST_REGION_I_TO_L: [],
@@ -287,8 +287,8 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
         assert result["data"] == {}
 
         assert dict(config_entry.data) == {
-            CONF_FILTERS: deepcopy(DUMMY_DATA[CONF_FILTERS]),
-            CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
+            CONF_FILTERS: DUMMY_DATA[CONF_FILTERS],
+            CONF_MESSAGE_SLOTS: DUMMY_DATA[CONF_MESSAGE_SLOTS],
             CONST_REGION_A_TO_D: ["095760000000_0"],
             CONST_REGION_E_TO_H: [],
             CONST_REGION_I_TO_L: [],
