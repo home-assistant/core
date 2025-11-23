@@ -23,7 +23,7 @@ from pylamarzocco.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -127,6 +127,17 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _internal_async_setup(self) -> None:
         """Actual setup logic."""
 
+    async def _async_setup(self) -> None:
+        """Set up coordinator."""
+        await self.__handle_internal_update(self._internal_async_setup)
+
+    async def _async_update_data(self) -> None:
+        """Do the data update."""
+        await self.__handle_internal_update(self._internal_async_update_data)
+
+    async def _internal_async_setup(self) -> None:
+        """Actual setup logic."""
+
     @abstractmethod
     async def _internal_async_update_data(self) -> None:
         """Actual data update logic."""
@@ -147,6 +158,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         # ensure token stays valid; does nothing if token is still valid
         await self.cloud_client.async_get_access_token()
 
+        # Only skip websocket reconnection if it's currently connected and the task is still running
         if self.device.websocket.connected and not self.websocket_terminated:
             return
 
@@ -171,8 +183,13 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         self.async_update_listeners()
 
+        @callback
+        def update_callback(_: Any | None = None) -> None:
+            _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+            self.async_set_updated_data(None)
+
         await self.device.connect_dashboard_websocket(
-            update_callback=lambda _: self.async_set_updated_data(None),
+            update_callback=update_callback,
             connect_callback=self.async_update_listeners,
             disconnect_callback=self.async_update_listeners,
         )

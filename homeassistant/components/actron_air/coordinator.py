@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from actron_neo_api import ActronAirNeoACSystem, ActronAirNeoStatus, ActronNeoAPI
+from actron_neo_api import ActronAirACSystem, ActronAirAPI, ActronAirStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ ERROR_UNKNOWN = "unknown_error"
 class ActronAirRuntimeData:
     """Runtime data for the Actron Air integration."""
 
-    api: ActronNeoAPI
+    api: ActronAirAPI
     system_coordinators: dict[str, ActronAirSystemCoordinator]
 
 
@@ -33,15 +33,15 @@ AUTH_ERROR_THRESHOLD = 3
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
+class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
     """System coordinator for Actron Air integration."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ActronAirConfigEntry,
-        api: ActronNeoAPI,
-        system: ActronAirNeoACSystem,
+        api: ActronAirAPI,
+        system: ActronAirACSystem,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -57,7 +57,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
 
-    async def _async_update_data(self) -> ActronAirNeoStatus:
+    async def _async_update_data(self) -> ActronAirStatus:
         """Fetch updates and merge incremental changes into the full state."""
         await self.api.update_status()
         self.status = self.api.state_manager.get_status(self.serial_number)
