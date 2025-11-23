@@ -915,14 +915,8 @@ async def test_user_flow_with_zeroconf_devices(
             },
         ),
         patch(
-            "homeassistant.components.shelly.config_flow.validate_input",
-            return_value={
-                "title": "Test Zeroconf Device",
-                CONF_HOST: "192.168.1.100",
-                CONF_MODEL: MODEL_PLUS_2PM,
-                CONF_GEN: 2,
-                CONF_SLEEP_PERIOD: 0,
-            },
+            "homeassistant.components.shelly.config_flow.RpcDevice.create",
+            return_value=create_mock_rpc_device("Test Zeroconf Device"),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
