@@ -142,7 +142,7 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
     return {"requests": cast(list[JsonValueType], result)}
 
 
-async def __search_media(
+async def _search_media(
     client: OverseerrClient, query: str, limit: int | None = None
 ) -> list[Any]:
     """Search for media in Overseerr."""
@@ -171,7 +171,7 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     query = call.data[ATTR_QUERY]
     limit = call.data.get(ATTR_LIMIT)
 
-    search_results = await __search_media(client, query, limit)
+    search_results = await _search_media(client, query, limit)
 
     return {
         "results": cast(
@@ -180,7 +180,7 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     }
 
 
-async def __request_media(
+async def _request_media(
     client: OverseerrClient,
     media_type: MediaType,
     tmdb_id: int,
@@ -223,7 +223,7 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     tmdb_id = call.data[ATTR_TMDB_ID]
     seasons = call.data.get(ATTR_SEASONS)
 
-    request = await __request_media(client, media_type, tmdb_id, seasons)
+    request = await _request_media(client, media_type, tmdb_id, seasons)
 
     return {"request": cast(JsonValueType, asdict(request))}
 
@@ -235,7 +235,7 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
     query = call.data[ATTR_QUERY]
     seasons = call.data.get(ATTR_SEASONS)
 
-    search_results = await __search_media(client, query)
+    search_results = await _search_media(client, query)
 
     if not search_results:
         LOGGER.error("No results found for query '%s'", query)
@@ -255,7 +255,7 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
     if media_type == "tv" and seasons:
         request_seasons = seasons
 
-    request = await __request_media(client, media_type, tmdb_id, request_seasons)
+    request = await _request_media(client, media_type, tmdb_id, request_seasons)
 
     return {
         "request": cast(JsonValueType, asdict(request)),
