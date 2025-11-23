@@ -156,13 +156,14 @@ class HueSceneEntityBase(HueBaseEntity, BaseScene):
         """
         # Only track activations for regular scenes (HueScene)
         if isinstance(self.resource, HueScene):
-            current_last_recall = (
-                self.resource.status.last_recall if self.resource.status else None
-            )
-
             # Only record activation if last_recall timestamp has changed
             if (
-                current_last_recall is not None
+                (
+                    current_last_recall := (
+                        self.resource.status.last_recall if self.resource.status else None
+                    )
+                )
+                is not None
                 and current_last_recall != self._previous_last_recall
             ):
                 self._async_record_activation()
