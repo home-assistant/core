@@ -22,12 +22,21 @@ from .coordinator import ShellyConfigEntry
 from .utils import get_device_entry_gen
 
 ATTR_KEY = "key"
+ATTR_VALUE = "value"
 
 SERVICE_GET_KVS_VALUE = "get_kvs_value"
+SERVICE_SET_KVS_VALUE = "set_kvs_value"
 SERVICE_GET_KVS_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_KEY): str,
+    }
+)
+SERVICE_SET_KVS_VALUE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_KEY): str,
+        vol.Required(ATTR_VALUE): str,
     }
 )
 
@@ -94,7 +103,7 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
         )
 
     try:
-        response = await runtime_data.rpc.device.call_rpc("KVS.Get", {"key": key})
+        response = await runtime_data.rpc.device.call_rpc("KVS.Get", {ATTR_KEY: key})
     except RpcCallError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -109,18 +118,64 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
         ) from err
     else:
         result: dict[str, JsonValueType] = {}
-        result["value"] = response.get("value")
+        result[ATTR_VALUE] = response.get(ATTR_VALUE)
 
         return result
+
+
+async def async_set_kvs_value(call: ServiceCall) -> None:
+    """Handle the set_kvs_value service call."""
+    key = call.data[ATTR_KEY]
+    config_entry = async_get_config_entry_for_service_call(call)
+
+    runtime_data = config_entry.runtime_data
+
+    if not runtime_data.rpc:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_initialized",
+            translation_placeholders={"device": config_entry.title},
+        )
+
+    try:
+        await runtime_data.rpc.device.call_rpc(
+            "KVS.Set", {ATTR_KEY: key, ATTR_VALUE: call.data[ATTR_VALUE]}
+        )
+    except RpcCallError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="rpc_call_error",
+            translation_placeholders={"device": config_entry.title},
+        ) from err
+    except DeviceConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_communication_error",
+            translation_placeholders={"device": config_entry.title},
+        ) from err
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for Shelly integration."""
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_KVS_VALUE,
-        async_get_kvs_value,
-        schema=SERVICE_GET_KVS_VALUE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
+    for service, method, schema, response in (
+        (
+            SERVICE_GET_KVS_VALUE,
+            async_get_kvs_value,
+            SERVICE_GET_KVS_VALUE_SCHEMA,
+            SupportsResponse.ONLY,
+        ),
+        (
+            SERVICE_SET_KVS_VALUE,
+            async_set_kvs_value,
+            SERVICE_SET_KVS_VALUE_SCHEMA,
+            SupportsResponse.NONE,
+        ),
+    ):
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            method,
+            schema=schema,
+            supports_response=response,
+        )
