@@ -163,7 +163,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
             or input_obj.get_output_id() != self.output.value
         ):
             return
-
+        self._attr_available = True
         percent = input_obj.get_percent()
         self._attr_brightness = value_to_brightness(BRIGHTNESS_SCALE, percent)
         self._attr_is_on = bool(percent)
