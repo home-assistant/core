@@ -291,7 +291,7 @@ async def test_join(
     setup_config_entry_secondary: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the join action."""
+    """Test the bluesound.join action."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_JOIN,
@@ -313,7 +313,7 @@ async def test_unjoin(
     setup_config_entry_secondary: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the unjoin action."""
+    """Test the bluesound.unjoin action."""
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
         leader=PairedPlayer("2.2.2.2", 11000),
