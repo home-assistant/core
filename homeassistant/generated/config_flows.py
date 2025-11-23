@@ -160,6 +160,7 @@ FLOWS = {
         "duckdns",
         "duke_energy",
         "dunehd",
+        "duosida_ev",
         "duotecno",
         "dwd_weather_warnings",
         "dynalite",

@@ -1,0 +1,145 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not provide actions.
+  appropriate-polling:
+    status: done
+    comment: Uses configurable scan interval with 10 second default.
+  brands:
+    status: exempt
+    comment: PR pending at home-assistant/brands.
+  common-modules:
+    status: done
+    comment: Uses standard HA patterns and helpers.
+  config-flow:
+    status: done
+    comment: Full config flow with options flow for reconfiguration.
+  config-flow-test-coverage:
+    status: done
+    comment: Config flow tests provide coverage.
+  dependency-transparency:
+    status: done
+    comment: Uses duosida-ev library from PyPI.
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide actions.
+  docs-high-level-description:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-installation-instructions:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-removal-instructions:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  entity-unique-id:
+    status: done
+    comment: All entities have unique IDs based on device ID.
+  has-entity-name:
+    status: done
+    comment: All entities use has_entity_name = True.
+  runtime-data:
+    status: done
+    comment: Uses entry.runtime_data pattern.
+  test-before-configure:
+    status: done
+    comment: Config flow validates connection before creating entry.
+  test-before-setup:
+    status: done
+    comment: Coordinator validates connection during setup.
+  unique-config-entry:
+    status: done
+    comment: Prevents duplicate entries via unique_id.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide actions.
+  config-entry-unloading:
+    status: done
+    comment: Properly unloads platforms and closes connection.
+  docs-configuration-parameters:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-troubleshooting:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  entity-unavailable:
+    status: done
+    comment: Entities become unavailable when coordinator fails.
+  integration-owner:
+    status: done
+    comment: "@americodias"
+  log-when-unavailable:
+    status: done
+    comment: Coordinator logs connection failures.
+  parallel-updates:
+    status: done
+    comment: Uses coordinator pattern with PARALLEL_UPDATES = 0.
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not use authentication.
+  test-coverage: todo
+
+  # Gold
+  devices:
+    status: done
+    comment: Creates device registry entries.
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-examples:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-known-limitations:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-supported-devices:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-supported-functions:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  docs-use-cases:
+    status: exempt
+    comment: Documentation PR pending at home-assistant.io.
+  dynamic-devices:
+    status: exempt
+    comment: Integration supports a single device per entry.
+  entity-category:
+    status: done
+    comment: Entities have appropriate categories assigned.
+  entity-device-class:
+    status: done
+    comment: Entities use appropriate device classes.
+  entity-disabled-by-default:
+    status: done
+    comment: Non-essential entities disabled by default.
+  entity-translations:
+    status: done
+    comment: Full translations for 20 languages.
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: Uses options flow for reconfiguration. No reconfigure step needed as host cannot be changed.
+  repair-issues:
+    status: exempt
+    comment: Integration does not raise repair issues.
+  stale-devices:
+    status: exempt
+    comment: Integration supports a single device per entry.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: Integration uses TCP socket, not HTTP.
+  strict-typing: todo
