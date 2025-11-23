@@ -19,6 +19,13 @@
       }
     }
   },
+  "entity": {
+    "light": {
+      "sauna_light": {
+        "name": "Sauna light"
+      }
+    }
+  },
   "exceptions": {
     "communication_error": {
       "message": "Communication error: {error}"
@@ -28,6 +35,9 @@
     },
     "set_hvac_mode_failed": {
       "message": "Failed to set HVAC mode to {hvac_mode}"
+    },
+    "set_light_failed": {
+      "message": "Failed to turn light {state}"
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"
