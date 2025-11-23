@@ -264,7 +264,7 @@ def calc_first(
     """Calculate first value."""
     first_entity_id: str | None = None
     first: float | None = None
-    if len(sensor_values) > 0:
+    if sensor_values:
         first_entity_id, first, _ = sensor_values[0]
 
     attributes = {ATTR_FIRST_ENTITY_ID: first_entity_id}
