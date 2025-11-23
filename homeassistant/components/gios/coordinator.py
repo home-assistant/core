@@ -56,6 +56,9 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
 
         station_id = gios.station_id
         if TYPE_CHECKING:
+            # Station ID is Optional in the library, but here we know it is set for sure
+            # so we can safely assert it is not None for type checking purposes
+            # Gios instance is created only with a valid station ID in the async_setup_entry.
             assert station_id is not None
         station_name = gios.measurement_stations[station_id].name
 
