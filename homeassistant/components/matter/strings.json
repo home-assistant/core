@@ -311,7 +311,11 @@
       "door_lock_operating_mode": {
         "name": "Operating Mode",
         "state": {
-          "NoRemoteLockUnlock": "No remote lock/unlock"
+          "Normal": "Normal",
+          "Vacation": "Vacation",
+          "Privacy": "Privacy",
+          "NoRemoteLockUnlock": "No remote lock/unlock",
+          "Passage": "Passage"
         }
       }
     },
