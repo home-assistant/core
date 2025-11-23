@@ -2,7 +2,6 @@
 
 from dataclasses import asdict
 from typing import Any, cast
-from urllib.parse import quote
 
 from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
@@ -125,14 +124,16 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
 
 async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     """Search for media in Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    entry: OverseerrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     client = entry.runtime_data.client
     query = call.data[ATTR_QUERY]
     limit = call.data.get(ATTR_LIMIT)
     try:
         LOGGER.debug("Searching for '%s'", query)
         # URL encode the query to handle spaces and special characters
-        search_results = await client.search(quote(query))
+        search_results = await client.search(query)
     except OverseerrConnectionError as err:
         LOGGER.error("Error searching for '%s': %s", query, str(err))
         raise HomeAssistantError(
@@ -144,12 +145,18 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     if limit is not None and limit > 0:
         search_results = search_results[:limit]
 
-    return {"results": cast(list[JsonValueType], [asdict(result) for result in search_results])}
+    return {
+        "results": cast(
+            list[JsonValueType], [asdict(result) for result in search_results]
+        )
+    }
 
 
 async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     """Request media in Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    entry: OverseerrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     client = entry.runtime_data.client
     media_type = call.data[ATTR_MEDIA_TYPE]
     tmdb_id = call.data[ATTR_TMDB_ID]
@@ -164,7 +171,7 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
             "Requesting %s with TMDB ID %s (seasons: %s)",
             media_type,
             tmdb_id,
-            seasons if seasons else "none",
+            seasons or "none",
         )
         request = await client.create_request(media_type, tmdb_id, seasons)
     except OverseerrConnectionError as err:
