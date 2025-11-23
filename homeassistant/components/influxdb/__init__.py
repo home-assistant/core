@@ -199,8 +199,26 @@ INFLUX_SCHEMA = vol.All(
     create_influx_url,
 )
 
+
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: INFLUX_SCHEMA},
+    {
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_API_VERSION),
+            cv.deprecated(CONF_HOST),
+            cv.deprecated(CONF_PATH),
+            cv.deprecated(CONF_PORT),
+            cv.deprecated(CONF_SSL),
+            cv.deprecated(CONF_VERIFY_SSL),
+            cv.deprecated(CONF_SSL_CA_CERT),
+            cv.deprecated(CONF_USERNAME),
+            cv.deprecated(CONF_PASSWORD),
+            cv.deprecated(CONF_DB_NAME),
+            cv.deprecated(CONF_TOKEN),
+            cv.deprecated(CONF_ORG),
+            cv.deprecated(CONF_BUCKET),
+            INFLUX_SCHEMA,
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 

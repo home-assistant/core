@@ -132,25 +132,25 @@ RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
 RENDERING_WHERE_MESSAGE = "Rendering where: %s."
 RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 
+
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 and V2 APIs.
-    cv.deprecated(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
+    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
         vol.Coerce(str),
         vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
     ),
-    cv.deprecated(CONF_HOST): cv.string,
-    cv.deprecated(CONF_PATH): cv.string,
-    cv.deprecated(CONF_PORT): cv.port,
-    cv.deprecated(CONF_SSL): cv.boolean,
-    cv.deprecated(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    cv.deprecated(CONF_SSL_CA_CERT): cv.isfile,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PATH): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_SSL): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_SSL_CA_CERT): cv.isfile,
     vol.Optional(CONF_PRECISION): vol.In(["ms", "s", "us", "ns"]),
     # Connection config for V1 API only.
-    cv.deprecated(CONF_USERNAME, "authentication"): cv.string,
-    cv.deprecated(CONF_PASSWORD, "authentication"): cv.string,
-    cv.deprecated(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     # Connection config for V2 API only.
-    cv.deprecated(CONF_TOKEN, "v2_authentication"): cv.string,
-    cv.deprecated(CONF_ORG, "v2_authentication"): cv.string,
-    cv.deprecated(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+    vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
+    vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
+    vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
