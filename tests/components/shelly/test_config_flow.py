@@ -2077,6 +2077,78 @@ async def test_bluetooth_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_bluetooth_provisioning_clears_match_history(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test bluetooth provisioning clears match history after successful provisioning."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_clear_address_from_match_history"
+        ) as mock_clear,
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=("1.1.1.1", 80),
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=BLE_DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "bluetooth_confirm"
+
+        # Confirm
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SSID: "MyNetwork"},
+        )
+
+        # Enter password and provision
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning happens in background, shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Complete provisioning by configuring the progress step
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        # Provisioning should complete and create entry
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == "C049EF8873E8"
+
+        # Verify match history was cleared at least twice:
+        # - Once at the start of the bluetooth discovery flow
+        # - Once after successful WiFi provisioning
+        # (May be called additional times by automatic discovery flows)
+        assert mock_clear.call_count >= 2
+        mock_clear.assert_called_with(hass, BLE_DISCOVERY_INFO.address)
+
+
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_discovery_no_rpc_over_ble(
     hass: HomeAssistant,
@@ -2090,6 +2162,88 @@ async def test_bluetooth_discovery_no_rpc_over_ble(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_bluetooth_factory_reset_rediscovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test device can be rediscovered after factory reset when RPC-over-BLE is re-enabled."""
+    # First discovery: device is already provisioned (no RPC-over-BLE)
+    # Inject the device without RPC so it's in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_NO_RPC)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_NO_RPC,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Should abort because RPC-over-BLE is not enabled
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+    # Simulate factory reset: device now advertises with RPC-over-BLE enabled
+    # Inject the updated advertisement
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    # Second discovery: device after factory reset (RPC-over-BLE now enabled)
+    # Wait for automatic discovery to happen
+    await hass.async_block_till_done()
+
+    # Find the flow that was automatically created
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+
+    # Should successfully start config flow since match history was cleared
+    assert result["step_id"] == "bluetooth_confirm"
+    assert (
+        result["context"]["title_placeholders"]["name"] == "ShellyPlus2PM-C049EF8873E8"
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Enter password and provision
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=("1.1.1.1", 80),
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning happens in background
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Complete provisioning
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Provisioning should complete and create entry
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -2182,6 +2336,41 @@ async def test_bluetooth_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_bluetooth_discovery_already_configured_clears_match_history(
+    hass: HomeAssistant,
+) -> None:
+    """Test bluetooth discovery clears match history when device already configured."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C049EF8873E8",  # MAC from device name - uppercase no colons
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_MODEL: MODEL_PLUS_2PM,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_GEN: 2,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_clear_address_from_match_history"
+    ) as mock_clear:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=BLE_DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify match history was cleared to allow rediscovery if factory reset
+    mock_clear.assert_called_once_with(hass, BLE_DISCOVERY_INFO.address)
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
