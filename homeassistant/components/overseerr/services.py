@@ -47,7 +47,7 @@ SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_QUERY): str,
-        vol.Optional(ATTR_LIMIT): vol.Coerce(int),
+        vol.Optional(ATTR_LIMIT): vol.All(vol.Coerce(int), vol.Range(min=1))
     }
 )
 
