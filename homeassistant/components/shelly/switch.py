@@ -43,6 +43,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
@@ -470,6 +471,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         """Initialize relay switch."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property
@@ -512,11 +514,9 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if (
-            hasattr(self, "_attr_name")
-            and description.role != ROLE_GENERIC
-            and description.key not in ("switch", "script")
-        ):
+        if description.role == ROLE_GENERIC or description.key in ("switch", "script"):
+            self._attr_name = get_rpc_channel_name(coordinator.device, key)
+        elif hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
 
     @property
