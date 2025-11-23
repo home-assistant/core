@@ -412,7 +412,7 @@
             "payload_press": "The payload to send when the button is triggered.",
             "payload_reset": "The payload received at the state topic that resets the entity to an unknown state.",
             "position_closed": "Number which represents closed position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
-            "position_open": "Number which represents open position. The valve’s position will be scaled to (position \"closed\"…position \"open\") range when an is performed and scaled back when a value is received.",
+            "position_open": "Number which represents open position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template]({value_templating_url}) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
@@ -1005,11 +1005,11 @@
               "data_description": {
                 "payload_close": "The payload sent when a \"close\" command is issued.",
                 "payload_open": "The payload sent when an \"open\" command is issued.",
-                "payload_stop": "The payload sent when an \"stop\" command is issued. Set this payload only if your lock supports the \"stop\" action.",
+                "payload_stop": "The payload sent when a \"stop\" command is issued. Set this payload only if your lock supports the \"stop\" action.",
                 "state_closed": "The payload received at the state topic that represents the \"closed\" state.",
                 "state_closing": "The payload received at the state topic that represents the \"closing\" state.",
-                "state_locked": "The payload received at the state topic that represents the \"locked\" state.",
-                "state_locking": "The payload received at the state topic that represents the \"locking\" state."
+                "state_open": "The payload received at the state topic that represents the \"open\" state.",
+                "state_opening": "The payload received at the state topic that represents the \"opening\" state."
               },
               "name": "Valve payload settings"
             }
