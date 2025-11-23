@@ -5,7 +5,6 @@ from collections.abc import Callable
 from copy import deepcopy
 from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import (
     Device as WLEDDevice,
@@ -202,7 +201,6 @@ async def test_websocket_disconnect_on_home_assistant_stop(
 async def test_fail_when_other_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Ensure entry fails to setup when mac mismatch."""

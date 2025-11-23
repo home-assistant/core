@@ -127,8 +127,8 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 translation_domain=DOMAIN,
                 translation_key="mac_address_mismatch",
                 translation_placeholders={
-                    "expected_mac": format_mac(self.config_entry.unique_id),
-                    "actual_mac": format_mac(device.info.mac_address),
+                    "expected_mac": format_mac(self.config_entry.unique_id).upper(),
+                    "actual_mac": format_mac(device.info.mac_address).upper(),
                 },
             )
 

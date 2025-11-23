@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
@@ -50,16 +51,22 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if self.source == SOURCE_RECONFIGURE:
-                    await self.async_set_unique_id(device.info.mac_address)
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(),
-                        data_updates=user_input,
-                    )
                 await self.async_set_unique_id(
                     device.info.mac_address, raise_on_progress=False
                 )
+                if self.source == SOURCE_RECONFIGURE:
+                    entry = self._get_reconfigure_entry()
+                    self._abort_if_unique_id_mismatch(
+                        reason="unique_id_mismatch",
+                        description_placeholders={
+                            "expected_mac": format_mac(entry.unique_id).upper(),
+                            "actual_mac": format_mac(self.unique_id).upper(),
+                        },
+                    )
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates=user_input,
+                    )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
