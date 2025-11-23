@@ -67,7 +67,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_total',
-    'unique_id': 'testuser_domain_com_storage_total',
+    'unique_id': 'testuser@domain.com_storage_total',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -123,7 +123,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_used',
-    'unique_id': 'testuser_domain_com_storage_used',
+    'unique_id': 'testuser@domain.com_storage_used',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -179,7 +179,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_used_in_drive',
-    'unique_id': 'testuser_domain_com_storage_used_in_drive',
+    'unique_id': 'testuser@domain.com_storage_used_in_drive',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_used_in_drive_trash',
-    'unique_id': 'testuser_domain_com_storage_used_in_drive_trash',
+    'unique_id': 'testuser@domain.com_storage_used_in_drive_trash',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---

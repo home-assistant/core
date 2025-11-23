@@ -59,10 +59,8 @@ async def test_sensor(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_unknown_when_unlimited_plan(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     mock_api: MagicMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the total storage are unknown when the user is on an unlimited plan."""
     mock_api.get_user = AsyncMock(
@@ -78,9 +76,7 @@ async def test_sensor_unknown_when_unlimited_plan(
 
     await setup_integration(hass, config_entry, mock_api)
 
-    assert not (
-        entity_registry.async_get("sensor.testuser_domain_com_total_available_storage")
-    )
+    assert not hass.states.get("sensor.testuser_domain_com_total_available_storage")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

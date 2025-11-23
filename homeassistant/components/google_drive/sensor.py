@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import re
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,14 +21,6 @@ from .entity import GoogleDriveEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
-
-
-def _slugify(text: str | None) -> str:
-    if text == "" or text is None:
-        return ""
-    slug = re.sub(r"[^0-9a-zA-Z]+", "_", text)
-    slug = slug.strip("_")
-    return slug.lower()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -111,11 +102,9 @@ class GoogleDriveSensorEntity(GoogleDriveEntity, SensorEntity):
         description: GoogleDriveSensorEntityDescription,
     ) -> None:
         """Initialize a Google Drive sensor entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{_slugify(coordinator.config_entry.unique_id)}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
