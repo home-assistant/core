@@ -83,13 +83,12 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         if not description.role:
             if description.key != "input":
                 self.configure_translation_attributes()
+            elif custom_name := get_rpc_custom_name(coordinator.device, key):
+                self._attr_name = custom_name
             else:
-                if custom_name := get_rpc_custom_name(coordinator.device, key):
-                    self._attr_name = custom_name
-                else:
-                    _, _, component_id = get_rpc_key(key)
-                    self._attr_translation_placeholders = {"input_number": component_id}
-                    self._attr_translation_key = "input_with_number"
+                _, _, component_id = get_rpc_key(key)
+                self._attr_translation_placeholders = {"input_number": component_id}
+                self._attr_translation_key = "input_with_number"
 
     @property
     def is_on(self) -> bool:
