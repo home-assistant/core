@@ -114,16 +114,6 @@ class HueSceneEntityBase(HueBaseEntity, BaseScene):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.group.id)},
         )
-        # Track last_recall timestamp for scene activation detection (regular scenes only)
-        self._previous_last_recall = (
-            resource.status.last_recall
-            if isinstance(resource, HueScene) and resource.status
-            else None
-        )
-        # Track state for smart scene activation detection (smart scenes only)
-        self._previous_state = (
-            resource.state if isinstance(resource, HueSmartScene) else None
-        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -142,40 +132,49 @@ class HueSceneEntityBase(HueBaseEntity, BaseScene):
         """Return name of the scene."""
         return self.resource.metadata.name
 
-    def on_update(self) -> None:
-        """Handle EventStream updates for scene activation detection.
-
-        For regular scenes (HueScene), we track the last_recall timestamp to detect
-        actual scene activations (from Hue app, buttons, or automations) while
-        avoiding false activations when lights in an active scene are modified.
-
-        When a scene is recalled, the bridge updates last_recall timestamp.
-        When a light in an active scene is modified, last_recall stays unchanged.
-
-        SmartScenes override this method with their own activation logic.
-        """
-        # Only track activations for regular scenes (HueScene)
-        if isinstance(self.resource, HueScene):
-            # Only record activation if last_recall timestamp has changed
-            if (
-                (
-                    current_last_recall := (
-                        self.resource.status.last_recall if self.resource.status else None
-                    )
-                )
-                is not None
-                and current_last_recall != self._previous_last_recall
-            ):
-                self._async_record_activation()
-
-            # Update tracked timestamp
-            self._previous_last_recall = current_last_recall
-
-        super().on_update()
-
 
 class HueSceneEntity(HueSceneEntityBase):
     """Representation of a Scene entity from Hue Scenes."""
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: ScenesController,
+        resource: HueScene,
+    ) -> None:
+        """Initialize the scene entity."""
+        super().__init__(bridge, controller, resource)
+        # Track last_recall timestamp for scene activation detection
+        self._previous_last_recall = (
+            resource.status.last_recall if resource.status else None
+        )
+
+    def on_update(self) -> None:
+        """Handle EventStream updates for scene activation detection.
+
+        We track the last_recall timestamp to detect actual scene activations
+        (from Hue app, buttons, or automations) while avoiding false activations
+        when lights in an active scene are modified.
+
+        When a scene is recalled, the bridge updates last_recall timestamp.
+        When a light in an active scene is modified, last_recall stays unchanged.
+        """
+        # Only record activation if last_recall timestamp has changed
+        if (
+            (
+                current_last_recall := (
+                    self.resource.status.last_recall if self.resource.status else None
+                )
+            )
+            is not None
+            and current_last_recall != self._previous_last_recall
+        ):
+            self._async_record_activation()
+
+        # Update tracked timestamp
+        self._previous_last_recall = current_last_recall
+
+        super().on_update()
 
     @property
     def is_dynamic(self) -> bool:
@@ -248,6 +247,17 @@ class HueSceneEntity(HueSceneEntityBase):
 class HueSmartSceneEntity(HueSceneEntityBase):
     """Representation of a Smart Scene entity from Hue Scenes."""
 
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: ScenesController,
+        resource: HueSmartScene,
+    ) -> None:
+        """Initialize the smart scene entity."""
+        super().__init__(bridge, controller, resource)
+        # Track state for smart scene activation detection
+        self._previous_state = resource.state
+
     @property
     def is_active(self) -> bool:
         """Return if this smart scene is currently active."""
@@ -277,10 +287,11 @@ class HueSmartSceneEntity(HueSceneEntityBase):
 
         super().on_update()
 
-    async def async_activate(self, **kwargs: Any) -> None:
-        """Activate Hue Smart scene."""
-        # kwargs accepted for BaseScene contract but not used for smart scenes
-        _ = kwargs
+    async def async_activate(self, **_: Any) -> None:
+        """Activate Hue Smart scene.
+
+        Note: kwargs accepted for BaseScene contract but not used for smart scenes.
+        """
         await self.bridge.async_request_call(
             self.controller.smart_scene.recall,
             self.resource.id,
