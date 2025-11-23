@@ -598,13 +598,11 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 
     def configure_translation(self) -> None:
         """Configure translation attributes."""
-        translation_placeholders, translation_key = (
-            get_entity_translation_attributes(
-                self.block.name,
-                self.entity_description.translation_key,
-                self.entity_description.device_class,
-                self._default_to_device_class_name(),
-            )
+        translation_placeholders, translation_key = get_entity_translation_attributes(
+            get_rpc_channel_name(self.coordinator.device, self.key),
+            self.entity_description.translation_key,
+            self.entity_description.device_class,
+            self._default_to_device_class_name(),
         )
 
         if translation_placeholders:
