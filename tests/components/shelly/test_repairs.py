@@ -268,7 +268,7 @@ async def test_open_wifi_ap_issue(
     monkeypatch.setitem(
         mock_rpc_device.config,
         "wifi",
-        {"ap": {"enable": True, "pass": ""}},
+        {"ap": {"enable": True, "is_open": True}},
     )
 
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
@@ -308,7 +308,7 @@ async def test_open_wifi_ap_issue_no_restart(
     monkeypatch.setitem(
         mock_rpc_device.config,
         "wifi",
-        {"ap": {"enable": True, "pass": ""}},
+        {"ap": {"enable": True, "is_open": True}},
     )
 
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
@@ -354,7 +354,7 @@ async def test_open_wifi_ap_issue_exc(
     monkeypatch.setitem(
         mock_rpc_device.config,
         "wifi",
-        {"ap": {"enable": True, "pass": ""}},
+        {"ap": {"enable": True, "is_open": True}},
     )
 
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
@@ -393,7 +393,7 @@ async def test_no_open_wifi_ap_issue_with_password(
     monkeypatch.setitem(
         mock_rpc_device.config,
         "wifi",
-        {"ap": {"enable": True, "pass": "secure_password"}},
+        {"ap": {"enable": True, "is_open": False}},
     )
 
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
@@ -413,7 +413,7 @@ async def test_no_open_wifi_ap_issue_when_disabled(
     monkeypatch.setitem(
         mock_rpc_device.config,
         "wifi",
-        {"ap": {"enable": False, "pass": ""}},
+        {"ap": {"enable": False, "is_open": True}},
     )
 
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
@@ -434,7 +434,7 @@ async def test_open_wifi_ap_issue_ignore(
     monkeypatch.setitem(
         mock_rpc_device.config,
         "wifi",
-        {"ap": {"enable": True, "pass": ""}},
+        {"ap": {"enable": True, "is_open": True}},
     )
 
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)

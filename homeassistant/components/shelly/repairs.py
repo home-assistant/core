@@ -163,12 +163,12 @@ def async_manage_open_wifi_ap_issue(
 
     device = entry.runtime_data.rpc.device
 
-    # Check if WiFi AP is enabled and has no password (open/unsecured)
+    # Check if WiFi AP is enabled and is open (no password)
     if (
         (wifi_config := device.config.get("wifi"))
         and (ap_config := wifi_config.get("ap"))
         and ap_config.get("enable")
-        and not ap_config.get("pass")
+        and ap_config.get("is_open")
     ):
         ir.async_create_issue(
             hass,
