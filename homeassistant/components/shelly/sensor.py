@@ -50,9 +50,9 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
-    ShellyRpcAttributeEntity,
+    ShellyRpcAttributeChannelEntity,
     ShellySleepingBlockAttributeEntity,
-    ShellySleepingRpcAttributeEntity,
+    ShellySleepingRpcAttributeChannelEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
@@ -63,8 +63,6 @@ from .utils import (
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
-    get_entity_translation_attributes,
-    get_rpc_channel_name,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
@@ -91,7 +89,7 @@ class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
 
 
-class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
+class RpcSensor(ShellyRpcAttributeChannelEntity, SensorEntity):
     """Represent a RPC sensor."""
 
     entity_description: RpcSensorDescription
@@ -105,24 +103,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     ) -> None:
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
-
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
-        if not description.role:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
 
         if self.option_map:
             if description.role == ROLE_GENERIC:
@@ -1819,10 +1799,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, block, attribute, description)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
@@ -1835,18 +1811,6 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a REST sensor."""
 
     entity_description: RestSensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyBlockCoordinator,
-        attribute: str,
-        description: RestSensorDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, attribute, description)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     @property
     def native_value(self) -> StateType:
@@ -1870,9 +1834,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -1902,7 +1863,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         return self.restored_data.native_unit_of_measurement
 
 
-class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
+class RpcSleepingSensor(ShellySleepingRpcAttributeChannelEntity, RestoreSensor):
     """Represent a RPC sleeping sensor."""
 
     entity_description: RpcSensorDescription
@@ -1918,24 +1879,6 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, key, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
-
-        if coordinator.device.initialized:
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
-
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
