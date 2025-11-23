@@ -43,7 +43,8 @@ async def async_setup_entry(
     async def _create_gateway_port_entities(device: OmadaListDevice) -> list[Entity]:
         gateway_coordinator = controller.gateway_coordinator
         if not gateway_coordinator:
-            return []
+            # Unreachable as coordinator would be created if gateway device exists.
+            return []  # pragma: no cover
 
         entities: list[Entity] = []
         gateway = gateway_coordinator.data.get(device.mac)
