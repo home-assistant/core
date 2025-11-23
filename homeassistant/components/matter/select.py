@@ -27,7 +27,9 @@ DOOR_LOCK_OPERATING_MODE_MAP = {
     clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "no_remote_lock_unlock",
     clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
 }
-DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {v: k for k, v in DOOR_LOCK_OPERATING_MODE_MAP.items()}
+DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {
+    v: k for k, v in DOOR_LOCK_OPERATING_MODE_MAP.items()
+}
 
 NUMBER_OF_RINSES_STATE_MAP = {
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "off",
@@ -36,7 +38,9 @@ NUMBER_OF_RINSES_STATE_MAP = {
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kMax: "max",
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kUnknownEnumValue: None,
 }
-NUMBER_OF_RINSES_STATE_MAP_REVERSE = {v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()}
+NUMBER_OF_RINSES_STATE_MAP_REVERSE = {
+    v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()
+}
 
 PUMP_OPERATION_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kNormal: "normal",
@@ -599,8 +603,6 @@ DISCOVERY_SCHEMAS = [
             ha_to_device=DOOR_LOCK_OPERATING_MODE_MAP_REVERSE.get,
         ),
         entity_class=MatterAttributeSelectEntity,
-        required_attributes=(
-            clusters.DoorLock.Attributes.OperatingMode,
-        ),
+        required_attributes=(clusters.DoorLock.Attributes.OperatingMode,),
     ),
 ]
