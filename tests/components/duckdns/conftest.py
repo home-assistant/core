@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock Duck DNS configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=f"{TEST_TOKEN}.duckdns.org",
+        title=f"{TEST_SUBDOMAIN}.duckdns.org",
         data={
             CONF_DOMAIN: TEST_SUBDOMAIN,
             CONF_ACCESS_TOKEN: TEST_TOKEN,
