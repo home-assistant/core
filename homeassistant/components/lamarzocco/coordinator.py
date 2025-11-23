@@ -55,7 +55,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
-    actual_update_success = False
+    update_success = False
 
     def __init__(
         self,
@@ -93,13 +93,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             await func()
         except AuthFail as ex:
             _LOGGER.debug("Authentication failed", exc_info=True)
-            self.actual_update_success = False
+            self.update_success = False
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
-            self.actual_update_success = False
+            self.update_success = False
             # if no bluetooth coordinator, this is a fatal error
             # otherwise, bluetooth may still work
             if self.bluetooth_client is None:
@@ -107,13 +107,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_domain=DOMAIN, translation_key="api_error"
                 ) from ex
         except BluetoothConnectionFailed as err:
-            self.actual_update_success = False
+            self.update_success = False
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="bluetooth_connection_failed",
             ) from err
         else:
-            self.actual_update_success = True
+            self.update_success = True
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
     async def _async_setup(self) -> None:

@@ -91,7 +91,7 @@ class LaMarzoccoBaseEntity(
             and not (
                 self._unavailable_when_machine_off and machine_state is MachineState.OFF
             )
-            and self.coordinator.actual_update_success
+            and self.coordinator.update_success
         )
 
 
