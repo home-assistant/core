@@ -40,15 +40,15 @@ async def test_sensor(
 @pytest.mark.usefixtures("init_integration")
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    state = hass.states.get("sensor.station_test_name_1_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state
     assert state.state == "4"
 
-    state = hass.states.get("sensor.station_test_name_1_pm2_5_index")
+    state = hass.states.get("sensor.test_name_1_pm2_5_index")
     assert state
     assert state.state == "good"
 
-    state = hass.states.get("sensor.station_test_name_1_air_quality_index")
+    state = hass.states.get("sensor.test_name_1_air_quality_index")
     assert state
     assert state.state == "good"
 
@@ -60,7 +60,7 @@ async def test_availability_api_error(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    state = hass.states.get("sensor.station_test_name_1_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state
     assert state.state == "4"
 
@@ -69,15 +69,15 @@ async def test_availability_api_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.station_test_name_1_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_pm2_5_index")
+    state = hass.states.get("sensor.test_name_1_pm2_5_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_air_quality_index")
+    state = hass.states.get("sensor.test_name_1_air_quality_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -93,17 +93,17 @@ async def test_availability_api_error(
     await hass.async_block_till_done()
 
     # There is no PM2.5 data so the state should be unavailable
-    state = hass.states.get("sensor.station_test_name_1_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
     # Indexes are empty so the state should be unavailable
-    state = hass.states.get("sensor.station_test_name_1_air_quality_index")
+    state = hass.states.get("sensor.test_name_1_air_quality_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
     # Indexes are empty so the state should be unavailable
-    state = hass.states.get("sensor.station_test_name_1_pm2_5_index")
+    state = hass.states.get("sensor.test_name_1_pm2_5_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -114,15 +114,15 @@ async def test_availability_api_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.station_test_name_1_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state
     assert state.state == "4"
 
-    state = hass.states.get("sensor.station_test_name_1_pm2_5_index")
+    state = hass.states.get("sensor.test_name_1_pm2_5_index")
     assert state
     assert state.state == "good"
 
-    state = hass.states.get("sensor.station_test_name_1_air_quality_index")
+    state = hass.states.get("sensor.test_name_1_air_quality_index")
     assert state
     assert state.state == "good"
 
@@ -168,27 +168,27 @@ async def test_missing_index_data(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.station_test_name_1_nitrogen_dioxide_index")
+    state = hass.states.get("sensor.test_name_1_nitrogen_dioxide_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_ozone_index")
+    state = hass.states.get("sensor.test_name_1_ozone_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_pm10_index")
+    state = hass.states.get("sensor.test_name_1_pm10_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_pm2_5_index")
+    state = hass.states.get("sensor.test_name_1_pm2_5_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_sulphur_dioxide_index")
+    state = hass.states.get("sensor.test_name_1_sulphur_dioxide_index")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.station_test_name_1_air_quality_index")
+    state = hass.states.get("sensor.test_name_1_air_quality_index")
     assert state is None
 
 
@@ -203,12 +203,12 @@ async def test_unique_id_migration(
         Platform.SENSOR,
         DOMAIN,
         "123-pm2.5",
-        suggested_object_id="station_test_name_1_pm2_5",
+        suggested_object_id="test_name_1_pm2_5",
         disabled_by=None,
     )
 
     await setup_integration(hass, mock_config_entry)
 
-    entry = entity_registry.async_get("sensor.station_test_name_1_pm2_5")
+    entry = entity_registry.async_get("sensor.test_name_1_pm2_5")
     assert entry
     assert entry.unique_id == "123-pm25"
