@@ -1157,6 +1157,8 @@ async def test_user_flow_filters_already_configured_devices(
     # Should have manual entry
     assert "manual" in options
 
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
+
 
 async def test_user_flow_includes_ignored_devices(
     hass: HomeAssistant,
@@ -1197,6 +1199,53 @@ async def test_user_flow_includes_ignored_devices(
     # Should have the ignored device (for potential reconfiguration)
     assert "AABBCCDDEEFF" in options
     assert options["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"
+
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
+
+
+async def test_user_flow_aborts_when_another_flow_finishes_while_in_progress(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test that user flow aborts when another flow finishes and creates a config entry."""
+    # Add an ignored entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={CONF_HOST: "192.168.1.50"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock zeroconf discovery with the ignored device
+    mock_service_info = AsyncServiceInfo(
+        type_="_http._tcp.local.",
+        name="shellyplus2pm-AABBCCDDEEFF._http._tcp.local.",
+        port=80,
+        addresses=[ip_address("192.168.1.100").packed],
+        server="shellyplus2pm-AABBCCDDEEFF.local.",
+    )
+    mock_discovery.return_value = [mock_service_info]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Check device list - should include the ignored device
+    schema = result["data_schema"].schema
+    device_selector = schema[CONF_DEVICE]
+    options = device_selector.container
+
+    # Should have the ignored device (for potential reconfiguration)
+    assert "AABBCCDDEEFF" in options
+    assert options["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"
+
+    # TODO: FIXME: start a zeroconf flow for the same device, configure it
+    # to completion of CREATE_ENTRY, than finish the user flow,
+    # it should abort
 
 
 async def test_user_flow_zeroconf_device_connection_error(
@@ -1316,6 +1365,8 @@ async def test_user_flow_zeroconf_device_requires_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
+
 
 async def test_user_flow_zeroconf_invalid_mac_filtered(
     hass: HomeAssistant,
@@ -1340,6 +1391,8 @@ async def test_user_flow_zeroconf_invalid_mac_filtered(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user_manual"
 
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
+
 
 async def test_user_flow_zeroconf_no_ipv4_filtered(
     hass: HomeAssistant,
@@ -1363,6 +1416,8 @@ async def test_user_flow_zeroconf_no_ipv4_filtered(
     # Should redirect to manual entry (no valid devices)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user_manual"
+
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
 
 
 async def test_user_flow_ble_device_without_rpc_over_ble_filtered(
@@ -1402,6 +1457,8 @@ async def test_user_flow_ble_device_without_rpc_over_ble_filtered(
     # Should redirect to manual entry (no valid devices)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user_manual"
+
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
 
 
 async def test_user_flow_select_zeroconf_device_mac_mismatch(
@@ -1592,6 +1649,8 @@ async def test_user_flow_select_ble_device(
     # Should go to bluetooth_confirm step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+
+    # TODO: FIXME: need to finish this to ABORT or CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
