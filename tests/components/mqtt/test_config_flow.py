@@ -63,6 +63,8 @@ from .common import (
     MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
     MOCK_TEXT_SUBENTRY_DATA,
+    MOCK_VALVE_SUBENTRY_DATA_POSITION,
+    MOCK_VALVE_SUBENTRY_DATA_STATE,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode, get_schema_suggested_value
@@ -3779,6 +3781,74 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier MOTD",
             id="text",
+        ),
+        pytest.param(
+            MOCK_VALVE_SUBENTRY_DATA_STATE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Ice cream"},
+            {"reports_position": False},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": True,
+                "optimistic": True,
+                "valve_payload_settings": {
+                    "payload_stop": "STOP",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Ice cream",
+            id="valve_state",
+        ),
+        pytest.param(
+            MOCK_VALVE_SUBENTRY_DATA_POSITION,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Ice cream"},
+            {"device_class": "water", "reports_position": True},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "position_closed": 0,
+                "position_open": 100,
+                "retain": True,
+                "optimistic": False,
+                "valve_payload_settings": {
+                    "payload_stop": "STOP",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Ice cream",
+            id="valve_postion",
         ),
     ],
 )
