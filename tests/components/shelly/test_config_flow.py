@@ -268,13 +268,22 @@ BLE_DISCOVERY_INFO_GEN3 = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
-# Mock zeroconf service info for testing
-MOCK_ZEROCONF_SERVICE_INFO = AsyncServiceInfo(
+# Mock HTTP zeroconf service info for shellyplus2pm-AABBCCDDEEFF
+MOCK_HTTP_ZEROCONF_SERVICE_INFO = AsyncServiceInfo(
     type_="_http._tcp.local.",
     name="shellyplus2pm-AABBCCDDEEFF._http._tcp.local.",
     port=80,
     addresses=[ip_address("192.168.1.100").packed],
     server="shellyplus2pm-AABBCCDDEEFF.local.",
+)
+
+# Mock Shelly zeroconf service info for shellyplus2pm-CCBA97C2D670
+MOCK_SHELLY_ZEROCONF_SERVICE_INFO = AsyncServiceInfo(
+    type_="_http._tcp.local.",
+    name="shellyplus2pm-CCBA97C2D670._http._tcp.local.",
+    port=80,
+    addresses=[ip_address("192.168.1.100").packed],
+    server="shellyplus2pm-CCBA97C2D670.local.",
 )
 
 # Mock device info returned by get_info for BLE provisioned devices
@@ -881,7 +890,7 @@ async def test_user_flow_with_zeroconf_devices(
 ) -> None:
     """Test user flow shows discovered Zeroconf devices."""
     # Mock zeroconf discovery to return a device
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -938,7 +947,7 @@ async def test_user_flow_select_zeroconf_device(
 ) -> None:
     """Test selecting a discovered Zeroconf device completes setup."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -978,7 +987,7 @@ async def test_user_flow_select_manual_entry(
 ) -> None:
     """Test selecting manual entry from device list."""
     # Mock zeroconf discovery with a device
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1026,14 +1035,7 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
 ) -> None:
     """Test device discovered via both BLE and Zeroconf prefers Zeroconf."""
     # Mock zeroconf discovery - same MAC as BLE device
-    mock_service_info = AsyncServiceInfo(
-        type_="_http._tcp.local.",
-        name="shellyplus2pm-CCBA97C2D670._http._tcp.local.",
-        port=80,
-        addresses=[ip_address("192.168.1.100").packed],
-        server="shellyplus2pm-CCBA97C2D670.local.",
-    )
-    mock_discovery.return_value = [mock_service_info]
+    mock_discovery.return_value = [MOCK_SHELLY_ZEROCONF_SERVICE_INFO]
 
     # Inject BLE device with same MAC (from manufacturer data)
     # The manufacturer data contains WiFi MAC CCBA97C2D670
@@ -1301,7 +1303,7 @@ async def test_user_flow_includes_ignored_devices(
     entry.add_to_hass(hass)
 
     # Mock zeroconf discovery with the ignored device
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1357,7 +1359,7 @@ async def test_user_flow_aborts_when_another_flow_finishes_while_in_progress(
 ) -> None:
     """Test that user flow aborts when another flow finishes and creates a config entry."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1408,7 +1410,7 @@ async def test_user_flow_zeroconf_device_connection_error(
 ) -> None:
     """Test connection error when getting info from Zeroconf device."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1434,7 +1436,7 @@ async def test_user_flow_zeroconf_device_validation_connection_error(
 ) -> None:
     """Test connection error during validation of Zeroconf device."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1473,7 +1475,7 @@ async def test_user_flow_zeroconf_device_requires_auth(
 ) -> None:
     """Test selecting Zeroconf device that requires authentication."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1704,7 +1706,7 @@ async def test_user_flow_select_zeroconf_device_mac_mismatch(
 ) -> None:
     """Test MAC address mismatch when selecting Zeroconf device."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1787,7 +1789,7 @@ async def test_user_flow_select_zeroconf_device_not_fully_provisioned(
 ) -> None:
     """Test firmware not fully provisioned when selecting Zeroconf device."""
     # Mock zeroconf discovery
-    mock_discovery.return_value = [MOCK_ZEROCONF_SERVICE_INFO]
+    mock_discovery.return_value = [MOCK_HTTP_ZEROCONF_SERVICE_INFO]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
