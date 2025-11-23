@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import Gios
@@ -54,7 +55,8 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
         )
 
         station_id = gios.station_id
-        assert station_id is not None
+        if TYPE_CHECKING:
+            assert station_id is not None
         station_name = gios.measurement_stations[station_id].name
 
         self.device_info = DeviceInfo(
