@@ -690,7 +690,7 @@ bring-api==1.1.1
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==5.1.1
+brother==6.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -2402,7 +2402,7 @@ pysml==0.1.5
 pysmlight==0.2.8
 
 # homeassistant.components.snmp
-pysnmp==7.1.21
+pysnmp==7.1.22
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
