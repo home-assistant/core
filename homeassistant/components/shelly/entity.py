@@ -681,7 +681,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_unique_id = f"{coordinator.mac}-{key}-{attribute}"
         self._last_value = None
 
-        if entry is not None:
+        if not coordinator.device.initialized and entry is not None:
             self._attr_name = cast(str, entry.original_name)
 
     async def async_update(self) -> None:
