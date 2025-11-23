@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,8 +35,6 @@ from .const import (
     ATTR_SO2,
     ATTRIBUTION,
     DOMAIN,
-    MANUFACTURER,
-    URL,
 )
 from .coordinator import GiosConfigEntry, GiosDataUpdateCoordinator
 
@@ -184,8 +181,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
-    name = entry.data.get(CONF_NAME)
-
     coordinator = entry.runtime_data.coordinator
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
@@ -208,7 +203,7 @@ async def async_setup_entry(
     for description in SENSOR_TYPES:
         if getattr(coordinator.data, description.key) is None:
             continue
-        sensors.append(GiosSensor(name, coordinator, description))
+        sensors.append(GiosSensor(coordinator, description))
 
     async_add_entities(sensors)
 
@@ -222,27 +217,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        name: str | None,
         coordinator: GiosDataUpdateCoordinator,
         description: GiosSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        station_id = coordinator.gios.station_id
-        assert station_id is not None
-        station_name = coordinator.gios.measurement_stations[station_id].name
-        device_info_kwargs = {
-            "entry_type": DeviceEntryType.SERVICE,
-            "identifiers": {(DOMAIN, str(station_id))},
-            "manufacturer": MANUFACTURER,
-            "configuration_url": URL.format(station_id=station_id),
-        }
-        if name:
-            device_info_kwargs["name"] = name
-        else:
-            device_info_kwargs["translation_key"] = "station"
-            device_info_kwargs["translation_placeholders"] = {"station_name": station_name}
-        self._attr_device_info = DeviceInfo(**device_info_kwargs)
+
+        self._attr_device_info = coordinator.device_info
         if description.subkey:
             self._attr_unique_id = (
                 f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"

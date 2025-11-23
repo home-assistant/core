@@ -12,10 +12,12 @@ from gios.exceptions import GiosError
 from gios.model import GiosSensors
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_TIMEOUT, DOMAIN, SCAN_INTERVAL
+from .const import API_TIMEOUT, DOMAIN, MANUFACTURER, SCAN_INTERVAL, URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +51,18 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+        station_id = gios.station_id
+        assert station_id is not None
+        station_name = gios.measurement_stations[station_id].name
+
+        self.device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(gios.station_id))},
+            manufacturer=MANUFACTURER,
+            name=config_entry.data.get(CONF_NAME) or station_name,
+            configuration_url=URL.format(station_id=gios.station_id),
         )
 
     async def _async_update_data(self) -> GiosSensors:

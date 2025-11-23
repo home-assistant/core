@@ -21,7 +21,7 @@ async def test_async_setup_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test a successful setup entry."""
-    state = hass.states.get("sensor.station_test_name_1_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "4"
@@ -122,7 +122,7 @@ async def test_remove_air_quality_entities(
     ("config_data", "expected_device_name"),
     [
         ({CONF_STATION_ID: 123, CONF_NAME: "Home"}, "Home"),
-        ({CONF_STATION_ID: 123}, "Station Test Name 1"),
+        ({CONF_STATION_ID: 123}, "Test Name 1"),
     ],
 )
 async def test_device_name_based_on_config(
