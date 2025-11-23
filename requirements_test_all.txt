@@ -947,7 +947,7 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==9.0.1
+google-nest-sdm==9.1.0
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
