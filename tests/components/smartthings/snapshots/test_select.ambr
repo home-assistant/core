@@ -296,6 +296,63 @@
     'state': 'stop',
   })
 # ---
+# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_oven_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lamp',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lamp',
+    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen oven Lamp',
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_oven_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_spin_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
