@@ -38,6 +38,8 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+            self._async_abort_entries_match(data)
             wsdot_travel_times = wsdot_api.WsdotTravelTimes(user_input[CONF_API_KEY])
             try:
                 await wsdot_travel_times.get_all_travel_times()
@@ -47,8 +49,6 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
             else:
-                data = {CONF_API_KEY: user_input[CONF_API_KEY]}
-                self._async_abort_entries_match(data)
                 return self.async_create_entry(
                     title=DOMAIN,
                     data=data,
@@ -136,8 +136,12 @@ class TravelTimeSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             name = user_input[CONF_NAME]
             tt_id = self.travel_times[name]
-            data = {CONF_NAME: name, CONF_ID: tt_id}
             unique_id = str(tt_id)
+            data = {CONF_NAME: name, CONF_ID: tt_id}
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                for subentry in entry.subentries.values():
+                    if subentry.unique_id == unique_id:
+                        return self.async_abort(reason="already_configured")
             return self.async_create_entry(title=name, unique_id=unique_id, data=data)
 
         names = SelectSelector(

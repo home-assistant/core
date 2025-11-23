@@ -8,7 +8,8 @@ import pytest
 from wsdot import TravelTime, WsdotTravelError
 
 from homeassistant.components.wsdot.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -39,7 +40,7 @@ def mock_no_auth_travel_time() -> Generator[None]:
 def mock_config_data() -> dict[str, Any]:
     """Return valid test config data."""
     return {
-        CONF_API_KEY: "foo",
+        CONF_API_KEY: "abcd-1234",
     }
 
 
@@ -50,6 +51,7 @@ def mock_subentries() -> list[ConfigSubentryData]:
         ConfigSubentryData(
             subentry_type="travel_time",
             title="I-90 EB",
+            unique_id="96",
             data={
                 CONF_ID: 96,
                 CONF_NAME: "Seattle-Bellevue via I-90 (EB AM)",
@@ -59,7 +61,9 @@ def mock_subentries() -> list[ConfigSubentryData]:
 
 
 @pytest.fixture
-def mock_config_entry(mock_config_data: dict[str, Any], mock_subentries: list[ConfigSubentryData]) -> MockConfigEntry:
+def mock_config_entry(
+    mock_config_data: dict[str, Any], mock_subentries: list[ConfigSubentryData]
+) -> MockConfigEntry:
     """Mock a wsdot config entry."""
     return MockConfigEntry(
         domain=DOMAIN,

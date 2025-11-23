@@ -31,7 +31,7 @@
       "step": {
         "user": {
           "data": {
-            "name": "[%key:common::config_flow::data::username%]"
+            "name": "Travel Route Description"
           },
           "data_description": {
             "name": "The official WSDOT description of the route."

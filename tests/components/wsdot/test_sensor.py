@@ -33,7 +33,7 @@ TRAVEL_TIME_SUBENTRY = {
 
 
 @pytest.mark.parametrize(
-    "subentries",
+    "mock_subentries",
     [
         [TRAVEL_TIME_SUBENTRY],
     ],
@@ -138,7 +138,7 @@ async def test_travel_sensor_setup_no_auth(
     ids=["key-matches-", "key-does-not-match-"],
 )
 @pytest.mark.parametrize(
-    "subentries",
+    "mock_subentries",
     [
         [],
     ],
@@ -174,7 +174,7 @@ async def test_travel_sensor_platform_setup_skipped(
 
 
 @pytest.mark.parametrize(
-    "subentries",
+    "mock_subentries",
     [
         [],
     ],
