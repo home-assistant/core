@@ -76,7 +76,7 @@ async def test_service_get_kvs_value_block_device(
         )
 
     assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "not_rpc_device"
+    assert exc_info.value.translation_key == "kvs_not_supported"
     assert exc_info.value.translation_placeholders == {"device": entry.title}
 
 
@@ -141,4 +141,30 @@ async def test_config_entry_not_loaded(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "entry_not_loaded"
+    assert exc_info.value.translation_placeholders == {"device": entry.title}
+
+
+async def test_service_get_kvs_value_sleeping_device(
+    hass: HomeAssistant, mock_rpc_device: Mock, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test get_kvs_value service with RPC sleeping device."""
+    entry = await init_integration(hass, 2, sleep_period=1000)
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_KVS_VALUE,
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "kvs_not_supported"
     assert exc_info.value.translation_placeholders == {"device": entry.title}

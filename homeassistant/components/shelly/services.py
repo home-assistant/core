@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN
+from .const import CONF_SLEEP_PERIOD, DOMAIN
 from .coordinator import ShellyConfigEntry
 from .utils import get_device_entry_gen
 
@@ -61,7 +61,13 @@ def async_get_config_entry_for_service_call(
         if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="not_rpc_device",
+                translation_key="kvs_not_supported",
+                translation_placeholders={"device": config_entry.title},
+            )
+        if config_entry.data.get(CONF_SLEEP_PERIOD, 0) > 0:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="kvs_not_supported",
                 translation_placeholders={"device": config_entry.title},
             )
         return config_entry

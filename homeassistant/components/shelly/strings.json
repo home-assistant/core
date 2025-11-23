@@ -630,7 +630,7 @@
     "invalid_trigger": {
       "message": "Invalid device automation trigger (type, subtype): {trigger}"
     },
-    "not_rpc_device": {
+    "kvs_not_supported": {
       "message": "{device} does not support KVS"
     },
     "ota_update_connection_error": {
