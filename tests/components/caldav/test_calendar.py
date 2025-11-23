@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, Mock
 import zoneinfo
 
 from caldav.objects import Event
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -437,7 +436,7 @@ async def test_setup_component_config(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 45))
+@pytest.mark.freeze_time(_local_datetime(17, 45))
 async def test_ongoing_event(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -462,7 +461,7 @@ async def test_ongoing_event(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 30))
+@pytest.mark.freeze_time(_local_datetime(17, 30))
 async def test_just_ended_event(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -487,7 +486,7 @@ async def test_just_ended_event(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 00))
+@pytest.mark.freeze_time(_local_datetime(17, 00))
 async def test_ongoing_event_different_tz(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -512,7 +511,7 @@ async def test_ongoing_event_different_tz(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(19, 10))
+@pytest.mark.freeze_time(_local_datetime(19, 10))
 async def test_ongoing_floating_event_returned(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -537,7 +536,7 @@ async def test_ongoing_floating_event_returned(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(8, 30))
+@pytest.mark.freeze_time(_local_datetime(8, 30))
 async def test_ongoing_event_with_offset(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -578,7 +577,7 @@ async def test_ongoing_event_with_offset(
         )
     ],
 )
-@freeze_time(_local_datetime(12, 00))
+@pytest.mark.freeze_time(_local_datetime(12, 00))
 async def test_matching_filter(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -619,7 +618,7 @@ async def test_matching_filter(
         )
     ],
 )
-@freeze_time(_local_datetime(12, 00))
+@pytest.mark.freeze_time(_local_datetime(12, 00))
 async def test_matching_filter_real_regexp(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -658,7 +657,7 @@ async def test_matching_filter_real_regexp(
         }
     ],
 )
-@freeze_time(_local_datetime(20, 00))
+@pytest.mark.freeze_time(_local_datetime(20, 00))
 async def test_filter_matching_past_event(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -691,7 +690,7 @@ async def test_filter_matching_past_event(
         }
     ],
 )
-@freeze_time(_local_datetime(12, 00))
+@pytest.mark.freeze_time(_local_datetime(12, 00))
 async def test_no_result_with_filtering(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -765,7 +764,7 @@ async def test_all_day_event(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(21, 45))
+@pytest.mark.freeze_time(_local_datetime(21, 45))
 async def test_event_rrule(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -790,7 +789,7 @@ async def test_event_rrule(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(22, 15))
+@pytest.mark.freeze_time(_local_datetime(22, 15))
 async def test_event_rrule_ongoing(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -815,7 +814,7 @@ async def test_event_rrule_ongoing(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(22, 45))
+@pytest.mark.freeze_time(_local_datetime(22, 45))
 async def test_event_rrule_duration(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -840,7 +839,7 @@ async def test_event_rrule_duration(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(23, 15))
+@pytest.mark.freeze_time(_local_datetime(23, 15))
 async def test_event_rrule_duration_ongoing(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -865,7 +864,7 @@ async def test_event_rrule_duration_ongoing(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(23, 37))
+@pytest.mark.freeze_time(_local_datetime(23, 37))
 async def test_event_rrule_endless(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -947,7 +946,7 @@ async def test_event_rrule_all_day_early(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 15)))
+@pytest.mark.freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 15)))
 async def test_event_rrule_hourly_on_first(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -972,7 +971,7 @@ async def test_event_rrule_hourly_on_first(
 
 
 @pytest.mark.parametrize("tz", ["UTC"])
-@freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 15)))
+@pytest.mark.freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 15)))
 async def test_event_rrule_hourly_on_last(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -1104,7 +1103,7 @@ async def test_calendar_components(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 30))
+@pytest.mark.freeze_time(_local_datetime(17, 30))
 async def test_setup_config_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

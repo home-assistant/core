@@ -129,6 +129,16 @@
       "active_map": {
         "name": "Active map"
       },
+      "auto_empty": {
+        "name": "Auto-empty frequency",
+        "state": {
+          "auto": "Auto",
+          "min_10": "10 minutes",
+          "min_15": "15 minutes",
+          "min_25": "25 minutes",
+          "smart": "Smart"
+        }
+      },
       "water_amount": {
         "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
@@ -230,6 +240,9 @@
     "switch": {
       "advanced_mode": {
         "name": "Advanced mode"
+      },
+      "border_spin": {
+        "name": "Border spin"
       },
       "border_switch": {
         "name": "Border switch"

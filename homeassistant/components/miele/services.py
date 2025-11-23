@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import cast
 
-import aiohttp
+from aiohttp import ClientResponseError
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
@@ -107,7 +107,7 @@ async def set_program(call: ServiceCall) -> None:
     data = {"programId": call.data[ATTR_PROGRAM_ID]}
     try:
         await api.set_program(serial_number, data)
-    except aiohttp.ClientResponseError as ex:
+    except ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_program_error",
@@ -137,7 +137,7 @@ async def set_program_oven(call: ServiceCall) -> None:
         data["temperature"] = call.data[ATTR_TEMPERATURE]
     try:
         await api.set_program(serial_number, data)
-    except aiohttp.ClientResponseError as ex:
+    except ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_program_oven_error",
@@ -157,7 +157,7 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
 
     try:
         programs = await api.get_programs(serial_number)
-    except aiohttp.ClientResponseError as ex:
+    except ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="get_programs_error",
