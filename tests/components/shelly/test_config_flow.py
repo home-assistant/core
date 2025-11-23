@@ -2107,7 +2107,7 @@ async def test_bluetooth_provisioning_clears_match_history(
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
-    """Test bluetooth provisioning clears match history after successful provisioning."""
+    """Test bluetooth provisioning clears match history at discovery start and after successful provisioning."""
     # Inject BLE device so it's available in the bluetooth scanner
     inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_FOR_CLEAR_TEST)
 
