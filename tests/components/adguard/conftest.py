@@ -48,6 +48,18 @@ async def mock_adguard() -> AsyncMock:
 
     # async method mocks
     adguard_mock.version = AsyncMock(return_value="v0.107.50")
+    adguard_mock.protection_enabled = AsyncMock(return_value=True)
+    adguard_mock.enable_protection = AsyncMock()
+    adguard_mock.disable_protection = AsyncMock()
+    adguard_mock.parental.enabled = AsyncMock(return_value=True)
+    adguard_mock.parental.enable = AsyncMock()
+    adguard_mock.parental.disable = AsyncMock()
+    adguard_mock.safesearch.enabled = AsyncMock(return_value=True)
+    adguard_mock.safesearch.enable = AsyncMock()
+    adguard_mock.safesearch.disable = AsyncMock()
+    adguard_mock.safebrowsing.enabled = AsyncMock(return_value=True)
+    adguard_mock.safebrowsing.enable = AsyncMock()
+    adguard_mock.safebrowsing.disable = AsyncMock()
     adguard_mock.stats.dns_queries = AsyncMock(return_value=666)
     adguard_mock.stats.blocked_filtering = AsyncMock(return_value=1337)
     adguard_mock.stats.blocked_percentage = AsyncMock(return_value=200.75)
@@ -61,6 +73,12 @@ async def mock_adguard() -> AsyncMock:
     adguard_mock.filtering.enable_url = AsyncMock()
     adguard_mock.filtering.disable_url = AsyncMock()
     adguard_mock.filtering.refresh = AsyncMock()
+    adguard_mock.filtering.enabled = AsyncMock(return_value=True)
+    adguard_mock.filtering.enable = AsyncMock()
+    adguard_mock.filtering.disable = AsyncMock()
+    adguard_mock.querylog.enabled = AsyncMock(return_value=True)
+    adguard_mock.querylog.enable = AsyncMock()
+    adguard_mock.querylog.disable = AsyncMock()
     adguard_mock.update.update_available = AsyncMock(
         return_value=AdGuardHomeAvailableUpdate(
             new_version="v0.107.59",
