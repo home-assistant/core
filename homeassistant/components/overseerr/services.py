@@ -18,13 +18,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
-from .const import ATTR_LIMIT, ATTR_MEDIA_TYPE, ATTR_QUERY, ATTR_REQUESTED_BY, ATTR_SEASONS, ATTR_SORT_ORDER, \
-    ATTR_STATUS, \
-    ATTR_TMDB_ID, DOMAIN, \
-    LOGGER
+from .const import (
+    ATTR_LIMIT,
+    ATTR_MEDIA_TYPE,
+    ATTR_QUERY,
+    ATTR_REQUESTED_BY,
+    ATTR_SEASONS,
+    ATTR_SORT_ORDER,
+    ATTR_STATUS,
+    ATTR_TMDB_ID,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import OverseerrConfigEntry
-
-
 
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
@@ -45,7 +51,7 @@ SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_QUERY): str,
-        vol.Optional(ATTR_LIMIT): vol.All(vol.Coerce(int), vol.Range(min=1))
+        vol.Optional(ATTR_LIMIT): vol.All(vol.Coerce(int), vol.Range(min=1)),
     }
 )
 
@@ -134,7 +140,7 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
         # URL encode the query to handle spaces and special characters
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
-        LOGGER.error("Error searching for '%s': %s", query, str(err))
+        LOGGER.info("Error searching for '%s': %s", query, str(err))
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="connection_error",
