@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import (
     ModStatusKeyLocks,
     ModStatusOutput,
@@ -10,9 +11,11 @@ from pypck.inputs import (
 )
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import KeyLockStateModifier, RelayStateModifier, Var, VarValue
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
+from homeassistant.components.lcn.switch import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,7 +31,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 SWITCH_OUTPUT1 = "switch.testmodule_switch_output1"
 SWITCH_OUTPUT2 = "switch.testmodule_switch_output2"
@@ -502,6 +505,71 @@ async def test_pushed_keylock_status_change(
 
     state = hass.states.get(SWITCH_KEYLOCKK1)
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_method", "return_value"),
+    [
+        (
+            SWITCH_OUTPUT1,
+            "request_status_output",
+            ModStatusOutput(LcnAddr(0, 7, False), 0, 0),
+        ),
+        (
+            SWITCH_RELAY1,
+            "request_status_relays",
+            ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),
+        ),
+        (
+            SWITCH_REGULATOR1,
+            "request_status_variable",
+            ModStatusVar(LcnAddr(0, 7, False), Var.R1VARSETPOINT, VarValue(0x8000)),
+        ),
+        (
+            SWITCH_KEYLOCKK1,
+            "request_status_locked_keys",
+            ModStatusKeyLocks(LcnAddr(0, 7, False), [[False] * 8 for i in range(4)]),
+        ),
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entry: MockConfigEntry,
+    entity_id: str,
+    request_method: str,
+    return_value: ModStatusOutput | ModStatusRelays,
+) -> None:
+    """Test the availability of switch entity."""
+    await init_integration(hass, entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # no response from device -> unavailable
+    with patch.object(MockDeviceConnection, request_method, return_value=None):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # response from device -> available
+    with patch.object(
+        MockDeviceConnection,
+        request_method,
+        return_value=return_value,
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
