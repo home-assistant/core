@@ -224,7 +224,7 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco Bluetooth API centrally."""
 
-    async def _async_setup(self) -> None:
+    async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
         await self.device.get_model_info_from_bluetooth()
 
