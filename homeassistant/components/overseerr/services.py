@@ -262,9 +262,7 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
         "media": {
             "type": media_type,
             "id": tmdb_id,
-            "title": getattr(
-                first_result, "title", getattr(first_result, "name", "Unknown")
-            ),
+             "title": first_result.title if hasattr(first_result, "title") else getattr(first_result, "name", "Unknown")
         },
     }
 
