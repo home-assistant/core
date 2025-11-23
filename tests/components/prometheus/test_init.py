@@ -30,6 +30,7 @@ from homeassistant.components import (
     sensor,
     switch,
     update,
+    water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
@@ -54,6 +55,18 @@ from homeassistant.components.fan import (
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
+
+# Alias water_heater constants to avoid name clashes with similarly named climate constants
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
+    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+    ATTR_MAX_TEMP as WATER_HEATER_ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP as WATER_HEATER_ATTR_MIN_TEMP,
+    ATTR_OPERATION_LIST as WATER_HEATER_ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE as WATER_HEATER_ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH as WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW as WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -864,6 +877,75 @@ async def test_humidifier(
         entity="humidifier.hygrostat",
         mode="eco",
     ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_water_heater(
+    client: ClientSessionGenerator,
+    water_heater_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
+    """Test prometheus metrics for water_heater entities."""
+    body = await generate_latest_metrics(client)
+
+    # Temperatures
+    EntityMetric(
+        metric_name="water_heater_current_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(55.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(60.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_target_temperature_low_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(50.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_target_temperature_high_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(65.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_min_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(40.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_max_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(70.0).assert_in_metrics(body)
+
+    # Operation mode enum
+    EntityMetric(
+        metric_name="water_heater_operation_mode",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+        mode="eco",
+    ).withValue(1).assert_in_metrics(body)
+
+    # Away mode
+    EntityMetric(
+        metric_name="water_heater_away_mode",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -2105,6 +2187,38 @@ async def humidifier_fixture(
     set_state_with_entry(hass, humidifier_3, STATE_ON, humidifier_3_attributes)
     data["humidifier_3"] = humidifier_3
     data["humidifier_3_attributes"] = humidifier_3_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="water_heater_entities")
+async def water_heater_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry | dict[str, Any]]:
+    """Simulate water_heater entities."""
+    data = {}
+    wh_1 = entity_registry.async_get_or_create(
+        domain=water_heater.DOMAIN,
+        platform="test",
+        unique_id="water_heater_1",
+        suggested_object_id="geyser",
+        original_name="Geyser",
+    )
+    wh_attributes = {
+        WATER_HEATER_ATTR_CURRENT_TEMPERATURE: 55,
+        ATTR_TEMPERATURE: 60,
+        WATER_HEATER_ATTR_TARGET_TEMP_LOW: 50,
+        WATER_HEATER_ATTR_TARGET_TEMP_HIGH: 65,
+        WATER_HEATER_ATTR_MIN_TEMP: 40,
+        WATER_HEATER_ATTR_MAX_TEMP: 70,
+        WATER_HEATER_ATTR_OPERATION_MODE: "eco",
+        WATER_HEATER_ATTR_OPERATION_LIST: ["eco", "performance"],
+        WATER_HEATER_ATTR_AWAY_MODE: "on",
+    }
+    set_state_with_entry(hass, wh_1, "eco", wh_attributes)
+    data["water_heater_1"] = wh_1
+    data["water_heater_1_attributes"] = wh_attributes
 
     await hass.async_block_till_done()
     return data
