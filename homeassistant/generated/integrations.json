@@ -1467,7 +1467,7 @@
     "duckdns": {
       "name": "Duck DNS",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "duke_energy": {
