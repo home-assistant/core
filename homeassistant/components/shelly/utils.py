@@ -797,8 +797,7 @@ async def get_rpc_scripts_event_types(
     script_instances = get_rpc_key_instances(device.status, "script")
     script_events = {}
     for script in script_instances:
-        script_name = get_rpc_channel_name(device, script)
-        if script_name in ignore_scripts:
+        if get_rpc_channel_name(device, script) in ignore_scripts:
             continue
 
         script_id = get_rpc_key_id(script)
