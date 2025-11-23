@@ -396,7 +396,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # BLE device - start provisioning flow
             self.ble_device = device_data.ble_device
             self.device_name = device_data.name
-            await self.async_set_unique_id(device_data.mac)
+            await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self.context.update(
                 {
