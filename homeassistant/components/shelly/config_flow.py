@@ -110,7 +110,7 @@ MANUAL_ENTRY_STRING = "manual"
 BLUETOOTH_FINISHING_STEPS = {"do_provision", "provision_done"}
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class DiscoveredDeviceZeroconf:
     """Discovered Shelly device via Zeroconf."""
 
@@ -120,7 +120,7 @@ class DiscoveredDeviceZeroconf:
     port: int
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class DiscoveredDeviceBluetooth:
     """Discovered Shelly device via Bluetooth."""
 
