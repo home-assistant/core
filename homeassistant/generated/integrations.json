@@ -123,6 +123,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "airobot": {
+      "name": "Airobot",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airq": {
       "name": "air-Q",
       "integration_type": "hub",
@@ -1136,6 +1142,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "cosori": {
+      "name": "Cosori",
+      "integration_type": "virtual",
+      "supported_by": "vesync"
+    },
     "cozytouch": {
       "name": "Atlantic Cozytouch",
       "integration_type": "virtual",
@@ -1382,12 +1393,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "dominos": {
-      "name": "Dominos Pizza",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "doods": {
       "name": "DOODS - Dedicated Open Object Detection Service",
       "integration_type": "hub",
@@ -1462,7 +1467,7 @@
     "duckdns": {
       "name": "Duck DNS",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "duke_energy": {
@@ -2568,6 +2573,12 @@
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hanna": {
+      "name": "Hanna",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5758,7 +5769,7 @@
       "iot_class": "local_push"
     },
     "saunum": {
-      "name": "Saunum Leil",
+      "name": "Saunum",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7277,11 +7288,22 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "victron_remote_monitoring": {
-      "name": "Victron Remote Monitoring",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+    "victron": {
+      "name": "Victron",
+      "integrations": {
+        "victron_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Victron BLE"
+        },
+        "victron_remote_monitoring": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Victron Remote Monitoring"
+        }
+      }
     },
     "vilfo": {
       "name": "Vilfo Router",

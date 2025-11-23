@@ -104,7 +104,9 @@ def get_config_entry(
 
     @wraps(func)
     async def get_entry(
-        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
     ) -> None:
         """Get config_entry."""
         if not (config_entry := hass.config_entries.async_get_entry(msg["entry_id"])):
@@ -124,7 +126,7 @@ def get_config_entry(
 async def websocket_get_device_configs(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Get device configs."""
@@ -144,7 +146,7 @@ async def websocket_get_device_configs(
 async def websocket_get_entity_configs(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Get entities configs."""
@@ -175,7 +177,7 @@ async def websocket_get_entity_configs(
 async def websocket_scan_devices(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Scan for new devices."""
@@ -207,7 +209,7 @@ async def websocket_scan_devices(
 async def websocket_add_device(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Add a device."""
@@ -253,7 +255,7 @@ async def websocket_add_device(
 async def websocket_delete_device(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Delete a device."""
@@ -315,7 +317,7 @@ async def websocket_delete_device(
 async def websocket_add_entity(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Add an entity."""
@@ -381,7 +383,7 @@ async def websocket_add_entity(
 async def websocket_delete_entity(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     config_entry: LcnConfigEntry,
 ) -> None:
     """Delete an entity."""
@@ -451,7 +453,7 @@ async def async_create_or_update_device_in_config_entry(
 
 
 def get_entity_entry(
-    hass: HomeAssistant, entity_config: dict, config_entry: LcnConfigEntry
+    hass: HomeAssistant, entity_config: dict[str, Any], config_entry: LcnConfigEntry
 ) -> er.RegistryEntry | None:
     """Get entity RegistryEntry from entity_config."""
     entity_registry = er.async_get(hass)

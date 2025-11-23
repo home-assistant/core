@@ -65,7 +65,7 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title="Saunum Leil Sauna",
+                    title="Saunum",
                     data=user_input,
                 )
 
