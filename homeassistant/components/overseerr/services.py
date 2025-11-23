@@ -18,14 +18,13 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util.json import JsonValueType
 
-from .const import ATTR_REQUESTED_BY, ATTR_SORT_ORDER, ATTR_STATUS, DOMAIN, LOGGER
+from .const import ATTR_LIMIT, ATTR_MEDIA_TYPE, ATTR_QUERY, ATTR_REQUESTED_BY, ATTR_SEASONS, ATTR_SORT_ORDER, \
+    ATTR_STATUS, \
+    ATTR_TMDB_ID, DOMAIN, \
+    LOGGER
 from .coordinator import OverseerrConfigEntry
 
-ATTR_QUERY = "query"
-ATTR_LIMIT = "limit"
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_TMDB_ID = "tmdb_id"
-ATTR_SEASONS = "seasons"
+
 
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
