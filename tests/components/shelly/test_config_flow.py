@@ -1203,7 +1203,7 @@ async def test_user_flow_zeroconf_device_connection_error(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
 ) -> None:
-    """Test connection error when selecting Zeroconf device."""
+    """Test connection error when getting info from Zeroconf device."""
     # Mock zeroconf discovery
     mock_service_info = AsyncServiceInfo(
         type_="_http._tcp.local.",
@@ -1218,10 +1218,55 @@ async def test_user_flow_zeroconf_device_connection_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Select the device but connection fails
+    # Select the device but connection fails when getting info
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         side_effect=DeviceConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: "AABBCCDDEEFF"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_user_flow_zeroconf_device_validation_connection_error(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test connection error during validation of Zeroconf device."""
+    # Mock zeroconf discovery
+    mock_service_info = AsyncServiceInfo(
+        type_="_http._tcp.local.",
+        name="shellyplus2pm-AABBCCDDEEFF._http._tcp.local.",
+        port=80,
+        addresses=[ip_address("192.168.1.100").packed],
+        server="shellyplus2pm-AABBCCDDEEFF.local.",
+    )
+    mock_discovery.return_value = [mock_service_info]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select the device but connection fails during validation
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "AABBCCDDEEFF",
+                "model": MODEL_PLUS_2PM,
+                "auth": False,  # No auth required, will proceed to validate_input
+                "gen": 2,
+                "port": 80,
+            },
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.validate_input",
+            side_effect=DeviceConnectionError,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1318,6 +1363,235 @@ async def test_user_flow_zeroconf_no_ipv4_filtered(
     # Should redirect to manual entry (no valid devices)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user_manual"
+
+
+async def test_user_flow_ble_device_without_rpc_over_ble_filtered(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test BLE device without RPC-over-BLE is filtered."""
+    # Mock empty zeroconf discovery
+    mock_discovery.return_value = []
+
+    # Inject BLE device WITHOUT RPC-over-BLE (empty manufacturer data)
+    inject_bluetooth_service_info_bleak(
+        hass,
+        BluetoothServiceInfoBleak(
+            name="ShellyPlusGen3-AABBCCDDEEFF",
+            address="AA:BB:CC:DD:EE:FF",
+            rssi=-60,
+            manufacturer_data={},  # No manufacturer data = no RPC-over-BLE
+            service_data={},
+            service_uuids=[],
+            source="local",
+            device=generate_ble_device(
+                address="AA:BB:CC:DD:EE:FF",
+                name="ShellyPlusGen3-AABBCCDDEEFF",
+            ),
+            advertisement=generate_advertisement_data(),
+            time=0,
+            connectable=True,
+            tx_power=-127,
+        ),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Should redirect to manual entry (no valid devices)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_manual"
+
+
+async def test_user_flow_select_zeroconf_device_mac_mismatch(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test MAC address mismatch when selecting Zeroconf device."""
+    # Mock zeroconf discovery
+    mock_service_info = AsyncServiceInfo(
+        type_="_http._tcp.local.",
+        name="shellyplus2pm-AABBCCDDEEFF._http._tcp.local.",
+        port=80,
+        addresses=[ip_address("192.168.1.100").packed],
+        server="shellyplus2pm-AABBCCDDEEFF.local.",
+    )
+    mock_discovery.return_value = [mock_service_info]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select device but MAC address doesn't match
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "AABBCCDDEEFF",
+                "model": MODEL_PLUS_2PM,
+                "auth": False,
+                "gen": 2,
+                "port": 80,
+            },
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.validate_input",
+            side_effect=MacAddressMismatchError,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: "AABBCCDDEEFF"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mac_address_mismatch"
+
+
+async def test_user_flow_select_zeroconf_device_custom_port_not_supported(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test custom port not supported when selecting Zeroconf device."""
+    # Mock zeroconf discovery
+    mock_service_info = AsyncServiceInfo(
+        type_="_http._tcp.local.",
+        name="shellyplus2pm-AABBCCDDEEFF._http._tcp.local.",
+        port=8080,  # Custom port
+        addresses=[ip_address("192.168.1.100").packed],
+        server="shellyplus2pm-AABBCCDDEEFF.local.",
+    )
+    mock_discovery.return_value = [mock_service_info]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select device but custom port not supported
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "AABBCCDDEEFF",
+                "model": MODEL_PLUS_2PM,
+                "auth": False,
+                "gen": 2,
+                "port": 8080,
+            },
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.validate_input",
+            side_effect=CustomPortNotSupported,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: "AABBCCDDEEFF"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "custom_port_not_supported"
+
+
+async def test_user_flow_select_zeroconf_device_not_fully_provisioned(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test firmware not fully provisioned when selecting Zeroconf device."""
+    # Mock zeroconf discovery
+    mock_service_info = AsyncServiceInfo(
+        type_="_http._tcp.local.",
+        name="shellyplus2pm-AABBCCDDEEFF._http._tcp.local.",
+        port=80,
+        addresses=[ip_address("192.168.1.100").packed],
+        server="shellyplus2pm-AABBCCDDEEFF.local.",
+    )
+    mock_discovery.return_value = [mock_service_info]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select device but firmware not fully provisioned (empty model)
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "AABBCCDDEEFF",
+                "model": "",  # Empty model indicates not fully provisioned
+                "auth": False,
+                "gen": 2,
+                "port": 80,
+            },
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.validate_input",
+            return_value={
+                "title": "shellyplus2pm-AABBCCDDEEFF",
+                CONF_HOST: "192.168.1.100",
+                CONF_MODEL: "",  # Empty model
+                CONF_GEN: 2,
+            },
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: "AABBCCDDEEFF"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "firmware_not_fully_provisioned"
+
+
+async def test_user_flow_select_ble_device(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test selecting a BLE device goes to provisioning flow."""
+    # Mock empty zeroconf discovery
+    mock_discovery.return_value = []
+
+    # Inject BLE device with RPC-over-BLE enabled
+    inject_bluetooth_service_info_bleak(
+        hass,
+        BluetoothServiceInfoBleak(
+            name="ShellyPlusGen3",
+            address="AA:BB:CC:DD:EE:FF",
+            rssi=-60,
+            manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+            service_data={},
+            service_uuids=[],
+            source="local",
+            device=generate_ble_device(
+                address="AA:BB:CC:DD:EE:FF",
+                name="ShellyPlusGen3",
+            ),
+            advertisement=generate_advertisement_data(
+                manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+            ),
+            time=0,
+            connectable=True,
+            tx_power=-127,
+        ),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Select the BLE device
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DEVICE: "CCBA97C2D670"},  # MAC from manufacturer data
+    )
+
+    # Should go to bluetooth_confirm step
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
 
 
 @pytest.mark.parametrize(
