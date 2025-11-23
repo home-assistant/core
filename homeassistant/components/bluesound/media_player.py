@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import Task
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -25,6 +26,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import (
@@ -42,7 +44,12 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
-from .utils import dispatcher_join_signal, dispatcher_unjoin_signal, format_unique_id
+from .utils import (
+    dispatcher_join_signal,
+    dispatcher_unjoin_signal,
+    format_unique_id,
+    id_to_paired_player,
+)
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -90,6 +97,14 @@ async def async_setup_entry(
     async_add_entities([bluesound_player], update_before_add=True)
 
 
+@dataclass
+class EnityIdWithSyncStatus:
+    """For grouping feature."""
+
+    entity_id: str
+    sync_status: SyncStatus
+
+
 class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
@@ -120,6 +135,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._presets: list[Preset] = coordinator.data.presets
         self._group_name: str | None = None
         self._group_list: list[str] = []
+        self._group_members: list[str] | None = None
         self._bluesound_device_name = sync_status.name
         self._player = player
         self._last_status_update = dt_util.utcnow()
@@ -180,6 +196,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._last_status_update = dt_util.utcnow()
 
         self._group_list = self.rebuild_bluesound_group()
+        self._group_members = self.rebuild_group_members()
 
         self.async_write_ha_state()
 
@@ -365,11 +382,13 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                 MediaPlayerEntityFeature.VOLUME_STEP
                 | MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.GROUPING
             )
 
         supported = (
             MediaPlayerEntityFeature.CLEAR_PLAYLIST
             | MediaPlayerEntityFeature.BROWSE_MEDIA
+            | MediaPlayerEntityFeature.GROUPING
         )
 
         if not self._status.indexing:
@@ -420,6 +439,33 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             shuffle = self._status.shuffle
 
         return shuffle
+
+    @property
+    def group_members(self) -> list[str] | None:
+        """Get list of group members. Leader is always first."""
+        return self._group_members
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        if self.entity_id in group_members:
+            raise ServiceValidationError("Cannot join player to itself")
+
+        entity_ids_with_sync_status = self._entity_ids_with_sync_status()
+
+        paired_players = []
+        for group_member in group_members:
+            for entity_id, sync_status in entity_ids_with_sync_status:
+                if group_member == entity_id:
+                    paired_player = id_to_paired_player(sync_status.id)
+                    if paired_player:
+                        paired_players.append(paired_player)
+
+        if paired_players:
+            await self._player.add_followers(paired_players)
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        await self.async_unjoin()
 
     async def async_join(self, master: str) -> None:
         """Join the player to a group."""
@@ -487,6 +533,70 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         ]
         follower_names.insert(0, leader_sync_status.name)
         return follower_names
+
+    def rebuild_group_members(self) -> list[str] | None:
+        """Get list of group members. Leader is always first."""
+        if self.sync_status.leader is None and self.sync_status.followers is None:
+            return None
+
+        entity_ids_with_sync_status = self._entity_ids_with_sync_status()
+
+        leader_entity_id = None
+        followers = None
+        if self.sync_status.followers is not None:
+            leader_entity_id = self.entity_id
+            followers = self.sync_status.followers
+        elif self.sync_status.leader is not None:
+            leader_id = f"{self.sync_status.leader.ip}:{self.sync_status.leader.port}"
+            for entity_id, sync_status in entity_ids_with_sync_status:
+                if sync_status.id == leader_id:
+                    leader_entity_id = entity_id
+                    followers = sync_status.followers
+                    break
+
+        if leader_entity_id is None or followers is None:
+            return None
+
+        grouped_entity_ids = [leader_entity_id]
+        for follower in followers:
+            follower_id = f"{follower.ip}:{follower.port}"
+            entity_ids = [
+                entity_id
+                for entity_id, sync_status in entity_ids_with_sync_status
+                if sync_status.id == follower_id
+            ]
+            match entity_ids:
+                case [entity_id]:
+                    grouped_entity_ids.append(entity_id)
+                case _:
+                    pass
+
+        return grouped_entity_ids
+
+    def _entity_ids_with_sync_status(self) -> list[tuple[str, SyncStatus]]:
+        result = []
+
+        entity_registry = er.async_get(self.hass)
+
+        config_entries: list[BluesoundConfigEntry] = (
+            self.hass.config_entries.async_entries(DOMAIN)
+        )
+        for config_entry in config_entries:
+            entity_entries = er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+            for entity_entry in entity_entries:
+                if entity_entry.domain == "media_player":
+                    result.extend(
+                        [
+                            (
+                                entity_entry.entity_id,
+                                config_entry.runtime_data.coordinator.data.sync_status,
+                            )
+                        ]
+                    )
+
+        return result
 
     async def async_add_follower(self, host: str, port: int) -> None:
         """Add follower to leader."""
