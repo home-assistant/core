@@ -880,6 +880,38 @@ async def test_user_flow_with_zeroconf_devices(
     assert options["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"
     assert options["manual"] == "Enter address manually"
 
+    # Select the discovered device and complete setup
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "AABBCCDDEEFF",
+                "model": MODEL_PLUS_2PM,
+                "auth": False,
+                "gen": 2,
+                "port": 80,
+            },
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.validate_input",
+            return_value={
+                "title": "Test Zeroconf Device",
+                CONF_HOST: "192.168.1.100",
+                CONF_MODEL: MODEL_PLUS_2PM,
+                CONF_GEN: 2,
+                CONF_SLEEP_PERIOD: 0,
+            },
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: "AABBCCDDEEFF"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "AABBCCDDEEFF"
+    assert result["data"][CONF_HOST] == "192.168.1.100"
+
 
 async def test_user_flow_select_zeroconf_device(
     hass: HomeAssistant,
