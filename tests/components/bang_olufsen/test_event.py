@@ -2,16 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from inflection import underscore
 from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
     BEO_REMOTE_KEY_EVENTS,
     DEVICE_BUTTON_EVENTS,
-    DEVICE_BUTTONS,
     EVENT_TRANSLATION_MAP,
-    BangOlufsenButtons,
 )
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.const import STATE_UNKNOWN
@@ -19,7 +16,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import mock_websocket_connection
-from .const import TEST_BUTTON_EVENT_ENTITY_ID, TEST_REMOTE_KEY_EVENT_ENTITY_ID
+from .const import (
+    TEST_BUTTON_EVENT_ENTITY_ID,
+    TEST_REMOTE_KEY_EVENT_ENTITY_ID,
+    TEST_SERIAL_NUMBER_3,
+)
 from .util import get_button_entity_ids, get_remote_entity_ids
 
 from tests.common import MockConfigEntry
@@ -90,15 +91,11 @@ async def test_button_event_creation_beosound_premiere(
     await mock_websocket_connection(hass, mock_mozart_client)
 
     # Add Button Event entity ids
-    premiere_buttons = DEVICE_BUTTONS.copy()
-    premiere_buttons.remove(BangOlufsenButtons.BLUETOOTH.value)
-
     entity_ids = [
-        f"event.beosound_premiere_33333333_{underscore(button_type)}".replace(
-            "preset", "favorite_"
-        )
-        for button_type in premiere_buttons
+        *get_button_entity_ids("beosound_premiere_33333333"),
+        *get_remote_entity_ids(device_serial=TEST_SERIAL_NUMBER_3),
     ]
+    entity_ids.remove("event.beosound_premiere_33333333_bluetooth")
 
     # Check that the entities are available
     for entity_id in entity_ids:
