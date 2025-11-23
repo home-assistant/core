@@ -1,5 +1,6 @@
 """Coordinator for fetching data from Google Air Quality API."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final
@@ -19,9 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL: Final = timedelta(hours=1)
 
-type GoogleAirQualityConfigEntry = ConfigEntry[
-    dict[str, GoogleAirQualityUpdateCoordinator]
-]
+type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityRuntimeData]
 
 
 class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
@@ -59,3 +58,11 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
             ) from ex
+
+
+@dataclass
+class GoogleAirQualityRuntimeData:
+    """Runtime data for the Google Air Quality integration."""
+
+    api: GoogleAirQualityApi
+    subentries_runtime_data: dict[str, GoogleAirQualityUpdateCoordinator]

@@ -1,17 +1,20 @@
 """The Google Air Quality integration."""
 
 import asyncio
-from typing import TYPE_CHECKING
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.auth import Auth
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFERRER
-from .coordinator import GoogleAirQualityConfigEntry, GoogleAirQualityUpdateCoordinator
+from .coordinator import (
+    GoogleAirQualityConfigEntry,
+    GoogleAirQualityRuntimeData,
+    GoogleAirQualityUpdateCoordinator,
+)
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -23,10 +26,9 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Google Air Quality from a config entry."""
     session = async_get_clientsession(hass)
-    if TYPE_CHECKING:
-        assert entry.unique_id is not None
+    api_key = entry.data[CONF_API_KEY]
     referrer = entry.data.get(CONF_REFERRER)
-    auth = Auth(session, entry.unique_id, referrer=referrer)
+    auth = Auth(session, api_key, referrer=referrer)
     client = GoogleAirQualityApi(auth)
     coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = {}
     for subentry_id in entry.subentries:
@@ -39,8 +41,12 @@ async def async_setup_entry(
             for coordinator in coordinators.values()
         )
     )
-    entry.runtime_data = coordinators
+    entry.runtime_data = GoogleAirQualityRuntimeData(
+        api=client,
+        subentries_runtime_data=coordinators,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
     return True
 
 
@@ -49,3 +55,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_update_options(
+    hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
+) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)

@@ -136,10 +136,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinators = entry.runtime_data
+    coordinators = entry.runtime_data.subentries_runtime_data
 
     for subentry_id, subentry in entry.subentries.items():
         coordinator = coordinators[subentry_id]
+        _LOGGER.debug("subentry.data: %s", subentry.data)
         async_add_entities(
             (
                 AirQualitySensorEntity(coordinator, description, subentry_id, subentry)
@@ -169,13 +170,12 @@ class AirQualitySensorEntity(
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)
         self.entity_description = description
-        name = subentry.data["name"]
         self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
             },
-            name=name,
+            name=subentry.title,
             entry_type=DeviceEntryType.SERVICE,
         )
         self._attr_translation_placeholders = {

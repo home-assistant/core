@@ -13,15 +13,23 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
+    "error": {
+      "cannot_connect": "Unable to connect to the Google Air Quality API:\n\n{error_message}",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "api_key": "The API key provided by Google."
+          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Air Quality API",
+          "location": "Location coordinates",
+          "name": "Location name"
         },
-        "description": "This integration provides air quality data from Google. You need an API-Key for setting up the integration. Read the [instructions]({more_info_url}) for more details.",
+        "description": "Get your API key from [here]({api_key_url}).",
         "sections": {
           "api_key_options": {
             "data": {

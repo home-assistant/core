@@ -1,5 +1,7 @@
 """Tests for Google Air Quality."""
 
+from unittest.mock import AsyncMock
+
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
 import pytest
 
@@ -9,26 +11,36 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_setup(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
 ) -> None:
     """Test successful setup and unload."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_integration_and_subentry")
-@pytest.mark.parametrize("api_error", [GoogleAirQualityApiError("some error")])
-async def test_async_update_data_failure(
+@pytest.mark.parametrize(
+    "failing_api_method",
+    [
+        "async_air_quality",
+    ],
+)
+async def test_config_not_ready(
     hass: HomeAssistant,
-    config_and_subentry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+    failing_api_method: str,
 ) -> None:
-    """Test for no reply from the API."""
-    assert config_and_subentry.state is ConfigEntryState.SETUP_RETRY
+    """Test for setup failure if an API call fails."""
+    getattr(mock_api, failing_api_method).side_effect = GoogleAirQualityApiError()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

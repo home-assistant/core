@@ -1,8 +1,7 @@
 """Test the Google Air Quality sensor."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -13,21 +12,21 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("setup_integration_and_subentry")
 async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_and_subentry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Snapshot test of the sensors."""
-    await hass.async_block_till_done()
-    assert config_and_subentry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.google_air_quality.PLATFORMS",
         [Platform.SENSOR],
     ):
         await snapshot_platform(
-            hass, entity_registry, snapshot, config_and_subentry.entry_id
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
