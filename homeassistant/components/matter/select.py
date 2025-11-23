@@ -28,6 +28,7 @@ DOOR_LOCK_OPERATING_MODE_MAP = {
     clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
 }
 DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {v: k for k, v in DOOR_LOCK_OPERATING_MODE_MAP.items()}
+
 NUMBER_OF_RINSES_STATE_MAP = {
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "off",
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNormal: "normal",
@@ -36,6 +37,7 @@ NUMBER_OF_RINSES_STATE_MAP = {
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kUnknownEnumValue: None,
 }
 NUMBER_OF_RINSES_STATE_MAP_REVERSE = {v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()}
+
 PUMP_OPERATION_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kNormal: "normal",
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kMinimum: "minimum",
@@ -43,7 +45,6 @@ PUMP_OPERATION_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kLocal: "local",
 }
 PUMP_OPERATION_MODE_MAP_REVERSE = {v: k for k, v in PUMP_OPERATION_MODE_MAP.items()}
-
 
 type SelectCluster = (
     clusters.ModeSelect
