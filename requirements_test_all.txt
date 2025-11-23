@@ -2010,7 +2010,7 @@ pysml==0.1.5
 pysmlight==0.2.8
 
 # homeassistant.components.snmp
-pysnmp==7.1.21
+pysnmp==7.1.22
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
