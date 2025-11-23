@@ -127,17 +127,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _internal_async_setup(self) -> None:
         """Actual setup logic."""
 
-    async def _async_setup(self) -> None:
-        """Set up coordinator."""
-        await self.__handle_internal_update(self._internal_async_setup)
-
-    async def _async_update_data(self) -> None:
-        """Do the data update."""
-        await self.__handle_internal_update(self._internal_async_update_data)
-
-    async def _internal_async_setup(self) -> None:
-        """Actual setup logic."""
-
     @abstractmethod
     async def _internal_async_update_data(self) -> None:
         """Actual data update logic."""
