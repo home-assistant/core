@@ -31,7 +31,8 @@ async def async_setup_entry(
 class LeilSaunaLight(LeilSaunaEntity, LightEntity):
     """Representation of a Saunum Leil Sauna light entity."""
 
-    _attr_translation_key = "sauna_light"
+    _attr_has_entity_name = True
+    _attr_translation_key = "light"
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
@@ -53,8 +54,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
         except SaunumException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_light_failed",
-                translation_placeholders={"state": "on"},
+                translation_key="set_light_on_failed",
             ) from err
 
         await self.coordinator.async_request_refresh()
@@ -66,8 +66,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
         except SaunumException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_light_failed",
-                translation_placeholders={"state": "off"},
+                translation_key="set_light_off_failed",
             ) from err
 
         await self.coordinator.async_request_refresh()

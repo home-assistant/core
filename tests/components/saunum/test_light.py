@@ -58,7 +58,7 @@ async def test_light_service_calls(
     expected_args: tuple,
 ) -> None:
     """Test light service calls."""
-    entity_id = "light.saunum_leil"
+    entity_id = "light.saunum_leil_light"
 
     # Mock the client method to update the coordinator data
     async def update_light_state(*args):
@@ -86,24 +86,28 @@ async def test_light_service_calls(
 
 
 @pytest.mark.parametrize(
-    "service",
-    [SERVICE_TURN_ON, SERVICE_TURN_OFF],
+    ("service", "expected_error"),
+    [
+        (SERVICE_TURN_ON, "Failed to turn on light"),
+        (SERVICE_TURN_OFF, "Failed to turn off light"),
+    ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_light_service_call_failure(
     hass: HomeAssistant,
     mock_saunum_client,
     service: str,
+    expected_error: str,
 ) -> None:
     """Test handling of light service call failures."""
-    entity_id = "light.saunum_leil"
+    entity_id = "light.saunum_leil_light"
 
     # Make the client method raise an exception
     mock_saunum_client.async_set_light_control.side_effect = SaunumException(
         "Connection lost"
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to turn light"):
+    with pytest.raises(HomeAssistantError, match=expected_error):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             service,
