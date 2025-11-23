@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.light import ColorMode, LightEntity
@@ -11,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DEVICE_TYPE_LIGHT_SWITCH
 from .coordinator import MiHomeConfigEntry
 from .entity import MiHomeEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -46,10 +49,26 @@ class MiHomeLightEntity(MiHomeEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self.coordinator.api.async_set_device_state(self.device_id, True)
-        await self.coordinator.async_request_refresh()
+        _LOGGER.debug("Turning on light %s", self.device_id)
+        try:
+            await self.coordinator.api.async_set_device_state(self.device_id, True)
+            _LOGGER.debug(
+                "Successfully sent turn on command for light %s", self.device_id
+            )
+            await self.coordinator.async_request_refresh()
+        except Exception:
+            _LOGGER.exception("Failed to turn on light %s", self.device_id)
+            raise
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.coordinator.api.async_set_device_state(self.device_id, False)
-        await self.coordinator.async_request_refresh()
+        _LOGGER.debug("Turning off light %s", self.device_id)
+        try:
+            await self.coordinator.api.async_set_device_state(self.device_id, False)
+            _LOGGER.debug(
+                "Successfully sent turn off command for light %s", self.device_id
+            )
+            await self.coordinator.async_request_refresh()
+        except Exception:
+            _LOGGER.exception("Failed to turn off light %s", self.device_id)
+            raise

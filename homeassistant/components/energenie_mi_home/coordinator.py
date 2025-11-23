@@ -52,8 +52,15 @@ class MiHomeCoordinator(DataUpdateCoordinator[dict[str, MiHomeDevice]]):
         """Fetch data from Mi Home API."""
         try:
             devices = await self.api.async_get_devices()
-            return {device.device_id: device for device in devices}
+            device_dict = {device.device_id: device for device in devices}
+            _LOGGER.debug(
+                "Coordinator updated with %d devices: %s",
+                len(device_dict),
+                [f"{d.device_id}(available={d.available})" for d in devices],
+            )
         except MiHomeAuthError as err:
             raise ConfigEntryAuthFailed("Authentication failed") from err
         except (MiHomeConnectionError, Exception) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+        else:
+            return device_dict

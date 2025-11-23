@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import MiHomeCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 # Device manufacturer info
 MANUFACTURER = "Energenie"
@@ -44,7 +48,23 @@ class MiHomeEntity(CoordinatorEntity[MiHomeCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not super().available:
+        coordinator_available = super().available
+        if not coordinator_available:
+            _LOGGER.debug(
+                "Entity %s unavailable: coordinator not available", self.device_id
+            )
             return False
         device = self.coordinator.data.get(self.device_id)
-        return device is not None and device.available if device else False
+        if device is None:
+            _LOGGER.debug(
+                "Entity %s unavailable: device not found in coordinator data (available devices: %s)",
+                self.device_id,
+                list(self.coordinator.data.keys()) if self.coordinator.data else "none",
+            )
+            return False
+        if not device.available:
+            _LOGGER.debug(
+                "Entity %s unavailable: device.available is False", self.device_id
+            )
+            return False
+        return True

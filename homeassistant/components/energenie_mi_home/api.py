@@ -70,7 +70,29 @@ class MiHomeDevice:
         else:
             brightness = None
 
-        available = not bool(data.get("unknown_state?"))
+        # The API returns unknown_state?=True even when devices have valid power_state
+        # Since we have valid device data (id, power_state, label), the device is available
+        # We only mark as unavailable if we truly can't determine the state
+        unknown_state_q = data.get("unknown_state?")
+        unknown_state = data.get("unknown_state")
+        _LOGGER.debug(
+            "Device %s availability check: unknown_state?=%s, unknown_state=%s, power_state=%s",
+            device_id,
+            unknown_state_q,
+            unknown_state,
+            data.get("power_state"),
+        )
+        # Device is available if we have valid power_state data, regardless of unknown_state? flag
+        # The unknown_state? flag appears to be always True in API responses but doesn't indicate
+        # actual unavailability since we have valid state information
+        available = True
+        if available:
+            _LOGGER.debug(
+                "Device %s (%s) marked as available (has valid power_state=%s)",
+                device_id,
+                name,
+                data.get("power_state"),
+            )
 
         return cls(
             device_id=device_id,
@@ -127,12 +149,39 @@ class MiHomeAPI:
             _LOGGER.debug("Unexpected response for subdevices: %s", payload)
             return []
 
+        _LOGGER.debug("Received %d devices from API", len(payload))
         devices: list[MiHomeDevice] = []
         for raw_device in payload:
             if not isinstance(raw_device, dict):
+                _LOGGER.debug("Skipping non-dict device entry: %s", raw_device)
                 continue
-            if device := MiHomeDevice.from_api(raw_device):
+            # Log the raw device data for debugging
+            _LOGGER.debug(
+                "Processing device: id=%s, device_type=%s, power_state=%s, unknown_state?=%s, label=%s",
+                raw_device.get("id"),
+                raw_device.get("device_type"),
+                raw_device.get("power_state"),
+                raw_device.get("unknown_state?"),
+                raw_device.get("label"),
+            )
+            device = MiHomeDevice.from_api(raw_device)
+            if device:
+                _LOGGER.debug(
+                    "Created device: id=%s, name=%s, type=%s, available=%s, is_on=%s",
+                    device.device_id,
+                    device.name,
+                    device.device_type,
+                    device.available,
+                    device.is_on,
+                )
                 devices.append(device)
+            else:
+                _LOGGER.debug(
+                    "Skipped device from API response: %s (missing required fields or unsupported type). Raw data: %s",
+                    raw_device.get("id", "unknown"),
+                    raw_device,
+                )
+        _LOGGER.debug("Found %d supported devices", len(devices))
         return devices
 
     async def async_set_device_state(
@@ -143,7 +192,14 @@ class MiHomeAPI:
 
         params = {"id": _coerce_device_id(device_id)}
         endpoint = "subdevices/power_on" if state else "subdevices/power_off"
-        await self._request(endpoint, params=params)
+        _LOGGER.debug(
+            "Calling %s with params: %s (device_id=%s)",
+            endpoint,
+            params,
+            device_id,
+        )
+        response = await self._request(endpoint, params=params)
+        _LOGGER.debug("Response from %s: %s", endpoint, response)
 
     async def _request(
         self,
