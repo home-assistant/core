@@ -580,4 +580,37 @@ DISCOVERY_SCHEMAS = [
         vendor_id=(4619,),
         product_id=(4097,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="DoorLockOperatingMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="door_lock_operating_mode",
+            options=[
+                "Normal",
+                "Vacation",
+                "Privacy",
+                "NoRemoteLockUnlock",
+                "Passage",
+            ],
+            device_to_ha={
+                0: "Normal",
+                1: "Vacation",
+                2: "Privacy",
+                3: "NoRemoteLockUnlock",
+                4: "Passage",
+            }.get,
+            ha_to_device={
+                "Normal": 0,
+                "Vacation": 1,
+                "Privacy": 2,
+                "NoRemoteLockUnlock": 3,
+                "Passage": 4,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.DoorLock.Attributes.OperatingMode,
+        ),
+    ),
 ]

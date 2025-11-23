@@ -307,6 +307,12 @@
       },
       "water_heater_mode": {
         "name": "Water heater mode"
+      },
+      "door_lock_operating_mode": {
+        "name": "Operating Mode",
+        "state": {
+          "NoRemoteLockUnlock": "No remote lock/unlock"
+        }
       }
     },
     "sensor": {
