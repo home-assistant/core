@@ -135,7 +135,7 @@ async def test_async_dock(mock_mower_coordinator) -> None:
     """Test the async_dock method."""
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     # Test working mode
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
@@ -159,7 +159,7 @@ async def test_async_dock_returning(mock_mower_coordinator) -> None:
     """Test the async_dock method when already returning."""
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_RETURNING
     mock_mower_coordinator.data.report_data.dev.charge_state = 0
@@ -178,7 +178,7 @@ async def test_async_dock_ready(mock_mower_coordinator) -> None:
     """Test the async_dock method when device is ready."""
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
     mock_mower_coordinator.data.report_data.dev.charge_state = 0
@@ -211,7 +211,7 @@ async def test_async_dock_command_exception(mock_mower_coordinator) -> None:
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_error = COMMAND_EXCEPTIONS[0]("Test error")
     mock_mower_coordinator.async_send_command = AsyncMock(side_effect=mock_error)
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
     mock_mower_coordinator.data.report_data.dev.charge_state = 0
@@ -229,7 +229,7 @@ async def test_async_pause(mock_mower_coordinator) -> None:
     """Test the async_pause method."""
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     # Test working mode
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
@@ -248,7 +248,7 @@ async def test_async_pause_returning(mock_mower_coordinator) -> None:
     """Test the async_pause method when returning."""
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_RETURNING
 
@@ -280,7 +280,7 @@ async def test_async_pause_not_working_or_returning(mock_mower_coordinator) -> N
     """Test the async_pause method when not in working or returning mode."""
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
 
@@ -296,7 +296,7 @@ async def test_async_pause_command_exception(mock_mower_coordinator) -> None:
     entity = MammotionLawnMowerEntity(mock_mower_coordinator)
     mock_error = COMMAND_EXCEPTIONS[0]("Test error")
     mock_mower_coordinator.async_send_command = AsyncMock(side_effect=mock_error)
-    mock_mower_coordinator.async_request_iot_sync = AsyncMock()
+    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
 
     mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
 
