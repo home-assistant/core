@@ -1011,7 +1011,7 @@
                 "state_locked": "The payload received at the state topic that represents the \"locked\" state.",
                 "state_locking": "The payload received at the state topic that represents the \"locking\" state."
               },
-              "name": "Lock payload settings"
+              "name": "Valve payload settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
