@@ -292,6 +292,16 @@ def mock_wifi_provision() -> Generator[AsyncMock]:
         yield mock_provision
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery() -> Generator[AsyncMock]:
+    """Mock device discovery to return empty by default."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_discover_devices",
+        return_value=[],
+    ) as mock_disc:
+        yield mock_disc
+
+
 @pytest.mark.parametrize(
     ("gen", "model", "port"),
     [

@@ -262,46 +262,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return mac, device_name
 
-    async def _async_connect_and_setup(self, host: str, port: int) -> ConfigFlowResult:
-        """Connect to device and set up entry."""
-        try:
-            self.info = await self._async_get_info(host, port)
-        except DeviceConnectionError:
-            return self.async_abort(reason="cannot_connect")
-
-        await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
-        self._abort_if_unique_id_configured({CONF_HOST: host})
-
-        self.host = host
-        self.port = port
-
-        if get_info_auth(self.info):
-            return await self.async_step_credentials()
-
-        try:
-            device_info = await validate_input(
-                self.hass, self.host, self.port, self.info, {}
-            )
-        except DeviceConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except MacAddressMismatchError:
-            return self.async_abort(reason="mac_address_mismatch")
-        except CustomPortNotSupported:
-            return self.async_abort(reason="custom_port_not_supported")
-
-        if device_info[CONF_MODEL]:
-            return self.async_create_entry(
-                title=device_info["title"],
-                data={
-                    CONF_HOST: self.host,
-                    CONF_PORT: self.port,
-                    CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                    CONF_MODEL: device_info[CONF_MODEL],
-                    CONF_GEN: device_info[CONF_GEN],
-                },
-            )
-        return self.async_abort(reason="firmware_not_fully_provisioned")
-
     async def _async_discover_zeroconf_devices(
         self,
     ) -> dict[str, DiscoveredDeviceZeroconf]:
@@ -376,9 +336,47 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if isinstance(device_data, DiscoveredDeviceZeroconf):
                 # Zeroconf device - connect directly
-                return await self._async_connect_and_setup(
-                    device_data.host, device_data.port
+                try:
+                    self.info = await self._async_get_info(
+                        device_data.host, device_data.port
+                    )
+                except DeviceConnectionError:
+                    return self.async_abort(reason="cannot_connect")
+
+                await self.async_set_unique_id(
+                    self.info[CONF_MAC], raise_on_progress=False
                 )
+                self._abort_if_unique_id_configured({CONF_HOST: device_data.host})
+
+                self.host = device_data.host
+                self.port = device_data.port
+
+                if get_info_auth(self.info):
+                    return await self.async_step_credentials()
+
+                try:
+                    device_info = await validate_input(
+                        self.hass, self.host, self.port, self.info, {}
+                    )
+                except DeviceConnectionError:
+                    return self.async_abort(reason="cannot_connect")
+                except MacAddressMismatchError:
+                    return self.async_abort(reason="mac_address_mismatch")
+                except CustomPortNotSupported:
+                    return self.async_abort(reason="custom_port_not_supported")
+
+                if device_info[CONF_MODEL]:
+                    return self.async_create_entry(
+                        title=device_info["title"],
+                        data={
+                            CONF_HOST: self.host,
+                            CONF_PORT: self.port,
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                            CONF_MODEL: device_info[CONF_MODEL],
+                            CONF_GEN: device_info[CONF_GEN],
+                        },
+                    )
+                return self.async_abort(reason="firmware_not_fully_provisioned")
 
             # BLE device - start provisioning flow
             self.ble_device = device_data.ble_device
@@ -436,15 +434,56 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle manual entry step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+
             try:
-                return await self._async_connect_and_setup(
-                    user_input[CONF_HOST], user_input[CONF_PORT]
-                )
+                self.info = await self._async_get_info(host, port)
+            except DeviceConnectionError:
+                errors["base"] = "cannot_connect"
             except InvalidHostError:
                 errors["base"] = "invalid_host"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(
+                    self.info[CONF_MAC], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured({CONF_HOST: host})
+
+                self.host = host
+                self.port = port
+
+                if get_info_auth(self.info):
+                    return await self.async_step_credentials()
+
+                try:
+                    device_info = await validate_input(
+                        self.hass, self.host, self.port, self.info, {}
+                    )
+                except DeviceConnectionError:
+                    errors["base"] = "cannot_connect"
+                except MacAddressMismatchError:
+                    errors["base"] = "mac_address_mismatch"
+                except CustomPortNotSupported:
+                    errors["base"] = "custom_port_not_supported"
+                except Exception:  # noqa: BLE001
+                    LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    if device_info[CONF_MODEL]:
+                        return self.async_create_entry(
+                            title=device_info["title"],
+                            data={
+                                CONF_HOST: user_input[CONF_HOST],
+                                CONF_PORT: user_input[CONF_PORT],
+                                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                                CONF_MODEL: device_info[CONF_MODEL],
+                                CONF_GEN: device_info[CONF_GEN],
+                            },
+                        )
+                    return self.async_abort(reason="firmware_not_fully_provisioned")
 
         return self.async_show_form(
             step_id="user_manual", data_schema=CONFIG_SCHEMA, errors=errors
