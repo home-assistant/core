@@ -88,7 +88,7 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.bridge_device["serial"])},
         )
-        self._smart_away_unique_id = f"{data.bridge_device['serial']}_smart_away"
+        self._smart_away_unique_id = f"{self._bridge_unique_id}_smart_away"
 
     @property
     def unique_id(self) -> str:

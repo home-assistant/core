@@ -37,7 +37,7 @@ async def test_smart_away_switch_setup(
     # Verify entity is registered
     entity_entry = entity_registry.async_get(smart_away_entity_id)
     assert entity_entry is not None
-    assert entity_entry.unique_id == "1234_smart_away"
+    assert entity_entry.unique_id == "000004d2_smart_away"
 
     # Verify initial state is off
     state = hass.states.get(smart_away_entity_id)
