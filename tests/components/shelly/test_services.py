@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.shelly.services import ATTR_KEY, SERVICE_GET_KVS_VALUE
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -111,4 +112,33 @@ async def test_service_get_kvs_value_exc(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"device": entry.title}
+
+
+async def test_config_entry_not_loaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test config entry not loaded."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_KVS_VALUE,
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "entry_not_loaded"
     assert exc_info.value.translation_placeholders == {"device": entry.title}
