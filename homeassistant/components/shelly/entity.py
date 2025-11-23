@@ -596,34 +596,21 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 
         return self.entity_description.available(self.sub_status)
 
-
-class ShellyRpcAttributeChannelEntity(ShellyRpcAttributeEntity):
-    """Helper class to represent a rpc attribute."""
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcEntityDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if not description.role:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
+    def configure_translation(self) -> None:
+        """Configure translation attributes."""
+        translation_placeholders, translation_key = (
+            get_entity_translation_attributes(
+                self.block.name,
+                self.entity_description.translation_key,
+                self.entity_description.device_class,
+                self._default_to_device_class_name(),
             )
+        )
 
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
+            if translation_key:
+                self._attr_translation_key = translation_key
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
@@ -720,36 +707,6 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
             "Entity %s comes from a sleeping device, update is not possible",
             self.entity_id,
         )
-
-
-class ShellySleepingRpcAttributeChannelEntity(ShellySleepingRpcAttributeEntity):
-    """Helper class to represent a sleeping rpc attribute."""
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcEntityDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-
-        if coordinator.device.initialized:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
 
 
 def get_entity_class(

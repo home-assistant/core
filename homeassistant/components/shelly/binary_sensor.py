@@ -16,6 +16,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE, ROLE_GENERIC
@@ -26,9 +27,9 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
-    ShellyRpcAttributeChannelEntity,
+    ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    ShellySleepingRpcAttributeChannelEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
@@ -64,7 +65,7 @@ class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescr
     """Class to describe a REST binary sensor."""
 
 
-class RpcBinarySensor(ShellyRpcAttributeChannelEntity, BinarySensorEntity):
+class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     """Represent a RPC binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
@@ -79,13 +80,16 @@ class RpcBinarySensor(ShellyRpcAttributeChannelEntity, BinarySensorEntity):
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
 
-        if not description.role and description.key == "input":
-            if custom_name := get_rpc_custom_name(coordinator.device, key):
-                self._attr_name = custom_name
+        if not description.role:
+            if description.key != "input":
+                self.configure_translation()
             else:
-                _, _, component_id = get_rpc_key(key)
-                self._attr_translation_placeholders = {"input_number": component_id}
-                self._attr_translation_key = "input_with_number"
+                if custom_name := get_rpc_custom_name(coordinator.device, key):
+                    self._attr_name = custom_name
+                else:
+                    _, _, component_id = get_rpc_key(key)
+                    self._attr_translation_placeholders = {"input_number": component_id}
+                    self._attr_translation_key = "input_with_number"
 
     @property
     def is_on(self) -> bool:
@@ -472,11 +476,25 @@ class BlockSleepingBinarySensor(
 
 
 class RpcSleepingBinarySensor(
-    ShellySleepingRpcAttributeChannelEntity, BinarySensorEntity, RestoreEntity
+    ShellySleepingRpcAttributeEntity, BinarySensorEntity, RestoreEntity
 ):
     """Represent a RPC sleeping binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+
+        if coordinator.device.initialized:
+            self.configure_translation()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
