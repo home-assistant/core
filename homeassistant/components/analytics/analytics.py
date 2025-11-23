@@ -59,9 +59,6 @@ from homeassistant.loader import (
 from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
-    ANALYTICS_ENDPOINT_URL,
-    ANALYTICS_ENDPOINT_URL_DEV,
-    ANALYTICS_SNAPSHOT_ENDPOINT_URL,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
     ATTR_ARCH,
@@ -91,10 +88,14 @@ from .const import (
     ATTR_USER_COUNT,
     ATTR_UUID,
     ATTR_VERSION,
+    BASIC_ENDPOINT_URL,
+    BASIC_ENDPOINT_URL_DEV,
     DOMAIN,
     INTERVAL,
     LOGGER,
     PREFERENCE_SCHEMA,
+    SNAPSHOT_DEFAULT_URL,
+    SNAPSHOT_URL_PATH,
     SNAPSHOT_VERSION,
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -236,10 +237,18 @@ class AnalyticsData:
 class Analytics:
     """Analytics helper class for the analytics integration."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        snapshots_url: str | None = None,
+        disable_snapshots: bool = False,
+    ) -> None:
         """Initialize the Analytics class."""
-        self.hass: HomeAssistant = hass
-        self.session = async_get_clientsession(hass)
+        self._hass: HomeAssistant = hass
+        self._snapshots_url = snapshots_url
+        self._disable_snapshots = disable_snapshots
+
+        self._session = async_get_clientsession(hass)
         self._data = AnalyticsData(False, {})
         self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
         self._basic_scheduled: CALLBACK_TYPE | None = None
@@ -249,13 +258,15 @@ class Analytics:
     def preferences(self) -> dict:
         """Return the current active preferences."""
         preferences = self._data.preferences
-        return {
+        result = {
             ATTR_BASE: preferences.get(ATTR_BASE, False),
-            ATTR_SNAPSHOTS: preferences.get(ATTR_SNAPSHOTS, False),
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
             ATTR_USAGE: preferences.get(ATTR_USAGE, False),
             ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
         }
+        if not self._disable_snapshots:
+            result[ATTR_SNAPSHOTS] = preferences.get(ATTR_SNAPSHOTS, False)
+        return result
 
     @property
     def onboarded(self) -> bool:
@@ -272,13 +283,13 @@ class Analytics:
         """Return the endpoint that will receive the payload."""
         if RELEASE_CHANNEL is ReleaseChannel.DEV:
             # dev installations will contact the dev analytics environment
-            return ANALYTICS_ENDPOINT_URL_DEV
-        return ANALYTICS_ENDPOINT_URL
+            return BASIC_ENDPOINT_URL_DEV
+        return BASIC_ENDPOINT_URL
 
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return is_hassio(self.hass)
+        return is_hassio(self._hass)
 
     async def load(self) -> None:
         """Load preferences."""
@@ -288,7 +299,7 @@ class Analytics:
 
         if (
             self.supervisor
-            and (supervisor_info := hassio.get_supervisor_info(self.hass)) is not None
+            and (supervisor_info := hassio.get_supervisor_info(self._hass)) is not None
         ):
             if not self.onboarded:
                 # User have not configured analytics, get this setting from the supervisor
@@ -315,7 +326,7 @@ class Analytics:
 
         if self.supervisor:
             await hassio.async_update_diagnostics(
-                self.hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
+                self._hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
             )
 
     async def send_analytics(self, _: datetime | None = None) -> None:
@@ -323,7 +334,7 @@ class Analytics:
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             return
 
-        hass = self.hass
+        hass = self._hass
         supervisor_info = None
         operating_system_info: dict[str, Any] = {}
 
@@ -463,7 +474,7 @@ class Analytics:
 
         try:
             async with timeout(30):
-                response = await self.session.post(self.endpoint_basic, json=payload)
+                response = await self._session.post(self.endpoint_basic, json=payload)
                 if response.status == 200:
                     LOGGER.info(
                         (
@@ -479,11 +490,9 @@ class Analytics:
                         self.endpoint_basic,
                     )
         except TimeoutError:
-            LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
+            LOGGER.error("Timeout sending analytics to %s", BASIC_ENDPOINT_URL)
         except aiohttp.ClientError as err:
-            LOGGER.error(
-                "Error sending analytics to %s: %r", ANALYTICS_ENDPOINT_URL, err
-            )
+            LOGGER.error("Error sending analytics to %s: %r", BASIC_ENDPOINT_URL, err)
 
     @callback
     def _async_should_report_integration(
@@ -507,7 +516,7 @@ class Analytics:
         if not integration.config_flow:
             return False
 
-        entries = self.hass.config_entries.async_entries(integration.domain)
+        entries = self._hass.config_entries.async_entries(integration.domain)
 
         # Filter out ignored and disabled entries
         return any(
@@ -521,7 +530,7 @@ class Analytics:
         if not self.onboarded or not self.preferences.get(ATTR_SNAPSHOTS, False):
             return
 
-        payload = await _async_snapshot_payload(self.hass)
+        payload = await _async_snapshot_payload(self._hass)
 
         headers = {
             "Content-Type": "application/json",
@@ -532,11 +541,16 @@ class Analytics:
                 self._data.submission_identifier
             )
 
+        url = (
+            self._snapshots_url
+            if self._snapshots_url is not None
+            else SNAPSHOT_DEFAULT_URL
+        )
+        url += SNAPSHOT_URL_PATH
+
         try:
             async with timeout(30):
-                response = await self.session.post(
-                    ANALYTICS_SNAPSHOT_ENDPOINT_URL, json=payload, headers=headers
-                )
+                response = await self._session.post(url, json=payload, headers=headers)
 
                 if response.status == 200:  # OK
                     response_data = await response.json()
@@ -562,7 +576,7 @@ class Analytics:
                         # Clear the invalid identifier and retry on next cycle
                         LOGGER.warning(
                             "Invalid submission identifier to %s, clearing: %s",
-                            ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                            url,
                             error_message,
                         )
                         self._data.submission_identifier = None
@@ -571,7 +585,7 @@ class Analytics:
                         LOGGER.warning(
                             "Malformed snapshot analytics submission (%s) to %s: %s",
                             error_kind,
-                            ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                            url,
                             error_message,
                         )
 
@@ -579,7 +593,7 @@ class Analytics:
                     response_text = await response.text()
                     LOGGER.warning(
                         "Snapshot analytics service %s unavailable: %s",
-                        ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                        url,
                         response_text,
                     )
 
@@ -587,18 +601,18 @@ class Analytics:
                     LOGGER.warning(
                         "Unexpected status code %s when submitting snapshot analytics to %s",
                         response.status,
-                        ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                        url,
                     )
 
         except TimeoutError:
             LOGGER.error(
                 "Timeout sending snapshot analytics to %s",
-                ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                url,
             )
         except aiohttp.ClientError as err:
             LOGGER.error(
                 "Error sending snapshot analytics to %s: %r",
-                ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                url,
                 err,
             )
 
@@ -622,7 +636,7 @@ class Analytics:
         elif self._basic_scheduled is None:
             # Wait 15 min after started for basic analytics
             self._basic_scheduled = async_call_later(
-                self.hass,
+                self._hass,
                 900,
                 HassJob(
                     self._async_schedule_basic,
@@ -631,10 +645,7 @@ class Analytics:
                 ),
             )
 
-        if not self.preferences.get(ATTR_SNAPSHOTS, False) or RELEASE_CHANNEL not in (
-            ReleaseChannel.DEV,
-            ReleaseChannel.NIGHTLY,
-        ):
+        if not self.preferences.get(ATTR_SNAPSHOTS, False) or self._disable_snapshots:
             LOGGER.debug("Snapshot analytics not scheduled")
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()
@@ -642,9 +653,11 @@ class Analytics:
         elif self._snapshot_scheduled is None:
             snapshot_submission_time = self._data.snapshot_submission_time
 
+            interval_seconds = INTERVAL.total_seconds()
+
             if snapshot_submission_time is None:
                 # Randomize the submission time within the 24 hours
-                snapshot_submission_time = random.uniform(0, 86400)
+                snapshot_submission_time = random.uniform(0, interval_seconds)
                 self._data.snapshot_submission_time = snapshot_submission_time
                 await self._save()
                 LOGGER.debug(
@@ -654,10 +667,10 @@ class Analytics:
 
             # Calculate delay until next submission
             current_time = time.time()
-            delay = (snapshot_submission_time - current_time) % 86400
+            delay = (snapshot_submission_time - current_time) % interval_seconds
 
             self._snapshot_scheduled = async_call_later(
-                self.hass,
+                self._hass,
                 delay,
                 HassJob(
                     self._async_schedule_snapshots,
@@ -672,7 +685,7 @@ class Analytics:
 
         # Send basic analytics every day
         self._basic_scheduled = async_track_time_interval(
-            self.hass,
+            self._hass,
             self.send_analytics,
             INTERVAL,
             name="basic analytics daily",
@@ -685,7 +698,7 @@ class Analytics:
 
         # Send snapshot analytics every day
         self._snapshot_scheduled = async_track_time_interval(
-            self.hass,
+            self._hass,
             self.send_snapshot,
             INTERVAL,
             name="snapshot analytics daily",
