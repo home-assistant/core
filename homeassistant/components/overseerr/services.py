@@ -18,13 +18,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
-from .const import ATTR_LIMIT, ATTR_MEDIA_TYPE, ATTR_QUERY, ATTR_REQUESTED_BY, ATTR_SEASONS, ATTR_SORT_ORDER, \
-    ATTR_STATUS, \
-    ATTR_TMDB_ID, DOMAIN, \
-    LOGGER
+from .const import (
+    ATTR_LIMIT,
+    ATTR_MEDIA_TYPE,
+    ATTR_QUERY,
+    ATTR_REQUESTED_BY,
+    ATTR_SEASONS,
+    ATTR_SORT_ORDER,
+    ATTR_STATUS,
+    ATTR_TMDB_ID,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import OverseerrConfigEntry
-
-
 
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
@@ -46,7 +52,7 @@ SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_QUERY): str,
-        vol.Optional(ATTR_LIMIT): vol.All(vol.Coerce(int), vol.Range(min=1))
+        vol.Optional(ATTR_LIMIT): vol.All(vol.Coerce(int), vol.Range(min=1)),
     }
 )
 
@@ -143,7 +149,7 @@ async def _search_media(
         # URL encode the query to handle spaces and special characters
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
-        LOGGER.error("Error searching for '%s': %s", query, str(err))
+        LOGGER.info("Error searching for '%s': %s", query, str(err))
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="connection_error",
@@ -176,7 +182,7 @@ async def _request_media(
     client: OverseerrClient,
     media_type: MediaType,
     tmdb_id: int,
-    seasons: int | list[int] | Literal['all'] | None = None,
+    seasons: int | list[int] | Literal["all"] | None = None,
 ) -> Any:
     """Request media in Overseerr."""
     # Convert single integer to list for seasons
@@ -254,7 +260,9 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
         "media": {
             "type": media_type,
             "id": tmdb_id,
-             "title": first_result.title if hasattr(first_result, "title") else getattr(first_result, "name", "Unknown")
+            "title": first_result.title
+            if hasattr(first_result, "title")
+            else getattr(first_result, "name", "Unknown"),
         },
     }
 
