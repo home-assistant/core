@@ -76,10 +76,17 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
+        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                entry.data,
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=data_schema,
             errors=errors or {},
         )
 
