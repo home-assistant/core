@@ -671,12 +671,12 @@
         },
         "step": {
           "confirm": {
-            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nTo fix this issue:\n\n1. Select **Submit** to automatically disable the WiFi access point, OR\n2. Select **Ignore** if you want to keep the access point enabled (not recommended)\n\nNote: If you disable the access point, the device may need to restart.",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nTo fix this issue:\n\n1. Select **Submit** to automatically disable the WiFi access point, OR\n2. Select **Ignore** to dismiss this warning if you want to keep the access point enabled (not recommended)\n\nNote: If you disable the access point, the device may need to restart.",
             "title": "[%key:component::shelly::issues::open_wifi_ap::title%]"
           }
         }
       },
-      "title": "{device_name} has an open WiFi access point"
+      "title": "Open WiFi access point on {device_name}"
     },
     "outbound_websocket_incorrectly_enabled": {
       "fix_flow": {

@@ -175,7 +175,7 @@ def async_manage_open_wifi_ap_issue(
             DOMAIN,
             issue_id,
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="open_wifi_ap",
             translation_placeholders={
