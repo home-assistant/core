@@ -59,9 +59,6 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         if self.option_map:
             self._attr_options = list(self.option_map.values())
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
