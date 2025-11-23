@@ -794,9 +794,8 @@ async def get_rpc_scripts_event_types(
     device: RpcDevice, ignore_scripts: list[str]
 ) -> dict[int, list[str]]:
     """Return a dict of all scripts and their event types."""
-    script_instances = get_rpc_key_instances(device.status, "script")
     script_events = {}
-    for script in script_instances:
+    for script in get_rpc_key_instances(device.status, "script"):
         if get_rpc_channel_name(device, script) in ignore_scripts:
             continue
 
