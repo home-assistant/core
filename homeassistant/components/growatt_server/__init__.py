@@ -136,6 +136,21 @@ async def async_setup_entry(
         new_data[CONF_URL] = url
         hass.config_entries.async_update_entry(config_entry, data=new_data)
 
+    # Migrate legacy config entries without auth_type field
+    if CONF_AUTH_TYPE not in config:
+        new_data = dict(config_entry.data)
+        # Detect auth type based on which fields are present
+        if CONF_TOKEN in config:
+            new_data[CONF_AUTH_TYPE] = AUTH_API_TOKEN
+        elif CONF_USERNAME in config:
+            new_data[CONF_AUTH_TYPE] = AUTH_PASSWORD
+        else:
+            raise ConfigEntryError(
+                "Unable to determine authentication type from config entry."
+            )
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        config = config_entry.data
+
     # Determine API version
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         api_version = "v1"

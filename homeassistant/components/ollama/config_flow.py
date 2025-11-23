@@ -306,6 +306,14 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
     async_step_reconfigure = async_step_set_options
 
 
+def filter_invalid_llm_apis(hass: HomeAssistant, selected_apis: list[str]) -> list[str]:
+    """Accepts a list of LLM API IDs and filters this against those currently available."""
+
+    valid_llm_apis = [api.id for api in llm.async_get_apis(hass)]
+
+    return [api for api in selected_apis if api in valid_llm_apis]
+
+
 def ollama_config_option_schema(
     hass: HomeAssistant,
     is_new: bool,
@@ -325,6 +333,10 @@ def ollama_config_option_schema(
         }
     else:
         schema = {}
+
+    selected_llm_apis = filter_invalid_llm_apis(
+        hass, options.get(CONF_LLM_HASS_API, [])
+    )
 
     schema.update(
         {
@@ -349,7 +361,7 @@ def ollama_config_option_schema(
                 ): TemplateSelector(),
                 vol.Optional(
                     CONF_LLM_HASS_API,
-                    description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                    description={"suggested_value": selected_llm_apis},
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[

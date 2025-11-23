@@ -106,6 +106,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.protocol = "rtsp"
     host_mock.channels = [0]
     host_mock.stream_channels = [0]
+    host_mock.num_cameras = 1
     host_mock.new_devices = False
     host_mock.sw_version_update_required = False
     host_mock.hardware_version = "IPC_00000"

@@ -231,6 +231,7 @@ homeassistant.components.google_cloud.*
 homeassistant.components.google_drive.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
+homeassistant.components.google_weather.*
 homeassistant.components.govee_ble.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
@@ -578,6 +579,7 @@ homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.workday.*
 homeassistant.components.worldclock.*
+homeassistant.components.xbox.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*

@@ -467,6 +467,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
+        # These conditions are always true as they were verified by SCHEMA_MOUNT_RELOAD.
         if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) and device.name:
             await supervisor_client.mounts.reload_mount(device.name)
 
