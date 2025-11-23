@@ -4,15 +4,14 @@
     'data': dict({
       'api_key': '**REDACTED**',
       'platform': 'webhooks',
-      'proxy_url': None,
       'trusted_networks': list([
-        '127.0.0.1/32',
+        '127.0.0.1',
       ]),
       'url': 'https://**redacted**/',
     }),
     'options': dict({
       'parse_mode': 'markdown',
     }),
-    'subentries_count': 2,
+    'subentries_count': 1,
   })
 # ---
