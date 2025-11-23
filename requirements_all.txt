@@ -1258,7 +1258,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==1.5.6
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.9
+incomfort-client==0.6.10
 
 # homeassistant.components.influxdb
 influxdb-client==1.48.0
