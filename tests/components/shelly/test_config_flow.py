@@ -248,6 +248,26 @@ BLE_DISCOVERY_INFO_NO_DEVICE = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+BLE_DISCOVERY_INFO_GEN3 = BluetoothServiceInfoBleak(
+    name="ShellyPlusGen3",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+    service_data={},
+    service_uuids=[],
+    source="local",
+    device=generate_ble_device(
+        address="AA:BB:CC:DD:EE:FF",
+        name="ShellyPlusGen3",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 # Mock device info returned by get_info for BLE provisioned devices
 MOCK_DEVICE_INFO = {
     "mac": "C049EF8873E8",
@@ -1035,28 +1055,7 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
 
     # Inject BLE device with same MAC (from manufacturer data)
     # The manufacturer data contains WiFi MAC CCBA97C2D670
-    inject_bluetooth_service_info_bleak(
-        hass,
-        BluetoothServiceInfoBleak(
-            name="ShellyPlusGen3",  # Name without MAC so it uses manufacturer data
-            address="AA:BB:CC:DD:EE:FF",
-            rssi=-60,
-            manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
-            service_data={},
-            service_uuids=[],
-            source="local",
-            device=generate_ble_device(
-                address="AA:BB:CC:DD:EE:FF",
-                name="ShellyPlusGen3",
-            ),
-            advertisement=generate_advertisement_data(
-                manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
-            ),
-            time=0,
-            connectable=True,
-            tx_power=-127,
-        ),
-    )
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1901,28 +1900,7 @@ async def test_user_flow_select_ble_device(
     mock_discovery.return_value = []
 
     # Inject BLE device with RPC-over-BLE enabled
-    inject_bluetooth_service_info_bleak(
-        hass,
-        BluetoothServiceInfoBleak(
-            name="ShellyPlusGen3",
-            address="AA:BB:CC:DD:EE:FF",
-            rssi=-60,
-            manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
-            service_data={},
-            service_uuids=[],
-            source="local",
-            device=generate_ble_device(
-                address="AA:BB:CC:DD:EE:FF",
-                name="ShellyPlusGen3",
-            ),
-            advertisement=generate_advertisement_data(
-                manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
-            ),
-            time=0,
-            connectable=True,
-            tx_power=-127,
-        ),
-    )
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
 
     # Wait for bluetooth discovery to process
     await hass.async_block_till_done()
@@ -1931,25 +1909,7 @@ async def test_user_flow_select_ble_device(
     ble_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=BluetoothServiceInfoBleak(
-            name="ShellyPlusGen3",
-            address="AA:BB:CC:DD:EE:FF",
-            rssi=-60,
-            manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
-            service_data={},
-            service_uuids=[],
-            source="local",
-            device=generate_ble_device(
-                address="AA:BB:CC:DD:EE:FF",
-                name="ShellyPlusGen3",
-            ),
-            advertisement=generate_advertisement_data(
-                manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
-            ),
-            time=0,
-            connectable=True,
-            tx_power=-127,
-        ),
+        data=BLE_DISCOVERY_INFO_GEN3,
     )
     ble_flow_id = ble_result["flow_id"]
 
