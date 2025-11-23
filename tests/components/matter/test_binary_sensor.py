@@ -388,7 +388,7 @@ async def test_water_valve(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_occupancy(
     hass: HomeAssistant,
     matter_client: MagicMock,
