@@ -23,16 +23,13 @@ from .const import (
     BEO_REMOTE_SUBMENU_LIGHT,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
-    DEVICE_BUTTONS,
     DOMAIN,
     MANUFACTURER,
-    MODEL_SUPPORT_DEVICE_BUTTONS,
-    MODEL_SUPPORT_MAP,
     BangOlufsenModel,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import get_remotes
+from .util import get_device_buttons, get_remotes
 
 PARALLEL_UPDATES = 0
 
@@ -45,12 +42,10 @@ async def async_setup_entry(
     """Set up Event entities from config entry."""
     entities: list[BangOlufsenEvent] = []
 
-    # Add physical buttons
-    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
-        entities.extend(
-            BangOlufsenButtonEvent(config_entry, button_type)
-            for button_type in DEVICE_BUTTONS
-        )
+    async_add_entities(
+        BangOlufsenButtonEvent(config_entry, button_type)
+        for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
+    )
 
     # Check for connected Beoremote One
     remotes = await get_remotes(config_entry.runtime_data.client)

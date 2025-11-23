@@ -2,13 +2,16 @@
 
 from unittest.mock import AsyncMock
 
+from inflection import underscore
 from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
     BEO_REMOTE_KEY_EVENTS,
     DEVICE_BUTTON_EVENTS,
+    DEVICE_BUTTONS,
     EVENT_TRANSLATION_MAP,
+    BangOlufsenButtons,
 )
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.const import STATE_UNKNOWN
@@ -22,14 +25,15 @@ from .util import get_button_entity_ids, get_remote_entity_ids
 from tests.common import MockConfigEntry
 
 
-async def test_button_and_key_event_creation(
+async def test_button_event_creation_balance(
     hass: HomeAssistant,
     integration: None,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button and remote key event entities are created."""
-    # Add Button and remote key Event entity ids
+    """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
+
+    # Add Button Event entity ids
     entity_ids: list[str] = [*get_button_entity_ids(), *get_remote_entity_ids()]
 
     # Check that the entities are available
@@ -68,6 +72,43 @@ async def test_no_button_and_remote_key_event_creation(
     assert len(entity_ids_available) == 1
 
     # Check snapshot
+    assert entity_ids_available == snapshot
+
+
+async def test_button_event_creation_beosound_premiere(
+    hass: HomeAssistant,
+    mock_config_entry_premiere: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Bluetooth button event entity is not created when using a Beosound Premiere."""
+
+    # Load entry
+    mock_config_entry_premiere.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_premiere.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
+
+    # Add Button Event entity ids
+    premiere_buttons = DEVICE_BUTTONS.copy()
+    premiere_buttons.remove(BangOlufsenButtons.BLUETOOTH.value)
+
+    entity_ids = [
+        f"event.beosound_premiere_33333333_{underscore(button_type)}".replace(
+            "preset", "favorite_"
+        )
+        for button_type in premiere_buttons
+    ]
+
+    # Check that the entities are available
+    for entity_id in entity_ids:
+        assert entity_registry.async_get(entity_id)
+
+    # Check number of entities
+    # The media_player entity and all of the button event entities (except Bluetooth) should be the only available
+    entity_ids_available = list(entity_registry.entities.keys())
+    assert len(entity_ids_available) == 1 + len(entity_ids)
+
     assert entity_ids_available == snapshot
 
 

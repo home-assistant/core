@@ -6,7 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pythonxbox.api.provider.catalog.models import CatalogResponse
+from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
+from pythonxbox.api.provider.screenshots.models import ScreenshotResponse
 from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
@@ -32,20 +34,8 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "cloud"
     )
-
-
-@pytest.fixture(autouse=True)
-def mock_oauth2_implementation() -> Generator[AsyncMock]:
-    """Mock config entry oauth2 implementation."""
-    with patch(
-        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
-        return_value=AsyncMock(),
-    ) as mock_client:
-        client = mock_client.return_value
-
-        yield client
 
 
 @pytest.fixture(name="config_entry")
@@ -124,6 +114,33 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.titlehub = AsyncMock()
         client.titlehub.get_title_info.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
+        )
+        client.titlehub.get_title_history.return_value = TitleHubResponse(
+            **load_json_object_fixture("titlehub_titlehistory.json", DOMAIN)
+        )
+        client.gameclips = AsyncMock()
+        client.gameclips.get_recent_clips_by_xuid.return_value = GameclipsResponse(
+            **load_json_object_fixture("gameclips_recent_xuid.json", DOMAIN)
+        )
+        client.gameclips.get_recent_community_clips_by_title_id.return_value = (
+            GameclipsResponse(
+                **load_json_object_fixture(
+                    "gameclips_community_recent_xuid.json", DOMAIN
+                )
+            )
+        )
+        client.screenshots = AsyncMock()
+        client.screenshots.get_recent_screenshots_by_xuid.return_value = (
+            ScreenshotResponse(
+                **load_json_object_fixture("screenshots_recent_xuid.json", DOMAIN)
+            )
+        )
+        client.screenshots.get_recent_community_screenshots_by_title_id.return_value = (
+            ScreenshotResponse(
+                **load_json_object_fixture(
+                    "screenshots_community_recent_xuid.json", DOMAIN
+                )
+            )
         )
 
         client.xuid = "271958441785640"

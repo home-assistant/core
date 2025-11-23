@@ -72,9 +72,26 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_BALANCE = "Beosound Balance"
     BEOSOUND_EMERGE = "Beosound Emerge"
     BEOSOUND_LEVEL = "Beosound Level"
+    BEOSOUND_PREMIERE = "Beosound Premiere"
     BEOSOUND_THEATRE = "Beosound Theatre"
     # Remote devices
     BEOREMOTE_ONE = "Beoremote One"
+
+
+# Physical "buttons" on devices
+class BangOlufsenButtons(StrEnum):
+    """Enum for device buttons."""
+
+    BLUETOOTH = "Bluetooth"
+    MICROPHONE = "Microphone"
+    NEXT = "Next"
+    PLAY_PAUSE = "PlayPause"
+    PRESET_1 = "Preset1"
+    PRESET_2 = "Preset2"
+    PRESET_3 = "Preset3"
+    PRESET_4 = "Preset4"
+    PREVIOUS = "Previous"
+    VOLUME = "Volume"
 
 
 # Dispatcher events
@@ -213,23 +230,6 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
     ]
 )
-# Map for storing compatibility of devices.
-
-MODEL_SUPPORT_DEVICE_BUTTONS: Final[str] = "device_buttons"
-
-MODEL_SUPPORT_MAP = {
-    MODEL_SUPPORT_DEVICE_BUTTONS: (
-        BangOlufsenModel.BEOLAB_8,
-        BangOlufsenModel.BEOLAB_28,
-        BangOlufsenModel.BEOSOUND_2,
-        BangOlufsenModel.BEOSOUND_A5,
-        BangOlufsenModel.BEOSOUND_A9,
-        BangOlufsenModel.BEOSOUND_BALANCE,
-        BangOlufsenModel.BEOSOUND_EMERGE,
-        BangOlufsenModel.BEOSOUND_LEVEL,
-        BangOlufsenModel.BEOSOUND_THEATRE,
-    )
-}
 
 # Device events
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
@@ -249,18 +249,7 @@ EVENT_TRANSLATION_MAP: dict[str, str] = {
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
-DEVICE_BUTTONS: Final[list[str]] = [
-    "Bluetooth",
-    "Microphone",
-    "Next",
-    "PlayPause",
-    "Preset1",
-    "Preset2",
-    "Preset3",
-    "Preset4",
-    "Previous",
-    "Volume",
-]
+DEVICE_BUTTONS: Final[list[str]] = [x.value for x in BangOlufsenButtons]
 
 
 DEVICE_BUTTON_EVENTS: Final[list[str]] = [

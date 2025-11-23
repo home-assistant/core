@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN
+from .const import DEVICE_BUTTONS, DOMAIN, BangOlufsenButtons, BangOlufsenModel
 
 
 def get_device(hass: HomeAssistant, unique_id: str) -> DeviceEntry:
@@ -38,3 +38,18 @@ async def get_remotes(client: MozartClient) -> list[PairedRemote]:
         for remote in cast(list[PairedRemote], bluetooth_remote_list.items)
         if remote.serial_number is not None
     ]
+
+
+def get_device_buttons(model: BangOlufsenModel) -> list[str]:
+    """Get supported buttons for a given model."""
+    buttons = DEVICE_BUTTONS.copy()
+
+    # Beosound Premiere does not have a bluetooth button
+    if model == BangOlufsenModel.BEOSOUND_PREMIERE:
+        buttons.remove(BangOlufsenButtons.BLUETOOTH)
+
+    # Beoconnect Core does not have any buttons
+    elif model == BangOlufsenModel.BEOCONNECT_CORE:
+        buttons = []
+
+    return buttons
