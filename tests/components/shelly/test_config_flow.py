@@ -1927,11 +1927,31 @@ async def test_user_flow_select_ble_device(
     # Wait for bluetooth discovery to process
     await hass.async_block_till_done()
 
-    # Abort any auto-discovered bluetooth flows
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    for flow in flows:
-        if flow["context"]["source"] == config_entries.SOURCE_BLUETOOTH:
-            await hass.config_entries.flow.async_abort(flow["flow_id"])
+    # Start a bluetooth discovery flow manually to simulate auto-discovery
+    ble_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=BluetoothServiceInfoBleak(
+            name="ShellyPlusGen3",
+            address="AA:BB:CC:DD:EE:FF",
+            rssi=-60,
+            manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+            service_data={},
+            service_uuids=[],
+            source="local",
+            device=generate_ble_device(
+                address="AA:BB:CC:DD:EE:FF",
+                name="ShellyPlusGen3",
+            ),
+            advertisement=generate_advertisement_data(
+                manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC,
+            ),
+            time=0,
+            connectable=True,
+            tx_power=-127,
+        ),
+    )
+    ble_flow_id = ble_result["flow_id"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1940,7 +1960,7 @@ async def test_user_flow_select_ble_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Select the BLE device
+    # Select the BLE device - should take over from the discovery flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_DEVICE: "CCBA97C2D670"},  # MAC from manufacturer data
@@ -2010,6 +2030,10 @@ async def test_user_flow_select_ble_device(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "CCBA97C2D670"
     assert result["title"] == "Test BLE Device"
+
+    # Verify the original bluetooth discovery flow no longer exists
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert not any(f["flow_id"] == ble_flow_id for f in flows)
 
 
 @pytest.mark.parametrize(
