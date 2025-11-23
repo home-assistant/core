@@ -103,7 +103,7 @@ async def test_gateway_connect_ipv4_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "off"
+    assert entity and entity.state == "off"
 
     mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
     mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
@@ -120,7 +120,7 @@ async def test_gateway_connect_ipv4_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "on"
+    assert entity and entity.state == "on"
 
 
 async def test_gateway_port_poe_switch(
@@ -150,7 +150,7 @@ async def test_gateway_port_poe_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "off"
+    assert entity and entity.state == "off"
 
     mock_omada_site_client.set_gateway_port_settings.reset_mock()
     mock_omada_site_client.set_gateway_port_settings.return_value = port_config
@@ -161,7 +161,7 @@ async def test_gateway_port_poe_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "on"
+    assert entity and entity.state == "on"
 
 
 async def test_gateway_wan_port_has_no_poe_switch(
@@ -196,7 +196,7 @@ async def test_gateway_api_fail_disables_switch_entities(
     """Test gateway connected switches."""
     entity_id = "switch.test_router_port_4_internet_connected"
     entity = hass.states.get(entity_id)
-    assert entity == snapshot
+    assert entity and entity == snapshot
     assert entity.state == "on"
 
     mock_omada_site_client.get_gateway.reset_mock()
@@ -206,7 +206,7 @@ async def test_gateway_api_fail_disables_switch_entities(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "unavailable"
+    assert entity and entity.state == "unavailable"
 
 
 async def test_gateway_port_change_disables_switch_entities(
@@ -222,7 +222,7 @@ async def test_gateway_port_change_disables_switch_entities(
 
     entity_id = "switch.test_router_port_4_internet_connected"
     entity = hass.states.get(entity_id)
-    assert entity == snapshot
+    assert entity and entity == snapshot
     assert entity.state == "on"
 
     mock_omada_site_client.get_gateway.reset_mock()
@@ -233,7 +233,7 @@ async def test_gateway_port_change_disables_switch_entities(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "unavailable"
+    assert entity and entity.state == "unavailable"
 
 
 async def _test_poe_switch(
@@ -285,7 +285,7 @@ async def _test_poe_switch(
     async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity.state == "off"
+    assert entity and entity.state == "off"
 
     mock_omada_site_client.update_switch_port.reset_mock()
     mock_omada_site_client.update_switch_port.return_value = await _update_port_details(
@@ -303,7 +303,7 @@ async def _test_poe_switch(
     async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity.state == "on"
+    assert entity and entity.state == "on"
 
 
 async def _update_port_details(
@@ -312,7 +312,7 @@ async def _update_port_details(
     poe_enabled: bool,
 ) -> OmadaSwitchPortDetails:
     switch_ports = await mock_omada_site_client.get_switch_ports()
-    port_details: OmadaSwitchPortDetails = None
+    port_details: OmadaSwitchPortDetails | None = None
     for details in switch_ports:
         if details.port == port_num:
             port_details = details
@@ -338,8 +338,10 @@ def _get_updated_gateway_port_status(
     return OmadaGatewayPortStatus(gateway_data["portStats"][port])
 
 
-def call_service(hass: HomeAssistant, service: str, entity_id: str) -> ServiceResponse:
+async def call_service(
+    hass: HomeAssistant, service: str, entity_id: str
+) -> ServiceResponse:
     """Call any service on entity."""
-    return hass.services.async_call(
+    return await hass.services.async_call(
         switch.DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
