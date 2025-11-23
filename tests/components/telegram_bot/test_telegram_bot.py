@@ -75,7 +75,6 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
@@ -84,7 +83,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -167,7 +165,7 @@ async def test_polling_platform_init(
     ],
 )
 async def test_send_message(
-    hass: HomeAssistant, webhook_platform, service: str, input: dict[str, Any]
+    hass: HomeAssistant, webhook_bot, service: str, input: dict[str, Any]
 ) -> None:
     """Test the send_message service. Tests any service that does not require files to be sent."""
     context = Context()
@@ -186,17 +184,12 @@ async def test_send_message(
     assert len(events) == 1
     assert events[0].context == context
 
-    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, "1234567890:ABC"
-    )
-    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
     assert events[0].data["bot"]["username"] == "mock username"
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 @pytest.mark.parametrize(
@@ -240,7 +233,7 @@ async def test_send_message(
 )
 async def test_send_message_with_inline_keyboard(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     input: dict[str, Any],
     expected: InlineKeyboardMarkup,
 ) -> None:
@@ -257,7 +250,7 @@ async def test_send_message_with_inline_keyboard(
             return_value=Message(
                 message_id=12345,
                 date=datetime.now(),
-                chat=Chat(id=123456, type=ChatType.PRIVATE),
+                chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
     ) as mock_send_message:
@@ -286,8 +279,7 @@ async def test_send_message_with_inline_keyboard(
     assert len(events) == 1
     assert events[0].context == context
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 async def test_send_sticker_partial_error(
@@ -331,7 +323,7 @@ async def test_send_sticker_partial_error(
     assert err.value.args[0] == "Failed targets: [123456, 654321]"
 
 
-async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None:
+async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     """Test the send_message service with an error."""
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.send_sticker",
@@ -357,7 +349,7 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None
 
 async def test_send_message_with_invalid_inline_keyboard(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
 ) -> None:
     """Test the send_message service with invalid inline keyboard."""
 
@@ -401,7 +393,7 @@ def _read_file_as_bytesio_mock(file_path):
 
 async def test_send_chat_action(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     mock_broadcast_config_entry: MockConfigEntry,
 ) -> None:
     """Test the send_chat_action service."""
@@ -440,7 +432,7 @@ async def test_send_chat_action(
         SERVICE_SEND_DOCUMENT,
     ],
 )
-async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) -> None:
+async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None:
     """Test the send_file service (photo, animation, video, document...)."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -468,11 +460,10 @@ async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) ->
     assert len(events) == 1
     assert events[0].context == context
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
-async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
+async def test_send_message_thread(hass: HomeAssistant, webhook_bot) -> None:
     """Test the send_message service for threads."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -493,7 +484,7 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> Non
 
 async def test_webhook_endpoint_generates_telegram_text_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_text,
     mock_generate_secret_token,
@@ -520,7 +511,7 @@ async def test_webhook_endpoint_generates_telegram_text_event(
 
 async def test_webhook_endpoint_generates_telegram_command_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_command,
     mock_generate_secret_token,
@@ -547,7 +538,7 @@ async def test_webhook_endpoint_generates_telegram_command_event(
 
 async def test_webhook_endpoint_generates_telegram_callback_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_callback_query,
     mock_generate_secret_token,
@@ -581,7 +572,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 )
 async def test_webhook_endpoint_generates_telegram_attachment_event(
     hass: HomeAssistant,
-    webhook_platform: None,
+    webhook_bot: None,
     hass_client: ClientSessionGenerator,
     mock_generate_secret_token: str,
     attachment_type: str,
@@ -768,7 +759,7 @@ async def test_polling_platform_start_polling_error_callback(
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     unauthorized_update_message_text,
     mock_generate_secret_token,
@@ -793,7 +784,7 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
 
 async def test_webhook_endpoint_without_secret_token_is_denied(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_text,
 ) -> None:
@@ -810,7 +801,7 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
 
 async def test_webhook_endpoint_invalid_secret_token_is_denied(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_text,
     incorrect_secret_token,
@@ -906,7 +897,7 @@ async def test_send_message_with_config_entry(
         return_response=True,
     )
 
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
 
 async def test_send_message_no_chat_id_error(
@@ -914,28 +905,25 @@ async def test_send_message_no_chat_id_error(
     mock_external_calls: None,
 ) -> None:
     """Test send message using config entry with no whitelisted chat id."""
-    data = {
-        CONF_PLATFORM: PLATFORM_BROADCAST,
-        CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {},
-    }
-
-    with patch("homeassistant.components.telegram_bot.config_flow.Bot.get_me"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=data,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_KEY: "mock api key",
+            SECTION_ADVANCED_SETTINGS: {},
+        },
+        options={ATTR_PARSER: PARSER_PLAIN_TEXT},
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                CONF_CONFIG_ENTRY_ID: result["result"].entry_id,
                 ATTR_MESSAGE: "mock message",
             },
             blocking=True,
@@ -944,7 +932,7 @@ async def test_send_message_no_chat_id_error(
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
     assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["bot_name"] == "Testbot mock last name"
+    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
 
 async def test_send_message_config_entry_error(
@@ -1011,7 +999,7 @@ async def test_delete_message(
         blocking=True,
         return_response=True,
     )
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.delete_message",
@@ -1386,7 +1374,7 @@ async def test_send_video(
     )
 
     await hass.async_block_till_done()
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
     # test: success with url
 
@@ -1410,7 +1398,7 @@ async def test_send_video(
 
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
 
 async def test_set_message_reaction(

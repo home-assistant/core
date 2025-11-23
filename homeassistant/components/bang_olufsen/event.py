@@ -9,15 +9,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BangOlufsenConfigEntry
-from .const import (
-    CONNECTION_STATUS,
-    DEVICE_BUTTON_EVENTS,
-    DEVICE_BUTTONS,
-    MODEL_SUPPORT_DEVICE_BUTTONS,
-    MODEL_SUPPORT_MAP,
-    WebsocketNotification,
-)
+from .const import CONNECTION_STATUS, DEVICE_BUTTON_EVENTS, WebsocketNotification
 from .entity import BangOlufsenEntity
+from .util import get_device_buttons
 
 PARALLEL_UPDATES = 0
 
@@ -29,11 +23,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sensor entities from config entry."""
 
-    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
-        async_add_entities(
-            BangOlufsenButtonEvent(config_entry, button_type)
-            for button_type in DEVICE_BUTTONS
-        )
+    async_add_entities(
+        BangOlufsenButtonEvent(config_entry, button_type)
+        for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
+    )
 
 
 class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
