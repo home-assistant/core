@@ -269,17 +269,32 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
         return self.async_create_entry(title="", data={})
 
 
-class DisableOpenWiFiApFlow(ShellyRpcRepairsFlow):
+class DisableOpenWiFiApFlow(RepairsFlow):
     """Handler for Disable Open WiFi AP flow."""
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        return await self.async_step_disable_wifi_ap()
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+        """Initialize."""
+        self._device = device
+        self.issue_id = issue_id
 
-    async def async_step_disable_wifi_ap(
+    async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Disable the open WiFi AP."""
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
         try:
             result = await self._device.wifi_setconfig(ap_enable=False)
             if result.get("restart_required"):
@@ -288,6 +303,13 @@ class DisableOpenWiFiApFlow(ShellyRpcRepairsFlow):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
 
 
 async def async_create_fix_flow(
@@ -315,6 +337,6 @@ async def async_create_fix_flow(
         return DisableOutboundWebSocketFlow(device)
 
     if "open_wifi_ap" in issue_id:
-        return DisableOpenWiFiApFlow(device)
+        return DisableOpenWiFiApFlow(device, issue_id)
 
     return ConfirmRepairFlow()

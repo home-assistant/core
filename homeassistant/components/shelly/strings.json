@@ -667,11 +667,16 @@
     "open_wifi_ap": {
       "fix_flow": {
         "abort": {
-          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
         },
         "step": {
-          "confirm": {
-            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nTo fix this issue:\n\n1. Select **Submit** to automatically disable the WiFi access point, OR\n2. Select **Ignore** to dismiss this warning if you want to keep the access point enabled (not recommended)\n\nNote: If you disable the access point, the device may need to restart.",
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nNote: If you disable the access point, the device may need to restart.",
+            "menu_options": {
+              "confirm": "Disable WiFi access point",
+              "ignore": "Ignore"
+            },
             "title": "[%key:component::shelly::issues::open_wifi_ap::title%]"
           }
         }
