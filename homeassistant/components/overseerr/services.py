@@ -2,7 +2,6 @@
 
 from dataclasses import asdict
 from typing import Any, Literal, cast
-from urllib.parse import quote
 
 from python_overseerr import MediaType, OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
@@ -150,7 +149,7 @@ async def __search_media(
     try:
         LOGGER.debug("Searching for '%s'", query)
         # URL encode the query to handle spaces and special characters
-        search_results = await client.search(quote(query))
+        search_results = await client.search(query)
     except OverseerrConnectionError as err:
         LOGGER.error("Error searching for '%s': %s", query, str(err))
         raise HomeAssistantError(
