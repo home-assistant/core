@@ -116,11 +116,9 @@ publish:
               selector:
                 text:
                   type: url
-              required: true
             intent:
               selector:
                 text:
-              required: true
             extras:
               selector:
                 object:
