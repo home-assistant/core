@@ -106,7 +106,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         }
 
         api_channels = {x.broadcaster_login for x in follows.values()}
-        config_channels = set((await self.get_entry()).options[CONF_CHANNELS])
+        config_channels = self.config_entry.options[CONF_CHANNELS]
 
         # Update config entry if it no longer reflects reality
         if api_channels != config_channels:
@@ -154,12 +154,3 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 stream.viewer_count if stream else None,
             )
         return data
-
-    async def get_entry(self) -> TwitchConfigEntry:
-        """Helper for getting most recent value of a config entry."""
-        latest_config_entry: TwitchConfigEntry | None = (
-            self.hass.config_entries.async_get_entry(self.config_entry.entry_id)
-        )
-        if latest_config_entry is None:
-            raise UpdateFailed("Failed to retrieve config entry")
-        return latest_config_entry
