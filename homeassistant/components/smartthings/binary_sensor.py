@@ -182,9 +182,11 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.CUSTOM_OVEN_CAVITY_STATUS: {
         Attribute.OVEN_CAVITY_STATUS: SmartThingsBinarySensorEntityDescription(
             key=Attribute.OVEN_CAVITY_STATUS,
-            translation_key="oven_cavity_status",
             is_on_key="on",
-            exists_fn=lambda key: key in {"cavity-01"},
+            exists_fn=lambda component, _: component in {"cavity-01"},
+            component_translation_key={
+                "cavity-01": "oven_cavity_status",
+            },
         )
     },
 }
