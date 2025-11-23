@@ -10,6 +10,7 @@ from typing import Any, cast
 from aiohttp import ClientSession
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -18,12 +19,16 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+
+from .const import ATTR_CONFIG_ENTRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +37,13 @@ ATTR_TXT = "txt"
 DOMAIN = "duckdns"
 
 INTERVAL = timedelta(minutes=5)
-
+BACKOFF_INTERVALS = (
+    INTERVAL,
+    timedelta(minutes=1),
+    timedelta(minutes=5),
+    timedelta(minutes=15),
+    timedelta(minutes=30),
+)
 SERVICE_SET_TXT = "set_txt"
 
 UPDATE_URL = "https://www.duckdns.org/update"
@@ -49,36 +60,109 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_TXT_SCHEMA = vol.Schema({vol.Required(ATTR_TXT): vol.Any(None, cv.string)})
+SERVICE_TXT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        vol.Optional(ATTR_TXT): vol.Any(None, cv.string),
+    }
+)
+
+type DuckDnsConfigEntry = ConfigEntry
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the DuckDNS component."""
-    domain: str = config[DOMAIN][CONF_DOMAIN]
-    token: str = config[DOMAIN][CONF_ACCESS_TOKEN]
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_TXT,
+        update_domain_service,
+        schema=SERVICE_TXT_SCHEMA,
+    )
+
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> bool:
+    """Set up Duck DNS from a config entry."""
+
     session = async_get_clientsession(hass)
 
     async def update_domain_interval(_now: datetime) -> bool:
         """Update the DuckDNS entry."""
-        return await _update_duckdns(session, domain, token)
+        return await _update_duckdns(
+            session,
+            entry.data[CONF_DOMAIN],
+            entry.data[CONF_ACCESS_TOKEN],
+        )
 
-    intervals = (
-        INTERVAL,
-        timedelta(minutes=1),
-        timedelta(minutes=5),
-        timedelta(minutes=15),
-        timedelta(minutes=30),
-    )
-    async_track_time_interval_backoff(hass, update_domain_interval, intervals)
-
-    async def update_domain_service(call: ServiceCall) -> None:
-        """Update the DuckDNS entry."""
-        await _update_duckdns(session, domain, token, txt=call.data[ATTR_TXT])
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_TXT, update_domain_service, schema=SERVICE_TXT_SCHEMA
+    entry.async_on_unload(
+        async_track_time_interval_backoff(
+            hass, update_domain_interval, BACKOFF_INTERVALS
+        )
     )
 
+    return True
+
+
+def get_config_entry(
+    hass: HomeAssistant, entry_id: str | None = None
+) -> DuckDnsConfigEntry:
+    """Return config entry or raise if not found or not loaded."""
+
+    if entry_id is None:
+        if not (config_entries := hass.config_entries.async_entries(DOMAIN)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_found",
+            )
+
+        if len(config_entries) != 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_selected",
+            )
+        return config_entries[0]
+
+    if not (entry := hass.config_entries.async_get_entry(entry_id)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_found",
+        )
+
+    return entry
+
+
+async def update_domain_service(call: ServiceCall) -> None:
+    """Update the DuckDNS entry."""
+
+    entry = get_config_entry(call.hass, call.data.get(ATTR_CONFIG_ENTRY))
+
+    session = async_get_clientsession(call.hass)
+
+    await _update_duckdns(
+        session,
+        entry.data[CONF_DOMAIN],
+        entry.data[CONF_ACCESS_TOKEN],
+        txt=call.data.get(ATTR_TXT),
+    )
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> bool:
+    """Unload a config entry."""
     return True
 
 
