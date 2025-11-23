@@ -130,6 +130,64 @@
         }
       },
       "name": "Get requests"
+    },
+    "request_media": {
+      "description": "Creates a media request in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to create the request on.",
+          "name": "Overseerr instance"
+        },
+        "media_type": {
+          "description": "Type of media to request.",
+          "name": "Media type"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Provide a number, a list of numbers, or 'all'.",
+          "name": "Seasons"
+        },
+        "tmdb_id": {
+          "description": "The TMDB ID of the media to request.",
+          "name": "TMDB ID"
+        }
+      },
+      "name": "Request media"
+    },
+    "search_and_request": {
+      "description": "Searches for media and creates a request for the best match.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to use.",
+          "name": "Overseerr instance"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Provide a number, a list of numbers, or 'all'.",
+          "name": "Seasons"
+        }
+      },
+      "name": "Search and request"
+    },
+    "search_media": {
+      "description": "Searches for media in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to search.",
+          "name": "Overseerr instance"
+        },
+        "limit": {
+          "description": "Maximum number of results to return.",
+          "name": "Limit"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        }
+      },
+      "name": "Search media"
     }
   }
 }
