@@ -33,6 +33,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
+    async_clear_address_from_match_history,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -395,6 +396,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not mac:
             return self.async_abort(reason="invalid_discovery_info")
 
+        # Clear match history at the start of discovery flow.
+        # This ensures that if the user never provisions the device and it
+        # disappears (powers down), the discovery flow gets cleaned up,
+        # and then the device comes back later, it can be rediscovered.
+        # Also handles factory reset scenarios where the device may reappear
+        # with different advertisement content (RPC-over-BLE re-enabled).
+        async_clear_address_from_match_history(self.hass, discovery_info.address)
+
         # Check if RPC-over-BLE is enabled - required for WiFi provisioning
         if not has_rpc_over_ble(discovery_info.manufacturer_data):
             LOGGER.debug(
@@ -684,6 +693,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Secure device after provisioning if requested (disable AP/BLE)
         await self._async_secure_device_after_provision(self.host, self.port)
+
+        # Clear match history so device can be rediscovered if factory reset
+        # This ensures that if the device is factory reset in the future
+        # (re-enabling BLE provisioning), it will trigger a new discovery flow
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
+        async_clear_address_from_match_history(self.hass, self.ble_device.address)
 
         # User just provisioned this device - create entry directly without confirmation
         return self.async_create_entry(
