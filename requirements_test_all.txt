@@ -242,6 +242,10 @@ aioemonitor==1.0.5
 # homeassistant.components.esphome
 aioesphomeapi==42.7.0
 
+# homeassistant.components.matrix
+# homeassistant.components.slack
+aiofiles==24.1.0
+
 # homeassistant.components.flo
 aioflo==2021.11.0
 
@@ -371,7 +375,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.20.0
+aioshelly==13.21.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
