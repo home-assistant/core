@@ -273,7 +273,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     assert state
     assert state.state == STATE_OFF
 
-    # Simulate Bluetooth update adding water issue
+    # Simulate Bluetooth update changing machine mode to brewing
     mock_lamarzocco.dashboard.config[
         WidgetType.CM_MACHINE_STATUS
     ].mode = MachineMode.BREWING_MODE
