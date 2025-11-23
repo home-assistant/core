@@ -106,7 +106,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         }
 
         api_channels = {x.broadcaster_login for x in follows.values()}
-        config_channels = self.config_entry.options[CONF_CHANNELS]
+        config_channels = set(self.config_entry.options[CONF_CHANNELS])
 
         # Update config entry if it no longer reflects reality
         if api_channels != config_channels:
