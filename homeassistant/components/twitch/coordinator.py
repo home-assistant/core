@@ -105,20 +105,20 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             )
         }
 
-        # Determine if user has followed new channels
-        missing_channels = {x.broadcaster_login for x in follows.values()} - set(
-            (await self.get_entry()).options[CONF_CHANNELS]
-        )
+        api_channels = {x.broadcaster_login for x in follows.values()}
+        config_channels = set((await self.get_entry()).options[CONF_CHANNELS])
 
-        # If necessary, add any missing channels to config entry and reload the integration
-        if len(list(missing_channels)) > 0:
-            new_channels_list = (await self.get_entry()).options[CONF_CHANNELS] + list(
-                missing_channels
+        # Update config entry if it no longer reflects reality
+        if api_channels != config_channels:
+            additions = api_channels - config_channels
+            removals = config_channels - api_channels
+            change_summary = [f"+{x}" for x in additions] + [f"-{x}" for x in removals]
+            LOGGER.info(
+                f"Discovered changes to followed channels: {', '.join(change_summary)}"
             )
-            LOGGER.info(f"Discovered missing channels: {missing_channels}")
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
-                options={**self.config_entry.options, CONF_CHANNELS: new_channels_list},
+                options={**self.config_entry.options, CONF_CHANNELS: api_channels},
             )
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
