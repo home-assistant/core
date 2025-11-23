@@ -1168,23 +1168,24 @@ async def async_setup_entry(
         attribute,
         description,
     ) in _iter_sensor_candidates(entry_data.devices.values()):
-        # Skip sensors based on capability ignore list
+        # Skip sensors when a description defines capability ignore lists
+        # and the device's main component reports all capabilities in any list
         if description.capability_ignore_list and any(
             all(capability in device.status[MAIN] for capability in capability_list)
             for capability_list in description.capability_ignore_list
         ):
             continue
 
-        # Only include sensors if no exists_fn OR (component is MAIN and exists_fn returns True)
+        # Only create the sensor if the description's exists_fn (when provided)
+        # confirms the attribute's value on the main component is present and allowed
         if description.exists_fn and not (
             component == MAIN
             and description.exists_fn(device.status[MAIN][capability][attribute])
         ):
             continue
 
-        # Skip sensors based on component function
-        # Main component is always included
-        # Other components are included only if the component_fn returns True
+        # Only create the sensor for the main component or for components
+        # explicitly allowed by the description's component_fn
         if not (
             component == MAIN
             or (description.component_fn and description.component_fn(component))
