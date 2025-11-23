@@ -2115,6 +2115,9 @@ async def test_bluetooth_provisioning_clears_match_history(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "bluetooth_confirm"
 
+        # Reset mock to only count calls during provisioning
+        mock_clear.reset_mock()
+
         # Confirm
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -2141,11 +2144,8 @@ async def test_bluetooth_provisioning_clears_match_history(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "C049EF8873E8"
 
-        # Verify match history was cleared at least twice:
-        # - Once at the start of the bluetooth discovery flow
-        # - Once after successful WiFi provisioning
-        # (May be called additional times by automatic discovery flows)
-        assert mock_clear.call_count >= 2
+        # Verify match history was cleared once during provisioning
+        assert mock_clear.call_count == 1
         mock_clear.assert_called_with(hass, BLE_DISCOVERY_INFO.address)
 
 
