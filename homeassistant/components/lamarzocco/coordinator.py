@@ -138,6 +138,8 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     cloud_client: LaMarzoccoCloudClient
 
     async def _internal_async_setup(self) -> None:
+        """Set up the coordinator."""
+        await self.cloud_client.async_get_access_token()
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
