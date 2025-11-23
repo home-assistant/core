@@ -264,7 +264,7 @@ async def test_set_mode(
 ) -> None:
     """Test handling of value in set_mode method."""
 
-    # If VeSyncHumid200300S.set_humidity_mode fails (returns False), then HomeAssistantError is raised
+    # If VeSyncHumid200300S.set_mode fails (returns False), then HomeAssistantError is raised
     with (
         expectation,
         patch(
@@ -354,7 +354,7 @@ async def test_set_mode_sleep_turns_display_off(
     await hass.async_block_till_done()
 
     with (
-        patch.object(humidifier, "set_humidity_mode", return_value=True),
+        patch.object(humidifier, "set_mode", return_value=True),
         patch.object(humidifier, "toggle_display") as display_mock,
     ):
         await hass.services.async_call(
