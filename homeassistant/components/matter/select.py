@@ -42,7 +42,7 @@ DOOR_LOCK_OPERATING_MODE_MAP = {
     clusters.DoorLock.Enums.OperatingModeEnum.kNormal: "normal",
     clusters.DoorLock.Enums.OperatingModeEnum.kVacation: "vacation",
     clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy: "privacy",
-    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "noRemoteLockUnlock",
+    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "no_remote_lock_unlock",
     clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
 }
 DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {v: k for k, v in DOOR_LOCK_OPERATING_MODE_MAP.items()}
