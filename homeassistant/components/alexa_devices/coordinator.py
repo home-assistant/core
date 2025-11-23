@@ -59,7 +59,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:
-            await self.api.login_mode_stored_data()
+            await self.api.login.login_mode_stored_data()
             data = await self.api.get_devices_data()
         except CannotConnect as err:
             raise UpdateFailed(
