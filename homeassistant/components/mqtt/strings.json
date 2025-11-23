@@ -270,7 +270,7 @@
             "fan_feature_speed": "The fan supports multiple speeds.",
             "image_processing_mode": "Select how the image data is received.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
-            "reports_position": "Set this option if the value reports the position or supports setting the position. Enabling this option will cause the position to be published instead of a payload defined by payload \"open\", payload \"close\" or payload \"stop\". When receiving messages, state topic will accept numeric payloads or one of the configured state messages.",
+            "reports_position": "Set this option if the valve reports the position or supports setting the position. Enabling this option will cause the position to be published instead of a payload defined by payload \"open\", payload \"close\" or payload \"stop\". When receiving messages, state topic will accept numeric payloads or one of the configured state messages.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
             "state_class": "The [State class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
             "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)",
@@ -1005,7 +1005,7 @@
               "data_description": {
                 "payload_close": "The payload sent when a \"close\" command is issued.",
                 "payload_open": "The payload sent when an \"open\" command is issued.",
-                "payload_stop": "The payload sent when a \"stop\" command is issued. Set this payload only if your lock supports the \"stop\" action.",
+                "payload_stop": "The payload sent when a \"stop\" command is issued. Set this payload only if your valve supports the \"stop\" action.",
                 "state_closed": "The payload received at the state topic that represents the \"closed\" state.",
                 "state_closing": "The payload received at the state topic that represents the \"closing\" state.",
                 "state_open": "The payload received at the state topic that represents the \"open\" state.",
