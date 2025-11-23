@@ -5,7 +5,7 @@
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "update_failed": "Updating DuckDNS failed"
+      "update_failed": "Updating Duck DNS failed"
     },
     "step": {
       "user": {
@@ -37,7 +37,7 @@
   },
   "services": {
     "set_txt": {
-      "description": "Sets the TXT record of your DuckDNS subdomain.",
+      "description": "Sets the TXT record of your Duck DNS subdomain.",
       "fields": {
         "config_entry_id": {
           "description": "The Duck DNS integration ID.",
