@@ -34,6 +34,9 @@
         "data": {
           "cloud_project_id": "Google Cloud Project ID"
         },
+        "data_description": {
+          "cloud_project_id": "The Google Cloud Project ID which can be obtained from the Cloud Console"
+        },
         "description": "Enter the Cloud Project ID below e.g. *example-project-12345*. See the [Google Cloud Console]({cloud_console_url}) or the documentation for [more info]({more_info_url}).",
         "title": "Nest: Enter Cloud Project ID"
       },
@@ -44,6 +47,9 @@
       "device_project": {
         "data": {
           "project_id": "Device Access Project ID"
+        },
+        "data_description": {
+          "project_id": "The Device Access Project ID which can be obtained from the Device Access Console"
         },
         "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Select on **Create project**\n1. Give your Device Access project a name and select **Next**.\n1. Enter your OAuth Client ID\n1. Skip enabling events for now and select **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).",
         "title": "Nest: Create a Device Access Project"
@@ -64,12 +70,18 @@
         "data": {
           "subscription_name": "Pub/Sub subscription name"
         },
+        "data_description": {
+          "subscription_name": "The Pub/Sub subscription name to receive Nest device updates"
+        },
         "description": "Home Assistant receives realtime Nest device updates with a Cloud Pub/Sub subscription for topic `{topic}`.\n\nSelect an existing subscription below if one already exists, or the next step will create a new one for you. See the integration documentation for [more info]({more_info_url}).",
         "title": "Configure Cloud Pub/Sub subscription"
       },
       "pubsub_topic": {
         "data": {
           "topic_name": "Pub/Sub topic name"
+        },
+        "data_description": {
+          "topic_name": "The Pub/Sub topic name configured in the Device Access Console"
         },
         "description": "Nest devices publish updates on a Cloud Pub/Sub topic. You can select an existing topic if one exists, or choose to create a new topic and the next step will create it for you with the necessary permissions. See the integration documentation for [more info]({more_info_url}).",
         "title": "Configure Cloud Pub/Sub topic"
