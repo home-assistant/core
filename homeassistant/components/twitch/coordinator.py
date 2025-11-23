@@ -118,7 +118,10 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             )
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
-                options={**self.config_entry.options, CONF_CHANNELS: api_channels},
+                options={
+                    **self.config_entry.options,
+                    CONF_CHANNELS: list(api_channels),
+                },
             )
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
