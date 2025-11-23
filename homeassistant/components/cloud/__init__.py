@@ -80,6 +80,7 @@ DEFAULT_MODE = MODE_PROD
 PLATFORMS = [
     Platform.AI_TASK,
     Platform.BINARY_SENSOR,
+    Platform.CONVERSATION,
     Platform.STT,
     Platform.TTS,
 ]
