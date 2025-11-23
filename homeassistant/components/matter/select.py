@@ -38,6 +38,16 @@ PUMP_OPERATION_MODE_MAP = {
 }
 PUMP_OPERATION_MODE_MAP_REVERSE = {v: k for k, v in PUMP_OPERATION_MODE_MAP.items()}
 
+DOOR_LOCK_OPERATING_MODE_MAP = {
+    clusters.DoorLock.Enums.OperatingModeEnum.kNormal: "normal",
+    clusters.DoorLock.Enums.OperatingModeEnum.kVacation: "vacation",
+    clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy: "privacy",
+    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "noRemoteLockUnlock",
+    clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
+}
+DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {v: k for k, v in DOOR_LOCK_OPERATING_MODE_MAP.items()}
+
+
 type SelectCluster = (
     clusters.ModeSelect
     | clusters.OvenMode
@@ -586,27 +596,9 @@ DISCOVERY_SCHEMAS = [
             key="DoorLockOperatingMode",
             entity_category=EntityCategory.CONFIG,
             translation_key="door_lock_operating_mode",
-            options=[
-                "Normal",
-                "Vacation",
-                "Privacy",
-                "NoRemoteLockUnlock",
-                "Passage",
-            ],
-            device_to_ha={
-                0: "Normal",
-                1: "Vacation",
-                2: "Privacy",
-                3: "NoRemoteLockUnlock",
-                4: "Passage",
-            }.get,
-            ha_to_device={
-                "Normal": 0,
-                "Vacation": 1,
-                "Privacy": 2,
-                "NoRemoteLockUnlock": 3,
-                "Passage": 4,
-            }.get,
+            options=list(DOOR_LOCK_OPERATING_MODE_MAP.values()),
+            device_to_ha=DOOR_LOCK_OPERATING_MODE_MAP.get,
+            ha_to_device=DOOR_LOCK_OPERATING_MODE_MAP_REVERSE.get,
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(
