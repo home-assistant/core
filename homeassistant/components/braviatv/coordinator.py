@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
@@ -22,8 +23,7 @@ from homeassistant.components.media_player import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -40,7 +40,16 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
-type BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
+
+@dataclass
+class BraviaTVData:
+    """Data for the Bravia TV integration."""
+
+    coordinator: BraviaTVCoordinator
+    picture_coordinator: BraviaTVPictureCoordinator
+
+
+type BraviaTVConfigEntry = ConfigEntry[BraviaTVData]
 
 
 def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
@@ -100,7 +109,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.is_on = False
         self.connected = False
         self.skipped_updates = 0
-        self.picture_settings: list[dict[str, Any]] | None = None
 
         super().__init__(
             hass,
@@ -111,16 +119,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=1.0, immediate=False
             ),
-        )
-
-    def _has_enabled_number_entities(self) -> bool:
-        """Check if any number entities are enabled."""
-        entity_registry = er.async_get(self.hass)
-        entries = er.async_entries_for_config_entry(
-            entity_registry, self.config_entry.entry_id
-        )
-        return any(
-            entry.domain == "number" and entry.disabled_by is None for entry in entries
         )
 
     def _sources_extend(
@@ -173,10 +171,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
-            # Only fetch picture settings if number entities are enabled or if we haven't
-            # fetched them yet (to allow initial entity creation)
-            if self.picture_settings is None or self._has_enabled_number_entities():
-                await self.async_update_picture_settings()
         except BraviaNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
@@ -249,19 +243,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
 
         channels = await self.client.get_content_list_all("tv")
         self._sources_extend(channels, SourceType.CHANNEL)
-
-    async def async_update_picture_settings(self) -> None:
-        """Update picture settings."""
-        try:
-            self.picture_settings = await self.client.get_picture_setting()
-        except BraviaError:
-            _LOGGER.debug("Failed to update picture settings")
-            self.picture_settings = None
-
-    @catch_braviatv_errors
-    async def async_set_picture_setting(self, target: str, value: str) -> None:
-        """Set a picture quality setting."""
-        await self.client.set_picture_setting(target, value)
 
     async def async_source_start(self, uri: str, source_type: SourceType | str) -> None:
         """Select source by uri."""
@@ -395,3 +376,64 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_terminate_apps(self) -> None:
         """Send command to terminate all applications."""
         await self.client.terminate_apps()
+
+
+class BraviaTVPictureCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | None]):
+    """Coordinator for Bravia TV picture settings.
+
+    This coordinator only polls when there are listeners (enabled entities).
+    """
+
+    config_entry: BraviaTVConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: BraviaTVConfigEntry,
+        coordinator: BraviaTVCoordinator,
+    ) -> None:
+        """Initialize the picture settings coordinator."""
+        self._coordinator = coordinator
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_picture",
+            update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def client(self) -> BraviaClient:
+        """Return the Bravia client."""
+        return self._coordinator.client
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if TV is on."""
+        return self._coordinator.is_on
+
+    async def _async_update_data(self) -> list[dict[str, Any]] | None:
+        """Fetch picture settings data."""
+        # Only fetch if TV is on
+        if not self._coordinator.is_on:
+            return self.data
+
+        try:
+            return await self.client.get_picture_setting()
+        except BraviaError:
+            _LOGGER.debug("Failed to update picture settings")
+            return None
+
+    async def async_set_picture_setting(self, target: str, value: str) -> None:
+        """Set a picture quality setting."""
+        try:
+            await self.client.set_picture_setting(target, value)
+        except BraviaError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_picture_setting_failed",
+                translation_placeholders={"target": target, "error": str(err)},
+            ) from err
+        finally:
+            await self.async_request_refresh()

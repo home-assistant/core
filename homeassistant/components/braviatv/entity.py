@@ -9,6 +9,21 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import BraviaTVCoordinator
 
 
+def get_device_info(coordinator: BraviaTVCoordinator, unique_id: str) -> DeviceInfo:
+    """Create device info for a Bravia TV entity."""
+    if TYPE_CHECKING:
+        assert coordinator.client.mac is not None
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, unique_id)},
+        connections={(CONNECTION_NETWORK_MAC, coordinator.client.mac)},
+        manufacturer=ATTR_MANUFACTURER,
+        model_id=coordinator.system_info.get("model"),
+        hw_version=coordinator.system_info.get("generation"),
+        serial_number=coordinator.system_info.get("serial"),
+    )
+
+
 class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
     """BraviaTV entity class."""
 
@@ -19,15 +34,4 @@ class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
         super().__init__(coordinator)
 
         self._attr_unique_id = unique_id
-
-        if TYPE_CHECKING:
-            assert coordinator.client.mac is not None
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.client.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model_id=coordinator.system_info.get("model"),
-            hw_version=coordinator.system_info.get("generation"),
-            serial_number=coordinator.system_info.get("serial"),
-        )
+        self._attr_device_info = get_device_info(coordinator, unique_id)

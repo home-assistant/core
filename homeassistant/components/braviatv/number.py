@@ -10,9 +10,14 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
-from .entity import BraviaTVEntity
+from .coordinator import (
+    BraviaTVConfigEntry,
+    BraviaTVCoordinator,
+    BraviaTVPictureCoordinator,
+)
+from .entity import get_device_info
 
 PARALLEL_UPDATES = 1
 
@@ -21,36 +26,34 @@ PARALLEL_UPDATES = 1
 class BraviaTVNumberDescription(NumberEntityDescription):
     """Bravia TV Number description."""
 
-    get_value_fn: Callable[[BraviaTVCoordinator], int | None]
-    set_value_fn: Callable[[BraviaTVCoordinator, int], Coroutine[Any, Any, None]]
-    supported_fn: Callable[[BraviaTVCoordinator], bool]
+    get_value_fn: Callable[[list[dict[str, Any]] | None], int | None]
+    set_value_fn: Callable[[BraviaTVPictureCoordinator, int], Coroutine[Any, Any, None]]
+    supported_fn: Callable[[list[dict[str, Any]] | None], bool]
 
 
 def _get_picture_setting_value(
-    coordinator: BraviaTVCoordinator, target: str
+    data: list[dict[str, Any]] | None, target: str
 ) -> int | None:
     """Get picture setting value."""
-    if not coordinator.picture_settings:
+    if not data:
         return None
-    for setting in coordinator.picture_settings:
+    for setting in data:
         if setting.get("target") == target:
             return int(setting.get("currentValue", 0))
     return None
 
 
 def _is_picture_setting_supported(
-    coordinator: BraviaTVCoordinator, target: str
+    data: list[dict[str, Any]] | None, target: str
 ) -> bool:
     """Check if picture setting is supported."""
-    if not coordinator.picture_settings:
+    if not data:
         return False
-    return any(
-        setting.get("target") == target for setting in coordinator.picture_settings
-    )
+    return any(setting.get("target") == target for setting in data)
 
 
 async def _set_picture_setting(
-    coordinator: BraviaTVCoordinator, target: str, value: int
+    coordinator: BraviaTVPictureCoordinator, target: str, value: int
 ) -> None:
     """Set picture setting value."""
     await coordinator.async_set_picture_setting(target, str(value))
@@ -65,15 +68,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "brightness"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "brightness"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "brightness", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "brightness"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "brightness"),
     ),
     BraviaTVNumberDescription(
         key="contrast",
@@ -83,15 +82,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "contrast"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "contrast"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "contrast", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "contrast"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "contrast"),
     ),
     BraviaTVNumberDescription(
         key="color",
@@ -101,15 +96,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "color"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "color"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "color", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "color"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "color"),
     ),
     BraviaTVNumberDescription(
         key="sharpness",
@@ -119,15 +110,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "sharpness"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "sharpness"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "sharpness", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "sharpness"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "sharpness"),
     ),
     BraviaTVNumberDescription(
         key="color_temperature",
@@ -137,14 +124,12 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "colorTemperature"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "colorTemperature"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "colorTemperature", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "colorTemperature"
+        supported_fn=lambda data: _is_picture_setting_supported(
+            data, "colorTemperature"
         ),
     ),
     BraviaTVNumberDescription(
@@ -155,15 +140,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "pictureMode"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "pictureMode"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "pictureMode", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "pictureMode"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "pictureMode"),
     ),
     BraviaTVNumberDescription(
         key="color_space",
@@ -173,15 +154,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "colorSpace"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "colorSpace"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "colorSpace", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "colorSpace"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "colorSpace"),
     ),
     BraviaTVNumberDescription(
         key="light_sensor",
@@ -191,15 +168,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "lightSensor"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "lightSensor"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "lightSensor", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "lightSensor"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "lightSensor"),
     ),
     BraviaTVNumberDescription(
         key="auto_picture_mode",
@@ -209,14 +182,12 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "autoPictureMode"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "autoPictureMode"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "autoPictureMode", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "autoPictureMode"
+        supported_fn=lambda data: _is_picture_setting_supported(
+            data, "autoPictureMode"
         ),
     ),
     BraviaTVNumberDescription(
@@ -227,15 +198,11 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "hdrMode"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "hdrMode"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "hdrMode", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "hdrMode"
-        ),
+        supported_fn=lambda data: _is_picture_setting_supported(data, "hdrMode"),
     ),
     BraviaTVNumberDescription(
         key="auto_local_dimming",
@@ -245,14 +212,12 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "autoLocalDimming"
-        ),
+        get_value_fn=lambda data: _get_picture_setting_value(data, "autoLocalDimming"),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "autoLocalDimming", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "autoLocalDimming"
+        supported_fn=lambda data: _is_picture_setting_supported(
+            data, "autoLocalDimming"
         ),
     ),
     BraviaTVNumberDescription(
@@ -263,14 +228,14 @@ NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        get_value_fn=lambda coordinator: _get_picture_setting_value(
-            coordinator, "xtendedDynamicRange"
+        get_value_fn=lambda data: _get_picture_setting_value(
+            data, "xtendedDynamicRange"
         ),
         set_value_fn=lambda coordinator, value: _set_picture_setting(
             coordinator, "xtendedDynamicRange", value
         ),
-        supported_fn=lambda coordinator: _is_picture_setting_supported(
-            coordinator, "xtendedDynamicRange"
+        supported_fn=lambda data: _is_picture_setting_supported(
+            data, "xtendedDynamicRange"
         ),
     ),
 )
@@ -282,20 +247,22 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bravia TV Number entities."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
+    picture_coordinator = config_entry.runtime_data.picture_coordinator
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
     async_add_entities(
-        BraviaTVNumber(coordinator, unique_id, description)
+        BraviaTVNumber(coordinator, picture_coordinator, unique_id, description)
         for description in NUMBERS
-        if description.supported_fn(coordinator)
+        if description.supported_fn(picture_coordinator.data)
     )
 
 
-class BraviaTVNumber(BraviaTVEntity, NumberEntity):
+class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], NumberEntity):
     """Representation of a Bravia TV Number."""
 
+    _attr_has_entity_name = True
     entity_description: BraviaTVNumberDescription
 
     # Map entity key to API target name
@@ -317,13 +284,17 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
     def __init__(
         self,
         coordinator: BraviaTVCoordinator,
+        picture_coordinator: BraviaTVPictureCoordinator,
         unique_id: str,
         description: BraviaTVNumberDescription,
     ) -> None:
         """Initialize the number."""
-        super().__init__(coordinator, unique_id)
+        super().__init__(picture_coordinator)
+        self._main_coordinator = coordinator
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
+        self._attr_device_info = get_device_info(coordinator, unique_id)
+
         # Initialize with defaults from entity description
         self._attr_native_min_value = description.native_min_value or 0
         self._attr_native_max_value = description.native_max_value or 100
@@ -333,14 +304,14 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
 
     def _update_dynamic_attributes(self) -> None:
         """Update min/max/step from API data."""
-        if not self.coordinator.picture_settings:
+        if not self.coordinator.data:
             return
 
         # Find the setting for this entity
         target_key = self.entity_description.key
         target = self.TARGET_MAP.get(target_key, target_key)
 
-        for setting in self.coordinator.picture_settings:
+        for setting in self.coordinator.data:
             if setting.get("target") == target:
                 # Get candidate info (min/max/step)
                 candidates = setting.get("candidate", [])
@@ -359,9 +330,14 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
         super()._handle_coordinator_update()
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.is_on
+
+    @property
     def native_value(self) -> int | None:
         """Return the current value."""
-        return self.entity_description.get_value_fn(self.coordinator)
+        return self.entity_description.get_value_fn(self.coordinator.data)
 
     @property
     def native_min_value(self) -> float:

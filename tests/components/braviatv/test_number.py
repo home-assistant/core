@@ -14,6 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -154,12 +155,14 @@ async def test_set_number_value(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_set_number_value_error(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling when setting a number value."""
-    with patch(
-        "pybravia.BraviaClient.set_picture_setting",
-        side_effect=BraviaError("Test error"),
+    with (
+        patch(
+            "pybravia.BraviaClient.set_picture_setting",
+            side_effect=BraviaError("Test error"),
+        ),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -170,9 +173,6 @@ async def test_set_number_value_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
-
-        assert "Command error: Test error" in caplog.text
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

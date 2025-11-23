@@ -92,5 +92,10 @@
         "name": "X-tended Dynamic Range"
       }
     }
+  },
+  "exceptions": {
+    "set_picture_setting_failed": {
+      "message": "Failed to set picture setting {target}: {error}"
+    }
   }
 }

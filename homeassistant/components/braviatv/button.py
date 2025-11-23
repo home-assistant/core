@@ -48,7 +48,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Bravia TV Button entities."""
 
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
