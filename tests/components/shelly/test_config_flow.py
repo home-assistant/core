@@ -101,6 +101,11 @@ BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL = {
     0x0BA9: bytes.fromhex("0105000b99990a70d6c297bacc")
 }  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x99, 0x99) - unknown model ID, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
 
+BLE_MANUFACTURER_DATA_FOR_CLEAR_TEST = {
+    0x0BA9: bytes.fromhex("0105000b30100a00eeddccbbaa")
+}  # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x30, 0x10), MAC (0x0a, 0x00, 0xee, 0xdd, 0xcc, 0xbb, 0xaa)
+# Device WiFi MAC: 00eeddccbbaa (little-endian) -> AABBCCDDEE00 (reversed to big-endian)
+
 BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="ShellyPlus2PM-C049EF8873E8",
     address="AA:BB:CC:DD:EE:FF",
@@ -115,6 +120,26 @@ BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     ),
     advertisement=generate_advertisement_data(
         manufacturer_data=BLE_MANUFACTURER_DATA_RPC,
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+BLE_DISCOVERY_INFO_FOR_CLEAR_TEST = BluetoothServiceInfoBleak(
+    name="ShellyPlus2PM-AABBCCDDEE00",
+    address="AA:BB:CC:DD:EE:00",
+    rssi=-60,
+    manufacturer_data=BLE_MANUFACTURER_DATA_FOR_CLEAR_TEST,
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(
+        address="AA:BB:CC:DD:EE:00",
+        name="ShellyPlus2PM-AABBCCDDEE00",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data=BLE_MANUFACTURER_DATA_FOR_CLEAR_TEST,
     ),
     time=0,
     connectable=True,
@@ -2084,42 +2109,28 @@ async def test_bluetooth_provisioning_clears_match_history(
 ) -> None:
     """Test bluetooth provisioning clears match history after successful provisioning."""
     # Inject BLE device so it's available in the bluetooth scanner
-    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_FOR_CLEAR_TEST)
 
-    with (
-        patch(
-            "homeassistant.components.shelly.config_flow.async_clear_address_from_match_history"
-        ) as mock_clear,
-        patch(
-            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
-            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
-        ),
-        patch(
-            "homeassistant.components.shelly.config_flow.async_provision_wifi",
-        ),
-        patch(
-            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            return_value=("1.1.1.1", 80),
-        ),
-        patch(
-            "homeassistant.components.shelly.config_flow.get_info",
-            return_value=MOCK_DEVICE_INFO,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_clear_address_from_match_history",
+    ) as mock_clear:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            data=BLE_DISCOVERY_INFO,
+            data=BLE_DISCOVERY_INFO_FOR_CLEAR_TEST,
             context={"source": config_entries.SOURCE_BLUETOOTH},
         )
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "bluetooth_confirm"
 
-        # Reset mock to only count calls during provisioning
-        mock_clear.reset_mock()
-
         # Confirm
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        with patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {}
+            )
 
         # Select network
         result = await hass.config_entries.flow.async_configure(
@@ -2127,26 +2138,49 @@ async def test_bluetooth_provisioning_clears_match_history(
             {CONF_SSID: "MyNetwork"},
         )
 
+        # Reset mock to only count calls during provisioning
+        mock_clear.reset_mock()
+
         # Enter password and provision
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
-        )
+        with (
+            patch(
+                "homeassistant.components.shelly.config_flow.async_provision_wifi",
+            ),
+            patch(
+                "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+                return_value=("1.1.1.1", 80),
+            ),
+            patch(
+                "homeassistant.components.shelly.config_flow.get_info",
+                return_value=MOCK_DEVICE_INFO,
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {CONF_PASSWORD: "my_password"},
+            )
 
-        # Provisioning happens in background, shows progress
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        await hass.async_block_till_done()
+            # Provisioning happens in background, shows progress
+            assert result["type"] is FlowResultType.SHOW_PROGRESS
+            await hass.async_block_till_done()
 
-        # Complete provisioning by configuring the progress step
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            # Complete provisioning by configuring the progress step
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         # Provisioning should complete and create entry
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == "C049EF8873E8"
+        assert result["result"].unique_id == "AABBCCDDEE00"
 
         # Verify match history was cleared once during provisioning
-        assert mock_clear.call_count == 1
-        mock_clear.assert_called_with(hass, BLE_DISCOVERY_INFO.address)
+        # Only count calls with our test device's address to avoid interference from other tests
+        our_device_calls = [
+            call
+            for call in mock_clear.call_args_list
+            if len(call.args) > 1
+            and call.args[1] == BLE_DISCOVERY_INFO_FOR_CLEAR_TEST.address
+        ]
+        assert our_device_calls
+        mock_clear.assert_called_with(hass, BLE_DISCOVERY_INFO_FOR_CLEAR_TEST.address)
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
