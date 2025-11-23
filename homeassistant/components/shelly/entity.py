@@ -596,7 +596,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 
         return self.entity_description.available(self.sub_status)
 
-    def configure_translation(self) -> None:
+    def configure_translation_attributes(self) -> None:
         """Configure translation attributes."""
         translation_placeholders, translation_key = get_entity_translation_attributes(
             get_rpc_channel_name(self.coordinator.device, self.key),

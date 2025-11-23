@@ -82,7 +82,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
 
         if not description.role:
             if description.key != "input":
-                self.configure_translation()
+                self.configure_translation_attributes()
             else:
                 if custom_name := get_rpc_custom_name(coordinator.device, key):
                     self._attr_name = custom_name
@@ -494,7 +494,7 @@ class RpcSleepingBinarySensor(
         super().__init__(coordinator, key, attribute, description, entry)
 
         if coordinator.device.initialized:
-            self.configure_translation()
+            self.configure_translation_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
