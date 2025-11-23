@@ -12,6 +12,10 @@ from aiohttp import BasicAuth, ClientError, ClientResponseError, ClientSession
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    API_ENDPOINT_PROFILE,
+    API_ENDPOINT_SUBDEVICES_LIST,
+    API_ENDPOINT_SUBDEVICES_POWER_OFF,
+    API_ENDPOINT_SUBDEVICES_POWER_ON,
     DEVICE_TYPE_LIGHT_SWITCH,
     DEVICE_TYPE_POWER_SOCKET,
     DEVICE_TYPE_SWITCH,
@@ -52,7 +56,11 @@ class MiHomeDevice:
     @classmethod
     def from_api(cls, data: dict[str, Any]) -> MiHomeDevice | None:
         """Create device from MiHome API subdevice data."""
-        if "id" not in data:
+        # Validate id exists and is not empty
+        device_id_raw = data.get("id")
+        if not device_id_raw or (
+            isinstance(device_id_raw, str) and not device_id_raw.strip()
+        ):
             return None
 
         raw_type = str(data.get("device_type", "")).lower()
@@ -60,9 +68,20 @@ class MiHomeDevice:
         if device_type not in SUPPORTED_DEVICE_TYPES:
             return None
 
-        device_id = str(data["id"])
+        device_id = str(device_id_raw)
         name = data.get("label") or f"MiHome device {device_id}"
-        is_on = bool(data.get("power_state"))
+
+        # Convert power_state to boolean, handling string values correctly
+        power_state = data.get("power_state")
+        if isinstance(power_state, bool):
+            is_on = power_state
+        elif isinstance(power_state, str):
+            # String values: "true"/"1" -> True, "false"/"0"/empty -> False
+            is_on = power_state.lower() in ("true", "1")
+        elif isinstance(power_state, (int, float)):
+            is_on = bool(power_state)
+        else:
+            is_on = False
 
         brightness_value = data.get("dim_level")
         if isinstance(brightness_value, (int, float)):
@@ -94,6 +113,10 @@ class MiHomeDevice:
                 data.get("power_state"),
             )
 
+        # Validate device_type is a string before assigning
+        product_type_raw = data.get("device_type")
+        product_type = str(product_type_raw) if product_type_raw is not None else None
+
         return cls(
             device_id=device_id,
             name=name,
@@ -101,7 +124,7 @@ class MiHomeDevice:
             is_on=is_on,
             brightness=brightness,
             available=available,
-            product_type=data.get("device_type"),
+            product_type=product_type,
         )
 
     @classmethod
@@ -135,16 +158,17 @@ class MiHomeAPI:
 
     async def async_authenticate(self) -> str:
         """Authenticate with the user's password and return an API key."""
-        data = await self._request("users/profile", use_password=True)
+        data = await self._request(API_ENDPOINT_PROFILE, use_password=True)
         api_key = data.get("api_key") if isinstance(data, dict) else None
-        if not api_key:
+        # Validate api_key is a non-empty string before assigning
+        if not api_key or not isinstance(api_key, str) or not api_key.strip():
             raise MiHomeConnectionError("API key missing from profile response")
         self._api_key = api_key
         return api_key
 
     async def async_get_devices(self) -> list[MiHomeDevice]:
         """Return the list of supported MiHome subdevices."""
-        payload = await self._request("subdevices/list")
+        payload = await self._request(API_ENDPOINT_SUBDEVICES_LIST)
         if not isinstance(payload, list):
             _LOGGER.debug("Unexpected response for subdevices: %s", payload)
             return []
@@ -191,7 +215,11 @@ class MiHomeAPI:
         del brightness  # Brightness is not currently supported by the MiHome API.
 
         params = {"id": _coerce_device_id(device_id)}
-        endpoint = "subdevices/power_on" if state else "subdevices/power_off"
+        endpoint = (
+            API_ENDPOINT_SUBDEVICES_POWER_ON
+            if state
+            else API_ENDPOINT_SUBDEVICES_POWER_OFF
+        )
         _LOGGER.debug(
             "Calling %s with params: %s (device_id=%s)",
             endpoint,
@@ -242,9 +270,11 @@ class MiHomeAPI:
 
         status = payload.get("status")
         if status != "success":
-            message = (
+            message_raw = (
                 payload.get("message") or payload.get("error") or status or "unknown"
             )
+            # Ensure message is a string
+            message = str(message_raw) if message_raw is not None else "unknown"
             if status in {"access-denied", "not-authenticated"}:
                 raise MiHomeAuthError(message)
             raise MiHomeConnectionError(f"MiHome API error: {message}")
@@ -253,13 +283,19 @@ class MiHomeAPI:
 
 
 def _map_device_type(raw_type: str) -> str | None:
-    """Map MiHome device types onto Home Assistant categories."""
+    """Map MiHome device types onto Home Assistant categories.
+
+    Maps device type strings from the API to Home Assistant device categories:
+    - Light/dimmer devices -> light_switch
+    - Power sockets/plugs (including "ecalm") -> power_socket
+    - Switch devices -> switch
+    """
     if not raw_type:
         return None
 
     if "light" in raw_type or "dim" in raw_type:
         return DEVICE_TYPE_LIGHT_SWITCH
-    if raw_type in {"ecalm"} or "socket" in raw_type or "plug" in raw_type:
+    if raw_type == "ecalm" or "socket" in raw_type or "plug" in raw_type:
         return DEVICE_TYPE_POWER_SOCKET
     if "switch" in raw_type:
         return DEVICE_TYPE_SWITCH

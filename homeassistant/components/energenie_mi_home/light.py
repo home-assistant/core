@@ -31,7 +31,8 @@ async def async_setup_entry(
         if device.device_type == DEVICE_TYPE_LIGHT_SWITCH
     ]
 
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 class MiHomeLightEntity(MiHomeEntity, LightEntity):

@@ -44,8 +44,7 @@ class MiHomeCoordinator(DataUpdateCoordinator[dict[str, MiHomeDevice]]):
             config_entry.data[CONF_EMAIL],
             config_entry.data[CONF_PASSWORD],
             session,
-            api_key=config_entry.data.get(CONF_API_KEY)
-            or config_entry.data.get("token"),
+            api_key=config_entry.data.get(CONF_API_KEY),
         )
 
     async def _async_update_data(self) -> dict[str, MiHomeDevice]:
