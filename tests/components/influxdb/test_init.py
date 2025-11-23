@@ -404,6 +404,53 @@ async def test_invalid_config(
     assert not await async_setup_component(hass, influxdb.DOMAIN, config)
 
 
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "config_ext", "get_write_api"),
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {},
+            _get_write_api_mock_v1,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "organization": "org",
+                "token": "token",
+            },
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_no_import_when_config_entry_exist(
+    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
+) -> None:
+    """Test the setup with minimal configuration and defaults."""
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    mock_entry = MockConfigEntry(
+        domain="influxdb",
+        data=config_base,
+    )
+    mock_entry.add_to_hass(hass)
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(conf_entries) == 1
+
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(conf_entries) == 1
+
+
 async def _setup(
     hass: HomeAssistant, mock_influx_client, config, get_write_api
 ) -> None:
