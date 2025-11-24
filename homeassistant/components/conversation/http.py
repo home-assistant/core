@@ -12,6 +12,7 @@ from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.chat_session import async_get_chat_session
 from homeassistant.util import language as language_util
 
 from .agent_manager import (
@@ -20,7 +21,8 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .const import DATA_COMPONENT
+from .chat_log import DATA_CHAT_LOGS, async_get_chat_log, async_subscribe_chat_logs
+from .const import DATA_COMPONENT, ChatLogEventType
 from .entity import ConversationEntity
 from .models import ConversationInput
 
@@ -35,6 +37,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_sentences)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
     websocket_api.async_register_command(hass, websocket_hass_agent_language_scores)
+    websocket_api.async_register_command(hass, websocket_subscribe_chat_log)
+    websocket_api.async_register_command(hass, websocket_subscribe_chat_log_index)
 
 
 @websocket_api.websocket_command(
@@ -265,3 +269,114 @@ class ConversationProcessView(http.HomeAssistantView):
         )
 
         return self.json(result.as_dict())
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/chat_log/subscribe",
+        vol.Required("conversation_id"): str,
+    }
+)
+@websocket_api.require_admin
+def websocket_subscribe_chat_log(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to a chat log."""
+    msg_id = msg["id"]
+    subscribed_conversation = msg["conversation_id"]
+
+    chat_logs = hass.data.get(DATA_CHAT_LOGS)
+
+    if not chat_logs or subscribed_conversation not in chat_logs:
+        connection.send_error(
+            msg_id,
+            websocket_api.ERR_NOT_FOUND,
+            "Conversation chat log not found",
+        )
+        return
+
+    @callback
+    def forward_events(conversation_id: str, event_type: str, data: dict) -> None:
+        """Forward chat log events to websocket connection."""
+        if conversation_id != subscribed_conversation:
+            return
+
+        connection.send_event(
+            msg_id,
+            {
+                "conversation_id": conversation_id,
+                "event_type": event_type,
+                "data": data,
+            },
+        )
+
+        if event_type == ChatLogEventType.DELETED:
+            unsubscribe()
+            del connection.subscriptions[msg_id]
+
+    unsubscribe = async_subscribe_chat_logs(hass, forward_events)
+    connection.subscriptions[msg_id] = unsubscribe
+    connection.send_result(msg_id)
+
+    with (
+        async_get_chat_session(hass, subscribed_conversation) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        connection.send_event(
+            msg_id,
+            {
+                "event_type": ChatLogEventType.INITIAL_STATE,
+                "data": chat_log.as_dict(),
+            },
+        )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/chat_log/subscribe_index",
+    }
+)
+@websocket_api.require_admin
+def websocket_subscribe_chat_log_index(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to a chat log."""
+    msg_id = msg["id"]
+
+    @callback
+    def forward_events(
+        conversation_id: str, event_type: ChatLogEventType, data: dict
+    ) -> None:
+        """Forward chat log events to websocket connection."""
+        if event_type not in (ChatLogEventType.CREATED, ChatLogEventType.DELETED):
+            return
+
+        connection.send_event(
+            msg_id,
+            {
+                "conversation_id": conversation_id,
+                "event_type": event_type,
+                "data": data,
+            },
+        )
+
+    unsubscribe = async_subscribe_chat_logs(hass, forward_events)
+    connection.subscriptions[msg["id"]] = unsubscribe
+    connection.send_result(msg["id"])
+
+    chat_logs = hass.data.get(DATA_CHAT_LOGS)
+
+    if not chat_logs:
+        return
+
+    connection.send_event(
+        msg_id,
+        {
+            "event_type": ChatLogEventType.INITIAL_STATE,
+            "data": [c.as_dict() for c in chat_logs.values()],
+        },
+    )
