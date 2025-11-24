@@ -1535,11 +1535,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         None,
                     )
                 )
-                # Only update existing entries that are configured via sockets
-                and existing_entry.data.get(CONF_SOCKET_PATH)
             ):
-                # Only update config if we're using the add-on
-                if existing_entry.data.get(CONF_USE_ADDON):
+                # We can't migrate entries that are not using the add-on
+                if not existing_entry.data.get(CONF_USE_ADDON):
+                    return self.async_abort(reason="already_configured")
+
+                # Only update config automatically if using socket
+                if existing_entry.data.get(CONF_SOCKET_PATH):
                     manager = get_addon_manager(self.hass)
                     await self._async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
@@ -1556,7 +1558,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_schedule_reload(
                         existing_entry.entry_id
                     )
-                return self.async_abort(reason="already_configured")
+                    return self.async_abort(reason="already_configured")
 
             # We are not aborting if home ID configured here, we just want to make sure that it's set
             # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`

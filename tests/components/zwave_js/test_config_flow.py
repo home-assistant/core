@@ -1373,7 +1373,7 @@ async def test_esphome_discovery_already_configured(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery success path."""
+    """Test ESPHome discovery when already configured."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
@@ -1436,7 +1436,6 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
         entry_id="mock-entry-id",
         domain=DOMAIN,
         data={
-            CONF_SOCKET_PATH: "esphome://existing-device:6053",
             "use_addon": False,
             "integration_created_addon": False,
         },
@@ -1456,7 +1455,6 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
 
     # Data did not get updated. Since we don't use the addon, we don't update the data
     assert entry.data == {
-        CONF_SOCKET_PATH: "esphome://existing-device:6053",
         "use_addon": False,
         "integration_created_addon": False,
     }
