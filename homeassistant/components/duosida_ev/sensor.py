@@ -24,11 +24,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DuosidaConfigEntry
-from .const import CONF_DEVICE_ID, STATUS_CODES
+from .const import CONF_DEVICE_ID, STATUS_OPTIONS
 from .coordinator import DuosidaDataUpdateCoordinator
 from .entity import DuosidaEntity
 
 PARALLEL_UPDATES = 0
+
+STATUS_MAP: dict[int, str] = {
+    0: "available",
+    1: "preparing",
+    2: "charging",
+    3: "cooling",
+    4: "suspended_ev",
+    5: "finished",
+    6: "holiday",
+}
 
 
 @dataclass(frozen=True)
@@ -42,8 +52,9 @@ SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
     DuosidaSensorEntityDescription(
         key="state",
         translation_key="status",
-        icon="mdi:ev-station",
-        value_fn=lambda data: STATUS_CODES.get(data.get("conn_status", 0), "Unknown"),
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_OPTIONS,
+        value_fn=lambda data: STATUS_MAP.get(data.get("conn_status", 0), "available"),
     ),
     DuosidaSensorEntityDescription(
         key="cp_voltage",
@@ -51,7 +62,6 @@ SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:ev-plug-type2",
         value_fn=lambda data: data.get("cp_voltage"),
     ),
     DuosidaSensorEntityDescription(
@@ -125,7 +135,6 @@ SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
     DuosidaSensorEntityDescription(
         key="session_time",
         translation_key="session_time",
-        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
@@ -140,7 +149,6 @@ SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:lightning-bolt",
         value_fn=lambda data: data.get("total_energy"),
     ),
     DuosidaSensorEntityDescription(
@@ -150,27 +158,6 @@ SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get("temperature_station"),
-    ),
-    DuosidaSensorEntityDescription(
-        key="model",
-        translation_key="model",
-        icon="mdi:information",
-        value_fn=lambda data: data.get("model"),
-        entity_registry_enabled_default=False,
-    ),
-    DuosidaSensorEntityDescription(
-        key="manufacturer",
-        translation_key="manufacturer",
-        icon="mdi:factory",
-        value_fn=lambda data: data.get("manufacturer"),
-        entity_registry_enabled_default=False,
-    ),
-    DuosidaSensorEntityDescription(
-        key="firmware",
-        translation_key="firmware",
-        icon="mdi:chip",
-        value_fn=lambda data: data.get("firmware"),
-        entity_registry_enabled_default=False,
     ),
 )
 

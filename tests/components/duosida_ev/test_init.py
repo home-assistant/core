@@ -5,30 +5,28 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
+from homeassistant.components.duosida_ev import async_setup_entry, async_unload_entry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from custom_components.duosida_ev import async_setup_entry
-
-# Note: test_setup_entry, test_unload_entry, and test_setup_entry_connection_error
-# have been removed as they are redundant with test_platforms_are_loaded and all
-# the entity platform tests which already verify setup/unload work correctly.
+from tests.common import MockConfigEntry
 
 
 async def test_platforms_are_loaded(
     hass: HomeAssistant,
-    mock_config_entry: Any,
+    mock_config_entry: MockConfigEntry,
     mock_duosida_charger: Any,
 ) -> None:
     """Test that all platforms are loaded."""
-    mock_config_entry.add_to_hass(hass)
+    # Note: mock_config_entry fixture already adds entry to hass
 
     with (
         patch(
-            "custom_components.duosida_ev.DuosidaDataUpdateCoordinator.async_load_stored_settings",
+            "homeassistant.components.duosida_ev.DuosidaDataUpdateCoordinator.async_load_stored_settings",
             return_value=None,
         ),
         patch(
-            "custom_components.duosida_ev.DuosidaDataUpdateCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.duosida_ev.DuosidaDataUpdateCoordinator.async_config_entry_first_refresh",
             return_value=None,
         ),
         patch(
@@ -41,9 +39,29 @@ async def test_platforms_are_loaded(
 
         # Verify platforms were loaded
         assert mock_forward.called
-        # Should load sensor, switch, number, button platforms
+        # Should load sensor platform
         loaded_platforms = mock_forward.call_args[0][1]
-        assert "sensor" in loaded_platforms
-        assert "switch" in loaded_platforms
-        assert "number" in loaded_platforms
-        assert "button" in loaded_platforms
+        assert Platform.SENSOR in loaded_platforms
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duosida_charger: Any,
+) -> None:
+    """Test unloading the config entry."""
+    with (
+        patch(
+            "homeassistant.components.duosida_ev.coordinator.Store.async_load",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.duosida_ev.coordinator.Store.async_save",
+            return_value=None,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await async_unload_entry(hass, mock_config_entry)
+        await hass.async_block_till_done()
