@@ -1805,19 +1805,11 @@ async def test_user_flow_select_ble_device(
     # Mock empty zeroconf discovery
     mock_discovery.return_value = []
 
-    # Inject BLE device with RPC-over-BLE enabled
+    # Inject BLE device with RPC-over-BLE enabled (no discovery flow created)
     inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
 
     # Wait for bluetooth discovery to process
     await hass.async_block_till_done()
-
-    # Start a bluetooth discovery flow manually to simulate auto-discovery
-    ble_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=BLE_DISCOVERY_INFO_GEN3,
-    )
-    ble_flow_id = ble_result["flow_id"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1826,7 +1818,7 @@ async def test_user_flow_select_ble_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Select the BLE device - should take over from the discovery flow
+    # Select the BLE device
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_DEVICE: "CCBA97C2D670"},  # MAC from manufacturer data
@@ -1891,9 +1883,38 @@ async def test_user_flow_select_ble_device(
     assert result["result"].unique_id == "CCBA97C2D670"
     assert result["title"] == "Test BLE Device"
 
-    # Verify the original bluetooth discovery flow no longer exists
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert not any(f["flow_id"] == ble_flow_id for f in flows)
+
+async def test_user_flow_filters_devices_with_active_discovery_flows(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test user flow filters out devices that already have discovery flows."""
+    # Mock empty zeroconf discovery
+    mock_discovery.return_value = []
+
+    # Inject BLE device with RPC-over-BLE enabled
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
+
+    # Wait for bluetooth discovery to process
+    await hass.async_block_till_done()
+
+    # Start a bluetooth discovery flow to simulate auto-discovery
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=BLE_DISCOVERY_INFO_GEN3,
+    )
+
+    # Start a user flow - should go to manual entry since the only
+    # discovered device already has an active discovery flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Should go directly to manual entry since the BLE device is filtered
+    # out (it already has an active discovery flow being offered to the user)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_manual"
 
 
 @pytest.mark.parametrize(
