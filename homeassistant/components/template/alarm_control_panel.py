@@ -197,7 +197,8 @@ class AbstractTemplateAlarmControlPanel(
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
 
-    def setup_entity(self, name: str) -> None:
+    # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
+    def __init__(self, name: str) -> None:  # pylint: disable=super-init-not-called
         """Setup the templates and scripts."""
 
         self._attr_code_arm_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
@@ -242,7 +243,7 @@ class AbstractTemplateAlarmControlPanel(
             return AlarmControlPanelState(result)
 
         _LOGGER.error(
-            "Received invalid alarm panel state: %s for entity %s. Expected: %s",
+            "Received invalid alarm panel state: %s for entity %s. Expected one of %s",
             result,
             self.entity_id,
             ", ".join(AlarmControlPanelState),
@@ -323,8 +324,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
 
     _attr_should_poll = False
 
-    # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
-    def __init__(  # pylint: disable=super-init-not-called
+    def __init__(
         self,
         hass: HomeAssistant,
         config: dict,
@@ -336,7 +336,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         if TYPE_CHECKING:
             assert name is not None
 
-        self.setup_entity(name)
+        AbstractTemplateAlarmControlPanel.__init__(self, name)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -349,8 +349,7 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
 
     domain = ALARM_CONTROL_PANEL_DOMAIN
 
-    # The super init is not called because TriggerEntity calls AbstractTemplateEntity.__init__.
-    def __init__(  # pylint: disable=super-init-not-called
+    def __init__(
         self,
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
@@ -358,9 +357,8 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        self.setup_entity(name)
+        AbstractTemplateAlarmControlPanel.__init__(self, name)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
