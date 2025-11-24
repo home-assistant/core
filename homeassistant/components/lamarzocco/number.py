@@ -65,8 +65,8 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_step=PRECISION_TENTHS,
-        native_min_value=121,
-        native_max_value=131,
+        native_min_value=20,
+        native_max_value=134,
         set_value_fn=lambda machine, temp: machine.set_steam_target_temperature(temp),
         native_value_fn=(
             lambda machine: cast(

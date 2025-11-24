@@ -299,8 +299,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS012345 Steam target temperature',
-      'max': 131,
-      'min': 121,
+      'max': 134,
+      'min': 20,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -319,8 +319,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 131,
-      'min': 121,
+      'max': 134,
+      'min': 20,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
