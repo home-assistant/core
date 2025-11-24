@@ -1470,12 +1470,12 @@ async def test_deprecated_installation_issue_supported_board(
     assert len(issue_registry.issues) == 0
 
 
-async def test_mount_reload_action(
+async def mount_reload_test_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
-) -> None:
-    """Test reload_mount service call."""
+) -> dr.DeviceEntry:
+    """Set up mount reload test and return the device entry."""
     supervisor_client.mounts.info = AsyncMock(
         return_value=MountsInfo(
             default_backup_mount=None,
@@ -1502,6 +1502,31 @@ async def test_mount_reload_action(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "mount_NAS")})
     assert device is not None
+    return device
 
+
+async def test_mount_reload_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
     await hass.services.async_call("hassio", "mount_reload", {"device_id": device.id})
     supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")
+
+
+async def test_mount_reload_action_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reload_mount service call failure."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    supervisor_client.mounts.reload_mount = AsyncMock(side_effect=SupervisorError)
+    with pytest.raises(SupervisorError):
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert "Failed to reload mount NAS" in caplog.text
