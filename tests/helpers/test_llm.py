@@ -369,7 +369,7 @@ async def test_assist_api_tools(
         "HassTurnOn",
         "HassTurnOff",
         "HassSetPosition",
-        "HassStop",
+        "HassStopPosition",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",

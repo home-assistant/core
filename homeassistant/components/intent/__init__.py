@@ -145,7 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
-    intent.async_register(hass, StopIntentHandler())
+    intent.async_register(hass, StopPositionIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, CancelAllTimersIntentHandler())
@@ -436,14 +436,14 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
 
-class StopIntentHandler(intent.DynamicServiceIntentHandler):
+class StopPositionIntentHandler(intent.DynamicServiceIntentHandler):
     """Intent handler for stopping covers and valves."""
 
     def __init__(self) -> None:
-        """Create stop handler."""
+        """Create stop position handler."""
         super().__init__(
-            intent.INTENT_STOP,
-            description="Stops a device or entity",
+            intent.INTENT_STOP_POSITION,
+            description="Stops the position of a device or entity",
             platforms={COVER_DOMAIN, VALVE_DOMAIN},
             device_classes={CoverDeviceClass, ValveDeviceClass},
         )

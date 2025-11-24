@@ -603,7 +603,7 @@ async def test_intents_respond_intent(hass: HomeAssistant) -> None:
 async def test_stop_intent_valve(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test HassStop intent for valves."""
+    """Test HassStopPosition intent for valves."""
     assert await async_setup_component(hass, "intent", {})
 
     valve = entity_registry.async_get_or_create("valve", "test", "valve_uid")
@@ -611,7 +611,7 @@ async def test_stop_intent_valve(
     stop_calls = async_mock_service(hass, "valve", SERVICE_STOP_VALVE)
 
     response = await intent.async_handle(
-        hass, "test", intent.INTENT_STOP, {"name": {"value": valve.entity_id}}
+        hass, "test", intent.INTENT_STOP_POSITION, {"name": {"value": valve.entity_id}}
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -623,7 +623,7 @@ async def test_stop_intent_valve(
 
 
 async def test_stop_intent_unsupported_domain(hass: HomeAssistant) -> None:
-    """Test that HassStop intent fails with unsupported domain."""
+    """Test that HassStopPosition intent fails with unsupported domain."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
 
@@ -632,5 +632,5 @@ async def test_stop_intent_unsupported_domain(hass: HomeAssistant) -> None:
 
     with pytest.raises(intent.IntentHandleError):
         await intent.async_handle(
-            hass, "test", intent.INTENT_STOP, {"name": {"value": "test light"}}
+            hass, "test", intent.INTENT_STOP_POSITION, {"name": {"value": "test light"}}
         )

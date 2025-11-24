@@ -85,7 +85,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
 
 
 async def test_stop_valve_intent(hass: HomeAssistant) -> None:
-    """Test HassStop intent for valves."""
+    """Test HassStopPosition intent for valves."""
     assert await async_setup_component(hass, "intent", {})
 
     entity_id = f"{DOMAIN}.test_valve"
@@ -93,7 +93,7 @@ async def test_stop_valve_intent(hass: HomeAssistant) -> None:
     calls = async_mock_service(hass, DOMAIN, SERVICE_STOP_VALVE)
 
     response = await intent.async_handle(
-        hass, "test", intent.INTENT_STOP, {"name": {"value": "test valve"}}
+        hass, "test", intent.INTENT_STOP_POSITION, {"name": {"value": "test valve"}}
     )
     await hass.async_block_till_done()
 

@@ -92,7 +92,7 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     ],
 )
 async def test_stop_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> None:
-    """Test HassStop intent for covers."""
+    """Test HassStopPosition intent for covers."""
     assert await async_setup_component(hass, "intent", {})
 
     entity_id = f"{DOMAIN}.test_cover"
@@ -104,7 +104,7 @@ async def test_stop_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> 
     response = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_STOP,
+        intent.INTENT_STOP_POSITION,
         slots,
     )
     await hass.async_block_till_done()
