@@ -11,6 +11,7 @@ from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
     LabsStorage,
     async_is_preview_feature_enabled,
+    async_listen,
 )
 from homeassistant.components.labs.const import DOMAIN, LABS_DATA, LabPreviewFeature
 from homeassistant.core import HomeAssistant
@@ -153,38 +154,6 @@ async def test_storage_cleanup_stale_features(
     # Verify stale features were cleaned up
     for domain, feature in expected_cleaned:
         assert not async_is_preview_feature_enabled(hass, domain, feature)
-
-
-async def test_event_fired_on_preview_feature_update(hass: HomeAssistant) -> None:
-    """Test that labs_updated event is fired when preview feature is toggled."""
-    # Load kitchen_sink integration
-    hass.config.components.add("kitchen_sink")
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    events = []
-
-    def event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_LABS_UPDATED, event_listener)
-
-    # Fire event manually to test listener (websocket handler does this)
-    hass.bus.async_fire(
-        EVENT_LABS_UPDATED,
-        {
-            "domain": "kitchen_sink",
-            "preview_feature": "special_repair",
-            "enabled": True,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data["domain"] == "kitchen_sink"
-    assert events[0].data["preview_feature"] == "special_repair"
-    assert events[0].data["enabled"] is True
 
 
 @pytest.mark.parametrize(
@@ -421,3 +390,86 @@ async def test_preview_feature_to_dict_is_built_in(
     assert feature.is_built_in is expected_default
     result = feature.to_dict(enabled=True)
     assert result["is_built_in"] is expected_default
+
+
+async def test_async_listen_helper(hass: HomeAssistant) -> None:
+    """Test the async_listen helper function for preview feature events."""
+    # Load kitchen_sink integration
+    hass.config.components.add("kitchen_sink")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Track listener calls
+    listener_calls = []
+
+    def test_listener() -> None:
+        """Test listener callback."""
+        listener_calls.append("called")
+
+    # Subscribe to a specific preview feature
+    unsub = async_listen(
+        hass,
+        domain="kitchen_sink",
+        preview_feature="special_repair",
+        listener=test_listener,
+    )
+
+    # Fire event for the subscribed feature
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was called
+    assert len(listener_calls) == 1
+
+    # Fire event for a different feature - should not trigger listener
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "kitchen_sink",
+            "preview_feature": "other_feature",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was not called again
+    assert len(listener_calls) == 1
+
+    # Fire event for a different domain - should not trigger listener
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "other_domain",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was not called again
+    assert len(listener_calls) == 1
+
+    # Test unsubscribe
+    unsub()
+
+    # Fire event again - should not trigger listener after unsubscribe
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was not called after unsubscribe
+    assert len(listener_calls) == 1
