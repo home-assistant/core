@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.components.tuya import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
@@ -83,3 +88,80 @@ async def test_sfkzq_deprecated_switch(
         )
         is not None
     ) is expected_issue
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cz_PGEkBctAbtzKOZng"],
+)
+@pytest.mark.parametrize(
+    ("service", "expected_commands"),
+    [
+        (
+            SERVICE_TURN_ON,
+            [{"code": "switch", "value": True}],
+        ),
+        (
+            SERVICE_TURN_OFF,
+            [{"code": "switch", "value": False}],
+        ),
+    ],
+)
+async def test_action(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    service: str,
+    expected_commands: list[dict[str, Any]],
+) -> None:
+    """Test switch action."""
+    entity_id = "switch.din_socket"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, expected_commands
+    )
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cz_PGEkBctAbtzKOZng"],
+)
+@pytest.mark.parametrize(
+    ("initial_status", "expected_state"),
+    [
+        (True, "on"),
+        (False, "off"),
+        (None, STATE_UNKNOWN),
+        ("some string", STATE_UNKNOWN),
+    ],
+)
+async def test_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    initial_status: Any,
+    expected_state: str,
+) -> None:
+    """Test switch state."""
+    entity_id = "switch.din_socket"
+    mock_device.status["switch"] = initial_status
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state

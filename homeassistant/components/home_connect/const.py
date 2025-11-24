@@ -19,6 +19,7 @@ APPLIANCES_WITH_PROGRAMS = (
     "Dishwasher",
     "Dryer",
     "Hood",
+    "Microwave",
     "Oven",
     "WarmingDrawer",
     "Washer",

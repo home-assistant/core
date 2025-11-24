@@ -239,7 +239,7 @@ async def test_set_mode_invalid(
     """Test handling of invalid value in set_mode method."""
 
     with patch(
-        "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_humidity_mode"
+        "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_mode"
     ) as method_mock:
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
@@ -264,11 +264,11 @@ async def test_set_mode(
 ) -> None:
     """Test handling of value in set_mode method."""
 
-    # If VeSyncHumid200300S.set_humidity_mode fails (returns False), then HomeAssistantError is raised
+    # If VeSyncHumid200300S.set_mode fails (returns False), then HomeAssistantError is raised
     with (
         expectation,
         patch(
-            "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_humidity_mode",
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_mode",
             return_value=api_response,
         ) as method_mock,
     ):
@@ -354,7 +354,7 @@ async def test_set_mode_sleep_turns_display_off(
     await hass.async_block_till_done()
 
     with (
-        patch.object(humidifier, "set_humidity_mode", return_value=True),
+        patch.object(humidifier, "set_mode", return_value=True),
         patch.object(humidifier, "toggle_display") as display_mock,
     ):
         await hass.services.async_call(

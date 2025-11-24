@@ -42,6 +42,16 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
+    def __init__(
+        self,
+        *args: Any,
+        retry_after: float | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(*args, **kwargs)
+        self.retry_after = retry_after
+
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
     """Base protocol type for DataUpdateCoordinator."""
@@ -119,6 +129,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
+        self._retry_after: float | None = None
         self.last_update_success = True
         self.last_exception: Exception | None = None
 
@@ -250,9 +261,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass = self.hass
         loop = hass.loop
 
-        next_refresh = (
-            int(loop.time()) + self._microsecond + self._update_interval_seconds
-        )
+        update_interval = self._update_interval_seconds
+        if self._retry_after is not None:
+            update_interval = self._retry_after
+            self._retry_after = None
+
+        next_refresh = int(loop.time()) + self._microsecond + update_interval
         self._unsub_refresh = loop.call_at(
             next_refresh, self.__wrap_handle_refresh_interval
         ).cancel
@@ -327,7 +341,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
-                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+                log_failures=False,
+                raise_on_auth_failed=True,
+                raise_on_entry_error=True,
             )
             if self.last_update_success:
                 return
@@ -430,6 +446,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
+            # We can only honor a retry_after, after the config entry has been set up
+            # Basically meaning that the retry after can't be used when coming
+            # from an async_config_entry_first_refresh
+            if err.retry_after is not None and not raise_on_entry_error:
+                self._retry_after = err.retry_after
+                self.logger.debug(
+                    "Retry after triggered. Scheduling next update in %s second(s)",
+                    err.retry_after,
+                )
+
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
