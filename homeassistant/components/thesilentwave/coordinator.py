@@ -25,10 +25,11 @@ type TheSilentWaveConfigEntry = ConfigEntry[TheSilentWaveCoordinator]
 class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching the data from the API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: TheSilentWaveConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: TheSilentWaveConfigEntry) -> None:
         """Initialize the coordinator."""
         websession = async_get_clientsession(hass)
-        self.entry = entry
         self._device_name = entry.title
         self._host = entry.data["host"]
         self.client = SilentWaveClient(self._host, session=websession)
