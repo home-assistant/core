@@ -51,14 +51,12 @@ class FishAudioTTSEntity(TextToSpeechEntity):
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
-        super().__init__()
         self.session = entry.runtime_data
         self.sub_entry = sub_entry
         self._attr_unique_id = sub_entry.subentry_id
         title = sub_entry.title
         backend = sub_entry.data.get(CONF_BACKEND)
         self._attr_name = title
-        self.entity_id = f"tts.{title}_{backend}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sub_entry.subentry_id)},
