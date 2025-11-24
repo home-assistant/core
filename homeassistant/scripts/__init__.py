@@ -49,7 +49,7 @@ def run(args: list[str]) -> int:
     if not is_virtual_env():
         asyncio.run(async_mount_local_lib_path(config_dir))
 
-    _pip_kwargs = loop.run_until_complete(async_pip_kwargs(config_dir))
+    _pip_kwargs = asyncio.run(async_pip_kwargs(config_dir))
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
