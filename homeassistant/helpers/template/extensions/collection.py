@@ -64,6 +64,7 @@ class CollectionExtension(BaseTemplateExtension):
                     self.natural_sort,
                     as_global=True,
                     as_filter=True,
+                    as_test=True,
                 ),
                 # Type conversion functions
                 TemplateFunction(
@@ -90,11 +91,6 @@ class CollectionExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "tuple",
                     self.is_tuple,
-                    as_test=True,
-                ),
-                TemplateFunction(
-                    "natural_sort",
-                    self.natural_sort,
                     as_test=True,
                 ),
             ],
@@ -211,10 +207,9 @@ class CollectionExtension(BaseTemplateExtension):
 
             alg = ns.FLOAT | ns.SIGNED
 
-            if isinstance(expr, str):
-                parts = [p.strip().replace("ns.", "").upper() for p in expr.split("|")]
             if not isinstance(expr, str):
-                raise TypeError(f"alg expected as an string, got {type(alg).__name__}")
+                raise TypeError(f"alg expected as an string, got {type(expr).__name__}")
+            parts = [p.strip().replace("ns.", "").upper() for p in expr.split("|")]
 
             for p in parts:
                 if p in ALG_MAP:
