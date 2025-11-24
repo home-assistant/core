@@ -254,6 +254,7 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
 )
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
+OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 
 
 class DeprecatedFirmwareInfo(TypedDict):

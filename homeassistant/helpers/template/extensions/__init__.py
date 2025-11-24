@@ -7,6 +7,7 @@ from .crypto import CryptoExtension
 from .datetime import DateTimeExtension
 from .devices import DeviceExtension
 from .floors import FloorExtension
+from .issues import IssuesExtension
 from .labels import LabelExtension
 from .math import MathExtension
 from .regex import RegexExtension
@@ -20,6 +21,7 @@ __all__ = [
     "DateTimeExtension",
     "DeviceExtension",
     "FloorExtension",
+    "IssuesExtension",
     "LabelExtension",
     "MathExtension",
     "RegexExtension",
