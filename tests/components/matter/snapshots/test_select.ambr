@@ -266,7 +266,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operating Mode',
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -279,7 +279,7 @@
 # name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Smart Lock U200 Operating Mode',
+      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -709,7 +709,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operating Mode',
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -722,7 +722,7 @@
 # name: test_selects[door_lock][select.mock_door_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Operating Mode',
+      'friendly_name': 'Mock Door Lock Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -894,7 +894,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operating Mode',
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -907,7 +907,7 @@
 # name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Operating Mode',
+      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -2479,7 +2479,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operating Mode',
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2492,7 +2492,7 @@
 # name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Operating Mode',
+      'friendly_name': 'Mock Lock Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -3682,7 +3682,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operating Mode',
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3695,7 +3695,7 @@
 # name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Secuyou Smart Lock Operating Mode',
+      'friendly_name': 'Secuyou Smart Lock Operating mode',
       'options': list([
         'normal',
         'vacation',
