@@ -374,23 +374,27 @@ class ElkSyncWaiter:
         self._elk.add_handler("login", self._login_status)
         self._elk.add_handler("sync_complete", self._sync_complete)
 
-        for name, future, timeout in (
-            ("login", self._login_future, self._login_timeout),
-            ("sync_complete", self._sync_future, self._sync_timeout),
-        ):
-            _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
-            handle = self._loop.call_later(
-                timeout, self._async_set_exception_if_not_done, future, TimeoutError
-            )
-            step_succeeded = False
-            try:
-                await future
-                step_succeeded = True
-            finally:
-                handle.cancel()
-                if not step_succeeded:
-                    self._elk.disconnect()
+        try:
+            for name, future, timeout in (
+                ("login", self._login_future, self._login_timeout),
+                ("sync_complete", self._sync_future, self._sync_timeout),
+            ):
+                _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
+                handle = self._loop.call_later(
+                    timeout, self._async_set_exception_if_not_done, future, TimeoutError
+                )
+                step_succeeded = False
+                try:
+                    await future
+                    step_succeeded = True
+                finally:
+                    handle.cancel()
+                    if not step_succeeded:
+                        self._elk.disconnect()
 
-            _LOGGER.debug("Received %s event", name)
+                _LOGGER.debug("Received %s event", name)
+        finally:
+            self._elk.remove_handler("login", self._login_status)
+            self._elk.remove_handler("sync_complete", self._sync_complete)
 
         return self._login_succeeded
