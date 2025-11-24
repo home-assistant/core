@@ -191,7 +191,6 @@ class LunatoneLineBroadcastLight(
 
         self._attr_unique_id = f"{coordinator_info.data.device.serial}-line{line}"
 
-        assert self.unique_id
         line_device = self.coordinator.data.lines[str(line)].device
         extra_info: dict = {}
         if line_device.serial != coordinator_info.data.device.serial:
@@ -201,6 +200,7 @@ class LunatoneLineBroadcastLight(
                 model_id=f"{line_device.article_number}{line_device.article_info}",
             )
 
+        assert self.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"DALI Line {line}",
