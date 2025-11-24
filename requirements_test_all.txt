@@ -759,7 +759,7 @@ elevenlabs==2.3.0
 elgato==5.1.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.12
+elkm1-lib==2.2.13
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4
