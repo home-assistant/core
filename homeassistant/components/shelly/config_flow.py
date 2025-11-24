@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.ble import get_name_from_model_id
@@ -29,18 +30,21 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
-from aioshelly.zeroconf import async_lookup_device_by_name
+from aioshelly.zeroconf import async_discover_devices, async_lookup_device_by_name
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
+from zeroconf import IPVersion
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
     async_clear_address_from_match_history,
+    async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -49,9 +53,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -102,6 +108,7 @@ BLE_SCANNER_OPTIONS = [
 ]
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
+MANUAL_ENTRY_STRING = "manual"
 
 
 async def async_get_ip_from_ble(ble_device: BLEDevice) -> str | None:
@@ -132,6 +139,26 @@ async def async_get_ip_from_ble(ble_device: BLEDevice) -> str | None:
 # BLE provisioning flow steps that are in the finishing state
 # Used to determine if a BLE flow should be aborted when zeroconf discovers the device
 BLUETOOTH_FINISHING_STEPS = {"do_provision", "provision_done"}
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveredDeviceZeroconf:
+    """Discovered Shelly device via Zeroconf."""
+
+    name: str
+    mac: str
+    host: str
+    port: int
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveredDeviceBluetooth:
+    """Discovered Shelly device via Bluetooth."""
+
+    name: str
+    mac: str
+    ble_device: BLEDevice
+    discovery_info: BluetoothServiceInfoBleak
 
 
 async def validate_input(
@@ -216,63 +243,278 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     _provision_result: ConfigFlowResult | None = None
     disable_ap_after_provision: bool = True
     disable_ble_rpc_after_provision: bool = True
+    _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
+
+    @staticmethod
+    def _get_name_from_mac_and_ble_model(
+        mac: str, parsed_data: dict[str, int | str]
+    ) -> str:
+        """Generate device name from MAC and BLE manufacturer data model ID.
+
+        For devices without a Shelly name, use model name from model ID if available.
+        Gen3/4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR".
+        """
+        if (
+            (model_id := parsed_data.get("model_id"))
+            and isinstance(model_id, int)
+            and (model_name := get_name_from_model_id(model_id))
+        ):
+            # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
+            return f"{model_name.replace(' ', '')}-{mac}"
+        return f"Shelly-{mac}"
+
+    def _parse_ble_device_mac_and_name(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> tuple[str | None, str]:
+        """Parse MAC address and device name from BLE discovery info.
+
+        Returns:
+            Tuple of (mac, device_name) where mac is None if parsing failed.
+        """
+        device_name = discovery_info.name
+        mac: str | None = None
+
+        # Try to get MAC from device name first
+        if mac := mac_address_from_name(device_name):
+            return mac, device_name
+
+        # Try to parse from manufacturer data
+        if not (
+            (parsed := parse_shelly_manufacturer_data(discovery_info.manufacturer_data))
+            and (mac_with_colons := parsed.get("mac"))
+            and isinstance(mac_with_colons, str)
+        ):
+            return None, device_name
+
+        # Convert MAC from "CC:BA:97:C2:D6:72" to "CCBA97C2D672"
+        mac = mac_with_colons.replace(":", "")
+        device_name = self._get_name_from_mac_and_ble_model(mac, parsed)
+
+        return mac, device_name
+
+    async def _async_discover_zeroconf_devices(
+        self,
+    ) -> dict[str, DiscoveredDeviceZeroconf]:
+        """Discover Shelly devices via Zeroconf."""
+        discovered: dict[str, DiscoveredDeviceZeroconf] = {}
+
+        aiozc = await zeroconf.async_get_async_instance(self.hass)
+        zeroconf_devices = await async_discover_devices(aiozc)
+
+        for service_info in zeroconf_devices:
+            device_name = service_info.name.partition(".")[0]
+            if not (mac := mac_address_from_name(device_name)):
+                continue
+
+            # Get IPv4 address from service info (Shelly doesn't support IPv6)
+            if not (
+                ipv4_addresses := service_info.ip_addresses_by_version(IPVersion.V4Only)
+            ):
+                continue
+
+            host = str(ipv4_addresses[0])
+            discovered[mac] = DiscoveredDeviceZeroconf(
+                name=device_name,
+                mac=mac,
+                host=host,
+                port=service_info.port or DEFAULT_HTTP_PORT,
+            )
+
+        return discovered
+
+    @callback
+    def _async_discover_bluetooth_devices(
+        self,
+    ) -> dict[str, DiscoveredDeviceBluetooth]:
+        """Discover Shelly devices via Bluetooth."""
+        discovered: dict[str, DiscoveredDeviceBluetooth] = {}
+
+        for discovery_info in async_discovered_service_info(self.hass, False):
+            mac, device_name = self._parse_ble_device_mac_and_name(discovery_info)
+
+            if not (
+                mac
+                and has_rpc_over_ble(discovery_info.manufacturer_data)
+                and (
+                    ble_device := async_ble_device_from_address(
+                        self.hass, discovery_info.address, connectable=True
+                    )
+                )
+            ):
+                continue
+
+            discovered[mac] = DiscoveredDeviceBluetooth(
+                name=device_name,
+                mac=mac,
+                ble_device=ble_device,
+                discovery_info=discovery_info,
+            )
+
+        return discovered
+
+    async def _async_connect_and_get_info(
+        self, host: str, port: int
+    ) -> ConfigFlowResult | None:
+        """Connect to device, validate, and create entry or return None to continue flow.
+
+        This helper consolidates the common logic between Zeroconf device selection
+        and manual entry flows. Returns a ConfigFlowResult if the flow should end
+        (create_entry or abort), or None if the flow should continue (e.g., to credentials).
+
+        Sets self.info, self.host, and self.port on success.
+        """
+        self.info = await self._async_get_info(host, port)
+        await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+
+        self.host = host
+        self.port = port
+
+        if get_info_auth(self.info):
+            return None  # Continue to credentials step
+
+        device_info = await validate_input(
+            self.hass, self.host, self.port, self.info, {}
+        )
+
+        if device_info[CONF_MODEL]:
+            return self.async_create_entry(
+                title=device_info["title"],
+                data={
+                    CONF_HOST: self.host,
+                    CONF_PORT: self.port,
+                    CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                    CONF_MODEL: device_info[CONF_MODEL],
+                    CONF_GEN: device_info[CONF_GEN],
+                },
+            )
+        return self.async_abort(reason="firmware_not_fully_provisioned")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step - show discovered devices or manual entry."""
+        if user_input is not None:
+            selected = user_input[CONF_DEVICE]
+            if selected == MANUAL_ENTRY_STRING:
+                return await self.async_step_user_manual()
+
+            # User selected a discovered device
+            device_data = self._discovered_devices[selected]
+
+            if isinstance(device_data, DiscoveredDeviceZeroconf):
+                # Zeroconf device - connect directly
+                try:
+                    result = await self._async_connect_and_get_info(
+                        device_data.host, device_data.port
+                    )
+                except AbortFlow:
+                    raise  # Let AbortFlow propagate (e.g., already_configured)
+                except DeviceConnectionError:
+                    return self.async_abort(reason="cannot_connect")
+                except MacAddressMismatchError:
+                    return self.async_abort(reason="mac_address_mismatch")
+                except CustomPortNotSupported:
+                    return self.async_abort(reason="custom_port_not_supported")
+
+                # If result is None, continue to credentials step
+                if result is None:
+                    return await self.async_step_credentials()
+                return result
+
+            # BLE device - start provisioning flow
+            self.ble_device = device_data.ble_device
+            self.device_name = device_data.name
+            await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            self.context.update(
+                {
+                    "title_placeholders": {"name": self.device_name},
+                }
+            )
+            return await self.async_step_bluetooth_confirm()
+
+        # Discover devices from both sources
+        discovered_devices: dict[
+            str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth
+        ] = {}
+
+        # Discover BLE devices first, then zeroconf (which will overwrite duplicates)
+        discovered_devices.update(self._async_discover_bluetooth_devices())
+        # Zeroconf devices are preferred over BLE, so update overwrites any duplicates
+        discovered_devices.update(await self._async_discover_zeroconf_devices())
+
+        # Filter out already-configured devices (excluding ignored)
+        current_ids = self._async_current_ids(include_ignore=False)
+        discovered_devices = {
+            mac: device
+            for mac, device in discovered_devices.items()
+            if mac not in current_ids
+        }
+
+        # Store discovered devices for use in selection
+        self._discovered_devices = discovered_devices
+
+        # If no devices discovered, go directly to manual entry
+        if not discovered_devices:
+            return await self.async_step_user_manual()
+
+        # Build selection options for discovered devices
+        device_options: list[SelectOptionDict] = [
+            SelectOptionDict(label=data.name, value=mac)
+            for mac, data in discovered_devices.items()
+        ]
+        # Add manual entry option with translation key
+        device_options.append(
+            SelectOptionDict(label="manual", value=MANUAL_ENTRY_STRING)
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): SelectSelector(
+                        SelectSelectorConfig(
+                            options=device_options,
+                            translation_key=CONF_DEVICE,
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_user_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual entry step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
             try:
-                self.info = await self._async_get_info(host, port)
+                result = await self._async_connect_and_get_info(
+                    user_input[CONF_HOST], user_input[CONF_PORT]
+                )
+            except AbortFlow:
+                raise  # Let AbortFlow propagate (e.g., already_configured)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except InvalidHostError:
                 errors["base"] = "invalid_host"
+            except MacAddressMismatchError:
+                errors["base"] = "mac_address_mismatch"
+            except CustomPortNotSupported:
+                errors["base"] = "custom_port_not_supported"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    self.info[CONF_MAC], raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured({CONF_HOST: host})
-                self.host = host
-                self.port = port
-                if get_info_auth(self.info):
+                # If result is None, continue to credentials step
+                if result is None:
                     return await self.async_step_credentials()
-
-                try:
-                    device_info = await validate_input(
-                        self.hass, host, port, self.info, {}
-                    )
-                except DeviceConnectionError:
-                    errors["base"] = "cannot_connect"
-                except MacAddressMismatchError:
-                    errors["base"] = "mac_address_mismatch"
-                except CustomPortNotSupported:
-                    errors["base"] = "custom_port_not_supported"
-                except Exception:  # noqa: BLE001
-                    LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                else:
-                    if device_info[CONF_MODEL]:
-                        return self.async_create_entry(
-                            title=device_info["title"],
-                            data={
-                                CONF_HOST: user_input[CONF_HOST],
-                                CONF_PORT: user_input[CONF_PORT],
-                                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                                CONF_MODEL: device_info[CONF_MODEL],
-                                CONF_GEN: device_info[CONF_GEN],
-                            },
-                        )
-                    return self.async_abort(reason="firmware_not_fully_provisioned")
+                return result
 
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user_manual", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     async def async_step_credentials(
@@ -395,33 +637,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
-        # Try to parse MAC address from the Bluetooth device name
-        # If not found, try to get it from manufacturer data
-        device_name = discovery_info.name
-        if (
-            not (mac := mac_address_from_name(device_name))
-            and (
-                parsed := parse_shelly_manufacturer_data(
-                    discovery_info.manufacturer_data
-                )
-            )
-            and (mac_with_colons := parsed.get("mac"))
-            and isinstance(mac_with_colons, str)
-        ):
-            # parse_shelly_manufacturer_data returns MAC with colons (e.g., "CC:BA:97:C2:D6:72")
-            # Convert to format without colons to match mac_address_from_name output
-            mac = mac_with_colons.replace(":", "")
-            # For devices without a Shelly name, use model name from model ID if available
-            # Gen3/4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR"
-            if (
-                (model_id := parsed.get("model_id"))
-                and isinstance(model_id, int)
-                and (model_name := get_name_from_model_id(model_id))
-            ):
-                # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
-                device_name = f"{model_name.replace(' ', '')}-{mac}"
-            else:
-                device_name = f"Shelly-{mac}"
+        mac, device_name = self._parse_ble_device_mac_and_name(discovery_info)
 
         if not mac:
             return self.async_abort(reason="invalid_discovery_info")
