@@ -33,15 +33,35 @@ BRAVIA_SYSTEM_INFO = {
 }
 
 PICTURE_SETTINGS = [
-    {"target": "brightness", "currentValue": "50", "minValue": "0", "maxValue": "100"},
-    {"target": "contrast", "currentValue": "75", "minValue": "0", "maxValue": "100"},
-    {"target": "color", "currentValue": "60", "minValue": "0", "maxValue": "100"},
-    {"target": "sharpness", "currentValue": "30", "minValue": "0", "maxValue": "100"},
     {
-        "target": "colorTemperature",
-        "currentValue": "40",
-        "minValue": "0",
-        "maxValue": "100",
+        "target": "brightness",
+        "currentValue": "50",
+        "isAvailable": True,
+        "candidate": [{"min": 0, "max": 100, "step": 1}],
+    },
+    {
+        "target": "contrast",
+        "currentValue": "75",
+        "isAvailable": True,
+        "candidate": [{"min": 0, "max": 100, "step": 1}],
+    },
+    {
+        "target": "color",
+        "currentValue": "60",
+        "isAvailable": True,
+        "candidate": [{"min": 0, "max": 100, "step": 1}],
+    },
+    {
+        "target": "sharpness",
+        "currentValue": "30",
+        "isAvailable": True,
+        "candidate": [{"min": 0, "max": 100, "step": 1}],
+    },
+    {
+        "target": "hue",
+        "currentValue": "10",
+        "isAvailable": True,
+        "candidate": [{"min": -50, "max": 50, "step": 1}],
     },
 ]
 
@@ -249,10 +269,10 @@ async def test_number_entity_values(
     assert state
     assert state.state == "30"
 
-    # Test color temperature
-    state = hass.states.get("number.bravia_tv_model_color_temperature")
+    # Test hue
+    state = hass.states.get("number.bravia_tv_model_picture_hue")
     assert state
-    assert state.state == "40"
+    assert state.state == "10"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -379,3 +399,148 @@ async def test_default_attributes_without_candidate_data(
     assert state.attributes["min"] == 0  # Default
     assert state.attributes["max"] == 100  # Default
     assert state.attributes["step"] == 1  # Default
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_enum_settings_not_created_as_numbers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that enum settings (like pictureMode) are not created as number entities."""
+    # Mix of numeric and enum settings - only numeric should create entities
+    picture_settings_with_enums = [
+        {
+            "target": "brightness",
+            "currentValue": "50",
+            "candidate": [{"min": 0, "max": 100, "step": 1}],
+        },
+        {
+            # This is an enum setting - should NOT be created as a number
+            "target": "pictureMode",
+            "currentValue": "dvBright",
+            "candidate": ["dvBright", "standard", "vivid", "cinema"],
+        },
+        {
+            # This is an enum setting - should NOT be created as a number
+            "target": "colorSpace",
+            "currentValue": "auto",
+            "candidate": ["auto", "bt2020", "bt709"],
+        },
+    ]
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string_enum_test",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.braviatv.PLATFORMS", [Platform.NUMBER]),
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=[]),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=picture_settings_with_enums,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Only brightness should be created (numeric setting)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    number_entities = [
+        entry for entry in entity_entries if entry.domain == NUMBER_DOMAIN
+    ]
+    assert len(number_entities) == 1
+
+    # Brightness should exist
+    state = hass.states.get("number.bravia_tv_model_picture_brightness")
+    assert state
+    assert state.state == "50"
+
+    # Enum settings should NOT exist as number entities
+    assert hass.states.get("number.bravia_tv_model_picture_mode") is None
+    assert hass.states.get("number.bravia_tv_model_color_space") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_is_available_field_affects_availability(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that Sony API isAvailable field affects entity availability."""
+    # Settings with isAvailable field - per Sony API spec
+    picture_settings_with_availability = [
+        {
+            "target": "brightness",
+            "currentValue": "50",
+            "isAvailable": True,
+            "candidate": [{"min": 0, "max": 100, "step": 1}],
+        },
+        {
+            "target": "contrast",
+            "currentValue": "75",
+            "isAvailable": False,  # Not currently available
+            "candidate": [{"min": 0, "max": 100, "step": 1}],
+        },
+    ]
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string_availability_test",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.braviatv.PLATFORMS", [Platform.NUMBER]),
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=[]),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=picture_settings_with_availability,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Brightness should be available (isAvailable=True)
+    state = hass.states.get("number.bravia_tv_model_picture_brightness")
+    assert state
+    assert state.state == "50"
+
+    # Contrast should be unavailable (isAvailable=False)
+    state = hass.states.get("number.bravia_tv_model_picture_contrast")
+    assert state
+    assert state.state == "unavailable"

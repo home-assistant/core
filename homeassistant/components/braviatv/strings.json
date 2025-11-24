@@ -55,26 +55,34 @@
       }
     },
     "number": {
-      "auto_local_dimming": {
-        "name": "Auto local dimming"
-      },
-      "auto_picture_mode": {
-        "name": "Auto picture mode"
-      },
       "brightness": {
         "name": "Picture brightness"
       },
       "color": {
         "name": "Picture color"
       },
+      "contrast": {
+        "name": "Picture contrast"
+      },
+      "hue": {
+        "name": "Picture hue"
+      },
+      "sharpness": {
+        "name": "Picture sharpness"
+      }
+    },
+    "select": {
+      "auto_local_dimming": {
+        "name": "Auto local dimming"
+      },
+      "auto_picture_mode": {
+        "name": "Auto picture mode"
+      },
       "color_space": {
         "name": "Color space"
       },
       "color_temperature": {
         "name": "Color temperature"
-      },
-      "contrast": {
-        "name": "Picture contrast"
       },
       "hdr_mode": {
         "name": "HDR mode"
@@ -85,11 +93,8 @@
       "picture_mode": {
         "name": "Picture mode"
       },
-      "sharpness": {
-        "name": "Picture sharpness"
-      },
       "xtended_dynamic_range": {
-        "name": "X-tended Dynamic Range"
+        "name": "Xtended dynamic range"
       }
     }
   },

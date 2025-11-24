@@ -1,0 +1,183 @@
+# serializer version: 1
+# name: test_entities[select.bravia_tv_model_color_space-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'bt2020',
+        'bt709',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.bravia_tv_model_color_space',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:palette-outline',
+    'original_name': 'Color space',
+    'platform': 'braviatv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'color_space',
+    'unique_id': 'very_unique_string_color_space',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.bravia_tv_model_color_space-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BRAVIA TV-Model Color space',
+      'icon': 'mdi:palette-outline',
+      'options': list([
+        'auto',
+        'bt2020',
+        'bt709',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bravia_tv_model_color_space',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select.bravia_tv_model_hdr_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.bravia_tv_model_hdr_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:hdr',
+    'original_name': 'HDR mode',
+    'platform': 'braviatv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hdr_mode',
+    'unique_id': 'very_unique_string_hdr_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.bravia_tv_model_hdr_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BRAVIA TV-Model HDR mode',
+      'icon': 'mdi:hdr',
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bravia_tv_model_hdr_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select.bravia_tv_model_picture_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'vivid',
+        'standard',
+        'cinema',
+        'custom',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.bravia_tv_model_picture_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:television-shimmer',
+    'original_name': 'Picture mode',
+    'platform': 'braviatv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'picture_mode',
+    'unique_id': 'very_unique_string_picture_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.bravia_tv_model_picture_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BRAVIA TV-Model Picture mode',
+      'icon': 'mdi:television-shimmer',
+      'options': list([
+        'vivid',
+        'standard',
+        'cinema',
+        'custom',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bravia_tv_model_picture_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vivid',
+  })
+# ---

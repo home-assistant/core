@@ -1,61 +1,4 @@
 # serializer version: 1
-# name: test_entities[number.bravia_tv_model_color_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bravia_tv_model_color_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Color temperature',
-    'platform': 'braviatv',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'color_temperature',
-    'unique_id': 'very_unique_string_color_temperature',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[number.bravia_tv_model_color_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'BRAVIA TV-Model Color temperature',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.bravia_tv_model_color_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
-  })
-# ---
 # name: test_entities[number.bravia_tv_model_picture_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -85,7 +28,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:brightness-6',
     'original_name': 'Picture brightness',
     'platform': 'braviatv',
     'previous_unique_id': None,
@@ -100,6 +43,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BRAVIA TV-Model Picture brightness',
+      'icon': 'mdi:brightness-6',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -142,7 +86,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:palette',
     'original_name': 'Picture color',
     'platform': 'braviatv',
     'previous_unique_id': None,
@@ -157,6 +101,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BRAVIA TV-Model Picture color',
+      'icon': 'mdi:palette',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -199,7 +144,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:contrast-circle',
     'original_name': 'Picture contrast',
     'platform': 'braviatv',
     'previous_unique_id': None,
@@ -214,6 +159,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BRAVIA TV-Model Picture contrast',
+      'icon': 'mdi:contrast-circle',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -225,6 +171,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
+  })
+# ---
+# name: test_entities[number.bravia_tv_model_picture_hue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 50,
+      'min': -50,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bravia_tv_model_picture_hue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:palette-outline',
+    'original_name': 'Picture hue',
+    'platform': 'braviatv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hue',
+    'unique_id': 'very_unique_string_hue',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[number.bravia_tv_model_picture_hue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BRAVIA TV-Model Picture hue',
+      'icon': 'mdi:palette-outline',
+      'max': 50,
+      'min': -50,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bravia_tv_model_picture_hue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
   })
 # ---
 # name: test_entities[number.bravia_tv_model_picture_sharpness-entry]
@@ -256,7 +260,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:image-edit',
     'original_name': 'Picture sharpness',
     'platform': 'braviatv',
     'previous_unique_id': None,
@@ -271,6 +275,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BRAVIA TV-Model Picture sharpness',
+      'icon': 'mdi:image-edit',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,

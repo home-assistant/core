@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -18,6 +19,12 @@ from .coordinator import (
     BraviaTVPictureCoordinator,
 )
 from .entity import get_device_info
+from .helpers import (
+    PictureSettingsData,
+    get_picture_setting,
+    is_numeric_setting,
+    is_picture_setting_available,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -26,218 +33,92 @@ PARALLEL_UPDATES = 1
 class BraviaTVNumberDescription(NumberEntityDescription):
     """Bravia TV Number description."""
 
-    get_value_fn: Callable[[list[dict[str, Any]] | None], int | None]
+    target: str  # The API target name (e.g., "brightness", "colorTemperature")
+    get_value_fn: Callable[[PictureSettingsData], int | None]
     set_value_fn: Callable[[BraviaTVPictureCoordinator, int], Coroutine[Any, Any, None]]
-    supported_fn: Callable[[list[dict[str, Any]] | None], bool]
+    supported_fn: Callable[[PictureSettingsData], bool]
+    available_fn: Callable[[PictureSettingsData], bool]
 
 
-def _get_picture_setting_value(
-    data: list[dict[str, Any]] | None, target: str
-) -> int | None:
-    """Get picture setting value."""
-    if not data:
+def _get_picture_setting_value(data: PictureSettingsData, target: str) -> int | None:
+    """Get picture setting value as integer."""
+    setting = get_picture_setting(data, target)
+    if not setting:
         return None
-    for setting in data:
-        if setting.get("target") == target:
-            return int(setting.get("currentValue", 0))
+
+    current_value = setting.get("currentValue")
+    if current_value is None:
+        return None
+
+    # Only return value if it's numeric (int or numeric string)
+    if isinstance(current_value, int):
+        return current_value
+    if isinstance(current_value, str):
+        try:
+            return int(current_value)
+        except ValueError:
+            # Non-numeric string value (e.g., enum like "dvBright")
+            return None
     return None
 
 
-def _is_picture_setting_supported(
-    data: list[dict[str, Any]] | None, target: str
+def _is_numeric_picture_setting_supported(
+    data: PictureSettingsData, target: str
 ) -> bool:
-    """Check if picture setting is supported."""
-    if not data:
+    """Check if picture setting is supported and is a numeric type."""
+    setting = get_picture_setting(data, target)
+    if not setting:
         return False
-    return any(setting.get("target") == target for setting in data)
+
+    # Check if setting is numeric (not an enum)
+    return is_numeric_setting(setting)
 
 
-async def _set_picture_setting(
-    coordinator: BraviaTVPictureCoordinator, target: str, value: int
+def _create_number_description(
+    key: str,
+    target: str,
+    translation_key: str,
+    icon: str,
+) -> BraviaTVNumberDescription:
+    """Create a number entity description for a picture setting."""
+    return BraviaTVNumberDescription(
+        key=key,
+        target=target,
+        translation_key=translation_key,
+        icon=icon,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        get_value_fn=partial(_get_picture_setting_value, target=target),
+        set_value_fn=partial(_set_picture_setting_with_target, target=target),
+        supported_fn=partial(_is_numeric_picture_setting_supported, target=target),
+        available_fn=partial(is_picture_setting_available, target=target),
+    )
+
+
+async def _set_picture_setting_with_target(
+    coordinator: BraviaTVPictureCoordinator, value: int, *, target: str
 ) -> None:
-    """Set picture setting value."""
+    """Set picture setting value with target as keyword arg for partial."""
     await coordinator.async_set_picture_setting(target, str(value))
 
 
+# Only include settings that are numeric (slider-type controls).
+# Settings like pictureMode, colorSpace, hdrMode, colorTemperature are enums (string choices)
+# and should be implemented as Select entities, not Number entities.
+# Runtime filtering via _is_picture_setting_supported provides additional safety.
 NUMBERS: tuple[BraviaTVNumberDescription, ...] = (
-    BraviaTVNumberDescription(
-        key="brightness",
-        translation_key="brightness",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "brightness"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "brightness", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "brightness"),
+    _create_number_description(
+        "brightness", "brightness", "brightness", "mdi:brightness-6"
     ),
-    BraviaTVNumberDescription(
-        key="contrast",
-        translation_key="contrast",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "contrast"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "contrast", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "contrast"),
+    _create_number_description(
+        "contrast", "contrast", "contrast", "mdi:contrast-circle"
     ),
-    BraviaTVNumberDescription(
-        key="color",
-        translation_key="color",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "color"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "color", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "color"),
-    ),
-    BraviaTVNumberDescription(
-        key="sharpness",
-        translation_key="sharpness",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "sharpness"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "sharpness", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "sharpness"),
-    ),
-    BraviaTVNumberDescription(
-        key="color_temperature",
-        translation_key="color_temperature",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "colorTemperature"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "colorTemperature", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(
-            data, "colorTemperature"
-        ),
-    ),
-    BraviaTVNumberDescription(
-        key="picture_mode",
-        translation_key="picture_mode",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "pictureMode"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "pictureMode", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "pictureMode"),
-    ),
-    BraviaTVNumberDescription(
-        key="color_space",
-        translation_key="color_space",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "colorSpace"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "colorSpace", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "colorSpace"),
-    ),
-    BraviaTVNumberDescription(
-        key="light_sensor",
-        translation_key="light_sensor",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "lightSensor"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "lightSensor", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "lightSensor"),
-    ),
-    BraviaTVNumberDescription(
-        key="auto_picture_mode",
-        translation_key="auto_picture_mode",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "autoPictureMode"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "autoPictureMode", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(
-            data, "autoPictureMode"
-        ),
-    ),
-    BraviaTVNumberDescription(
-        key="hdr_mode",
-        translation_key="hdr_mode",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "hdrMode"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "hdrMode", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(data, "hdrMode"),
-    ),
-    BraviaTVNumberDescription(
-        key="auto_local_dimming",
-        translation_key="auto_local_dimming",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(data, "autoLocalDimming"),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "autoLocalDimming", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(
-            data, "autoLocalDimming"
-        ),
-    ),
-    BraviaTVNumberDescription(
-        key="xtended_dynamic_range",
-        translation_key="xtended_dynamic_range",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=100,
-        native_step=1,
-        get_value_fn=lambda data: _get_picture_setting_value(
-            data, "xtendedDynamicRange"
-        ),
-        set_value_fn=lambda coordinator, value: _set_picture_setting(
-            coordinator, "xtendedDynamicRange", value
-        ),
-        supported_fn=lambda data: _is_picture_setting_supported(
-            data, "xtendedDynamicRange"
-        ),
-    ),
+    _create_number_description("color", "color", "color", "mdi:palette"),
+    _create_number_description("sharpness", "sharpness", "sharpness", "mdi:image-edit"),
+    _create_number_description("hue", "hue", "hue", "mdi:palette-outline"),
 )
 
 
@@ -265,22 +146,6 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], NumberEntity
     _attr_has_entity_name = True
     entity_description: BraviaTVNumberDescription
 
-    # Map entity key to API target name
-    TARGET_MAP = {
-        "brightness": "brightness",
-        "contrast": "contrast",
-        "color": "color",
-        "sharpness": "sharpness",
-        "color_temperature": "colorTemperature",
-        "picture_mode": "pictureMode",
-        "color_space": "colorSpace",
-        "light_sensor": "lightSensor",
-        "auto_picture_mode": "autoPictureMode",
-        "hdr_mode": "hdrMode",
-        "auto_local_dimming": "autoLocalDimming",
-        "xtended_dynamic_range": "xtendedDynamicRange",
-    }
-
     def __init__(
         self,
         coordinator: BraviaTVCoordinator,
@@ -304,24 +169,20 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], NumberEntity
 
     def _update_dynamic_attributes(self) -> None:
         """Update min/max/step from API data."""
-        if not self.coordinator.data:
+        setting = get_picture_setting(
+            self.coordinator.data, self.entity_description.target
+        )
+        if not setting:
             return
 
-        # Find the setting for this entity
-        target_key = self.entity_description.key
-        target = self.TARGET_MAP.get(target_key, target_key)
-
-        for setting in self.coordinator.data:
-            if setting.get("target") == target:
-                # Get candidate info (min/max/step)
-                candidates = setting.get("candidate", [])
-                if candidates and isinstance(candidates[0], dict):
-                    # Numeric setting with min/max/step
-                    candidate = candidates[0]
-                    self._attr_native_min_value = candidate.get("min", 0)
-                    self._attr_native_max_value = candidate.get("max", 100)
-                    self._attr_native_step = candidate.get("step", 1)
-                break
+        # Get candidate info (min/max/step) per Sony API spec
+        candidates = setting.get("candidate", [])
+        if candidates and isinstance(candidates[0], dict):
+            # Numeric setting with min/max/step
+            candidate = candidates[0]
+            self._attr_native_min_value = candidate.get("min", 0)
+            self._attr_native_max_value = candidate.get("max", 100)
+            self._attr_native_step = candidate.get("step", 1)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -332,7 +193,10 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], NumberEntity
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.is_on
+        # Check coordinator availability, TV power state, and Sony API isAvailable field
+        if not super().available or not self.coordinator.is_on:
+            return False
+        return self.entity_description.available_fn(self.coordinator.data)
 
     @property
     def native_value(self) -> int | None:
