@@ -267,6 +267,9 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "battery_range": {
+        "name": "Battery range"
+      },
       "bluetooth_signal": {
         "name": "Bluetooth signal"
       },

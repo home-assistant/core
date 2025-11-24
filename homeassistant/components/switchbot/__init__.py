@@ -107,6 +107,7 @@ PLATFORMS_BY_TYPE = {
         Platform.CLIMATE,
         Platform.SENSOR,
     ],
+    SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,

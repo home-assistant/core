@@ -126,6 +126,10 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
     ),
+    "battery_range": SensorEntityDescription(
+        key="battery_range",
+        translation_key="battery_range",
+    ),
 }
 
 

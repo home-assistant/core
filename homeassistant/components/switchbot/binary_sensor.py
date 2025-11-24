@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from switchbot import SwitchbotModel
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -98,6 +100,11 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         self._sensor = binary_sensor
         self._attr_unique_id = f"{coordinator.base_unique_id}-{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
+        if (
+            binary_sensor == "motion_detected"
+            and coordinator.model == SwitchbotModel.PRESENCE_SENSOR
+        ):
+            self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     @property
     def is_on(self) -> bool:

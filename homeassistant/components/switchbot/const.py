@@ -60,6 +60,7 @@ class SupportedModels(StrEnum):
     CLIMATE_PANEL = "climate_panel"
     SMART_THERMOSTAT_RADIATOR = "smart_thermostat_radiator"
     S20_VACUUM = "s20_vacuum"
+    PRESENCE_SENSOR = "presence_sensor"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -113,6 +114,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
     SwitchbotModel.HUB3: SupportedModels.HUB3,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
+    SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
 }
 
 SUPPORTED_MODEL_TYPES = (
