@@ -314,11 +314,11 @@ def websocket_subscribe_chat_log(
 
         if event_type == ChatLogEventType.DELETED:
             unsubscribe()
-            del connection.subscriptions[msg["id"]]
+            del connection.subscriptions[msg_id]
 
     unsubscribe = async_subscribe_chat_logs(hass, forward_events)
-    connection.subscriptions[msg["id"]] = unsubscribe
-    connection.send_result(msg["id"])
+    connection.subscriptions[msg_id] = unsubscribe
+    connection.send_result(msg_id)
 
     with (
         async_get_chat_session(hass, subscribed_conversation) as session,
