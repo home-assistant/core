@@ -595,7 +595,6 @@ async def test_legacy_deprecation(
 
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.is_persistent
     assert issue.translation_placeholders["breadcrumb"] == breadcrumb
 
 

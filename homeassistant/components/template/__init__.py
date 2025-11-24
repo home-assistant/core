@@ -40,6 +40,18 @@ _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
 
+def _clean_up_legacy_template_deprecations(hass: HomeAssistant) -> None:
+    if (found_issues := hass.data.get(DATA_DEPRECATION)) is not None:
+        issue_registry = ir.async_get(hass)
+        registry_issues = {
+            issue_id
+            for domain, issue_id in issue_registry.issues
+            if domain == DOMAIN and issue_id.startswith(LEGACY_TEMPLATE_DEPRECATION_KEY)
+        }
+        for issue_id in registry_issues - set(found_issues):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""
 
@@ -55,9 +67,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN in config:
         await _process_config(hass, config)
+        _clean_up_legacy_template_deprecations(hass)
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
+        if (found_issues := hass.data.get(DATA_DEPRECATION)) is not None:
+            found_issues.clear()
+
         await async_get_blueprints(hass).async_reset_cache()
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
@@ -78,19 +94,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if DOMAIN in conf:
             await _process_config(hass, conf)
 
+        _clean_up_legacy_template_deprecations(hass)
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
-
-    if (found_issues := hass.data.get(DATA_DEPRECATION)) is not None:
-        issue_registry = ir.async_get(hass)
-        registry_issues = {
-            issue_id
-            for domain, issue_id in issue_registry.issues
-            if domain == DOMAIN and issue_id.startswith(LEGACY_TEMPLATE_DEPRECATION_KEY)
-        }
-        for issue_id in registry_issues - set(found_issues):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     return True
 

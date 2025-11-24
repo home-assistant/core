@@ -232,13 +232,6 @@ def create_legacy_template_issue(
 ) -> None:
     """Create a repair for legacy template entities."""
 
-    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{hex(hash(frozenset(config)))}"
-
-    if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
-        hass.data[DATA_DEPRECATION] = deprecation_list = []
-
-    deprecation_list.append(issue_id)
-
     breadcrumb = "Template Entity"
     # Default entity id should be in most legacy configuration because
     # it's created from the legacy slug. Vacuum and Lock do not have a
@@ -249,6 +242,13 @@ def create_legacy_template_issue(
         breadcrumb = f"unique_id: {unique_id}"
     elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
         breadcrumb = name.template
+
+    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hex(hash(frozenset(config)))}"
+
+    if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
+        hass.data[DATA_DEPRECATION] = deprecation_list = []
+
+    deprecation_list.append(issue_id)
 
     try:
         modified_yaml = format_migration_config(config)
