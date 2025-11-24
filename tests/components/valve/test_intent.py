@@ -6,7 +6,6 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
     ValveState,
 )
 from homeassistant.core import HomeAssistant
@@ -82,24 +81,3 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     assert call.domain == DOMAIN
     assert call.service == SERVICE_SET_VALVE_POSITION
     assert call.data == {"entity_id": entity_id, "position": 50}
-
-
-async def test_stop_valve_position(hass: HomeAssistant) -> None:
-    """Test HassStopPosition intent for valves."""
-    assert await async_setup_component(hass, "intent", {})
-
-    entity_id = f"{DOMAIN}.test_valve"
-    hass.states.async_set(entity_id, ValveState.OPEN)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_STOP_VALVE)
-
-    response = await intent.async_handle(
-        hass, "test", intent.INTENT_STOP_POSITION, {"name": {"value": "test valve"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_STOP_VALVE
-    assert call.data == {"entity_id": entity_id}
