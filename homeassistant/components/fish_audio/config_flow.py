@@ -12,7 +12,6 @@ from fish_audio_sdk.schemas import APICreditEntity
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -177,12 +176,10 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fish Audio."""
 
     VERSION = 1
-    _reauth_entry: ConfigEntry | None
     session: Session | None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._reauth_entry = None
         self.session = None
 
     async def async_step_user(
