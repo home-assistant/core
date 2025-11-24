@@ -478,7 +478,7 @@
         "name": "Right slot vial"
       },
       "self_test": {
-        "name": "Self test",
+        "name": "Self-test",
         "state": {
           "completed": "Completed",
           "not_completed": "Not completed",
@@ -663,6 +663,25 @@
     "device_not_calibrated": {
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",
       "title": "Shelly device {device_name} is not calibrated"
+    },
+    "open_wifi_ap": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nNote: If you disable the access point, the device may need to restart.",
+            "menu_options": {
+              "confirm": "Disable WiFi access point",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::shelly::issues::open_wifi_ap::title%]"
+          }
+        }
+      },
+      "title": "Open WiFi access point on {device_name}"
     },
     "outbound_websocket_incorrectly_enabled": {
       "fix_flow": {
