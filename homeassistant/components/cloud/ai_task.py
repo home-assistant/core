@@ -245,10 +245,15 @@ class CloudLLMTaskEntity(ai_task.AITaskEntity):
             )
 
         try:
-            image = await self._cloud.llm.async_generate_image(
-                prompt=task.instructions,
-                attachments=attachments,
-            )
+            if attachments is None:
+                image = await self._cloud.llm.async_generate_image(
+                    prompt=task.instructions,
+                )
+            else:
+                image = await self._cloud.llm.async_edit_image(
+                    prompt=task.instructions,
+                    attachments=attachments,
+                )
         except LLMAuthenticationError as err:
             raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
         except LLMRateLimitError as err:
