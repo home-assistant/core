@@ -17,6 +17,7 @@ from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
+from homeassistant.components.labs import async_is_preview_feature_enabled, async_listen
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
@@ -24,10 +25,12 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_PANELS_UPDATED,
     EVENT_THEMES_UPDATED,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv, discovery, service
+from homeassistant.helpers.entity_platform import DATA_ENTITY_PLATFORM
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
@@ -41,6 +44,7 @@ from .storage import async_setup_frontend_storage
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "frontend"
+PLATFORMS = [Platform.SWITCH]
 CONF_THEMES = "themes"
 CONF_THEMES_MODES = "modes"
 CONF_THEMES_LIGHT = "light"
@@ -403,6 +407,61 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
+
+    # Set up platforms if labs feature is enabled
+    if async_is_preview_feature_enabled(hass, DOMAIN, "winter_mode"):
+        hass.async_create_task(
+            discovery.async_load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
+        )
+
+    # Listen for winter_mode labs feature changes
+    @callback
+    def _handle_winter_mode_toggle() -> None:
+        """Handle winter mode labs feature toggle."""
+        is_enabled = async_is_preview_feature_enabled(hass, DOMAIN, "winter_mode")
+
+        if is_enabled:
+            # Load the switch platform
+            _LOGGER.info("Winter mode enabled - loading switch platform")
+            hass.async_create_task(
+                discovery.async_load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
+            )
+        else:
+            # Unload the switch platform and clean storage
+            _LOGGER.info("Winter mode disabled - unloading switch platform")
+            hass.async_create_task(_async_cleanup_winter_mode())
+
+    async def _async_cleanup_winter_mode() -> None:
+        """Clean up winter mode entities and storage."""
+        from homeassistant.helpers import entity_registry as er  # noqa: PLC0415
+
+        from .storage import async_system_store  # noqa: PLC0415
+        from .switch import STORAGE_KEY_WINTER_MODE  # noqa: PLC0415
+
+        # Remove the entity from the entity registry
+        entity_registry = er.async_get(hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, "frontend_winter_mode"
+        ):
+            entity_registry.async_remove(entity_id)
+
+        # Unload the switch platform
+        platform_key = f"{Platform.SWITCH}.{DOMAIN}"
+        if platform_key in hass.data.get(DATA_ENTITY_PLATFORM, {}):
+            platforms = hass.data[DATA_ENTITY_PLATFORM][platform_key]
+            for platform in platforms:
+                await platform.async_reset()
+
+        # Clean up storage - set enabled to false
+        from .switch import STORAGE_SUBKEY_ENABLED  # noqa: PLC0415
+
+        store = await async_system_store(hass)
+        await store.async_set_item(
+            STORAGE_KEY_WINTER_MODE, {STORAGE_SUBKEY_ENABLED: False}
+        )
+
+    async_listen(hass, DOMAIN, "winter_mode", _handle_winter_mode_toggle)
+
     websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
