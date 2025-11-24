@@ -343,7 +343,7 @@ def mock_discovery() -> Generator[AsyncMock]:
 
 
 def create_mock_rpc_device(
-    name: str = "Test Device", model: str = MODEL_PLUS_2PM
+    name: str = "Test Device", model: str | None = MODEL_PLUS_2PM
 ) -> AsyncMock:
     """Create a mock RPC device for provisioning tests."""
     mock_device = AsyncMock()
@@ -905,13 +905,17 @@ async def test_user_flow_with_zeroconf_devices(
     # Check device is in the options
     schema = result["data_schema"].schema
     device_selector = schema[CONF_DEVICE]
-    options = device_selector.container
+    options = device_selector.config["options"]
 
     # Should have the discovered device plus manual entry
-    assert "AABBCCDDEEFF" in options  # MAC as key
-    assert "manual" in options
-    assert options["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"
-    assert options["manual"] == "Enter address manually"
+    # Options is now a list of dicts with 'value' and 'label' keys
+    option_values = {opt["value"]: opt["label"] for opt in options}
+    assert "AABBCCDDEEFF" in option_values  # MAC as value
+    assert "manual" in option_values
+    assert option_values["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"
+    assert (
+        option_values["manual"] == "manual"
+    )  # Translation key, not the translated text
 
     # Select the discovered device and complete setup
     with (
@@ -1053,7 +1057,7 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
     # Check device list - should only have one device (Zeroconf, not BLE)
     schema = result["data_schema"].schema
     device_selector = schema[CONF_DEVICE]
-    options = device_selector.container
+    options = {opt["value"]: opt["label"] for opt in device_selector.config["options"]}
 
     # Should have the device with MAC as key
     assert "CCBA97C2D670" in options
@@ -1139,7 +1143,7 @@ async def test_user_flow_with_ble_devices(
     # Check device is in the options
     schema = result["data_schema"].schema
     device_selector = schema[CONF_DEVICE]
-    options = device_selector.container
+    options = {opt["value"]: opt["label"] for opt in device_selector.config["options"]}
 
     # Should have the discovered BLE device plus manual entry
     # MAC from manufacturer data: CCBA97C2D670
@@ -1248,7 +1252,7 @@ async def test_user_flow_filters_already_configured_devices(
     # Check device list - should only have unconfigured device
     schema = result["data_schema"].schema
     device_selector = schema[CONF_DEVICE]
-    options = device_selector.container
+    options = {opt["value"]: opt["label"] for opt in device_selector.config["options"]}
 
     # Should NOT have the already configured device
     assert "AABBCCDDEEFF" not in options
@@ -1311,7 +1315,7 @@ async def test_user_flow_includes_ignored_devices(
     # Check device list - should include the ignored device
     schema = result["data_schema"].schema
     device_selector = schema[CONF_DEVICE]
-    options = device_selector.container
+    options = {opt["value"]: opt["label"] for opt in device_selector.config["options"]}
 
     # Should have the ignored device (for potential reconfiguration)
     assert "AABBCCDDEEFF" in options
@@ -1361,7 +1365,7 @@ async def test_user_flow_aborts_when_another_flow_finishes_while_in_progress(
     # Check device list
     schema = result["data_schema"].schema
     device_selector = schema[CONF_DEVICE]
-    options = device_selector.container
+    options = {opt["value"]: opt["label"] for opt in device_selector.config["options"]}
 
     assert "AABBCCDDEEFF" in options
     assert options["AABBCCDDEEFF"] == "shellyplus2pm-AABBCCDDEEFF"

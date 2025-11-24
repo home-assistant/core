@@ -741,6 +741,11 @@
         "disabled": "[%key:common::state::disabled%]",
         "passive": "Passive"
       }
+    },
+    "device": {
+      "options": {
+        "manual": "Enter address manually"
+      }
     }
   }
 }

@@ -53,6 +53,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -212,9 +213,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     _provision_result: ConfigFlowResult | None = None
     disable_ap_after_provision: bool = True
     disable_ble_rpc_after_provision: bool = True
-    _discovered_devices: dict[
-        str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth
-    ] = {}
+    _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
 
     @staticmethod
     def _get_name_from_mac_and_ble_model(
@@ -430,15 +429,27 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not discovered_devices:
             return await self.async_step_user_manual()
 
-        # Build selection options
-        device_options = {mac: data.name for mac, data in discovered_devices.items()}
-        device_options[MANUAL_ENTRY_STRING] = "Enter address manually"
+        # Build selection options for discovered devices
+        device_options: list[SelectOptionDict] = [
+            SelectOptionDict(label=data.name, value=mac)
+            for mac, data in discovered_devices.items()
+        ]
+        # Add manual entry option with translation key
+        device_options.append(
+            SelectOptionDict(label="manual", value=MANUAL_ENTRY_STRING)
+        )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DEVICE): vol.In(device_options),
+                    vol.Required(CONF_DEVICE): SelectSelector(
+                        SelectSelectorConfig(
+                            options=device_options,
+                            translation_key=CONF_DEVICE,
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    ),
                 }
             ),
         )
