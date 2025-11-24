@@ -19,7 +19,10 @@ class EnergyType(StrEnum):
 
 
 class PriceGroup(StrEnum):
-    """Price group types."""
+    """Price group types as provided in tariff groups.
+
+    VAT is not emitted as a price group; use tariff.total_amount_vat for VAT.
+    """
 
     MARKET_PRICE = "MARKET_PRICE"
     PURCHASING_FEE = "PURCHASING_FEE"

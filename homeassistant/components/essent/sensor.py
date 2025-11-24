@@ -132,6 +132,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         value_fn=lambda entity: (
             None
             if (tariff := _get_current_tariff(entity)) is None
+            # VAT is exposed as tariff.total_amount_vat, not as a tariff group
             else tariff.total_amount_vat
         ),
         entity_registry_enabled_default=False,
