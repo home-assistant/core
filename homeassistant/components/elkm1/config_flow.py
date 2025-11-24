@@ -90,7 +90,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
 
     try:
         await ElkSyncWaiter(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT).async_wait()
-    except (TimeoutError, LoginFailed) as exc:
+    except LoginFailed as exc:
         raise InvalidAuth from exc
     finally:
         elk.disconnect()
