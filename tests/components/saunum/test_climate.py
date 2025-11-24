@@ -25,12 +25,23 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
