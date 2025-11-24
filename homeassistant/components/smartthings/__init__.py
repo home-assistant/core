@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import contextlib
+from copy import deepcopy
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
@@ -22,6 +23,7 @@ from pysmartthings import (
     SmartThings,
     SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
+    SmartThingsError,
     SmartThingsSinkError,
     Status,
 )
@@ -410,6 +412,31 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry,
             minor_version=2,
+        )
+
+    if entry.minor_version < 3:
+        data = deepcopy(dict(entry.data))
+        old_data: dict[str, Any] | None = data.pop(OLD_DATA, None)
+        if old_data is not None:
+            _LOGGER.info("Found old data during migration")
+            client = SmartThings(session=async_get_clientsession(hass))
+            access_token = old_data[CONF_ACCESS_TOKEN]
+            try:
+                app = await client.get_installed_app(
+                    access_token, old_data[CONF_INSTALLED_APP_ID]
+                )
+                _LOGGER.info("Found old app %s, named %s", app.app_id, app.display_name)
+                await client.delete_smart_app(access_token, app.app_id)
+            except SmartThingsError as err:
+                _LOGGER.warning(
+                    "Could not clean up old smart app during migration: %s", err
+                )
+            else:
+                _LOGGER.info("Successfully cleaned up old smart app during migration")
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            minor_version=3,
         )
 
     return True
