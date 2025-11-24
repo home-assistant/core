@@ -50,7 +50,7 @@ def mock_scanners_all_active() -> Generator[None]:
     mock_scanner = Mock()
     mock_scanner.current_mode = BluetoothScanningMode.ACTIVE
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_current_scanners",
+        "homeassistant.components.bluetooth.async_current_scanners",
         return_value=[mock_scanner],
     ):
         yield
@@ -62,7 +62,7 @@ def mock_scanners_all_passive() -> Generator[None]:
     mock_scanner = Mock()
     mock_scanner.current_mode = BluetoothScanningMode.PASSIVE
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_current_scanners",
+        "homeassistant.components.bluetooth.async_current_scanners",
         return_value=[mock_scanner],
     ):
         yield
@@ -1470,7 +1470,7 @@ async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) 
 
     with (
         patch(
-            "homeassistant.components.switchbot.config_flow.async_current_scanners",
+            "homeassistant.components.bluetooth.async_current_scanners",
             return_value=[mock_scanner_active, mock_scanner_passive],
         ),
         patch(
@@ -1514,7 +1514,7 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
     """Test that menu is shown when no scanners are available."""
     with (
         patch(
-            "homeassistant.components.switchbot.config_flow.async_current_scanners",
+            "homeassistant.components.bluetooth.async_current_scanners",
             return_value=[],
         ),
         patch(
