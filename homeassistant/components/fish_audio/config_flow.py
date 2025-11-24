@@ -12,13 +12,13 @@ from fish_audio_sdk.schemas import APICreditEntity
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
     LanguageSelector,
     LanguageSelectorConfig,
@@ -132,6 +132,7 @@ def get_model_selection_schema(
                     options=model_options,
                     mode=SelectSelectorMode.DROPDOWN,
                     custom_value=True,
+                    sort=True,
                 )
             ),
             vol.Required(
@@ -200,8 +201,6 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             credit_info, self.session = await _validate_api_key(
                 self.hass, user_input[CONF_API_KEY]
             )
-        except AbortFlow:
-            raise
         except InvalidAuthError:
             errors["base"] = "invalid_auth"
         except CannotConnectError:
@@ -231,7 +230,9 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
-    def async_get_supported_subentry_types(cls, config_entry) -> dict[str, type]:
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type]:
         """Return subentries supported by this integration."""
         return {"tts": FishAudioSubentryFlowHandler}
 
@@ -264,10 +265,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
             raise CannotGetModelsError(exc) from exc
         models = models_response.items
 
-        return [
-            SelectOptionDict(value=model.id, label=model.title)
-            for model in sorted(models, key=lambda m: m.title)
-        ]
+        return [SelectOptionDict(value=model.id, label=model.title) for model in models]
 
     @property
     def _is_new(self) -> bool:
