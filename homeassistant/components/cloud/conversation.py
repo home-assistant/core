@@ -10,12 +10,12 @@ import re
 from typing import Any, Literal, cast
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.ai import (
-    AIAuthenticationError,
-    AIError,
-    AIRateLimitError,
-    AIResponseError,
-    AIServiceError,
+from hass_nabucasa.llm import (
+    LLMAuthenticationError,
+    LLMError,
+    LLMRateLimitError,
+    LLMResponseError,
+    LLMServiceError,
 )
 from litellm import ResponseFunctionToolCall, ResponsesAPIStreamEvents
 from openai.types.responses import ResponseReasoningItem
@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .client import CloudClient
 from .const import CONVERSATION_ENTITY_UNIQUE_ID, DATA_CLOUD, DOMAIN
-from .helpers import AIChatHelper
+from .helpers import LLMChatHelper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,8 +274,8 @@ async def async_setup_entry(
     """Set up the Home Assistant Cloud conversation entity."""
     cloud = hass.data[DATA_CLOUD]
     try:
-        await cloud.ai.async_ensure_token()
-    except AIError:
+        await cloud.llm.async_ensure_token()
+    except LLMError:
         return
 
     async_add_entities([CloudConversationEntity(cloud, config_entry)])
@@ -297,7 +297,6 @@ class CloudConversationEntity(
     def __init__(self, cloud: Cloud[CloudClient], config_entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._cloud = cloud
-        self._ai = cloud.ai
         self._entry = config_entry
         self._attr_supported_features = conversation.ConversationEntityFeature.CONTROL
 
@@ -345,14 +344,14 @@ class CloudConversationEntity(
         """Generate a response for the chat log."""
 
         for _ in range(_MAX_TOOL_ITERATIONS):
-            response_kwargs = await AIChatHelper.prepare_chat_for_generation(
+            response_kwargs = await LLMChatHelper.prepare_chat_for_generation(
                 self.hass,
                 chat_log,
             )
             response_kwargs["stream"] = True
 
             try:
-                raw_stream = await self._cloud.ai.async_process_conversation(
+                raw_stream = await self._cloud.llm.async_process_conversation(
                     **response_kwargs,
                 )
 
@@ -366,15 +365,15 @@ class CloudConversationEntity(
                 ):
                     pass
 
-            except AIAuthenticationError as err:
-                raise ConfigEntryAuthFailed("Cloud AI authentication failed") from err
-            except AIRateLimitError as err:
-                raise HomeAssistantError("Cloud AI is rate limited") from err
-            except AIResponseError as err:
+            except LLMAuthenticationError as err:
+                raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
+            except LLMRateLimitError as err:
+                raise HomeAssistantError("Cloud LLM is rate limited") from err
+            except LLMResponseError as err:
                 raise HomeAssistantError(str(err)) from err
-            except AIServiceError as err:
-                raise HomeAssistantError("Error talking to Cloud AI") from err
-            except AIError as err:
+            except LLMServiceError as err:
+                raise HomeAssistantError("Error talking to Cloud LLM") from err
+            except LLMError as err:
                 raise HomeAssistantError(str(err)) from err
 
             if not chat_log.unresponded_tool_results:

@@ -8,13 +8,13 @@ import logging
 from typing import Any
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.ai import (
-    AIAuthenticationError,
-    AIError,
-    AIImageAttachment,
-    AIRateLimitError,
-    AIResponseError,
-    AIServiceError,
+from hass_nabucasa.llm import (
+    LLMAuthenticationError,
+    LLMError,
+    LLMImageAttachment,
+    LLMRateLimitError,
+    LLMResponseError,
+    LLMServiceError,
 )
 from litellm import BaseResponsesAPIStreamingIterator, ResponsesAPIResponse
 import voluptuous as vol
@@ -31,7 +31,7 @@ from homeassistant.util.json import json_loads
 
 from .client import CloudClient
 from .const import AI_TASK_ENTITY_UNIQUE_ID, DATA_CLOUD
-from .helpers import AIChatHelper, AIFileHelper
+from .helpers import LLMChatHelper, LLMFileHelper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,14 +141,14 @@ async def async_setup_entry(
     """Set up Home Assistant Cloud AI Task entity."""
     cloud = hass.data[DATA_CLOUD]
     try:
-        await cloud.ai.async_ensure_token()
-    except AIError:
+        await cloud.llm.async_ensure_token()
+    except LLMError:
         return
 
-    async_add_entities([CloudAITaskEntity(cloud)])
+    async_add_entities([CloudLLMTaskEntity(cloud)])
 
 
-class CloudAITaskEntity(ai_task.AITaskEntity):
+class CloudLLMTaskEntity(ai_task.AITaskEntity):
     """Home Assistant Cloud AI Task entity."""
 
     _attr_has_entity_name = True
@@ -188,25 +188,25 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
                 }
             }
 
-        response_kwargs = await AIChatHelper.prepare_chat_for_generation(
+        response_kwargs = await LLMChatHelper.prepare_chat_for_generation(
             self.hass,
             chat_log,
             response_text,
         )
 
         try:
-            response = await self._cloud.ai.async_generate_data(**response_kwargs)
+            response = await self._cloud.llm.async_generate_data(**response_kwargs)
             content = _extract_response_text(response)
 
-        except AIAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Cloud AI authentication failed") from err
-        except AIRateLimitError as err:
-            raise HomeAssistantError("Cloud AI is rate limited") from err
-        except AIResponseError as err:
+        except LLMAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
+        except LLMRateLimitError as err:
+            raise HomeAssistantError("Cloud LLM is rate limited") from err
+        except LLMResponseError as err:
             raise HomeAssistantError(str(err)) from err
-        except AIServiceError as err:
-            raise HomeAssistantError("Error talking to Cloud AI") from err
-        except AIError as err:
+        except LLMServiceError as err:
+            raise HomeAssistantError("Error talking to Cloud LLM") from err
+        except LLMError as err:
             raise HomeAssistantError(str(err)) from err
 
         if not task.structure:
@@ -221,7 +221,9 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s", err, content
             )
-            raise HomeAssistantError("Error with Cloud AI structured response") from err
+            raise HomeAssistantError(
+                "Error with Cloud LLM structured response"
+            ) from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
@@ -234,26 +236,33 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenImageTaskResult:
         """Handle a generate image task."""
-        attachments: list[AIImageAttachment] | None = None
+        attachments: list[LLMImageAttachment] | None = None
         if task.attachments:
-            attachments = await AIFileHelper.async_prepare_image_generation_attachments(
-                self.hass, task.attachments
+            attachments = (
+                await LLMFileHelper.async_prepare_image_generation_attachments(
+                    self.hass, task.attachments
+                )
             )
 
         try:
-            image = await self._cloud.ai.async_generate_image(
-                prompt=task.instructions,
-                attachments=attachments,
-            )
-        except AIAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Cloud AI authentication failed") from err
-        except AIRateLimitError as err:
-            raise HomeAssistantError("Cloud AI is rate limited") from err
-        except AIResponseError as err:
+            if attachments is None:
+                image = await self._cloud.llm.async_generate_image(
+                    prompt=task.instructions,
+                )
+            else:
+                image = await self._cloud.llm.async_edit_image(
+                    prompt=task.instructions,
+                    attachments=attachments,
+                )
+        except LLMAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
+        except LLMRateLimitError as err:
+            raise HomeAssistantError("Cloud LLM is rate limited") from err
+        except LLMResponseError as err:
             raise HomeAssistantError(str(err)) from err
-        except AIServiceError as err:
-            raise HomeAssistantError("Error talking to Cloud AI") from err
-        except AIError as err:
+        except LLMServiceError as err:
+            raise HomeAssistantError("Error talking to Cloud LLM") from err
+        except LLMError as err:
             raise HomeAssistantError(str(err)) from err
 
         return ai_task.GenImageTaskResult(
