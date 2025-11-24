@@ -72,7 +72,7 @@ async def test_setup_entry_raises_on_login_fail(hass: HomeAssistant) -> None:
 
     with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
         api = api_cls.return_value
-        api.login = AsyncMock(side_effect=Exception("fail-login"))
+        api.login = AsyncMock(side_effect=TimeoutError("fail-login"))
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, entry)
@@ -145,7 +145,12 @@ async def test_setup_entry_failure_raises_on_any_api_error(
     entry = DummyEntry("e2", {"email": "a@b.c", "password": "pw"})
     with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
         api = api_cls.return_value
-        setattr(api, fail_method, AsyncMock(side_effect=Exception("boom")))
+        # Mock all methods as AsyncMock first
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock()
+        # Then override the failing one
+        setattr(api, fail_method, AsyncMock(side_effect=ConnectionError("boom")))
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, entry)

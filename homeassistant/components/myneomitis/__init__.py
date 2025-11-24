@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
         # Retrieve the user's devices
         devices: list[dict[str, Any]] = await api.get_devices()
 
-    except Exception as err:
+    except (TimeoutError, ConnectionError) as err:
         raise ConfigEntryNotReady(
             f"MyNeomitis: Error connecting to API/WebSocket: {err}"
         ) from err

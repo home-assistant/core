@@ -25,8 +25,6 @@ from .utils import (
     REVERSE_PRESET_MODE_MAP,
     REVERSE_PRESET_MODE_MAP_RELAIS,
     REVERSE_PRESET_MODE_MAP_UFH,
-    get_device_by_rfid,
-    parents_to_dict,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,8 +100,6 @@ async def async_setup_entry(
     """
     api = config_entry.runtime_data.api
     devices = config_entry.runtime_data.devices
-    added_ids = set()
-    entities_by_id: dict[str, MyNeoSelect] = {}
 
     def _get_entity_description(device: dict) -> MyNeoSelectEntityDescription | None:
         """Determine the appropriate entity description for a device."""
@@ -129,10 +125,7 @@ async def async_setup_entry(
         description = _get_entity_description(device)
         if description is None:
             return None
-        entity = MyNeoSelect(api, device, [*devices, device], description)
-        added_ids.add(device["_id"])
-        entities_by_id[f"myneo_{device['_id']}"] = entity
-        return entity
+        return MyNeoSelect(api, device, devices, description)
 
     select_entities = [
         entity
@@ -142,35 +135,6 @@ async def async_setup_entry(
     ]
 
     async_add_entities(select_entities)
-
-    async def add_new_entity(device: dict) -> None:
-        """Add a new select entity dynamically when a device is discovered."""
-        if device["_id"] in added_ids:
-            return
-        if device["model"] not in MODELES and device["model"] not in SUB_MODELES:
-            return
-        entity = _create_entity(device)
-        if entity is None:
-            return
-        _LOGGER.info("MyNeomitis : Adding new select entity: %s", entity.name)
-        async_add_entities([entity])
-
-    async def remove_entity(device_id: str) -> None:
-        """Remove a select entity dynamically when a device is removed."""
-        uid = f"myneo_{device_id}"
-        entity = entities_by_id.get(uid)
-        if entity:
-            _LOGGER.info("MyNeomitis : Removing select entity: %s", uid)
-            await entity.async_remove()
-            added_ids.discard(device_id)
-            entities_by_id.pop(uid, None)
-
-    api.register_discovery_callback(
-        lambda dev: hass.async_create_task(add_new_entity(dev))
-    )
-    api.register_removal_callback(
-        lambda dev_id: hass.async_create_task(remove_entity(dev_id))
-    )
 
 
 class MyNeoSelect(SelectEntity):
@@ -201,14 +165,6 @@ class MyNeoSelect(SelectEntity):
         self._attr_name = f"MyNeo {device['name']}"
         self._attr_unique_id = f"myneo_{device['_id']}"
         self._attr_available = device["connected"]
-        self._parents = (
-            parents_to_dict(device["parents"]) if "parents" in device else {}
-        )
-        self._primary_parent = (
-            get_device_by_rfid(devices, self._parents.get("primary") or "")
-            if "primary" in self._parents
-            else {}
-        )
         self._is_sub_device = device["model"] in SUB_MODELES
 
         # Set current option based on device state
@@ -301,18 +257,4 @@ class MyNeoSelect(SelectEntity):
 
         """
         mode_code = self.entity_description.preset_mode_map[mode]
-
-        if self._is_sub_device:
-            if self._device["model"] == "UFH":
-                return await self._api.set_sub_device_mode_ufh(
-                    self._parents["gateway"],
-                    self._device["rfid"],
-                    mode_code,
-                )
-
-            return await self._api.set_sub_device_mode(
-                self._parents["gateway"],
-                self._device["rfid"],
-                mode_code,
-            )
         return await self._api.set_device_mode(self._device["_id"], mode_code)

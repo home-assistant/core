@@ -231,12 +231,34 @@ async def test_normal_device_set_api_device_mode(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_dynamic_entity_discovery(hass: HomeAssistant) -> None:
-    """Test that a select entity is added dynamically on WebSocket discovery event."""
+async def test_setup_entry_filters_unsupported_devices(hass: HomeAssistant) -> None:
+    """Test that async_setup_entry filters out unsupported device models."""
+    devices = [
+        {
+            "_id": "supported1",
+            "name": "Supported EWS",
+            "model": "EWS",
+            "state": {"targetMode": 1},
+            "connected": True,
+            "program": {"data": {}},
+        },
+        {
+            "_id": "unsupported",
+            "name": "Unsupported Device",
+            "model": "UNKNOWN",
+            "state": {},
+            "connected": True,
+            "program": {"data": {}},
+        },
+    ]
+
+    mock_api = Mock()
+    mock_api.register_listener = Mock()
+
     entry = ConfigEntry(
         version=1,
         minor_version=1,
-        entry_id="select-link",
+        entry_id="test-entry",
         domain="myneomitis",
         title="MyNeomitis",
         data={"email": "test@test.com", "password": "secret"},
@@ -246,44 +268,69 @@ async def test_dynamic_entity_discovery(hass: HomeAssistant) -> None:
         discovery_keys=[],
         subentries_data={},
     )
+    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=devices)
 
-    callbacks = {}
-
-    def register_discovery_callback(cb):
-        callbacks["discovery"] = cb
-
-    def register_removal_callback(cb):
-        callbacks["removal"] = cb
-
-    fake_api = Mock()
-    fake_api.sio.connected = True
-    fake_api.register_listener = lambda *_: None
-    fake_api.register_discovery_callback = register_discovery_callback
-    fake_api.register_removal_callback = register_removal_callback
-
-    entry.runtime_data = MyNeomitisRuntimeData(api=fake_api, devices=[])
-
-    added = []
+    added_entities = []
 
     def fake_add(entities):
-        added.extend(entities)
+        added_entities.extend(entities)
 
     await async_setup_entry(hass, entry, fake_add)
 
-    linked_device = {
-        "_id": "ews1",
-        "name": "Relais Salon",
+    # Only 1 entity should be added (the supported EWS device)
+    assert len(added_entities) == 1
+    assert added_entities[0].unique_id == "myneo_supported1"
+
+
+@pytest.mark.asyncio
+async def test_handle_ws_update_empty_state(hass: HomeAssistant) -> None:
+    """Test handle_ws_update with empty state does nothing."""
+    device = {
+        "_id": "dev_ws",
+        "name": "WS Test",
         "model": "EWS",
-        "state": {"targetMode": 1, "relayMode": True, "connected": True},
+        "state": {"targetMode": 1},
         "connected": True,
         "program": {"data": {}},
     }
 
-    callbacks["discovery"](linked_device)
-    await hass.async_block_till_done()
+    mock_api = Mock()
+    mock_api.register_listener = Mock()
+    description = SELECT_TYPES["pilote"]
+    select = MyNeoSelect(mock_api, device, [device], description)
 
-    assert len(added) == 1
-    entity = added[0]
-    assert isinstance(entity, MyNeoSelect)
-    assert entity.name == "MyNeo Relais Salon"
-    assert entity.unique_id == "myneo_ews1"
+    initial_option = select.current_option
+
+    with patch.object(select, "async_write_ha_state") as mock_write:
+        select.handle_ws_update({})
+        # Should not write state for empty update
+        mock_write.assert_not_called()
+
+    assert select.current_option == initial_option
+
+
+@pytest.mark.asyncio
+async def test_handle_ws_update_with_program_update(hass: HomeAssistant) -> None:
+    """Test handle_ws_update updates program data."""
+    device = {
+        "_id": "dev_prog",
+        "name": "Program Test",
+        "model": "EWS",
+        "state": {"targetMode": 1},
+        "connected": True,
+        "program": {"data": {"MON": []}},
+    }
+
+    mock_api = Mock()
+    mock_api.register_listener = Mock()
+    description = SELECT_TYPES["pilote"]
+    select = MyNeoSelect(mock_api, device, [device], description)
+
+    new_program = {"TUE": [1, 2, 3]}
+    ws_state = {"program": {"data": new_program}}
+
+    with patch.object(select, "async_write_ha_state") as mock_write:
+        select.handle_ws_update(ws_state)
+        mock_write.assert_called_once()
+
+    assert select._program["TUE"] == [1, 2, 3]
