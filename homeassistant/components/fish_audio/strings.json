@@ -26,7 +26,7 @@
       },
       "user": {
         "data": {
-          "api_key": "API Key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your personal API key for accessing the Fish Audio service."
@@ -72,7 +72,7 @@
         "model": {
           "data": {
             "backend": "AI Voice Model",
-            "name": "Entity name",
+            "name": "[%key:common::config_flow::data::name%]",
             "voice_id": "Voice"
           },
           "data_description": {
