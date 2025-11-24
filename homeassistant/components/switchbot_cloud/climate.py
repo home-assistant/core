@@ -17,6 +17,13 @@ from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_HOME,
+    PRESET_NONE,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -193,6 +200,17 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         await self.async_set_hvac_mode(hvac_mode)
 
 
+SmartRadiatorThermostatPresetModeMap = {
+    PRESET_NONE: SmartRadiatorThermostatMode.OFF,
+    PRESET_ECO: SmartRadiatorThermostatMode.ENERGY_SAVING,
+    PRESET_AWAY: SmartRadiatorThermostatMode.OFF,
+    PRESET_BOOST: SmartRadiatorThermostatMode.FAST_HEATING,
+    PRESET_COMFORT: SmartRadiatorThermostatMode.COMFORT,
+    PRESET_HOME: SmartRadiatorThermostatMode.MANUAL,
+    PRESET_SLEEP: SmartRadiatorThermostatMode.ENERGY_SAVING,
+}
+
+
 class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity):
     """Representation of a Smart Radiator Thermostat."""
 
@@ -208,7 +226,13 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     _attr_preset_modes = [
-        item.name.lower() for item in SmartRadiatorThermostatMode.get_all_modes()
+        PRESET_NONE,
+        PRESET_ECO,
+        PRESET_AWAY,
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_HOME,
+        PRESET_SLEEP,
     ]
     _attr_preset_mode = SmartRadiatorThermostatMode.MANUAL.name.lower()
 
@@ -217,7 +241,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         HVACMode.HEAT,
     ]
 
-    _attr_translation_key = "smart_radiator_thermostat"
+    # _attr_translation_key = "smart_radiator_thermostat"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
