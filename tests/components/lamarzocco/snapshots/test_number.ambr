@@ -300,7 +300,7 @@
       'device_class': 'temperature',
       'friendly_name': 'GS012345 Steam target temperature',
       'max': 131,
-      'min': 126,
+      'min': 121,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -320,7 +320,7 @@
     'area_id': None,
     'capabilities': dict({
       'max': 131,
-      'min': 126,
+      'min': 121,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
