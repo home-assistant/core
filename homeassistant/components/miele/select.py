@@ -109,26 +109,17 @@ class MieleSelectMode(MieleEntity, SelectEntity):
         # There is no direct mapping from Miele 3rd party API, so we infer the
         # current mode based on available modes in action.modes
 
-        if (
-            {1} == set(self.action.modes)
-            or {1, 2} == set(self.action.modes)
-            or {1, 3} == set(self.action.modes)
-            or {1, 2, 3} == set(self.action.modes)
-        ):
+        action_modes = set(self.action.modes)
+        if action_modes in ({1}, {1, 2}, {1, 3}, {1, 2, 3}):
             return MieleModes.NORMAL.name.lower()
 
-        if (
-            {0} == set(self.action.modes)
-            or {0, 2} == set(self.action.modes)
-            or {0, 3} == set(self.action.modes)
-            or {0, 2, 3} == set(self.action.modes)
-        ):
+        if action_modes in ({0}, {0, 2}, {0, 3}, {0, 2, 3}):
             return MieleModes.SABBATH.name.lower()
 
-        if {0, 1} == set(self.action.modes) or {0, 1, 3} == set(self.action.modes):
+        if action_modes in ({0, 1}, {0, 1, 3}):
             return MieleModes.PARTY.name.lower()
 
-        if {0, 1, 2} == set(self.action.modes):
+        if action_modes == {0, 1, 2}:
             return MieleModes.HOLIDAY.name.lower()
 
         return None
