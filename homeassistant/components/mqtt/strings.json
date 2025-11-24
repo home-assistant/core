@@ -242,6 +242,7 @@
             "fan_feature_speed": "Speed support",
             "image_processing_mode": "Image processing mode",
             "options": "Add option",
+            "reports_position": "Reports position",
             "schema": "Schema",
             "state_class": "State class",
             "suggested_display_precision": "Suggested display precision",
@@ -269,6 +270,7 @@
             "fan_feature_speed": "The fan supports multiple speeds.",
             "image_processing_mode": "Select how the image data is received.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
+            "reports_position": "Set this option if the valve reports the position or supports setting the position. Enabling this option will cause the position to be published instead of a payload defined by payload \"open\", payload \"close\" or payload \"stop\". When receiving messages, state topic will accept numeric payloads or one of the configured state messages.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
             "state_class": "The [State class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
             "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)",
@@ -356,6 +358,8 @@
             "payload_on": "Payload \"on\"",
             "payload_press": "Payload \"press\"",
             "payload_reset": "Payload \"reset\"",
+            "position_closed": "Position \"closed\"",
+            "position_open": "Position \"open\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -407,6 +411,8 @@
             "payload_on": "The payload that represents the \"on\" state.",
             "payload_press": "The payload to send when the button is triggered.",
             "payload_reset": "The payload received at the state topic that resets the entity to an unknown state.",
+            "position_closed": "Number which represents closed position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
+            "position_open": "Number which represents open position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template]({value_templating_url}) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
@@ -985,6 +991,27 @@
                 "pattern": "A valid regex pattern"
               },
               "name": "Advanced text entity settings"
+            },
+            "valve_payload_settings": {
+              "data": {
+                "payload_close": "Payload \"close\"",
+                "payload_open": "Payload \"open\"",
+                "payload_stop": "Payload \"stop\"",
+                "state_closed": "State \"closed\"",
+                "state_closing": "State \"closing\"",
+                "state_open": "State \"open\"",
+                "state_opening": "State \"opening\""
+              },
+              "data_description": {
+                "payload_close": "The payload sent when a \"close\" command is issued.",
+                "payload_open": "The payload sent when an \"open\" command is issued.",
+                "payload_stop": "The payload sent when a \"stop\" command is issued. Set this payload only if your valve supports the \"stop\" action.",
+                "state_closed": "The payload received at the state topic that represents the \"closed\" state.",
+                "state_closing": "The payload received at the state topic that represents the \"closing\" state.",
+                "state_open": "The payload received at the state topic that represents the \"open\" state.",
+                "state_opening": "The payload received at the state topic that represents the \"opening\" state."
+              },
+              "name": "Valve payload settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -1347,6 +1374,12 @@
         "switch": "[%key:component::switch::title%]"
       }
     },
+    "device_class_valve": {
+      "options": {
+        "gas": "[%key:component::valve::entity_component::gas::name%]",
+        "water": "[%key:component::valve::entity_component::water::name%]"
+      }
+    },
     "entity_category": {
       "options": {
         "config": "Config",
@@ -1403,7 +1436,8 @@
         "sensor": "[%key:component::sensor::title%]",
         "siren": "[%key:component::siren::title%]",
         "switch": "[%key:component::switch::title%]",
-        "text": "[%key:component::text::title%]"
+        "text": "[%key:component::text::title%]",
+        "valve": "[%key:component::valve::title%]"
       }
     },
     "set_ca_cert": {
