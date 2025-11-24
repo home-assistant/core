@@ -21,10 +21,10 @@ from .const import (
     ATTR_ITEM_NUMBER,
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
-    COMPATIBLE_MODELS,
     CONF_SERIAL_NUMBER,
     DEFAULT_MODEL,
     DOMAIN,
+    SELECTABLE_MODELS,
 )
 from .util import get_serial_number_from_jid
 
@@ -70,7 +70,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
-                    SelectSelectorConfig(options=COMPATIBLE_MODELS)
+                    SelectSelectorConfig(options=SELECTABLE_MODELS)
                 ),
             }
         )

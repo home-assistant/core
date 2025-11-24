@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from actron_neo_api import ActronNeoAuthError
+from actron_neo_api import ActronAirAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.actron_air.const import DOMAIN
@@ -76,7 +76,7 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
     """Test OAuth2 flow with authentication error during device code request."""
     # Override the default mock to raise an error
     mock_actron_api.request_device_code = AsyncMock(
-        side_effect=ActronNeoAuthError("OAuth2 error")
+        side_effect=ActronAirAuthError("OAuth2 error")
     )
 
     # Start the flow
@@ -95,7 +95,7 @@ async def test_user_flow_token_polling_error(
     """Test OAuth2 flow with error during token polling."""
     # Override the default mock to raise an error during token polling
     mock_actron_api.poll_for_token = AsyncMock(
-        side_effect=ActronNeoAuthError("Token polling error")
+        side_effect=ActronAirAuthError("Token polling error")
     )
 
     # Start the config flow
