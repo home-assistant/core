@@ -1,51 +1,30 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Set up Essent dynamic energy price monitoring for the Netherlands. For customers with dynamic pricing contracts only."
-      }
+    "abort": {
+      "already_configured": "Essent integration is already configured",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_data": "Received invalid data from Essent",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "Essent integration is already configured",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    "step": {
+      "user": {
+        "description": "Set up Essent dynamic energy price monitoring for the Netherlands. For customers with dynamic pricing contracts only."
+      }
     }
   },
   "entity": {
     "sensor": {
-      "electricity_current_price": {
-        "name": "Current electricity price"
-      },
-      "gas_current_price": {
-        "name": "Current gas price"
-      },
-      "electricity_next_price": {
-        "name": "Next electricity price"
-      },
-      "gas_next_price": {
-        "name": "Next gas price"
-      },
       "electricity_average_today": {
         "name": "Average electricity price today"
       },
-      "gas_average_today": {
-        "name": "Average gas price today"
-      },
-      "electricity_lowest_price_today": {
-        "name": "Lowest electricity price today"
-      },
-      "electricity_highest_price_today": {
-        "name": "Highest electricity price today"
+      "electricity_current_price": {
+        "name": "Current electricity price"
       },
       "electricity_current_price_ex_vat": {
         "name": "Current electricity price excl. VAT"
-      },
-      "electricity_current_price_vat": {
-        "name": "Current electricity VAT"
       },
       "electricity_current_price_market_price": {
         "name": "Current electricity market price"
@@ -56,11 +35,26 @@
       "electricity_current_price_tax": {
         "name": "Current electricity tax"
       },
+      "electricity_current_price_vat": {
+        "name": "Current electricity VAT"
+      },
+      "electricity_highest_price_today": {
+        "name": "Highest electricity price today"
+      },
+      "electricity_lowest_price_today": {
+        "name": "Lowest electricity price today"
+      },
+      "electricity_next_price": {
+        "name": "Next electricity price"
+      },
+      "gas_average_today": {
+        "name": "Average gas price today"
+      },
+      "gas_current_price": {
+        "name": "Current gas price"
+      },
       "gas_current_price_ex_vat": {
         "name": "Current gas price excl. VAT"
-      },
-      "gas_current_price_vat": {
-        "name": "Current gas VAT"
       },
       "gas_current_price_market_price": {
         "name": "Current gas market price"
@@ -70,6 +64,12 @@
       },
       "gas_current_price_tax": {
         "name": "Current gas tax"
+      },
+      "gas_current_price_vat": {
+        "name": "Current gas VAT"
+      },
+      "gas_next_price": {
+        "name": "Next gas price"
       }
     }
   }

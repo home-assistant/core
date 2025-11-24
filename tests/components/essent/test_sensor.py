@@ -5,18 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from essent_dynamic_pricing.models import EnergyData, EssentPrices
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from essent_dynamic_pricing.models import EnergyData, EssentPrices
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("entity_registry_enabled_by_default"),
@@ -340,8 +340,6 @@ async def test_sensors_handle_empty_tariffs(
     assert float(highest.state) == 0
     assert lowest.attributes["unit_of_measurement"] == "€/kWh"
     assert highest.attributes["unit_of_measurement"] == "€/kWh"
-
-
 
 
 async def test_current_price_breakdown_sensors(

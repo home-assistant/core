@@ -1,6 +1,7 @@
 """Base entity for Essent integration."""
 
 from essent_dynamic_pricing.models import EnergyData
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

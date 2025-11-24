@@ -9,37 +9,37 @@
           {
             "startDateTime": "2025-11-16T09:00:00",
             "endDateTime": "2025-11-16T10:00:00",
-            "totalAmount": 0.2000,
+            "totalAmount": 0.2,
             "totalAmountEx": 0.1653,
             "totalAmountVat": 0.0347,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.1200},
-              {"type": "PURCHASING_FEE", "amount": 0.0300},
-              {"type": "TAX", "amount": 0.0500}
+              { "type": "MARKET_PRICE", "amount": 0.12 },
+              { "type": "PURCHASING_FEE", "amount": 0.03 },
+              { "type": "TAX", "amount": 0.05 }
             ]
           },
           {
             "startDateTime": "2025-11-16T10:00:00",
             "endDateTime": "2025-11-16T11:00:00",
-            "totalAmount": 0.2500,
+            "totalAmount": 0.25,
             "totalAmountEx": 0.2066,
             "totalAmountVat": 0.0434,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.1700},
-              {"type": "PURCHASING_FEE", "amount": 0.0300},
-              {"type": "TAX", "amount": 0.0500}
+              { "type": "MARKET_PRICE", "amount": 0.17 },
+              { "type": "PURCHASING_FEE", "amount": 0.03 },
+              { "type": "TAX", "amount": 0.05 }
             ]
           },
           {
             "startDateTime": "2025-11-16T11:00:00",
             "endDateTime": "2025-11-16T12:00:00",
-            "totalAmount": 0.2200,
+            "totalAmount": 0.22,
             "totalAmountEx": 0.1818,
             "totalAmountVat": 0.0382,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.1400},
-              {"type": "PURCHASING_FEE", "amount": 0.0300},
-              {"type": "TAX", "amount": 0.0500}
+              { "type": "MARKET_PRICE", "amount": 0.14 },
+              { "type": "PURCHASING_FEE", "amount": 0.03 },
+              { "type": "TAX", "amount": 0.05 }
             ]
           }
         ]
@@ -51,37 +51,37 @@
           {
             "startDateTime": "2025-11-16T09:00:00",
             "endDateTime": "2025-11-16T10:00:00",
-            "totalAmount": 0.8000,
+            "totalAmount": 0.8,
             "totalAmountEx": 0.6612,
             "totalAmountVat": 0.1388,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.6500},
-              {"type": "PURCHASING_FEE", "amount": 0.0500},
-              {"type": "TAX", "amount": 0.1000}
+              { "type": "MARKET_PRICE", "amount": 0.65 },
+              { "type": "PURCHASING_FEE", "amount": 0.05 },
+              { "type": "TAX", "amount": 0.1 }
             ]
           },
           {
             "startDateTime": "2025-11-16T10:00:00",
             "endDateTime": "2025-11-16T11:00:00",
-            "totalAmount": 0.8200,
+            "totalAmount": 0.82,
             "totalAmountEx": 0.6777,
             "totalAmountVat": 0.1423,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.6700},
-              {"type": "PURCHASING_FEE", "amount": 0.0500},
-              {"type": "TAX", "amount": 0.1000}
+              { "type": "MARKET_PRICE", "amount": 0.67 },
+              { "type": "PURCHASING_FEE", "amount": 0.05 },
+              { "type": "TAX", "amount": 0.1 }
             ]
           },
           {
             "startDateTime": "2025-11-16T11:00:00",
             "endDateTime": "2025-11-16T12:00:00",
-            "totalAmount": 0.7800,
-            "totalAmountEx": 0.6450,
-            "totalAmountVat": 0.1350,
+            "totalAmount": 0.78,
+            "totalAmountEx": 0.645,
+            "totalAmountVat": 0.135,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.6300},
-              {"type": "PURCHASING_FEE", "amount": 0.0500},
-              {"type": "TAX", "amount": 0.1000}
+              { "type": "MARKET_PRICE", "amount": 0.63 },
+              { "type": "PURCHASING_FEE", "amount": 0.05 },
+              { "type": "TAX", "amount": 0.1 }
             ]
           }
         ]
@@ -96,13 +96,13 @@
           {
             "startDateTime": "2025-11-17T00:00:00",
             "endDateTime": "2025-11-17T01:00:00",
-            "totalAmount": 0.2100,
+            "totalAmount": 0.21,
             "totalAmountEx": 0.1736,
             "totalAmountVat": 0.0364,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.1300},
-              {"type": "PURCHASING_FEE", "amount": 0.0300},
-              {"type": "TAX", "amount": 0.0500}
+              { "type": "MARKET_PRICE", "amount": 0.13 },
+              { "type": "PURCHASING_FEE", "amount": 0.03 },
+              { "type": "TAX", "amount": 0.05 }
             ]
           }
         ]
@@ -114,13 +114,13 @@
           {
             "startDateTime": "2025-11-17T00:00:00",
             "endDateTime": "2025-11-17T01:00:00",
-            "totalAmount": 0.7600,
+            "totalAmount": 0.76,
             "totalAmountEx": 0.6281,
             "totalAmountVat": 0.1319,
             "groups": [
-              {"type": "MARKET_PRICE", "amount": 0.6100},
-              {"type": "PURCHASING_FEE", "amount": 0.0500},
-              {"type": "TAX", "amount": 0.1000}
+              { "type": "MARKET_PRICE", "amount": 0.61 },
+              { "type": "PURCHASING_FEE", "amount": 0.05 },
+              { "type": "TAX", "amount": 0.1 }
             ]
           }
         ]

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from essent_dynamic_pricing.models import Tariff
@@ -38,26 +38,30 @@ class EssentSensorEntityDescription(SensorEntityDescription):
     energy_types: tuple[EnergyType, ...] = (EnergyType.ELECTRICITY, EnergyType.GAS)
 
 
-def _get_all_tariffs(entity: "EssentSensor") -> list[Tariff]:
+def _get_all_tariffs(entity: EssentSensor) -> list[Tariff]:
     """Return tariffs for both today and tomorrow."""
     data = entity.energy_data
     return [*data.tariffs, *data.tariffs_tomorrow]
 
 
-def _get_current_tariff(entity: "EssentSensor") -> Tariff | None:
+def _get_current_tariff(entity: EssentSensor) -> Tariff | None:
     """Return the currently active tariff."""
     now = dt_util.now()
     for tariff in _get_all_tariffs(entity):
+        if tariff.start is None or tariff.end is None:
+            continue
         if tariff.start <= now < tariff.end:
             return tariff
     _LOGGER.debug("No current tariff found")
     return None
 
 
-def _get_next_tariff(entity: "EssentSensor") -> Tariff | None:
+def _get_next_tariff(entity: EssentSensor) -> Tariff | None:
     """Return the next tariff."""
     now = dt_util.now()
     for tariff in _get_all_tariffs(entity):
+        if tariff.start is None:
+            continue
         if tariff.start > now:
             return tariff
     _LOGGER.debug("No upcoming tariff found")
@@ -65,7 +69,7 @@ def _get_next_tariff(entity: "EssentSensor") -> Tariff | None:
 
 
 def _get_current_tariff_groups(
-    entity: "EssentSensor",
+    entity: EssentSensor,
 ) -> tuple[Tariff | None, dict[str, Any]]:
     """Return the current tariff and grouped amounts."""
     if (tariff := _get_current_tariff(entity)) is None:

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
 from essent_dynamic_pricing import (
     EssentConnectionError,
     EssentDataError,
     EssentResponseError,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.essent.const import DOMAIN

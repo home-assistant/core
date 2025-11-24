@@ -6,9 +6,9 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from essent_dynamic_pricing import EssentClient, EssentPrices
 import pytest
 
-from essent_dynamic_pricing import EssentClient, EssentPrices
 from homeassistant.components.essent.const import DOMAIN
 from homeassistant.core import HomeAssistant
 

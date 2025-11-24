@@ -48,7 +48,6 @@ rules:
     comment: |
       No authentication is required for this integration.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: todo
