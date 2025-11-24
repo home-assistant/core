@@ -565,6 +565,25 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
     },
 }
+MOCK_SUBENTRY_SIREN_COMPONENT = {
+    "3faf1318023c46c5aea26707eeb6f12e": {
+        "platform": "siren",
+        "name": "Siren",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "command_off_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "available_tones": ["Happy hour", "Cooling alarm"],
+        "support_volume_set": True,
+        "support_duration": True,
+        "entity_picture": "https://example.com/3faf1318023c46c5aea26707eeb6f12e",
+        "optimistic": True,
+    },
+}
 MOCK_SUBENTRY_SWITCH_COMPONENT = {
     "3faf1318016c46c5aea26707eeb6f12e": {
         "platform": "switch",
@@ -579,6 +598,23 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
         "payload_on": "ON",
         "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f12e",
         "optimistic": True,
+    },
+}
+MOCK_SUBENTRY_TEXT_COMPONENT = {
+    "09261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "text",
+        "name": "MOTD",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "mode": "password",
+        "pattern": "^[a-z_]*$",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
     },
 }
 
@@ -698,9 +734,17 @@ MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
 }
+MOCK_SIREN_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SIREN_COMPONENT,
+}
 MOCK_SWITCH_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
+}
+MOCK_TEXT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TEXT_COMPONENT,
 }
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

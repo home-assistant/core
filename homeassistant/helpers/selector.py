@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
@@ -1029,6 +1030,7 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
 
     accept: list[str]
+    multiple: bool
 
 
 @SELECTORS.register("media")
@@ -1040,6 +1042,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("accept"): [str],
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
     DATA_SCHEMA = vol.Schema(
@@ -1058,9 +1061,9 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, str]:
+    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
         """Validate the passed selection."""
-        schema = {
+        item_schema_dict = {
             key: value
             for key, value in self.DATA_SCHEMA.schema.items()
             if key != "entity_id"
@@ -1068,10 +1071,19 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
         if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
-            schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
+            item_schema_dict[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
-        media: dict[str, str] = vol.Schema(schema)(data)
-        return media
+        item_schema = vol.Schema(item_schema_dict)
+
+        if not self.config["multiple"]:
+            media: dict[str, str] = item_schema(data)
+            return media
+
+        # Backwards compatibility for places that now accept multiple items
+        if not isinstance(data, list):
+            data = [data]
+
+        return [item_schema(item) for item in data]
 
 
 class NumberSelectorConfig(BaseSelectorConfig, total=False):
@@ -1153,7 +1165,7 @@ class ObjectSelectorField(TypedDict, total=False):
 
     label: str
     required: bool
-    selector: Required[dict[str, Any]]
+    selector: Required[Selector | dict[str, Any]]
 
 
 class ObjectSelectorConfig(BaseSelectorConfig, total=False):
@@ -1176,7 +1188,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         {
             vol.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): validate_selector,
+                    vol.Required("selector"): vol.Any(Selector, validate_selector),
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
@@ -1191,6 +1203,21 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+
+    def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
+        """Serialize ObjectSelector for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "fields" in _config:
+            for field_items in _config["fields"].values():
+                if isinstance(field_items["selector"], ObjectSelector):
+                    field_items["selector"] = field_items["selector"].serialize()
+                elif isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = {
+                        field_items["selector"].selector_type: field_items[
+                            "selector"
+                        ].config
+                    }
+        return {"selector": {self.selector_type: _config}}
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
@@ -1447,7 +1474,8 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         }
     )
 
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+    # We want to transition to not including templates in the target selector.
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED)  # noqa: SLF001
 
     def __init__(self, config: TargetSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

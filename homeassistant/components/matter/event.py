@@ -47,7 +47,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.EVENT, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescription):
     """Describe Matter Event entities."""
 

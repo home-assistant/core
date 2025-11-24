@@ -1,54 +1,53 @@
 {
-  "title": "Update",
   "device_automation": {
-    "trigger_type": {
-      "changed_states": "{entity_name} update availability changed",
-      "turned_on": "{entity_name} got an update available",
-      "turned_off": "{entity_name} became up-to-date"
-    },
     "extra_fields": {
       "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "changed_states": "{entity_name} update availability changed",
+      "turned_off": "{entity_name} became up-to-date",
+      "turned_on": "{entity_name} got an update available"
     }
   },
   "entity_component": {
     "_": {
       "name": "[%key:component::update::title%]",
       "state": {
-        "on": "Update available",
-        "off": "Up-to-date"
+        "off": "Up-to-date",
+        "on": "Update available"
       },
       "state_attributes": {
-        "in_progress": {
-          "name": "In progress",
-          "state": {
-            "true": "[%key:common::state::yes%]",
-            "false": "[%key:common::state::no%]"
-          }
-        },
         "auto_update": {
           "name": "Auto update",
           "state": {
-            "true": "[%key:common::state::yes%]",
-            "false": "[%key:common::state::no%]"
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
           }
         },
-        "title": {
-          "name": "Title"
-        },
-        "skipped_version": {
-          "name": "Skipped version"
-        },
-        "release_url": {
-          "name": "Release URL"
-        },
-        "release_summary": {
-          "name": "Release summary"
+        "in_progress": {
+          "name": "In progress",
+          "state": {
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
+          }
         },
         "installed_version": {
           "name": "Installed version"
         },
         "latest_version": {
           "name": "Latest version"
+        },
+        "release_summary": {
+          "name": "Release summary"
+        },
+        "release_url": {
+          "name": "Release URL"
+        },
+        "skipped_version": {
+          "name": "Skipped version"
+        },
+        "title": {
+          "name": "Title"
         }
       }
     },
@@ -57,27 +56,28 @@
     }
   },
   "services": {
+    "clear_skipped": {
+      "description": "Removes the skipped version marker from an update.",
+      "name": "Clear skipped update"
+    },
     "install": {
-      "name": "Install update",
       "description": "Installs an update for a device or service.",
       "fields": {
-        "version": {
-          "name": "Version",
-          "description": "The version to install. If omitted, the latest version will be installed."
-        },
         "backup": {
-          "name": "Backup",
-          "description": "If supported by the integration, this creates a backup before starting the update."
+          "description": "If supported by the integration, this creates a backup before starting the update.",
+          "name": "Backup"
+        },
+        "version": {
+          "description": "The version to install. If omitted, the latest version will be installed.",
+          "name": "Version"
         }
-      }
+      },
+      "name": "Install update"
     },
     "skip": {
-      "name": "Skip update",
-      "description": "Marks currently available update as skipped."
-    },
-    "clear_skipped": {
-      "name": "Clear skipped update",
-      "description": "Removes the skipped version marker from an update."
+      "description": "Marks currently available update as skipped.",
+      "name": "Skip update"
     }
-  }
+  },
+  "title": "Update"
 }

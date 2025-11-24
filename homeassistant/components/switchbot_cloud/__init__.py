@@ -171,6 +171,7 @@ async def make_device_data(
         "Robot Vacuum Cleaner K10+ Pro Combo",
         "Robot Vacuum Cleaner S10",
         "S20",
+        "Robot Vacuum Cleaner K11 Plus",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
@@ -217,6 +218,7 @@ async def make_device_data(
     if isinstance(device, Device) and device.device_type in [
         "Motion Sensor",
         "Contact Sensor",
+        "Presence Sensor",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
