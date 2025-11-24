@@ -279,8 +279,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
         keypad.add_callback(_keypad_changed)
 
     try:
-        if not await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait():
-            return False
+        await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
+    except LoginFailed:
+        _LOGGER.error("ElkM1 login failed for %s", conf[CONF_HOST])
+        return False
     except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
@@ -321,6 +323,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bo
     return unload_ok
 
 
+class LoginFailed(Exception):
+    """Raised when login to ElkM1 fails."""
+
+
 class ElkSyncWaiter:
     """Wait for ElkM1 to sync."""
 
@@ -345,16 +351,18 @@ class ElkSyncWaiter:
         self._login_succeeded = succeeded
         if succeeded:
             _LOGGER.debug("ElkM1 login succeeded")
+            self._set_future_if_not_done(self._login_future)
         else:
             _LOGGER.error("ElkM1 login failed; invalid username or password")
-            self._set_future_if_not_done(self._sync_future)
-        self._set_future_if_not_done(self._login_future)
+            self._async_set_exception_if_not_done(self._login_future, LoginFailed)
 
     @callback
-    def _async_on_timeout(self, future: asyncio.Future[None]) -> None:
+    def _async_set_exception_if_not_done(
+        self, future: asyncio.Future[None], exception: type[Exception]
+    ) -> None:
         """Handle timeout callback."""
         if not future.done():
-            future.set_exception(TimeoutError())
+            future.set_exception(exception)
 
     @callback
     def _sync_complete(self) -> None:
@@ -371,14 +379,13 @@ class ElkSyncWaiter:
             ("sync_complete", self._sync_future, self._sync_timeout),
         ):
             _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
-            handle = self._loop.call_later(timeout, self._async_on_timeout, future)
+            handle = self._loop.call_later(
+                timeout, self._async_set_exception_if_not_done, future, TimeoutError
+            )
             step_succeeded = False
             try:
                 await future
                 step_succeeded = True
-            except TimeoutError:
-                _LOGGER.debug("Timed out waiting for %s event", name)
-                raise
             finally:
                 handle.cancel()
                 if not step_succeeded:
