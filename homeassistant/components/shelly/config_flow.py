@@ -6,14 +6,18 @@ import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.ble import get_name_from_model_id
 from aioshelly.ble.manufacturer_data import (
     has_rpc_over_ble,
     parse_shelly_manufacturer_data,
 )
-from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
+from aioshelly.ble.provisioning import (
+    async_provision_wifi,
+    async_scan_wifi_networks,
+    ble_rpc_device,
+)
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
@@ -105,6 +109,32 @@ BLE_SCANNER_OPTIONS = [
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 MANUAL_ENTRY_STRING = "manual"
+
+
+async def async_get_ip_from_ble(ble_device: BLEDevice) -> str | None:
+    """Get device IP address via BLE after WiFi provisioning.
+
+    Args:
+        ble_device: BLE device to query
+
+    Returns:
+        IP address string if available, None otherwise
+
+    """
+    try:
+        async with ble_rpc_device(ble_device) as device:
+            await device.update_status()
+            if (
+                (wifi := device.status.get("wifi"))
+                and isinstance(wifi, dict)
+                and (ip := wifi.get("sta_ip"))
+            ):
+                return cast(str, ip)
+            return None
+    except (DeviceConnectionError, RpcCallError) as err:
+        LOGGER.debug("Failed to get IP via BLE: %s", err)
+        return None
+
 
 # BLE provisioning flow steps that are in the finishing state
 # Used to determine if a BLE flow should be aborted when zeroconf discovers the device
@@ -864,13 +894,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             aiozc = await zeroconf.async_get_async_instance(self.hass)
             result = await async_lookup_device_by_name(aiozc, self.device_name)
 
-            # If we still don't have a host, provisioning failed
+            # If we still don't have a host, try BLE fallback for alternate subnets
             if not result:
-                LOGGER.debug("Active lookup failed - provisioning unsuccessful")
-                # Store failure info and return None - provision_done will handle redirect
-                return None
-
-            state.host, state.port = result
+                LOGGER.debug(
+                    "Active lookup failed, trying to get IP address via BLE as fallback"
+                )
+                if ip := await async_get_ip_from_ble(self.ble_device):
+                    LOGGER.debug("Got IP %s from BLE, using it", ip)
+                    state.host = ip
+                    state.port = DEFAULT_HTTP_PORT
+                else:
+                    LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
+                    # Store failure info and return None - provision_done will handle redirect
+                    return None
+            else:
+                state.host, state.port = result
         else:
             LOGGER.debug(
                 "Zeroconf discovery received for device after WiFi provisioning at %s",
