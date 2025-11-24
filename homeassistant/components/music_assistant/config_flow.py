@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
@@ -88,6 +89,58 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle Home Assistant add-on discovery.
+
+        This flow is triggered by the Music Assistant add-on.
+        """
+        # Build URL from add-on discovery info
+        # The add-on exposes the API on port 8095, but also has an internal-only
+        # port 8094 for the Home Assistant integration to connect to
+        # If the add-on provides host info, use it; otherwise use the add-on slug
+        host = discovery_info.config.get("host", discovery_info.slug)
+        self.url = f"http://{host}:8094"
+
+        try:
+            server_info = await _get_server_info(self.hass, self.url)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidServerVersion:
+            return self.async_abort(reason="invalid_server_version")
+        except MusicAssistantClientException:
+            LOGGER.exception("Unexpected exception during add-on discovery")
+            return self.async_abort(reason="unknown")
+
+        # Check if server has completed onboarding
+        if not server_info.onboard_done:
+            return self.async_abort(reason="server_not_ready")
+
+        await self.async_set_unique_id(server_info.server_id)
+        self._abort_if_unique_id_configured(updates={CONF_URL: self.url})
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the add-on discovery."""
+        if TYPE_CHECKING:
+            assert self.url is not None
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=DEFAULT_TITLE,
+                data={CONF_URL: self.url},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            description_placeholders={"url": self.url},
+        )
+
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -96,6 +149,15 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             server_info = ServerInfoMessage.from_dict(discovery_info.properties)
         except LookupError:
             return self.async_abort(reason="invalid_discovery_info")
+
+        # Ignore servers running as Home Assistant add-on
+        # (they should be discovered through hassio discovery instead)
+        if server_info.homeassistant_addon:
+            return self.async_abort(reason="already_discovered_addon")
+
+        # Ignore servers that have not completed onboarding yet
+        if not server_info.onboard_done:
+            return self.async_abort(reason="server_not_ready")
 
         self.url = server_info.base_url
 
