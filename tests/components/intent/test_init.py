@@ -649,10 +649,7 @@ async def test_stop_cover_position(hass: HomeAssistant, slots: dict[str, Any]) -
     calls = async_mock_service(hass, COVER_DOMAIN, SERVICE_STOP_COVER)
 
     response = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_STOP_POSITION,
-        slots,
+        hass, "test", intent.INTENT_STOP_POSITION, slots
     )
     await hass.async_block_till_done()
 
