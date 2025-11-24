@@ -41,7 +41,7 @@ MICRA_BT_OFFLINE_ENTITIES = [
 ]
 
 
-def build_entitiy_id(
+def build_entity_id(
     platform: str,
     serial_number: str,
     entity_suffix: str,
@@ -145,7 +145,7 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
     # Check all entities are initially available
     for entity_id in entities:
         state = hass.states.get(
-            build_entitiy_id(entity_id[0], mock_lamarzocco.serial_number, entity_id[1])
+            build_entity_id(entity_id[0], mock_lamarzocco.serial_number, entity_id[1])
         )
         assert state
         assert state.state != STATE_UNAVAILABLE
@@ -162,7 +162,7 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
     # All bt_offline_mode entities should still be available
     for entity_id in entities:
         state = hass.states.get(
-            build_entitiy_id(entity_id[0], mock_lamarzocco.serial_number, entity_id[1])
+            build_entity_id(entity_id[0], mock_lamarzocco.serial_number, entity_id[1])
         )
         assert state
         assert state.state != STATE_UNAVAILABLE
@@ -329,7 +329,7 @@ async def test_setup_through_bluetooth_only(
 
     # Check all Bluetooth entities are available
     for entity_id in entities:
-        entity = build_entitiy_id(
+        entity = build_entity_id(
             entity_id[0], mock_lamarzocco_bluetooth.serial_number, entity_id[1]
         )
         state = hass.states.get(entity)
