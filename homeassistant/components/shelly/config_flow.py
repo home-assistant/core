@@ -42,7 +42,13 @@ from homeassistant.components.bluetooth import (
     async_clear_address_from_match_history,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_ZEROCONF,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -109,6 +115,7 @@ BLE_SCANNER_OPTIONS = [
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 MANUAL_ENTRY_STRING = "manual"
+DISCOVERY_SOURCES = {SOURCE_BLUETOOTH, SOURCE_ZEROCONF}
 
 
 async def async_get_ip_from_ble(ble_device: BLEDevice) -> str | None:
@@ -445,11 +452,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_devices.update(await self._async_discover_zeroconf_devices())
 
         # Filter out already-configured devices (excluding ignored)
+        # and devices with active discovery flows (already being offered to user)
         current_ids = self._async_current_ids(include_ignore=False)
+        in_progress_macs = self._async_get_in_progress_discovery_macs()
         discovered_devices = {
             mac: device
             for mac, device in discovered_devices.items()
-            if mac not in current_ids
+            if mac not in current_ids and mac not in in_progress_macs
         }
 
         # Store discovered devices for use in selection
@@ -574,6 +583,22 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
+
+    @callback
+    def _async_get_in_progress_discovery_macs(self) -> set[str]:
+        """Get MAC addresses of devices with active discovery flows.
+
+        Returns MAC addresses from bluetooth and zeroconf discovery flows
+        that are already in progress, so they can be filtered from the
+        user step device list (since they're already being offered).
+        """
+        return {
+            mac
+            for flow in self._async_in_progress(include_uninitialized=True)
+            if flow["flow_id"] != self.flow_id
+            and flow["context"].get("source") in DISCOVERY_SOURCES
+            and (mac := flow["context"].get("unique_id"))
+        }
 
     def _abort_idle_ble_flows(self, mac: str) -> None:
         """Abort idle BLE provisioning flows for this device.
