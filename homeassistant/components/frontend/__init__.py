@@ -403,7 +403,6 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
-
     websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)

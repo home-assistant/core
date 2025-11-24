@@ -2,6 +2,8 @@
   "preview_features": {
     "winter_mode": {
       "description": "Enables winter mode in the frontend. Get your home ready for winter! ❄️",
+      "disable_confirmation": "Winter mode will be disabled in the frontend. You can re-enable this at any time in labs settings.",
+      "enable_confirmation": "Winter mode will be enabled in the frontend. You can turn this off at any time in labs settings.",
       "name": "Winter mode"
     }
   },
