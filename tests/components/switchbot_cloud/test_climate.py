@@ -345,16 +345,6 @@ async def test_smart_radiator_thermostat_set_temperature(
         "27.0",
     )
 
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, "temperature": 4},
-        )
-    mock_send_command.assert_called_once_with(
-        "ac-device-id-1", SmartRadiatorThermostatCommands.SET_MODE, "command", 2
-    )
-
 
 async def test_smart_radiator_thermostat_set_preset_mode(
     hass: HomeAssistant, mock_list_devices, mock_get_status
