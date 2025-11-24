@@ -60,14 +60,13 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
             # so we can safely assert it is not None for type checking purposes
             # Gios instance is created only with a valid station ID in the async_setup_entry.
             assert station_id is not None
-        station_name = gios.measurement_stations[station_id].name
 
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(gios.station_id))},
+            identifiers={(DOMAIN, str(station_id))},
             manufacturer=MANUFACTURER,
-            name=config_entry.data.get(CONF_NAME) or station_name,
-            configuration_url=URL.format(station_id=gios.station_id),
+            name=config_entry.data.get(CONF_NAME) or gios.station_name,
+            configuration_url=URL.format(station_id=station_id),
         )
 
     async def _async_update_data(self) -> GiosSensors:
