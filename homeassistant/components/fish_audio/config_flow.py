@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -283,15 +284,11 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: SubentryInitUserInput | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
-        api_key = self._get_entry().data[CONF_API_KEY]
-        try:
-            _, self.session = await _validate_api_key(self.hass, api_key)
-        except InvalidAuthError:
-            return self.async_abort(reason="invalid_auth")
-        except CannotConnectError:
-            return self.async_abort(reason="cannot_connect")
-        except UnexpectedError:
-            return self.async_abort(reason="unknown")
+        entry = self._get_entry()
+        if entry.state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        self.session = entry.runtime_data
 
         if user_input is not None:
             self.config_data.update(user_input)
@@ -317,10 +314,10 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                     sort_by=self.config_data.get(CONF_SORT_BY, "score"),
                 )
             except CannotGetModelsError:
-                self.models = []
+                return self.async_abort(reason="cannot_connect")
 
             if not self.models:
-                errors["base"] = "no_models_found"
+                return self.async_abort(reason="no_models_found")
 
         if user_input is not None:
             if (
