@@ -4373,19 +4373,6 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    # Confirm and scan
-    with patch(
-        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
-        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Mock device for BLE status query
     mock_ble_status_device = AsyncMock()
     mock_ble_status_device.status = {"wifi": {"sta_ip": "192.168.1.100"}}
@@ -4401,8 +4388,13 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
     mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
     mock_device.shutdown = AsyncMock()
 
+    # Confirm and scan, then select network and enter password
     # Provision WiFi but no zeroconf discovery arrives, active lookup fails, BLE fallback succeeds
     with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
         patch(
             "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
             0.01,  # Short timeout to trigger timeout path
@@ -4427,9 +4419,13 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
         # Configure BLE RPC mock to return device with IP
         mock_ble_rpc.return_value.__aenter__.return_value = mock_ble_status_device
 
+        # Scan for networks
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network and enter password in single step
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4459,21 +4455,13 @@ async def test_bluetooth_provision_timeout_ble_fallback_fails(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    # Confirm and scan
-    with patch(
-        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
-        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
+    # Confirm and scan, select network and enter password
     # Provision WiFi but no zeroconf discovery, active lookup fails, BLE fallback fails
     with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
         patch(
             "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
             0.01,  # Short timeout to trigger timeout path
@@ -4488,9 +4476,13 @@ async def test_bluetooth_provision_timeout_ble_fallback_fails(
             return_value=None,  # BLE fallback also fails
         ),
     ):
+        # Scan for networks
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network and enter password in single step
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4528,21 +4520,13 @@ async def test_bluetooth_provision_timeout_ble_exception(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    # Confirm and scan
-    with patch(
-        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
-        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
+    # Confirm and scan, select network and enter password
     # Provision WiFi but no zeroconf discovery, active lookup fails, BLE raises exception
     with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
         patch(
             "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
             0.01,  # Short timeout to trigger timeout path
@@ -4557,9 +4541,13 @@ async def test_bluetooth_provision_timeout_ble_exception(
             side_effect=DeviceConnectionError,  # BLE raises exception
         ),
     ):
+        # Scan for networks
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network and enter password in single step
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
