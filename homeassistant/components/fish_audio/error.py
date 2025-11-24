@@ -17,7 +17,7 @@ class CannotConnectError(FishAudioError):
     def __init__(self, exc: Exception) -> None:
         """Initialize and log the connection error."""
         super().__init__("Cannot connect")
-        _LOGGER.exception("Failed to connect to Fish Audio API: %s", exc)
+        _LOGGER.error("Failed to connect to Fish Audio API: %s", exc)
 
 
 class InvalidAuthError(FishAudioError):
@@ -26,7 +26,7 @@ class InvalidAuthError(FishAudioError):
     def __init__(self, exc: Exception) -> None:
         """Initialize and log the invalid auth error."""
         super().__init__("Invalid authentication")
-        _LOGGER.exception("Invalid authentication: %s", exc)
+        _LOGGER.warning("Invalid authentication: %s", exc)
 
 
 class CannotGetModelsError(FishAudioError):
@@ -35,7 +35,7 @@ class CannotGetModelsError(FishAudioError):
     def __init__(self, exc: Exception) -> None:
         """Initialize and log the model fetch error."""
         super().__init__("Cannot get models")
-        _LOGGER.exception("Failed to fetch Fish Audio models: %s", exc)
+        _LOGGER.error("Failed to fetch Fish Audio models: %s", exc)
 
 
 class UnexpectedError(FishAudioError):
@@ -53,4 +53,4 @@ class AlreadyConfiguredError(FishAudioError):
     def __init__(self, exc: Exception) -> None:
         """Initialize and log the already configured error."""
         super().__init__("Already configured")
-        _LOGGER.exception("Already configured: %s", exc)
+        _LOGGER.warning("Already configured: %s", exc)
