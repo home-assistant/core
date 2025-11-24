@@ -70,6 +70,22 @@ LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
 IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
 
+MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
+    b"\x89PNG": "image/png",
+    b"GIF8": "image/gif",
+    b"RIFF": "image/webp",
+    b"\x49\x49\x2a\x00": "image/tiff",
+    b"\x4d\x4d\x00\x2a": "image/tiff",
+}
+JPEG_MAGIC_NUMBERS = (
+    b"\xff\xd8\xff\xdb",
+    b"\xff\xd8\xff\xe0",
+    b"\xff\xd8\xff\xed",
+    b"\xff\xd8\xff\xee",
+    b"\xff\xd8\xff\xe1",
+    b"\xff\xd8\xff\xe2",
+)
+
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
@@ -98,22 +114,11 @@ def infer_image_type(content: bytes) -> str | None:
     """Infer image type from first 4 bytes (magic number)."""
     magic = content[:4]
 
-    if magic in (
-        b"\xff\xd8\xff\xdb",
-        b"\xff\xd8\xff\xe0",
-        b"\xff\xd8\xff\xed",
-        b"\xff\xd8\xff\xee",
-        b"\xff\xd8\xff\xe1",
-        b"\xff\xd8\xff\xe2",
-    ):
-        return "image/jpeg"
-    return {
-        b"\x89PNG": "image/png",
-        b"GIF8": "image/gif",
-        b"RIFF": "image/webp",
-        b"\x49\x49\x2a\x00": "image/tiff",
-        b"\x4d\x4d\x00\x2a": "image/tiff",
-    }.get(magic)
+    return (
+        "image/jpeg"
+        if magic in JPEG_MAGIC_NUMBERS
+        else MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE.get(magic)
+    )
 
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
