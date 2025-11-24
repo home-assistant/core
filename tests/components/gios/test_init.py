@@ -5,9 +5,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
-from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
+from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -21,7 +21,7 @@ async def test_async_setup_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test a successful setup entry."""
-    state = hass.states.get("sensor.test_name_1_pm2_5")
+    state = hass.states.get("sensor.station_name_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "4"
@@ -116,37 +116,3 @@ async def test_remove_air_quality_entities(
 
     entry = entity_registry.async_get("air_quality.home")
     assert entry is None
-
-
-@pytest.mark.parametrize(
-    ("config_data", "expected_device_name"),
-    [
-        ({CONF_STATION_ID: 123, CONF_NAME: "Home"}, "Home"),
-        ({CONF_STATION_ID: 123}, "Test Name 1"),
-    ],
-)
-async def test_device_name_based_on_config(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_gios: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    config_data: dict,
-    expected_device_name: str,
-) -> None:
-    """Test device name based on config entry data or station name."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Test Name 1",
-        unique_id="123",
-        data=config_data,
-        entry_id="86129426118ae32020417a53712d6eef",
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-    assert len(devices) == 1
-    device = devices[0]
-    assert device.name == expected_device_name
