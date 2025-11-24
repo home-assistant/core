@@ -11,11 +11,11 @@ from typing import Any, Literal, cast
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.ai import (
-    AiAuthenticationError,
-    AiError,
-    AiRateLimitError,
-    AiResponseError,
-    AiServiceError,
+    AIAuthenticationError,
+    AIError,
+    AIRateLimitError,
+    AIResponseError,
+    AIServiceError,
 )
 from litellm import ResponseFunctionToolCall, ResponsesAPIStreamEvents
 from openai.types.responses import ResponseReasoningItem
@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .client import CloudClient
 from .const import CONVERSATION_ENTITY_UNIQUE_ID, DATA_CLOUD, DOMAIN
-from .helpers import AiChatHelper
+from .helpers import AIChatHelper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -275,7 +275,7 @@ async def async_setup_entry(
     cloud = hass.data[DATA_CLOUD]
     try:
         await cloud.ai.async_ensure_token()
-    except AiError:
+    except AIError:
         return
 
     async_add_entities([CloudConversationEntity(cloud, config_entry)])
@@ -345,7 +345,7 @@ class CloudConversationEntity(
         """Generate a response for the chat log."""
 
         for _ in range(_MAX_TOOL_ITERATIONS):
-            response_kwargs = await AiChatHelper.prepare_chat_for_generation(
+            response_kwargs = await AIChatHelper.prepare_chat_for_generation(
                 self.hass,
                 chat_log,
             )
@@ -366,15 +366,15 @@ class CloudConversationEntity(
                 ):
                     pass
 
-            except AiAuthenticationError as err:
+            except AIAuthenticationError as err:
                 raise ConfigEntryAuthFailed("Cloud AI authentication failed") from err
-            except AiRateLimitError as err:
+            except AIRateLimitError as err:
                 raise HomeAssistantError("Cloud AI is rate limited") from err
-            except AiResponseError as err:
+            except AIResponseError as err:
                 raise HomeAssistantError(str(err)) from err
-            except AiServiceError as err:
+            except AIServiceError as err:
                 raise HomeAssistantError("Error talking to Cloud AI") from err
-            except AiError as err:
+            except AIError as err:
                 raise HomeAssistantError(str(err)) from err
 
             if not chat_log.unresponded_tool_results:

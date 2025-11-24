@@ -9,7 +9,7 @@ import io
 import logging
 from typing import Any, cast
 
-from hass_nabucasa.ai import AiImageAttachment
+from hass_nabucasa.ai import AIImageAttachment
 from openai.types.responses import FunctionToolParam, ToolParam, WebSearchToolParam
 from PIL import Image
 from voluptuous_openapi import convert
@@ -45,7 +45,7 @@ class FixedSizeQueueLogHandler(logging.Handler):
         return await hass.async_add_executor_job(_get_logs)
 
 
-class AiChatHelper:
+class AIChatHelper:
     """Helper methods for AI chat handling."""
 
     @staticmethod
@@ -59,7 +59,7 @@ class AiChatHelper:
         messages = [
             message
             for content in chat_log.content
-            if (message := AiChatHelper._convert_content_to_chat_message(content))
+            if (message := AIChatHelper._convert_content_to_chat_message(content))
         ]
 
         if not messages or messages[-1]["role"] != "user":
@@ -67,7 +67,7 @@ class AiChatHelper:
 
         last_content = chat_log.content[-1]
         if last_content.role == "user" and last_content.attachments:
-            files = await AiChatHelper.async_prepare_files_for_prompt(
+            files = await AIChatHelper.async_prepare_files_for_prompt(
                 hass, last_content.attachments
             )
             user_message = messages[-1]
@@ -79,7 +79,7 @@ class AiChatHelper:
 
         if chat_log.llm_api:
             ha_tools: list[ToolParam] = [
-                AiChatHelper._format_tool(tool, chat_log.llm_api.custom_serializer)
+                AIChatHelper._format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
 
@@ -200,7 +200,7 @@ class AiChatHelper:
         return spec
 
 
-class AiFileHelper:
+class AIFileHelper:
     """Helper methods for AI file handling."""
 
     @staticmethod
@@ -229,11 +229,11 @@ class AiFileHelper:
     @staticmethod
     async def async_prepare_image_generation_attachments(
         hass: HomeAssistant, attachments: list[conversation.Attachment]
-    ) -> list[AiImageAttachment]:
+    ) -> list[AIImageAttachment]:
         """Load attachment data for image generation."""
 
-        def prepare() -> list[AiImageAttachment]:
-            items: list[AiImageAttachment] = []
+        def prepare() -> list[AIImageAttachment]:
+            items: list[AIImageAttachment] = []
             for attachment in attachments:
                 if not attachment.mime_type or not attachment.mime_type.startswith(
                     "image/"
@@ -249,7 +249,7 @@ class AiFileHelper:
                 mime_type = attachment.mime_type
 
                 try:
-                    data, mime_type = AiFileHelper._convert_image_for_editing(data)
+                    data, mime_type = AIFileHelper._convert_image_for_editing(data)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -258,7 +258,7 @@ class AiFileHelper:
                     ) from err
 
                 items.append(
-                    AiImageAttachment(
+                    AIImageAttachment(
                         filename=path.name,
                         mime_type=mime_type,
                         data=data,
@@ -268,7 +268,7 @@ class AiFileHelper:
             if attachments and len(items) == 1:
                 path = attachments[0].path
                 items.append(
-                    AiImageAttachment(
+                    AIImageAttachment(
                         filename=f"{path.stem}_mask.png",
                         mime_type="image/png",
                         data=items[0]["data"],
