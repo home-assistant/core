@@ -3687,42 +3687,36 @@ async def test_get_triggers_for_target(
         label_mqtt_switch.entity_id, labels={label1.label_id}
     )
 
-    async def call_command(target: dict[str, list[str]]) -> Any:
+    async def assert_triggers(target: dict[str, list[str]], expected: list[str]) -> Any:
+        """Call the command and assert expected triggers."""
         await websocket_client.send_json_auto_id(
             {"type": "get_triggers_for_target", "target": target}
         )
-        return await websocket_client.receive_json()
+        msg = await websocket_client.receive_json()
 
-    def assert_triggers(msg: dict[str, Any], expected: list[str]) -> None:
-        """Assert triggers for target match expected."""
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
     # Test entity target - unknown entity
-    msg = await call_command({"entity_id": ["light.unknown_entity"]})
-    assert_triggers(msg, [])
+    await assert_triggers({"entity_id": ["light.unknown_entity"]}, [])
 
     # Test entity target - entity not in registry
-    msg = await call_command({"entity_id": ["light.not_registry"]})
-    assert_triggers(msg, ["light.turned_on"])
+    await assert_triggers({"entity_id": ["light.not_registry"]}, ["light.turned_on"])
 
     # Test entity targets
-    msg = await call_command(
-        {"entity_id": [mqtt_light.entity_id, label_mqtt_switch.entity_id]}
+    await assert_triggers(
+        {"entity_id": [mqtt_light.entity_id, label_mqtt_switch.entity_id]},
+        ["light.turned_on", "mqtt", "mqtt.light_message", "switch.turned_on"],
     )
-    assert_triggers(
-        msg, ["light.turned_on", "mqtt", "mqtt.light_message", "switch.turned_on"]
-    )
-    msg = await call_command({"entity_id": [mqtt_flash_light.entity_id]})
-    assert_triggers(
-        msg, ["light.turned_on", "mqtt", "mqtt.light_message", "mqtt.light_flash"]
+    await assert_triggers(
+        {"entity_id": [mqtt_flash_light.entity_id]},
+        ["light.turned_on", "mqtt", "mqtt.light_message", "mqtt.light_flash"],
     )
 
     # Test device target - multiple devices
-    msg = await call_command({"device_id": [device1.id, device2.id]})
-    assert_triggers(
-        msg,
+    await assert_triggers(
+        {"device_id": [device1.id, device2.id]},
         [
             "light.turned_on",
             "mqtt",
@@ -3733,24 +3727,25 @@ async def test_get_triggers_for_target(
     )
 
     # Test area target - multiple areas
-    msg = await call_command({"area_id": [kitchen_area.id, living_room_area.id]})
-    assert_triggers(msg, ["light.turned_on", "switch.turned_on"])
+    await assert_triggers(
+        {"area_id": [kitchen_area.id, living_room_area.id]},
+        ["light.turned_on", "switch.turned_on"],
+    )
 
     # Test label target - multiple labels
-    msg = await call_command({"label_id": [label1.label_id, label2.label_id]})
-    assert_triggers(msg, ["light.turned_on", "mqtt", "switch.turned_on"])
+    await assert_triggers(
+        {"label_id": [label1.label_id, label2.label_id]},
+        ["light.turned_on", "mqtt", "switch.turned_on"],
+    )
 
     # Test mixed target types
-    msg = await call_command(
+    await assert_triggers(
         {
             "entity_id": [device1_light.entity_id],
             "device_id": [device2.id],
             "area_id": [kitchen_area.id],
             "label_id": [label1.label_id],
-        }
-    )
-    assert_triggers(
-        msg,
+        },
         [
             "light.turned_on",
             "mqtt",
