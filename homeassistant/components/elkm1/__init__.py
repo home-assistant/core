@@ -338,7 +338,7 @@ class ElkSyncWaiter:
         self._loop = asyncio.get_running_loop()
         self._sync_future: asyncio.Future[None] = self._loop.create_future()
         self._login_future: asyncio.Future[None] = self._loop.create_future()
-        self._login_succeeded = True
+        self._login_succeeded = False
 
     def _set_future_if_not_done(self, future: asyncio.Future[None]) -> None:
         """Set the future result if not already done."""
