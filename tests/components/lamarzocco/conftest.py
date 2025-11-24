@@ -147,9 +147,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 @pytest.fixture
 def mock_ble_device() -> BLEDevice:
     """Return a mock BLE device."""
-    return BLEDevice(
-        "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
-    )
+    return BLEDevice("00:00:00:00:00:00", "GS_GS012345", details={"path": "path"})
 
 
 @pytest.fixture

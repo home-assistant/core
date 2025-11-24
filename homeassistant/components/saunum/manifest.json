@@ -1,6 +1,6 @@
 {
   "domain": "saunum",
-  "name": "Saunum Leil",
+  "name": "Saunum",
   "codeowners": ["@mettolen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/saunum",
