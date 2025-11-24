@@ -328,7 +328,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         translation_key="vehicle",
         icon="mdi:car",
         ufp_required_field="feature_flags.has_smart_detect",
-        ufp_event_obj="last_vehicle_detect_event",
+        ufp_event_obj="last_smart_detect_event",
         event_types=[EVENT_TYPE_VEHICLE_DETECTED],
         entity_class=ProtectDeviceVehicleEventEntity,
     ),
