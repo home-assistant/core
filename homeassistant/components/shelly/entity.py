@@ -25,6 +25,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
+    get_entity_translation_attributes,
     get_rpc_channel_name,
     get_rpc_device_info,
     get_rpc_key,
@@ -594,6 +595,20 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
             return available
 
         return self.entity_description.available(self.sub_status)
+
+    def configure_translation_attributes(self) -> None:
+        """Configure translation attributes."""
+        translation_placeholders, translation_key = get_entity_translation_attributes(
+            get_rpc_channel_name(self.coordinator.device, self.key),
+            self.entity_description.translation_key,
+            self.entity_description.device_class,
+            self._default_to_device_class_name(),
+        )
+
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
+            if translation_key:
+                self._attr_translation_key = translation_key
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
