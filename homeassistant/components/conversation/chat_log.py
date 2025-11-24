@@ -207,7 +207,11 @@ class SystemContent:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
-        return {"role": self.role, "content": self.content}
+        return {
+            "role": self.role,
+            "content": self.content,
+            "created": self.created,
+        }
 
 
 @dataclass(frozen=True)

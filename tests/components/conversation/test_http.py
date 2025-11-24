@@ -646,7 +646,7 @@ async def test_ws_chat_log_index_subscription(
                         "continue_conversation": False,
                         "created": now,
                         "content": [
-                            {"role": "system", "content": ""},
+                            {"role": "system", "content": "", "created": now},
                             {"role": "user", "content": "Hello", "created": now},
                             {
                                 "role": "assistant",
@@ -680,7 +680,7 @@ async def test_ws_chat_log_index_subscription(
                         "conversation_id": conversation_id,
                         "continue_conversation": False,
                         "created": now,
-                        "content": [{"role": "system", "content": ""}],
+                        "content": [{"role": "system", "content": "", "created": now}],
                     }
                 },
             },
@@ -783,7 +783,7 @@ async def test_ws_chat_log_subscription(
                     "continue_conversation": False,
                     "created": now,
                     "content": [
-                        {"role": "system", "content": ""},
+                        {"role": "system", "content": "", "created": now},
                         {"role": "user", "content": "Hello", "created": now},
                         {
                             "role": "assistant",
@@ -860,6 +860,7 @@ async def test_ws_chat_log_subscription(
                             {
                                 "content": "",
                                 "role": "system",
+                                "created": now,
                             },
                             {
                                 "content": "Hello",
