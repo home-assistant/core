@@ -100,23 +100,16 @@
         },
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
       },
-      "wifi_credentials": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "Password for the WiFi network."
-        },
-        "description": "Enter the password for {ssid}."
-      },
       "wifi_scan": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]",
           "ssid": "WiFi network"
         },
         "data_description": {
+          "password": "Password for the WiFi network.",
           "ssid": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
         },
-        "description": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+        "description": "Select a WiFi network and enter the password to provision the device."
       },
       "wifi_scan_failed": {
         "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
