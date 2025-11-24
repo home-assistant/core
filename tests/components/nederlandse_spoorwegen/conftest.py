@@ -57,6 +57,21 @@ def mock_nsapi() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_single_trip_nsapi(mock_nsapi: AsyncMock) -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    trips_data = load_json_object_fixture("trip_single.json", DOMAIN)
+    mock_nsapi.get_trips.return_value = [Trip(trip) for trip in trips_data["trips"]]
+    return mock_nsapi
+
+
+@pytest.fixture
+def mock_no_trips_nsapi(mock_nsapi: AsyncMock) -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    mock_nsapi.get_trips.return_value = []
+    return mock_nsapi
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(

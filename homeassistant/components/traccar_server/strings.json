@@ -12,23 +12,21 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "description": "The authentication credentials for {host}:{port} need to be updated."
       },
       "user": {
         "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Traccar Server",
-          "username": "The username (email) you use to log in to your Traccar Server"
+          "api_token": "The API token generated from your account on your Traccar Server",
+          "host": "The hostname or IP address of your Traccar Server"
         }
       }
     }
@@ -60,6 +58,11 @@
       "geofence": {
         "name": "Geofence"
       }
+    }
+  },
+  "exceptions": {
+    "migrate_to_api_token": {
+      "message": "To continue using Traccar Server, you need to migrate to API token based authentication."
     }
   },
   "options": {
