@@ -50,9 +50,9 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
-    ShellyRpcAttributeChannelEntity,
+    ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    ShellySleepingRpcAttributeChannelEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
@@ -89,7 +89,7 @@ class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
 
 
-class RpcSensor(ShellyRpcAttributeChannelEntity, SensorEntity):
+class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     """Represent a RPC sensor."""
 
     entity_description: RpcSensorDescription
@@ -109,6 +109,9 @@ class RpcSensor(ShellyRpcAttributeChannelEntity, SensorEntity):
                 self._attr_options = list(self.option_map.values())
             else:
                 self._attr_options = list(self.option_map)
+
+        if not description.role:
+            self.configure_translation_attributes()
 
     @property
     def native_value(self) -> StateType:
@@ -1863,7 +1866,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         return self.restored_data.native_unit_of_measurement
 
 
-class RpcSleepingSensor(ShellySleepingRpcAttributeChannelEntity, RestoreSensor):
+class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
     """Represent a RPC sleeping sensor."""
 
     entity_description: RpcSensorDescription
@@ -1879,6 +1882,9 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeChannelEntity, RestoreSensor):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, key, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
+
+        if coordinator.device.initialized:
+            self.configure_translation_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
