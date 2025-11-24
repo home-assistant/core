@@ -592,15 +592,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         that are already in progress, so they can be filtered from the
         user step device list (since they're already being offered).
         """
-        macs: set[str] = set()
-        for flow in self._async_in_progress(include_uninitialized=True):
-            if (
-                flow["flow_id"] != self.flow_id
-                and flow["context"].get("source") in DISCOVERY_SOURCES
-                and (mac := flow["context"].get("unique_id"))
-            ):
-                macs.add(mac)
-        return macs
+        return {
+            mac
+            for flow in self._async_in_progress(include_uninitialized=True)
+            if flow["flow_id"] != self.flow_id
+            and flow["context"].get("source") in DISCOVERY_SOURCES
+            and (mac := flow["context"].get("unique_id"))
+        }
 
     def _abort_idle_ble_flows(self, mac: str) -> None:
         """Abort idle BLE provisioning flows for this device.

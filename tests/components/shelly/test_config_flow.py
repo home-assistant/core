@@ -1887,6 +1887,7 @@ async def test_user_flow_select_ble_device(
 async def test_user_flow_filters_devices_with_active_discovery_flows(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
+    mock_rpc_device: Mock,
 ) -> None:
     """Test user flow filters out devices that already have discovery flows."""
     # Mock empty zeroconf discovery
@@ -1915,6 +1916,26 @@ async def test_user_flow_filters_devices_with_active_discovery_flows(
     # out (it already has an active discovery flow being offered to the user)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user_manual"
+
+    # Complete the manual entry flow to reach terminal state
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "aabbccddeeff", "model": MODEL_PLUS_2PM, "gen": 2},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "10.10.10.10",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+    }
 
 
 @pytest.mark.parametrize(
