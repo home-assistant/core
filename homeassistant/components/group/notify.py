@@ -180,6 +180,11 @@ class NotifyGroup(GroupEntity, NotifyEntity):
                 ATTR_MESSAGE: message,
                 ATTR_TITLE: title,
                 ATTR_ENTITY_ID: self._entity_ids,
+            }
+            if title is not None
+            else {
+                ATTR_MESSAGE: message,
+                ATTR_ENTITY_ID: self._entity_ids,
             },
             blocking=True,
             context=self._context,

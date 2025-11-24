@@ -166,6 +166,34 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     )
     send_message_mock.reset_mock()
 
+    # Test sending a message to a notify group which does not have title.
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {"message": "Hello", "data": {"hello": "world"}},
+        blocking=True,
+    )
+    send_message_mock.assert_has_calls(
+        [
+            call(
+                "Hello",
+                {
+                    "target": [1],
+                    "data": {"hello": "world"},
+                },
+            ),
+            call(
+                "Hello",
+                {
+                    "target": [2],
+                    "data": {"hello": "world", "test": "message", "default": "default"},
+                },
+            ),
+        ],
+        any_order=True,
+    )
+    send_message_mock.reset_mock()
+
     # Test sending a message which overrides service defaults to a notify group
     await hass.services.async_call(
         "notify",
