@@ -146,7 +146,7 @@ async def test_saving_with_delay(
     }
 
 
-async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:  # MEEPÅ
+async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
     """Test thread handling when saving with a delay."""
     calls = []
 
