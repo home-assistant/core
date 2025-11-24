@@ -3369,6 +3369,163 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
     assert result["reason"] == "unknown"
 
 
+async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test WiFi provisioning times out, active lookup fails, but BLE fallback succeeds."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Mock device for BLE status query
+    mock_ble_status_device = AsyncMock()
+    mock_ble_status_device.status = {"wifi": {"sta_ip": "192.168.1.100"}}
+
+    # Mock device for secure device feature
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
+    mock_device.name = "Test name"
+    mock_device.status = {"sys": {}}
+    mock_device.xmod_info = {}
+    mock_device.shelly = {"model": MODEL_PLUS_2PM}
+    mock_device.wifi_setconfig = AsyncMock(return_value={})
+    mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
+    mock_device.shutdown = AsyncMock()
+
+    # Provision WiFi but no zeroconf discovery arrives, active lookup fails, BLE fallback succeeds
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.ble_rpc_device",
+        ) as mock_ble_rpc,
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.RpcDevice.create",
+            return_value=mock_device,
+        ),
+    ):
+        # Configure BLE RPC mock to return device with IP
+        mock_ble_rpc.return_value.__aenter__.return_value = mock_ble_status_device
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, active lookup fails, but BLE fallback gets IP
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should create entry successfully with IP from BLE
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"][CONF_HOST] == "192.168.1.100"
+    assert result["data"][CONF_PORT] == DEFAULT_HTTP_PORT
+
+
+async def test_bluetooth_provision_timeout_ble_fallback_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test WiFi provisioning times out, active lookup fails, and BLE fallback also fails."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Provision WiFi but no zeroconf discovery, active lookup fails, BLE fallback fails
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_get_ip_from_ble",
+            return_value=None,  # BLE fallback also fails
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, both active lookup and BLE fallback fail
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show provision_failed form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision_failed"
+
+    # User aborts after failure
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
 async def test_bluetooth_provision_secure_device_both_enabled(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
