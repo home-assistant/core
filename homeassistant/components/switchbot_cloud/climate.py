@@ -200,7 +200,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         await self.async_set_hvac_mode(hvac_mode)
 
 
-SmartRadiatorThermostatPresetModeMap = {
+SmartRadiatorThermostatPresetModeMap: dict[str, SmartRadiatorThermostatMode] = {
     PRESET_NONE: SmartRadiatorThermostatMode.OFF,
     PRESET_ECO: SmartRadiatorThermostatMode.ENERGY_SAVING,
     PRESET_AWAY: SmartRadiatorThermostatMode.OFF,
@@ -241,19 +241,15 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         HVACMode.HEAT,
     ]
 
-    # _attr_translation_key = "smart_radiator_thermostat"
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         self._attr_target_temperature = kwargs["temperature"]
         if self._attr_target_temperature == 4:
             await self.send_api_command(
                 command=SmartRadiatorThermostatCommands.SET_MODE,
-                parameters=self.__mode_map_value(
-                    SmartRadiatorThermostatMode.OFF.name.lower()
-                ),
+                parameters=SmartRadiatorThermostatPresetModeMap[PRESET_NONE].value,
             )
-            self._attr_preset_mode = SmartRadiatorThermostatMode.OFF.name.lower()
+            self._attr_preset_mode = PRESET_NONE
         else:
             await self.send_api_command(
                 command=SmartRadiatorThermostatCommands.SET_MANUAL_MODE_TEMPERATURE,
@@ -267,11 +263,11 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         """Set preset mode."""
         await self.send_api_command(
             command=SmartRadiatorThermostatCommands.SET_MODE,
-            parameters=self.__mode_map_value(preset_mode),
+            parameters=SmartRadiatorThermostatPresetModeMap[preset_mode].value,
         )
-        self._attr_preset_mode = preset_mode.lower()
+        self._attr_preset_mode = preset_mode
 
-        if self.preset_mode == SmartRadiatorThermostatMode.MANUAL.name.lower():
+        if self.preset_mode == PRESET_HOME:
             self._attr_target_temperature = self.current_temperature
         else:
             self._attr_target_temperature = None
@@ -284,21 +280,15 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         if hvac_mode is HVACMode.OFF:
             await self.send_api_command(
                 command=SmartRadiatorThermostatCommands.SET_MODE,
-                parameters=self.__mode_map_value(
-                    SmartRadiatorThermostatMode.OFF.name.lower()
-                ),
+                parameters=SmartRadiatorThermostatPresetModeMap[PRESET_NONE].value,
             )
-            self._attr_preset_mode = SmartRadiatorThermostatMode.OFF.name.lower()
+            self._attr_preset_mode = PRESET_NONE
         else:
             await self.send_api_command(
                 command=SmartRadiatorThermostatCommands.SET_MODE,
-                parameters=self.__mode_map_value(
-                    SmartRadiatorThermostatMode.FAST_HEATING.name.lower()
-                ),
+                parameters=SmartRadiatorThermostatPresetModeMap[PRESET_BOOST].value,
             )
-            self._attr_preset_mode = (
-                SmartRadiatorThermostatMode.FAST_HEATING.name.lower()
-            )
+            self._attr_preset_mode = PRESET_BOOST
         self._attr_target_temperature = None
         self._attr_hvac_mode = hvac_mode
         await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
@@ -308,33 +298,25 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-
         mode: int = self.coordinator.data["mode"]
         temperature: str = self.coordinator.data["temperature"]
         self._attr_current_temperature = float(temperature)
         self._attr_preset_mode = self.__value_map_mode(mode)
 
-        if self.preset_mode == SmartRadiatorThermostatMode.OFF.name.lower():
+        if self.preset_mode in [PRESET_NONE, PRESET_AWAY]:
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = HVACMode.HEAT
-            if self.preset_mode == SmartRadiatorThermostatMode.MANUAL.name.lower():
+            if self.preset_mode == PRESET_HOME:
                 self._attr_target_temperature = self._attr_current_temperature
         self.async_write_ha_state()
 
     def __value_map_mode(self, value: int) -> Any:
         """Value map SmartRadiatorThermostatMode mode."""
-        for i in SmartRadiatorThermostatMode.get_all_modes():
-            if i.value == value:
-                return i.name.lower()
+        for key, item in SmartRadiatorThermostatPresetModeMap.items():
+            if item.value == value:
+                return key
         raise NotImplementedError(f"{value} Not Supported")
-
-    def __mode_map_value(self, mode: str) -> Any:
-        """SmartRadiatorThermostatMode mode map value."""
-        for i in SmartRadiatorThermostatMode.get_all_modes():
-            if i.name.lower() == mode:
-                return i.value
-        raise NotImplementedError(f"{mode} Not Supported")
 
 
 @callback
