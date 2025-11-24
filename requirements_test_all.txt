@@ -1047,7 +1047,7 @@ holidays==0.84
 home-assistant-frontend==20251105.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.11.7
+home-assistant-intents==2025.11.24
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.4.0
@@ -2520,7 +2520,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.26.0
+uiprotect==7.28.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

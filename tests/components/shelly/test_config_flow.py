@@ -1172,13 +1172,7 @@ async def test_user_flow_with_ble_devices(
             {},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "TestNetwork"},
-    )
-
-    # Enter WiFi credentials and complete
+    # Select network and enter WiFi credentials to complete
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
         patch(
@@ -1201,7 +1195,7 @@ async def test_user_flow_with_ble_devices(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "test_password"},
+            {CONF_SSID: "TestNetwork", CONF_PASSWORD: "test_password"},
         )
 
         await hass.async_block_till_done()
@@ -1811,19 +1805,11 @@ async def test_user_flow_select_ble_device(
     # Mock empty zeroconf discovery
     mock_discovery.return_value = []
 
-    # Inject BLE device with RPC-over-BLE enabled
+    # Inject BLE device with RPC-over-BLE enabled (no discovery flow created)
     inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
 
     # Wait for bluetooth discovery to process
     await hass.async_block_till_done()
-
-    # Start a bluetooth discovery flow manually to simulate auto-discovery
-    ble_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=BLE_DISCOVERY_INFO_GEN3,
-    )
-    ble_flow_id = ble_result["flow_id"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1832,7 +1818,7 @@ async def test_user_flow_select_ble_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Select the BLE device - should take over from the discovery flow
+    # Select the BLE device
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_DEVICE: "CCBA97C2D670"},  # MAC from manufacturer data
@@ -1854,16 +1840,10 @@ async def test_user_flow_select_ble_device(
             {},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "wifi_credentials"
+    assert result["step_id"] == "wifi_scan"
 
-    # Enter password and provision
+    # Select network and enter password to provision
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
         patch(
@@ -1886,7 +1866,7 @@ async def test_user_flow_select_ble_device(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "wifi_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "wifi_password"},
         )
 
         # Should show progress
@@ -1903,9 +1883,59 @@ async def test_user_flow_select_ble_device(
     assert result["result"].unique_id == "CCBA97C2D670"
     assert result["title"] == "Test BLE Device"
 
-    # Verify the original bluetooth discovery flow no longer exists
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert not any(f["flow_id"] == ble_flow_id for f in flows)
+
+async def test_user_flow_filters_devices_with_active_discovery_flows(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test user flow filters out devices that already have discovery flows."""
+    # Mock empty zeroconf discovery
+    mock_discovery.return_value = []
+
+    # Inject BLE device with RPC-over-BLE enabled
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
+
+    # Wait for bluetooth discovery to process
+    await hass.async_block_till_done()
+
+    # Start a bluetooth discovery flow to simulate auto-discovery
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=BLE_DISCOVERY_INFO_GEN3,
+    )
+
+    # Start a user flow - should go to manual entry since the only
+    # discovered device already has an active discovery flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Should go directly to manual entry since the BLE device is filtered
+    # out (it already has an active discovery flow being offered to the user)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user_manual"
+
+    # Complete the manual entry flow to reach terminal state
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "aabbccddeeff", "model": MODEL_PLUS_2PM, "gen": 2},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "10.10.10.10",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+    }
 
 
 @pytest.mark.parametrize(
@@ -3180,13 +3210,7 @@ async def test_bluetooth_discovery(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
-    # Enter password and provision
+    # Select network and enter password to provision
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
@@ -3202,7 +3226,7 @@ async def test_bluetooth_discovery(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning happens in background, shows progress
@@ -3257,16 +3281,10 @@ async def test_bluetooth_provisioning_clears_match_history(
                 result["flow_id"], {}
             )
 
-        # Select network
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_SSID: "MyNetwork"},
-        )
-
         # Reset mock to only count calls during provisioning
         mock_clear.reset_mock()
 
-        # Enter password and provision
+        # Select network and enter password to provision
         with (
             patch(
                 "homeassistant.components.shelly.config_flow.async_provision_wifi",
@@ -3282,7 +3300,7 @@ async def test_bluetooth_provisioning_clears_match_history(
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {CONF_PASSWORD: "my_password"},
+                {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
             )
 
             # Provisioning happens in background, shows progress
@@ -3368,13 +3386,7 @@ async def test_bluetooth_factory_reset_rediscovery(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
-    # Enter password and provision
+    # Select network and enter password to provision
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
@@ -3390,7 +3402,7 @@ async def test_bluetooth_factory_reset_rediscovery(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning happens in background
@@ -3581,12 +3593,7 @@ async def test_bluetooth_wifi_scan_success(
     # Check that SSIDs are in the selector options
     assert "data_schema" in result
 
-    # Select network and complete flow
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "Network1"},
-    )
-
+    # Select network and enter password to complete flow
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
@@ -3602,7 +3609,7 @@ async def test_bluetooth_wifi_scan_success(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "Network1", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -3668,13 +3675,7 @@ async def test_bluetooth_wifi_scan_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi_scan"
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "Network1"},
-    )
-
-    # Complete provisioning
+    # Select network and enter password to complete provisioning
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
         patch(
@@ -3692,7 +3693,7 @@ async def test_bluetooth_wifi_scan_failure(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "Network1", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -3772,16 +3773,10 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
             {},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "wifi_credentials"
+    assert result["step_id"] == "wifi_scan"
 
-    # Enter password and provision
+    # Select network and enter password to provision
     mock_device = create_mock_rpc_device("Test name")
 
     with (
@@ -3803,7 +3798,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Should show progress
@@ -3854,12 +3849,6 @@ async def test_bluetooth_wifi_provision_failure(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision fails
     with (
         patch(
@@ -3873,7 +3862,7 @@ async def test_bluetooth_wifi_provision_failure(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -3896,12 +3885,6 @@ async def test_bluetooth_wifi_provision_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi_scan"
 
-    # Select network again
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision succeeds this time
     with (
         patch(
@@ -3918,7 +3901,7 @@ async def test_bluetooth_wifi_provision_failure(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -3990,12 +3973,6 @@ async def test_bluetooth_provision_unexpected_exception(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision raises unexpected exception in background task
     with (
         patch(
@@ -4009,7 +3986,7 @@ async def test_bluetooth_provision_unexpected_exception(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4044,12 +4021,6 @@ async def test_bluetooth_provision_device_connection_error_after_wifi(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision but get_info fails
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
@@ -4064,7 +4035,7 @@ async def test_bluetooth_provision_device_connection_error_after_wifi(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4111,12 +4082,6 @@ async def test_bluetooth_provision_requires_auth(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision but device requires auth
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
@@ -4136,7 +4101,7 @@ async def test_bluetooth_provision_requires_auth(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4193,12 +4158,6 @@ async def test_bluetooth_provision_validate_input_fails(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision but validate_input fails
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
@@ -4217,7 +4176,7 @@ async def test_bluetooth_provision_validate_input_fails(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4262,12 +4221,6 @@ async def test_bluetooth_provision_firmware_not_fully_provisioned(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision but device has no model (firmware not fully provisioned)
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
@@ -4286,7 +4239,7 @@ async def test_bluetooth_provision_firmware_not_fully_provisioned(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4322,12 +4275,6 @@ async def test_bluetooth_provision_with_zeroconf_discovery_fast_path(
         return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
 
     # Patch async_provision_wifi to trigger zeroconf discovery
     async def mock_provision_wifi(*args, **kwargs):
@@ -4376,7 +4323,7 @@ async def test_bluetooth_provision_with_zeroconf_discovery_fast_path(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4414,12 +4361,6 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision WiFi but no zeroconf discovery arrives, and active lookup fails
     with (
         patch(
@@ -4434,7 +4375,7 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
 
         # Provisioning shows progress
@@ -4442,6 +4383,220 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
         await hass.async_block_till_done()
 
         # Timeout occurs, active lookup fails, provision unsuccessful
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show provision_failed form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision_failed"
+
+    # User aborts after failure
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test WiFi provisioning times out, active lookup fails, but BLE fallback succeeds."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Mock device for BLE status query
+    mock_ble_status_device = AsyncMock()
+    mock_ble_status_device.status = {"wifi": {"sta_ip": "192.168.1.100"}}
+
+    # Mock device for secure device feature
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
+    mock_device.name = "Test name"
+    mock_device.status = {"sys": {}}
+    mock_device.xmod_info = {}
+    mock_device.shelly = {"model": MODEL_PLUS_2PM}
+    mock_device.wifi_setconfig = AsyncMock(return_value={})
+    mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
+    mock_device.shutdown = AsyncMock()
+
+    # Confirm and scan, then select network and enter password
+    # Provision WiFi but no zeroconf discovery arrives, active lookup fails, BLE fallback succeeds
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.ble_rpc_device",
+        ) as mock_ble_rpc,
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.RpcDevice.create",
+            return_value=mock_device,
+        ),
+    ):
+        # Configure BLE RPC mock to return device with IP
+        mock_ble_rpc.return_value.__aenter__.return_value = mock_ble_status_device
+
+        # Scan for networks
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network and enter password in single step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, active lookup fails, but BLE fallback gets IP
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should create entry successfully with IP from BLE
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"][CONF_HOST] == "192.168.1.100"
+    assert result["data"][CONF_PORT] == DEFAULT_HTTP_PORT
+
+
+async def test_bluetooth_provision_timeout_ble_fallback_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test WiFi provisioning times out, active lookup fails, and BLE fallback also fails."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan, select network and enter password
+    # Provision WiFi but no zeroconf discovery, active lookup fails, BLE fallback fails
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_get_ip_from_ble",
+            return_value=None,  # BLE fallback also fails
+        ),
+    ):
+        # Scan for networks
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network and enter password in single step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, both active lookup and BLE fallback fail
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show provision_failed form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision_failed"
+
+    # User aborts after failure
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_bluetooth_provision_timeout_ble_exception(
+    hass: HomeAssistant,
+) -> None:
+    """Test WiFi provisioning times out, active lookup fails, and BLE raises exception."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan, select network and enter password
+    # Provision WiFi but no zeroconf discovery, active lookup fails, BLE raises exception
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+            return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.ble_rpc_device",
+            side_effect=DeviceConnectionError,  # BLE raises exception
+        ),
+    ):
+        # Scan for networks
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Select network and enter password in single step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, both active lookup and BLE fallback fail (exception)
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should show provision_failed form
@@ -4483,12 +4638,6 @@ async def test_bluetooth_provision_secure_device_both_enabled(
             {"disable_ap": True, "disable_ble_rpc": True},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision and verify security calls
     mock_device = AsyncMock()
     mock_device.initialize = AsyncMock()
@@ -4513,7 +4662,7 @@ async def test_bluetooth_provision_secure_device_both_enabled(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -4551,12 +4700,6 @@ async def test_bluetooth_provision_secure_device_both_disabled(
             {"disable_ap": False, "disable_ble_rpc": False},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision - with both disabled, secure device method should not create device
     with (
         patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
@@ -4571,7 +4714,7 @@ async def test_bluetooth_provision_secure_device_both_disabled(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -4604,12 +4747,6 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
             {"disable_ap": True, "disable_ble_rpc": False},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision and verify only AP disabled
     mock_device = AsyncMock()
     mock_device.initialize = AsyncMock()
@@ -4633,7 +4770,7 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -4670,12 +4807,6 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
             {"disable_ap": False, "disable_ble_rpc": True},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision and verify only BLE disabled
     mock_device = AsyncMock()
     mock_device.initialize = AsyncMock()
@@ -4699,7 +4830,7 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -4736,12 +4867,6 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
             {"disable_ap": True, "disable_ble_rpc": True},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision and verify restart is triggered
     mock_device = AsyncMock()
     mock_device.initialize = AsyncMock()
@@ -4767,7 +4892,7 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -4804,12 +4929,6 @@ async def test_bluetooth_provision_secure_device_fails_gracefully(
             {"disable_ap": True, "disable_ble_rpc": True},
         )
 
-    # Select network
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SSID: "MyNetwork"},
-    )
-
     # Provision with security calls failing - wifi_setconfig will fail
     mock_device = AsyncMock()
     mock_device.initialize = AsyncMock()
@@ -4833,7 +4952,7 @@ async def test_bluetooth_provision_secure_device_fails_gracefully(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "my_password"},
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
         )
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

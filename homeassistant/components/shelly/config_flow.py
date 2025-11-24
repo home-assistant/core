@@ -6,14 +6,18 @@ import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.ble import get_name_from_model_id
 from aioshelly.ble.manufacturer_data import (
     has_rpc_over_ble,
     parse_shelly_manufacturer_data,
 )
-from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
+from aioshelly.ble.provisioning import (
+    async_provision_wifi,
+    async_scan_wifi_networks,
+    ble_rpc_device,
+)
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
@@ -38,7 +42,13 @@ from homeassistant.components.bluetooth import (
     async_clear_address_from_match_history,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_ZEROCONF,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -105,6 +115,33 @@ BLE_SCANNER_OPTIONS = [
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 MANUAL_ENTRY_STRING = "manual"
+DISCOVERY_SOURCES = {SOURCE_BLUETOOTH, SOURCE_ZEROCONF}
+
+
+async def async_get_ip_from_ble(ble_device: BLEDevice) -> str | None:
+    """Get device IP address via BLE after WiFi provisioning.
+
+    Args:
+        ble_device: BLE device to query
+
+    Returns:
+        IP address string if available, None otherwise
+
+    """
+    try:
+        async with ble_rpc_device(ble_device) as device:
+            await device.update_status()
+            if (
+                (wifi := device.status.get("wifi"))
+                and isinstance(wifi, dict)
+                and (ip := wifi.get("sta_ip"))
+            ):
+                return cast(str, ip)
+            return None
+    except (DeviceConnectionError, RpcCallError) as err:
+        LOGGER.debug("Failed to get IP via BLE: %s", err)
+        return None
+
 
 # BLE provisioning flow steps that are in the finishing state
 # Used to determine if a BLE flow should be aborted when zeroconf discovers the device
@@ -415,11 +452,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_devices.update(await self._async_discover_zeroconf_devices())
 
         # Filter out already-configured devices (excluding ignored)
+        # and devices with active discovery flows (already being offered to user)
         current_ids = self._async_current_ids(include_ignore=False)
+        in_progress_macs = self._async_get_in_progress_discovery_macs()
         discovered_devices = {
             mac: device
             for mac, device in discovered_devices.items()
-            if mac not in current_ids
+            if mac not in current_ids and mac not in in_progress_macs
         }
 
         # Store discovered devices for use in selection
@@ -544,6 +583,22 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
+
+    @callback
+    def _async_get_in_progress_discovery_macs(self) -> set[str]:
+        """Get MAC addresses of devices with active discovery flows.
+
+        Returns MAC addresses from bluetooth and zeroconf discovery flows
+        that are already in progress, so they can be filtered from the
+        user step device list (since they're already being offered).
+        """
+        return {
+            mac
+            for flow in self._async_in_progress(include_uninitialized=True)
+            if flow["flow_id"] != self.flow_id
+            and flow["context"].get("source") in DISCOVERY_SOURCES
+            and (mac := flow["context"].get("unique_id"))
+        }
 
     def _abort_idle_ble_flows(self, mac: str) -> None:
         """Abort idle BLE provisioning flows for this device.
@@ -678,7 +733,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Scan for WiFi networks via BLE."""
         if user_input is not None:
             self.selected_ssid = user_input[CONF_SSID]
-            return await self.async_step_wifi_credentials()
+            password = user_input[CONF_PASSWORD]
+            return await self.async_step_do_provision({"password": password})
 
         # Scan for WiFi networks via BLE
         if TYPE_CHECKING:
@@ -696,22 +752,34 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception during WiFi scan")
             return self.async_abort(reason="unknown")
 
-        # Create list of SSIDs for selection
-        # If no networks found, still allow custom SSID entry
-        ssid_options = [network["ssid"] for network in self.wifi_networks]
+        # Sort by RSSI (strongest signal first - higher/less negative values first)
+        # and create list of SSIDs for selection
+        sorted_networks = sorted(
+            self.wifi_networks, key=lambda n: n["rssi"], reverse=True
+        )
+        ssid_options = [network["ssid"] for network in sorted_networks]
+
+        # Pre-select SSID if returning from failed provisioning attempt
+        suggested_values: dict[str, Any] = {}
+        if self.selected_ssid:
+            suggested_values[CONF_SSID] = self.selected_ssid
 
         return self.async_show_form(
             step_id="wifi_scan",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_SSID): SelectSelector(
-                        SelectSelectorConfig(
-                            options=ssid_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_SSID): SelectSelector(
+                            SelectSelectorConfig(
+                                options=ssid_options,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                custom_value=True,
+                            )
+                        ),
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                suggested_values,
             ),
         )
 
@@ -738,25 +806,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             yield state
         finally:
             provisioning_registry.pop(normalized_mac, None)
-
-    async def async_step_wifi_credentials(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Get WiFi credentials and provision device."""
-        if user_input is not None:
-            self.selected_ssid = user_input.get(CONF_SSID, self.selected_ssid)
-            password = user_input[CONF_PASSWORD]
-            return await self.async_step_do_provision({"password": password})
-
-        return self.async_show_form(
-            step_id="wifi_credentials",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            description_placeholders={"ssid": self.selected_ssid},
-        )
 
     async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
         """Disable AP and/or BLE RPC after successful WiFi provisioning.
@@ -864,13 +913,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             aiozc = await zeroconf.async_get_async_instance(self.hass)
             result = await async_lookup_device_by_name(aiozc, self.device_name)
 
-            # If we still don't have a host, provisioning failed
+            # If we still don't have a host, try BLE fallback for alternate subnets
             if not result:
-                LOGGER.debug("Active lookup failed - provisioning unsuccessful")
-                # Store failure info and return None - provision_done will handle redirect
-                return None
-
-            state.host, state.port = result
+                LOGGER.debug(
+                    "Active lookup failed, trying to get IP address via BLE as fallback"
+                )
+                if ip := await async_get_ip_from_ble(self.ble_device):
+                    LOGGER.debug("Got IP %s from BLE, using it", ip)
+                    state.host = ip
+                    state.port = DEFAULT_HTTP_PORT
+                else:
+                    LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
+                    # Store failure info and return None - provision_done will handle redirect
+                    return None
+            else:
+                state.host, state.port = result
         else:
             LOGGER.debug(
                 "Zeroconf discovery received for device after WiFi provisioning at %s",
@@ -972,8 +1029,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle failed provisioning - allow retry."""
         if user_input is not None:
-            # User wants to retry - clear state and go back to wifi_scan
-            self.selected_ssid = ""
+            # User wants to retry - keep selected_ssid so it's pre-selected
             self.wifi_networks = []
             return await self.async_step_wifi_scan()
 
