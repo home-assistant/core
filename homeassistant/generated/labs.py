@@ -4,6 +4,13 @@ To update, run python3 -m script.hassfest
 """
 
 LABS_PREVIEW_FEATURES = {
+    "automation": {
+        "new_triggers_conditions": {
+            "feedback_url": "",
+            "learn_more_url": "",
+            "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/automation&integration_name=Automation",
+        },
+    },
     "kitchen_sink": {
         "special_repair": {
             "feedback_url": "https://community.home-assistant.io",
