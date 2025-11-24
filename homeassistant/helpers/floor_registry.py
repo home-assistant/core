@@ -187,9 +187,6 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
                 f"The name {name} ({floor.normalized_name}) is already in use"
             )
 
-        if aliases:
-            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
-
         floor = FloorEntry(
             aliases=aliases or set(),
             icon=icon,
@@ -233,10 +230,6 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     ) -> FloorEntry:
         """Update name of the floor."""
         old = self.floors[floor_id]
-
-        if aliases is not UNDEFINED:
-            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
-
         changes: dict[str, Any] = {
             attr_name: value
             for attr_name, value in (
