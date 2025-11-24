@@ -9,12 +9,12 @@ from typing import Any
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.ai import (
-    AiAuthenticationError,
-    AiError,
-    AiImageAttachment,
-    AiRateLimitError,
-    AiResponseError,
-    AiServiceError,
+    AIAuthenticationError,
+    AIError,
+    AIImageAttachment,
+    AIRateLimitError,
+    AIResponseError,
+    AIServiceError,
 )
 from litellm import BaseResponsesAPIStreamingIterator, ResponsesAPIResponse
 import voluptuous as vol
@@ -31,7 +31,7 @@ from homeassistant.util.json import json_loads
 
 from .client import CloudClient
 from .const import AI_TASK_ENTITY_UNIQUE_ID, DATA_CLOUD
-from .helpers import AiChatHelper, AiFileHelper
+from .helpers import AIChatHelper, AIFileHelper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ async def async_setup_entry(
     cloud = hass.data[DATA_CLOUD]
     try:
         await cloud.ai.async_ensure_token()
-    except AiError:
+    except AIError:
         return
 
     async_add_entities([CloudAITaskEntity(cloud)])
@@ -188,7 +188,7 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
                 }
             }
 
-        response_kwargs = await AiChatHelper.prepare_chat_for_generation(
+        response_kwargs = await AIChatHelper.prepare_chat_for_generation(
             self.hass,
             chat_log,
             response_text,
@@ -198,15 +198,15 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
             response = await self._cloud.ai.async_generate_data(**response_kwargs)
             content = _extract_response_text(response)
 
-        except AiAuthenticationError as err:
+        except AIAuthenticationError as err:
             raise ConfigEntryAuthFailed("Cloud AI authentication failed") from err
-        except AiRateLimitError as err:
+        except AIRateLimitError as err:
             raise HomeAssistantError("Cloud AI is rate limited") from err
-        except AiResponseError as err:
+        except AIResponseError as err:
             raise HomeAssistantError(str(err)) from err
-        except AiServiceError as err:
+        except AIServiceError as err:
             raise HomeAssistantError("Error talking to Cloud AI") from err
-        except AiError as err:
+        except AIError as err:
             raise HomeAssistantError(str(err)) from err
 
         if not task.structure:
@@ -234,9 +234,9 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenImageTaskResult:
         """Handle a generate image task."""
-        attachments: list[AiImageAttachment] | None = None
+        attachments: list[AIImageAttachment] | None = None
         if task.attachments:
-            attachments = await AiFileHelper.async_prepare_image_generation_attachments(
+            attachments = await AIFileHelper.async_prepare_image_generation_attachments(
                 self.hass, task.attachments
             )
 
@@ -245,15 +245,15 @@ class CloudAITaskEntity(ai_task.AITaskEntity):
                 prompt=task.instructions,
                 attachments=attachments,
             )
-        except AiAuthenticationError as err:
+        except AIAuthenticationError as err:
             raise ConfigEntryAuthFailed("Cloud AI authentication failed") from err
-        except AiRateLimitError as err:
+        except AIRateLimitError as err:
             raise HomeAssistantError("Cloud AI is rate limited") from err
-        except AiResponseError as err:
+        except AIResponseError as err:
             raise HomeAssistantError(str(err)) from err
-        except AiServiceError as err:
+        except AIServiceError as err:
             raise HomeAssistantError("Error talking to Cloud AI") from err
-        except AiError as err:
+        except AIError as err:
             raise HomeAssistantError(str(err)) from err
 
         return ai_task.GenImageTaskResult(
