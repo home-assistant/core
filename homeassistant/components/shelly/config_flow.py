@@ -708,7 +708,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Scan for WiFi networks via BLE."""
         if user_input is not None:
             self.selected_ssid = user_input[CONF_SSID]
-            return await self.async_step_wifi_credentials()
+            password = user_input[CONF_PASSWORD]
+            return await self.async_step_do_provision({"password": password})
 
         # Scan for WiFi networks via BLE
         if TYPE_CHECKING:
@@ -726,22 +727,34 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception during WiFi scan")
             return self.async_abort(reason="unknown")
 
-        # Create list of SSIDs for selection
-        # If no networks found, still allow custom SSID entry
-        ssid_options = [network["ssid"] for network in self.wifi_networks]
+        # Sort by RSSI (strongest signal first - higher/less negative values first)
+        # and create list of SSIDs for selection
+        sorted_networks = sorted(
+            self.wifi_networks, key=lambda n: n["rssi"], reverse=True
+        )
+        ssid_options = [network["ssid"] for network in sorted_networks]
+
+        # Pre-select SSID if returning from failed provisioning attempt
+        suggested_values: dict[str, Any] = {}
+        if self.selected_ssid:
+            suggested_values[CONF_SSID] = self.selected_ssid
 
         return self.async_show_form(
             step_id="wifi_scan",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_SSID): SelectSelector(
-                        SelectSelectorConfig(
-                            options=ssid_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_SSID): SelectSelector(
+                            SelectSelectorConfig(
+                                options=ssid_options,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                custom_value=True,
+                            )
+                        ),
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                suggested_values,
             ),
         )
 
@@ -768,25 +781,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             yield state
         finally:
             provisioning_registry.pop(normalized_mac, None)
-
-    async def async_step_wifi_credentials(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Get WiFi credentials and provision device."""
-        if user_input is not None:
-            self.selected_ssid = user_input.get(CONF_SSID, self.selected_ssid)
-            password = user_input[CONF_PASSWORD]
-            return await self.async_step_do_provision({"password": password})
-
-        return self.async_show_form(
-            step_id="wifi_credentials",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            description_placeholders={"ssid": self.selected_ssid},
-        )
 
     async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
         """Disable AP and/or BLE RPC after successful WiFi provisioning.
@@ -1010,8 +1004,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle failed provisioning - allow retry."""
         if user_input is not None:
-            # User wants to retry - clear state and go back to wifi_scan
-            self.selected_ssid = ""
+            # User wants to retry - keep selected_ssid so it's pre-selected
             self.wifi_networks = []
             return await self.async_step_wifi_scan()
 
