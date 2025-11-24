@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(slots=True, kw_only=True)
 class _EntityFilter:
-    """Single entity filter configuration with AND logic for criteria."""
+    """Single entity filter configuration."""
 
     domains: set[str]
     device_classes: set[str]
@@ -36,11 +36,9 @@ class _EntityFilter:
             return False
 
         if self.device_classes:
-            entity_device_class = get_device_class(hass, entity_id)
             if (
-                entity_device_class is None
-                or entity_device_class not in self.device_classes
-            ):
+                entity_device_class := get_device_class(hass, entity_id)
+            ) is None or entity_device_class not in self.device_classes:
                 return False
 
         if self.supported_features:
