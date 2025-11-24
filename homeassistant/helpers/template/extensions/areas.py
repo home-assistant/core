@@ -71,6 +71,13 @@ class AreaExtension(BaseTemplateExtension):
                     as_filter=True,
                     requires_hass=True,
                 ),
+                TemplateFunction(
+                    "area_humidity",
+                    self.area_humidity,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                ),
             ],
         )
 
@@ -182,6 +189,27 @@ class AreaExtension(BaseTemplateExtension):
             ) is not None:
                 try:
                     return float(temp_state.state)
+                except (AttributeError, ValueError):
+                    return None
+        return None
+
+    def area_humidity(self, area_id_or_name: str) -> float | None:
+        """Return the humidity for a given area ID or name."""
+        _area_id: str | None
+        if self.area_name(area_id_or_name) is not None:
+            _area_id = area_id_or_name
+        else:
+            _area_id = self.area_id(area_id_or_name)
+        if _area_id is None:
+            return None
+        if (area_entry := ar.async_get(self.hass).async_get_area(_area_id)) is not None:
+            if area_entry.humidity_entity_id is None:
+                return None
+            if (
+                hum_state := self.hass.states.get(area_entry.humidity_entity_id)
+            ) is not None:
+                try:
+                    return float(hum_state.state)
                 except (AttributeError, ValueError):
                     return None
         return None
