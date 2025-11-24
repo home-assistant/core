@@ -76,15 +76,13 @@ MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
     b"RIFF": "image/webp",
     b"\x49\x49\x2a\x00": "image/tiff",
     b"\x4d\x4d\x00\x2a": "image/tiff",
+    b"\xff\xd8\xff\xdb": "image/jpeg",
+    b"\xff\xd8\xff\xe0": "image/jpeg",
+    b"\xff\xd8\xff\xed": "image/jpeg",
+    b"\xff\xd8\xff\xee": "image/jpeg",
+    b"\xff\xd8\xff\xe1": "image/jpeg",
+    b"\xff\xd8\xff\xe2": "image/jpeg",
 }
-JPEG_MAGIC_NUMBERS = (
-    b"\xff\xd8\xff\xdb",
-    b"\xff\xd8\xff\xe0",
-    b"\xff\xd8\xff\xed",
-    b"\xff\xd8\xff\xee",
-    b"\xff\xd8\xff\xe1",
-    b"\xff\xd8\xff\xe2",
-)
 
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -112,13 +110,7 @@ def valid_image_content_type(content_type: str | None) -> str:
 
 def infer_image_type(content: bytes) -> str | None:
     """Infer image type from first 4 bytes (magic number)."""
-    magic = content[:4]
-
-    return (
-        "image/jpeg"
-        if magic in JPEG_MAGIC_NUMBERS
-        else MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE.get(magic)
-    )
+    return MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE.get(content[:4])
 
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
