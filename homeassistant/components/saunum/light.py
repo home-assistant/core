@@ -31,7 +31,6 @@ async def async_setup_entry(
 class LeilSaunaLight(LeilSaunaEntity, LightEntity):
     """Representation of a Saunum Leil Sauna light entity."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "light"
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
