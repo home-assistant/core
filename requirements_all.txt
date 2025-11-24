@@ -776,7 +776,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==3.0.0
+dbus-fast==3.1.2
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
@@ -1261,7 +1261,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==1.5.6
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.9
+incomfort-client==0.6.10
 
 # homeassistant.components.influxdb
 influxdb-client==1.48.0
@@ -2139,7 +2139,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.0
+pylamarzocco==2.2.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2406,7 +2406,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.8
+pysmlight==0.2.11
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
