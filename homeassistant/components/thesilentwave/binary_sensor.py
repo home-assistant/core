@@ -41,8 +41,7 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         if self.coordinator.data is None:
             return None
-        # Convert the coordinator data to a boolean state
-        return self.coordinator.data == "on"
+        return self.coordinator.data.get("status") == "on"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
