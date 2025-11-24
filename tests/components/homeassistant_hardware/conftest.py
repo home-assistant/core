@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.hassio import AddonInfo, AddonState
+
 
 @pytest.fixture(autouse=True)
 def mock_zha_config_flow_setup() -> Generator[None]:
@@ -45,5 +47,31 @@ def mock_zha_get_last_network_settings() -> Generator[None]:
     with patch(
         "homeassistant.components.zha.api.async_get_last_network_settings",
         AsyncMock(return_value=None),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_addon_manager() -> Generator[None]:
+    """Mock addon managers to return real AddonInfo instances."""
+    mock_manager = AsyncMock()
+    mock_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname="core_test_addon",
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
+            return_value=mock_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            return_value=mock_manager,
+        ),
     ):
         yield

@@ -31,11 +31,6 @@ from .test_config_flow import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
-async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
-    """Mock supervisor client in tests."""
-
-
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains",
     ["test_firmware_domain"],
