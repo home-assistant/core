@@ -1,16 +1,7 @@
 {
-  "entity": {
-    "switch": {
-      "winter_mode": {
-        "name": "Winter mode"
-      }
-    }
-  },
   "preview_features": {
     "winter_mode": {
-      "description": "Enable the **winter mode switch** to get your home ready for winter! ❄️\n\nThis adds a switch entity that you can use in automations. You can manually add it to your dashboard.",
-      "disable_confirmation": "This will remove the winter mode switch entity. You can bring it back at any time in labs settings.",
-      "enable_confirmation": "This will add a winter mode switch entity. You can turn this off at any time in labs settings.",
+      "description": "Enables winter mode in the frontend. Get your home ready for winter! ❄️",
       "name": "Winter mode"
     }
   },
