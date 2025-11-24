@@ -14,10 +14,20 @@ from music_assistant_models.api import ServerInfoMessage
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
-from homeassistant.components.music_assistant.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.components.music_assistant.const import (
+    AUTH_SCHEMA_VERSION,
+    DEFAULT_NAME,
+    DOMAIN,
+)
+from homeassistant.config_entries import (
+    SOURCE_HASSIO,
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry, async_load_fixture
@@ -26,9 +36,10 @@ SERVER_INFO = {
     "server_id": "1234",
     "base_url": "http://localhost:8095",
     "server_version": "0.0.0",
-    "schema_version": 23,
-    "min_supported_schema_version": 23,
-    "homeassistant_addon": True,
+    "schema_version": AUTH_SCHEMA_VERSION,
+    "min_supported_schema_version": AUTH_SCHEMA_VERSION,
+    "homeassistant_addon": False,
+    "onboard_done": True,
 }
 
 ZEROCONF_DATA = ZeroconfServiceInfo(
@@ -39,6 +50,13 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
     type=mock.ANY,
     name=mock.ANY,
     properties=SERVER_INFO,
+)
+
+HASSIO_DATA = HassioServiceInfo(
+    config={"host": "addon-music-assistant", "port": 8094},
+    name="Music Assistant",
+    slug="music_assistant",
+    uuid="1234",
 )
 
 
@@ -356,3 +374,218 @@ async def test_zeroconf_existing_entry_ignored(
     # Should abort because entry was ignored (respect user's choice)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_hassio_flow(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test hassio discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HASSIO_DATA,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {
+        CONF_URL: "http://addon-music-assistant:8094",
+    }
+    assert result["result"].unique_id == "1234"
+
+
+async def test_hassio_flow_no_host_in_config(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test hassio discovery flow without host in config (uses slug as fallback)."""
+    hassio_data_no_host = HassioServiceInfo(
+        config={},  # No host provided
+        name="Music Assistant",
+        slug="music_assistant",
+        uuid="1234",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=hassio_data_no_host,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    # Should use slug as hostname
+    assert result["data"] == {
+        CONF_URL: "http://music_assistant:8094",
+    }
+    assert result["result"].unique_id == "1234"
+
+
+async def test_hassio_flow_duplicate(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test hassio discovery flow with duplicate server."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HASSIO_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_reason"),
+    [
+        (InvalidServerVersion("invalid_server_version"), "invalid_server_version"),
+        (CannotConnect("cannot_connect"), "cannot_connect"),
+        (MusicAssistantClientException("unknown"), "unknown"),
+    ],
+)
+async def test_hassio_flow_errors(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    exception: MusicAssistantClientException,
+    error_reason: str,
+) -> None:
+    """Test hassio discovery flow with connection errors."""
+    mock_get_server_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HASSIO_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == error_reason
+
+
+async def test_hassio_flow_server_not_ready(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test hassio discovery flow when server onboarding is not complete."""
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.onboard_done = False
+    mock_get_server_info.return_value = server_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HASSIO_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "server_not_ready"
+
+
+async def test_zeroconf_addon_server_ignored(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf discovery ignores servers running as add-on."""
+    addon_zeroconf_data = deepcopy(ZEROCONF_DATA)
+    addon_zeroconf_data.properties["homeassistant_addon"] = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=addon_zeroconf_data,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_discovered_addon"
+
+
+async def test_zeroconf_server_not_ready_ignored(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf discovery ignores servers that haven't completed onboarding."""
+    not_ready_zeroconf_data = deepcopy(ZEROCONF_DATA)
+    not_ready_zeroconf_data.properties["onboard_done"] = False
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=not_ready_zeroconf_data,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "server_not_ready"
+
+
+async def test_zeroconf_old_schema_addon_not_ignored(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf discovery does NOT ignore add-on servers with old schema version."""
+    old_schema_addon_data = deepcopy(ZEROCONF_DATA)
+    old_schema_version = AUTH_SCHEMA_VERSION - 1
+    old_schema_addon_data.properties["schema_version"] = old_schema_version
+    old_schema_addon_data.properties["min_supported_schema_version"] = (
+        old_schema_version
+    )
+    old_schema_addon_data.properties["homeassistant_addon"] = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=old_schema_addon_data,
+    )
+    await hass.async_block_till_done()
+
+    # Should proceed to discovery_confirm, not abort
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+
+async def test_zeroconf_old_schema_not_ready_not_ignored(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf discovery does NOT ignore not-ready servers with old schema version."""
+    old_schema_not_ready_data = deepcopy(ZEROCONF_DATA)
+    old_schema_version = AUTH_SCHEMA_VERSION - 1
+    old_schema_not_ready_data.properties["schema_version"] = old_schema_version
+    old_schema_not_ready_data.properties["min_supported_schema_version"] = (
+        old_schema_version
+    )
+    old_schema_not_ready_data.properties["onboard_done"] = False
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=old_schema_not_ready_data,
+    )
+    await hass.async_block_till_done()
+
+    # Should proceed to discovery_confirm, not abort
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"

@@ -20,7 +20,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, LOGGER
+from .const import AUTH_SCHEMA_VERSION, DOMAIN, LOGGER
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
@@ -100,8 +100,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         # The add-on exposes the API on port 8095, but also has an internal-only
         # port 8094 for the Home Assistant integration to connect to
         # If the add-on provides host info, use it; otherwise use the add-on slug
-        host = discovery_info.config.get("host", discovery_info.slug)
-        self.url = f"http://{host}:8094"
+        host = discovery_info.config["host"]
+        port = discovery_info.config["port"]
+        self.url = f"http://{host}:{port}"
 
         try:
             server_info = await _get_server_info(self.hass, self.url)
@@ -150,9 +151,12 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         except LookupError:
             return self.async_abort(reason="invalid_discovery_info")
 
-        # Ignore servers running as Home Assistant add-on
+        # Ignore servers running as Home Assistant add-on (only for schema >= AUTH_SCHEMA_VERSION)
         # (they should be discovered through hassio discovery instead)
-        if server_info.homeassistant_addon:
+        if (
+            server_info.schema_version >= AUTH_SCHEMA_VERSION
+            and server_info.homeassistant_addon
+        ):
             return self.async_abort(reason="already_discovered_addon")
 
         # Ignore servers that have not completed onboarding yet
