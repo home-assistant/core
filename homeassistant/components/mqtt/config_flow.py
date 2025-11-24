@@ -62,6 +62,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.valve import ValveDeviceClass, ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -276,6 +277,7 @@ from .const import (
     CONF_PRESET_MODES_LIST,
     CONF_QOS,
     CONF_RED_TEMPLATE,
+    CONF_REPORTS_POSITION,
     CONF_RETAIN,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TOPIC,
@@ -467,6 +469,7 @@ SUBENTRY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.VALVE,
 ]
 
 _CODE_VALIDATION_MODE = {
@@ -830,6 +833,16 @@ TEXT_MODE_SELECTOR = SelectSelector(
 )
 TEXT_SIZE_SELECTOR = NumberSelector(
     NumberSelectorConfig(min=0, max=255, step=1, mode=NumberSelectorMode.BOX)
+)
+VALVE_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in ValveDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="device_class_valve",
+    )
+)
+VALVE_POSITION_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, step=1)
 )
 
 
@@ -1199,6 +1212,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.SIREN: None,
     Platform.SWITCH: None,
     Platform.TEXT: validate_text_platform_config,
+    Platform.VALVE: None,
 }
 
 
@@ -1460,6 +1474,16 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
         ),
     },
     Platform.TEXT: {},
+    Platform.VALVE: {
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=VALVE_DEVICE_CLASS_SELECTOR, required=False, default=None
+        ),
+        CONF_REPORTS_POSITION: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=True,
+            default=False,
+        ),
+    },
 }
 PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     Platform.ALARM_CONTROL_PANEL: {
@@ -3379,6 +3403,91 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             error="invalid_regular_expression",
             section="text_advanced_settings",
         ),
+    },
+    Platform.VALVE: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_POSITION_CLOSED: PlatformField(
+            selector=VALVE_POSITION_SELECTOR,
+            required=True,
+            default=DEFAULT_POSITION_CLOSED,
+            conditions=({CONF_REPORTS_POSITION: True},),
+        ),
+        CONF_POSITION_OPEN: PlatformField(
+            selector=VALVE_POSITION_SELECTOR,
+            required=True,
+            default=DEFAULT_POSITION_OPEN,
+            conditions=({CONF_REPORTS_POSITION: True},),
+        ),
+        CONF_PAYLOAD_OPEN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=DEFAULT_PAYLOAD_OPEN,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_PAYLOAD_CLOSE: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=DEFAULT_PAYLOAD_CLOSE,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_PAYLOAD_STOP: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_OPEN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.OPEN.value,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_CLOSED: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.CLOSED.value,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_OPENING: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.OPENING.value,
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_CLOSING: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.CLOSING.value,
+            section="valve_payload_settings",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
 }
 MQTT_DEVICE_PLATFORM_FIELDS = {
