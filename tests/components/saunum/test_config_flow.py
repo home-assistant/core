@@ -173,3 +173,65 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == TEST_RECONFIGURE_INPUT
+
+
+@pytest.mark.usefixtures("mock_saunum_client")
+async def test_reconfigure_with_same_host(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow with the same host (no duplicate check)."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    # Reconfigure with the same host as the existing entry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_USER_INPUT,  # Same host as mock_config_entry
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == TEST_USER_INPUT
+
+
+@pytest.mark.usefixtures("mock_saunum_client")
+async def test_reconfigure_to_existing_host(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow aborts when changing to a host used by another entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a second entry with a different host
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_RECONFIGURE_INPUT,
+        title="Saunum 2",
+    )
+    second_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    # Try to reconfigure first entry to use the same host as second entry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_RECONFIGURE_INPUT,  # Same host as second_entry
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify the original entry was not changed
+    assert mock_config_entry.data == TEST_USER_INPUT
