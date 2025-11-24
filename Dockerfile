@@ -17,11 +17,12 @@ COPY rootfs /
 
 # Add go2rtc binary
 COPY --from=ghcr.io/alexxit/go2rtc@sha256:baef0aa19d759fcfd31607b34ce8eaf039d496282bba57731e6ae326896d7640 /usr/local/bin/go2rtc /bin/go2rtc
-# Verify go2rtc can be executed
-RUN go2rtc --version
 
-# Install uv
-RUN pip3 install uv==0.9.6
+RUN \
+    # Verify go2rtc can be executed
+    go2rtc --version \
+    # Install uv
+    && pip3 install uv==0.9.6
 
 WORKDIR /usr/src
 
