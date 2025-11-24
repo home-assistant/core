@@ -3508,7 +3508,7 @@ async def test_get_triggers_for_target(
     mock_platform(hass, "sensor.trigger", Mock(async_get_triggers=async_get_triggers))
     mock_platform(
         hass,
-        "mqtt.trigger",
+        "component1.trigger",
         Mock(
             async_get_triggers=AsyncMock(
                 return_value={
@@ -3547,7 +3547,7 @@ async def test_get_triggers_for_target(
                     - any
     """
 
-    mqtt_trigger_descriptions = """
+    component1_trigger_descriptions = """
         _:
           target:
             entity:
@@ -3566,8 +3566,8 @@ async def test_get_triggers_for_target(
     """
 
     def _load_yaml(fname, secrets=None):
-        if fname.endswith("mqtt/triggers.yaml"):
-            trigger_descriptions = mqtt_trigger_descriptions
+        if fname.endswith("component1/triggers.yaml"):
+            trigger_descriptions = component1_trigger_descriptions
         else:
             trigger_descriptions = common_trigger_descriptions
         with io.StringIO(trigger_descriptions) as file:
@@ -3577,7 +3577,7 @@ async def test_get_triggers_for_target(
     assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(hass, "switch", {})
     assert await async_setup_component(hass, "sensor", {})
-    assert await async_setup_component(hass, "mqtt", {})
+    assert await async_setup_component(hass, "component1", {})
     await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test")
@@ -3646,45 +3646,51 @@ async def test_get_triggers_for_target(
     switch_platform.config_entry = config_entry
     await switch_platform.async_add_entities([device1_switch, area_device_switch])
 
-    mqtt_light = MockEntity(entity_id="light.mqtt_light", unique_id="mqtt_light")
-    mqtt_flash_light = MockEntity(
-        entity_id="light.mqtt_flash_light",
-        unique_id="mqtt_flash_light",
+    component1_light = MockEntity(
+        entity_id="light.component1_light", unique_id="component1_light"
+    )
+    component1_flash_light = MockEntity(
+        entity_id="light.component1_flash_light",
+        unique_id="component1_flash_light",
         supported_features=LightEntityFeature.FLASH,
     )
 
-    mqtt_light_platform = MockEntityPlatform(hass, domain="light", platform_name="mqtt")
-    mqtt_light_platform.config_entry = config_entry
-    await mqtt_light_platform.async_add_entities([mqtt_light, mqtt_flash_light])
-
-    label_mqtt_switch = MockEntity(
-        entity_id="switch.mqtt_switch", unique_id="mqtt_switch"
+    component1_light_platform = MockEntityPlatform(
+        hass, domain="light", platform_name="component1"
+    )
+    component1_light_platform.config_entry = config_entry
+    await component1_light_platform.async_add_entities(
+        [component1_light, component1_flash_light]
     )
 
-    mqtt_switch_platform = MockEntityPlatform(
-        hass, domain="switch", platform_name="mqtt"
+    label_component1_switch = MockEntity(
+        entity_id="switch.component1_switch", unique_id="component1_switch"
     )
-    mqtt_switch_platform.config_entry = config_entry
-    await mqtt_switch_platform.async_add_entities([label_mqtt_switch])
 
-    device2_mqtt_sensor = MockEntity(
-        entity_id="sensor.mqtt_sensor",
-        unique_id="mqtt_sensor",
+    component1_switch_platform = MockEntityPlatform(
+        hass, domain="switch", platform_name="component1"
+    )
+    component1_switch_platform.config_entry = config_entry
+    await component1_switch_platform.async_add_entities([label_component1_switch])
+
+    device2_component1_sensor = MockEntity(
+        entity_id="sensor.component1_sensor",
+        unique_id="component1_sensor",
         device_class="illuminance",
         device_info=dr.DeviceInfo(identifiers=device2.identifiers),
     )
-    mqtt_sensor_platform = MockEntityPlatform(
-        hass, domain="sensor", platform_name="mqtt"
+    component1_sensor_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="component1"
     )
-    mqtt_sensor_platform.config_entry = config_entry
-    await mqtt_sensor_platform.async_add_entities([device2_mqtt_sensor])
+    component1_sensor_platform.config_entry = config_entry
+    await component1_sensor_platform.async_add_entities([device2_component1_sensor])
 
     # Associate entities with areas and labels
     entity_registry.async_update_entity(
         area_light.entity_id, area_id=living_room_area.id
     )
     entity_registry.async_update_entity(
-        label_mqtt_switch.entity_id, labels={label1.label_id}
+        label_component1_switch.entity_id, labels={label1.label_id}
     )
 
     async def assert_triggers(target: dict[str, list[str]], expected: list[str]) -> Any:
@@ -3706,12 +3712,22 @@ async def test_get_triggers_for_target(
 
     # Test entity targets
     await assert_triggers(
-        {"entity_id": [mqtt_light.entity_id, label_mqtt_switch.entity_id]},
-        ["light.turned_on", "mqtt", "mqtt.light_message", "switch.turned_on"],
+        {"entity_id": [component1_light.entity_id, label_component1_switch.entity_id]},
+        [
+            "light.turned_on",
+            "component1",
+            "component1.light_message",
+            "switch.turned_on",
+        ],
     )
     await assert_triggers(
-        {"entity_id": [mqtt_flash_light.entity_id]},
-        ["light.turned_on", "mqtt", "mqtt.light_message", "mqtt.light_flash"],
+        {"entity_id": [component1_flash_light.entity_id]},
+        [
+            "light.turned_on",
+            "component1",
+            "component1.light_message",
+            "component1.light_flash",
+        ],
     )
 
     # Test device target - multiple devices
@@ -3719,8 +3735,8 @@ async def test_get_triggers_for_target(
         {"device_id": [device1.id, device2.id]},
         [
             "light.turned_on",
-            "mqtt",
-            "mqtt.light_message",
+            "component1",
+            "component1.light_message",
             "sensor.turned_on",
             "switch.turned_on",
         ],
@@ -3735,9 +3751,8 @@ async def test_get_triggers_for_target(
     # Test label target - multiple labels
     await assert_triggers(
         {"label_id": [label1.label_id, label2.label_id]},
-        ["light.turned_on", "mqtt", "switch.turned_on"],
+        ["light.turned_on", "component1", "switch.turned_on"],
     )
-
     # Test mixed target types
     await assert_triggers(
         {
@@ -3748,8 +3763,8 @@ async def test_get_triggers_for_target(
         },
         [
             "light.turned_on",
-            "mqtt",
-            "mqtt.light_message",
+            "component1",
+            "component1.light_message",
             "sensor.turned_on",
             "switch.turned_on",
         ],
