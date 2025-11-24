@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import cast
+from typing import Any, cast
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -84,6 +84,10 @@ SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
     "CLOUD_CONNECTION_STATE"
+)
+
+_SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType(
+    "CLOUDHOOKS_UPDATED"
 )
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
@@ -242,6 +246,24 @@ async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
     await hass.data[DATA_CLOUD].cloudhooks.async_delete(webhook_id)
 
 
+@callback
+def async_listen_cloudhook_change(
+    hass: HomeAssistant,
+    webhook_id: str,
+    on_change: Callable[[dict[str, Any] | None], None],
+) -> Callable[[], None]:
+    """Listen for cloudhook changes for the given webhook and notify when modified or deleted."""
+
+    @callback
+    def _handle_cloudhooks_updated(cloudhooks: dict[str, Any]) -> None:
+        """Handle cloudhooks updated signal."""
+        on_change(cloudhooks.get(webhook_id))
+
+    return async_dispatcher_connect(
+        hass, _SIGNAL_CLOUDHOOKS_UPDATED, _handle_cloudhooks_updated
+    )
+
+
 @bind_hass
 @callback
 def async_remote_ui_url(hass: HomeAssistant) -> str:
@@ -289,7 +311,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    _remote_handle_prefs_updated(cloud)
+    _handle_prefs_updated(hass, cloud)
     _setup_services(hass, prefs)
 
     async def async_startup_repairs(_: datetime) -> None:
@@ -373,26 +395,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
-    """Handle remote preferences updated."""
-    cur_pref = cloud.client.prefs.remote_enabled
+def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
+    """Register handler for cloud preferences updates."""
+    cur_remote_enabled = cloud.client.prefs.remote_enabled
+    cur_cloudhooks = cloud.client.prefs.cloudhooks
     lock = asyncio.Lock()
 
-    # Sync remote connection with prefs
-    async def remote_prefs_updated(prefs: CloudPreferences) -> None:
-        """Update remote status."""
-        nonlocal cur_pref
+    async def on_prefs_updated(prefs: CloudPreferences) -> None:
+        """Handle cloud preferences updates."""
+        nonlocal cur_remote_enabled
+        nonlocal cur_cloudhooks
 
+        # Lock protects cur_ state variables from concurrent updates
         async with lock:
-            if prefs.remote_enabled == cur_pref:
+            if cur_cloudhooks != prefs.cloudhooks:
+                cur_cloudhooks = prefs.cloudhooks
+                async_dispatcher_send(hass, _SIGNAL_CLOUDHOOKS_UPDATED, cur_cloudhooks)
+
+            if prefs.remote_enabled == cur_remote_enabled:
                 return
 
-            if cur_pref := prefs.remote_enabled:
+            if cur_remote_enabled := prefs.remote_enabled:
                 await cloud.remote.connect()
             else:
                 await cloud.remote.disconnect()
 
-    cloud.client.prefs.async_listen_updates(remote_prefs_updated)
+    cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

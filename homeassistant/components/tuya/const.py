@@ -49,6 +49,9 @@ TUYA_RESPONSE_QR_CODE = "qrcode"
 TUYA_RESPONSE_RESULT = "result"
 TUYA_RESPONSE_SUCCESS = "success"
 
+CELSIUS_ALIASES = {"°c", "c", "celsius", "℃"}
+FAHRENHEIT_ALIASES = {"°f", "f", "fahrenheit", "℉"}
+
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -607,6 +610,7 @@ class DPCode(StrEnum):
     ALARM_DELAY_TIME = "alarm_delay_time"
     ALARM_MESSAGE = "alarm_message"
     ALARM_MSG = "alarm_msg"
+    ALARM_STATE = "alarm_state"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
@@ -1158,12 +1162,12 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=UnitOfTemperature.CELSIUS,
-        aliases={"°c", "c", "celsius", "℃"},
+        aliases=CELSIUS_ALIASES,
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
         unit=UnitOfTemperature.FAHRENHEIT,
-        aliases={"°f", "f", "fahrenheit"},
+        aliases=FAHRENHEIT_ALIASES,
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
