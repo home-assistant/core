@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any
 
 from fish_audio_sdk import Session
 from fish_audio_sdk.exceptions import HttpCodeErr
@@ -55,34 +55,6 @@ from .error import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class TTSConfigData(TypedDict, total=False):
-    """Fish Audio TTS subentry configuration data."""
-
-    voice_id: str
-    backend: str
-    language: str
-    self_only: bool
-    sort_by: str
-    name: str
-
-
-class SubentryInitUserInput(TypedDict, total=False):
-    """User input for the Fish Audio subentry init step."""
-
-    name: str
-    language: str
-    self_only: bool
-    sort_by: str
-
-
-class SubentryModelUserInput(TypedDict, total=False):
-    """User input for the Fish Audio subentry model step."""
-
-    voice_id: str
-    backend: str
-    name: str
-
-
 def get_api_key_schema(default: str | None = None) -> vol.Schema:
     """Return the schema for API key input."""
     return vol.Schema(
@@ -90,7 +62,7 @@ def get_api_key_schema(default: str | None = None) -> vol.Schema:
     )
 
 
-def get_filter_schema(options: TTSConfigData) -> vol.Schema:
+def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
     """Return the schema for the filter step."""
     return vol.Schema(
         {
@@ -116,7 +88,7 @@ def get_filter_schema(options: TTSConfigData) -> vol.Schema:
 
 
 def get_model_selection_schema(
-    options: TTSConfigData,
+    options: dict[str, Any],
     model_options: list[SelectOptionDict],
 ) -> vol.Schema:
     """Return the schema for the model selection step."""
@@ -237,7 +209,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a tts entity."""
 
-    config_data: TTSConfigData
+    config_data: dict[str, Any]
     models: list[SelectOptionDict]
     session: Session
 
@@ -275,13 +247,11 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle reconfiguration of a subentry."""
-        self.config_data = cast(
-            TTSConfigData, dict(self._get_reconfigure_subentry().data)
-        )
+        self.config_data = dict(self._get_reconfigure_subentry().data)
         return await self.async_step_init()
 
     async def async_step_init(
-        self, user_input: SubentryInitUserInput | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
         entry = self._get_entry()
@@ -301,7 +271,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     async def async_step_model(
-        self, user_input: SubentryModelUserInput | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle the model selection step."""
         errors: dict[str, str] = {}
