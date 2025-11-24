@@ -1,8 +1,6 @@
-"""Test the Essent config flow."""
+"""Tests for Essent config flow."""
 
-from __future__ import annotations
-
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from essent_dynamic_pricing import (
     EssentConnectionError,
@@ -11,68 +9,73 @@ from essent_dynamic_pricing import (
 )
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.essent.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we can create an entry."""
-    with (
-        patch(
-            "homeassistant.components.essent.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
-        patch(
-            "homeassistant.components.essent.config_flow.EssentClient.async_get_prices",
-            return_value={},
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+async def test_full_flow(
+    hass: HomeAssistant,
+    mock_essent_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test successful config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Essent"
     assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test we abort if already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    entry.add_to_hass(hass)
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test abort when already configured."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("exception", "error"),
     [
-        (EssentConnectionError(), "cannot_connect"),
+        (EssentConnectionError, "cannot_connect"),
         (EssentResponseError("bad"), "cannot_connect"),
         (EssentDataError("bad"), "invalid_data"),
-        (Exception(), "unknown"),
+        (Exception, "unknown"),
     ],
 )
-async def test_cannot_connect(
-    hass: HomeAssistant, side_effect: Exception, error: str
+async def test_flow_errors(
+    hass: HomeAssistant,
+    mock_essent_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
 ) -> None:
-    """Test connection errors show form with error."""
-    with patch(
-        "homeassistant.components.essent.config_flow.EssentClient.async_get_prices",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    """Test flow errors."""
+    mock_essent_client.async_get_prices.side_effect = exception
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_essent_client.async_get_prices.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

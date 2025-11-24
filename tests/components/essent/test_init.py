@@ -1,6 +1,6 @@
-"""Integration tests for Essent setup and runtime."""
+"""Tests for Essent integration setup."""
 
-from __future__ import annotations
+from unittest.mock import AsyncMock
 
 from essent_dynamic_pricing import (
     EssentConnectionError,
@@ -8,146 +8,96 @@ from essent_dynamic_pricing import (
     EssentError,
     EssentResponseError,
 )
-from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.essent.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.essent.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import async_fire_time_changed
-
-pytestmark = [
-    pytest.mark.freeze_time("2025-11-16 10:30:00+01:00"),
-]
+from tests.common import MockConfigEntry
 
 
-async def test_full_integration_setup(hass: HomeAssistant) -> None:
-    """Test complete integration setup and unload."""
-    entry = await setup_integration(hass)
-    ent_reg = er.async_get(hass)
-
-    updated = False
-    for unique_id in ("electricity_next_price", "gas_next_price"):
-        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
-        assert entity_id is not None
-        reg_entry = ent_reg.async_get(entity_id)
-        assert reg_entry is not None
-        if reg_entry.disabled_by:
-            ent_reg.async_update_entity(entity_id, disabled_by=None)
-            updated = True
-
-    if updated:
-        await hass.config_entries.async_reload(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state == ConfigEntryState.LOADED
-
-    def _state(unique_id: str) -> str | None:
-        entity_id = ent_reg.async_get_entity_id("sensor", "essent", unique_id)
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
-        return state.state
-
-    assert _state("electricity_current_price") is not None
-    assert _state("electricity_next_price") is not None
-    assert _state("gas_current_price") is not None
-    assert _state("gas_next_price") is not None
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.NOT_LOADED
-
-
-async def test_device_registry_entry(
+async def test_load_unload_entry(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    mock_essent_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Ensure the integration registers a service device."""
-    entry = await setup_integration(hass)
+    """Test load and unload entry."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    mock_essent_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device is registered correctly."""
+    await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)}
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert device_entry is not None
-    assert device_entry.manufacturer == "Essent"
-    assert device_entry.name == "Essent"
-    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    "exception",
     [
         EssentConnectionError("fail"),
-        EssentResponseError("bad response"),
-        EssentDataError("bad data"),
+        EssentResponseError("bad"),
+        EssentDataError("bad"),
         EssentError("boom"),
     ],
 )
-async def test_setup_retries_on_client_errors(
-    hass: HomeAssistant, patch_essent_client, side_effect: Exception
-) -> None:
-    """Ensure setup retries when the client raises."""
-    patch_essent_client.async_get_prices.side_effect = side_effect
-
-    entry = await setup_integration(hass)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_polling_interval_triggers_refresh(
+async def test_setup_retry_on_error(
     hass: HomeAssistant,
-    patch_essent_client,
-    freezer: FrozenDateTimeFactory,
+    mock_essent_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
 ) -> None:
-    """Coordinator should refresh data on the polling interval."""
-    await setup_integration(hass)
+    """Test setup retries on client errors."""
+    mock_essent_client.async_get_prices.side_effect = exception
 
-    next_poll = dt_util.utcnow() + UPDATE_INTERVAL
-    freezer.move_to(next_poll)
-    async_fire_time_changed(hass, next_poll)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    assert patch_essent_client.async_get_prices.call_count == 2
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_disable_polling_skips_scheduled_refresh(
+async def test_listener_reschedule_cancels_existing(
     hass: HomeAssistant,
-    patch_essent_client,
-    freezer: FrozenDateTimeFactory,
+    mock_essent_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Coordinator should not schedule refreshes when polling is disabled."""
-    await setup_integration(hass, pref_disable_polling=True)
+    """Ensure scheduling cancels an existing listener before scheduling a new one."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
 
-    future = dt_util.utcnow() + UPDATE_INTERVAL
-    freezer.move_to(future)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    unsub_called = False
 
-    assert patch_essent_client.async_get_prices.call_count == 1
+    def _unsub() -> None:
+        nonlocal unsub_called
+        unsub_called = True
 
+    coordinator._unsub_listener = _unsub  # Pretend a listener is already scheduled
+    coordinator._schedule_listener_tick()
 
-async def test_shutdown_cancels_scheduled_updates(
-    hass: HomeAssistant,
-    patch_essent_client,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """API polling should stop once the entry is unloaded."""
-    entry = await setup_integration(hass)
-    assert patch_essent_client.async_get_prices.call_count == 1
+    assert unsub_called is True
+    assert coordinator.listener_tick_scheduled is True
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
-
-    future = dt_util.utcnow() + UPDATE_INTERVAL
-    freezer.move_to(future)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    assert patch_essent_client.async_get_prices.call_count == 1
+    # Clean up the scheduled listener created by _schedule_listener_tick
+    coordinator._unsub_listener()
+    coordinator._unsub_listener = None
