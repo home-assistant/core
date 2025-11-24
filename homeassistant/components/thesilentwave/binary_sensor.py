@@ -4,7 +4,10 @@ import logging
 
 from pysilentwave.exceptions import SilentWaveError
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,6 +30,7 @@ async def async_setup_entry(
 class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
     """Representation of a TheSilentWave binary sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_translation_key = "status"
     _attr_name = None  # Set to None to use device name as this is the main sensor
 
