@@ -22,7 +22,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import (
+    PRECISION_TENTHS,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -199,7 +204,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
 
     _attr_max_temp = 35
     _attr_min_temp = 4
-    _attr_target_temperature_step = 0.1
+    _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     _attr_preset_modes = [
