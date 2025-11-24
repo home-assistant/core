@@ -53,6 +53,7 @@ from tests.common import (
     MockModule,
     MockUser,
     async_mock_service,
+    mock_device_registry,
     mock_integration,
     mock_platform,
 )
@@ -89,6 +90,141 @@ def fake_integration(hass: HomeAssistant):
             ),
             spec=["ACTION_SCHEMA"],
         ),
+    )
+
+
+@pytest.fixture
+async def target_entities(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+):
+    """Fixture to create targets and entities used in target-based tests."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    kitchen_area = area_registry.async_create("Kitchen")
+    living_room_area = area_registry.async_create("Living Room")
+    label_area = area_registry.async_create("Bathroom")
+    label1 = label_registry.async_create("Label 1")
+    label2 = label_registry.async_create("Label 2")
+
+    area_registry.async_update(label_area.id, labels={label1.label_id})
+
+    device1 = dr.DeviceEntry(id="device1", identifiers={("test", "device1")})
+    device2 = dr.DeviceEntry(id="device2", identifiers={("test", "device2")})
+    area_device = dr.DeviceEntry(
+        id="area_device", identifiers={("test", "device3")}, area_id=kitchen_area.id
+    )
+    label2_device = dr.DeviceEntry(
+        id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
+    )
+    mock_device_registry(
+        hass,
+        {
+            device1.id: device1,
+            device2.id: device2,
+            area_device.id: area_device,
+            label2_device.id: label2_device,
+        },
+    )
+
+    # Create entities
+    not_registry_light = MockEntity(entity_id="light.not_registry")
+    device1_light = MockEntity(
+        entity_id="light.test1",
+        unique_id="test1",
+        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
+    )
+    label_device_light = MockEntity(
+        entity_id="light.test4",
+        unique_id="test4",
+        device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
+    )
+    area_light = MockEntity(entity_id="light.test6", unique_id="test6")
+
+    light_platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    light_platform.config_entry = config_entry
+    await light_platform.async_add_entities(
+        [not_registry_light, device1_light, label_device_light, area_light]
+    )
+    assert entity_registry.async_get(not_registry_light.entity_id) is None
+
+    device1_switch = MockEntity(
+        entity_id="switch.test2",
+        unique_id="test2",
+        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
+    )
+    area_device_switch = MockEntity(
+        entity_id="switch.test5",
+        unique_id="test5",
+        device_info=dr.DeviceInfo(identifiers=area_device.identifiers),
+    )
+    switch_platform = MockEntityPlatform(hass, domain="switch", platform_name="test")
+    switch_platform.config_entry = config_entry
+    await switch_platform.async_add_entities([device1_switch, area_device_switch])
+
+    component1_light = MockEntity(
+        entity_id="light.component1_light", unique_id="component1_light"
+    )
+    component1_flash_light = MockEntity(
+        entity_id="light.component1_flash_light",
+        unique_id="component1_flash_light",
+        supported_features=LightEntityFeature.FLASH,
+    )
+    component1_effect_flash_light = MockEntity(
+        entity_id="light.component1_effect_flash_light",
+        unique_id="component1_effect_flash_light",
+        supported_features=LightEntityFeature.EFFECT | LightEntityFeature.FLASH,
+    )
+    component1_flash_transition_light = MockEntity(
+        entity_id="light.component1_flash_transition_light",
+        unique_id="component1_flash_transition_light",
+        supported_features=LightEntityFeature.FLASH | LightEntityFeature.TRANSITION,
+    )
+
+    component1_light_platform = MockEntityPlatform(
+        hass, domain="light", platform_name="component1"
+    )
+    component1_light_platform.config_entry = config_entry
+    await component1_light_platform.async_add_entities(
+        [
+            component1_light,
+            component1_flash_light,
+            component1_effect_flash_light,
+            component1_flash_transition_light,
+        ]
+    )
+
+    label_component1_switch = MockEntity(
+        entity_id="switch.component1_switch", unique_id="component1_switch"
+    )
+
+    component1_switch_platform = MockEntityPlatform(
+        hass, domain="switch", platform_name="component1"
+    )
+    component1_switch_platform.config_entry = config_entry
+    await component1_switch_platform.async_add_entities([label_component1_switch])
+
+    device2_component1_sensor = MockEntity(
+        entity_id="sensor.component1_sensor",
+        unique_id="component1_sensor",
+        device_class="illuminance",
+        device_info=dr.DeviceInfo(identifiers=device2.identifiers),
+    )
+    component1_sensor_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="component1"
+    )
+    component1_sensor_platform.config_entry = config_entry
+    await component1_sensor_platform.async_add_entities([device2_component1_sensor])
+
+    # Associate entities with areas and labels
+    entity_registry.async_update_entity(
+        area_light.entity_id, area_id=living_room_area.id
+    )
+    entity_registry.async_update_entity(
+        label_component1_switch.entity_id, labels={label1.label_id}
     )
 
 
@@ -3483,6 +3619,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
+@pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_triggers", return_value=True)
 async def test_get_triggers_for_target(
@@ -3490,10 +3627,6 @@ async def test_get_triggers_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test get_triggers_for_target command with mixed target types."""
 
@@ -3589,134 +3722,6 @@ async def test_get_triggers_for_target(
     assert await async_setup_component(hass, "component1", {})
     await hass.async_block_till_done()
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    kitchen_area = area_registry.async_create("Kitchen")
-    living_room_area = area_registry.async_create("Living Room")
-    label_area = area_registry.async_create("Bathroom")
-    label1 = label_registry.async_create("Test Label 1")
-    label2 = label_registry.async_create("Test Label 2")
-
-    area_registry.async_update(label_area.id, labels={label1.label_id})
-
-    device1 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device1")},
-    )
-    device2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device2")},
-    )
-    area_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device3")},
-    )
-    device_registry.async_update_device(area_device.id, area_id=kitchen_area.id)
-
-    label2_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "device4")},
-    )
-    device_registry.async_update_device(label2_device.id, labels={label2.label_id})
-
-    # Create entities
-    not_registry_light = MockEntity(entity_id="light.not_registry")
-    device1_light = MockEntity(
-        entity_id="light.test1",
-        unique_id="test1",
-        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
-    )
-    label_device_light = MockEntity(
-        entity_id="light.test4",
-        unique_id="test4",
-        device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
-    )
-    area_light = MockEntity(entity_id="light.test6", unique_id="test6")
-
-    light_platform = MockEntityPlatform(hass, domain="light", platform_name="test")
-    light_platform.config_entry = config_entry
-    await light_platform.async_add_entities(
-        [not_registry_light, device1_light, label_device_light, area_light]
-    )
-    assert entity_registry.async_get(not_registry_light.entity_id) is None
-
-    device1_switch = MockEntity(
-        entity_id="switch.test2",
-        unique_id="test2",
-        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
-    )
-    area_device_switch = MockEntity(
-        entity_id="switch.test5",
-        unique_id="test5",
-        device_info=dr.DeviceInfo(identifiers=area_device.identifiers),
-    )
-    switch_platform = MockEntityPlatform(hass, domain="switch", platform_name="test")
-    switch_platform.config_entry = config_entry
-    await switch_platform.async_add_entities([device1_switch, area_device_switch])
-
-    component1_light = MockEntity(
-        entity_id="light.component1_light", unique_id="component1_light"
-    )
-    component1_flash_light = MockEntity(
-        entity_id="light.component1_flash_light",
-        unique_id="component1_flash_light",
-        supported_features=LightEntityFeature.FLASH,
-    )
-    component1_effect_flash_light = MockEntity(
-        entity_id="light.component1_effect_flash_light",
-        unique_id="component1_effect_flash_light",
-        supported_features=LightEntityFeature.EFFECT | LightEntityFeature.FLASH,
-    )
-    component1_flash_transition_light = MockEntity(
-        entity_id="light.component1_flash_transition_light",
-        unique_id="component1_flash_transition_light",
-        supported_features=LightEntityFeature.FLASH | LightEntityFeature.TRANSITION,
-    )
-
-    component1_light_platform = MockEntityPlatform(
-        hass, domain="light", platform_name="component1"
-    )
-    component1_light_platform.config_entry = config_entry
-    await component1_light_platform.async_add_entities(
-        [
-            component1_light,
-            component1_flash_light,
-            component1_effect_flash_light,
-            component1_flash_transition_light,
-        ]
-    )
-
-    label_component1_switch = MockEntity(
-        entity_id="switch.component1_switch", unique_id="component1_switch"
-    )
-
-    component1_switch_platform = MockEntityPlatform(
-        hass, domain="switch", platform_name="component1"
-    )
-    component1_switch_platform.config_entry = config_entry
-    await component1_switch_platform.async_add_entities([label_component1_switch])
-
-    device2_component1_sensor = MockEntity(
-        entity_id="sensor.component1_sensor",
-        unique_id="component1_sensor",
-        device_class="illuminance",
-        device_info=dr.DeviceInfo(identifiers=device2.identifiers),
-    )
-    component1_sensor_platform = MockEntityPlatform(
-        hass, domain="sensor", platform_name="component1"
-    )
-    component1_sensor_platform.config_entry = config_entry
-    await component1_sensor_platform.async_add_entities([device2_component1_sensor])
-
-    # Associate entities with areas and labels
-    entity_registry.async_update_entity(
-        area_light.entity_id, area_id=living_room_area.id
-    )
-    entity_registry.async_update_entity(
-        label_component1_switch.entity_id, labels={label1.label_id}
-    )
-
     async def assert_triggers(target: dict[str, list[str]], expected: list[str]) -> Any:
         """Call the command and assert expected triggers."""
         await websocket_client.send_json_auto_id(
@@ -3736,7 +3741,7 @@ async def test_get_triggers_for_target(
 
     # Test entity targets
     await assert_triggers(
-        {"entity_id": [component1_light.entity_id, label_component1_switch.entity_id]},
+        {"entity_id": ["light.component1_light", "switch.component1_switch"]},
         [
             "light.turned_on",
             "component1",
@@ -3745,7 +3750,7 @@ async def test_get_triggers_for_target(
         ],
     )
     await assert_triggers(
-        {"entity_id": [component1_flash_light.entity_id]},
+        {"entity_id": ["light.component1_flash_light"]},
         [
             "light.turned_on",
             "component1",
@@ -3754,7 +3759,7 @@ async def test_get_triggers_for_target(
         ],
     )
     await assert_triggers(
-        {"entity_id": [component1_effect_flash_light.entity_id]},
+        {"entity_id": ["light.component1_effect_flash_light"]},
         [
             "light.turned_on",
             "component1",
@@ -3763,7 +3768,7 @@ async def test_get_triggers_for_target(
         ],
     )
     await assert_triggers(
-        {"entity_id": [component1_flash_transition_light.entity_id]},
+        {"entity_id": ["light.component1_flash_transition_light"]},
         [
             "light.turned_on",
             "component1",
@@ -3775,7 +3780,7 @@ async def test_get_triggers_for_target(
 
     # Test device target - multiple devices
     await assert_triggers(
-        {"device_id": [device1.id, device2.id]},
+        {"device_id": ["device1", "device2"]},
         [
             "light.turned_on",
             "component1",
@@ -3787,22 +3792,22 @@ async def test_get_triggers_for_target(
 
     # Test area target - multiple areas
     await assert_triggers(
-        {"area_id": [kitchen_area.id, living_room_area.id]},
+        {"area_id": ["kitchen", "living_room"]},
         ["light.turned_on", "switch.turned_on"],
     )
 
     # Test label target - multiple labels
     await assert_triggers(
-        {"label_id": [label1.label_id, label2.label_id]},
+        {"label_id": ["label_1", "label_2"]},
         ["light.turned_on", "component1", "switch.turned_on"],
     )
     # Test mixed target types
     await assert_triggers(
         {
-            "entity_id": [device1_light.entity_id],
-            "device_id": [device2.id],
-            "area_id": [kitchen_area.id],
-            "label_id": [label1.label_id],
+            "entity_id": ["light.test1"],
+            "device_id": ["device2"],
+            "area_id": ["kitchen"],
+            "label_id": ["label_1"],
         },
         [
             "light.turned_on",
