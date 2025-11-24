@@ -13,6 +13,7 @@ from homeassistant.components.generic_thermostat.const import (
     CONF_HOT_TOLERANCE,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_KEEP_ALIVE,
     DOMAIN,
 )
 from homeassistant.components.sensor import SensorDeviceClass
@@ -85,6 +86,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
+            CONF_KEEP_ALIVE: 60,
             CONF_PRESETS[PRESET_AWAY]: 20,
         },
         title="My dehumidifier",
@@ -180,3 +182,51 @@ async def test_config_flow_preset_accepts_float(
         "name": "My thermostat",
         "target_sensor": "sensor.temperature",
     }
+
+
+async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
+    """Test the config flow when keep_alive is set."""
+    with patch(
+        "homeassistant.components.generic_thermostat.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        # Provide keep_alive in the initial user step (60 seconds)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My thermostat",
+                CONF_HEATER: "switch.run",
+                CONF_SENSOR: "sensor.temperature",
+                CONF_AC_MODE: False,
+                CONF_COLD_TOLERANCE: 0.3,
+                CONF_HOT_TOLERANCE: 0.3,
+                CONF_KEEP_ALIVE: 60,
+            },
+        )
+
+        # Complete presets step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PRESETS[PRESET_AWAY]: 21,
+            },
+        )
+
+        assert result["type"] == "create_entry"
+
+        # Keep-alive should be present in the created options
+        val = result["options"].get(CONF_KEEP_ALIVE)
+        assert val is not None
+        # Accept either an int of seconds or a timedelta
+        if hasattr(val, "total_seconds"):
+            assert val.total_seconds() == 60
+        else:
+            assert val == 60
+
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
