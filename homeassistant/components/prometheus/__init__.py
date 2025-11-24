@@ -489,8 +489,8 @@ class PrometheusMetrics:
     def _enum_metric(
         self,
         state: State,
-        current_value: str,
-        values: Sequence[str],
+        current_value: Any | None,
+        values: Sequence[str] | None,
         metric_name: str,
         metric_description: str,
         enum_label_name: str,
