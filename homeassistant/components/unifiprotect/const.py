@@ -85,6 +85,9 @@ EVENT_TYPE_NFC_SCANNED: Final = "scanned"
 EVENT_TYPE_DOORBELL_RING: Final = "ring"
 EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
 
+# Delay in seconds before firing vehicle event after last thumbnail
+VEHICLE_EVENT_DELAY_SECONDS: Final = 3
+
 KEYRINGS_ULP_ID: Final = "ulp_id"
 KEYRINGS_USER_STATUS: Final = "user_status"
 KEYRINGS_USER_FULL_NAME: Final = "full_name"

@@ -6,6 +6,8 @@ from collections.abc import Callable
 import dataclasses
 from typing import Any
 
+from uiprotect.data.nvr import EventDetectedThumbnail
+
 from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
@@ -27,6 +29,7 @@ from .const import (
     KEYRINGS_ULP_ID,
     KEYRINGS_USER_FULL_NAME,
     KEYRINGS_USER_STATUS,
+    VEHICLE_EVENT_DELAY_SECONDS,
 )
 from .data import (
     Camera,
@@ -181,6 +184,12 @@ class ProtectDeviceVehicleEventEntity(
     _pending_event_id: str | None = None
     _thumbnail_timer_cancel: Callable[[], None] | None = None
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel timer when entity is removed."""
+        if self._thumbnail_timer_cancel:
+            self._thumbnail_timer_cancel()
+        await super().async_will_remove_from_hass()
+
     @callback
     def _fire_vehicle_event(self, event_id: str) -> None:
         """Fire the vehicle detection event with best available thumbnail."""
@@ -190,7 +199,7 @@ class ProtectDeviceVehicleEventEntity(
             return
 
         # Get current vehicle thumbnails
-        current_thumbnails = []
+        current_thumbnails: list[EventDetectedThumbnail] = []
         if event.metadata and event.metadata.detected_thumbnails:
             current_thumbnails = [
                 t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
@@ -205,23 +214,18 @@ class ProtectDeviceVehicleEventEntity(
         }
 
         # Select best thumbnail
+        # Prefer thumbnails with LPR data, sorted by confidence
         # LPR can be in: 1) group.matched_name (UFP 6.0+) or 2) name field
-        thumbnails_with_lpr = [
-            t
-            for t in current_thumbnails
-            if (t.group and t.group.matched_name) or (t.name and len(t.name) > 0)
-        ]
+        def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
+            """Sort key: (has_lpr, confidence, clock_best_wall)."""
+            has_lpr = bool(
+                (t.group and t.group.matched_name) or (t.name and len(t.name) > 0)
+            )
+            confidence = t.confidence if t.confidence else 0.0
+            clock = t.clock_best_wall.timestamp() if t.clock_best_wall else 0.0
+            return (has_lpr, confidence, clock)
 
-        if thumbnails_with_lpr:
-            thumbnail = max(
-                thumbnails_with_lpr,
-                key=lambda t: t.confidence if t.confidence else 0,
-            )
-        else:
-            thumbnail = max(
-                current_thumbnails,
-                key=lambda t: t.clock_best_wall if t.clock_best_wall else 0,
-            )
+        thumbnail = max(current_thumbnails, key=_thumbnail_sort_key)
 
         # Add confidence if available
         if thumbnail.confidence is not None:
@@ -261,7 +265,7 @@ class ProtectDeviceVehicleEventEntity(
         # Check if detected_thumbnails just arrived for this event
         if event and event.type is EventType.SMART_DETECT:
             # Get current vehicle thumbnails
-            current_thumbnails = []
+            current_thumbnails: list[EventDetectedThumbnail] = []
             if event.metadata and event.metadata.detected_thumbnails:
                 current_thumbnails = [
                     t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
@@ -287,7 +291,7 @@ class ProtectDeviceVehicleEventEntity(
                     self._fire_vehicle_event(event.id)
 
                 self._thumbnail_timer_cancel = async_call_later(
-                    self.hass, 3, _fire_event
+                    self.hass, VEHICLE_EVENT_DELAY_SECONDS, _fire_event
                 )
 
 

@@ -10,6 +10,7 @@ from uiprotect.data import Camera, Event, EventType, ModelType, SmartDetectObjec
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
     DEFAULT_ATTRIBUTION,
+    VEHICLE_EVENT_DELAY_SECONDS,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
 from homeassistant.const import ATTR_ATTRIBUTION, Platform
@@ -752,7 +753,9 @@ async def test_vehicle_detection_basic(
 
     # Wait for the 3 second timer
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -836,7 +839,9 @@ async def test_vehicle_detection_with_lpr_ufp6(
 
     # Wait for the 3 second timer
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -913,7 +918,9 @@ async def test_vehicle_detection_with_lpr_legacy(
 
     # Wait for the 3 second timer
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1014,7 +1021,9 @@ async def test_vehicle_detection_multiple_thumbnails(
 
     # Wait for the 3 second timer
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event with highest confidence LPR
@@ -1078,7 +1087,9 @@ async def test_vehicle_detection_no_thumbnails(
 
     # Wait for the timer to expire
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Should NOT have received any events (no vehicle thumbnails)
@@ -1185,7 +1196,9 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     assert len(events) == 0
 
     # Wait another 3+ seconds
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Now should have the event with the better LPR
@@ -1306,7 +1319,9 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait for second event's timer
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3.1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Should only have one event - the second one
@@ -1317,3 +1332,70 @@ async def test_vehicle_detection_new_event_cancels_timer(
     assert state.attributes["license_plate"] == "SECOND"
 
     unsub()
+
+
+async def test_vehicle_detection_timer_cleanup_on_remove(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test that pending timer is cancelled when entity is removed."""
+
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.EVENT, 4, 4)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[3]
+    )
+
+    # Create event with vehicle thumbnail
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_cleanup_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+        api=ufp.api,
+        metadata={
+            "detected_thumbnails": [
+                {
+                    "type": "vehicle",
+                    "confidence": 90,
+                    "clock_best_wall": fixed_now,
+                    "cropped_id": "test_cleanup_thumb_id",
+                }
+            ]
+        },
+    )
+
+    new_camera = doorbell.model_copy()
+    new_camera.last_smart_detect_event_id = "test_cleanup_event_id"
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+    await hass.async_block_till_done()
+
+    # Timer is now pending - remove the entity before it fires
+    await remove_entities(hass, ufp, [doorbell])
+    await hass.async_block_till_done()
+
+    # Advance time past when timer would have fired
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
+    )
+    await hass.async_block_till_done()
+
+    # Entity should be gone and no event should have fired
+    state = hass.states.get(entity_id)
+    assert state is None
