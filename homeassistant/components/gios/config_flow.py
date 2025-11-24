@@ -10,6 +10,7 @@ from gios import ApiError, Gios, InvalidSensorsDataError, NoStationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -53,7 +54,7 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=gios.station_name,
-                    data=user_input,
+                    data={**user_input, CONF_NAME: gios.station_name},
                 )
             except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
