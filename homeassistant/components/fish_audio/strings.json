@@ -3,27 +3,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "reconfigure_successful": "Your API key has been updated successfully. The integration will now reload with the new settings."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Failed to connect, please check your API key and network connection.",
       "invalid_auth": "Invalid authentication. Please check your API key. You can get your API key from [Fish Audio API Keys]({api_keys_url}).",
-      "reconfigure_wrong_account": "The provided API key belongs to a different user. Please use an API key from the original account.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Your personal API key for accessing the Fish Audio service."
-        },
-        "description": "Enter the new API key for your Fish Audio account.",
-        "title": "Update API Key"
-      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -71,7 +59,7 @@
         },
         "model": {
           "data": {
-            "backend": "AI Voice Model",
+            "backend": "AI voice model",
             "name": "[%key:common::config_flow::data::name%]",
             "voice_id": "Voice"
           },
