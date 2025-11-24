@@ -5,12 +5,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.myneomitis import (
-    async_reload_entry,
-    async_setup,
+    MyNeomitisRuntimeData,
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.myneomitis.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -24,6 +22,7 @@ class DummyEntry:
         self.entry_id = entry_id
         self.data = data
         self.unique_id = entry_id
+        self.runtime_data = None
 
 
 @pytest.mark.asyncio
@@ -85,14 +84,13 @@ async def test_unload_entry_success(hass: HomeAssistant) -> None:
     entry = DummyEntry("test-entry", {"email": "u@v.w", "password": "pw"})
 
     api = AsyncMock()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"api": api, "devices": []}
+    entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=[])
 
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     result = await async_unload_entry(hass, entry)
 
     assert result is True
     api.disconnect_websocket.assert_awaited_once()
-    assert entry.entry_id not in hass.data[DOMAIN]
 
 
 @pytest.mark.asyncio
@@ -100,42 +98,13 @@ async def test_unload_entry_failure(hass: HomeAssistant) -> None:
     """Test that async_unload_entry returns False if unload fails."""
     entry = DummyEntry("test-entry", {"email": "u@v.w", "password": "pw"})
     api = AsyncMock()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"api": api, "devices": []}
+    entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=[])
 
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
     result = await async_unload_entry(hass, entry)
 
     assert result is False
     api.disconnect_websocket.assert_not_awaited()
-
-
-@pytest.mark.asyncio
-async def test_reload_entry_calls_unload_and_setup(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test that async_reload_entry calls unload then setup."""
-    entry = DummyEntry("test-entry", {"email": "x@y.z", "password": "pw"})
-
-    mock_unload = AsyncMock()
-    mock_setup = AsyncMock()
-
-    monkeypatch.setattr(
-        "homeassistant.components.myneomitis.async_unload_entry", mock_unload
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.myneomitis.async_setup_entry", mock_setup
-    )
-
-    await async_reload_entry(hass, entry)
-
-    assert mock_unload.await_count == 1
-    assert mock_setup.await_count == 1
-
-
-@pytest.mark.asyncio
-async def test_async_setup_returns_true(hass: HomeAssistant) -> None:
-    """Simple test to check if async_setup returns True."""
-    assert await async_setup(hass, {}) is True
 
 
 @pytest.mark.asyncio
@@ -161,8 +130,9 @@ async def test_setup_entry_success_populates_data_and_forwards(
         result = await async_setup_entry(hass, entry)
 
         assert result is True
-        assert entry.entry_id in hass.data[DOMAIN]
-        assert hass.data[DOMAIN][entry.entry_id]["devices"] == [{"id": 1}, {"id": 2}]
+        assert entry.runtime_data is not None
+        assert isinstance(entry.runtime_data, MyNeomitisRuntimeData)
+        assert entry.runtime_data.devices == [{"id": 1}, {"id": 2}]
         forward.assert_awaited_once()
 
 
@@ -190,7 +160,7 @@ async def test_unload_entry_logs_on_disconnect_error(
 
     api = AsyncMock()
     api.disconnect_websocket = AsyncMock(side_effect=TimeoutError("to"))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"api": api, "devices": []}
+    entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=[])
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
     caplog.set_level("ERROR")
@@ -198,4 +168,3 @@ async def test_unload_entry_logs_on_disconnect_error(
 
     assert result is True
     assert "Error while disconnecting WebSocket" in caplog.text
-    assert entry.entry_id not in hass.data[DOMAIN]

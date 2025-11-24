@@ -1,19 +1,5 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to MyNeomitis",
-        "description": "Enter your MyNeomitis account credentials.",
-        "data": {
-          "email": "Email address",
-          "password": "Password"
-        },
-        "data_description": {
-          "email": "Votre adresse e-mail utilisée pour votre compte MyNeomitis",
-          "password": "Votre mot de passe MyNeomitis"
-        }
-      }
-    },
     "abort": {
       "already_configured": "This integration is already configured."
     },
@@ -21,24 +7,38 @@
       "auth_failed": "Authentication failed. Please check your email address and password.",
       "connection_error": "Could not connect to the MyNeomitis service. Please try again later.",
       "unknown_error": "An unexpected error occurred. Please try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "Email address",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "Your email address used for your MyNeomitis account",
+          "password": "Your MyNeomitis account password"
+        },
+        "description": "Enter your MyNeomitis account credentials.",
+        "title": "Connect to MyNeomitis"
+      }
     }
   },
   "entity": {
     "select": {
       "select_myneomitis": {
         "state": {
-          "on": "On",
-          "off": "Off",
+          "antifrost": "Frost protection",
           "auto": "Auto",
           "boost": "Boost",
           "comfort": "Comfort",
+          "cooling": "Cooling",
           "eco": "Eco",
           "eco_1": "Eco -1",
           "eco_2": "Eco -2",
-          "antifrost": "Frost protection",
-          "standby": "Standby",
           "heating": "Heating",
-          "cooling": "Cooling"
+          "off": "Off",
+          "on": "On",
+          "standby": "Standby"
         }
       }
     }

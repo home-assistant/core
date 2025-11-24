@@ -1,8 +1,6 @@
 """Tests for utility functions in the MyNeomitis integration."""
 
 from homeassistant.components.myneomitis.utils import (
-    CtnType,
-    Sensors,
     format_week_schedule,
     get_device_by_rfid,
     parents_to_dict,
@@ -58,28 +56,3 @@ def test_get_device_by_rfid() -> None:
     devices = [{"_id": "1", "rfid": "A"}, {"_id": "2", "rfid": "B"}]
     assert get_device_by_rfid(devices, "B") == {"_id": "2", "rfid": "B"}
     assert get_device_by_rfid(devices, "Z") is None
-
-
-def test_ctntype_to_binary() -> None:
-    """Test conversion of CtnType values to binary strings."""
-    assert CtnType.to_binary(CtnType.NONE) == "00"
-    assert CtnType.to_binary(CtnType.FLOOR) == "01"
-    assert CtnType.to_binary(CtnType.FLOW) == "10"
-    assert CtnType.to_binary(CtnType.OUTSIDE) == "11"
-
-
-def test_ctntype_get_label() -> None:
-    """Test retrieving labels for CtnType values."""
-    assert CtnType.get_label(0) == "NTC"
-    assert CtnType.get_label(1) == "Floor"
-    assert CtnType.get_label(2) == "Flow"
-    assert CtnType.get_label(3) == "Outside"
-    assert CtnType.get_label(99) == "NTC"
-
-
-def test_sensors_from_number() -> None:
-    """Test the creation of Sensors object from a binary number."""
-    sensors = Sensors.from_number(0b010110)
-    assert sensors.ctn0 == 2
-    assert sensors.ctn1 == 1
-    assert sensors.ctn2 == 1

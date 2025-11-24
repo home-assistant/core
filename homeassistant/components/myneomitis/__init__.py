@@ -1,58 +1,59 @@
 """Integration for MyNeomitis."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 import pyaxencoapi
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_EMAIL, DATA_PASSWORD
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["select"]
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+PLATFORMS = [Platform.SELECT]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up from configuration.yaml (not used)."""
-    return True
+@dataclass
+class MyNeomitisRuntimeData:
+    """Runtime data for MyNeomitis integration."""
+
+    api: pyaxencoapi.PyAxencoAPI
+    devices: list[dict[str, Any]]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type MyNeomitisConfigEntry = ConfigEntry[MyNeomitisRuntimeData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> bool:
     """Set up MyNeomitis from a config entry."""
     session = async_get_clientsession(hass)
 
-    email: str = entry.data["email"]
-    password: str = entry.data["password"]
+    email: str = entry.data[DATA_EMAIL]
+    password: str = entry.data[DATA_PASSWORD]
 
-    api = pyaxencoapi.PyAxencoAPI("myneomitis", session)
+    api = pyaxencoapi.PyAxencoAPI(session)
     try:
         await api.login(email, password)
         await api.connect_websocket()
-        _LOGGER.info("MyNeomitis: Successfully connected to Login/WebSocket")
+        _LOGGER.debug("MyNeomitis: Successfully connected to Login/WebSocket")
 
         # Retrieve the user's devices
-        devices: list[dict] = await api.get_devices()
+        devices: list[dict[str, Any]] = await api.get_devices()
 
     except Exception as err:
         raise ConfigEntryNotReady(
             f"MyNeomitis: Error connecting to API/WebSocket: {err}"
         ) from err
 
-    entry.runtime_data = {
-        "api": api,
-        "devices": devices,
-    }
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.runtime_data
+    entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=devices)
 
     # Load platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -60,35 +61,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        runtime_data = getattr(entry, "runtime_data", None)
-        if runtime_data is None:
-            runtime_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-
-        api = None
-        if isinstance(runtime_data, dict):
-            api = runtime_data.get("api")
-
-        if api is not None:
-            try:
-                await api.disconnect_websocket()
-            except (TimeoutError, ConnectionError) as err:
-                _LOGGER.error(
-                    "MyNeomitis: Error while disconnecting WebSocket for %s: %s",
-                    entry.entry_id,
-                    err,
-                )
-
-        # Cleanup
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        try:
+            await entry.runtime_data.api.disconnect_websocket()
+        except (TimeoutError, ConnectionError) as err:
+            _LOGGER.error(
+                "MyNeomitis: Error while disconnecting WebSocket for %s: %s",
+                entry.entry_id,
+                err,
+            )
 
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle reload of a config entry."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)

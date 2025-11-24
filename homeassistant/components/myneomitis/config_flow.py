@@ -7,8 +7,7 @@ import aiohttp
 from pyaxencoapi import PyAxencoAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -16,21 +15,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class MyNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the MyNeomitis integration."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step of the configuration flow.
 
         Args:
             user_input: User-provided input from the form, or None if no input is provided.
-
-        Returns:
-            FlowResult: The result of the configuration flow step.
 
         """
         errors: dict[str, str] = {}
@@ -42,7 +38,7 @@ class MyNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password: str = user_input["password"]
 
             session = async_get_clientsession(self.hass)
-            api = PyAxencoAPI("myneomitis", session)
+            api = PyAxencoAPI(session)
 
             try:
                 await api.login(email, password)
@@ -64,21 +60,15 @@ class MyNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except aiohttp.ClientResponseError as e:
                 if e.status == 401:
-                    _LOGGER.error("MyNeomitis : Authentication failed: %s", e)
                     errors["base"] = "auth_failed"
                 else:
-                    _LOGGER.error("MyNeomitis : HTTP error: %s", e)
                     errors["base"] = "connection_error"
-            except aiohttp.ClientConnectionError as e:
-                _LOGGER.error("MyNeomitis : Connection error: %s", e)
+            except aiohttp.ClientConnectionError:
                 errors["base"] = "connection_error"
-            except aiohttp.ClientError as e:
-                _LOGGER.error(
-                    "MyNeomitis : Unexpected aiohttp client error during login: %s", e
-                )
+            except aiohttp.ClientError:
                 errors["base"] = "unknown_error"
-            except RuntimeError as e:
-                _LOGGER.error("MyNeomitis : Runtime error during login: %s", e)
+            except Exception:
+                _LOGGER.exception("Unexpected error during login")
                 errors["base"] = "unknown_error"
 
         return self.async_show_form(
