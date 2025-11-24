@@ -442,7 +442,12 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         data_func: Callable[[], _T],
         delay: float = 0,
     ) -> None:
-        """Save data with an optional delay."""
+        """Save data with an optional delay.
+
+        data_func: A function that returns the data to save. If the function
+        is decorated with @callback, it will be called in the event loop. If
+        it is a regular function, it will be called from an executor.
+        """
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
