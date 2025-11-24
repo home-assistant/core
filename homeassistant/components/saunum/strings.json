@@ -19,6 +19,13 @@
       }
     }
   },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    }
+  },
   "exceptions": {
     "communication_error": {
       "message": "Communication error: {error}"
@@ -28,6 +35,12 @@
     },
     "set_hvac_mode_failed": {
       "message": "Failed to set HVAC mode to {hvac_mode}"
+    },
+    "set_light_off_failed": {
+      "message": "Failed to turn off light"
+    },
+    "set_light_on_failed": {
+      "message": "Failed to turn on light"
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"
