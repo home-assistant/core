@@ -44,7 +44,7 @@ class _EntityFilter:
         if self.supported_features:
             entity_supported_features = get_supported_features(hass, entity_id)
             if not any(
-                feature & entity_supported_features
+                feature & entity_supported_features == feature
                 for feature in self.supported_features
             ):
                 return False

@@ -3515,6 +3515,7 @@ async def test_get_triggers_for_target(
                     "_": Mock,
                     "light_message": Mock,
                     "light_flash": Mock,
+                    "light_dance": Mock,
                 }
             )
         ),
@@ -3563,6 +3564,14 @@ async def test_get_triggers_for_target(
               domain: light
               supported_features:
                 - light.LightEntityFeature.FLASH
+                - light.LightEntityFeature.EFFECT
+        light_dance:
+          target:
+            entity:
+              domain: light
+              supported_features: # both required features
+                - - light.LightEntityFeature.FLASH
+                  - light.LightEntityFeature.TRANSITION
     """
 
     def _load_yaml(fname, secrets=None):
@@ -3654,13 +3663,28 @@ async def test_get_triggers_for_target(
         unique_id="component1_flash_light",
         supported_features=LightEntityFeature.FLASH,
     )
+    component1_effect_flash_light = MockEntity(
+        entity_id="light.component1_effect_flash_light",
+        unique_id="component1_effect_flash_light",
+        supported_features=LightEntityFeature.EFFECT | LightEntityFeature.FLASH,
+    )
+    component1_flash_transition_light = MockEntity(
+        entity_id="light.component1_flash_transition_light",
+        unique_id="component1_flash_transition_light",
+        supported_features=LightEntityFeature.FLASH | LightEntityFeature.TRANSITION,
+    )
 
     component1_light_platform = MockEntityPlatform(
         hass, domain="light", platform_name="component1"
     )
     component1_light_platform.config_entry = config_entry
     await component1_light_platform.async_add_entities(
-        [component1_light, component1_flash_light]
+        [
+            component1_light,
+            component1_flash_light,
+            component1_effect_flash_light,
+            component1_flash_transition_light,
+        ]
     )
 
     label_component1_switch = MockEntity(
@@ -3727,6 +3751,25 @@ async def test_get_triggers_for_target(
             "component1",
             "component1.light_message",
             "component1.light_flash",
+        ],
+    )
+    await assert_triggers(
+        {"entity_id": [component1_effect_flash_light.entity_id]},
+        [
+            "light.turned_on",
+            "component1",
+            "component1.light_message",
+            "component1.light_flash",
+        ],
+    )
+    await assert_triggers(
+        {"entity_id": [component1_flash_transition_light.entity_id]},
+        [
+            "light.turned_on",
+            "component1",
+            "component1.light_message",
+            "component1.light_flash",
+            "component1.light_dance",
         ],
     )
 
