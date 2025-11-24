@@ -172,7 +172,6 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_cloud_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities become unavailable when cloud fails and no bluetooth coordinator exists."""
@@ -193,7 +192,7 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
 
     # Simulate cloud coordinator failures without bluetooth fallback
     mock_lamarzocco.websocket.connected = False
-    mock_cloud_client.async_get_access_token.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco.ensure_token_valid.side_effect = RequestNotSuccessful("")
 
     # Trigger update
     freezer.tick(timedelta(seconds=61))

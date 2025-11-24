@@ -164,12 +164,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     )
 
     coordinators = LaMarzoccoRuntimeData(
-        LaMarzoccoConfigUpdateCoordinator(
-            hass, entry, device, bluetooth_client, cloud_client
-        ),
-        LaMarzoccoSettingsUpdateCoordinator(hass, entry, device, bluetooth_client),
-        LaMarzoccoScheduleUpdateCoordinator(hass, entry, device, bluetooth_client),
-        LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device, bluetooth_client),
+        LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
+        LaMarzoccoSettingsUpdateCoordinator(hass, entry, device),
+        LaMarzoccoScheduleUpdateCoordinator(hass, entry, device),
+        LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
     await asyncio.gather(
@@ -184,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # to fetch only if the others failed
     if bluetooth_client:
         bluetooth_coordinator = LaMarzoccoBluetoothUpdateCoordinator(
-            hass, entry, device, bluetooth_client
+            hass, entry, device
         )
         await bluetooth_coordinator.async_config_entry_first_refresh()
         coordinators.bluetooth_coordinator = bluetooth_coordinator

@@ -51,6 +51,7 @@ async def test_config_entry_not_ready(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test the La Marzocco configuration entry not ready."""
+    mock_lamarzocco.bluetooth_client_available = False
     mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
 

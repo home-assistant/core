@@ -10,11 +10,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pylamarzocco import (
-    LaMarzoccoBluetoothClient,
-    LaMarzoccoCloudClient,
-    LaMarzoccoMachine,
-)
+from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.exceptions import (
     AuthFail,
     BluetoothConnectionFailed,
@@ -62,8 +58,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
         device: LaMarzoccoMachine,
-        bluetooth_client: LaMarzoccoBluetoothClient | None = None,
-        cloud_client: LaMarzoccoCloudClient | None = None,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -74,8 +68,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=self._default_update_interval,
         )
         self.device = device
-        self.cloud_client = cloud_client
-        self.bluetooth_client = bluetooth_client
         self._websocket_task: Task | None = None
 
     @property
@@ -102,7 +94,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             self.update_success = False
             # if no bluetooth coordinator, this is a fatal error
             # otherwise, bluetooth may still work
-            if self.bluetooth_client is None:
+            if not self.device.bluetooth_client_available:
                 raise UpdateFailed(
                     translation_domain=DOMAIN, translation_key="api_error"
                 ) from ex
@@ -135,11 +127,9 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    cloud_client: LaMarzoccoCloudClient
-
     async def _internal_async_setup(self) -> None:
         """Set up the coordinator."""
-        await self.cloud_client.async_get_access_token()
+        await self.device.ensure_token_valid()
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
@@ -147,7 +137,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Fetch data from API endpoint."""
 
         # ensure token stays valid; does nothing if token is still valid
-        await self.cloud_client.async_get_access_token()
+        await self.device.ensure_token_valid()
 
         # Only skip websocket reconnection if it's currently connected and the task is still running
         if self.device.websocket.connected and not self.websocket_terminated:
