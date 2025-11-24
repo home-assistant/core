@@ -10,20 +10,12 @@ from pymarstek import MarstekUDPClient
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): str,
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_MAC): str,
-    }
-)
 
 
 class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -8,6 +8,7 @@ from typing import Any, cast
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfPower,
@@ -54,15 +55,7 @@ class MarstekSensor(CoordinatorEntity[MarstekDataUpdateCoordinator], SensorEntit
         device_id = self._device_info.get("ip") or self._device_info.get(
             "mac", "unknown"
         )
-        unique_id = f"{device_id}_{self._sensor_type}"
-        _LOGGER.debug(
-            "Generate sensor unique_id: %s (ip=%s, mac=%s, type=%s)",
-            unique_id,
-            self._device_info.get("ip"),
-            self._device_info.get("mac"),
-            self._sensor_type,
-        )
-        return unique_id
+        return f"{device_id}_{self._sensor_type}"
 
     @property
     def name(self) -> str:
@@ -85,6 +78,8 @@ class MarstekSensor(CoordinatorEntity[MarstekDataUpdateCoordinator], SensorEntit
 class MarstekBatterySensor(MarstekSensor):
     """Representation of a Marstek battery sensor."""
 
+    _attr_translation_key = "battery_level"
+
     def __init__(
         self,
         coordinator: MarstekDataUpdateCoordinator,
@@ -95,12 +90,6 @@ class MarstekBatterySensor(MarstekSensor):
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_icon = "mdi:battery"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        device_ip = self._device_info.get("ip", "Unknown")
-        return f"Battery Level ({device_ip})"
 
     @property
     def native_value(self) -> StateType:
@@ -141,6 +130,8 @@ class MarstekPowerSensor(MarstekSensor):
 class MarstekDeviceInfoSensor(MarstekSensor):
     """Representation of a Marstek device info sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     def __init__(
         self,
         coordinator: MarstekDataUpdateCoordinator,
@@ -157,7 +148,12 @@ class MarstekDeviceInfoSensor(MarstekSensor):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self._info_type.replace("_", " ").title()
+        info_type_names = {
+            "device_ip": "Device IP",
+            "device_version": "Device version",
+            "wifi_name": "Wi-Fi name",
+        }
+        return info_type_names.get(self._info_type, self._info_type.replace("_", " "))
 
     @property
     def native_value(self) -> StateType:

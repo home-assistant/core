@@ -12,13 +12,20 @@
     "step": {
       "user": {
         "data": {
-          "device": "Select Device"
+          "device": "Select device"
         },
         "data_description": {
           "device": "Choose the Marstek device you want to add"
         },
         "description": "Select your Marstek energy storage device from the discovered devices",
-        "title": "Marstek Energy Storage"
+        "title": "Marstek energy storage"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_level": {
+        "name": "Battery level"
       }
     }
   }
