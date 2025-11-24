@@ -3526,6 +3526,75 @@ async def test_bluetooth_provision_timeout_ble_fallback_fails(
     assert result["reason"] == "unknown"
 
 
+async def test_bluetooth_provision_timeout_ble_exception(
+    hass: HomeAssistant,
+) -> None:
+    """Test WiFi provisioning times out, active lookup fails, and BLE raises exception."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Provision WiFi but no zeroconf discovery, active lookup fails, BLE raises exception
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.ble_rpc_device",
+            side_effect=DeviceConnectionError,  # BLE raises exception
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, both active lookup and BLE fallback fail (exception)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show provision_failed form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision_failed"
+
+    # User aborts after failure
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
 async def test_bluetooth_provision_secure_device_both_enabled(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
