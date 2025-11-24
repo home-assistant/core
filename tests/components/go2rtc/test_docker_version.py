@@ -1,12 +1,12 @@
-"""Test go2rtc Docker version matches recommended version.
+"""Test that the go2rtc Docker image version matches or exceeds the recommended version.
 
-This test module ensures that the go2rtc Docker image SHA pinned in
+This test ensures that the go2rtc Docker image SHA pinned in
 script/hassfest/docker.py corresponds to a version that is equal to or
 greater than the RECOMMENDED_VERSION defined in homeassistant/components/go2rtc/const.py.
 
-The test uses a temporary Dockerfile with multi-stage build (like the main Dockerfile)
-to extract and run the go2rtc binary from the pinned SHA, then compares the actual
-version against RECOMMENDED_VERSION.
+The test pulls the Docker image using the pinned SHA and runs the
+`go2rtc --version` command inside the container to extract the version,
+then compares it against RECOMMENDED_VERSION.
 """
 
 import asyncio
