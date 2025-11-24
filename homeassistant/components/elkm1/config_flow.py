@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
-from . import async_wait_for_elk_to_sync, hostname_from_url
+from . import ElkSyncWaiter, hostname_from_url
 from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN, LOGIN_TIMEOUT
 from .discovery import (
     _short_mac,
@@ -89,7 +89,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     elk.connect()
 
     try:
-        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT):
+        if not await ElkSyncWaiter(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT).async_wait():
             raise InvalidAuth
     finally:
         elk.disconnect()
