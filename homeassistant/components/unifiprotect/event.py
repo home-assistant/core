@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import dataclasses
+from typing import Any
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -11,6 +13,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from . import Bootstrap
 from .const import (
@@ -19,6 +22,7 @@ from .const import (
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
+    EVENT_TYPE_VEHICLE_DETECTED,
     KEYRINGS_KEY_TYPE_ID_NFC,
     KEYRINGS_ULP_ID,
     KEYRINGS_USER_FULL_NAME,
@@ -167,6 +171,126 @@ class ProtectDeviceFingerprintEventEntity(
             self.async_write_ha_state()
 
 
+class ProtectDeviceVehicleEventEntity(
+    EventEntityMixin, ProtectDeviceEntity, EventEntity
+):
+    """A UniFi Protect vehicle detection event entity."""
+
+    entity_description: ProtectEventEntityDescription
+    _last_event_id_with_thumbnails: str | None = None
+    _pending_event_id: str | None = None
+    _thumbnail_timer_cancel: Callable[[], None] | None = None
+
+    @callback
+    def _fire_vehicle_event(self, event_id: str) -> None:
+        """Fire the vehicle detection event with best available thumbnail."""
+        # Get the event object
+        event = self.entity_description.get_event_obj(self.device)
+        if not event or event.id != event_id:
+            return
+
+        # Get current vehicle thumbnails
+        current_thumbnails = []
+        if event.metadata and event.metadata.detected_thumbnails:
+            current_thumbnails = [
+                t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
+            ]
+
+        if not current_thumbnails:
+            return
+
+        # Start with just the event ID
+        event_data: dict[str, Any] = {
+            ATTR_EVENT_ID: event.id,
+        }
+
+        # Select best thumbnail
+        # LPR can be in: 1) group.matched_name (UFP 6.0+) or 2) name field
+        thumbnails_with_lpr = [
+            t
+            for t in current_thumbnails
+            if (t.group and t.group.matched_name) or (t.name and len(t.name) > 0)
+        ]
+
+        if thumbnails_with_lpr:
+            thumbnail = max(
+                thumbnails_with_lpr,
+                key=lambda t: t.confidence if t.confidence else 0,
+            )
+        else:
+            thumbnail = max(
+                current_thumbnails,
+                key=lambda t: t.clock_best_wall if t.clock_best_wall else 0,
+            )
+
+        # Add confidence if available
+        if thumbnail.confidence is not None:
+            event_data["confidence"] = thumbnail.confidence
+
+        # Add best detection frame timestamp
+        if thumbnail.clock_best_wall is not None:
+            event_data["clock_best_wall"] = thumbnail.clock_best_wall.isoformat()
+
+        # License plate from group.matched_name (UFP 6.0+) or name field (older)
+        if thumbnail.group and thumbnail.group.matched_name:
+            event_data["license_plate"] = thumbnail.group.matched_name
+        elif thumbnail.name:
+            event_data["license_plate"] = thumbnail.name
+
+        # Add all thumbnail attributes as dict
+        if thumbnail.attributes:
+            event_data["attributes"] = thumbnail.attributes.unifi_dict()
+
+        self._trigger_event(EVENT_TYPE_VEHICLE_DETECTED, event_data)
+        self.async_write_ha_state()
+
+        # Remember this event
+        self._last_event_id_with_thumbnails = event.id
+        self._pending_event_id = None
+        self._thumbnail_timer_cancel = None
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        description = self.entity_description
+
+        super()._async_update_device_from_protect(device)
+        if event := description.get_event_obj(device):
+            self._event = event
+            self._event_end = event.end if event else None
+
+        # Check if detected_thumbnails just arrived for this event
+        if event and event.type is EventType.SMART_DETECT:
+            # Get current vehicle thumbnails
+            current_thumbnails = []
+            if event.metadata and event.metadata.detected_thumbnails:
+                current_thumbnails = [
+                    t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
+                ]
+
+            # Strategy: Wait 3 seconds after last thumbnail before firing event
+            if current_thumbnails:
+                # Is this a new event or same event with new thumbnails?
+                if event.id != self._pending_event_id:
+                    # New event - cancel any pending timer
+                    if self._thumbnail_timer_cancel:
+                        self._thumbnail_timer_cancel()
+                    self._pending_event_id = event.id
+
+                # Cancel existing timer (we got a new thumbnail)
+                if self._thumbnail_timer_cancel:
+                    self._thumbnail_timer_cancel()
+
+                # Start 3 second timer - must use callback wrapper for event loop safety
+                @callback
+                def _fire_event(_now: Any) -> None:
+                    """Wrapper to fire event in event loop."""
+                    self._fire_vehicle_event(event.id)
+
+                self._thumbnail_timer_cancel = async_call_later(
+                    self.hass, 3, _fire_event
+                )
+
+
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
@@ -198,6 +322,15 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
             EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
         ],
         entity_class=ProtectDeviceFingerprintEventEntity,
+    ),
+    ProtectEventEntityDescription(
+        key="vehicle",
+        translation_key="vehicle",
+        icon="mdi:car",
+        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_event_obj="last_vehicle_detect_event",
+        event_types=[EVENT_TYPE_VEHICLE_DETECTED],
+        entity_class=ProtectDeviceVehicleEventEntity,
     ),
 )
 

@@ -83,6 +83,7 @@ EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "scanned"
 EVENT_TYPE_DOORBELL_RING: Final = "ring"
+EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
 
 KEYRINGS_ULP_ID: Final = "ulp_id"
 KEYRINGS_USER_STATUS: Final = "user_status"
