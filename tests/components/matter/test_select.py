@@ -350,7 +350,11 @@ async def test_door_lock_operating_mode_select(
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
-    write_call = matter_client.write_attribute.call_args
-    args, kwargs = write_call
-    value_written = kwargs.get("value") if kwargs else args[-1]
-    assert value_written == clusters.DoorLock.Enums.OperatingModeEnum.kVacation
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.DoorLock.Attributes.OperatingMode,
+        ),
+        value=clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+    )
