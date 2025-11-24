@@ -7,6 +7,7 @@ in the Home Assistant Labs UI for users to enable or disable.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -14,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.backup import async_get_manager
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.generated.labs import LABS_PREVIEW_FEATURES
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -41,6 +42,7 @@ __all__ = [
     "EVENT_LABS_UPDATED",
     "EventLabsUpdatedData",
     "async_is_preview_feature_enabled",
+    "async_listen",
 ]
 
 
@@ -218,6 +220,37 @@ def async_is_preview_feature_enabled(
 
 
 @callback
+def async_listen(
+    hass: HomeAssistant,
+    domain: str,
+    preview_feature: str,
+    listener: Callable[[], None],
+) -> Callable[[], None]:
+    """Listen for changes to a specific preview feature.
+
+    Args:
+        hass: HomeAssistant instance
+        domain: Integration domain
+        preview_feature: Preview feature name
+        listener: Callback to invoke when the preview feature is toggled
+
+    Returns:
+        Callable to unsubscribe from the listener
+    """
+
+    @callback
+    def _async_feature_updated(event: Event[EventLabsUpdatedData]) -> None:
+        """Handle labs feature update event."""
+        if (
+            event.data["domain"] == domain
+            and event.data["preview_feature"] == preview_feature
+        ):
+            listener()
+
+    return hass.bus.async_listen(EVENT_LABS_UPDATED, _async_feature_updated)
+
+
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "labs/list"})
 def websocket_list_preview_features(
@@ -234,7 +267,7 @@ def websocket_list_preview_features(
             (preview_feature.domain, preview_feature.preview_feature)
             in labs_data.data["preview_feature_status"]
         )
-        for preview_feature_key, preview_feature in labs_data.preview_features.items()
+        for preview_feature in labs_data.preview_features.values()
         if preview_feature.domain in loaded_components
     ]
 
