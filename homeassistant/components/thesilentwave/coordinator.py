@@ -34,10 +34,6 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._host = entry.data["host"]
         self.client = SilentWaveClient(self._host, session=websession)
 
-        # Track connection state to avoid log spam.
-        self.has_connection = True
-        self._connection_error_logged = False
-
         super().__init__(
             hass,
             _LOGGER,
@@ -60,21 +56,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from the API."""
         try:
             status = await self.client.get_status()
-
-            # Reset connection tracking state if needed
-            if not self.has_connection:
-                self.has_connection = True
-                self._connection_error_logged = False
-
         except SilentWaveError as exc:
-            # Mark that we have a connection issue.
-            self.has_connection = False
-
-            # Only log the error once until we reconnect.
-            if not self._connection_error_logged:
-                _LOGGER.error("Failed to connect to device at %s", self._host)
-                self._connection_error_logged = True
-
             raise UpdateFailed("Failed to fetch device status") from exc
         else:
             return status
