@@ -100,7 +100,11 @@ async def target_entities(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ):
-    """Fixture to create targets and entities used in target-based tests."""
+    """Fixture to create targets and entities used in target-based tests.
+
+    The list of created entities, areas, labels, and devices can be found in the
+    assertions at the end.
+    """
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
@@ -226,6 +230,29 @@ async def target_entities(
     entity_registry.async_update_entity(
         label_component1_switch.entity_id, labels={label1.label_id}
     )
+
+    assert set(hass.states.async_entity_ids()) == {
+        "light.not_registry",
+        "light.test1",
+        "light.test4",
+        "light.test6",
+        "switch.test2",
+        "switch.test5",
+        "light.component1_light",
+        "light.component1_flash_light",
+        "light.component1_effect_flash_light",
+        "light.component1_flash_transition_light",
+        "switch.component1_switch",
+        "sensor.component1_sensor",
+    }
+    assert set(label_registry.labels) == {"label_1", "label_2"}
+    assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom"}
+    assert set(dr.async_get(hass).devices) == {
+        "device1",
+        "device2",
+        "area_device",
+        "label_device",
+    }
 
 
 def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
