@@ -100,11 +100,11 @@ class MieleSelectMode(MieleEntity, SelectEntity):
         """Return the list of available options."""
         return sorted(
             {MieleModes(x).name.lower() for x in self.action.modes}
-            | {self.current_option if self.current_option is not None else "normal"}
+            | {self.current_option}
         )
 
     @property
-    def current_option(self) -> str | None:
+    def current_option(self) -> str:
         """Retrieve currently selected option."""
         # There is no direct mapping from Miele 3rd party API, so we infer the
         # current mode based on available modes in action.modes
@@ -122,7 +122,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
         if action_modes == {0, 1, 2}:
             return MieleModes.HOLIDAY.name.lower()
 
-        return None
+        return MieleModes.NORMAL.name.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
