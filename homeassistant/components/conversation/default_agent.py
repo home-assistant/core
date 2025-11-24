@@ -78,6 +78,7 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 from .agent_manager import get_agent_manager
 from .chat_log import AssistantContent, ChatLog
 from .const import (
+    CUSTOM_SENTENCES_DIR_NAME,
     DOMAIN,
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
@@ -264,6 +265,16 @@ class DefaultAgent(ConversationEntity):
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return get_languages()
+
+    @property
+    def trigger_details(self) -> list[TriggerDetails]:
+        """Get sentence trigger details."""
+        return self._triggers_details
+
+    @property
+    def config_intents(self) -> dict[str, Any]:
+        """Get intents from conversation configuration."""
+        return self._config_intents
 
     @callback
     def _filter_entity_registry_changes(
@@ -1128,7 +1139,7 @@ class DefaultAgent(ConversationEntity):
 
         # Check for custom sentences in <config>/custom_sentences/<language>/
         custom_sentences_dir = Path(
-            self.hass.config.path("custom_sentences", language_variant)
+            self.hass.config.path(CUSTOM_SENTENCES_DIR_NAME, language_variant)
         )
         if custom_sentences_dir.is_dir():
             for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
@@ -1467,7 +1478,7 @@ class DefaultAgent(ConversationEntity):
         for trigger_intent in trigger_intents.intents.values():
             for intent_data in trigger_intent.data:
                 for sentence in intent_data.sentences:
-                    _collect_list_references(sentence.expression, wildcard_names)
+                    collect_list_references(sentence.expression, wildcard_names)
 
         for wildcard_name in wildcard_names:
             trigger_intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
@@ -1798,11 +1809,11 @@ def _get_match_error_response(
     return ErrorKey.NO_INTENT, {}
 
 
-def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
+def collect_list_references(expression: Expression, list_names: set[str]) -> None:
     """Collect list reference names recursively."""
     if isinstance(expression, Group):
         for item in expression.items:
-            _collect_list_references(item, list_names)
+            collect_list_references(item, list_names)
     elif isinstance(expression, ListReference):
         # {list}
         list_names.add(expression.slot_name)
