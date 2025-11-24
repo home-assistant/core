@@ -12,6 +12,7 @@ from fish_audio_sdk.schemas import APICreditEntity
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -73,16 +74,11 @@ class SubentryInitUserInput(TypedDict, total=False):
     sort_by: str
 
 
-class SubentryModelUserInput(TypedDict):
+class SubentryModelUserInput(TypedDict, total=False):
     """User input for the Fish Audio subentry model step."""
 
     voice_id: str
     backend: str
-
-
-class SubentryNameUserInput(TypedDict):
-    """User input for the Fish Audio subentry name step."""
-
     name: str
 
 
@@ -119,7 +115,8 @@ def get_filter_schema(options: TTSConfigData) -> vol.Schema:
 
 
 def get_model_selection_schema(
-    options: TTSConfigData, model_options: list[SelectOptionDict]
+    options: TTSConfigData,
+    model_options: list[SelectOptionDict],
 ) -> vol.Schema:
     """Return the schema for the model selection step."""
     return vol.Schema(
@@ -146,13 +143,12 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
+            vol.Required(
+                CONF_NAME,
+                default=options.get(CONF_NAME) or vol.UNDEFINED,
+            ): str,
         }
     )
-
-
-def get_name_schema(options: TTSConfigData, default: str | None = None) -> vol.Schema:
-    """Return the schema for the name input."""
-    return vol.Schema({vol.Required(CONF_NAME, default=default or vol.UNDEFINED): str})
 
 
 async def _validate_api_key(
@@ -267,11 +263,6 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
 
         return [SelectOptionDict(value=model.id, label=model.title) for model in models]
 
-    @property
-    def _is_new(self) -> bool:
-        """Return if this is a new subentry."""
-        return self.source == "user"
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -332,19 +323,20 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "no_models_found"
 
         if user_input is not None:
-            if (voice_id := user_input.get(CONF_VOICE_ID)) and (
-                backend := user_input.get(CONF_BACKEND)
+            if (
+                (voice_id := user_input.get(CONF_VOICE_ID))
+                and (backend := user_input.get(CONF_BACKEND))
+                and (name := user_input.get(CONF_NAME))
             ):
                 self.config_data.update(user_input)
-                if self._is_new:
-                    voice_name = next(
-                        (m["label"] for m in self.models if m["value"] == voice_id),
-                        "Fish Audio TTS",
-                    )
-
-                    return await self.async_step_name(default=voice_name)
-
                 unique_id = f"{voice_id}-{backend}"
+
+                if self.source == SOURCE_USER:
+                    return self.async_create_entry(
+                        title=name,
+                        data=self.config_data,
+                        unique_id=unique_id,
+                    )
 
                 return self.async_update_and_abort(
                     self._get_entry(),
@@ -356,30 +348,5 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="model",
             data_schema=get_model_selection_schema(self.config_data, self.models),
-            errors=errors,
-        )
-
-    async def async_step_name(
-        self,
-        user_input: SubentryNameUserInput | None = None,
-        default: str | None = None,
-        unique_id: str | None = None,
-    ) -> SubentryFlowResult:
-        """Handle the name selection step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self.config_data.update(user_input)
-            unique_id = (
-                f"{self.config_data[CONF_VOICE_ID]}-{self.config_data[CONF_BACKEND]}"
-            )
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data=self.config_data,
-                unique_id=unique_id,
-            )
-        return self.async_show_form(
-            step_id="name",
-            data_schema=get_name_schema(self.config_data, default),
             errors=errors,
         )
