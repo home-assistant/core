@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import json
 import os
+import threading
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
@@ -17,7 +18,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes
@@ -138,6 +144,44 @@ async def test_saving_with_delay(
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:  # MEEPÅ
+    """Test thread handling when saving with a delay."""
+    calls = []
+
+    loop = asyncio.get_running_loop()
+    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+
+        def data_producer_thread_safe() -> Any:
+            """Produce data to store."""
+            assert threading.get_ident() != hass.loop_thread_id
+            calls.append("thread_safe")
+            return MOCK_DATA
+
+        @callback
+        def data_producer_callback() -> Any:
+            """Produce data to store."""
+            assert threading.get_ident() == hass.loop_thread_id
+            calls.append("callback")
+            return MOCK_DATA
+
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+        store.async_delay_save(data_producer_thread_safe, 1)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+        store.async_delay_save(data_producer_callback, 1)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        assert calls == ["thread_safe", "callback"]
+
+        await hass.async_stop(force=True)
 
 
 async def test_saving_with_delay_churn_reduction(

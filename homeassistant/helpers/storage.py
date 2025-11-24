@@ -27,6 +27,7 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     callback,
+    is_callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
@@ -542,6 +543,8 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, path: str, data: dict) -> None:
+        if "data_func" in data and is_callback(data["data_func"]):
+            data["data"] = data.pop("data_func")()
         await self.hass.async_add_executor_job(self._write_data, self.path, data)
 
     def _write_data(self, path: str, data: dict) -> None:
