@@ -3283,7 +3283,7 @@
     'state': '5067',
   })
 # ---
-# name: test_all_entities[sensor.model2_condensor_subcooling_temperature-entry]
+# name: test_all_entities[sensor.model2_condenser_subcooling_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3296,7 +3296,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model2_condensor_subcooling_temperature',
+    'entity_id': 'sensor.model2_condenser_subcooling_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3311,25 +3311,25 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Condensor subcooling temperature',
+    'original_name': 'Condenser subcooling temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'condensor_subcooling_temperature',
-    'unique_id': 'gateway2_################-condensor_subcooling_temperature-0',
+    'translation_key': 'condenser_subcooling_temperature',
+    'unique_id': 'gateway2_################-condenser_subcooling_temperature-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model2_condensor_subcooling_temperature-state]
+# name: test_all_entities[sensor.model2_condenser_subcooling_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model2 Condensor subcooling temperature',
+      'friendly_name': 'model2 Condenser subcooling temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model2_condensor_subcooling_temperature',
+    'entity_id': 'sensor.model2_condenser_subcooling_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

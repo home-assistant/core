@@ -31,7 +31,16 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?"
+        "data": {
+          "disable_ap": "Disable WiFi access point after provisioning",
+          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
+        },
+        "data_description": {
+          "disable_ap": "For improved security, disable the WiFi access point after successfully connecting to your network.",
+          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after WiFi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
+        },
+        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?",
+        "title": "Provision WiFi via Bluetooth"
       },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
@@ -129,6 +138,80 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "cable_unplugged": {
+        "name": "Cable unplugged"
+      },
+      "cable_unplugged_with_channel_name": {
+        "name": "{channel_name} cable unplugged"
+      },
+      "calibration": {
+        "name": "Calibration"
+      },
+      "cloud": {
+        "name": "Cloud"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "external_input": {
+        "name": "External input"
+      },
+      "external_power": {
+        "name": "External power"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "flood_with_channel_name": {
+        "name": "{channel_name} flood"
+      },
+      "input": {
+        "name": "Input"
+      },
+      "input_with_number": {
+        "name": "Input {input_number}"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "mute_with_channel_name": {
+        "name": "{channel_name} mute"
+      },
+      "occupancy_with_channel_name": {
+        "name": "{channel_name} occupancy"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overcurrent_with_channel_name": {
+        "name": "{channel_name} overcurrent"
+      },
+      "overheating": {
+        "name": "Overheating"
+      },
+      "overheating_with_channel_name": {
+        "name": "{channel_name} overheating"
+      },
+      "overpowering": {
+        "name": "Overpowering"
+      },
+      "overpowering_with_channel_name": {
+        "name": "{channel_name} overpowering"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "overvoltage_with_channel_name": {
+        "name": "{channel_name} overvoltage"
+      },
+      "restart_required": {
+        "name": "Restart required"
+      },
+      "smoke_with_channel_name": {
+        "name": "{channel_name} smoke"
+      }
+    },
     "button": {
       "calibrate": {
         "name": "Calibrate"
@@ -168,6 +251,7 @@
     },
     "event": {
       "input": {
+        "name": "Input {input_number}",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -463,6 +547,41 @@
         "name": "Water temperature"
       }
     },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "frost_protection": {
+        "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
+      },
+      "left_slot": {
+        "name": "Left slot"
+      },
+      "left_slot_boost": {
+        "name": "Left slot boost"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "right_slot": {
+        "name": "Right slot"
+      },
+      "right_slot_boost": {
+        "name": "Right slot boost"
+      },
+      "thermostat_enabled": {
+        "name": "Thermostat enabled"
+      },
+      "valve_opened": {
+        "name": "Valve opened"
+      },
+      "zone_with_number": {
+        "name": "Zone {zone_number}"
+      }
+    },
     "update": {
       "beta_firmware": {
         "name": "Beta firmware"
@@ -544,6 +663,25 @@
     "device_not_calibrated": {
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",
       "title": "Shelly device {device_name} is not calibrated"
+    },
+    "open_wifi_ap": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nNote: If you disable the access point, the device may need to restart.",
+            "menu_options": {
+              "confirm": "Disable WiFi access point",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::shelly::issues::open_wifi_ap::title%]"
+          }
+        }
+      },
+      "title": "Open WiFi access point on {device_name}"
     },
     "outbound_websocket_incorrectly_enabled": {
       "fix_flow": {
