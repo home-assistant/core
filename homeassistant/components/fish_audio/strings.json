@@ -40,6 +40,8 @@
     "tts": {
       "abort": {
         "already_configured": "This TTS voice is already configured.",
+        "entry_not_loaded": "Cannot add TTS voice while the configuration is disabled.",
+        "no_models_found": "No voices found matching the specified filters. Please adjust your filters and try again.",
         "reconfigure_successful": "Your TTS voice has been updated successfully. The integration will now reload with the new settings."
       },
       "entry_type": "TTS voice",
