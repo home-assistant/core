@@ -51,6 +51,7 @@
           "data": {
             "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::code_interpreter%]",
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
+            "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::inline_citations%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]",
@@ -59,6 +60,7 @@
           "data_description": {
             "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::code_interpreter%]",
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
+            "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::inline_citations%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]",
@@ -74,7 +76,6 @@
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Conversation agent",
-
       "error": {
         "model_not_supported": "This model is not supported, please select a different model",
         "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
@@ -108,6 +109,7 @@
           "data": {
             "code_interpreter": "Enable code interpreter tool",
             "image_model": "Image generation model",
+            "inline_citations": "Include links in web search results",
             "reasoning_effort": "Reasoning effort",
             "search_context_size": "Search context size",
             "user_location": "Include home location",
@@ -116,6 +118,7 @@
           "data_description": {
             "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
             "image_model": "The model to use when generating images",
+            "inline_citations": "If disabled, additional prompt is added to ask the model to not include source citations",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
             "user_location": "Refine search results based on geography",
@@ -143,7 +146,8 @@
         "high": "[%key:common::state::high%]",
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
-        "minimal": "Minimal"
+        "minimal": "Minimal",
+        "none": "None"
       }
     },
     "search_context_size": {

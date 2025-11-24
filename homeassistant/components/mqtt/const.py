@@ -138,6 +138,7 @@ CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
+CONF_PATTERN = "pattern"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
@@ -374,6 +375,7 @@ DOMAIN = "mqtt"
 LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"
+MQTT_PROCESSED_SUBSCRIPTIONS = "mqtt_processed_subscriptions"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"

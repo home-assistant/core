@@ -1827,6 +1827,63 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[light.kattenbak_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'light.kattenbak_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': 'tuya.yohkwjjdjlzludd3psmlight',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.kattenbak_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'Kattenbak Light',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.kattenbak_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[light.landing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2340,6 +2397,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.mini_split_backlight-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'light.mini_split_backlight',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Backlight',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backlight',
+    'unique_id': 'tuya.zzz87dkfce6pdqxwtklight',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.mini_split_backlight-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'Mini-Split Backlight',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.mini_split_backlight',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[light.parker_ceiling_fan_1-entry]
@@ -2861,6 +2975,77 @@
     }),
     'context': <ANY>,
     'entity_id': 'light.roller_shutter_living_room_backlight',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.shop_light_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.shop_light_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.y1dkg3disbacmqfyjdswitch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.shop_light_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'color_temp': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'Shop Light 5',
+      'hs_color': None,
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.shop_light_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3525,6 +3710,77 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[light.telecommande_lumieres_zigbee-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.telecommande_lumieres_zigbee',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.rsjdwgnbqkyswitch_controller',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.telecommande_lumieres_zigbee-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'color_temp': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'Télécommande lumières ZigBee',
+      'hs_color': None,
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.telecommande_lumieres_zigbee',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[light.tower_fan_ca_407g_smart_backlight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3644,5 +3900,66 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.white_noise_machine-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.white_noise_machine',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.c9nbmrweturkgqktdyzbswitch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.white_noise_machine-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'White Noise Machine',
+      'hs_color': None,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.white_noise_machine',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

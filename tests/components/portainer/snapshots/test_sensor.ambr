@@ -1170,7 +1170,10 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
@@ -1182,7 +1185,7 @@
     'supported_features': 0,
     'translation_key': 'memory_total',
     'unique_id': 'portainer_test_entry_123_1_memory_total',
-    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
 # name: test_all_entities[sensor.my_environment_total_memory-state]
@@ -1191,14 +1194,14 @@
       'device_class': 'data_size',
       'friendly_name': 'my-environment Total memory',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_environment_total_memory',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2095882240',
+    'state': '1998.7890625',
   })
 # ---
 # name: test_all_entities[sensor.practical_morse_cpu_usage_total-entry]

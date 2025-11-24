@@ -68,6 +68,11 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
             coordinator.config_entry.data.get(CONF_MAC),
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.get_data() is not None
+
     def get_data(self) -> ValueDict | None:
         """Get data for this entity, only if available."""
         platform_data = self.coordinator.data[self.platform_name]
