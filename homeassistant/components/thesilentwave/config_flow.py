@@ -26,9 +26,7 @@ class TheSilentWaveConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Check for duplicate entries.
-            await self.async_set_unique_id(user_input[CONF_HOST])
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             # Check if device is reachable.
             websession = async_get_clientsession(self.hass)
