@@ -106,9 +106,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
         if not description.role:
             translation_placeholders, translation_key = (
                 get_entity_translation_attributes(
@@ -1819,10 +1816,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, block, attribute, description)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
@@ -1835,18 +1828,6 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a REST sensor."""
 
     entity_description: RestSensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyBlockCoordinator,
-        attribute: str,
-        description: RestSensorDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, attribute, description)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     @property
     def native_value(self) -> StateType:
@@ -1870,9 +1851,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -1920,9 +1898,6 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         self.restored_data: SensorExtraStoredData | None = None
 
         if coordinator.device.initialized:
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
-
             translation_placeholders, translation_key = (
                 get_entity_translation_attributes(
                     get_rpc_channel_name(coordinator.device, key),
