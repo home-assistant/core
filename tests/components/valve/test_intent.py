@@ -84,7 +84,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     assert call.data == {"entity_id": entity_id, "position": 50}
 
 
-async def test_stop_valve_intent(hass: HomeAssistant) -> None:
+async def test_stop_valve_position(hass: HomeAssistant) -> None:
     """Test HassStopPosition intent for valves."""
     assert await async_setup_component(hass, "intent", {})
 

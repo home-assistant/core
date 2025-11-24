@@ -91,7 +91,7 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
         ({"device_class": {"value": "shade"}}),
     ],
 )
-async def test_stop_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> None:
+async def test_stop_cover_position(hass: HomeAssistant, slots: dict[str, Any]) -> None:
     """Test HassStopPosition intent for covers."""
     assert await async_setup_component(hass, "intent", {})
 

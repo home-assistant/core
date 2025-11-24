@@ -600,7 +600,7 @@ async def test_intents_respond_intent(hass: HomeAssistant) -> None:
     assert response.speech["plain"]["speech"] == "Hello World"
 
 
-async def test_stop_intent_valve(
+async def test_stop_position_intent_valve(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test HassStopPosition intent for valves."""
@@ -622,7 +622,7 @@ async def test_stop_intent_valve(
     assert call.data == {"entity_id": valve.entity_id}
 
 
-async def test_stop_intent_unsupported_domain(hass: HomeAssistant) -> None:
+async def test_stop_position_intent_unsupported_domain(hass: HomeAssistant) -> None:
     """Test that HassStopPosition intent fails with unsupported domain."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
