@@ -1,0 +1,856 @@
+{
+  "source": "HARP",
+  "trips": [
+    {
+      "idx": 2,
+      "uid": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T16:34:00+02:00|plannedArrivalTime=2025-09-15T18:45:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=1596512355",
+      "ctxRecon": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T16:34:00+02:00|plannedArrivalTime=2025-09-15T18:45:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=1596512355",
+      "sourceCtxRecon": "¶HKI¶T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100870@a=128@$202509151634$202509151731$IC 2761 $$1$$$$$$§W$A=1@O='s-Hertogenbosch@L=1100870@a=128@$A=1@O='s-Hertogenbosch@L=1101751@a=128@$202509151731$202509151733$$$1$$$$$$§T$A=1@O='s-Hertogenbosch@L=1101751@a=128@$A=1@O=Breda@L=1101034@a=128@$202509151741$202509151810$IC 3661 $$3$$$$$$§W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100942@a=128@$202509151810$202509151812$$$1$$$$$$§T$A=1@O=Breda@L=1100942@a=128@$A=1@O=Rotterdam Centraal@L=1100668@a=128@$202509151823$202509151845$IC 1162 $$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#¶KCC¶#VE#0#ERG#45317#HIN#390#ECK#13954|13954|14077|14085|0|0|485|13938|3|0|8|0|0|-2147483648#¶KRCC¶#VE#1#MRTF#",
+      "plannedDurationInMinutes": 131,
+      "actualDurationInMinutes": 130,
+      "transfers": 2,
+      "status": "NORMAL",
+      "messages": [],
+      "legs": [
+        {
+          "idx": "0",
+          "name": "IC 2761",
+          "travelType": "PUBLIC_TRANSIT",
+          "direction": "Maastricht",
+          "partCancelled": false,
+          "cancelled": false,
+          "isAfterCancelledLeg": false,
+          "isOnOrAfterCancelledLeg": false,
+          "changePossible": true,
+          "alternativeTransport": false,
+          "journeyDetailRef": "HARP_MM-2|#VN#1#ST#1757498654#PI#0#ZI#1088#TA#0#DA#150925#1S#1101009#1T#1557#LS#1101011#LT#1903#PU#784#RT#1#CA#IC#ZE#2761#ZB#IC 2761 #PC#1#FR#1101009#FT#1557#TO#1101011#TT#1903#",
+          "origin": {
+            "name": "Amsterdam Centraal",
+            "lng": 4.90027761459351,
+            "lat": 52.3788871765137,
+            "countryCode": "NL",
+            "uicCode": "8400058",
+            "uicCdCode": "118400058",
+            "stationCode": "ASD",
+            "type": "STATION",
+            "plannedTimeZoneOffset": 120,
+            "plannedDateTime": "2025-09-15T16:34:00+0200",
+            "actualTimeZoneOffset": 120,
+            "actualDateTime": "2025-09-15T16:35:00+0200",
+            "plannedTrack": "4",
+            "actualTrack": "4",
+            "checkinStatus": "NOTHING",
+            "notes": []
+          },
+          "destination": {
+            "name": "'s-Hertogenbosch",
+            "lng": 5.29362,
+            "lat": 51.69048,
+            "countryCode": "NL",
+            "uicCode": "8400319",
+            "uicCdCode": "118400319",
+            "stationCode": "HT",
+            "type": "STATION",
+            "plannedTimeZoneOffset": 120,
+            "plannedDateTime": "2025-09-15T17:31:00+0200",
+            "actualTimeZoneOffset": 120,
+            "actualDateTime": "2025-09-15T17:31:00+0200",
+            "plannedTrack": "6",
+            "actualTrack": "6",
+            "exitSide": "RIGHT",
+            "checkinStatus": "NOTHING",
+            "notes": []
+          },
+          "product": {
+            "productType": "Product",
+            "number": "2761",
+            "categoryCode": "IC",
+            "shortCategoryName": "IC",
+            "longCategoryName": "Intercity",
+            "operatorCode": "NS",
+            "operatorName": "NS",
+            "operatorAdministrativeCode": 100,
+            "type": "TRAIN",
+            "displayName": "NS Intercity",
+            "nameNesProperties": {
+              "color": "text-body"
+            },
+            "iconNesProperties": {
+              "color": "text-body",
+              "icon": "train"
+            },
+            "notes": [
+              [
+                {
+                  "value": "NS Intercity",
+                  "shortValue": "NS Intercity",
+                  "accessibilityValue": "NS Intercity",
+                  "key": "PRODUCT_NAME",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ],
+              [
+                {
+                  "value": "richting Maastricht",
+                  "shortValue": "richting Maastricht",
+                  "accessibilityValue": "richting Maastricht",
+                  "key": "PRODUCT_DIRECTION",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ],
+              [
+                {
+                  "value": "2 tussenstops",
+                  "shortValue": "2 tussenstops",
+                  "accessibilityValue": "2 tussenstops",
+                  "key": "PRODUCT_INTERMEDIATE_STOPS",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ]
+            ]
+          },
+          "stops": [
+            {
+              "uicCode": "8400058",
+              "uicCdCode": "118400058",
+              "name": "Amsterdam Centraal",
+              "lat": 52.3788871765137,
+              "lng": 4.90027761459351,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 0,
+              "plannedDepartureDateTime": "2025-09-15T16:34:00+0200",
+              "plannedDepartureTimeZoneOffset": 120,
+              "actualDepartureDateTime": "2025-09-15T16:35:00+0200",
+              "actualDepartureTimeZoneOffset": 120,
+              "actualDepartureTrack": "4",
+              "plannedDepartureTrack": "4",
+              "plannedArrivalTrack": "4",
+              "actualArrivalTrack": "4",
+              "departureDelayInSeconds": 60,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            },
+            {
+              "uicCode": "8400057",
+              "uicCdCode": "118400057",
+              "name": "Amsterdam Amstel",
+              "lat": 52.3466682434082,
+              "lng": 4.91777801513672,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 2,
+              "plannedDepartureDateTime": "2025-09-15T16:42:00+0200",
+              "plannedDepartureTimeZoneOffset": 120,
+              "actualDepartureDateTime": "2025-09-15T16:43:00+0200",
+              "actualDepartureTimeZoneOffset": 120,
+              "plannedArrivalDateTime": "2025-09-15T16:42:00+0200",
+              "plannedArrivalTimeZoneOffset": 120,
+              "actualArrivalDateTime": "2025-09-15T16:43:00+0200",
+              "actualArrivalTimeZoneOffset": 120,
+              "actualDepartureTrack": "4",
+              "plannedDepartureTrack": "4",
+              "plannedArrivalTrack": "4",
+              "actualArrivalTrack": "4",
+              "departureDelayInSeconds": 60,
+              "arrivalDelayInSeconds": 60,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            },
+            {
+              "uicCode": "8400621",
+              "uicCdCode": "118400621",
+              "name": "Utrecht Centraal",
+              "lat": 52.0888900756836,
+              "lng": 5.11027765274048,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 10,
+              "plannedDepartureDateTime": "2025-09-15T17:03:00+0200",
+              "plannedDepartureTimeZoneOffset": 120,
+              "actualDepartureDateTime": "2025-09-15T17:03:00+0200",
+              "actualDepartureTimeZoneOffset": 120,
+              "plannedArrivalDateTime": "2025-09-15T17:00:00+0200",
+              "plannedArrivalTimeZoneOffset": 120,
+              "actualArrivalDateTime": "2025-09-15T17:00:00+0200",
+              "actualArrivalTimeZoneOffset": 120,
+              "actualDepartureTrack": "15",
+              "plannedDepartureTrack": "15",
+              "plannedArrivalTrack": "15",
+              "actualArrivalTrack": "15",
+              "departureDelayInSeconds": 0,
+              "arrivalDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            },
+            {
+              "uicCode": "8400319",
+              "uicCdCode": "118400319",
+              "name": "'s-Hertogenbosch",
+              "lat": 51.69048,
+              "lng": 5.29362,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 18,
+              "plannedArrivalDateTime": "2025-09-15T17:31:00+0200",
+              "plannedArrivalTimeZoneOffset": 120,
+              "actualArrivalDateTime": "2025-09-15T17:31:00+0200",
+              "actualArrivalTimeZoneOffset": 120,
+              "actualDepartureTrack": "6",
+              "plannedDepartureTrack": "6",
+              "plannedArrivalTrack": "6",
+              "actualArrivalTrack": "6",
+              "arrivalDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            }
+          ],
+          "crowdForecast": "MEDIUM",
+          "bicycleSpotCount": 6,
+          "crossPlatformTransfer": true,
+          "shorterStock": false,
+          "journeyDetail": [
+            {
+              "type": "TRAIN_XML",
+              "link": {
+                "uri": "/api/v2/journey?id=HARP_MM-2|#VN#1#ST#1757498654#PI#0#ZI#1088#TA#0#DA#150925#1S#1101009#1T#1557#LS#1101011#LT#1903#PU#784#RT#1#CA#IC#ZE#2761#ZB#IC 2761 #PC#1#FR#1101009#FT#1557#TO#1101011#TT#1903#&train=2761&datetime=2025-09-15T16:34:00+02:00"
+              }
+            }
+          ],
+          "reachable": true,
+          "plannedDurationInMinutes": 57,
+          "nesProperties": {
+            "color": "text-info",
+            "scope": "LEG_LINE",
+            "styles": {
+              "type": "LineStyles",
+              "dashed": false
+            }
+          },
+          "duration": {
+            "value": "56 min.",
+            "accessibilityValue": "56 minuten",
+            "nesProperties": {
+              "color": "text-body"
+            }
+          },
+          "preSteps": [],
+          "postSteps": [],
+          "transferTimeToNextLeg": 2,
+          "distanceInMeters": 84795
+        },
+        {
+          "idx": "1",
+          "name": "IC 3661",
+          "travelType": "PUBLIC_TRANSIT",
+          "direction": "Roosendaal",
+          "partCancelled": false,
+          "cancelled": false,
+          "isAfterCancelledLeg": false,
+          "isOnOrAfterCancelledLeg": false,
+          "changePossible": true,
+          "alternativeTransport": false,
+          "journeyDetailRef": "HARP_MM-2|#VN#1#ST#1757498654#PI#0#ZI#505945#TA#0#DA#150925#1S#1101167#1T#1550#LS#1101102#LT#1833#PU#784#RT#3#CA#IC#ZE#3661#ZB#IC 3661 #PC#1#FR#1101167#FT#1550#TO#1101102#TT#1833#",
+          "origin": {
+            "name": "'s-Hertogenbosch",
+            "lng": 5.29362,
+            "lat": 51.69048,
+            "countryCode": "NL",
+            "uicCode": "8400319",
+            "uicCdCode": "118400319",
+            "stationCode": "HT",
+            "type": "STATION",
+            "plannedTimeZoneOffset": 120,
+            "plannedDateTime": "2025-09-15T17:41:00+0200",
+            "actualTimeZoneOffset": 120,
+            "actualDateTime": "2025-09-15T17:41:00+0200",
+            "plannedTrack": "7",
+            "actualTrack": "7",
+            "checkinStatus": "NOTHING",
+            "notes": []
+          },
+          "destination": {
+            "name": "Breda",
+            "lng": 4.78000020980835,
+            "lat": 51.5955543518066,
+            "countryCode": "NL",
+            "uicCode": "8400131",
+            "uicCdCode": "118400131",
+            "stationCode": "BD",
+            "type": "STATION",
+            "plannedTimeZoneOffset": 120,
+            "plannedDateTime": "2025-09-15T18:10:00+0200",
+            "actualTimeZoneOffset": 120,
+            "actualDateTime": "2025-09-15T18:10:00+0200",
+            "plannedTrack": "8",
+            "actualTrack": "8",
+            "exitSide": "LEFT",
+            "checkinStatus": "NOTHING",
+            "notes": []
+          },
+          "product": {
+            "productType": "Product",
+            "number": "3661",
+            "categoryCode": "IC",
+            "shortCategoryName": "IC",
+            "longCategoryName": "Intercity",
+            "operatorCode": "NS",
+            "operatorName": "NS",
+            "operatorAdministrativeCode": 100,
+            "type": "TRAIN",
+            "displayName": "NS Intercity",
+            "nameNesProperties": {
+              "color": "text-body"
+            },
+            "iconNesProperties": {
+              "color": "text-body",
+              "icon": "train"
+            },
+            "notes": [
+              [
+                {
+                  "value": "NS Intercity",
+                  "shortValue": "NS Intercity",
+                  "accessibilityValue": "NS Intercity",
+                  "key": "PRODUCT_NAME",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ],
+              [
+                {
+                  "value": "richting Roosendaal",
+                  "shortValue": "richting Roosendaal",
+                  "accessibilityValue": "richting Roosendaal",
+                  "key": "PRODUCT_DIRECTION",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ],
+              [
+                {
+                  "value": "1 tussenstop",
+                  "shortValue": "1 tussenstop",
+                  "accessibilityValue": "1 tussenstop",
+                  "key": "PRODUCT_INTERMEDIATE_STOPS",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ]
+            ]
+          },
+          "transferMessages": [
+            {
+              "message": "Overstap op zelfde perron",
+              "accessibilityMessage": "Overstap op zelfde perron",
+              "type": "CROSS_PLATFORM",
+              "messageNesProperties": {
+                "color": "text-default",
+                "type": "informative"
+              }
+            }
+          ],
+          "stops": [
+            {
+              "uicCode": "8400319",
+              "uicCdCode": "118400319",
+              "name": "'s-Hertogenbosch",
+              "lat": 51.69048,
+              "lng": 5.29362,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 0,
+              "plannedDepartureDateTime": "2025-09-15T17:41:00+0200",
+              "plannedDepartureTimeZoneOffset": 120,
+              "actualDepartureDateTime": "2025-09-15T17:41:00+0200",
+              "actualDepartureTimeZoneOffset": 120,
+              "actualDepartureTrack": "7",
+              "plannedDepartureTrack": "7",
+              "plannedArrivalTrack": "7",
+              "actualArrivalTrack": "7",
+              "departureDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            },
+            {
+              "uicCode": "8400597",
+              "uicCdCode": "118400597",
+              "name": "Tilburg",
+              "lat": 51.5605545043945,
+              "lng": 5.08361101150513,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 1,
+              "plannedDepartureDateTime": "2025-09-15T17:58:00+0200",
+              "plannedDepartureTimeZoneOffset": 120,
+              "actualDepartureDateTime": "2025-09-15T17:58:00+0200",
+              "actualDepartureTimeZoneOffset": 120,
+              "plannedArrivalDateTime": "2025-09-15T17:56:00+0200",
+              "plannedArrivalTimeZoneOffset": 120,
+              "actualArrivalDateTime": "2025-09-15T17:56:00+0200",
+              "actualArrivalTimeZoneOffset": 120,
+              "actualDepartureTrack": "3",
+              "plannedDepartureTrack": "3",
+              "plannedArrivalTrack": "3",
+              "actualArrivalTrack": "3",
+              "departureDelayInSeconds": 0,
+              "arrivalDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            },
+            {
+              "uicCode": "8400131",
+              "uicCdCode": "118400131",
+              "name": "Breda",
+              "lat": 51.5955543518066,
+              "lng": 4.78000020980835,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 5,
+              "plannedArrivalDateTime": "2025-09-15T18:10:00+0200",
+              "plannedArrivalTimeZoneOffset": 120,
+              "actualArrivalDateTime": "2025-09-15T18:10:00+0200",
+              "actualArrivalTimeZoneOffset": 120,
+              "actualDepartureTrack": "8",
+              "plannedDepartureTrack": "8",
+              "plannedArrivalTrack": "8",
+              "actualArrivalTrack": "8",
+              "arrivalDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            }
+          ],
+          "crowdForecast": "MEDIUM",
+          "punctuality": 58.3,
+          "crossPlatformTransfer": true,
+          "shorterStock": false,
+          "journeyDetail": [
+            {
+              "type": "TRAIN_XML",
+              "link": {
+                "uri": "/api/v2/journey?id=HARP_MM-2|#VN#1#ST#1757498654#PI#0#ZI#505945#TA#0#DA#150925#1S#1101167#1T#1550#LS#1101102#LT#1833#PU#784#RT#3#CA#IC#ZE#3661#ZB#IC 3661 #PC#1#FR#1101167#FT#1550#TO#1101102#TT#1833#&train=3661&datetime=2025-09-15T17:41:00+02:00"
+              }
+            }
+          ],
+          "reachable": true,
+          "plannedDurationInMinutes": 29,
+          "nesProperties": {
+            "color": "text-info",
+            "scope": "LEG_LINE",
+            "styles": {
+              "type": "LineStyles",
+              "dashed": false
+            }
+          },
+          "duration": {
+            "value": "29 min.",
+            "accessibilityValue": "29 minuten",
+            "nesProperties": {
+              "color": "text-body"
+            }
+          },
+          "preSteps": [],
+          "postSteps": [],
+          "transferTimeToNextLeg": 2,
+          "distanceInMeters": 41871
+        },
+        {
+          "idx": "2",
+          "name": "IC 1162",
+          "travelType": "PUBLIC_TRANSIT",
+          "direction": "Den Haag Centraal",
+          "partCancelled": false,
+          "cancelled": false,
+          "isAfterCancelledLeg": false,
+          "isOnOrAfterCancelledLeg": false,
+          "changePossible": true,
+          "alternativeTransport": false,
+          "journeyDetailRef": "HARP_MM-2|#VN#1#ST#1757498654#PI#0#ZI#51#TA#9#DA#150925#1S#1100921#1T#1743#LS#1101078#LT#1911#PU#784#RT#1#CA#IC#ZE#1162#ZB#IC 1162 #PC#1#FR#1100921#FT#1743#TO#1101078#TT#1911#",
+          "origin": {
+            "name": "Breda",
+            "lng": 4.78000020980835,
+            "lat": 51.5955543518066,
+            "countryCode": "NL",
+            "uicCode": "8400131",
+            "uicCdCode": "118400131",
+            "stationCode": "BD",
+            "type": "STATION",
+            "plannedTimeZoneOffset": 120,
+            "plannedDateTime": "2025-09-15T18:23:00+0200",
+            "actualTimeZoneOffset": 120,
+            "actualDateTime": "2025-09-15T18:23:00+0200",
+            "plannedTrack": "7",
+            "actualTrack": "7",
+            "checkinStatus": "NOTHING",
+            "notes": []
+          },
+          "destination": {
+            "name": "Rotterdam Centraal",
+            "lng": 4.46888875961304,
+            "lat": 51.9249992370605,
+            "countryCode": "NL",
+            "uicCode": "8400530",
+            "uicCdCode": "118400530",
+            "stationCode": "RTD",
+            "type": "STATION",
+            "plannedTimeZoneOffset": 120,
+            "plannedDateTime": "2025-09-15T18:45:00+0200",
+            "actualTimeZoneOffset": 120,
+            "actualDateTime": "2025-09-15T18:45:00+0200",
+            "plannedTrack": "13",
+            "actualTrack": "13",
+            "exitSide": "RIGHT",
+            "checkinStatus": "NOTHING",
+            "notes": []
+          },
+          "product": {
+            "productType": "Product",
+            "number": "1162",
+            "categoryCode": "IC",
+            "shortCategoryName": "IC",
+            "longCategoryName": "Intercity",
+            "operatorCode": "NS",
+            "operatorName": "NS",
+            "operatorAdministrativeCode": 100,
+            "type": "TRAIN",
+            "displayName": "NS Intercity",
+            "nameNesProperties": {
+              "color": "text-body"
+            },
+            "iconNesProperties": {
+              "color": "text-body",
+              "icon": "train"
+            },
+            "notes": [
+              [
+                {
+                  "value": "NS Intercity",
+                  "shortValue": "NS Intercity",
+                  "accessibilityValue": "NS Intercity",
+                  "key": "PRODUCT_NAME",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ],
+              [
+                {
+                  "value": "richting Den Haag Centraal",
+                  "shortValue": "richting Den Haag Centraal",
+                  "accessibilityValue": "richting Den Haag Centraal",
+                  "key": "PRODUCT_DIRECTION",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ],
+              [
+                {
+                  "value": "Geen tussenstops",
+                  "shortValue": "Geen tussenstops",
+                  "accessibilityValue": "Geen tussenstops",
+                  "key": "PRODUCT_INTERMEDIATE_STOPS",
+                  "noteType": "ATTRIBUTE",
+                  "isPresentationRequired": true,
+                  "nesProperties": {
+                    "color": "text-body"
+                  }
+                }
+              ]
+            ]
+          },
+          "transferMessages": [
+            {
+              "message": "Overstap op zelfde perron",
+              "accessibilityMessage": "Overstap op zelfde perron",
+              "type": "CROSS_PLATFORM",
+              "messageNesProperties": {
+                "color": "text-default",
+                "type": "informative"
+              }
+            }
+          ],
+          "stops": [
+            {
+              "uicCode": "8400131",
+              "uicCdCode": "118400131",
+              "name": "Breda",
+              "lat": 51.5955543518066,
+              "lng": 4.78000020980835,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 0,
+              "plannedDepartureDateTime": "2025-09-15T18:23:00+0200",
+              "plannedDepartureTimeZoneOffset": 120,
+              "actualDepartureDateTime": "2025-09-15T18:23:00+0200",
+              "actualDepartureTimeZoneOffset": 120,
+              "actualDepartureTrack": "7",
+              "plannedDepartureTrack": "7",
+              "plannedArrivalTrack": "7",
+              "actualArrivalTrack": "7",
+              "departureDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            },
+            {
+              "uicCode": "8400530",
+              "uicCdCode": "118400530",
+              "name": "Rotterdam Centraal",
+              "lat": 51.9249992370605,
+              "lng": 4.46888875961304,
+              "countryCode": "NL",
+              "notes": [],
+              "routeIdx": 6,
+              "plannedArrivalDateTime": "2025-09-15T18:45:00+0200",
+              "plannedArrivalTimeZoneOffset": 120,
+              "actualArrivalDateTime": "2025-09-15T18:45:00+0200",
+              "actualArrivalTimeZoneOffset": 120,
+              "actualDepartureTrack": "13",
+              "plannedDepartureTrack": "13",
+              "plannedArrivalTrack": "13",
+              "actualArrivalTrack": "13",
+              "arrivalDelayInSeconds": 0,
+              "cancelled": false,
+              "borderStop": false,
+              "passing": false
+            }
+          ],
+          "crowdForecast": "LOW",
+          "bicycleSpotCount": 16,
+          "punctuality": 81.8,
+          "shorterStock": false,
+          "journeyDetail": [
+            {
+              "type": "TRAIN_XML",
+              "link": {
+                "uri": "/api/v2/journey?id=HARP_MM-2|#VN#1#ST#1757498654#PI#0#ZI#51#TA#9#DA#150925#1S#1100921#1T#1743#LS#1101078#LT#1911#PU#784#RT#1#CA#IC#ZE#1162#ZB#IC 1162 #PC#1#FR#1100921#FT#1743#TO#1101078#TT#1911#&train=1162&datetime=2025-09-15T18:23:00+02:00"
+              }
+            }
+          ],
+          "reachable": true,
+          "plannedDurationInMinutes": 22,
+          "nesProperties": {
+            "color": "text-info",
+            "scope": "LEG_LINE",
+            "styles": {
+              "type": "LineStyles",
+              "dashed": false
+            }
+          },
+          "duration": {
+            "value": "22 min.",
+            "accessibilityValue": "22 minuten",
+            "nesProperties": {
+              "color": "text-body"
+            }
+          },
+          "preSteps": [],
+          "postSteps": [],
+          "distanceInMeters": 44166
+        }
+      ],
+      "checksum": "fe950328_3",
+      "crowdForecast": "MEDIUM",
+      "punctuality": 58.3,
+      "optimal": false,
+      "fares": [],
+      "fareLegs": [
+        {
+          "origin": {
+            "name": "Amsterdam Centraal",
+            "lng": 4.90027761459351,
+            "lat": 52.3788871765137,
+            "countryCode": "NL",
+            "uicCode": "8400058",
+            "uicCdCode": "118400058",
+            "stationCode": "ASD",
+            "type": "STATION"
+          },
+          "destination": {
+            "name": "'s-Hertogenbosch",
+            "lng": 5.29362,
+            "lat": 51.69048,
+            "countryCode": "NL",
+            "uicCode": "8400319",
+            "uicCdCode": "118400319",
+            "stationCode": "HT",
+            "type": "STATION"
+          },
+          "operator": "NS",
+          "productTypes": ["TRAIN"],
+          "fares": [
+            {
+              "priceInCents": 1910,
+              "priceInCentsExcludingSupplement": 1910,
+              "supplementInCents": 0,
+              "buyableTicketSupplementPriceInCents": 0,
+              "product": "OVCHIPKAART_ENKELE_REIS",
+              "travelClass": "SECOND_CLASS",
+              "discountType": "NO_DISCOUNT"
+            }
+          ],
+          "travelDate": "2025-09-15"
+        },
+        {
+          "origin": {
+            "name": "'s-Hertogenbosch",
+            "lng": 5.29362,
+            "lat": 51.69048,
+            "countryCode": "NL",
+            "uicCode": "8400319",
+            "uicCdCode": "118400319",
+            "stationCode": "HT",
+            "type": "STATION"
+          },
+          "destination": {
+            "name": "Rotterdam Centraal",
+            "lng": 4.46888875961304,
+            "lat": 51.9249992370605,
+            "countryCode": "NL",
+            "uicCode": "8400530",
+            "uicCdCode": "118400530",
+            "stationCode": "RTD",
+            "type": "STATION"
+          },
+          "operator": "NS",
+          "productTypes": ["TRAIN"],
+          "fares": [
+            {
+              "priceInCents": 2010,
+              "priceInCentsExcludingSupplement": 2010,
+              "supplementInCents": 0,
+              "buyableTicketSupplementPriceInCents": 0,
+              "product": "OVCHIPKAART_ENKELE_REIS",
+              "travelClass": "SECOND_CLASS",
+              "discountType": "NO_DISCOUNT"
+            }
+          ],
+          "travelDate": "2025-09-15"
+        }
+      ],
+      "productFare": {
+        "priceInCents": 3920,
+        "priceInCentsExcludingSupplement": 3920,
+        "buyableTicketPriceInCents": 3920,
+        "buyableTicketPriceInCentsExcludingSupplement": 3920,
+        "product": "OVCHIPKAART_ENKELE_REIS",
+        "travelClass": "SECOND_CLASS",
+        "discountType": "NO_DISCOUNT"
+      },
+      "fareOptions": {
+        "isInternationalBookable": false,
+        "isInternational": false,
+        "isEticketBuyable": false,
+        "isPossibleWithOvChipkaart": false,
+        "isTotalPriceUnknown": false,
+        "reasonEticketNotBuyable": {
+          "reason": "VIA_STATION_REQUESTED",
+          "description": "Je kunt voor deze reis geen kaartje kopen, omdat je je reis via een extra station hebt gepland. Uiteraard kun je voor deze reis betalen met het saldo op je OV-chipkaart."
+        }
+      },
+      "nsiLink": {
+        "url": "https://www.nsinternational.com/nl/treintickets-v3/#/search/ASD/RTD/20250915/1634/1845?stationType=domestic&cookieConsent=false",
+        "showInternationalBanner": false
+      },
+      "type": "NS",
+      "shareUrl": {
+        "uri": "https://www.ns.nl/rpx?ctx=arnu%7CfromStation%3D8400058%7CrequestedFromStation%3D8400058%7CtoStation%3D8400530%7CrequestedToStation%3D8400530%7CviaStation%3D8400319%7CplannedFromTime%3D2025-09-15T16%3A34%3A00%2B02%3A00%7CplannedArrivalTime%3D2025-09-15T18%3A45%3A00%2B02%3A00%7CexcludeHighSpeedTrains%3Dfalse%7CsearchForAccessibleTrip%3Dfalse%7ClocalTrainsOnly%3Dfalse%7CdisabledTransportModalities%3DBUS%2CFERRY%2CTRAM%2CMETRO%7CtravelAssistance%3Dfalse%7CtripSummaryHash%3D1596512355"
+      },
+      "realtime": true,
+      "registerJourney": {
+        "url": "https://treinwijzer.ns.nl/idp/login?ctxRecon=arnu%7CfromStation%3D8400058%7CrequestedFromStation%3D8400058%7CtoStation%3D8400530%7CrequestedToStation%3D8400530%7CviaStation%3D8400319%7CplannedFromTime%3D2025-09-15T16%3A34%3A00%2B02%3A00%7CplannedArrivalTime%3D2025-09-15T18%3A45%3A00%2B02%3A00%7CexcludeHighSpeedTrains%3Dfalse%7CsearchForAccessibleTrip%3Dfalse%7ClocalTrainsOnly%3Dfalse%7CdisabledTransportModalities%3DBUS%2CFERRY%2CTRAM%2CMETRO%7CtravelAssistance%3Dfalse%7CtripSummaryHash%3D1596512355&originUicCode=8400058&destinationUicCode=8400530&dateTime=2025-09-15T16%3A28%3A00.051873%2B02%3A00&searchForArrival=false&viaUicCode=8400319&excludeHighSpeedTrains=false&localTrainsOnly=false&searchForAccessibleTrip=false&lang=nl&travelAssistance=false",
+        "searchUrl": "https://treinwijzer.ns.nl/idp/login?search=true&originUicCode=8400058&destinationUicCode=8400530&dateTime=2025-09-15T16%3A28%3A00.051873%2B02%3A00&searchForArrival=false&viaUicCode=8400319&excludeHighSpeedTrains=false&localTrainsOnly=false&searchForAccessibleTrip=false&lang=nl&travelAssistance=false",
+        "status": "REGISTRATION_POSSIBLE",
+        "bicycleReservationRequired": false
+      },
+      "modalityListItems": [
+        {
+          "name": "Intercity",
+          "nameNesProperties": {
+            "color": "text-subtle",
+            "styles": {
+              "type": "TextStyles",
+              "strikethrough": false,
+              "bold": false
+            }
+          },
+          "iconNesProperties": {
+            "color": "text-body",
+            "icon": "train"
+          },
+          "actualTrack": "4",
+          "accessibilityName": "Intercity"
+        },
+        {
+          "name": "Intercity",
+          "nameNesProperties": {
+            "color": "text-subtle",
+            "styles": {
+              "type": "TextStyles",
+              "strikethrough": false,
+              "bold": false
+            }
+          },
+          "iconNesProperties": {
+            "color": "text-body",
+            "icon": "train"
+          },
+          "actualTrack": "7",
+          "accessibilityName": "Intercity"
+        },
+        {
+          "name": "Intercity",
+          "nameNesProperties": {
+            "color": "text-subtle",
+            "styles": {
+              "type": "TextStyles",
+              "strikethrough": false,
+              "bold": false
+            }
+          },
+          "iconNesProperties": {
+            "color": "text-body",
+            "icon": "train"
+          },
+          "actualTrack": "7",
+          "accessibilityName": "Intercity"
+        }
+      ]
+    }
+  ],
+  "scrollRequestBackwardContext": "3|OB|MTµ14µ13954µ13944µ14077µ14080µ0µ0µ485µ13938µ1µ0µ8µ0µ0µ-2147483648µ1µ2|PDHµ28839c70675e70c3d48018993723bca2|RDµ15092025|RTµ161800|USµ0|RSµINIT",
+  "scrollRequestForwardContext": "3|OF|MTµ14µ13985µ13985µ14107µ14115µ0µ0µ485µ13955µ8µ0µ8µ0µ0µ-2147483648µ1µ2|PDHµ28839c70675e70c3d48018993723bca2|RDµ15092025|RTµ161800|USµ0|RSµINIT"
+}
