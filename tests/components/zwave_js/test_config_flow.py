@@ -1428,7 +1428,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery success path."""
+    """Test ESPHome discovery aborts when home ID already configured with unmanaged add-on."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
