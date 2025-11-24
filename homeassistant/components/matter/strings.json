@@ -246,6 +246,16 @@
       "device_energy_management_mode": {
         "name": "Energy management mode"
       },
+      "door_lock_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "no_remote_lock_unlock": "No remote lock/unlock",
+          "normal": "Normal",
+          "passage": "Passage",
+          "privacy": "Privacy",
+          "vacation": "Vacation"
+        }
+      },
       "door_lock_sound_volume": {
         "name": "Sound volume",
         "state": {
@@ -307,16 +317,6 @@
       },
       "water_heater_mode": {
         "name": "Water heater mode"
-      },
-      "door_lock_operating_mode": {
-        "name": "Operating Mode",
-        "state": {
-          "normal": "Normal",
-          "privacy": "Privacy",
-          "vacation": "Vacation",
-          "no_remote_lock_unlock": "No remote lock/unlock",
-          "passage": "Passage"
-        }
       }
     },
     "sensor": {
