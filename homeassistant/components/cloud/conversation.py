@@ -57,7 +57,6 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     last_summary_index = None
     last_role: Literal["assistant", "tool_result"] | None = None
     current_tool_call: ResponseFunctionToolCall | None = None
-    web_search_status_shown = False
 
     # Non-reasoning models don't follow our request to remove citations, so we remove
     # them manually here. They always follow the same pattern: the citation is always
@@ -139,12 +138,6 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_name": "web_search_call",
                     "tool_result": {"status": event.item.status},
                 }
-                if not web_search_status_shown:
-                    yield {
-                        "role": "assistant",
-                        "content": "I'm browsing the web, this may take a moment...",
-                    }
-                    web_search_status_shown = True
                 last_role = "tool_result"
             elif event_item_type == ResponseItemType.IMAGE:
                 yield {"native": event.item}
