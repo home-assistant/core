@@ -478,7 +478,7 @@
         "name": "Right slot vial"
       },
       "self_test": {
-        "name": "Self test",
+        "name": "Self-test",
         "state": {
           "completed": "Completed",
           "not_completed": "Not completed",
