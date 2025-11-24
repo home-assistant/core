@@ -970,6 +970,21 @@
                 "temperature_state_topic": "The MQTT topic to subscribe for changes of the target temperature. [Learn more.]({url}#temperature_state_topic)"
               },
               "name": "Target temperature settings"
+            },
+            "text_advanced_settings": {
+              "data": {
+                "max": "Maximum length",
+                "min": "Minimum length",
+                "mode": "Mode",
+                "pattern": "Pattern"
+              },
+              "data_description": {
+                "max": "Maximum length of the text input",
+                "min": "Minimum length of the text input",
+                "mode": "Mode of the text input",
+                "pattern": "A valid regex pattern"
+              },
+              "name": "Advanced text entity settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -1387,7 +1402,8 @@
         "select": "[%key:component::select::title%]",
         "sensor": "[%key:component::sensor::title%]",
         "siren": "[%key:component::siren::title%]",
-        "switch": "[%key:component::switch::title%]"
+        "switch": "[%key:component::switch::title%]",
+        "text": "[%key:component::text::title%]"
       }
     },
     "set_ca_cert": {
@@ -1423,6 +1439,12 @@
         "high_low": "Upper/lower target temperature",
         "none": "No target temperature",
         "single": "Single target temperature"
+      }
+    },
+    "text_mode": {
+      "options": {
+        "password": "[%key:common::config_flow::data::password%]",
+        "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
       }
     }
   },
