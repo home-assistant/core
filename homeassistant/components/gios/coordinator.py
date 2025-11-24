@@ -65,7 +65,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(station_id))},
             manufacturer=MANUFACTURER,
-            name=config_entry.data.get(CONF_NAME) or gios.station_name,
+            name=config_entry.data[CONF_NAME],
             configuration_url=URL.format(station_id=station_id),
         )
 

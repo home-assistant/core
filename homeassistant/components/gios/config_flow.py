@@ -54,6 +54,10 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=gios.station_name,
+                    # CONF_NAME is still used, but its value is preserved
+                    # primarily for backward compatibility. This allows older
+                    # versions of the software to read the entry data without
+                    # raising errors.
                     data={**user_input, CONF_NAME: gios.station_name},
                 )
             except (ApiError, ClientConnectorError, TimeoutError):

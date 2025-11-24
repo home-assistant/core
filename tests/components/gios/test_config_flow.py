@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -86,6 +87,9 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Name 1"
-    assert result["data"][CONF_STATION_ID] == 123
+    assert result["data"] == {
+        CONF_STATION_ID: 123,
+        CONF_NAME: "Test Name 1",
+    }
 
     assert result["result"].unique_id == "123"
