@@ -41,9 +41,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=None
-            if config_entry.pref_disable_polling
-            else UPDATE_INTERVAL,
+            update_interval=UPDATE_INTERVAL,
         )
         self._client = EssentClient(async_get_clientsession(hass))
         self._unsub_listener: Callable[[], None] | None = None

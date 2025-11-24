@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from essent_dynamic_pricing.models import Tariff
 
@@ -19,43 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import EnergyType
+from .const import EnergyType, PriceGroup
 from .coordinator import EssentConfigEntry, EssentDataUpdateCoordinator
 from .entity import EssentEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 PARALLEL_UPDATES = 1
-ESSENT_TIME_ZONE = dt_util.get_time_zone("Europe/Amsterdam") or dt_util.UTC
-
-
-def _parse_tariff_datetime(value: str | None) -> datetime | None:
-    """Parse a tariff timestamp in the Essent time zone."""
-    if not isinstance(value, str):
-        return None
-    parsed = dt_util.parse_datetime(value)
-    if not parsed:
-        return None
-    if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=ESSENT_TIME_ZONE)
-    return parsed.astimezone(ESSENT_TIME_ZONE)
-
-
-def _parse_tariff_times(
-    tariff: Tariff,
-) -> tuple[datetime | None, datetime | None]:
-    """Parse tariff start/end times and ensure they are timezone-aware."""
-    return (
-        _parse_tariff_datetime(tariff.start),
-        _parse_tariff_datetime(tariff.end),
-    )
-
-
-def _format_dt_str(value: str | None) -> str | None:
-    """Format a datetime string in the Essent time zone, falling back to original."""
-    if not value:
-        return None
-    if parsed := _parse_tariff_datetime(value):
-        return parsed.isoformat()
-    return value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,9 +48,9 @@ def _get_current_tariff(entity: "EssentSensor") -> Tariff | None:
     """Return the currently active tariff."""
     now = dt_util.now()
     for tariff in _get_all_tariffs(entity):
-        start, end = _parse_tariff_times(tariff)
-        if start and end and start <= now < end:
+        if tariff.start <= now < tariff.end:
             return tariff
+    _LOGGER.debug("No current tariff found")
     return None
 
 
@@ -87,9 +58,9 @@ def _get_next_tariff(entity: "EssentSensor") -> Tariff | None:
     """Return the next tariff."""
     now = dt_util.now()
     for tariff in _get_all_tariffs(entity):
-        start, _ = _parse_tariff_times(tariff)
-        if start and start > now:
+        if tariff.start > now:
             return tariff
+    _LOGGER.debug("No upcoming tariff found")
     return None
 
 
@@ -170,7 +141,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="current_price_market_price",
         translation_key="current_price_market_price",
         value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get(
-            "MARKET_PRICE"
+            PriceGroup.MARKET_PRICE
         ),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -179,7 +150,7 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
         key="current_price_purchasing_fee",
         translation_key="current_price_purchasing_fee",
         value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get(
-            "PURCHASING_FEE"
+            PriceGroup.PURCHASING_FEE
         ),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -187,7 +158,9 @@ SENSORS: tuple[EssentSensorEntityDescription, ...] = (
     EssentSensorEntityDescription(
         key="current_price_tax",
         translation_key="current_price_tax",
-        value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get("TAX"),
+        value_fn=lambda entity: _get_current_tariff_groups(entity)[1].get(
+            PriceGroup.TAX
+        ),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

@@ -18,7 +18,9 @@ class EnergyType(StrEnum):
     GAS = "gas"
 
 
-# Price group types
-PRICE_GROUP_MARKET: Final = "MARKET_PRICE"
-PRICE_GROUP_PURCHASING_FEE: Final = "PURCHASING_FEE"
-PRICE_GROUP_TAX: Final = "TAX"
+class PriceGroup(StrEnum):
+    """Price group types."""
+
+    MARKET_PRICE = "MARKET_PRICE"
+    PURCHASING_FEE = "PURCHASING_FEE"
+    TAX = "TAX"

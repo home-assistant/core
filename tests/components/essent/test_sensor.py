@@ -14,10 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from homeassistant.components.essent.sensor import (
-    _format_dt_str,
-    _parse_tariff_datetime,
-)
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 from . import setup_integration
@@ -346,19 +342,6 @@ async def test_sensors_handle_empty_tariffs(
     assert highest.attributes["unit_of_measurement"] == "€/kWh"
 
 
-def test_parse_tariff_datetime_and_formatting() -> None:
-    """Ensure helper functions cover edge cases."""
-    assert _parse_tariff_datetime(None) is None
-    assert _parse_tariff_datetime("invalid") is None
-
-    naive = "2025-11-16T10:00:00"
-    parsed = _parse_tariff_datetime(naive)
-    assert parsed is not None
-    assert parsed.tzinfo is not None
-
-    assert _format_dt_str(None) is None
-    assert _format_dt_str("invalid") == "invalid"
-    assert _format_dt_str(naive).endswith("+01:00")
 
 
 async def test_current_price_breakdown_sensors(
