@@ -150,8 +150,7 @@ async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
     """Test thread handling when saving with a delay."""
     calls = []
 
-    loop = asyncio.get_running_loop()
-    config_dir = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+    config_dir = await asyncio.to_thread(tmpdir.mkdir, "temp_storage")
     async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
 
         def data_producer_thread_safe() -> Any:
