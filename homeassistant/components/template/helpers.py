@@ -34,6 +34,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import yaml as yaml_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_ADVANCED_OPTIONS,
@@ -49,7 +50,10 @@ from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+LEGACY_TEMPLATE_DEPRECATION_KEY = "deprecate_legacy_templates"
+
 DATA_BLUEPRINTS = "template_blueprints"
+DATA_DEPRECATION: HassKey[list[str]] = HassKey(LEGACY_TEMPLATE_DEPRECATION_KEY)
 
 LEGACY_FIELDS = {
     CONF_ICON_TEMPLATE: CONF_ICON,
@@ -227,7 +231,13 @@ def create_legacy_template_issue(
     hass: HomeAssistant, config: ConfigType, domain: str
 ) -> None:
     """Create a repair for legacy template entities."""
-    issue_id = hex(hash(frozenset(config)))
+
+    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{hex(hash(frozenset(config)))}"
+
+    if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
+        hass.data[DATA_DEPRECATION] = deprecation_list = []
+
+    deprecation_list.append(issue_id)
 
     breadcrumb = "Template Entity"
     # Default entity id should be in most legacy configuration because
@@ -251,7 +261,6 @@ def create_legacy_template_issue(
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2026.6",
-        is_persistent=True,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_legacy_templates",

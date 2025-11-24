@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, issue_registry as ir
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
@@ -30,7 +30,11 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import async_get_blueprints
+from .helpers import (
+    DATA_DEPRECATION,
+    LEGACY_TEMPLATE_DEPRECATION_KEY,
+    async_get_blueprints,
+)
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
@@ -77,6 +81,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
+    if (found_issues := hass.data.get(DATA_DEPRECATION)) is not None:
+        issue_registry = ir.async_get(hass)
+        registry_issues = {
+            issue_id
+            for domain, issue_id in issue_registry.issues
+            if domain == DOMAIN and issue_id.startswith(LEGACY_TEMPLATE_DEPRECATION_KEY)
+        }
+        for issue_id in registry_issues - set(found_issues):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     return True
 
