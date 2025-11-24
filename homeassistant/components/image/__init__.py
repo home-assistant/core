@@ -94,6 +94,28 @@ def valid_image_content_type(content_type: str | None) -> str:
     return content_type
 
 
+def infer_image_type(content: bytes) -> str | None:
+    """Infer image type from first 4 bytes (magic number)."""
+    magic = content[:4]
+
+    if magic in (
+        b"\xff\xd8\xff\xdb",
+        b"\xff\xd8\xff\xe0",
+        b"\xff\xd8\xff\xed",
+        b"\xff\xd8\xff\xee",
+        b"\xff\xd8\xff\xe1",
+        b"\xff\xd8\xff\xe2",
+    ):
+        return "image/jpeg"
+    return {
+        b"\x89PNG": "image/png",
+        b"GIF8": "image/gif",
+        b"RIFF": "image/webp",
+        b"\x49\x49\x2a\x00": "image/tiff",
+        b"\x4d\x4d\x00\x2a": "image/tiff",
+    }.get(magic)
+
+
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
     with suppress(asyncio.CancelledError, TimeoutError, ImageContentTypeError):
@@ -242,7 +264,9 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
-            content_type = response.headers.get("content-type")
+            content_type = response.headers.get("content-type") or infer_image_type(
+                response.content
+            )
             try:
                 return Image(
                     content=response.content,
