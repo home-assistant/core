@@ -186,9 +186,15 @@ class ProtectDeviceVehicleEventEntity(
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel timer when entity is removed."""
+        self._cancel_thumbnail_timer()
+        await super().async_will_remove_from_hass()
+
+    @callback
+    def _cancel_thumbnail_timer(self) -> None:
+        """Cancel pending thumbnail timer if one exists."""
         if self._thumbnail_timer_cancel:
             self._thumbnail_timer_cancel()
-        await super().async_will_remove_from_hass()
+            self._thumbnail_timer_cancel = None
 
     @callback
     def _fire_vehicle_event(self, event_id: str) -> None:
@@ -251,7 +257,7 @@ class ProtectDeviceVehicleEventEntity(
         # Remember this event
         self._last_event_id_with_thumbnails = event.id
         self._pending_event_id = None
-        self._thumbnail_timer_cancel = None
+        self._cancel_thumbnail_timer()
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
@@ -276,13 +282,11 @@ class ProtectDeviceVehicleEventEntity(
                 # Is this a new event or same event with new thumbnails?
                 if event.id != self._pending_event_id:
                     # New event - cancel any pending timer
-                    if self._thumbnail_timer_cancel:
-                        self._thumbnail_timer_cancel()
+                    self._cancel_thumbnail_timer()
                     self._pending_event_id = event.id
 
                 # Cancel existing timer (we got a new thumbnail)
-                if self._thumbnail_timer_cancel:
-                    self._thumbnail_timer_cancel()
+                self._cancel_thumbnail_timer()
 
                 # Start 3 second timer - must use callback wrapper for event loop safety
                 @callback
