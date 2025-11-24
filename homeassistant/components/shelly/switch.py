@@ -425,9 +425,6 @@ class BlockSleepingMotionSwitch(
         super().__init__(coordinator, block, attribute, description, entry)
         self.last_state: State | None = None
 
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
     @property
     def is_on(self) -> bool | None:
         """If motion is active."""
@@ -514,10 +511,8 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.role == ROLE_GENERIC or description.key in ("switch", "script"):
+        if description.key in ("switch", "script"):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
-        elif hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     @property
     def is_on(self) -> bool:
