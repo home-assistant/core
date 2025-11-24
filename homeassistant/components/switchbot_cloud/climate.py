@@ -244,17 +244,10 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         self._attr_target_temperature = kwargs["temperature"]
-        if self._attr_target_temperature == 4:
-            await self.send_api_command(
-                command=SmartRadiatorThermostatCommands.SET_MODE,
-                parameters=SmartRadiatorThermostatPresetModeMap[PRESET_NONE].value,
-            )
-            self._attr_preset_mode = PRESET_NONE
-        else:
-            await self.send_api_command(
-                command=SmartRadiatorThermostatCommands.SET_MANUAL_MODE_TEMPERATURE,
-                parameters=str(self._attr_target_temperature),
-            )
+        await self.send_api_command(
+            command=SmartRadiatorThermostatCommands.SET_MANUAL_MODE_TEMPERATURE,
+            parameters=str(self._attr_target_temperature),
+        )
 
         await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
