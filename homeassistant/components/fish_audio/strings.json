@@ -70,21 +70,16 @@
         "model": {
           "data": {
             "backend": "AI Voice Model",
+            "name": "Entity name",
             "voice_id": "Voice"
           },
           "data_description": {
             "backend": "Select the AI model that will generate the audio.",
+            "name": "Enter a unique name for this TTS voice to easily identify it in Home Assistant.",
             "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID."
           },
           "description": "Select your preferred voice and the AI model to use for speech synthesis.",
           "title": "Choose your voice and model"
-        },
-        "name": {
-          "data": {
-            "name": "[%key:common::config_flow::data::name%]"
-          },
-          "description": "Enter a unique name for this TTS voice to easily identify it in Home Assistant.",
-          "title": "Name your TTS voice"
         }
       }
     }
