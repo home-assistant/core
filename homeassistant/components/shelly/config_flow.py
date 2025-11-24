@@ -33,6 +33,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
+    async_clear_address_from_match_history,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -183,6 +184,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
+    disable_ap_after_provision: bool = True
+    disable_ble_rpc_after_provision: bool = True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -393,6 +396,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not mac:
             return self.async_abort(reason="invalid_discovery_info")
 
+        # Clear match history at the start of discovery flow.
+        # This ensures that if the user never provisions the device and it
+        # disappears (powers down), the discovery flow gets cleaned up,
+        # and then the device comes back later, it can be rediscovered.
+        # Also handles factory reset scenarios where the device may reappear
+        # with different advertisement content (RPC-over-BLE re-enabled).
+        async_clear_address_from_match_history(self.hass, discovery_info.address)
+
         # Check if RPC-over-BLE is enabled - required for WiFi provisioning
         if not has_rpc_over_ble(discovery_info.manufacturer_data):
             LOGGER.debug(
@@ -426,10 +437,20 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm bluetooth provisioning."""
         if user_input is not None:
+            self.disable_ap_after_provision = user_input.get("disable_ap", True)
+            self.disable_ble_rpc_after_provision = user_input.get(
+                "disable_ble_rpc", True
+            )
             return await self.async_step_wifi_scan()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("disable_ap", default=True): bool,
+                    vol.Optional("disable_ble_rpc", default=True): bool,
+                }
+            ),
             description_placeholders={
                 "name": self.context["title_placeholders"]["name"]
             },
@@ -520,6 +541,62 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={"ssid": self.selected_ssid},
         )
+
+    async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
+        """Disable AP and/or BLE RPC after successful WiFi provisioning.
+
+        Must be called via IP after device is on WiFi, not via BLE.
+        """
+        if (
+            not self.disable_ap_after_provision
+            and not self.disable_ble_rpc_after_provision
+        ):
+            return
+
+        # Connect to device via IP
+        options = ConnectionOptions(
+            host,
+            None,
+            None,
+            device_mac=self.unique_id,
+            port=port,
+        )
+        device: RpcDevice | None = None
+        try:
+            device = await RpcDevice.create(
+                async_get_clientsession(self.hass), None, options
+            )
+            await device.initialize()
+
+            restart_required = False
+
+            # Disable WiFi AP if requested
+            if self.disable_ap_after_provision:
+                result = await device.wifi_setconfig(ap_enable=False)
+                LOGGER.debug("Disabled WiFi AP on %s", host)
+                restart_required = restart_required or result.get(
+                    "restart_required", False
+                )
+
+            # Disable BLE RPC if requested (keep BLE enabled for sensors/buttons)
+            if self.disable_ble_rpc_after_provision:
+                result = await device.ble_setconfig(enable=True, enable_rpc=False)
+                LOGGER.debug("Disabled BLE RPC on %s", host)
+                restart_required = restart_required or result.get(
+                    "restart_required", False
+                )
+
+            # Restart device once if either operation requires it
+            if restart_required:
+                await device.trigger_reboot(delay_ms=1000)
+        except (TimeoutError, DeviceConnectionError, RpcCallError) as err:
+            LOGGER.warning(
+                "Failed to secure device after provisioning at %s: %s", host, err
+            )
+            # Don't fail the flow - device is already on WiFi and functional
+        finally:
+            if device:
+                await device.shutdown()
 
     async def _async_provision_wifi_and_wait_for_zeroconf(
         self, mac: str, password: str, state: ProvisioningState
@@ -613,6 +690,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not device_info[CONF_MODEL]:
             return self.async_abort(reason="firmware_not_fully_provisioned")
+
+        # Secure device after provisioning if requested (disable AP/BLE)
+        await self._async_secure_device_after_provision(self.host, self.port)
+
+        # Clear match history so device can be rediscovered if factory reset
+        # This ensures that if the device is factory reset in the future
+        # (re-enabling BLE provisioning), it will trigger a new discovery flow
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
+        async_clear_address_from_match_history(self.hass, self.ble_device.address)
 
         # User just provisioned this device - create entry directly without confirmation
         return self.async_create_entry(
