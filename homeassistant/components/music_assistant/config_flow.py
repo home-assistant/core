@@ -193,7 +193,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="server_not_ready")
 
         # We trust the token from hassio discovery and validate it during setup
-        self.token = discovery_info.config["token"]
+        self.token = discovery_info.config["auth_token"]
 
         self.server_info = server_info
         await self.async_set_unique_id(server_info.server_id)
