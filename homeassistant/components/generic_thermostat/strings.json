@@ -47,6 +47,7 @@
           "cold_tolerance": "[%key:component::generic_thermostat::config::step::user::data::cold_tolerance%]",
           "heater": "[%key:component::generic_thermostat::config::step::user::data::heater%]",
           "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]",
+          "keep_alive": "[%key:component::generic_thermostat::config::step::user::data::keep_alive%]",
           "max_temp": "[%key:component::generic_thermostat::config::step::user::data::max_temp%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data::min_cycle_duration%]",
           "min_temp": "[%key:component::generic_thermostat::config::step::user::data::min_temp%]",
@@ -57,6 +58,7 @@
           "cold_tolerance": "[%key:component::generic_thermostat::config::step::user::data_description::cold_tolerance%]",
           "heater": "[%key:component::generic_thermostat::config::step::user::data_description::heater%]",
           "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data_description::hot_tolerance%]",
+          "keep_alive": "[%key:component::generic_thermostat::config::step::user::data_description::keep_alive%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data_description::min_cycle_duration%]",
           "target_sensor": "[%key:component::generic_thermostat::config::step::user::data_description::target_sensor%]"
         }
