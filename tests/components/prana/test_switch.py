@@ -9,43 +9,6 @@ from homeassistant.components.prana.switch import PranaSwitch, async_setup_entry
 from homeassistant.core import HomeAssistant
 
 
-@pytest.fixture(autouse=True)
-def _patch_aiohttp(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Stub ClientSession in switch.py to avoid real HTTP."""
-
-    class _DummyResponse:
-        def __init__(self, status: int = 200) -> None:
-            self.status = status
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
-
-        async def text(self) -> str:
-            return ""
-
-        async def json(self) -> dict:
-            return {}
-
-    class _MockClientSession:
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
-
-        def post(self, url, **kwargs):
-            return _DummyResponse(200)
-
-    monkeypatch.setattr(
-        "homeassistant.components.prana.switch.ClientSession",
-        _MockClientSession,
-        raising=False,
-    )
-
-
 @pytest.fixture
 def coordinator(hass: HomeAssistant):
     """Mock coordinator for tests."""
@@ -59,6 +22,9 @@ def coordinator(hass: HomeAssistant):
     }
     coord.async_refresh = AsyncMock()
     coord.async_add_listener = MagicMock(return_value=lambda: None)
+    # Provide mocked api_client used by entities (do not perform real HTTP in entities)
+    coord.api_client = MagicMock()
+    coord.api_client.set_switch = AsyncMock(return_value=None)
     return coord
 
 
@@ -77,13 +43,13 @@ async def test_switch_properties(
 ) -> None:
     """Test switch entity properties."""
     bound_switch = PranaSwitch(
-        "id1", "Bound", coordinator, "bound", PranaSwitchType.BOUND, config_entry
+        "id1", coordinator, "bound", PranaSwitchType.BOUND, config_entry
     )
     assert bound_switch.is_on is True
     assert bound_switch.icon == "mdi:link"
 
     heating = PranaSwitch(
-        "id2", "Heater", coordinator, "heater", PranaSwitchType.HEATER, config_entry
+        "id2", coordinator, "heater", PranaSwitchType.HEATER, config_entry
     )
     assert heating.is_on is False
     assert heating.icon == "mdi:radiator"
@@ -95,7 +61,7 @@ async def test_switch_turn_on_off(
 ) -> None:
     """Test turning switch on and off."""
     switch = PranaSwitch(
-        "id3", "Winter", coordinator, "winter", PranaSwitchType.WINTER, config_entry
+        "id3", coordinator, "winter", PranaSwitchType.WINTER, config_entry
     )
     switch.hass = hass
     switch.entity_id = "switch.prana_winter"
@@ -128,6 +94,9 @@ async def test_async_setup_entry(
         PranaSwitchType.WINTER: True,
     }
     coordinator.async_add_listener = MagicMock(return_value=lambda: None)
+    # Ensure api_client present on AsyncMock coordinator
+    coordinator.api_client = AsyncMock()
+    coordinator.api_client.set_switch = AsyncMock(return_value=None)
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 

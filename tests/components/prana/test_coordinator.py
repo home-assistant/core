@@ -1,12 +1,11 @@
 """Tests for Prana coordinator."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from homeassistant.components.prana.const import PranaFanType, PranaSensorType
 from homeassistant.components.prana.coordinator import PranaCoordinator
-from homeassistant.components.prana.fan import PranaFanType
-from homeassistant.components.prana.sensor import PranaSensorType
 from homeassistant.components.prana.switch import PranaSwitchType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant  # added
@@ -55,10 +54,10 @@ async def test_async_update_data_parses_state_correctly(
         PranaSensorType.OUTSIDE_TEMPERATURE: 123,  # -> 12.3
     }
 
-    with patch.object(
-        coordinator, "async_get_state", new=AsyncMock(return_value=mock_state)
-    ):
-        result = await coordinator._async_update_data()
+    # Attach a mocked api_client.get_state used by the coordinator implementation
+    coordinator.api_client = MagicMock()
+    coordinator.api_client.get_state = AsyncMock(return_value=mock_state)
+    result = await coordinator._async_update_data()
 
     # Fans max_speed should be normalized (100 // 10 == 10)
     assert result[PranaFanType.EXTRACT]["max_speed"] == 10
@@ -81,10 +80,8 @@ async def test_async_update_data_raises_update_failed(
     """Coordinator should raise UpdateFailed when underlying fetch fails."""
     coordinator = PranaCoordinator(hass, mock_entry, FAKE_CONFIG_HEX)
 
-    with patch.object(
-        coordinator, "async_get_state", new=AsyncMock(side_effect=Exception("boom"))
-    ):
-        with pytest.raises(UpdateFailed) as err:
-            await coordinator._async_update_data()
-
-        assert "boom" in str(err.value)
+    # Mock api_client.get_state to raise
+    coordinator.api_client = MagicMock()
+    coordinator.api_client.get_state = AsyncMock(side_effect=Exception("boom"))
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()

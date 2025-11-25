@@ -119,3 +119,61 @@ async def test_confirm_abort_no_devices(hass: HomeAssistant) -> None:
     result = await flow.async_step_confirm()
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices_found"
+
+
+@pytest.mark.asyncio
+async def test_user_flow_with_discovered_device(hass: HomeAssistant) -> None:
+    """User flow should list discovered devices and allow choosing one."""
+    # First, simulate zeroconf discovery to populate hass.data[DOMAIN + "_discovered"]
+    flow_discover = ConfigFlow()
+    flow_discover.hass = hass
+
+    mdns_name = "DeviceOne._prana._tcp.local."
+    info = ZeroconfServiceInfo(
+        ip_address="192.168.1.40",
+        ip_addresses=["192.168.1.40"],
+        hostname="deviceone.local",
+        name=mdns_name,
+        type=SERVICE_TYPE,
+        port=1234,
+        properties={"label": "Device One", "config": {"mode": "auto"}},
+    )
+
+    # run zeroconf handler -> discovered stored
+    result = await flow_discover.async_step_zeroconf(info)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    # Now start a user flow which should present the discovered device
+    flow_user = ConfigFlow()
+    flow_user.hass = hass
+
+    # Initial call returns a form listing choices
+    result_user = await flow_user.async_step_user()
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["step_id"] == "user"
+
+    # Submit the selected mdns to create the entry
+    result_create = await flow_user.async_step_user(user_input={"mdns": mdns_name})
+    assert result_create["type"] == FlowResultType.CREATE_ENTRY
+    assert result_create["title"] == "Device One"
+    assert result_create["data"][CONF_HOST] == "192.168.1.40"
+    assert result_create["data"]["mdns"] == mdns_name
+    assert result_create["data"]["config"] == {
+        "label": "Device One",
+        "config": {"mode": "auto"},
+    }
+
+
+@pytest.mark.asyncio
+async def test_user_flow_abort_when_no_discovered_devices(hass: HomeAssistant) -> None:
+    """User flow must abort with no_devices_found if nothing was discovered."""
+    flow = ConfigFlow()
+    flow.hass = hass
+
+    # Ensure no discovered devices in hass.data
+    hass.data.pop("prana_discovered", None)
+
+    result = await flow.async_step_user()
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_devices_found"

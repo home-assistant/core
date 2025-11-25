@@ -6,6 +6,8 @@ The flow is discovery-only. Users confirm a found device; manual starts abort.
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -30,6 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._config: dict | str | None = None
         self._mdns: str | None = None
+        # Ensure we have a mutable context mapping (tests may call async_set_unique_id)
+        # `config_entries` may provide a mappingproxy in some test harnesses
+        self.context = {}
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -83,13 +88,60 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config = raw_config
         self._mdns = name
 
+        # Persist discovered device metadata so user-start flow can list devices
+        discovered: dict = self.hass.data.setdefault(f"{DOMAIN}_discovered", {})
+        discovered[name] = {
+            "host": host,
+            "label": friendly_name or name,
+            "properties": raw_config,
+        }
+
         return await self.async_step_confirm()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Abort: manual user start is not supported for discovery-only flow."""
-        return self.async_abort(reason="no_devices_found")
+        """Allow user to pick from discovered devices and configure one.
+
+        If no devices were discovered, abort with no_devices_found.
+        """
+        discovered: dict = self.hass.data.get(f"{DOMAIN}_discovered", {})
+        if not discovered:
+            return self.async_abort(reason="no_devices_found")
+
+        # Build choices: mdns -> label
+        choices = {mdns: info.get("label", mdns) for mdns, info in discovered.items()}
+
+        if user_input is not None:
+            mdns = user_input["mdns"]
+            info = discovered.get(mdns)
+            if not info:
+                return self.async_abort(reason="no_devices_found")
+
+            # Populate internal fields and create entry (same as confirm)
+            self._host = info.get("host")
+            self._name = info.get("label")
+            self._config = info.get("properties")
+            self._mdns = mdns
+
+            # Ensure unique id and prevent duplicates
+            await self.async_set_unique_id(mdns)
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title=self._name or "Prana",
+                data={
+                    CONF_NAME: self._name,
+                    CONF_HOST: self._host,
+                    CONF_CONFIG: self._config,
+                    CONF_MDNS: self._mdns,
+                },
+                options={},
+                description_placeholders={},
+            )
+
+        schema = vol.Schema({"mdns": vol.In(choices)})
+        return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
