@@ -603,11 +603,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # TODO: Convert these services into configuration entities
-    # Setup services if this is the first device
-    # if len(hass.data[DATA_AMCREST][DEVICES]) == 1:
-    #     async_setup_services(hass)
-
     return True
 
 
