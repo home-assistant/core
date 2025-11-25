@@ -57,7 +57,6 @@ class PhotoFrameImageEntity(ImageEntity):
     """Implement the image entity for Photo Frame."""
 
     entity_description: PhotoFrameImageEntityDescription
-    _attr_content_type = "image/png"
     path: Path | None
 
     def __init__(
@@ -67,10 +66,9 @@ class PhotoFrameImageEntity(ImageEntity):
         hass: HomeAssistant,
     ) -> None:
         """Initialize the entity."""
-        ImageEntity.__init__(self, hass)
+        super().__init__(hass)
         self.entity_description = description
         self.path = None
-        self.hass = hass
         self._attr_unique_id = unique_id
         self._attr_name = (
             description.name if isinstance(description.name, str) else None
@@ -94,6 +92,7 @@ class PhotoFrameImageEntity(ImageEntity):
                         self.hass, child.media_content_id, self.entity_id
                     )
                     self.path = resolved.path
+                    self._attr_content_type = resolved.mime_type
                     self._attr_image_last_updated = dt_util.utcnow()
                     self.async_write_ha_state()
                     return
@@ -107,6 +106,7 @@ class PhotoFrameImageEntity(ImageEntity):
             _LOGGER.error("%s: %s", self.entity_id, str(err))
 
         self.path = None
+        self._attr_content_type = ""
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 

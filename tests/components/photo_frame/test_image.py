@@ -70,8 +70,8 @@ async def test_image(
                 "homeassistant.components.photo_frame.image.async_resolve_media",
                 return_value=PlayMedia(
                     url="fake",
-                    mime_type="png",
-                    path=Path(__file__).parent / "fake_image",
+                    mime_type="image/png",
+                    path=Path(__file__).parent / "test.png",
                 ),
             ),
         ):
@@ -87,7 +87,8 @@ async def test_image(
 
     resp = await client.get("/api/image_proxy/image.random_image")
     assert resp.status == HTTPStatus.OK
-    image_path = Path(__file__).parent / "fake_image"
+    assert resp.content_type == "image/png"
+    image_path = Path(__file__).parent / "test.png"
     expected_data = await hass.async_add_executor_job(image_path.read_bytes)
     body = await resp.read()
     assert body == expected_data
@@ -151,8 +152,8 @@ async def test_image_during_startup(
                 "homeassistant.components.photo_frame.image.async_resolve_media",
                 return_value=PlayMedia(
                     url="fake",
-                    mime_type="png",
-                    path=Path(__file__).parent / "fake_image",
+                    mime_type="image/png",
+                    path=Path(__file__).parent / "test.png",
                 ),
             ),
         ):
@@ -168,7 +169,8 @@ async def test_image_during_startup(
 
     resp = await client.get("/api/image_proxy/image.random_image")
     assert resp.status == HTTPStatus.OK
-    image_path = Path(__file__).parent / "fake_image"
+    assert resp.content_type == "image/png"
+    image_path = Path(__file__).parent / "test.png"
     expected_data = await hass.async_add_executor_job(image_path.read_bytes)
     body = await resp.read()
     assert body == expected_data
