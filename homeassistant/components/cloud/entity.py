@@ -54,7 +54,7 @@ def _convert_content_to_chat_message(
     content: conversation.Content,
 ) -> dict[str, Any] | None:
     """Convert ChatLog content to a responses message."""
-    if content.role not in ("user", "system", "tool_result", "assistant"):
+    if content.role not in ("user", "system", "assistant"):
         return None
 
     text_content = cast(
