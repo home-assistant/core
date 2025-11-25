@@ -75,7 +75,6 @@ class AmcrestCoordinatedButton(CoordinatorEntity, ButtonEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         # Use coordinator availability and check if device is online
-        return (
-            self.coordinator.data is not None
-            and bool(self.coordinator.data.get("online", False))
+        return self.coordinator.data is not None and bool(
+            self.coordinator.data.get("online", False)
         )
