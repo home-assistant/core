@@ -15,7 +15,6 @@ from tuya_sharing import (
 )
 
 from homeassistant.components.tuya.const import (
-    CONF_APP_TYPE,
     CONF_ENDPOINT,
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
@@ -29,17 +28,6 @@ from homeassistant.util import dt as dt_util
 from . import DEVICE_MOCKS, MockDeviceListener
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
-
-
-@pytest.fixture
-def mock_old_config_entry() -> MockConfigEntry:
-    """Mock an old config entry that can be migrated."""
-    return MockConfigEntry(
-        title="Old Tuya configuration entry",
-        domain=DOMAIN,
-        data={CONF_APP_TYPE: "tuyaSmart"},
-        unique_id="12345",
-    )
 
 
 @pytest.fixture
