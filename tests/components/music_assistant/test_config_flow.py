@@ -3,7 +3,7 @@
 from copy import deepcopy
 from ipaddress import ip_address
 from unittest import mock
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from music_assistant_client.exceptions import (
     CannotConnect,
@@ -13,9 +13,13 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 import pytest
 
-from homeassistant.components.music_assistant.config_flow import CONF_URL
+from homeassistant.components.music_assistant.config_flow import (
+    CONF_URL,
+    MusicAssistantConfigFlow,
+)
 from homeassistant.components.music_assistant.const import (
     AUTH_SCHEMA_VERSION,
+    CONF_TOKEN,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -42,6 +46,17 @@ SERVER_INFO = {
     "onboard_done": True,
 }
 
+# Zeroconf discovery properties are always strings
+ZEROCONF_PROPERTIES = {
+    "server_id": "1234",
+    "base_url": "http://localhost:8095",
+    "server_version": "0.0.0",
+    "schema_version": str(AUTH_SCHEMA_VERSION),
+    "min_supported_schema_version": str(AUTH_SCHEMA_VERSION),
+    "homeassistant_addon": "False",
+    "onboard_done": "True",
+}
+
 ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
@@ -49,11 +64,11 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
     port=None,
     type=mock.ANY,
     name=mock.ANY,
-    properties=SERVER_INFO,
+    properties=ZEROCONF_PROPERTIES,
 )
 
 HASSIO_DATA = HassioServiceInfo(
-    config={"host": "addon-music-assistant", "port": 8094},
+    config={"host": "addon-music-assistant", "port": 8094, "token": "test_token"},
     name="Music Assistant",
     slug="music_assistant",
     uuid="1234",
@@ -64,7 +79,14 @@ async def test_full_flow(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
-    """Test full flow."""
+    """Test full flow with old schema (no auth required)."""
+    # Mock an old server that doesn't require authentication
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.schema_version = AUTH_SCHEMA_VERSION - 1
+    mock_get_server_info.return_value = server_info
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -88,11 +110,18 @@ async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
-    """Test zeroconf flow."""
+    """Test zeroconf flow with old schema (no auth required)."""
+    # Use old schema version zeroconf data
+    old_schema_zeroconf_data = deepcopy(ZEROCONF_DATA)
+    old_schema_zeroconf_data.properties["schema_version"] = AUTH_SCHEMA_VERSION - 1
+    old_schema_zeroconf_data.properties["min_supported_schema_version"] = (
+        AUTH_SCHEMA_VERSION - 1
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DATA,
+        data=old_schema_zeroconf_data,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -203,9 +232,12 @@ async def test_flow_user_server_version_invalid(
     assert result["errors"] == {"base": error_message}
 
     mock_get_server_info.side_effect = None
-    mock_get_server_info.return_value = ServerInfoMessage.from_json(
+    # Use old schema version (no auth required)
+    server_info = ServerInfoMessage.from_json(
         await async_load_fixture(hass, "server_info_message.json", DOMAIN)
     )
+    server_info.schema_version = AUTH_SCHEMA_VERSION - 1
+    mock_get_server_info.return_value = server_info
 
     assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
@@ -241,10 +273,12 @@ async def test_user_url_different_from_server_base_url(
 ) -> None:
     """Test that user-provided URL is used even when different from server base_url."""
     # Mock server info with a different base_url than what user will provide
+    # Use old schema version (no auth required)
     server_info = ServerInfoMessage.from_json(
         await async_load_fixture(hass, "server_info_message.json", DOMAIN)
     )
     server_info.base_url = "http://different-server:8095"
+    server_info.schema_version = AUTH_SCHEMA_VERSION - 1
     mock_get_server_info.return_value = server_info
 
     user_url = "http://user-provided-server:8095"
@@ -285,10 +319,12 @@ async def test_duplicate_user_with_different_urls(
     existing_config_entry.add_to_hass(hass)
 
     # Mock server info with different base_url
+    # Use old schema version (no auth required)
     server_info = ServerInfoMessage.from_json(
         await async_load_fixture(hass, "server_info_message.json", DOMAIN)
     )
     server_info.base_url = "http://server-reported-url:8095"
+    server_info.schema_version = AUTH_SCHEMA_VERSION - 1
     mock_get_server_info.return_value = server_info
 
     # Try to configure with a different user URL but same server_id
@@ -322,10 +358,12 @@ async def test_zeroconf_existing_entry_working_url(
     mock_config_entry.add_to_hass(hass)
 
     # Mock server info with different base_url
+    # Use old schema version (no auth required)
     server_info = ServerInfoMessage.from_json(
         await async_load_fixture(hass, "server_info_message.json", DOMAIN)
     )
     server_info.base_url = "http://different-discovered-url:8095"
+    server_info.schema_version = AUTH_SCHEMA_VERSION - 1
     mock_get_server_info.return_value = server_info
 
     result = await hass.config_entries.flow.async_init(
@@ -358,10 +396,12 @@ async def test_zeroconf_existing_entry_ignored(
     ignored_config_entry.add_to_hass(hass)
 
     # Mock server info with discovered URL
+    # Use old schema version (no auth required)
     server_info = ServerInfoMessage.from_json(
         await async_load_fixture(hass, "server_info_message.json", DOMAIN)
     )
     server_info.base_url = "http://discovered-url:8095"
+    server_info.schema_version = AUTH_SCHEMA_VERSION - 1
     mock_get_server_info.return_value = server_info
 
     result = await hass.config_entries.flow.async_init(
@@ -397,39 +437,7 @@ async def test_hassio_flow(
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_URL: "http://addon-music-assistant:8094",
-    }
-    assert result["result"].unique_id == "1234"
-
-
-async def test_hassio_flow_no_host_in_config(
-    hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
-) -> None:
-    """Test hassio discovery flow without host in config (uses slug as fallback)."""
-    hassio_data_no_host = HassioServiceInfo(
-        config={},  # No host provided
-        name="Music Assistant",
-        slug="music_assistant",
-        uuid="1234",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_HASSIO},
-        data=hassio_data_no_host,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "hassio_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    # Should use slug as hostname
-    assert result["data"] == {
-        CONF_URL: "http://music_assistant:8094",
+        CONF_TOKEN: "test_token",
     }
     assert result["result"].unique_id == "1234"
 
@@ -509,7 +517,9 @@ async def test_zeroconf_addon_server_ignored(
 ) -> None:
     """Test zeroconf discovery ignores servers running as add-on."""
     addon_zeroconf_data = deepcopy(ZEROCONF_DATA)
-    addon_zeroconf_data.properties["homeassistant_addon"] = True
+    addon_zeroconf_data.properties["homeassistant_addon"] = (
+        "True"  # Zeroconf properties are strings
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -528,7 +538,9 @@ async def test_zeroconf_server_not_ready_ignored(
 ) -> None:
     """Test zeroconf discovery ignores servers that haven't completed onboarding."""
     not_ready_zeroconf_data = deepcopy(ZEROCONF_DATA)
-    not_ready_zeroconf_data.properties["onboard_done"] = False
+    not_ready_zeroconf_data.properties["onboard_done"] = (
+        "False"  # Zeroconf properties are strings
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -548,11 +560,13 @@ async def test_zeroconf_old_schema_addon_not_ignored(
     """Test zeroconf discovery does NOT ignore add-on servers with old schema version."""
     old_schema_addon_data = deepcopy(ZEROCONF_DATA)
     old_schema_version = AUTH_SCHEMA_VERSION - 1
-    old_schema_addon_data.properties["schema_version"] = old_schema_version
-    old_schema_addon_data.properties["min_supported_schema_version"] = (
+    old_schema_addon_data.properties["schema_version"] = str(old_schema_version)
+    old_schema_addon_data.properties["min_supported_schema_version"] = str(
         old_schema_version
     )
-    old_schema_addon_data.properties["homeassistant_addon"] = True
+    old_schema_addon_data.properties["homeassistant_addon"] = (
+        "True"  # Zeroconf properties are strings
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -573,11 +587,13 @@ async def test_zeroconf_old_schema_not_ready_not_ignored(
     """Test zeroconf discovery does NOT ignore not-ready servers with old schema version."""
     old_schema_not_ready_data = deepcopy(ZEROCONF_DATA)
     old_schema_version = AUTH_SCHEMA_VERSION - 1
-    old_schema_not_ready_data.properties["schema_version"] = old_schema_version
-    old_schema_not_ready_data.properties["min_supported_schema_version"] = (
+    old_schema_not_ready_data.properties["schema_version"] = str(old_schema_version)
+    old_schema_not_ready_data.properties["min_supported_schema_version"] = str(
         old_schema_version
     )
-    old_schema_not_ready_data.properties["onboard_done"] = False
+    old_schema_not_ready_data.properties["onboard_done"] = (
+        "False"  # Zeroconf properties are strings
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -589,3 +605,155 @@ async def test_zeroconf_old_schema_not_ready_not_ignored(
     # Should proceed to discovery_confirm, not abort
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+
+
+async def test_user_flow_with_auth_required(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test user flow with schema >= 28 redirects to auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    # Should fall back to manual auth (no request context in tests)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth_manual"
+
+
+async def test_zeroconf_flow_with_auth_required(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf flow with schema >= 28 redirects to auth after confirmation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    # Should fall back to manual auth (no request context in tests)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth_manual"
+
+
+async def test_hassio_flow_with_token(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test hassio discovery flow with token provided."""
+    # Add token to hassio discovery data
+    hassio_data_with_token = HassioServiceInfo(
+        config={
+            "host": "addon-music-assistant",
+            "port": 8094,
+            CONF_TOKEN: "test_token",
+        },
+        name="Music Assistant",
+        slug="music_assistant",
+        uuid="1234",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=hassio_data_with_token,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {
+        CONF_URL: "http://addon-music-assistant:8094",
+        CONF_TOKEN: "test_token",
+    }
+    assert result["result"].unique_id == "1234"
+
+
+async def test_auth_flow_success(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test successful authentication flow."""
+    # Start user flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    # Should fall back to manual auth (no request context in tests)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth_manual"
+
+    # Enter token
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "test_auth_token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {
+        CONF_URL: "http://localhost:8095",
+        CONF_TOKEN: "test_auth_token",
+    }
+    assert result["result"].unique_id == "1234"
+
+
+async def test_finish_auth_token_exchange(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test that finish_auth exchanges short-lived token for long-lived token."""
+    # Create flow instance
+    flow = MusicAssistantConfigFlow()
+    flow.hass = hass
+    flow.url = "http://localhost:8095"
+    flow.token = "short_lived_session_token"
+    flow.server_info = mock_get_server_info.return_value
+
+    # Mock the token exchange
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
+        return_value="long_lived_token_12345",
+    ) as mock_create_token:
+        # Call async_step_finish_auth to test token exchange
+        result = await flow.async_step_finish_auth()
+
+    # Verify token was exchanged
+    mock_create_token.assert_called_once()
+    call_args = mock_create_token.call_args
+    assert call_args[0][0] == "http://localhost:8095"
+    assert call_args[0][1] == "short_lived_session_token"
+    assert call_args[0][2] == "Home Assistant"
+    assert call_args[1]["aiohttp_session"] is not None
+
+    # Verify entry was created with long-lived token
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_URL: "http://localhost:8095",
+        CONF_TOKEN: "long_lived_token_12345",
+    }
