@@ -109,23 +109,23 @@
   "selector": {
     "info_skill": {
       "options": {
-        "alexa_calendar_playnext": "Calendar: Next event",
-        "alexa_calendar_playtoday": "Calendar: Today's Calendar",
-        "alexa_calendar_playtomorrow": "Calendar: Tomorrow's Calendar",
-        "alexa_cleanup_play": "Encourage me to clean up",
-        "alexa_date_play": "Date",
-        "alexa_flashbriefing_play": "Flash Briefing",
-        "alexa_funfact_play": "Tell me a fun fact",
-        "alexa_goodmorning_play": "Good morning",
-        "alexa_goodnight_play": "Wish me a good night",
-        "alexa_imhome_play": "Welcome me home",
-        "alexa_joke_play": "Tell me a joke",
-        "alexa_news_nationalnews": "National News",
-        "alexa_singasong_play": "Sing a song",
-        "alexa_tellstory_play": "Tell me a story",
-        "alexa_time_play": "Time",
-        "alexa_traffic_play": "Traffic",
-        "alexa_weather_play": "Weather"
+        "alexa_calendar_next": "Calendar: Next event",
+        "alexa_calendar_today": "Calendar: Today's Calendar",
+        "alexa_calendar_tomorrow": "Calendar: Tomorrow's Calendar",
+        "alexa_cleanup": "Encourage me to clean up",
+        "alexa_date": "Date",
+        "alexa_flashbriefing": "Flash Briefing",
+        "alexa_funfact": "Tell me a fun fact",
+        "alexa_goodmorning": "Good morning",
+        "alexa_goodnight": "Wish me a good night",
+        "alexa_imhome": "Welcome me home",
+        "alexa_joke": "Tell me a joke",
+        "alexa_nationalnews": "National News",
+        "alexa_singasong": "Sing a song",
+        "alexa_tellstory": "Tell me a story",
+        "alexa_time": "Time",
+        "alexa_traffic": "Traffic",
+        "alexa_weather": "Weather"
       }
     },
     "sound": {
