@@ -16,7 +16,6 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     FAN_LOW,
-    FAN_MEDIUM,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
@@ -175,8 +174,8 @@ async def test_set_fan_mode(
     """Test the Coolmaster climate set fan mode."""
     assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == FAN_LOW
 
-    # Set the fan to HIGH, MEDIUM, and LOW and verify the changes
-    for target_fan in (FAN_HIGH, FAN_MEDIUM, FAN_LOW):
+    # Set the fan to all supported modes and verify the changes
+    for target_fan in FAN_MODES:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
