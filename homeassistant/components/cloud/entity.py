@@ -28,6 +28,10 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
+from openai.types.responses.response_input_param import (
+    ImageGenerationCall as ImageGenerationCallParam,
+)
+from openai.types.responses.response_output_item import ImageGenerationCall
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -139,6 +143,11 @@ def _convert_content_to_param(
                     }
                 )
                 reasoning_summary = []
+
+            elif isinstance(content.native, ImageGenerationCall):
+                messages.append(
+                    cast(ImageGenerationCallParam, content.native.to_dict())
+                )
 
     return messages
 
