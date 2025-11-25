@@ -773,6 +773,10 @@ async def test_3_3_migration(
         "mock-access-token",
         "123aa123-2be1-4e40-b257-e4ef59083324",
     )
+    mock_smartthings.delete_installed_app.assert_called_once_with(
+        "mock-access-token",
+        "123aa123-2be1-4e40-b257-e4ef59083324",
+    )
     mock_smartthings.delete_smart_app.assert_called_once_with(
         "mock-access-token",
         "c6cde2b0-203e-44cf-a510-3b3ed4706996",
@@ -801,6 +805,7 @@ async def test_3_3_migration_fail(
         "mock-access-token",
         "123aa123-2be1-4e40-b257-e4ef59083324",
     )
+    mock_smartthings.delete_installed_app.assert_not_called()
     mock_smartthings.delete_smart_app.assert_not_called()
 
 
@@ -822,4 +827,5 @@ async def test_3_3_migration_no_old_data(
 
     assert OLD_DATA not in mock_migrated_config_entry.data
     mock_smartthings.get_installed_app.assert_not_called()
+    mock_smartthings.delete_installed_app.assert_not_called()
     mock_smartthings.delete_smart_app.assert_not_called()

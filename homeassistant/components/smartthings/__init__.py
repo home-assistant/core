@@ -421,11 +421,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.info("Found old data during migration")
             client = SmartThings(session=async_get_clientsession(hass))
             access_token = old_data[CONF_ACCESS_TOKEN]
+            installed_app_id = old_data[CONF_INSTALLED_APP_ID]
             try:
-                app = await client.get_installed_app(
-                    access_token, old_data[CONF_INSTALLED_APP_ID]
-                )
+                app = await client.get_installed_app(access_token, installed_app_id)
                 _LOGGER.info("Found old app %s, named %s", app.app_id, app.display_name)
+                await client.delete_installed_app(access_token, installed_app_id)
                 await client.delete_smart_app(access_token, app.app_id)
             except SmartThingsError as err:
                 _LOGGER.warning(
