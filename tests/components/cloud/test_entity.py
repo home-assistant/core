@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PIL import Image
@@ -14,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.cloud.entity import (
     BaseCloudLLMEntity,
+    _convert_content_to_param,
     _format_structured_output,
 )
 from homeassistant.core import HomeAssistant
@@ -36,6 +36,19 @@ def cloud_entity(hass: HomeAssistant) -> BaseCloudLLMEntity:
     entity.entity_id = "ai_task.cloud_ai_task"
     entity.hass = hass
     return entity
+
+
+@pytest.fixture
+def mock_prepare_files_for_prompt(
+    cloud_entity: BaseCloudLLMEntity,
+) -> AsyncMock:
+    """Patch file preparation helper on the entity."""
+    with patch.object(
+        cloud_entity,
+        "_async_prepare_files_for_prompt",
+        AsyncMock(),
+    ) as mock:
+        yield mock
 
 
 class DummyTool(llm.Tool):
@@ -162,12 +175,12 @@ async def test_prepare_chat_for_generation_appends_attachments(
     attachment = conversation.Attachment(
         media_content_id="media-source://media/doorbell.jpg",
         mime_type="image/jpeg",
-        path=hass.config.path("doorbell.jpg"),
+        path=Path(hass.config.path("doorbell.jpg")),
     )
     chat_log.async_add_user_content(
         conversation.UserContent(content="Describe the door", attachments=[attachment])
     )
-    chat_log.llm_api = SimpleNamespace(
+    chat_log.llm_api = MagicMock(
         tools=[DummyTool()],
         custom_serializer=None,
     )
@@ -175,8 +188,11 @@ async def test_prepare_chat_for_generation_appends_attachments(
     files = [{"type": "input_image", "image_url": "data://img", "detail": "auto"}]
 
     mock_prepare_files_for_prompt.return_value = files
+    messages = _convert_content_to_param(chat_log.content)
     response = await cloud_entity._prepare_chat_for_generation(
-        chat_log, response_format={"type": "json"}
+        chat_log,
+        messages,
+        response_format={"type": "json"},
     )
 
     assert response["conversation_id"] == "conversation-id"
@@ -185,35 +201,21 @@ async def test_prepare_chat_for_generation_appends_attachments(
     assert len(response["tools"]) == 2
     assert response["tools"][0]["name"] == "do_something"
     assert response["tools"][1]["type"] == "web_search"
-    user_message = response["messages"][-1]
-    assert user_message["content"][0] == {
-        "type": "input_text",
-        "text": "Describe the door",
-    }
-    assert user_message["content"][1:] == files
+    assert response["messages"] is messages
+    mock_prepare_files_for_prompt.assert_awaited_once_with([attachment])
 
 
-async def test_prepare_chat_for_generation_requires_user_prompt(
+async def test_prepare_chat_for_generation_passes_messages_through(
     hass: HomeAssistant, cloud_entity: BaseCloudLLMEntity
 ) -> None:
-    """Test that we fail fast when there is no user input to process."""
+    """Test that prepared messages are forwarded unchanged."""
     chat_log = conversation.ChatLog(hass, "conversation-id")
     chat_log.async_add_assistant_content_without_tools(
         conversation.AssistantContent(agent_id="agent", content="Ready")
     )
+    messages = _convert_content_to_param(chat_log.content)
 
-    with pytest.raises(HomeAssistantError, match="No user prompt found"):
-        await cloud_entity._prepare_chat_for_generation(chat_log)
+    response = await cloud_entity._prepare_chat_for_generation(chat_log, messages)
 
-
-@pytest.fixture
-def mock_prepare_files_for_prompt(
-    cloud_entity: BaseCloudLLMEntity,
-) -> AsyncMock:
-    """Patch file preparation helper on the entity."""
-    with patch.object(
-        cloud_entity,
-        "_async_prepare_files_for_prompt",
-        AsyncMock(),
-    ) as mock:
-        yield mock
+    assert response["messages"] == messages
+    assert response["conversation_id"] == "conversation-id"
