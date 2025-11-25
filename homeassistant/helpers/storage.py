@@ -27,11 +27,12 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     callback,
+    is_callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, json as json_util
-from homeassistant.util.file import WriteError
+from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
@@ -441,7 +442,12 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         data_func: Callable[[], _T],
         delay: float = 0,
     ) -> None:
-        """Save data with an optional delay."""
+        """Save data with an optional delay.
+
+        data_func: A function that returns the data to save. If the function
+        is decorated with @callback, it will be called in the event loop. If
+        it is a regular function, it will be called from an executor.
+        """
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -537,28 +543,37 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 return
 
             try:
-                await self._async_write_data(self.path, data)
+                await self._async_write_data(data)
             except (json_util.SerializationError, WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
-    async def _async_write_data(self, path: str, data: dict) -> None:
-        await self.hass.async_add_executor_job(self._write_data, self.path, data)
+    async def _async_write_data(self, data: dict) -> None:
+        if "data_func" in data and is_callback(data["data_func"]):
+            data["data"] = data.pop("data_func")()
+            mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
+            await self.hass.async_add_executor_job(
+                self._write_prepared_data, mode, json_data
+            )
+            return
+        await self.hass.async_add_executor_job(self._write_data, data)
 
-    def _write_data(self, path: str, data: dict) -> None:
+    def _write_data(self, data: dict) -> None:
         """Write the data."""
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
         if "data_func" in data:
             data["data"] = data.pop("data_func")()
+        mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
+        self._write_prepared_data(mode, json_data)
+
+    def _write_prepared_data(self, mode: str, json_data: str | bytes) -> None:
+        """Write the data."""
+        path = self.path
+        os.makedirs(os.path.dirname(path), exist_ok=True)
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        json_helper.save_json(
-            path,
-            data,
-            self._private,
-            encoder=self._encoder,
-            atomic_writes=self._atomic_writes,
+        write_method = (
+            write_utf8_file_atomic if self._atomic_writes else write_utf8_file
         )
+        write_method(path, json_data, self._private, mode=mode)
 
     async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version."""

@@ -4,6 +4,8 @@ import asyncio
 from datetime import timedelta
 import json
 import os
+from pathlib import Path
+import threading
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
@@ -17,7 +19,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes
@@ -35,6 +42,7 @@ MOCK_VERSION_2 = 2
 MOCK_MINOR_VERSION_1 = 1
 MOCK_MINOR_VERSION_2 = 2
 MOCK_KEY = "storage-test"
+MOCK_KEY2 = "storage-test-2"
 MOCK_DATA = {"hello": "world"}
 MOCK_DATA2 = {"goodbye": "cruel world"}
 
@@ -138,6 +146,74 @@ async def test_saving_with_delay(
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_saving_with_delay_threading(tmp_path: Path) -> None:
+    """Test thread handling when saving with a delay."""
+    calls = []
+
+    async def assert_storage_data(store_key: str, expected_data: str) -> None:
+        """Assert storage data."""
+
+        def read_storage_data(store_key: str) -> str:
+            """Read storage data."""
+            return Path(tmp_path / f".storage/{store_key}").read_text(encoding="utf-8")
+
+        store_data = await asyncio.to_thread(read_storage_data, store_key)
+        assert store_data == expected_data
+
+    async with async_test_home_assistant(config_dir=tmp_path) as hass:
+
+        def data_producer_thread_safe() -> Any:
+            """Produce data to store."""
+            assert threading.get_ident() != hass.loop_thread_id
+            calls.append("thread_safe")
+            return MOCK_DATA
+
+        @callback
+        def data_producer_callback() -> Any:
+            """Produce data to store."""
+            assert threading.get_ident() == hass.loop_thread_id
+            calls.append("callback")
+            return MOCK_DATA2
+
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+        store.async_delay_save(data_producer_thread_safe, 1)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY2)
+        store.async_delay_save(data_producer_callback, 1)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        assert calls == ["thread_safe", "callback"]
+        expected_data = (
+            "{\n"
+            '  "version": 1,\n'
+            '  "minor_version": 1,\n'
+            '  "key": "storage-test",\n'
+            '  "data": {\n'
+            '    "hello": "world"\n'
+            "  }\n"
+            "}"
+        )
+        await assert_storage_data(MOCK_KEY, expected_data)
+        expected_data = (
+            "{\n"
+            '  "version": 1,\n'
+            '  "minor_version": 1,\n'
+            '  "key": "storage-test-2",\n'
+            '  "data": {\n'
+            '    "goodbye": "cruel world"\n'
+            "  }\n"
+            "}"
+        )
+        await assert_storage_data(MOCK_KEY2, expected_data)
+
+        await hass.async_stop(force=True)
 
 
 async def test_saving_with_delay_churn_reduction(
