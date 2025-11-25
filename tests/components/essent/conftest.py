@@ -58,20 +58,13 @@ def mock_essent_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def platforms() -> list[Platform]:
-    """Return platforms to test."""
-    return [Platform.SENSOR]
-
-
-@pytest.fixture
 async def setup_sensor_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_essent_client: AsyncMock,
-    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up Essent with sensor platform patched in."""
-    with patch("homeassistant.components.essent.PLATFORMS", platforms):
+    with patch("homeassistant.components.essent.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     return mock_config_entry
