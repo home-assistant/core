@@ -3685,7 +3685,7 @@ async def test_get_triggers_for_target(
         "component2.trigger",
         Mock(
             async_get_triggers=AsyncMock(
-                return_value={"match_all": Mock, "other_integration": Mock}
+                return_value={"match_all": Mock, "other_integration_lights": Mock}
             )
         ),
     )
@@ -3754,7 +3754,7 @@ async def test_get_triggers_for_target(
         match_all:
           target:
 
-        other_integration:
+        other_integration_lights:
           target:
             entity:
               - domain: light
@@ -3799,7 +3799,11 @@ async def test_get_triggers_for_target(
     # Test entity target - entity not in registry
     await assert_triggers(
         {"entity_id": ["light.not_registry"]},
-        ["component2.match_all", "component2.other_integration", "light.turned_on"],
+        [
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "light.turned_on",
+        ],
     )
 
     # Test entity targets
@@ -3830,7 +3834,7 @@ async def test_get_triggers_for_target(
             "component1.light_flash",
             "component1.light_message",
             "component2.match_all",
-            "component2.other_integration",
+            "component2.other_integration_lights",
             "light.turned_on",
         ],
     )
@@ -3853,7 +3857,7 @@ async def test_get_triggers_for_target(
             "component1",
             "component1.light_message",
             "component2.match_all",
-            "component2.other_integration",
+            "component2.other_integration_lights",
             "light.turned_on",
             "sensor.turned_on",
             "switch.turned_on",
@@ -3865,7 +3869,7 @@ async def test_get_triggers_for_target(
         {"area_id": ["kitchen", "living_room"]},
         [
             "component2.match_all",
-            "component2.other_integration",
+            "component2.other_integration_lights",
             "light.turned_on",
             "switch.turned_on",
         ],
@@ -3878,7 +3882,7 @@ async def test_get_triggers_for_target(
             "light.turned_on",
             "component1",
             "component2.match_all",
-            "component2.other_integration",
+            "component2.other_integration_lights",
             "switch.turned_on",
         ],
     )
@@ -3894,7 +3898,7 @@ async def test_get_triggers_for_target(
             "component1",
             "component1.light_message",
             "component2.match_all",
-            "component2.other_integration",
+            "component2.other_integration_lights",
             "light.turned_on",
             "sensor.turned_on",
             "switch.turned_on",
