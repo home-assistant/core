@@ -21,6 +21,9 @@ HAP-python==5.0.0
 # homeassistant.components.tasmota
 HATasmota==0.10.1
 
+# homeassistant.components.hue_ble
+HueBLE==1.0.8
+
 # homeassistant.components.mastodon
 Mastodon.py==2.1.2
 
@@ -1083,6 +1086,9 @@ google-nest-sdm==9.1.0
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
 
+# homeassistant.components.google_air_quality
+google_air_quality_api==1.1.1
+
 # homeassistant.components.slide
 # homeassistant.components.slide_local
 goslide-api==0.7.0
@@ -1869,6 +1875,9 @@ pyairobotrest==0.1.0
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
 pyairvisual==2023.08.1
+
+# homeassistant.components.anglian_water
+pyanglianwater==2.1.0
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
@@ -3183,7 +3192,7 @@ xknxproject==3.8.2
 # homeassistant.components.startca
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
-xmltodict==0.13.0
+xmltodict==1.0.2
 
 # homeassistant.components.xs1
 xs1-api-client==3.0.0
