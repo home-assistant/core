@@ -28,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import now
+from homeassistant.util.variance import ignore_variance
 
 from .coordinator import StarlinkConfigEntry, StarlinkData
 from .entity import StarlinkEntity
@@ -64,24 +65,6 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class StarlinkLastRestartSensor(StarlinkSensorEntity):
-    """A StarlinkLastRestartSensor for Starlink devices. Handles creating unique IDs."""
-
-    _attr_native_value: datetime | None = None
-
-    @property
-    def native_value(self) -> datetime:
-        """Decide new value from current value and the entity description."""
-        new_value = super().native_value
-        if TYPE_CHECKING:
-            assert isinstance(new_value, datetime)
-        if not self._attr_native_value or (
-            self._attr_native_value + timedelta(minutes=1) < new_value
-        ):
-            self._attr_native_value = new_value
-        return self._attr_native_value
-
-
 class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
     """A StarlinkAccumulationSensor for Starlink devices. Handles creating unique IDs."""
 
@@ -108,6 +91,10 @@ class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
                 assert isinstance(last_native_value, (int, float))
             self._attr_native_value = last_native_value
 
+
+uptime_to_stable_datetime = ignore_variance(
+    lambda value: now() - timedelta(seconds=value), timedelta(minutes=1)
+)
 
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
@@ -168,8 +155,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         translation_key="last_restart",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
-        entity_class=StarlinkLastRestartSensor,
+        value_fn=lambda data: uptime_to_stable_datetime(data.status["uptime"]),
+        entity_class=StarlinkSensorEntity,
     ),
     StarlinkSensorEntityDescription(
         key="ping_drop_rate",
