@@ -449,8 +449,14 @@ async def test_cloud_abort_on_duplicate_entry(
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -498,7 +504,7 @@ async def test_local_abort_on_duplicate_entry(
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
+        unique_id=f"{TEST_GATEWAY_ID}-local",
         version=2,
         data={
             "host": TEST_HOST,
@@ -611,7 +617,7 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
         version=2,
         data={
             "username": TEST_EMAIL,
@@ -653,7 +659,7 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
         version=2,
         data={
             "username": TEST_EMAIL,
@@ -692,7 +698,7 @@ async def test_local_reauth_legacy(hass: HomeAssistant) -> None:
     """Test legacy reauthentication flow with username/password."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
+        unique_id=f"{TEST_GATEWAY_ID}-local",
         version=2,
         data={
             "host": TEST_HOST,
@@ -742,7 +748,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
     """Test modern local reauth flow."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
+        unique_id=f"{TEST_GATEWAY_ID}-local",
         version=2,
         data={
             "host": TEST_HOST,
@@ -793,7 +799,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID2,
+        unique_id=f"{TEST_GATEWAY_ID2}-local",
         version=2,
         data={
             "host": TEST_HOST,
@@ -888,12 +894,17 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
 async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that DHCP doesn't setup already configured gateways."""
-    config_entry = MockConfigEntry(
+    MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
-    )
-    config_entry.add_to_hass(hass)
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1019,12 +1030,17 @@ async def test_local_zeroconf_flow(
 
 async def test_zeroconf_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that zeroconf doesn't setup already configured gateways."""
-    config_entry = MockConfigEntry(
+    MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
-    )
-    config_entry.add_to_hass(hass)
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

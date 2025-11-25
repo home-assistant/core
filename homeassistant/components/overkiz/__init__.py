@@ -19,7 +19,7 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import Device, OverkizServer, Scenario
 from pyoverkiz.utils import generate_local_server
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -87,6 +87,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         await client.login()
         setup = await client.get_setup()
 
+        # Filter devices for cloud mode - exclude devices already managed by local entries
+        devices = setup.devices
+        if api_type == APIType.CLOUD:
+            local_device_urls = _get_entry_device_urls(hass, entry.entry_id, APIType.LOCAL)
+            if local_device_urls:
+                original_count = len(devices)
+                devices = [d for d in devices if d.device_url not in local_device_urls]
+                filtered_count = original_count - len(devices)
+                if filtered_count > 0:
+                    LOGGER.debug(
+                        "Filtered %d devices from cloud entry (managed by local entry)",
+                        filtered_count,
+                    )
+
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
         if api_type == APIType.CLOUD:
@@ -111,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         entry,
         LOGGER,
         client=client,
-        devices=setup.devices,
+        devices=devices,
         places=setup.root_place,
     )
 
@@ -177,6 +191,36 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: OverkizDataConfigEntry
+) -> bool:
+    """Migrate old entry to new version.
+
+    Called by Home Assistant BEFORE async_setup_entry when config entry version
+    is lower than VERSION. Migrates the config entry itself (unique_id, version).
+
+    Note: Different from _async_migrate_entries which migrates entity registry
+    unique_ids and runs DURING setup.
+    """
+    if config_entry.version == 1:
+        # Migrate unique_id to include API type suffix
+        # This allows both local and cloud entries for the same gateway
+        api_type = config_entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+        # api_type can be APIType enum or string, f-string handles both
+        new_unique_id = f"{config_entry.unique_id}-{api_type}"
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, version=2
+        )
+        LOGGER.info(
+            "Migrated Overkiz entry unique_id from %s to %s",
+            config_entry.unique_id,
+            new_unique_id,
+        )
+
+    return True
 
 
 async def _async_migrate_entries(
@@ -264,3 +308,23 @@ def create_cloud_client(
     return OverkizClient(
         username=username, password=password, session=session, server=server
     )
+
+def _get_entry_device_urls(
+    hass: HomeAssistant, current_entry_id: str, api_type: APIType
+) -> set[str]:
+    """Get device URLs managed by entries with specified API type (excluding current entry)."""
+    device_urls: set[str] = set()
+
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id == current_entry_id:
+            continue
+
+        if entry.state != ConfigEntryState.LOADED:
+            continue
+
+        if entry.data.get(CONF_API_TYPE) == api_type:
+            # Get devices from the loaded entry's runtime_data
+            if hasattr(entry, "runtime_data") and entry.runtime_data:
+                device_urls.update(entry.runtime_data.coordinator.devices.keys())
+
+    return device_urls
