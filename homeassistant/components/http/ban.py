@@ -232,7 +232,8 @@ class IpBanManager:
                 ip_bans_lookup[ban.ip_address] = ban
             except vol.Invalid as err:
                 _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
-                continue
+            except ValueError:
+                _LOGGER.error("Failed to load IP ban: invalid IP address %s", ip_ban)
 
         self.ip_bans_lookup = ip_bans_lookup
 
