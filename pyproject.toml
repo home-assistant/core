@@ -48,7 +48,7 @@ dependencies = [
   "fnv-hash-fast==1.6.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==1.5.1",
+  "hass-nabucasa==1.6.1",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -780,6 +780,7 @@ ignore = [
   "D213",     # Multi-line docstring summary should start at the second line
   "D406",     # Section name should end with a newline
   "D407",     # Section name underlining
+  "D417",     # Missing argument descriptions in docstring - to allow documenting only non-obvious parameters
   "E501",     # line too long
 
   "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
