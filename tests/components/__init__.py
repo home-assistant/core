@@ -29,7 +29,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, mock_device_registry
 
 
-async def target_entities(hass: HomeAssistant, domain: str) -> None:
+async def target_entities(hass: HomeAssistant, domain: str) -> list[str]:
     """Create multiple entities associated with different targets."""
     await async_setup_component(hass, domain, {})
 
