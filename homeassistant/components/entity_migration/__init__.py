@@ -38,14 +38,7 @@ SERVICE_SCAN_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """
-    Initialize the Entity Migration integration.
-    
-    Registers the integration's WebSocket API and a "scan" service that scans configurations for references to a given entity_id. The scan service raises ServiceValidationError (translation_domain=DOMAIN, translation_key="scan_failed") when scanning fails and returns the scan result as a dictionary.
-    
-    Returns:
-        True when setup completed successfully.
-    """
+    """Set up the Entity Migration integration."""
     _LOGGER.debug("Setting up Entity Migration integration")
 
     # Register WebSocket commands
@@ -53,18 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register services
     async def handle_scan(call: ServiceCall) -> ServiceResponse:
-        """
-        Process an entity migration scan service call and return the scan result as a dictionary.
-        
-        Parameters:
-            call (ServiceCall): Service call containing the `entity_id` to scan (key: `ATTR_ENTITY_ID`).
-        
-        Returns:
-            dict: Dictionary representation of the scan result.
-        
-        Raises:
-            ServiceValidationError: If the scan fails; contains translation_domain `DOMAIN`, translation_key `scan_failed`, and a placeholder `error` with the failure message.
-        """
+        """Handle the scan service call."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
         scanner = EntityMigrationScanner(hass)

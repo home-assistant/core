@@ -54,16 +54,13 @@ class EntityMigrationScanner:
         self.hass = hass
 
     async def async_scan(self, entity_id: str) -> ScanResult:
-        """
-        Scan Home Assistant configuration and dashboards for references to the given entity.
-        
-        Parameters:
-            entity_id (str): The entity ID to locate (for example, "light.kitchen").
-        
+        """Find all references to an entity across all configuration types.
+
+        Args:
+            entity_id: The entity ID to scan for references.
+
         Returns:
-            ScanResult: Aggregated results containing `source_entity_id`, a mapping of config
-            types to lists of `Reference` objects where the entity is used, and `total_count`
-            of found references.
+            ScanResult containing all found references grouped by config type.
         """
         _LOGGER.debug("Starting scan for entity %s", entity_id)
 
@@ -118,11 +115,10 @@ class EntityMigrationScanner:
         return scan_result
 
     async def _async_scan_automations(self, entity_id: str) -> list[Reference]:
-        """
-        Finds automation configurations that reference the given entity.
-        
-        Returns:
-            list[Reference]: A list of Reference objects for each automation/location where the entity is referenced (one entry per found location).
+        """Scan automations for entity references.
+
+        Uses the built-in automations_with_entity() helper and then retrieves
+        additional location information.
         """
         refs: list[Reference] = []
 
@@ -160,14 +156,7 @@ class EntityMigrationScanner:
     async def _get_automation_locations(
         self, automation_entity_id: str, entity_id: str
     ) -> list[str]:
-        """
-        Identify locations within an automation where the given entity is referenced.
-        
-        Returns:
-            locations (list[str]): List of location identifiers indicating where the entity is referenced
-            within the automation. If the automation state is unavailable or no specific location can be
-            determined, returns a list containing `LOCATION_ENTITY`.
-        """
+        """Determine where in an automation an entity is referenced."""
         locations: list[str] = []
 
         # Try to get the automation entity to access its config
@@ -175,25 +164,15 @@ class EntityMigrationScanner:
         if not state:
             return locations
 
-        # Check trigger, condition, action attributes if available
         # The automation entity stores referenced entities in attributes
-        attrs = state.attributes
-        if "id" in attrs:
-            # For UI automations, we can potentially get more detail
-            # but for now, we return a generic location
-            locations.append(LOCATION_ENTITY)
-        else:
-            locations.append(LOCATION_ENTITY)
+        # For now, return a generic location; future enhancement could
+        # distinguish trigger/condition/action based on automation config
+        locations.append(LOCATION_ENTITY)
 
-        return locations if locations else [LOCATION_ENTITY]
+        return locations
 
     async def _async_scan_scripts(self, entity_id: str) -> list[Reference]:
-        """
-        Find scripts that reference the given entity and produce Reference entries for each match.
-        
-        Returns:
-            refs (list[Reference]): A list of Reference objects for each script that references the entity. Each Reference uses CONFIG_TYPE_SCRIPT as the config_type, the script's unique id (or entity id) as config_id, the resolved display name as config_name, and LOCATION_SEQUENCE as the location.
-        """
+        """Scan scripts for entity references."""
         refs: list[Reference] = []
 
         script_ids = script.scripts_with_entity(self.hass, entity_id)
@@ -221,14 +200,7 @@ class EntityMigrationScanner:
         return refs
 
     async def _async_scan_scenes(self, entity_id: str) -> list[Reference]:
-        """
-        Finds scenes that reference the specified entity and returns references describing each match.
-        
-        Each Reference identifies the scene (using the scene's unique ID when available or the scene entity_id otherwise), a display name resolved from the entity registry or state, and marks the location as LOCATION_ENTITY.
-        
-        Returns:
-            list[Reference]: A list of Reference objects for scenes that reference the given entity_id.
-        """
+        """Scan scenes for entity references."""
         refs: list[Reference] = []
 
         scene_ids = scene.scenes_with_entity(self.hass, entity_id)
@@ -256,15 +228,7 @@ class EntityMigrationScanner:
         return refs
 
     async def _async_scan_groups(self, entity_id: str) -> list[Reference]:
-        """
-        Find group configurations that reference the given entity.
-        
-        Parameters:
-            entity_id (str): The entity_id to search for within groups.
-        
-        Returns:
-            list[Reference]: Reference entries for each group containing the entity. Each reference uses CONFIG_TYPE_GROUP, sets config_id to the group's unique id (or the group entity id if unavailable), config_name to the group's display name (or entity id), and location LOCATION_MEMBER.
-        """
+        """Scan groups for entity references."""
         refs: list[Reference] = []
 
         group_ids = group.groups_with_entity(self.hass, entity_id)
@@ -292,17 +256,7 @@ class EntityMigrationScanner:
         return refs
 
     async def _async_scan_persons(self, entity_id: str) -> list[Reference]:
-        """
-        Find person entities that reference the given entity as a device tracker.
-        
-        Resolves each person's display name and unique id from the entity registry when available, falling back to the entity state or entity id.
-        
-        Returns:
-            list[Reference]: References for matching person entities. Each Reference has
-                config_type set to CONFIG_TYPE_PERSON, config_id set to the person's
-                unique id or entity id, config_name set to the resolved display name,
-                and location set to LOCATION_DEVICE_TRACKER.
-        """
+        """Scan person entities for device_tracker references."""
         refs: list[Reference] = []
 
         person_ids = person.persons_with_entity(self.hass, entity_id)
@@ -330,14 +284,7 @@ class EntityMigrationScanner:
         return refs
 
     async def _async_scan_dashboards(self, entity_id: str) -> list[Reference]:
-        """
-        Scan Lovelace dashboards for references to the given entity.
-        
-        Scans every loaded Lovelace dashboard configuration, skipping dashboards without a config or those that fail to load, and records each location where the entity_id is referenced.
-        
-        Returns:
-            refs (list[Reference]): A list of Reference objects describing each dashboard location where the entity is referenced. Returns an empty list if Lovelace is not loaded or no references are found.
-        """
+        """Scan Lovelace dashboards for entity references."""
         refs: list[Reference] = []
 
         if LOVELACE_DATA not in self.hass.data:
@@ -389,16 +336,15 @@ class EntityMigrationScanner:
         entity_id: str,
         path: str = "",
     ) -> list[str]:
-        """
-        Recursively locate paths inside a configuration where the given entity_id is referenced.
-        
-        Parameters:
-            config (Any): Configuration node to scan (dict, list, or value).
-            entity_id (str): The entity ID to search for.
-            path (str): Current traversal path using dot notation for dict keys and `[index]` for list items; used in reported locations.
-        
+        """Recursively scan a configuration for entity references.
+
+        Args:
+            config: The configuration to scan (dict, list, or value).
+            entity_id: The entity ID to search for.
+            path: Current path in the config for location reporting.
+
         Returns:
-            list[str]: Paths where the entity was found. Template-based matches are suffixed with " (template)".
+            List of paths where the entity was found.
         """
         found: list[str] = []
 
@@ -426,16 +372,7 @@ class EntityMigrationScanner:
 
     @callback
     def _check_template_reference(self, template: str, entity_id: str) -> bool:
-        """
-        Detects whether a Jinja2 template contains a reference to a specific entity.
-        
-        Parameters:
-            template (str): Jinja2 template text to inspect.
-            entity_id (str): The entity_id to search for within the template.
-        
-        Returns:
-            `true` if the `entity_id` is referenced in the template, `false` otherwise.
-        """
+        """Check if a Jinja2 template contains a reference to an entity."""
         for pattern in TEMPLATE_PATTERNS:
             matches = pattern.findall(template)
             if entity_id in matches:
