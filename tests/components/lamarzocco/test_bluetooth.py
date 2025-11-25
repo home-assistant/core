@@ -40,6 +40,11 @@ MICRA_BT_OFFLINE_ENTITIES = [
     ("select", "steam_level"),
 ]
 
+GS3_BT_OFFLINE_ENTITIES = [
+    *BLUETOOTH_ONLY_BASE_ENTITIES,
+    ("number", "steam_target_temperature"),
+]
+
 
 def build_entity_id(
     platform: str,
@@ -128,7 +133,7 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     ("device_fixture", "entities"),
     [
         (ModelName.LINEA_MICRA, MICRA_BT_OFFLINE_ENTITIES),
-        (ModelName.GS3_AV, BLUETOOTH_ONLY_BASE_ENTITIES),
+        (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
     ],
 )
 async def test_bt_offline_mode_entity_available_when_cloud_fails(
@@ -294,7 +299,7 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
     ("device_fixture", "entities"),
     [
         (ModelName.LINEA_MICRA, MICRA_BT_OFFLINE_ENTITIES),
-        (ModelName.GS3_AV, BLUETOOTH_ONLY_BASE_ENTITIES),
+        (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
     ],
 )
 async def test_setup_through_bluetooth_only(

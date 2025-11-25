@@ -79,6 +79,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.GS3_AV, ModelName.GS3_MP)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
         key="smart_standby_time",
