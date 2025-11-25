@@ -68,7 +68,7 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
 )
 
 HASSIO_DATA = HassioServiceInfo(
-    config={"host": "addon-music-assistant", "port": 8094, "token": "test_token"},
+    config={"host": "addon-music-assistant", "port": 8094, "auth_token": "test_token"},
     name="Music Assistant",
     slug="music_assistant",
     uuid="1234",
@@ -660,7 +660,7 @@ async def test_hassio_flow_with_token(
         config={
             "host": "addon-music-assistant",
             "port": 8094,
-            CONF_TOKEN: "test_token",
+            "auth_token": "test_token",
         },
         name="Music Assistant",
         slug="music_assistant",
