@@ -221,9 +221,9 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
 
         val = result["options"].get(CONF_KEEP_ALIVE)
         assert val is not None
+
         assert isinstance(val, timedelta)
         assert val.total_seconds() == 60
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
-
