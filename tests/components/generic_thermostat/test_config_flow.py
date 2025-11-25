@@ -204,7 +204,7 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
                 CONF_AC_MODE: False,
                 CONF_COLD_TOLERANCE: 0.3,
                 CONF_HOT_TOLERANCE: 0.3,
-                CONF_KEEP_ALIVE: {"seconds": 60}, 
+                CONF_KEEP_ALIVE: {"seconds": 60},
             },
         )
 
