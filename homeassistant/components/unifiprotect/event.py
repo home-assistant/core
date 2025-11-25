@@ -201,6 +201,7 @@ class ProtectDeviceVehicleEventEntity(
     _latest_event_id: str | None = None
     _latest_thumbnails: list[EventDetectedThumbnail] | None = None
     _thumbnail_timer_due: float = 0.0  # Loop time when timer should fire
+    _fired_event_id: str | None = None  # Track last fired event to prevent duplicates
 
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
@@ -250,6 +251,10 @@ class ProtectDeviceVehicleEventEntity(
             thumbnails: Pre-stored thumbnails to use. If None, fetches from
                 the current event (used when event is still active).
         """
+        # Prevent duplicate firing of same event
+        if self._fired_event_id == event_id:
+            return
+
         if thumbnails is None:
             # No stored thumbnails; try to get from current event
             event = self.entity_description.get_event_obj(self.device)
@@ -286,6 +291,9 @@ class ProtectDeviceVehicleEventEntity(
         if thumbnail.attributes:
             event_data["attributes"] = thumbnail.attributes.unifi_dict()
 
+        # Mark this event as fired
+        self._fired_event_id = event_id
+
         self._trigger_event(EVENT_TYPE_VEHICLE_DETECTED, event_data)
         self.async_write_ha_state()
 
@@ -313,10 +321,16 @@ class ProtectDeviceVehicleEventEntity(
             and event.type is EventType.SMART_DETECT
             and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
+            # Ignore thumbnails for events we've already fired or that are older than current
+            if self._fired_event_id == event.id:
+                return
+
             # New event arrived while timer pending for different event?
             # Fire the old event immediately since it has completed
             if self._latest_event_id and self._latest_event_id != event.id:
+                # Only fire if we haven't already (shouldn't happen, but defensive)
                 self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
+                self._cancel_thumbnail_timer()
 
             # Store event data and extend/start the timer
             # Timer extension allows better thumbnails (with LPR) to arrive
