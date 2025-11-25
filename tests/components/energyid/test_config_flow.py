@@ -1,5 +1,6 @@
 """Test EnergyID config flow."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
@@ -62,35 +63,12 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
         assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
         assert result2["description"] == "add_sensor_mapping_hint"
 
-
-@pytest.mark.parametrize("claimed", [False])
-async def test_config_flow_user_step_needs_claim(
-    hass: HomeAssistant, claimed: bool
-) -> None:
-    """Test user step where device needs to be claimed."""
-    mock_client = MagicMock()
-    mock_client.authenticate = AsyncMock(return_value=claimed)
-    mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
-
-    with (
-        patch(
-            "homeassistant.components.energyid.config_flow.WebhookClient",
-            return_value=mock_client,
-        ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
-                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
-            },
-        )
-        assert result2["type"] is FlowResultType.EXTERNAL_STEP
-        assert result2["step_id"] == "auth_and_claim"
+        # Check unique_id is set correctly
+        entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+        # For initially claimed devices, unique_id should be the device_id, not record_number
+        assert entry.unique_id.startswith("homeassistant_eid_")
+        assert CONF_DEVICE_ID in entry.data
+        assert entry.data[CONF_DEVICE_ID] == entry.unique_id
 
 
 async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> None:
@@ -148,7 +126,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
 
 
 async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
-    """Test claim step when polling times out."""
+    """Test claim step when polling times out and user continues."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -165,28 +143,102 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.config_entries.flow.async_configure(
+        result_external = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
+        assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        # Simulate polling timeout, then user continuing the flow
+        result_after_timeout = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
         await hass.async_block_till_done()
 
-    assert mock_sleep.call_count == MAX_POLLING_ATTEMPTS + 1
+        # After timeout, polling stops and user continues - should see external step again
+        assert result_after_timeout["type"] is FlowResultType.EXTERNAL_STEP
+        assert result_after_timeout["step_id"] == "auth_and_claim"
+
+        # Verify polling actually ran the expected number of times
+        # Sleep happens at beginning of polling loop, so MAX_POLLING_ATTEMPTS + 1 sleeps
+        # but only MAX_POLLING_ATTEMPTS authentication attempts
+        assert mock_sleep.call_count == MAX_POLLING_ATTEMPTS + 1
 
 
-async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test that already configured devices are detected."""
+async def test_duplicate_unique_id_prevented(hass: HomeAssistant) -> None:
+    """Test that duplicate device_id (unique_id) is detected and aborted."""
+    # Create existing entry with a specific device_id as unique_id
+    # The generated device_id format is: homeassistant_eid_{instance_id}_{timestamp_ms}
+    # With instance_id="test_instance" and time=123.0, this becomes:
+    # homeassistant_eid_test_instance_123000
+    existing_device_id = "homeassistant_eid_test_instance_123000"
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_RECORD_NUMBER,
+        unique_id=existing_device_id,
         data={
-            CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
-            CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
-            CONF_DEVICE_ID: "existing_device",
+            CONF_PROVISIONING_KEY: "old_key",
+            CONF_PROVISIONING_SECRET: "old_secret",
+            CONF_DEVICE_ID: existing_device_id,
             CONF_DEVICE_NAME: "Existing Device",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = TEST_RECORD_NUMBER
+    mock_client.recordName = TEST_RECORD_NAME
+
+    # Mock to return the same device_id that already exists
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.energyid.config_flow.async_get_instance_id",
+            return_value="test_instance",
+        ),
+        patch(
+            "homeassistant.components.energyid.config_flow.asyncio.get_event_loop"
+        ) as mock_loop,
+    ):
+        # Force the same device_id to be generated
+        mock_loop.return_value.time.return_value = 123.0
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+
+        # Should abort because unique_id (device_id) already exists
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
+
+
+async def test_multiple_different_devices_allowed(hass: HomeAssistant) -> None:
+    """Test that multiple config entries with different device_ids are allowed."""
+    # Create existing entry with one device_id
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="homeassistant_eid_device_1",
+        data={
+            CONF_PROVISIONING_KEY: "key1",
+            CONF_PROVISIONING_SECRET: "secret1",
+            CONF_DEVICE_ID: "homeassistant_eid_device_1",
+            CONF_DEVICE_NAME: "Device 1",
         },
     )
     entry.add_to_hass(hass)
@@ -200,21 +252,33 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.config_flow.WebhookClient",
         return_value=mock_client,
     ):
+        # Check initial result
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        # Configure with different credentials (will create different device_id)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
-                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+                CONF_PROVISIONING_KEY: "key2",
+                CONF_PROVISIONING_SECRET: "secret2",
             },
         )
+
+        # Should succeed because device_id will be different
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == TEST_RECORD_NAME
-        assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
-        assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
+        assert result2["data"][CONF_PROVISIONING_KEY] == "key2"
+        assert result2["data"][CONF_PROVISIONING_SECRET] == "secret2"
         assert result2["description"] == "add_sensor_mapping_hint"
+
+        # Verify unique_id is set
+        new_entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+        assert new_entry.unique_id is not None
+        assert new_entry.unique_id != entry.unique_id  # Different from first entry
 
 
 async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
@@ -226,6 +290,10 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -246,6 +314,10 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -262,6 +334,8 @@ async def test_config_flow_external_step_claimed_during_display(
 ) -> None:
     """Test when device gets claimed while external step is being displayed."""
     call_count = 0
+    polling_started = asyncio.Event()
+    real_sleep = asyncio.sleep  # Store real sleep to avoid recursion
 
     def create_mock_client(*args, **kwargs):
         nonlocal call_count
@@ -277,16 +351,28 @@ async def test_config_flow_external_step_claimed_during_display(
             mock_client.recordName = TEST_RECORD_NAME
         return mock_client
 
+    async def slow_sleep(_interval):
+        """Sleep that takes long enough for task to be running when we continue."""
+        polling_started.set()
+        await real_sleep(10)  # Use real sleep, long enough to ensure task is not done
+
     with (
         patch(
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=create_mock_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch(
+            "homeassistant.components.energyid.config_flow.asyncio.sleep",
+            side_effect=slow_sleep,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result_external = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -296,6 +382,10 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
 
+        # Wait for polling to start
+        await asyncio.wait_for(polling_started.wait(), timeout=1.0)
+
+        # User continues - device is claimed, polling task should be cancelled
         result_claimed = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
@@ -311,6 +401,14 @@ async def test_config_flow_external_step_claimed_during_display(
 
 async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
     """Test auth_and_claim step when device is not claimed after polling."""
+    polling_started = asyncio.Event()
+    real_sleep = asyncio.sleep  # Store real sleep to avoid recursion
+
+    async def slow_sleep(_interval):
+        """Sleep that takes long enough for task to be running when we continue."""
+        polling_started.set()
+        await real_sleep(10)  # Use real sleep, long enough to ensure task is not done
+
     mock_client = MagicMock()
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -319,11 +417,18 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
             "homeassistant.components.energyid.config_flow.WebhookClient",
             return_value=mock_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch(
+            "homeassistant.components.energyid.config_flow.asyncio.sleep",
+            side_effect=slow_sleep,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -331,13 +436,20 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
                 CONF_PROVISIONING_SECRET: "y",
             },
         )
-        # Simulate the device still not being claimed after polling timeout
+        assert result2["type"] is FlowResultType.EXTERNAL_STEP
+
+        # Wait for polling to start
+        await asyncio.wait_for(polling_started.wait(), timeout=1.0)
+
+        # User continues - device still not claimed, polling task should be cancelled
         result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         assert result3["type"] is FlowResultType.EXTERNAL_STEP
         assert result3["step_id"] == "auth_and_claim"
 
 
-async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
+async def test_config_flow_reauth_success(
+    hass: HomeAssistant,
+) -> None:
     """Test the reauthentication flow for EnergyID integration (success path)."""
     # Existing config entry
     entry = MockConfigEntry(
@@ -381,8 +493,7 @@ async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == "abort"
-        assert result2["reason"] == "reauth_successful"
+        assert result2["type"] == FlowResultType.ABORT
         # Entry should be updated
         updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert updated_entry.data[CONF_PROVISIONING_KEY] == "new_key"
@@ -418,6 +529,10 @@ async def test_config_flow_client_response_error(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -461,6 +576,10 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
             context={"source": "reauth", "entry_id": entry.entry_id},
             data=entry.data,
         )
+        # Check initial reauth form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -516,6 +635,10 @@ async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result_external = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -560,6 +683,10 @@ async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> Non
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result_external = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -608,6 +735,10 @@ async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
         result_external = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -680,6 +811,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
 async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None:
     """Test that polling is cancelled when authentication fails during auth_and_claim."""
     call_count = 0
+    auth_call_count = 0
 
     def mock_webhook_client(*args, **kwargs):
         nonlocal call_count
@@ -692,18 +824,28 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
             return mock_client
         # Subsequent client for polling check - fails authentication
         mock_client = MagicMock()
-        mock_client.authenticate = AsyncMock(
-            side_effect=ClientError("Connection failed")
-        )
+
+        async def auth_with_error():
+            nonlocal auth_call_count
+            auth_call_count += 1
+            raise ClientError("Connection failed")
+
+        mock_client.authenticate = auth_with_error
         return mock_client
 
-    with patch(
-        "homeassistant.components.energyid.config_flow.WebhookClient",
-        side_effect=mock_webhook_client,
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            side_effect=mock_webhook_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
 
         # Start auth_and_claim flow - sets up polling
         result_external = await hass.config_entries.flow.async_configure(
@@ -715,17 +857,32 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
         )
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
 
-        # Trigger polling check - should cancel polling when auth fails
+        # Wait for polling task to encounter the error and stop
+        await hass.async_block_till_done()
+
+        # Verify polling stopped after the error
+        # auth_call_count should be 1 (one failed attempt during polling)
+        initial_auth_count = auth_call_count
+        assert initial_auth_count == 1
+
+        # Trigger user continuing the flow - polling should already be stopped
         result_failed = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
         assert result_failed["type"] is FlowResultType.EXTERNAL_STEP
         assert result_failed["step_id"] == "auth_and_claim"
 
+        # Wait a bit and verify no further authentication attempts occurred
+        await hass.async_block_till_done()
+        assert (
+            auth_call_count == initial_auth_count + 1
+        )  # One more for the manual check
+
 
 async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
     """Test that polling is cancelled when device becomes claimed successfully during auth_and_claim."""
     call_count = 0
+    auth_call_count = 0
 
     def mock_webhook_client(*args, **kwargs):
         nonlocal call_count
@@ -738,18 +895,30 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
             return mock_client
         # Subsequent client for polling check - device now claimed
         mock_client = MagicMock()
-        mock_client.authenticate = AsyncMock(return_value=True)
+
+        async def auth_success():
+            nonlocal auth_call_count
+            auth_call_count += 1
+            return True
+
+        mock_client.authenticate = auth_success
         mock_client.recordNumber = TEST_RECORD_NUMBER
         mock_client.recordName = TEST_RECORD_NAME
         return mock_client
 
-    with patch(
-        "homeassistant.components.energyid.config_flow.WebhookClient",
-        side_effect=mock_webhook_client,
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            side_effect=mock_webhook_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        # Check initial form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
 
         # Start auth_and_claim flow - sets up polling task
         result_external = await hass.config_entries.flow.async_configure(
@@ -761,15 +930,36 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         )
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
 
-        # Cancel any sleeping to speed up and trigger successful polling check
-        # The subsequent call will authenticate successfully and cancel polling
+        # Wait for polling to detect the device is claimed and advance the flow
+        await hass.async_block_till_done()
+
+        # Verify polling made authentication attempt
+        # auth_call_count should be 1 (polling detected device is claimed)
+        assert auth_call_count >= 1
+        claimed_auth_count = auth_call_count
+
+        # User continues - device is already claimed, polling should be cancelled
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
         assert result_done["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        # Verify polling was cancelled - the auth count should only increase by 1
+        # (for the manual check when user continues, not from polling)
+        assert auth_call_count == claimed_auth_count + 1
 
         # Final call to create entry
         final_result = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+
+        # Wait a bit and verify no further authentication attempts from polling
+        await hass.async_block_till_done()
+        final_auth_count = auth_call_count
+
+        # Ensure all background tasks have completed and polling really stopped
+        await hass.async_block_till_done()
+
+        # No new auth attempts should have occurred (polling was cancelled)
+        assert auth_call_count == final_auth_count

@@ -1,8 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This {integration_name} site is already configured.",
-      "reauth_successful": "Re-authentication was successful for {integration_name}"
+      "already_configured": "This device is already configured.",
+      "reauth_successful": "Reauthentication successful."
     },
     "create_entry": {
       "add_sensor_mapping_hint": "You can now add mappings from any sensor in Home Assistant to {integration_name} using the '+ add sensor mapping' button."

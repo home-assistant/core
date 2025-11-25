@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError, ClientResponseError
+
 from homeassistant.components.energyid import (
     DOMAIN,
     _async_handle_state_change,
@@ -50,7 +52,7 @@ async def test_setup_fails_on_timeout(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_fails_on_auth_error(
@@ -64,7 +66,8 @@ async def test_setup_fails_on_auth_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Unexpected errors cause retry, not reauth (might be temporary network issues)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_fails_when_not_claimed(
@@ -72,13 +75,107 @@ async def test_setup_fails_when_not_claimed(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test setup fails when device is not claimed."""
+    """Test setup fails when device is not claimed and triggers reauth flow."""
     mock_webhook_client.authenticate.return_value = False
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Device not claimed raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify that a reauth flow was initiated (reviewer comment at line 56-81)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_setup_auth_error_401_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test 401 authentication error triggers reauth flow (covers __init__.py lines 85-86)."""
+    mock_webhook_client.authenticate.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=401,
+        message="Unauthorized",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # 401 error raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify that a reauth flow was initiated
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_setup_auth_error_403_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test 403 authentication error triggers reauth flow (covers __init__.py lines 85-86)."""
+    mock_webhook_client.authenticate.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=403,
+        message="Forbidden",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # 403 error raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify that a reauth flow was initiated
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_setup_http_error_triggers_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test non-401/403 HTTP error triggers retry (covers __init__.py lines 88-90)."""
+    mock_webhook_client.authenticate.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=500,
+        message="Internal Server Error",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # 500 error raises ConfigEntryNotReady, resulting in SETUP_RETRY state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_network_error_triggers_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test network/connection error triggers retry (covers __init__.py lines 93-95)."""
+    mock_webhook_client.authenticate.side_effect = ClientError("Connection refused")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Network error raises ConfigEntryNotReady, resulting in SETUP_RETRY state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_state_change_sends_data(
