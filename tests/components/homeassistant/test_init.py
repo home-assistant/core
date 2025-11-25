@@ -6,12 +6,14 @@ import pytest
 import voluptuous as vol
 import yaml
 
-from homeassistant import config, core as ha
+from homeassistant import config, config_entries, core as ha
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     ATTR_SAFE_MODE,
     DOMAIN,
     SERVICE_CHECK_CONFIG,
+    SERVICE_DISABLE_CONFIG_ENTRY,
+    SERVICE_ENABLE_CONFIG_ENTRY,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
     SERVICE_RELOAD_ALL,
@@ -403,6 +405,46 @@ async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
 
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+
+
+async def test_disable_config_entry_by_entry_id(hass: HomeAssistant) -> None:
+    """Test being able to disable a config entry by config entry id."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_set_disabled_by",
+        return_value=True,
+    ) as mock_disable:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_DISABLE_CONFIG_ENTRY,
+            {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
+            blocking=True,
+        )
+
+    assert len(mock_disable.mock_calls) == 1
+    assert mock_disable.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+    assert mock_disable.mock_calls[0][1][1] == config_entries.ConfigEntryDisabler.USER
+
+
+async def test_enable_config_entry_by_entry_id(hass: HomeAssistant) -> None:
+    """Test being able to enable a config entry by config entry id."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_set_disabled_by",
+        return_value=True,
+    ) as mock_enable:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_ENABLE_CONFIG_ENTRY,
+            {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
+            blocking=True,
+        )
+
+    assert len(mock_enable.mock_calls) == 1
+    assert mock_enable.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+    assert mock_enable.mock_calls[0][1][1] is None
 
 
 @pytest.mark.parametrize(

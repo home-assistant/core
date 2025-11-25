@@ -178,6 +178,26 @@
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs.",
       "name": "Check configuration"
     },
+    "disable_config_entry": {
+      "description": "Disables the specified config entry.",
+      "fields": {
+        "entry_id": {
+          "description": "The configuration entry ID of the entry to be disabled.",
+          "name": "Config entry ID"
+        }
+      },
+      "name": "Disable config entry"
+    },
+    "enable_config_entry": {
+      "description": "Enables the specified config entry.",
+      "fields": {
+        "entry_id": {
+          "description": "The configuration entry ID of the entry to be enabled.",
+          "name": "Config entry ID"
+        }
+      },
+      "name": "Enable config entry"
+    },
     "reload_all": {
       "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant.",
       "name": "Reload all"

@@ -58,6 +58,22 @@ reload_config_entry:
       selector:
         config_entry:
 
+enable_config_entry:
+  fields:
+    entry_id:
+      required: true
+      example: 8955375327824e14ba89e4b29cc3ec9a
+      selector:
+        config_entry:
+
+disable_config_entry:
+  fields:
+    entry_id:
+      required: true
+      example: 8955375327824e14ba89e4b29cc3ec9a
+      selector:
+        config_entry:
+
 save_persistent_states:
 
 reload_all:

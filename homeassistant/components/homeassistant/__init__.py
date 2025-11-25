@@ -9,7 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config as conf_util, core_config
+from homeassistant import config as conf_util, config_entries, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -80,6 +80,8 @@ SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SERVICE_RELOAD_ALL = "reload_all"
+SERVICE_ENABLE_CONFIG_ENTRY = "enable_config_entry"
+SERVICE_DISABLE_CONFIG_ENTRY = "disable_config_entry"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     vol.Schema(
@@ -90,6 +92,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
 )
+SCHEMA_CONFIG_ENTRY_ID = vol.Schema({vol.Required(ATTR_ENTRY_ID): str})
 SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
@@ -349,12 +352,48 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             )
         )
 
+    async def async_handle_enable_config_entry(call: ServiceCall) -> None:
+        """Service handler for enabling a config entry."""
+        await _async_set_config_entry_disabled_by(hass, call, disabled_by=None)
+
+    async def async_handle_disable_config_entry(call: ServiceCall) -> None:
+        """Service handler for disabling a config entry."""
+        await _async_set_config_entry_disabled_by(
+            hass, call, disabled_by=config_entries.ConfigEntryDisabler.USER
+        )
+
+    async def _async_set_config_entry_disabled_by(
+        hass: HomeAssistant,
+        call: ServiceCall,
+        *,
+        disabled_by: config_entries.ConfigEntryDisabler | None,
+    ) -> None:
+        """Enable or disable a config entry."""
+        entry_id = call.data[ATTR_ENTRY_ID]
+        await hass.config_entries.async_set_disabled_by(entry_id, disabled_by)
+
     async_register_admin_service(
         hass,
         DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
         schema=SCHEMA_RELOAD_CONFIG_ENTRY,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_ENABLE_CONFIG_ENTRY,
+        async_handle_enable_config_entry,
+        schema=SCHEMA_CONFIG_ENTRY_ID,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_DISABLE_CONFIG_ENTRY,
+        async_handle_disable_config_entry,
+        schema=SCHEMA_CONFIG_ENTRY_ID,
     )
 
     async def async_handle_reload_all(call: ServiceCall) -> None:

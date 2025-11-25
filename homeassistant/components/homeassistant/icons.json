@@ -3,6 +3,12 @@
     "check_config": {
       "service": "mdi:receipt-text-check"
     },
+    "disable_config_entry": {
+      "service": "mdi:close"
+    },
+    "enable_config_entry": {
+      "service": "mdi:check"
+    },
     "reload_all": {
       "service": "mdi:reload"
     },
