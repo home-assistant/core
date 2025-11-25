@@ -11,7 +11,6 @@ DEFAULT_NAME = "Music Assistant"
 # This version also introduces hassio discovery support
 AUTH_SCHEMA_VERSION = 28
 
-# Configuration constants
 CONF_TOKEN = "token"
 
 ATTR_IS_GROUP = "is_group"
