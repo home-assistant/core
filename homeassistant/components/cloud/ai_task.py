@@ -31,7 +31,7 @@ from homeassistant.util.json import json_loads
 
 from .client import CloudClient
 from .const import AI_TASK_ENTITY_UNIQUE_ID, DATA_CLOUD
-from .helpers import LLMChatHelper, LLMFileHelper
+from .llm import LLMChatHelper, LLMFileHelper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,19 +97,13 @@ def _extract_text_from_output(output: Any) -> str | None:
         return None
 
     for item in output:
-        if isinstance(item, dict):
-            contents = getattr(item, "content", None)
-        else:
-            contents = getattr(item, "content", None)
+        contents = getattr(item, "content", None)
 
         if not contents:
             continue
 
         for content in contents:
-            if isinstance(content, dict):
-                text_value = _flatten_text_value(getattr(content, "text", None))
-            else:
-                text_value = _flatten_text_value(getattr(content, "text", None))
+            text_value = _flatten_text_value(getattr(content, "text", None))
 
             if text_value:
                 return text_value
