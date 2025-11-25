@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
+
 from homeassistant.components.climate import PRESET_AWAY
 from homeassistant.components.generic_thermostat.const import (
     CONF_AC_MODE,
@@ -23,8 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
+
 from tests.common import MockConfigEntry
 
 SNAPSHOT_FLOW_PROPS = props("type", "title", "result", "error")
