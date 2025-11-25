@@ -458,13 +458,15 @@ class BaseCloudLLMEntity(Entity):
                         {
                             "type": "input_image",
                             "image_url": f"data:{mime_type};base64,{data}",
+                            "detail": "auto",
                         }
                     )
                 elif mime_type and mime_type.startswith("application/pdf"):
                     content.append(
                         {
-                            "type": "input_text",
-                            "text": f"[File: {path.name}]\nContent: {data}",
+                            "type": "input_file",
+                            "filename": str(path.name),
+                            "file_data": f"data:{mime_type};base64,{data}",
                         }
                     )
                 else:
