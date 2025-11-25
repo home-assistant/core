@@ -99,11 +99,35 @@
     "invalid_device_id": {
       "message": "Invalid device ID specified: {device_id}"
     },
+    "invalid_info_skill_value": {
+      "message": "Invalid info skill {info_skill} specified"
+    },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
     }
   },
   "selector": {
+    "info_skill": {
+      "options": {
+        "alexa_calendar_playnext": "Calendar: Next event",
+        "alexa_calendar_playtoday": "Calendar: Today's Calendar",
+        "alexa_calendar_playtomorrow": "Calendar: Tomorrow's Calendar",
+        "alexa_cleanup_play": "Encourage me to clean up",
+        "alexa_date_play": "Date",
+        "alexa_flashbriefing_play": "Flash Briefing",
+        "alexa_funfact_play": "Tell me a fun fact",
+        "alexa_goodmorning_play": "Good morning",
+        "alexa_goodnight_play": "Wish me a good night",
+        "alexa_imhome_play": "Welcome me home",
+        "alexa_joke_play": "Tell me a joke",
+        "alexa_news_nationalnews": "National News",
+        "alexa_singasong_play": "Sing a song",
+        "alexa_tellstory_play": "Tell me a story",
+        "alexa_time_play": "Time",
+        "alexa_traffic_play": "Traffic",
+        "alexa_weather_play": "Weather"
+      }
+    },
     "sound": {
       "options": {
         "air_horn_03": "Air horn",
@@ -151,6 +175,20 @@
     }
   },
   "services": {
+    "send_info_skill": {
+      "description": "Sends an info skill command to a device",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::alexa_devices::common::device_id_description%]",
+          "name": "Device"
+        },
+        "info_skill": {
+          "description": "The info skill command to send.",
+          "name": "Alexa info skill command"
+        }
+      },
+      "name": "Send info skill command"
+    },
     "send_sound": {
       "description": "Sends a sound to a device",
       "fields": {

@@ -67,3 +67,36 @@ send_sound:
             - squeaky_12
             - zap_01
           translation_key: sound
+
+send_info_skill:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: alexa_devices
+    info_skill:
+      required: true
+      example: Alexa_Date_Play
+      default: Alexa_Date_Play
+      selector:
+        select:
+          options:
+            - alexa_calendar_playtoday
+            - alexa_calendar_playtomorrow
+            - alexa_calendar_playnext
+            - alexa_date_play
+            - alexa_time_play
+            - alexa_news_nationalnews
+            - alexa_flashbriefing_play
+            - alexa_traffic_play
+            - alexa_weather_play
+            - alexa_cleanup_play
+            - alexa_goodmorning_play
+            - alexa_singasong_play
+            - alexa_funfact_play
+            - alexa_joke_play
+            - alexa_tellstory_play
+            - alexa_imhome_play
+            - alexa_goodnight_play
+          translation_key: info_skill
