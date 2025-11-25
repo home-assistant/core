@@ -26,12 +26,18 @@ _LOGGER = logging.getLogger(__name__)
 class _EntityFilter:
     """Single entity filter configuration."""
 
+    integration: str | None
     domains: set[str]
     device_classes: set[str]
     supported_features: set[int]
 
-    def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
+    def matches(
+        self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
+    ) -> bool:
         """Return if entity matches all criteria in this filter."""
+        if self.integration and integration != self.integration:
+            return False
+
         if self.domains and domain not in self.domains:
             return False
 
@@ -67,6 +73,7 @@ class _AutomationComponentLookupData:
         entity_filters_config = target_description.get("entity", [])
         for entity_filter_config in entity_filters_config:
             entity_filter = _EntityFilter(
+                integration=entity_filter_config.get("integration"),
                 domains=set(entity_filter_config.get("domain", [])),
                 device_classes=set(entity_filter_config.get("device_class", [])),
                 supported_features=set(
@@ -77,11 +84,43 @@ class _AutomationComponentLookupData:
 
         return cls(component=component, filters=filters)
 
-    def matches(self, hass: HomeAssistant, entity_id: str, domain: str) -> bool:
+    def matches(
+        self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
+    ) -> bool:
         """Return if entity matches ANY of the filters."""
         if not self.filters:
             return True
-        return any(f.matches(hass, entity_id, domain) for f in self.filters)
+        return any(
+            f.matches(hass, entity_id, domain, integration) for f in self.filters
+        )
+
+
+def _get_automation_component_domains(
+    target_description: dict[str, Any],
+) -> set[str | None]:
+    """Get a list of domains (including integration domains) of an automation component.
+
+    The list of domains is extracted from each target's entity filters.
+    If a filter is missing both domain and integration keys, None is added to the
+    returned set.
+    """
+    domains: set[str | None] = set()
+    entity_filters_config = target_description.get("entity", [])
+    for entity_filter_config in entity_filters_config:
+        filter_integration = entity_filter_config.get("integration")
+        filter_domains = entity_filter_config.get("domain", [])
+
+        if not filter_domains and not filter_integration:
+            domains.add(None)
+            continue
+
+        if filter_integration:
+            domains.add(filter_integration)
+
+        for domain in filter_domains:
+            domains.add(domain)
+
+    return domains
 
 
 def _async_get_automation_components_for_target(
@@ -102,16 +141,18 @@ def _async_get_automation_components_for_target(
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
     # Build lookup structure: domain -> list of trigger/condition/service lookup data
-    domain_components: dict[str, list[_AutomationComponentLookupData]] = {}
+    domain_components: dict[str | None, list[_AutomationComponentLookupData]] = {}
     component_count = 0
     for component, description in component_descriptions.items():
         if description is None or CONF_TARGET not in description:
             _LOGGER.debug("Skipping component %s without target description", component)
             continue
-        domain = component.split(".")[0]
-        domain_components.setdefault(domain, []).append(
-            _AutomationComponentLookupData.create(component, description[CONF_TARGET])
+        domains = _get_automation_component_domains(description[CONF_TARGET])
+        lookup_data = _AutomationComponentLookupData.create(
+            component, description[CONF_TARGET]
         )
+        for domain in domains:
+            domain_components.setdefault(domain, []).append(lookup_data)
         component_count += 1
 
     _LOGGER.debug("Automation components per domain: %s", domain_components)
@@ -125,15 +166,18 @@ def _async_get_automation_components_for_target(
 
         entity_info = entity_infos.get(entity_id)
         if entity_info is None:
-            _LOGGER.warning("No entity source found for %s", entity_id)
+            _LOGGER.debug("No entity source found for %s", entity_id)
             continue
 
         entity_domain = entity_id.split(".")[0]
-        for domain in (entity_domain, entity_info["domain"]):
+        entity_integration = entity_info["domain"]
+        for domain in (entity_domain, entity_integration):
             for component_data in domain_components.get(domain, []):
                 if component_data.component in matched_components:
                     continue
-                if component_data.matches(hass, entity_id, entity_domain):
+                if component_data.matches(
+                    hass, entity_id, entity_domain, entity_integration
+                ):
                     matched_components.add(component_data.component)
 
     return matched_components

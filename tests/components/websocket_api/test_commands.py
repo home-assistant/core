@@ -3681,10 +3681,12 @@ async def test_get_triggers_for_target(
         ),
     )
 
-    common_trigger_descriptions = """
+    def get_common_trigger_descriptions(domain: str):
+        return f"""
         turned_on:
           target:
             entity:
+              domain: {domain}
           fields:
             behavior:
               required: true
@@ -3712,16 +3714,20 @@ async def test_get_triggers_for_target(
         _:
           target:
             entity:
+              integration: component1
         light_message:
           target:
             entity:
               - domain: light
+                integration: component1
               - domain: sensor
+                integration: component1
                 device_class: illuminance
         light_flash:
           target:
             entity:
               domain: light
+              integration: component1
               supported_features:
                 - light.LightEntityFeature.FLASH
                 - light.LightEntityFeature.EFFECT
@@ -3729,6 +3735,7 @@ async def test_get_triggers_for_target(
           target:
             entity:
               domain: light
+              integration: component1
               supported_features: # both required features
                 - - light.LightEntityFeature.FLASH
                   - light.LightEntityFeature.TRANSITION
@@ -3738,7 +3745,7 @@ async def test_get_triggers_for_target(
         if fname.endswith("component1/triggers.yaml"):
             trigger_descriptions = component1_trigger_descriptions
         else:
-            trigger_descriptions = common_trigger_descriptions
+            trigger_descriptions = get_common_trigger_descriptions(fname.split("/")[-2])
         with io.StringIO(trigger_descriptions) as file:
             return parse_yaml(file)
 
