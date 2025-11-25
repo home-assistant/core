@@ -1608,12 +1608,16 @@ def mock_integration(
     top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
-    integration = loader.Integration(
-        hass,
+    path = (
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
-        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        pathlib.Path(""),
+        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}"
+    )
+
+    integration = loader.Integration(
+        hass,
+        path,
+        pathlib.Path(path.replace(".", "/")),
         module.mock_manifest(),
         top_level_files,
     )
