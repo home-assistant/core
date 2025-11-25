@@ -4,6 +4,13 @@ To update, run python3 -m script.hassfest
 """
 
 LABS_PREVIEW_FEATURES = {
+    "frontend": {
+        "winter_mode": {
+            "feedback_url": "",
+            "learn_more_url": "",
+            "report_issue_url": "",
+        },
+    },
     "kitchen_sink": {
         "special_repair": {
             "feedback_url": "https://community.home-assistant.io",
