@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities([HueBLELight(light)])
 
 
-def get_avaliable_color_modes(api: HueBleLight) -> set[ColorMode]:
+def get_available_color_modes(api: HueBleLight) -> set[ColorMode]:
     """Return a set of available color modes."""
     color_modes = set()
     if api.supports_colour_xy:
@@ -80,7 +80,7 @@ class HueBLELight(LightEntity):
             model_id=light.model,
             sw_version=light.firmware,
         )
-        self._attr_supported_color_modes = get_avaliable_color_modes(self._api)
+        self._attr_supported_color_modes = get_available_color_modes(self._api)
         self._update_updatable_attributes()
 
     async def async_added_to_hass(self) -> None:

@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, URL_PAIRING_MODE
-from .light import get_avaliable_color_modes
+from .light import get_available_color_modes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
             return Error.CANNOT_CONNECT
 
         try:
-            get_avaliable_color_modes(light)
+            get_available_color_modes(light)
         except HomeAssistantError:
             return Error.NOT_SUPPORTED
 
@@ -64,8 +64,8 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
             _LOGGER.warning("Errors raised when connecting to light: %s", errors)
             return Error.CANNOT_CONNECT
 
-    except Exception as e:  # noqa: BLE001
-        _LOGGER.error("Unexpected error validating light connection: %s", e)
+    except Exception:
+        _LOGGER.exception("Unexpected error validating light connection")
         return Error.UNKNOWN
     else:
         return None
