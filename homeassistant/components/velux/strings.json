@@ -12,12 +12,19 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "password": "The password for your KLF200 gateway."
+        },
         "description": "Please enter the password for {name} ({host})"
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your KLF200 gateway.",
+          "password": "The password for your KLF200 gateway."
         }
       }
     }
@@ -29,9 +36,20 @@
       }
     }
   },
+  "exceptions": {
+    "reboot_failed": {
+      "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
+    }
+  },
+  "issues": {
+    "deprecated_reboot_service": {
+      "description": "The `velux.reboot_gateway` service is deprecated and will be removed in Home Assistant 2026.6.0. Please use the 'Restart' button entity instead. You can find this button in the device page for your KLF 200 Gateway or by searching for 'restart' in your entity list.",
+      "title": "Velux reboot service is deprecated"
+    }
+  },
   "services": {
     "reboot_gateway": {
-      "description": "Reboots the KLF200 Gateway.",
+      "description": "Reboots the KLF200 Gateway",
       "name": "Reboot gateway"
     }
   }

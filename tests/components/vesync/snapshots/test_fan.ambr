@@ -27,7 +27,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -78,7 +78,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': 0,
-      'child_lock': False,
       'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
@@ -127,7 +126,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -226,7 +225,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -327,7 +326,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -428,7 +427,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -465,7 +464,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -502,7 +501,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -576,7 +575,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -613,7 +612,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -650,7 +649,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -754,7 +753,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -791,7 +790,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])

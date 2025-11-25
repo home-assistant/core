@@ -13,9 +13,9 @@
       'max_temp': 35.0,
       'min_temp': 0.0,
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -63,11 +63,11 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 0.0,
-      'preset_mode': 'home',
+      'preset_mode': 'vacation',
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -97,9 +97,9 @@
       'max_temp': 35.0,
       'min_temp': 1.0,
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -149,9 +149,9 @@
       'min_temp': 1.0,
       'preset_mode': 'home',
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -658,89 +658,6 @@
     'state': 'auto',
   })
 # ---
-# name: test_anna_3_climate_snapshot[platforms0-True-m_anna_heatpump_idle][climate.anna-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'hvac_modes': list([
-        <HVACMode.AUTO: 'auto'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      'max_temp': 30.0,
-      'min_temp': 4.0,
-      'preset_modes': list([
-        'no_frost',
-        'home',
-        'away',
-        'asleep',
-        'vacation',
-      ]),
-      'target_temp_step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.anna',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 18>,
-    'translation_key': 'plugwise',
-    'unique_id': '3cb70739631c4d17a86b8b12e8a5161b-climate',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_anna_3_climate_snapshot[platforms0-True-m_anna_heatpump_idle][climate.anna-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_temperature': 23.0,
-      'friendly_name': 'Anna',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
-        <HVACMode.AUTO: 'auto'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      'max_temp': 30.0,
-      'min_temp': 4.0,
-      'preset_mode': 'home',
-      'preset_modes': list([
-        'no_frost',
-        'home',
-        'away',
-        'asleep',
-        'vacation',
-      ]),
-      'supported_features': <ClimateEntityFeature: 18>,
-      'target_temp_high': 30.0,
-      'target_temp_low': 20.5,
-      'target_temp_step': 0.1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.anna',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'auto',
-  })
-# ---
 # name: test_anna_climate_snapshot[platforms0-True-anna_heatpump_heating][climate.anna-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -822,5 +739,87 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
+  })
+# ---
+# name: test_anna_p1_climate_snapshot[platforms0][climate.anna-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'home',
+        'asleep',
+        'away',
+        'vacation',
+        'no_frost',
+      ]),
+      'target_temp_step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.anna',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': 'plugwise',
+    'unique_id': '1e5e55b958ac445583602f767cb45942-climate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_p1_climate_snapshot[platforms0][climate.anna-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.4,
+      'friendly_name': 'Anna',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 4.0,
+      'preset_mode': 'home',
+      'preset_modes': list([
+        'home',
+        'asleep',
+        'away',
+        'vacation',
+        'no_frost',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'target_temp_step': 0.1,
+      'temperature': 19.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.anna',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
   })
 # ---

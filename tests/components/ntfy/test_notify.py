@@ -9,7 +9,6 @@ from aiontfy.exceptions import (
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
-from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -57,7 +56,7 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@freeze_time("2025-01-09T12:00:00+00:00")
+@pytest.mark.freeze_time("2025-01-09T12:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
