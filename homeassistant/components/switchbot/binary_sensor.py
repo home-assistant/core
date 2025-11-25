@@ -44,34 +44,34 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
     "contact_open": SwitchbotBinarySensorEntityDescription(
         key="contact_open",
         name=None,
-        device_class_fn=lambda _: BinarySensorDeviceClass.DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
     ),
     "contact_timeout": SwitchbotBinarySensorEntityDescription(
         key="contact_timeout",
         translation_key="door_timeout",
-        device_class_fn=lambda _: BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "is_light": SwitchbotBinarySensorEntityDescription(
         key="is_light",
-        device_class_fn=lambda _: BinarySensorDeviceClass.LIGHT,
+        device_class=BinarySensorDeviceClass.LIGHT,
     ),
     "door_open": SwitchbotBinarySensorEntityDescription(
         key="door_status",
         name=None,
-        device_class_fn=lambda _: BinarySensorDeviceClass.DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
     ),
     "unclosed_alarm": SwitchbotBinarySensorEntityDescription(
         key="unclosed_alarm",
         translation_key="door_unclosed_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class_fn=lambda _: BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     "unlocked_alarm": SwitchbotBinarySensorEntityDescription(
         key="unlocked_alarm",
         translation_key="door_unlocked_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class_fn=lambda _: BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     "auto_lock_paused": SwitchbotBinarySensorEntityDescription(
         key="auto_lock_paused",
@@ -81,7 +81,7 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
     "leak": SwitchbotBinarySensorEntityDescription(
         key="leak",
         name=None,
-        device_class_fn=lambda _: BinarySensorDeviceClass.MOISTURE,
+        device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 }
 

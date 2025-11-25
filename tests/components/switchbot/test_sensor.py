@@ -817,7 +817,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 3
-    assert len(hass.states.async_all("binary_sensor")) == 2
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
@@ -836,15 +836,10 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
     assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
     assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
 
-    light_sensor = hass.states.get("binary_sensor.test_name_light")
-    light_sensor_attrs = light_sensor.attributes
-    assert light_sensor
-    assert light_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Light"
-
-    motion_sensor = hass.states.get("binary_sensor.test_name_motion")
-    motion_sensor_attrs = motion_sensor.attributes
-    assert motion_sensor
-    assert motion_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Motion"
+    occupancy_sensor = hass.states.get("binary_sensor.test_name_occupancy")
+    occupancy_sensor_attrs = occupancy_sensor.attributes
+    assert occupancy_sensor
+    assert occupancy_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Occupancy"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
