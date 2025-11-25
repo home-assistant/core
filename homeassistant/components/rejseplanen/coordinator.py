@@ -52,18 +52,17 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         ) as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
         except ConnectionError as error:  # network errors
-            _LOGGER.error("Connection error while fetching data: %s", error)
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                f"Connection error while fetching data: {error}"
+            ) from error
         except TypeError as error:
-            _LOGGER.error(
-                "Type error fetching data for stop %s: %s", self._stop_ids, error
-            )
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                f"Type error fetching data for stop {self._stop_ids}: {error}"
+            ) from error
         except Exception as error:  # Catch any other unexpected errors
-            _LOGGER.error(
-                "Unexpected error fetching data for stop %s: %s", self._stop_ids, error
-            )
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                f"Unexpected error fetching data for stop {self._stop_ids}: {error}"
+            ) from error
 
         self.last_update_success_time = dt_util.now()
         return board
