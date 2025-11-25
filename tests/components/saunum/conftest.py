@@ -1,16 +1,33 @@
 """Configuration for Saunum Leil integration tests."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from pysaunum import SaunumData
 import pytest
 
 from homeassistant.components.saunum.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def patch_delayed_refresh_seconds() -> Generator[None]:
+    """Patch DELAYED_REFRESH_SECONDS to 0 to avoid delays in tests."""
+    with patch(
+        "homeassistant.components.saunum.climate.DELAYED_REFRESH_SECONDS",
+        timedelta(seconds=0),
+    ):
+        yield
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE, Platform.LIGHT]
 
 
 @pytest.fixture
@@ -67,11 +84,23 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_saunum_client: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.saunum.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[MagicMock]:
+    """Mock Saunum setup entry."""
+    with patch(
+        "homeassistant.components.saunum.async_setup_entry", autospec=True
+    ) as mock_setup_entry:
+        mock_setup_entry.return_value = True
+        yield mock_setup_entry

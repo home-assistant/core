@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio import Task
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -14,7 +15,7 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -72,10 +73,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             return True
         return self._websocket_task.done()
 
-    async def _async_update_data(self) -> None:
-        """Do the data update."""
+    async def __handle_internal_update(
+        self, func: Callable[[], Coroutine[Any, Any, None]]
+    ) -> None:
+        """Handle update with error handling."""
         try:
-            await self._internal_async_update_data()
+            await func()
         except AuthFail as ex:
             _LOGGER.debug("Authentication failed", exc_info=True)
             raise ConfigEntryAuthFailed(
@@ -87,6 +90,17 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN, translation_key="api_error"
             ) from ex
 
+    async def _async_setup(self) -> None:
+        """Set up coordinator."""
+        await self.__handle_internal_update(self._internal_async_setup)
+
+    async def _async_update_data(self) -> None:
+        """Do the data update."""
+        await self.__handle_internal_update(self._internal_async_update_data)
+
+    async def _internal_async_setup(self) -> None:
+        """Actual setup logic."""
+
     @abstractmethod
     async def _internal_async_update_data(self) -> None:
         """Actual data update logic."""
@@ -97,6 +111,12 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     cloud_client: LaMarzoccoCloudClient
 
+    async def _internal_async_setup(self) -> None:
+        """Set up the coordinator."""
+        await self.cloud_client.async_get_access_token()
+        await self.device.get_dashboard()
+        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
@@ -106,9 +126,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         # Only skip websocket reconnection if it's currently connected and the task is still running
         if self.device.websocket.connected and not self.websocket_terminated:
             return
-
-        await self.device.get_dashboard()
-        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
         self._websocket_task = self.config_entry.async_create_background_task(
             hass=self.hass,
@@ -131,8 +148,13 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         self.async_update_listeners()
 
+        @callback
+        def update_callback(_: Any | None = None) -> None:
+            _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+            self.async_set_updated_data(None)
+
         await self.device.connect_dashboard_websocket(
-            update_callback=lambda _: self.async_set_updated_data(None),
+            update_callback=update_callback,
             connect_callback=self.async_update_listeners,
             disconnect_callback=self.async_update_listeners,
         )

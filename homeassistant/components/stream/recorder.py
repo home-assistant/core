@@ -121,11 +121,9 @@ class RecorderOutput(StreamOutput):
 
             # Add output streams if necessary
             if not output_v:
-                output_v = output.add_stream(template=source_v)
-                context = output_v.codec_context
-                context.global_header = True
+                output_v = output.add_stream_from_template(source_v)
             if source_a and not output_a:
-                output_a = output.add_stream(template=source_a)
+                output_a = output.add_stream_from_template(source_a)
 
             # Recalculate pts adjustments on first segment and on any discontinuity
             # We are assuming time base is the same across all discontinuities

@@ -2480,9 +2480,9 @@ async def test_render_template_with_timeout(
     """Test a template that will timeout."""
 
     slow_template_str = """
-{% for var in range(1000) -%}
-  {% for var in range(1000) -%}
-    {{ var }}
+{% for var in range(10000) -%}
+  {% for var in range(10000) -%}
+    {{ "" }}
   {%- endfor %}
 {%- endfor %}
 """
@@ -3423,7 +3423,7 @@ async def test_extract_from_target(
 ) -> None:
     """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
 
-    async def call_command(target: dict[str, str]) -> Any:
+    async def call_command(target: dict[str, list[str]]) -> Any:
         await websocket_client.send_json_auto_id(
             {"type": "extract_from_target", "target": target}
         )
