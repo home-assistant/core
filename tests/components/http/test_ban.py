@@ -159,9 +159,12 @@ async def test_access_from_banned_ip_with_invalid_ip_entry(
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Check that both invalid IP entries were logged
-    assert "Failed to load IP ban" in caplog.text
-    assert "Eo128.199.160.243" in caplog.text
-    assert "invalidip" in caplog.text
+    for ip in ("Eo128.199.160.243", "invalidip"):
+        assert (
+            "homeassistant.components.http.ban",
+            logging.ERROR,
+            f"Failed to load IP ban: invalid IP address {ip}",
+        ) in caplog.record_tuples
 
 
 async def test_no_ip_bans_file(
