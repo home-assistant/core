@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+import io
 from json import JSONDecodeError
 import logging
-from typing import Any
 
-from hass_nabucasa import Cloud
 from hass_nabucasa.llm import (
     LLMAuthenticationError,
     LLMError,
@@ -16,115 +14,77 @@ from hass_nabucasa.llm import (
     LLMResponseError,
     LLMServiceError,
 )
-from litellm import BaseResponsesAPIStreamingIterator, ResponsesAPIResponse
-import voluptuous as vol
-from voluptuous_openapi import convert
+from PIL import Image
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers import llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 from homeassistant.util.json import json_loads
 
-from .client import CloudClient
 from .const import AI_TASK_ENTITY_UNIQUE_ID, DATA_CLOUD
-from .llm import LLMChatHelper, LLMFileHelper
+from .entity import BaseCloudLLMEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _ensure_schema_constraints(schema: dict[str, Any]) -> None:
-    """Ensure generated schemas match the Responses API expectations."""
-    schema_type = schema.get("type")
+def _convert_image_for_editing(data: bytes) -> tuple[bytes, str]:
+    """Ensure the image data is in a format accepted by OpenAI image edits."""
+    stream = io.BytesIO(data)
+    with Image.open(stream) as img:
+        mode = img.mode
+        if mode not in ("RGBA", "LA", "L"):
+            img = img.convert("RGBA")
 
-    if schema_type == "object":
-        schema.setdefault("additionalProperties", False)
-        properties = schema.get("properties")
-        if isinstance(properties, dict):
-            for property_schema in properties.values():
-                if isinstance(property_schema, dict):
-                    _ensure_schema_constraints(property_schema)
-    elif schema_type == "array":
-        items = schema.get("items")
-        if isinstance(items, dict):
-            _ensure_schema_constraints(items)
+        output = io.BytesIO()
+        if img.mode in ("RGBA", "LA", "L"):
+            img.save(output, format="PNG")
+            return output.getvalue(), "image/png"
 
-
-def _format_structured_output(
-    structure: vol.Schema, llm_api: llm.APIInstance | None
-) -> dict[str, Any]:
-    """Format structured output for OpenAI format."""
-    schema: dict[str, Any] = convert(
-        structure,
-        custom_serializer=(
-            llm_api.custom_serializer if llm_api else llm.selector_serializer
-        ),
-    )
-    _ensure_schema_constraints(schema)
-    return schema
+        img.save(output, format=img.format or "PNG")
+        return output.getvalue(), f"image/{(img.format or 'png').lower()}"
 
 
-def _flatten_text_value(text: Any) -> str | None:
-    """Normalize text payloads from OpenAI Responses API objects."""
-    if isinstance(text, str):
-        return text
+async def async_prepare_image_generation_attachments(
+    hass: HomeAssistant, attachments: list[conversation.Attachment]
+) -> list[LLMImageAttachment]:
+    """Load attachment data for image generation."""
 
-    if isinstance(text, Iterable):
-        parts: list[str] = []
-        for entry in text:
-            if isinstance(entry, str):
-                parts.append(entry)
-            elif isinstance(entry, dict):
-                value = entry.get("text")
-                if isinstance(value, str):
-                    parts.append(value)
-            else:
-                value = getattr(entry, "text", None)
-                if isinstance(value, str):
-                    parts.append(value)
-        if parts:
-            return "".join(parts)
+    def prepare() -> list[LLMImageAttachment]:
+        items: list[LLMImageAttachment] = []
+        for attachment in attachments:
+            if not attachment.mime_type or not attachment.mime_type.startswith(
+                "image/"
+            ):
+                raise HomeAssistantError(
+                    "Only image attachments are supported for image generation"
+                )
+            path = attachment.path
+            if not path.exists():
+                raise HomeAssistantError(f"`{path}` does not exist")
 
-    return None
+            data = path.read_bytes()
+            mime_type = attachment.mime_type
 
+            try:
+                data, mime_type = _convert_image_for_editing(data)
+            except HomeAssistantError:
+                raise
+            except Exception as err:
+                raise HomeAssistantError("Failed to process image attachment") from err
 
-def _extract_text_from_output(output: Any) -> str | None:
-    """Extract the first assistant text segment from a Responses output list."""
-    if not isinstance(output, Iterable):
-        return None
+            items.append(
+                LLMImageAttachment(
+                    filename=path.name,
+                    mime_type=mime_type,
+                    data=data,
+                )
+            )
 
-    for item in output:
-        contents = getattr(item, "content", None)
+        return items
 
-        if not contents:
-            continue
-
-        for content in contents:
-            text_value = _flatten_text_value(getattr(content, "text", None))
-
-            if text_value:
-                return text_value
-
-    return None
-
-
-def _extract_response_text(
-    response: ResponsesAPIResponse | BaseResponsesAPIStreamingIterator,
-) -> str:
-    """Extract the first text response from a Responses API reply."""
-    text_value = _extract_text_from_output(getattr(response, "output", None))
-    if text_value:
-        return text_value
-
-    if isinstance(response, dict):
-        text_value = _extract_text_from_output(response.get("output"))
-        if text_value:
-            return text_value
-
-    raise TypeError("Unexpected response shape")
+    return await hass.async_add_executor_job(prepare)
 
 
 async def async_setup_entry(
@@ -139,10 +99,10 @@ async def async_setup_entry(
     except LLMError:
         return
 
-    async_add_entities([CloudLLMTaskEntity(cloud)])
+    async_add_entities([CloudLLMTaskEntity(cloud, config_entry)])
 
 
-class CloudLLMTaskEntity(ai_task.AITaskEntity):
+class CloudLLMTaskEntity(ai_task.AITaskEntity, BaseCloudLLMEntity):
     """Home Assistant Cloud AI Task entity."""
 
     _attr_has_entity_name = True
@@ -153,10 +113,6 @@ class CloudLLMTaskEntity(ai_task.AITaskEntity):
     )
     _attr_translation_key = "cloud_ai"
     _attr_unique_id = AI_TASK_ENTITY_UNIQUE_ID
-
-    def __init__(self, cloud: Cloud[CloudClient]) -> None:
-        """Initialize the entity."""
-        self._cloud = cloud
 
     @property
     def available(self) -> bool:
@@ -169,55 +125,31 @@ class CloudLLMTaskEntity(ai_task.AITaskEntity):
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        response_text: dict[str, Any] | None = None
-        if task.structure:
-            response_text = {
-                "format": {
-                    "type": "json_schema",
-                    "name": slugify(task.name),
-                    "schema": _format_structured_output(
-                        task.structure, chat_log.llm_api
-                    ),
-                    "strict": True,
-                }
-            }
-
-        response_kwargs = await LLMChatHelper.prepare_chat_for_generation(
-            self.hass,
-            chat_log,
-            response_text,
+        await self._async_handle_chat_log(
+            "ai_task", chat_log, task.name, task.structure
         )
 
-        try:
-            response = await self._cloud.llm.async_generate_data(**response_kwargs)
-            content = _extract_response_text(response)
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            raise HomeAssistantError(
+                "Last content in chat log is not an AssistantContent"
+            )
 
-        except LLMAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
-        except LLMRateLimitError as err:
-            raise HomeAssistantError("Cloud LLM is rate limited") from err
-        except LLMResponseError as err:
-            raise HomeAssistantError(str(err)) from err
-        except LLMServiceError as err:
-            raise HomeAssistantError("Error talking to Cloud LLM") from err
-        except LLMError as err:
-            raise HomeAssistantError(str(err)) from err
+        text = chat_log.content[-1].content or ""
 
         if not task.structure:
             return ai_task.GenDataTaskResult(
                 conversation_id=chat_log.conversation_id,
-                data=content,
+                data=text,
             )
-
         try:
-            data = json_loads(content)
+            data = json_loads(text)
         except JSONDecodeError as err:
             _LOGGER.error(
-                "Failed to parse JSON response: %s. Response: %s", err, content
+                "Failed to parse JSON response: %s. Response: %s",
+                err,
+                text,
             )
-            raise HomeAssistantError(
-                "Error with Cloud LLM structured response"
-            ) from err
+            raise HomeAssistantError("Error with OpenAI structured response") from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
@@ -232,10 +164,8 @@ class CloudLLMTaskEntity(ai_task.AITaskEntity):
         """Handle a generate image task."""
         attachments: list[LLMImageAttachment] | None = None
         if task.attachments:
-            attachments = (
-                await LLMFileHelper.async_prepare_image_generation_attachments(
-                    self.hass, task.attachments
-                )
+            attachments = await async_prepare_image_generation_attachments(
+                self.hass, task.attachments
             )
 
         try:
