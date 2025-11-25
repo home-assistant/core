@@ -14,7 +14,7 @@ from homeassistant.components.awair.sensor import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_awair
 from .const import CLOUD_CONFIG, CLOUD_UNIQUE_ID, LOCAL_CONFIG, LOCAL_UNIQUE_ID
@@ -24,33 +24,6 @@ from tests.common import async_fire_time_changed, snapshot_platform
 SENSOR_TYPES_MAP = {
     desc.key: desc for desc in (SENSOR_TYPE_SCORE, *SENSOR_TYPES, *SENSOR_TYPES_DUST)
 }
-
-
-def assert_expected_properties(
-    hass: HomeAssistant,
-    entity_registry: er.RegistryEntry,
-    name: str,
-    unique_id: str,
-    state_value: str,
-    attributes: dict,
-    model="Awair",
-    model_id="awair",
-):
-    """Assert expected properties from a dict."""
-    entity_entry = entity_registry.async_get(name)
-    assert entity_entry.unique_id == unique_id
-
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry is not None
-    assert device_entry.model == model
-    assert device_entry.model_id == model_id
-
-    state = hass.states.get(name)
-    assert state
-    assert state.state == state_value
-    for attr, value in attributes.items():
-        assert state.attributes.get(attr) == value
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
