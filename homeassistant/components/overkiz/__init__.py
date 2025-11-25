@@ -90,7 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         # Filter devices for cloud mode - exclude devices already managed by local entries
         devices = setup.devices
         if api_type == APIType.CLOUD:
-            local_device_urls = _get_entry_device_urls(hass, entry.entry_id, APIType.LOCAL)
+            local_device_urls = _get_entry_device_urls(
+                hass, entry.entry_id, APIType.LOCAL
+            )
             if local_device_urls:
                 original_count = len(devices)
                 devices = [d for d in devices if d.device_url not in local_device_urls]
@@ -308,6 +310,7 @@ def create_cloud_client(
     return OverkizClient(
         username=username, password=password, session=session, server=server
     )
+
 
 def _get_entry_device_urls(
     hass: HomeAssistant, current_entry_id: str, api_type: APIType

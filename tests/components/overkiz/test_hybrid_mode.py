@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from pyoverkiz.enums import APIType
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.overkiz import _get_entry_device_urls, async_migrate_entry
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .test_config_flow import (
     MOCK_GATEWAY_RESPONSE,
@@ -140,8 +144,6 @@ async def test_discovery_aborts_when_local_exists(hass: HomeAssistant) -> None:
         },
     ).add_to_hass(hass)
 
-    from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=DhcpServiceInfo(
@@ -170,8 +172,6 @@ async def test_discovery_aborts_when_cloud_exists(hass: HomeAssistant) -> None:
         },
     ).add_to_hass(hass)
 
-    from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=DhcpServiceInfo(
@@ -188,8 +188,6 @@ async def test_discovery_aborts_when_cloud_exists(hass: HomeAssistant) -> None:
 
 async def test_migration_v1_to_v2_cloud(hass: HomeAssistant) -> None:
     """Test migration of cloud config entry from v1 to v2."""
-    from homeassistant.components.overkiz import async_migrate_entry
-
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,  # Old format (v1)
@@ -213,8 +211,6 @@ async def test_migration_v1_to_v2_cloud(hass: HomeAssistant) -> None:
 
 async def test_migration_v1_to_v2_local(hass: HomeAssistant) -> None:
     """Test migration of local config entry from v1 to v2."""
-    from homeassistant.components.overkiz import async_migrate_entry
-
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,  # Old format (v1)
@@ -239,8 +235,6 @@ async def test_migration_v1_to_v2_local(hass: HomeAssistant) -> None:
 
 async def test_migration_v1_to_v2_defaults_to_cloud(hass: HomeAssistant) -> None:
     """Test migration defaults to cloud when api_type is not set."""
-    from homeassistant.components.overkiz import async_migrate_entry
-
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,  # Old format (v1)
@@ -264,11 +258,6 @@ async def test_migration_v1_to_v2_defaults_to_cloud(hass: HomeAssistant) -> None
 
 async def test_cloud_filters_devices_managed_by_local(hass: HomeAssistant) -> None:
     """Test that cloud entry filters out devices already managed by local entry."""
-    from pyoverkiz.enums import APIType
-
-    from homeassistant.components.overkiz import _get_entry_device_urls
-    from homeassistant.config_entries import ConfigEntryState
-
     # Create a mock local entry that appears loaded with devices
     local_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -309,11 +298,6 @@ async def test_cloud_uses_device_when_local_doesnt_have_it(
     hass: HomeAssistant,
 ) -> None:
     """Test that cloud entry keeps devices not managed by local entry."""
-    from pyoverkiz.enums import APIType
-
-    from homeassistant.components.overkiz import _get_entry_device_urls
-    from homeassistant.config_entries import ConfigEntryState
-
     # Create a mock local entry with only some devices
     local_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -360,11 +344,6 @@ async def test_get_entry_device_urls_excludes_current_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test that _get_entry_device_urls excludes the current entry."""
-    from pyoverkiz.enums import APIType
-
-    from homeassistant.components.overkiz import _get_entry_device_urls
-    from homeassistant.config_entries import ConfigEntryState
-
     local_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
