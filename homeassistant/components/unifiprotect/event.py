@@ -260,15 +260,13 @@ class ProtectDeviceVehicleEventEntity(
         if not thumbnails:
             return
 
-        current_thumbnails = thumbnails
-
         # Start with just the event ID
         event_data: dict[str, Any] = {
             ATTR_EVENT_ID: event_id,
-            "thumbnail_count": len(current_thumbnails),
+            "thumbnail_count": len(thumbnails),
         }
 
-        thumbnail = max(current_thumbnails, key=_thumbnail_sort_key)
+        thumbnail = max(thumbnails, key=_thumbnail_sort_key)
 
         # Add confidence if available
         if thumbnail.confidence is not None:

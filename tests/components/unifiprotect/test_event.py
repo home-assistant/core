@@ -17,7 +17,6 @@ from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
 from homeassistant.const import ATTR_ATTRIBUTION, Platform
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.util import dt as dt_util
 
 from .utils import (
     MockUFPFixture,
@@ -27,8 +26,6 @@ from .utils import (
     init_entry,
     remove_entities,
 )
-
-from tests.common import async_fire_time_changed
 
 # Short delay for testing
 TEST_VEHICLE_EVENT_DELAY = 0.05
@@ -1156,11 +1153,11 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
 
     await hass.async_block_till_done()
 
-    # Wait 2 seconds
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    # Wait briefly (timer hasn't expired yet)
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
     await hass.async_block_till_done()
 
-    # No event yet (timer is 3 seconds)
+    # No event yet (timer hasn't expired)
     assert len(events) == 0
 
     # Update with better thumbnail - should reset timer
@@ -1271,14 +1268,14 @@ async def test_vehicle_detection_new_event_cancels_timer(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    # Wait 2 seconds
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    # Wait briefly (timer hasn't expired yet)
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
     await hass.async_block_till_done()
 
     # No event yet
     assert len(events) == 0
 
-    # Send new event - should cancel first timer
+    # Send new event - should fire first event immediately
     event2 = Event(
         model=ModelType.EVENT,
         id="test_event_2",
