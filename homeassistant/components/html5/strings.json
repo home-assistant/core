@@ -40,6 +40,28 @@
         }
       },
       "name": "Dismiss"
+    },
+    "notify": {
+      "name": "Send a notification with HTML5",
+      "description": "Sends a notification message using the HTML5 push notification service.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "The message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "The title of the notification."
+        },
+        "target": {
+          "name": "Target",
+          "description": "The target devices to send the notification to."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information for the notification. Can include actions, icon, badge, tag, and other notification options."
+        }
+      }
     }
   }
 }
