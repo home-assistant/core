@@ -272,8 +272,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.url is not None
             assert self.token is not None
 
-        # Exchange short-lived token for long-lived token
-        # The OAuth flow gives us a short-lived session token (30 day expiration)
+        # Exchange session token for long-lived token
+        # The OAuth flow gives us a session token (30 day expiration)
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
