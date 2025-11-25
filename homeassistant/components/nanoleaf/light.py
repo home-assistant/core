@@ -1,8 +1,9 @@
 """Support for Nanoleaf Lights."""
 
 from __future__ import annotations
-
+from collections import OrderedDict
 from typing import Any
+from aionanoleaf2 import Nanoleaf
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,11 +15,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
 from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
 from .entity import NanoleafEntity
+from .const import EMERSION_MODELS, EMERSION_MODES
+
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
@@ -49,13 +52,21 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         self._attr_min_color_temp_kelvin = self._nanoleaf.color_temperature_min
 
     @property
+    def icon(self) -> str | None:
+        """Icon of the entity, based on model."""
+        if self._nanoleaf.model in EMERSION_MODELS:
+            return "mdi:led-strip-variant"
+        else:
+            return "mdi:triangle-outline"
+
+    @property
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int(self._nanoleaf.brightness * 2.55)
 
     @property
-    def color_temp_kelvin(self) -> int | None:
-        """Return the color temperature value in Kelvin."""
+    def color_temp_kelvin(self) -> int:
+        """Return the current color temperature."""
         return self._nanoleaf.color_temperature
 
     @property
@@ -65,14 +76,24 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         # The effects *Static* and *Dynamic* are not supported by Home Assistant.
         # These reserved effects are implicitly set and are not in the effect_list.
         # https://forum.nanoleaf.me/docs/openapi#_byoot0bams8f
-        return (
-            None if self._nanoleaf.effect in RESERVED_EFFECTS else self._nanoleaf.effect
-        )
+        active_effect = ""
+        if self._nanoleaf.effect in RESERVED_EFFECTS:
+            return None
+        if self._nanoleaf.effect == "*Emersion*":
+            active_effect = self._nanoleaf.emersion
+        else:
+            active_effect = self._nanoleaf.effect
+        return active_effect
 
     @property
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
-        return self._nanoleaf.effects_list
+        effect_dict = OrderedDict.fromkeys(self._nanoleaf.effects_list)
+        if self._nanoleaf.model in EMERSION_MODELS:
+            for mode in EMERSION_MODES:
+                effect_dict[mode] = None
+        effect_list = list(effect_dict.keys())
+        return effect_list
 
     @property
     def is_on(self) -> bool:
@@ -107,13 +128,20 @@ class NanoleafLight(NanoleafEntity, LightEntity):
                 raise ValueError(
                     f"Attempting to apply effect not in the effect list: '{effect}'"
                 )
-            await self._nanoleaf.set_effect(effect)
+
+            if effect not in EMERSION_MODES:
+                await self._nanoleaf.set_effect(effect)
+            else:
+                await self._nanoleaf.set_emersion(effect)
+
         elif hs_color:
             hue, saturation = hs_color
             await self._nanoleaf.set_hue(int(hue))
             await self._nanoleaf.set_saturation(int(saturation))
+
         elif color_temp_kelvin:
             await self._nanoleaf.set_color_temperature(color_temp_kelvin)
+
         if transition:
             if brightness:  # tune to the required brightness in n seconds
                 await self._nanoleaf.set_brightness(
