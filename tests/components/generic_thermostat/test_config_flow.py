@@ -1,5 +1,6 @@
 """Test the generic hygrostat config flow."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -218,16 +219,12 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
 
         assert result["type"] == "create_entry"
 
-        # Keep-alive should be a timedelta
         val = result["options"].get(CONF_KEEP_ALIVE)
         assert val is not None
-        # Let Home Assistant check timedelta object
-        if hasattr(val, "total_seconds"):
-            assert val.total_seconds() == 60
-        else:
-            # What if it is an integer Does that happen?
-            assert val == 60
+        
+        assert isinstance(val, timedelta)
+        assert val.total_seconds() == 60
 
         await hass.async_block_till_done()
+        assert len(mock_setup_entry.mock_calls) == 1
 
-    assert len(mock_setup_entry.mock_calls) == 1
