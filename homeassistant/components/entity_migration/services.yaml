@@ -1,0 +1,7 @@
+scan:
+  fields:
+    entity_id:
+      required: true
+      example: "sensor.temperature"
+      selector:
+        entity:
