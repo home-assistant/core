@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
+import pytest
 from uiprotect.data import Camera, Event, EventType, ModelType, SmartDetectObjectType
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
     DEFAULT_ATTRIBUTION,
-    VEHICLE_EVENT_DELAY_SECONDS,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
 from homeassistant.const import ATTR_ATTRIBUTION, Platform
@@ -28,6 +29,19 @@ from .utils import (
 )
 
 from tests.common import async_fire_time_changed
+
+# Short delay for testing
+TEST_VEHICLE_EVENT_DELAY = 0.05
+
+
+@pytest.fixture(autouse=True)
+def short_vehicle_delay():
+    """Use a short delay for vehicle event tests."""
+    with patch(
+        "homeassistant.components.unifiprotect.event.VEHICLE_EVENT_DELAY_SECONDS",
+        TEST_VEHICLE_EVENT_DELAY,
+    ):
+        yield
 
 
 async def test_camera_remove(
@@ -751,11 +765,8 @@ async def test_vehicle_detection_basic(
     mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
 
-    # Wait for the 3 second timer
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -837,11 +848,8 @@ async def test_vehicle_detection_with_lpr_ufp6(
     mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
 
-    # Wait for the 3 second timer
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -916,11 +924,8 @@ async def test_vehicle_detection_with_lpr_legacy(
     mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
 
-    # Wait for the 3 second timer
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1019,11 +1024,8 @@ async def test_vehicle_detection_multiple_thumbnails(
     mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
 
-    # Wait for the 3 second timer
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event with highest confidence LPR
@@ -1086,10 +1088,7 @@ async def test_vehicle_detection_no_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Should NOT have received any events (no vehicle thumbnails)
@@ -1192,13 +1191,11 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    # Still no event (timer was reset)
+    # Still no event (timer extended)
     assert len(events) == 0
 
-    # Wait another 3+ seconds
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    # Wait for timer to expire
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Now should have the event with the better LPR
@@ -1319,14 +1316,18 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait for second event's timer
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
-    # Should only have one event - the second one
-    assert len(events) == 1
+    # Should have two events - first fired immediately when second arrived
+    assert len(events) == 2
+    # First event fired immediately when second event arrived
     state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_EVENT_ID] == "test_event_1"
+    assert state.attributes["license_plate"] == "FIRST"
+    # Second event fired after timer
+    state = events[1].data["new_state"]
     assert state
     assert state.attributes[ATTR_EVENT_ID] == "test_event_2"
     assert state.attributes["license_plate"] == "SECOND"
@@ -1390,10 +1391,8 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     await remove_entities(hass, ufp, [doorbell])
     await hass.async_block_till_done()
 
-    # Advance time past when timer would have fired
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS + 0.1)
-    )
+    # Wait past when timer would have fired
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
     await hass.async_block_till_done()
 
     # Entity should be gone and no event should have fired

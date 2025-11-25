@@ -187,12 +187,20 @@ class ProtectDeviceFingerprintEventEntity(
 class ProtectDeviceVehicleEventEntity(
     EventEntityMixin, ProtectDeviceEntity, EventEntity
 ):
-    """A UniFi Protect vehicle detection event entity."""
+    """A UniFi Protect vehicle detection event entity.
+
+    Vehicle detection events use a delayed firing mechanism to allow time for
+    the best thumbnail (with license plate recognition data) to arrive. The
+    timer is extended each time new thumbnails arrive for the same event. If
+    a new event arrives while a timer is pending, the old event fires immediately
+    with its stored thumbnails, then a new timer starts for the new event.
+    """
 
     entity_description: ProtectEventEntityDescription
     _thumbnail_timer_cancel: CALLBACK_TYPE | None = None
     _latest_event_id: str | None = None
-    _thumbnail_timer_due: float = 0.0
+    _latest_thumbnails: list[EventDetectedThumbnail] | None = None
+    _thumbnail_timer_due: float = 0.0  # Loop time when timer should fire
 
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
@@ -208,15 +216,19 @@ class ProtectDeviceVehicleEventEntity(
 
     @callback
     def _async_timer_callback(self, *_: Any) -> None:
-        """Handle timer expiration - fire the vehicle event."""
+        """Handle timer expiration - fire the vehicle event.
+
+        If the due time was extended (new thumbnails arrived), re-arm the timer.
+        Otherwise, fire the event with the stored thumbnails.
+        """
         self._thumbnail_timer_cancel = None
-        # Timer fired too early, re-arm and return
         if self._thumbnail_timer_due > self.hass.loop.time():
+            # Timer fired early because due time was extended; re-arm
             self._async_set_thumbnail_timer()
             return
 
         if self._latest_event_id:
-            self._fire_vehicle_event(self._latest_event_id)
+            self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
 
     @staticmethod
     def _get_vehicle_thumbnails(event: Event) -> list[EventDetectedThumbnail]:
@@ -228,21 +240,31 @@ class ProtectDeviceVehicleEventEntity(
         return []
 
     @callback
-    def _fire_vehicle_event(self, event_id: str) -> None:
-        """Fire the vehicle detection event with best available thumbnail."""
-        # Get the event object
-        event = self.entity_description.get_event_obj(self.device)
-        if not event or event.id != event_id:
+    def _fire_vehicle_event(
+        self, event_id: str, thumbnails: list[EventDetectedThumbnail] | None = None
+    ) -> None:
+        """Fire the vehicle detection event with best available thumbnail.
+
+        Args:
+            event_id: The event ID to include in the fired event data.
+            thumbnails: Pre-stored thumbnails to use. If None, fetches from
+                the current event (used when event is still active).
+        """
+        if thumbnails is None:
+            # No stored thumbnails; try to get from current event
+            event = self.entity_description.get_event_obj(self.device)
+            if not event or event.id != event_id:
+                return
+            thumbnails = self._get_vehicle_thumbnails(event)
+
+        if not thumbnails:
             return
 
-        # Get current vehicle thumbnails
-        current_thumbnails = self._get_vehicle_thumbnails(event)
-        if not current_thumbnails:
-            return
+        current_thumbnails = thumbnails
 
         # Start with just the event ID
         event_data: dict[str, Any] = {
-            ATTR_EVENT_ID: event.id,
+            ATTR_EVENT_ID: event_id,
             "thumbnail_count": len(current_thumbnails),
         }
 
@@ -271,7 +293,7 @@ class ProtectDeviceVehicleEventEntity(
 
     @callback
     def _async_set_thumbnail_timer(self) -> None:
-        """Set or reset the thumbnail timer."""
+        """Schedule the thumbnail timer to fire at _thumbnail_timer_due."""
         self._thumbnail_timer_cancel = async_call_at(
             self.hass,
             self._async_timer_callback,
@@ -287,22 +309,25 @@ class ProtectDeviceVehicleEventEntity(
             self._event = event
             self._event_end = event.end if event else None
 
-        # Check if detected_thumbnails just arrived for this event
+        # Process vehicle detection events with thumbnails
         if (
             event
             and event.type is EventType.SMART_DETECT
-            and self._get_vehicle_thumbnails(event)
+            and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
-            # If event ID changed, fire immediately for old event
+            # New event arrived while timer pending for different event?
+            # Fire the old event immediately since it has completed
             if self._latest_event_id and self._latest_event_id != event.id:
-                self._fire_vehicle_event(self._latest_event_id)
+                self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
 
-            # Update to new event ID and schedule/extend timer
+            # Store event data and extend/start the timer
+            # Timer extension allows better thumbnails (with LPR) to arrive
             self._latest_event_id = event.id
+            self._latest_thumbnails = thumbnails
             self._thumbnail_timer_due = (
                 self.hass.loop.time() + VEHICLE_EVENT_DELAY_SECONDS
             )
-            # Only schedule timer if one isn't already running
+            # Only schedule if no timer running; existing timer will re-arm
             if self._thumbnail_timer_cancel is None:
                 self._async_set_thumbnail_timer()
 
