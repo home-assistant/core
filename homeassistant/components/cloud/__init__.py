@@ -77,7 +77,12 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT, Platform.TTS]
+PLATFORMS = [
+    Platform.AI_TASK,
+    Platform.BINARY_SENSOR,
+    Platform.STT,
+    Platform.TTS,
+]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
