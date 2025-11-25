@@ -1,8 +1,8 @@
 """Tests for Tibber config flow."""
 
-from asyncio import TimeoutError
+import builtins
 from http import HTTPStatus
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientError
@@ -17,19 +17,12 @@ from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.application_credentials import TOKEN_URL
 from homeassistant.components.tibber.config_flow import (
-    APPLICATION_CREDENTIALS_DOC_URL,
     DATA_API_DEFAULT_SCOPES,
-    DATA_API_DOC_URL,
     ERR_CLIENT,
     ERR_TIMEOUT,
     ERR_TOKEN,
 )
-from homeassistant.components.tibber.const import (
-    API_TYPE_DATA_API,
-    API_TYPE_GRAPHQL,
-    CONF_API_TYPE,
-    DOMAIN,
-)
+from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -46,6 +39,22 @@ def tibber_setup_fixture():
         yield
 
 
+def _mock_tibber(
+    *,
+    user_id: str = "unique_user_id",
+    title: str = "title",
+    update_side_effect: Exception | None = None,
+) -> MagicMock:
+    """Return a mocked Tibber GraphQL client."""
+    tibber_mock = MagicMock()
+    tibber_mock.user_id = user_id
+    tibber_mock.name = title
+    tibber_mock.update_info = AsyncMock()
+    if update_side_effect is not None:
+        tibber_mock.update_info.side_effect = update_side_effect
+    return tibber_mock
+
+
 async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
@@ -56,90 +65,58 @@ async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) ->
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test create entry from user input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_GRAPHQL}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "graphql"
-
-    test_data = {CONF_ACCESS_TOKEN: "valid"}
-    unique_user_id = "unique_user_id"
-    title = "title"
-
-    tibber_mock = MagicMock()
-    type(tibber_mock).update_info = AsyncMock(return_value=True)
-    type(tibber_mock).user_id = PropertyMock(return_value=unique_user_id)
-    type(tibber_mock).name = PropertyMock(return_value=title)
-
-    with patch("tibber.Tibber", return_value=tibber_mock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], test_data
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == title
-    assert result["data"] == {
-        CONF_API_TYPE: API_TYPE_GRAPHQL,
-        CONF_ACCESS_TOKEN: "valid",
-    }
-
-
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (TimeoutError, ERR_TIMEOUT),
-        (ClientError, ERR_CLIENT),
+        (builtins.TimeoutError(), ERR_TIMEOUT),
+        (ClientError(), ERR_CLIENT),
         (InvalidLoginError(401), ERR_TOKEN),
         (RetryableHttpExceptionError(503), ERR_CLIENT),
         (FatalHttpExceptionError(404), ERR_CLIENT),
     ],
 )
-async def test_create_entry_exceptions(
-    recorder_mock: Recorder, hass: HomeAssistant, exception, expected_error
+async def test_graphql_step_exceptions(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
 ) -> None:
-    """Test create entry from user input."""
+    """Validate GraphQL errors are surfaced."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_GRAPHQL}
-    )
 
-    unique_user_id = "unique_user_id"
-    title = "title"
-
-    tibber_mock = MagicMock()
-    type(tibber_mock).update_info = AsyncMock(side_effect=exception)
-    type(tibber_mock).user_id = PropertyMock(return_value=unique_user_id)
-    type(tibber_mock).name = PropertyMock(return_value=title)
-
+    tibber_mock = _mock_tibber(update_side_effect=exception)
     with patch("tibber.Tibber", return_value=tibber_mock):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_ACCESS_TOKEN: "valid"}
+            result["flow_id"], {CONF_ACCESS_TOKEN: "invalid"}
         )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"][CONF_ACCESS_TOKEN] == expected_error
 
 
 async def test_flow_entry_already_exists(
-    recorder_mock: Recorder, hass: HomeAssistant, config_entry
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test user input for config_entry that already exists."""
+    """GraphQL duplicates abort."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCESS_TOKEN: "old token"},
+        unique_id="unique_user_id",
+    )
+    existing_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_GRAPHQL}
-    )
+
+    tibber_mock = _mock_tibber()
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new token"}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -148,53 +125,57 @@ async def test_flow_entry_already_exists(
 async def test_data_api_requires_credentials(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test the data API path aborts when no credentials are configured."""
+    """Abort when OAuth credentials are missing."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
-    )
+
+    tibber_mock = _mock_tibber()
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "valid"}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
-    assert result["description_placeholders"] == {
-        "application_credentials_url": APPLICATION_CREDENTIALS_DOC_URL,
-        "data_api_url": DATA_API_DOC_URL,
-    }
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
 async def test_data_api_extra_authorize_scope(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Ensure the Data API flow requests the default scopes."""
+    """Ensure the OAuth implementation requests Tibber scopes."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
-    )
+
+    tibber_mock = _mock_tibber()
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "valid"}
+        )
 
     handler = hass.config_entries.flow._progress[result["flow_id"]]
-
     assert handler.extra_authorize_data["scope"] == " ".join(DATA_API_DEFAULT_SCOPES)
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
-async def test_data_api_full_flow(
+async def test_full_flow_success(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test configuring the Data API through OAuth."""
+    """Test configuring Tibber via GraphQL + OAuth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
-    )
+
+    tibber_mock = _mock_tibber()
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "graphql-token"}
+        )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     authorize_url = result["url"]
@@ -227,11 +208,11 @@ async def test_data_api_full_flow(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_API_TYPE] == API_TYPE_DATA_API
-    assert result["data"][CONF_TOKEN]["access_token"] == "mock-access-token"
-    assert result["data"]["auth_implementation"] == DOMAIN
+    data = result["data"]
+    assert data[CONF_TOKEN]["access_token"] == "mock-access-token"
+    assert data[CONF_ACCESS_TOKEN] == "graphql-token"
+    assert data["auth_implementation"] == DOMAIN
     assert result["title"] == "mock-user@example.com"
-    assert result["result"].unique_id == "mock-user@example.com"
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
@@ -241,13 +222,16 @@ async def test_data_api_oauth_cannot_connect_abort(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Abort the Data API flow when userinfo cannot be retrieved."""
+    """Abort when OAuth succeeds but userinfo fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
-    )
+
+    tibber_mock = _mock_tibber()
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "graphql-token"}
+        )
 
     authorize_url = result["url"]
     state = parse_qs(urlparse(authorize_url).query)["state"][0]
@@ -280,7 +264,6 @@ async def test_data_api_oauth_cannot_connect_abort(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_data_api_abort_when_already_configured(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -288,21 +271,24 @@ async def test_data_api_abort_when_already_configured(
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_TYPE: API_TYPE_DATA_API,
             "auth_implementation": DOMAIN,
             CONF_TOKEN: {"access_token": "existing"},
+            CONF_ACCESS_TOKEN: "stored-graphql",
         },
-        unique_id="existing@example.com",
-        title="existing@example.com",
+        unique_id="unique_user_id",
+        title="Existing",
     )
     existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
-    )
+
+    tibber_mock = _mock_tibber()
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -311,11 +297,10 @@ async def test_data_api_abort_when_already_configured(
 async def test_graphql_reauth_updates_entry(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test GraphQL reauth refreshes credentials."""
+    """GraphQL-only reauth simply updates the access token."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_TYPE: API_TYPE_GRAPHQL,
             CONF_ACCESS_TOKEN: "old-token",
         },
         unique_id="user-123",
@@ -334,15 +319,7 @@ async def test_graphql_reauth_updates_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "graphql"
-
-    tibber_mock = MagicMock()
-    type(tibber_mock).update_info = AsyncMock(return_value=True)
-    type(tibber_mock).user_id = PropertyMock(return_value="user-123")
-    type(tibber_mock).name = PropertyMock(return_value="New title")
-
+    tibber_mock = _mock_tibber(user_id="user-123", title="New title")
     with patch("tibber.Tibber", return_value=tibber_mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
@@ -351,9 +328,8 @@ async def test_graphql_reauth_updates_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     updated_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
-    assert updated_entry is not None
+    assert updated_entry
     assert updated_entry.data[CONF_ACCESS_TOKEN] == "new-token"
-    assert updated_entry.data[CONF_API_TYPE] == API_TYPE_GRAPHQL
     assert updated_entry.title == "New title"
 
 
@@ -364,16 +340,16 @@ async def test_data_api_reauth_updates_entry(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test Data API reauth refreshes credentials."""
+    """Data API reauth refreshes both GraphQL and OAuth tokens."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_TYPE: API_TYPE_DATA_API,
             "auth_implementation": DOMAIN,
             CONF_TOKEN: {
                 "access_token": "old-access-token",
                 "refresh_token": "old-refresh-token",
             },
+            CONF_ACCESS_TOKEN: "old-graphql",
         },
         unique_id="old@example.com",
         title="old@example.com",
@@ -388,9 +364,17 @@ async def test_data_api_reauth_updates_entry(
         },
         data=existing_entry.data,
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    tibber_mock = _mock_tibber(user_id="old@example.com", title="old@example.com")
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-graphql"}
+        )
+
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    authorize_url = result["url"]
-    state = parse_qs(urlparse(authorize_url).query)["state"][0]
+    state = parse_qs(urlparse(result["url"]).query)["state"][0]
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -419,11 +403,9 @@ async def test_data_api_reauth_updates_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     updated_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
-    assert updated_entry is not None
+    assert updated_entry
+    assert updated_entry.data[CONF_ACCESS_TOKEN] == "new-graphql"
     assert updated_entry.data[CONF_TOKEN]["access_token"] == "new-access-token"
-    assert updated_entry.data["auth_implementation"] == DOMAIN
-    assert updated_entry.data[CONF_API_TYPE] == API_TYPE_DATA_API
-    assert updated_entry.title == "old@example.com"
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
@@ -433,16 +415,16 @@ async def test_data_api_reauth_wrong_account_abort(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Abort Data API reauth when a different account is returned."""
+    """Abort Data API reauth when Tibber reports another account."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_TYPE: API_TYPE_DATA_API,
             "auth_implementation": DOMAIN,
             CONF_TOKEN: {
                 "access_token": "old-access-token",
                 "refresh_token": "old-refresh-token",
             },
+            CONF_ACCESS_TOKEN: "old-graphql",
         },
         unique_id="old@example.com",
         title="old@example.com",
@@ -458,8 +440,13 @@ async def test_data_api_reauth_wrong_account_abort(
         data=existing_entry.data,
     )
 
-    authorize_url = result["url"]
-    state = parse_qs(urlparse(authorize_url).query)["state"][0]
+    tibber_mock = _mock_tibber(user_id="old@example.com", title="old@example.com")
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-graphql"}
+        )
+
+    state = parse_qs(urlparse(result["url"]).query)["state"][0]
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")

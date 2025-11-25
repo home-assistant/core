@@ -19,37 +19,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
     async_get_implementations,
 )
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import (
-    API_TYPE_DATA_API,
-    API_TYPE_GRAPHQL,
-    CONF_API_TYPE,
-    DATA_API_DEFAULT_SCOPES,
-    DOMAIN,
-)
+from .const import DATA_API_DEFAULT_SCOPES, DOMAIN
 
-TYPE_SELECTOR = vol.Schema(
-    {
-        vol.Required(CONF_API_TYPE, default=API_TYPE_GRAPHQL): SelectSelector(
-            SelectSelectorConfig(
-                options=[API_TYPE_GRAPHQL, API_TYPE_DATA_API],
-                translation_key="api_type",
-            )
-        )
-    }
-)
-
-GRAPHQL_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
-
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 ERR_TIMEOUT = "timeout"
 ERR_CLIENT = "cannot_connect"
 ERR_TOKEN = "invalid_access_token"
 TOKEN_URL = "https://developer.tibber.com/settings/access-token"
-DATA_API_DOC_URL = "https://data-api.tibber.com/docs/auth/"
-APPLICATION_CREDENTIALS_DOC_URL = (
-    "https://www.home-assistant.io/integrations/application_credentials/"
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,17 +34,15 @@ _LOGGER = logging.getLogger(__name__)
 class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a config flow for Tibber integration."""
 
-    DOMAIN = DOMAIN
     VERSION = 1
     MINOR_VERSION = 1
+    DOMAIN = DOMAIN
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
-        self._api_type: str | None = None
-        self._data_api_home_ids: list[str] = []
-        self._data_api_user_sub: str | None = None
-        self._reauth_confirmed: bool = False
+        self._access_token = None
+        self._reauth_confirmed = False
 
     @property
     def logger(self) -> logging.Logger:
@@ -77,8 +52,6 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data appended to the authorize URL."""
-        if self._api_type != API_TYPE_DATA_API:
-            return super().extra_authorize_data
         return {
             **super().extra_authorize_data,
             "scope": " ".join(DATA_API_DEFAULT_SCOPES),
@@ -89,31 +62,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=TYPE_SELECTOR,
-                description_placeholders={"url": DATA_API_DOC_URL},
-            )
-
-        self._api_type = user_input[CONF_API_TYPE]
-
-        if self._api_type == API_TYPE_GRAPHQL:
-            return await self.async_step_graphql()
-
-        return await self.async_step_data_api()
-
-    async def async_step_graphql(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle GraphQL token based configuration."""
-
-        if self.source != SOURCE_REAUTH:
-            for entry in self._async_current_entries(include_ignore=False):
-                if entry.entry_id == self.context.get("entry_id"):
-                    continue
-                if entry.data.get(CONF_API_TYPE, API_TYPE_GRAPHQL) == API_TYPE_GRAPHQL:
-                    return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match()
 
         if user_input is not None:
             access_token = user_input[CONF_ACCESS_TOKEN].replace(" ", "")
@@ -140,73 +89,34 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
             if errors:
                 return self.async_show_form(
-                    step_id="graphql",
-                    data_schema=GRAPHQL_SCHEMA,
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
                     description_placeholders={"url": TOKEN_URL},
                     errors=errors,
                 )
 
-            unique_id = tibber_connection.user_id
-            await self.async_set_unique_id(unique_id)
-
-            if self.source == SOURCE_REAUTH:
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_API_TYPE: API_TYPE_GRAPHQL,
-                        CONF_ACCESS_TOKEN: access_token,
-                    },
-                    title=tibber_connection.name,
-                )
-
-            self._abort_if_unique_id_configured()
-
-            data = {
-                CONF_API_TYPE: API_TYPE_GRAPHQL,
-                CONF_ACCESS_TOKEN: access_token,
-            }
-
-            return self.async_create_entry(
-                title=tibber_connection.name,
-                data=data,
-            )
+            self._access_token = access_token
+            return await self.async_oath_flow_step()
 
         return self.async_show_form(
-            step_id="graphql",
-            data_schema=GRAPHQL_SCHEMA,
+            step_id="user",
+            data_schema=DATA_SCHEMA,
             description_placeholders={"url": TOKEN_URL},
             errors={},
         )
 
-    async def async_step_data_api(
+    async def async_oath_flow_step(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the Data API OAuth configuration."""
-
+        """Handle the OAuth flow step."""
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
         if not implementations:
-            return self.async_abort(
-                reason="missing_credentials",
-                description_placeholders={
-                    "application_credentials_url": APPLICATION_CREDENTIALS_DOC_URL,
-                    "data_api_url": DATA_API_DOC_URL,
-                },
-            )
-
-        if self.source != SOURCE_REAUTH:
-            for entry in self._async_current_entries(include_ignore=False):
-                if entry.entry_id == self.context.get("entry_id"):
-                    continue
-                if entry.data.get(CONF_API_TYPE, API_TYPE_GRAPHQL) == API_TYPE_DATA_API:
-                    return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="missing_credentials")
 
         return await self.async_step_pick_implementation(user_input)
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Finalize the OAuth flow and create the config entry."""
-
-        assert self._api_type == API_TYPE_DATA_API
 
         token: dict[str, Any] = data["token"]
 
@@ -220,11 +130,9 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         except (
             tibber.InvalidLoginError,
             tibber.FatalHttpExceptionError,
-        ) as err:
-            self.logger.error("Authentication failed against Data API: %s", err)
+        ):
             return self.async_abort(reason="oauth_invalid_token")
-        except (aiohttp.ClientError, TimeoutError) as err:
-            self.logger.error("Error retrieving homes via Data API: %s", err)
+        except (aiohttp.ClientError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
 
         unique_id = userinfo["email"]
@@ -239,18 +147,18 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 reauth_entry,
                 data_updates={
-                    CONF_API_TYPE: API_TYPE_DATA_API,
                     "auth_implementation": data["auth_implementation"],
                     CONF_TOKEN: token,
+                    CONF_ACCESS_TOKEN: self._access_token,
                 },
                 title=title,
             )
         self._abort_if_unique_id_configured()
 
         entry_data: dict[str, Any] = {
-            CONF_API_TYPE: API_TYPE_DATA_API,
             "auth_implementation": data["auth_implementation"],
             CONF_TOKEN: token,
+            CONF_ACCESS_TOKEN: self._access_token,
         }
         return self.async_create_entry(
             title=title,
@@ -261,18 +169,10 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-
-        api_type = entry_data.get(CONF_API_TYPE, API_TYPE_GRAPHQL)
-        self._api_type = api_type
-
-        if api_type == API_TYPE_DATA_API:
-            self.flow_impl = await async_get_config_entry_implementation(
-                self.hass, self._get_reauth_entry()
-            )
-            return await self.async_step_auth()
-
-        self.context["title_placeholders"] = {"name": self._get_reauth_entry().title}
-        return await self.async_step_reauth_confirm()
+        self.flow_impl = await async_get_config_entry_implementation(
+            self.hass, self._get_reauth_entry()
+        )
+        return await self.async_step_auth()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -282,4 +182,4 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self._reauth_confirmed = True
             return self.async_show_form(step_id="reauth_confirm")
 
-        return await self.async_step_graphql()
+        return await self.async_step_user()

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_TYPE_GRAPHQL, DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -39,7 +39,7 @@ class TibberNotificationEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
-        tibber_connection: Tibber = self.hass.data[DOMAIN][API_TYPE_GRAPHQL].tibber
+        tibber_connection: Tibber = self.hass.data[DOMAIN].tibber_connection
         try:
             await tibber_connection.send_notification(
                 title or ATTR_TITLE_DEFAULT, message

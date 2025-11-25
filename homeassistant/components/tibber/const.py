@@ -3,9 +3,6 @@
 DATA_HASS_CONFIG = "tibber_hass_config"
 DOMAIN = "tibber"
 MANUFACTURER = "Tibber"
-CONF_API_TYPE = "api_type"
-API_TYPE_GRAPHQL = "graphql"
-API_TYPE_DATA_API = "data_api"
 DATA_API_DEFAULT_SCOPES = [
     "openid",
     "profile",

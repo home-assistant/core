@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import datetime
 from datetime import timedelta
@@ -43,13 +44,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import (
-    API_TYPE_DATA_API,
-    API_TYPE_GRAPHQL,
-    CONF_API_TYPE,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import TibberDataAPICoordinator, TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -327,11 +322,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    if entry.data.get(CONF_API_TYPE, API_TYPE_GRAPHQL) == API_TYPE_DATA_API:
-        await _async_setup_data_api_sensors(hass, entry, async_add_entities)
-        return
+    await asyncio.gather(
+        _async_setup_data_api_sensors(hass, entry, async_add_entities),
+        _async_setup_graphql_sensors(hass, entry, async_add_entities),
+    )
 
-    tibber_connection = hass.data[DOMAIN][API_TYPE_GRAPHQL].tibber
+
+async def _async_setup_graphql_sensors(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Tibber sensor."""
+
+    tibber_connection = hass.data[DOMAIN].tibber_connection
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -403,10 +407,7 @@ async def _async_setup_data_api_sensors(
 ) -> None:
     """Set up sensors backed by the Tibber Data API."""
 
-    domain_data = hass.data.get(DOMAIN, {})
-    runtime = domain_data[API_TYPE_DATA_API]
-
-    coordinator = TibberDataAPICoordinator(hass, entry, runtime)
+    coordinator = TibberDataAPICoordinator(hass, entry, hass.data[DOMAIN])
 
     await coordinator.async_config_entry_first_refresh()
 

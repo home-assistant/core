@@ -18,7 +18,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from .const import API_TYPE_GRAPHQL, DOMAIN
+from .const import DOMAIN
 
 PRICE_SERVICE_NAME = "get_prices"
 ATTR_START: Final = "start"
@@ -33,15 +33,7 @@ SERVICE_SCHEMA: Final = vol.Schema(
 
 
 async def __get_prices(call: ServiceCall) -> ServiceResponse:
-    domain_data = call.hass.data.get(DOMAIN, {})
-    runtime = domain_data.get(API_TYPE_GRAPHQL)
-    if runtime is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="graphql_required",
-        )
-
-    tibber_connection = runtime.tibber
+    tibber_connection = call.hass.data[DOMAIN].tibber_connection
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")
