@@ -97,7 +97,7 @@ class NativeLabsStoreData(TypedDict):
 
 
 class NativeLabsStoredFeature(TypedDict):
-    """Storage data for Labs."""
+    """A single preview feature entry in storage format."""
 
     domain: str
     preview_feature: str
