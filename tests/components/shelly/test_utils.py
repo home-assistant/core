@@ -27,9 +27,9 @@ from homeassistant.components.shelly.utils import (
     get_block_channel_name,
     get_block_device_sleep_period,
     get_block_input_triggers,
+    get_block_number_of_channels,
     get_device_uptime,
     get_host,
-    get_number_of_channels,
     get_release_url,
     get_rpc_channel_name,
     get_rpc_input_triggers,
@@ -41,15 +41,15 @@ from homeassistant.util import dt as dt_util
 DEVICE_BLOCK_ID = 4
 
 
-async def test_block_get_number_of_channels(
+async def test_block_get_block_number_of_channels(
     mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test block get number of channels."""
+    """Test block get block number of channels."""
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "emeter")
     monkeypatch.setitem(mock_block_device.shelly, "num_emeters", 3)
 
     assert (
-        get_number_of_channels(
+        get_block_number_of_channels(
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
@@ -59,7 +59,7 @@ async def test_block_get_number_of_channels(
     monkeypatch.setitem(mock_block_device.shelly, "num_inputs", 4)
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "input")
     assert (
-        get_number_of_channels(
+        get_block_number_of_channels(
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
@@ -68,7 +68,7 @@ async def test_block_get_number_of_channels(
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_DIMMER_2)
     assert (
-        get_number_of_channels(
+        get_block_number_of_channels(
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
@@ -147,6 +147,7 @@ async def test_is_block_momentary_input(
         is False
     )
 
+    monkeypatch.delitem(mock_block_device.settings, "inputs")
     monkeypatch.delitem(mock_block_device.settings, "relays")
     monkeypatch.delitem(mock_block_device.settings, "rollers")
     assert (
