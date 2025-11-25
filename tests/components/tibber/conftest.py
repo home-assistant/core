@@ -11,11 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.tibber.const import (
-    API_TYPE_GRAPHQL,
-    CONF_API_TYPE,
-    DOMAIN,
-)
+from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -64,7 +60,10 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Tibber config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_TYPE: API_TYPE_GRAPHQL, CONF_ACCESS_TOKEN: "token"},
+        data={
+            CONF_ACCESS_TOKEN: "token",
+            "auth_implementation": DOMAIN,
+        },
         unique_id="tibber",
     )
     config_entry.add_to_hass(hass)
@@ -86,7 +85,23 @@ async def mock_tibber_setup(
     tibber_mock.send_notification = AsyncMock()
     tibber_mock.rt_disconnect = AsyncMock()
 
-    with patch("tibber.Tibber", return_value=tibber_mock):
+    session_mock = MagicMock()
+    session_mock.async_ensure_token_valid = AsyncMock()
+    session_mock.token = {CONF_ACCESS_TOKEN: "test-token"}
+
+    implementation_mock = MagicMock()
+
+    with (
+        patch("tibber.Tibber", return_value=tibber_mock),
+        patch(
+            "homeassistant.components.tibber.async_get_config_entry_implementation",
+            return_value=implementation_mock,
+        ),
+        patch(
+            "homeassistant.components.tibber.OAuth2Session",
+            return_value=session_mock,
+        ),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield tibber_mock

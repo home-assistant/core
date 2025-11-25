@@ -33,7 +33,8 @@ SERVICE_SCHEMA: Final = vol.Schema(
 
 
 async def __get_prices(call: ServiceCall) -> ServiceResponse:
-    tibber_connection = call.hass.data[DOMAIN].tibber_connection
+    runtime = call.hass.data[DOMAIN]
+    tibber_connection = runtime.tibber_connection
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")

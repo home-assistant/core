@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 import tibber
@@ -13,13 +13,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from . import TibberRuntimeData
+
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    runtime = hass.data[DOMAIN]
+    runtime = cast("TibberRuntimeData | None", hass.data.get(DOMAIN))
+    if runtime is None:
+        return {"homes": []}
     result: dict[str, Any] = {
         "homes": [
             {
@@ -33,7 +38,6 @@ async def async_get_config_entry_diagnostics(
         ]
     }
 
-    # Data API diagnostics
     if runtime.session:
         error: str | None = None
         try:
@@ -57,9 +61,7 @@ async def async_get_config_entry_diagnostics(
             devices = {}
             error = f"Fatal HTTP error ({err.status})"
 
-        if error:
-            result["error"] = error
-
+        result["error"] = error
         result["devices"] = [
             {
                 "id": device.id,

@@ -1,5 +1,6 @@
 """Constants for Tibber integration."""
 
+AUTH_IMPLEMENTATION = "auth_implementation"
 DATA_HASS_CONFIG = "tibber_hass_config"
 DOMAIN = "tibber"
 MANUFACTURER = "Tibber"

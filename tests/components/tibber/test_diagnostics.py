@@ -7,19 +7,13 @@ import pytest
 import tibber
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.tibber import TibberDataAPIRuntimeData
-from homeassistant.components.tibber.const import (
-    API_TYPE_DATA_API,
-    API_TYPE_GRAPHQL,
-    CONF_API_TYPE,
-    DOMAIN,
-)
+from homeassistant.components.tibber import TibberRuntimeData
+from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.setup import async_setup_component
 
 from .conftest import create_tibber_device
 from .test_common import mock_get_homes
@@ -33,36 +27,26 @@ async def test_entry_diagnostics(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry,
+    config_entry: MockConfigEntry,
+    mock_tibber_setup: MagicMock,
 ) -> None:
     """Test config entry diagnostics."""
-    with patch(
-        "tibber.Tibber.update_info",
-        return_value=None,
-    ):
-        assert await async_setup_component(hass, "tibber", {})
+    tibber_mock = mock_tibber_setup
+    runtime = hass.data[DOMAIN]
+    runtime.session = None
+    tibber_mock.get_homes.return_value = []
 
-    await hass.async_block_till_done()
-
-    with patch(
-        "tibber.Tibber.get_homes",
-        return_value=[],
-    ):
-        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "api_type": API_TYPE_GRAPHQL,
         "homes": [],
     }
 
-    with patch(
-        "tibber.Tibber.get_homes",
-        side_effect=mock_get_homes,
-    ):
-        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    tibber_mock.get_homes.side_effect = mock_get_homes
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "api_type": API_TYPE_GRAPHQL,
         "homes": [
             {
                 "last_data_timestamp": "2016-01-01T12:48:57",
@@ -83,18 +67,20 @@ async def test_data_api_diagnostics_no_runtime(
     """Test Data API diagnostics when runtime is not available."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_TYPE: API_TYPE_DATA_API},
+        data={},
         unique_id="data-api",
     )
     config_entry.add_to_hass(hass)
 
-    hass.data.setdefault(DOMAIN, {})
+    tibber_mock = MagicMock()
+    tibber_mock.get_homes = MagicMock(return_value=[])
+    runtime = TibberRuntimeData(session=None, tibber_connection=tibber_mock)
+    hass.data[DOMAIN] = runtime
 
     result = await async_get_config_entry_diagnostics(hass, config_entry)
 
     assert result == {
-        "api_type": API_TYPE_DATA_API,
-        "devices": [],
+        "homes": [],
     }
 
 
@@ -106,7 +92,7 @@ async def test_data_api_diagnostics_success(
     """Test Data API diagnostics with successful device retrieval."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_TYPE: API_TYPE_DATA_API},
+        data={},
         unique_id="data-api",
     )
     config_entry.add_to_hass(hass)
@@ -133,18 +119,17 @@ async def test_data_api_diagnostics_success(
         }
     )
 
-    runtime = TibberDataAPIRuntimeData(session=session)
+    runtime = TibberRuntimeData(session=session, tibber_connection=MagicMock())
     with patch.object(
-        TibberDataAPIRuntimeData,
+        TibberRuntimeData,
         "async_get_client",
         new_callable=AsyncMock,
         return_value=client,
     ):
-        hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
+        hass.data[DOMAIN] = runtime
 
         result = await async_get_config_entry_diagnostics(hass, config_entry)
 
-    assert result["api_type"] == API_TYPE_DATA_API
     assert result["error"] is None
     assert len(result["devices"]) == 2
     device_ids = {device["id"] for device in result["devices"]}
@@ -180,7 +165,7 @@ async def test_data_api_diagnostics_exceptions(
     """Test Data API diagnostics with various exception scenarios."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_TYPE: API_TYPE_DATA_API},
+        data={},
         unique_id="data-api",
     )
     config_entry.add_to_hass(hass)
@@ -192,17 +177,16 @@ async def test_data_api_diagnostics_exceptions(
     client = MagicMock()
     client.get_all_devices = AsyncMock(side_effect=exception)
 
-    runtime = TibberDataAPIRuntimeData(session=session)
+    runtime = TibberRuntimeData(session=session, tibber_connection=MagicMock())
     with patch.object(
-        TibberDataAPIRuntimeData,
+        TibberRuntimeData,
         "async_get_client",
         new_callable=AsyncMock,
         return_value=client,
     ):
-        hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
+        hass.data[DOMAIN] = runtime
 
         result = await async_get_config_entry_diagnostics(hass, config_entry)
 
-    assert result["api_type"] == API_TYPE_DATA_API
     assert result["error"] == expected_error
     assert result["devices"] == []

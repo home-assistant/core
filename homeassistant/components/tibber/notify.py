@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 from tibber import Tibber
 
 from homeassistant.components.notify import (
@@ -15,6 +17,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import TibberRuntimeData
 
 
 async def async_setup_entry(
@@ -39,7 +44,10 @@ class TibberNotificationEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
-        tibber_connection: Tibber = self.hass.data[DOMAIN].tibber_connection
+        runtime = cast("TibberRuntimeData | None", self.hass.data.get(DOMAIN))
+        if runtime is None:
+            raise HomeAssistantError("Tibber integration is not initialized")
+        tibber_connection: Tibber = runtime.tibber_connection
         try:
             await tibber_connection.send_notification(
                 title or ATTR_TITLE_DEFAULT, message

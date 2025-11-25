@@ -2,25 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
 import aiohttp
 import tibber
-from tibber.data_api import TibberDataAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
-    async_get_config_entry_implementation,
     async_get_implementations,
 )
 
-from .const import DATA_API_DEFAULT_SCOPES, DOMAIN
+from .const import AUTH_IMPLEMENTATION, DATA_API_DEFAULT_SCOPES, DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 ERR_TIMEOUT = "timeout"
@@ -42,7 +39,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self._access_token = None
-        self._reauth_confirmed = False
+        self._title = ""
 
     @property
     def logger(self) -> logging.Logger:
@@ -50,7 +47,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return _LOGGER
 
     @property
-    def extra_authorize_data(self) -> dict:
+    def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data appended to the authorize URL."""
         return {
             **super().extra_authorize_data,
@@ -61,9 +58,6 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-
-        self._async_abort_entries_match()
-
         if user_input is not None:
             access_token = user_input[CONF_ACCESS_TOKEN].replace(" ", "")
 
@@ -95,91 +89,37 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     errors=errors,
                 )
 
+            await self.async_set_unique_id(tibber_connection.user_id)
+
+            if self.source == SOURCE_REAUTH:
+                reauth_entry = self._get_reauth_entry()
+                self._abort_if_unique_id_mismatch(
+                    reason="wrong_account",
+                    description_placeholders={"email": reauth_entry.unique_id or ""},
+                )
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_ACCESS_TOKEN: access_token},
+                    title=tibber_connection.name,
+                )
+
+            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({AUTH_IMPLEMENTATION: DOMAIN})
             self._access_token = access_token
-            return await self.async_oath_flow_step()
+            self._title = tibber_connection.name
+            if not await async_get_implementations(self.hass, self.DOMAIN):
+                return self.async_abort(reason="missing_credentials")
+
+            return await self.async_step_pick_implementation()
 
         return self.async_show_form(
-            step_id="user",
+            step_id="user" if self.source != SOURCE_REAUTH else "reauth_confirm",
             data_schema=DATA_SCHEMA,
             description_placeholders={"url": TOKEN_URL},
             errors={},
         )
 
-    async def async_oath_flow_step(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the OAuth flow step."""
-        implementations = await async_get_implementations(self.hass, self.DOMAIN)
-        if not implementations:
-            return self.async_abort(reason="missing_credentials")
-
-        return await self.async_step_pick_implementation(user_input)
-
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Finalize the OAuth flow and create the config entry."""
-
-        token: dict[str, Any] = data["token"]
-
-        client = TibberDataAPI(
-            token[CONF_ACCESS_TOKEN],
-            websession=async_get_clientsession(self.hass),
-        )
-
-        try:
-            userinfo = await client.get_userinfo()
-        except (
-            tibber.InvalidLoginError,
-            tibber.FatalHttpExceptionError,
-        ):
-            return self.async_abort(reason="oauth_invalid_token")
-        except (aiohttp.ClientError, TimeoutError):
-            return self.async_abort(reason="cannot_connect")
-
-        unique_id = userinfo["email"]
-        title = userinfo["email"]
-        await self.async_set_unique_id(unique_id)
-        if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-            self._abort_if_unique_id_mismatch(
-                reason="wrong_account",
-                description_placeholders={"email": reauth_entry.unique_id or ""},
-            )
-            return self.async_update_reload_and_abort(
-                reauth_entry,
-                data_updates={
-                    "auth_implementation": data["auth_implementation"],
-                    CONF_TOKEN: token,
-                    CONF_ACCESS_TOKEN: self._access_token,
-                },
-                title=title,
-            )
-        self._abort_if_unique_id_configured()
-
-        entry_data: dict[str, Any] = {
-            "auth_implementation": data["auth_implementation"],
-            CONF_TOKEN: token,
-            CONF_ACCESS_TOKEN: self._access_token,
-        }
-        return self.async_create_entry(
-            title=title,
-            data=entry_data,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication."""
-        self.flow_impl = await async_get_config_entry_implementation(
-            self.hass, self._get_reauth_entry()
-        )
-        return await self.async_step_auth()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm the reauth dialog for GraphQL entries."""
-        if user_input is None and not self._reauth_confirmed:
-            self._reauth_confirmed = True
-            return self.async_show_form(step_id="reauth_confirm")
-
-        return await self.async_step_user()
+        data[CONF_ACCESS_TOKEN] = self._access_token
+        return self.async_create_entry(title=self._title, data=data)

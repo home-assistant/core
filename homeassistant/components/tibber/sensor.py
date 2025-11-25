@@ -335,7 +335,10 @@ async def _async_setup_graphql_sensors(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = hass.data[DOMAIN].tibber_connection
+    runtime = hass.data.get(DOMAIN)
+    if runtime is None:
+        raise PlatformNotReady("Tibber runtime is not ready")
+    tibber_connection = runtime.tibber_connection
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -407,7 +410,10 @@ async def _async_setup_data_api_sensors(
 ) -> None:
     """Set up sensors backed by the Tibber Data API."""
 
-    coordinator = TibberDataAPICoordinator(hass, entry, hass.data[DOMAIN])
+    runtime = hass.data.get(DOMAIN)
+    if runtime is None:
+        raise PlatformNotReady("Tibber runtime is not ready")
+    coordinator = TibberDataAPICoordinator(hass, entry, runtime)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -8,11 +8,7 @@ import aiohttp
 import pytest
 import tibber
 
-from homeassistant.components.tibber.const import (
-    API_TYPE_DATA_API,
-    CONF_API_TYPE,
-    DOMAIN,
-)
+from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.coordinator import TibberDataAPICoordinator
 from homeassistant.components.tibber.sensor import (
     TibberDataAPISensor,
@@ -34,7 +30,7 @@ def data_api_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a Data API Tibber config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ACCESS_TOKEN: "token", CONF_API_TYPE: API_TYPE_DATA_API},
+        data={CONF_ACCESS_TOKEN: "token"},
         unique_id="data-api",
     )
     entry.add_to_hass(hass)
@@ -56,7 +52,7 @@ async def test_data_api_setup_adds_entities(
     )
     runtime.async_get_client = AsyncMock(return_value=client)
 
-    hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
+    hass.data[DOMAIN] = runtime
 
     added_entities: list[TibberDataAPISensor] = []
 
@@ -88,7 +84,7 @@ async def test_data_api_coordinator_first_refresh_failure(
     """Ensure network failures during setup raise ConfigEntryNotReady."""
     runtime = MagicMock()
     runtime.async_get_client = AsyncMock(side_effect=aiohttp.ClientError("boom"))
-    hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
+    hass.data[DOMAIN] = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry, runtime)
     data_api_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
@@ -104,7 +100,7 @@ async def test_data_api_coordinator_first_refresh_auth_failed(
     """Ensure auth failures during setup propagate."""
     runtime = MagicMock()
     runtime.async_get_client = AsyncMock(side_effect=ConfigEntryAuthFailed("invalid"))
-    hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
+    hass.data[DOMAIN] = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry, runtime)
     data_api_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
@@ -127,7 +123,7 @@ async def test_data_api_coordinator_update_failures(
     """Ensure update failures are wrapped in UpdateFailed."""
     runtime = MagicMock()
     runtime.async_get_client = AsyncMock(side_effect=exception)
-    hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
+    hass.data[DOMAIN] = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry, runtime)
 
