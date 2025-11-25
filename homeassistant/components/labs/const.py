@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Self, TypedDict
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -62,14 +62,52 @@ class LabPreviewFeature:
         }
 
 
-type LabsStoreData = dict[str, set[tuple[str, str]]]
+@dataclass(kw_only=True)
+class LabsStoreData:
+    """Storage data for Labs."""
+
+    preview_feature_status: set[tuple[str, str]]
+
+    @classmethod
+    def from_store_format(cls, data: NativeLabsStoreData | None) -> Self:
+        """Initialize from storage format."""
+        if data is None:
+            return cls(preview_feature_status=set())
+        return cls(
+            preview_feature_status={
+                (item["domain"], item["preview_feature"])
+                for item in data["preview_feature_status"]
+            }
+        )
+
+    def to_store_format(self) -> NativeLabsStoreData:
+        """Convert to storage format."""
+        return {
+            "preview_feature_status": [
+                {"domain": domain, "preview_feature": preview_feature}
+                for domain, preview_feature in self.preview_feature_status
+            ]
+        }
+
+
+class NativeLabsStoreData(TypedDict):
+    """Storage data for Labs."""
+
+    preview_feature_status: list[NativeLabsStoredFeature]
+
+
+class NativeLabsStoredFeature(TypedDict):
+    """Storage data for Labs."""
+
+    domain: str
+    preview_feature: str
 
 
 @dataclass
 class LabsData:
     """Storage class for Labs global data."""
 
-    store: Store[LabsStoreData]
+    store: Store[NativeLabsStoreData]
     data: LabsStoreData
     preview_features: dict[str, LabPreviewFeature] = field(default_factory=dict)
 
