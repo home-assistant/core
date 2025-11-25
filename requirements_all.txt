@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.7.0
+aioesphomeapi==42.8.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -872,7 +872,7 @@ elgato==5.1.2
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.12
+elkm1-lib==2.2.13
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4

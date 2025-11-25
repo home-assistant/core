@@ -38,8 +38,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_entity_translation_attributes,
-    get_rpc_channel_name,
     get_rpc_custom_name,
     get_rpc_key,
     is_block_momentary_input,
@@ -83,27 +81,14 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         super().__init__(coordinator, key, attribute, description)
 
         if not description.role:
-            if description.key == "input":
-                if custom_name := get_rpc_custom_name(coordinator.device, key):
-                    self._attr_name = custom_name
-                else:
-                    _, _, component_id = get_rpc_key(key)
-                    self._attr_translation_placeholders = {"input_number": component_id}
-                    self._attr_translation_key = "input_with_number"
+            if description.key != "input":
+                self.configure_translation_attributes()
+            elif custom_name := get_rpc_custom_name(coordinator.device, key):
+                self._attr_name = custom_name
             else:
-                translation_placeholders, translation_key = (
-                    get_entity_translation_attributes(
-                        get_rpc_channel_name(coordinator.device, key),
-                        description.translation_key,
-                        description.device_class,
-                        self._default_to_device_class_name(),
-                    )
-                )
-
-                if translation_placeholders:
-                    self._attr_translation_placeholders = translation_placeholders
-                    if translation_key:
-                        self._attr_translation_key = translation_key
+                _, _, component_id = get_rpc_key(key)
+                self._attr_translation_placeholders = {"input_number": component_id}
+                self._attr_translation_key = "input_with_number"
 
     @property
     def is_on(self) -> bool:
@@ -508,19 +493,7 @@ class RpcSleepingBinarySensor(
         super().__init__(coordinator, key, attribute, description, entry)
 
         if coordinator.device.initialized:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
+            self.configure_translation_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
