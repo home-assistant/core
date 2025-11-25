@@ -51,6 +51,9 @@ async def test_sensor_updates_on_hour_tick(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Hourly tick should not trigger an extra API call
+    assert mock_essent_client.async_get_prices.call_count == 1
+
     # Snapshot platform state after the tick
     await snapshot_platform(
         hass, entity_registry, snapshot, setup_sensor_entry.entry_id
