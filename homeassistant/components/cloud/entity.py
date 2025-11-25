@@ -381,7 +381,7 @@ class BaseCloudLLMEntity(Entity):
     async def _prepare_chat_for_generation(
         self,
         chat_log: conversation.ChatLog,
-        text_format: dict[str, Any] | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Prepare kwargs for Cloud LLM from the chat log."""
 
@@ -429,8 +429,8 @@ class BaseCloudLLMEntity(Entity):
             "conversation_id": chat_log.conversation_id,
         }
 
-        if text_format is not None:
-            response_kwargs["text_format"] = text_format
+        if response_format is not None:
+            response_kwargs["response_format"] = response_format
         if tools is not None:
             response_kwargs["tools"] = tools
         if tool_choice is not None:
@@ -488,9 +488,9 @@ class BaseCloudLLMEntity(Entity):
         """Generate a response for the chat log."""
 
         for _ in range(_MAX_TOOL_ITERATIONS):
-            text_format: dict[str, Any] | None = None
+            response_format: dict[str, Any] | None = None
             if structure and structure_name:
-                text_format = {
+                response_format = {
                     "type": "json_schema",
                     "json_schema": {
                         "name": slugify(structure_name),
@@ -503,11 +503,9 @@ class BaseCloudLLMEntity(Entity):
 
             response_kwargs = await self._prepare_chat_for_generation(
                 chat_log,
-                text_format,
+                response_format,
             )
             response_kwargs["stream"] = True
-
-            _LOGGER.debug("Cloud LLM response_kwargs: %s", response_kwargs)
 
             try:
                 if type == "conversation":
