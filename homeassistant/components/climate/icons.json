@@ -96,5 +96,16 @@
     "turn_on": {
       "service": "mdi:power-on"
     }
+  },
+  "triggers": {
+    "started_heating": {
+      "trigger": "mdi:fire"
+    },
+    "turned_off": {
+      "trigger": "mdi:power-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:power-on"
+    }
   }
 }
