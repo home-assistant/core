@@ -431,8 +431,7 @@ class MathExtension(BaseTemplateExtension):
             value_num = in_min_num + position_in_period
         # Unknown "edges" values are left as-is; no use throwing an error.
 
-        if steps < 0:  # noqa: PLR1730 (we don't want a function call here)
-            steps = 0
+        steps = max(steps, 0)
 
         if not steps and (in_min_num == out_min_num and in_max_num == out_max_num):
             return value_num  # No remapping needed. Save some cycles and floating-point precision.
