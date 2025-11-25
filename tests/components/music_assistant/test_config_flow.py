@@ -11,6 +11,7 @@ from music_assistant_client.exceptions import (
     MusicAssistantClientException,
 )
 from music_assistant_models.api import ServerInfoMessage
+from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import (
@@ -26,6 +27,7 @@ from homeassistant.components.music_assistant.const import (
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     SOURCE_IGNORE,
+    SOURCE_REAUTH,
     SOURCE_USER,
     SOURCE_ZEROCONF,
 )
@@ -693,7 +695,6 @@ async def test_auth_flow_success(
     mock_get_server_info: AsyncMock,
 ) -> None:
     """Test successful authentication flow."""
-    # Start user flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -705,15 +706,15 @@ async def test_auth_flow_success(
         result["flow_id"],
         {CONF_URL: "http://localhost:8095"},
     )
-    # Should fall back to manual auth (no request context in tests)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_manual"
 
-    # Enter token
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_TOKEN: "test_auth_token"},
-    )
+    with patch("homeassistant.components.music_assistant.config_flow._test_connection"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "test_auth_token"},
+        )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
@@ -757,3 +758,200 @@ async def test_finish_auth_token_exchange(
         CONF_URL: "http://localhost:8095",
         CONF_TOKEN: "long_lived_token_12345",
     }
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow shows confirmation before auth."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["url"] == "http://localhost:8095"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth_manual"
+
+
+async def test_reauth_with_manual_token(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with manual token entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow._test_connection"
+    ) as mock_test_connection:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+            data=mock_config_entry.data,
+        )
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        assert result["step_id"] == "auth_manual"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "new_valid_token"},
+        )
+
+        mock_test_connection.assert_called_once_with(
+            hass, "http://localhost:8095", "new_valid_token"
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert mock_config_entry.data[CONF_TOKEN] == "new_valid_token"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_key"),
+    [
+        (AuthenticationFailed("auth_failed"), "auth_failed"),
+        (InvalidToken("invalid_token"), "auth_failed"),
+    ],
+)
+async def test_auth_manual_invalid_token(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    exception: Exception,
+    error_key: str,
+) -> None:
+    """Test manual auth with invalid token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    assert result["step_id"] == "auth_manual"
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow._test_connection",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "invalid_token"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth_manual"
+    assert result["errors"] == {"base": error_key}
+
+
+@pytest.mark.parametrize(
+    ("exception", "abort_reason"),
+    [
+        (CannotConnect("cannot_connect"), "cannot_connect"),
+        (InvalidServerVersion("invalid_server_version"), "invalid_server_version"),
+        (MusicAssistantClientException("unknown"), "unknown"),
+    ],
+)
+async def test_auth_manual_connection_errors(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    exception: Exception,
+    abort_reason: str,
+) -> None:
+    """Test manual auth with connection errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    assert result["step_id"] == "auth_manual"
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow._test_connection",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "test_token"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+
+
+async def test_finish_auth_reauth_source(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test finish_auth updates entry when source is reauth."""
+    mock_config_entry.add_to_hass(hass)
+
+    flow = MusicAssistantConfigFlow()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id}
+    flow.url = "http://localhost:8095"
+    flow.token = "session_token"
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
+        return_value="new_long_lived_token",
+    ):
+        result = await flow.async_step_finish_auth()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == "new_long_lived_token"
+
+
+@pytest.mark.parametrize(
+    ("exception", "abort_reason"),
+    [
+        (TimeoutError(), "cannot_connect"),
+        (CannotConnect("cannot_connect"), "cannot_connect"),
+        (AuthenticationFailed("auth_failed"), "auth_failed"),
+        (InvalidToken("invalid_token"), "auth_failed"),
+        (InvalidServerVersion("invalid_version"), "invalid_server_version"),
+        (MusicAssistantClientException("unknown"), "unknown"),
+    ],
+)
+async def test_finish_auth_errors(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    exception: Exception,
+    abort_reason: str,
+) -> None:
+    """Test finish_auth handles errors during token exchange."""
+    flow = MusicAssistantConfigFlow()
+    flow.hass = hass
+    flow.url = "http://localhost:8095"
+    flow.token = "session_token"
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
+        side_effect=exception,
+    ):
+        result = await flow.async_step_finish_auth()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason

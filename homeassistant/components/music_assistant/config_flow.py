@@ -405,9 +405,15 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             except (AuthenticationFailed, InvalidToken):
                 errors["base"] = "auth_failed"
             except MusicAssistantClientException:
-                LOGGER.exception("Unexpected exception during reauth")
+                LOGGER.exception("Unexpected exception during manual auth")
                 return self.async_abort(reason="unknown")
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data={CONF_URL: self.url, CONF_TOKEN: self.token},
+                    )
+
                 return self.async_create_entry(
                     title=DEFAULT_TITLE,
                     data={CONF_URL: self.url, CONF_TOKEN: self.token},
