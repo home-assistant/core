@@ -201,6 +201,8 @@ class ProtectDeviceVehicleEventEntity(
     _latest_event_id: str | None = None
     _latest_thumbnails: list[EventDetectedThumbnail] | None = None
     _thumbnail_timer_due: float = 0.0  # Loop time when timer should fire
+    _fired_event_id: str | None = None  # Track last fired event to prevent duplicates
+    _fired_event_data: dict[str, Any] | None = None  # Track event data when fired
 
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
@@ -239,28 +241,11 @@ class ProtectDeviceVehicleEventEntity(
             ]
         return []
 
-    @callback
-    def _fire_vehicle_event(
-        self, event_id: str, thumbnails: list[EventDetectedThumbnail] | None = None
-    ) -> None:
-        """Fire the vehicle detection event with best available thumbnail.
-
-        Args:
-            event_id: The event ID to include in the fired event data.
-            thumbnails: Pre-stored thumbnails to use. If None, fetches from
-                the current event (used when event is still active).
-        """
-        if thumbnails is None:
-            # No stored thumbnails; try to get from current event
-            event = self.entity_description.get_event_obj(self.device)
-            if not event or event.id != event_id:
-                return
-            thumbnails = self._get_vehicle_thumbnails(event)
-
-        if not thumbnails:
-            return
-
-        # Start with just the event ID
+    @staticmethod
+    def _build_event_data(
+        event_id: str, thumbnails: list[EventDetectedThumbnail]
+    ) -> dict[str, Any]:
+        """Build event data dictionary from thumbnails."""
         event_data: dict[str, Any] = {
             ATTR_EVENT_ID: event_id,
             "thumbnail_count": len(thumbnails),
@@ -285,6 +270,39 @@ class ProtectDeviceVehicleEventEntity(
         # Add all thumbnail attributes as dict
         if thumbnail.attributes:
             event_data["attributes"] = thumbnail.attributes.unifi_dict()
+
+        return event_data
+
+    @callback
+    def _fire_vehicle_event(
+        self, event_id: str, thumbnails: list[EventDetectedThumbnail] | None = None
+    ) -> None:
+        """Fire the vehicle detection event with best available thumbnail.
+
+        Args:
+            event_id: The event ID to include in the fired event data.
+            thumbnails: Pre-stored thumbnails to use. If None, fetches from
+                the current event (used when event is still active).
+        """
+        if thumbnails is None:
+            # No stored thumbnails; try to get from current event
+            event = self.entity_description.get_event_obj(self.device)
+            if not event or event.id != event_id:
+                return
+            thumbnails = self._get_vehicle_thumbnails(event)
+
+        if not thumbnails:
+            return
+
+        event_data = self._build_event_data(event_id, thumbnails)
+
+        # Prevent duplicate firing of same event with same data
+        if self._fired_event_id == event_id and self._fired_event_data == event_data:
+            return
+
+        # Mark this event as fired with its data
+        self._fired_event_id = event_id
+        self._fired_event_data = event_data
 
         self._trigger_event(EVENT_TYPE_VEHICLE_DETECTED, event_data)
         self.async_write_ha_state()
@@ -313,10 +331,20 @@ class ProtectDeviceVehicleEventEntity(
             and event.type is EventType.SMART_DETECT
             and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
+            # Skip if same event with same data (no changes)
+            if (
+                self._fired_event_id == event.id
+                and self._fired_event_data
+                == self._build_event_data(event.id, thumbnails)
+            ):
+                return
+
             # New event arrived while timer pending for different event?
             # Fire the old event immediately since it has completed
             if self._latest_event_id and self._latest_event_id != event.id:
+                # Only fire if we haven't already (shouldn't happen, but defensive)
                 self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
+                self._cancel_thumbnail_timer()
 
             # Store event data and extend/start the timer
             # Timer extension allows better thumbnails (with LPR) to arrive
