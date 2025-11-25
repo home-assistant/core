@@ -111,7 +111,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.url: str | None = None
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
-        self._external_auth_available: bool = False
 
     def _ensure_callback_view_registered(self) -> None:
         """Ensure the auth callback view is registered."""
