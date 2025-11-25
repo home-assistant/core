@@ -59,5 +59,24 @@
       "description": "You have configured Rejseplanen in configuration.yaml. This method is deprecated and will be ignored. Please use the UI to configure the integration. To solve this issue, remove the platform configuration from the configuration.yaml.",
       "title": "YAML configuration detected"
     }
+  },
+  "selector": {
+    "departure_type": {
+      "options": {
+        "bus": "City buses",
+        "express_bus": "Express buses",
+        "ferry": "Ferry",
+        "flexible_bus": "Flexible transport",
+        "flight": "Flight",
+        "ic": "InterCity trains (IC, IB)",
+        "icl": "InterCity Lyn trains (ICL, ICL-X, ICL+)",
+        "letbane": "Light rail",
+        "metro": "Metro",
+        "night_bus": "Night & special buses",
+        "re": "Regional trains (Re, RA, RX)",
+        "s_tog": "S-trains (Copenhagen suburban)",
+        "tog": "Long distance trains (EC, IR, ICE, SJ, etc.)"
+      }
+    }
   }
 }

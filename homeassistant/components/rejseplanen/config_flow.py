@@ -12,11 +12,13 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -30,7 +32,6 @@ from .const import (
     CONF_ROUTE,
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
-    DEPARTURE_TYPE_OPTIONS,
     DOMAIN,
 )
 
@@ -57,7 +58,14 @@ CONFIG_STOP_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_DEPARTURE_TYPE,
             default=[],
-        ): cv.multi_select(DEPARTURE_TYPE_OPTIONS),
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(DEPARTURE_TYPE_TO_CLASS),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="departure_type",
+                multiple=True,
+            )
+        ),
     }
 )
 
@@ -89,11 +97,10 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors: dict[str, str] = {}
+        auth_key = user_input[CONF_API_KEY]
+        api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
+
         try:
-            auth_key = user_input[CONF_API_KEY]
-            api = Rejseplanen(
-                base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key
-            )
             result = await self.hass.async_add_executor_job(api.validate_auth_key)
             if not result:
                 errors["base"] = "invalid_auth"
@@ -110,7 +117,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store the authentication key and name
         return self.async_create_entry(
             title="Rejseplanen",
-            data={CONF_API_KEY: auth_key, CONF_NAME: "Rejseplanen"},
+            data={CONF_API_KEY: auth_key},
         )
 
 

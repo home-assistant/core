@@ -75,6 +75,6 @@ async def _async_update_listener(
     """Handle update when subentries are added/removed."""
     _LOGGER.debug("Update listener triggered for entry: %s", config_entry.entry_id)
 
-    # ✅ Instead of setting up platforms again, reload the entire config entry
+    # Instead of setting up platforms again, reload the entire config entry
     # This is the standard approach for handling subentry changes
     await hass.config_entries.async_reload(config_entry.entry_id)

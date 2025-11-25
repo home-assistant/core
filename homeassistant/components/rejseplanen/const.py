@@ -36,20 +36,3 @@ ATTR_IS_CANCELLED = "cancelled"
 ATTR_DELAY_MINUTES = "delay_minutes"
 
 SCAN_INTERVAL_MINUTES = 2
-
-# User-friendly names for config flow - use string keys for cv.multi_select
-DEPARTURE_TYPE_OPTIONS = {
-    "ic": "InterCity trains (IC, IB)",
-    "icl": "InterCity Lyn trains (ICL, ICL-X, ICL+)",
-    "re": "Regional trains (Re, RA, RX)",
-    "tog": "Long distance trains (EC, IR, ICE, SJ, etc.)",
-    "s_tog": "S-trains (Copenhagen suburban)",
-    "bus": "City buses",
-    "express_bus": "Express buses",
-    "night_bus": "Night & special buses",
-    "flexible_bus": "Flexible transport",
-    "ferry": "Ferry",
-    "metro": "Metro",
-    "letbane": "Light rail",
-    "flight": "Flight",
-}
