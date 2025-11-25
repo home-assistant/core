@@ -258,17 +258,21 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return None
         return None
 
+    async def _async_cache_image(self, url: str | None) -> bytes | None:
+        """Cache the image from url."""
+        if not url or (image := await self._async_load_image_from_url(url)) is None:
+            return None
+        self._cached_image = image
+        self._attr_content_type = image.content_type
+        return image.content
+
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
 
         if self._cached_image:
             return self._cached_image.content
         if (url := self.image_url) is not UNDEFINED:
-            if not url or (image := await self._async_load_image_from_url(url)) is None:
-                return None
-            self._cached_image = image
-            self._attr_content_type = image.content_type
-            return image.content
+            return await self._async_cache_image(url)
         return await self.hass.async_add_executor_job(self.image)
 
     @property
