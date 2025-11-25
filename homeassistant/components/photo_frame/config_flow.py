@@ -29,6 +29,7 @@ class PhotoFrameConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Photo Frame."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
