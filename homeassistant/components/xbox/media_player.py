@@ -178,9 +178,9 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         return await build_item_response(
             self.client,
             self._console.id,
-            media_content_type or "",
-            media_content_id or "",
-        )  # type: ignore[return-value]
+            media_content_type,
+            media_content_id,
+        )
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
