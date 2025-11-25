@@ -86,7 +86,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
-            CONF_KEEP_ALIVE: 60,
+            CONF_KEEP_ALIVE: {"seconds": 60},
             CONF_PRESETS[PRESET_AWAY]: 20,
         },
         title="My dehumidifier",
