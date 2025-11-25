@@ -121,6 +121,8 @@ build.json @home-assistant/supervisor
 /tests/components/androidtv/ @JeffLIrion @ollo69
 /homeassistant/components/androidtv_remote/ @tronikos @Drafteed
 /tests/components/androidtv_remote/ @tronikos @Drafteed
+/homeassistant/components/anglian_water/ @pantherale0
+/tests/components/anglian_water/ @pantherale0
 /homeassistant/components/anova/ @Lash-L
 /tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
@@ -183,8 +185,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/automation/ @home-assistant/core
 /tests/components/automation/ @home-assistant/core
 /homeassistant/components/avea/ @pattyland
-/homeassistant/components/awair/ @ahayworth @danielsjf
-/tests/components/awair/ @ahayworth @danielsjf
+/homeassistant/components/awair/ @ahayworth @ricohageman
+/tests/components/awair/ @ahayworth @ricohageman
 /homeassistant/components/aws_s3/ @tomasbedrich
 /tests/components/aws_s3/ @tomasbedrich
 /homeassistant/components/axis/ @Kane610
@@ -472,6 +474,8 @@ build.json @home-assistant/supervisor
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco
 /tests/components/esphome/ @jesserockz @kbx81 @bdraco
+/homeassistant/components/essent/ @jaapp
+/tests/components/essent/ @jaapp
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
@@ -591,6 +595,8 @@ build.json @home-assistant/supervisor
 /tests/components/goodwe/ @mletenay @starkillerOG
 /homeassistant/components/google/ @allenporter
 /tests/components/google/ @allenporter
+/homeassistant/components/google_air_quality/ @Thomas55555
+/tests/components/google_air_quality/ @Thomas55555
 /homeassistant/components/google_assistant/ @home-assistant/cloud
 /tests/components/google_assistant/ @home-assistant/cloud
 /homeassistant/components/google_assistant_sdk/ @tronikos
@@ -700,6 +706,8 @@ build.json @home-assistant/supervisor
 /tests/components/huawei_lte/ @scop @fphammerle
 /homeassistant/components/hue/ @marcelveldt
 /tests/components/hue/ @marcelveldt
+/homeassistant/components/hue_ble/ @flip-dots
+/tests/components/hue_ble/ @flip-dots
 /homeassistant/components/huisbaasje/ @dennisschroer
 /tests/components/huisbaasje/ @dennisschroer
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
