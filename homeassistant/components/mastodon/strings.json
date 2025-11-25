@@ -42,6 +42,9 @@
     }
   },
   "exceptions": {
+    "idempotency_key_too_short": {
+      "message": "Idempotency key must be at least 4 characters long."
+    },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
@@ -79,6 +82,10 @@
         "content_warning": {
           "description": "A content warning will be shown before the status text is shown (default: no content warning).",
           "name": "Content warning"
+        },
+        "idempotency_key": {
+          "description": "A unique key for this post. If specified then subsequent posts with the same key will be ignored by your Mastodon instance. Mastodon holds keys for up to one hour (default: no idempotency key, which allows duplication).",
+          "name": "Idempotency key"
         },
         "language": {
           "description": "The language of the post (default: Mastodon account preference).",

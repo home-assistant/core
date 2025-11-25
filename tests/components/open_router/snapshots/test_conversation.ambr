@@ -108,11 +108,13 @@
     dict({
       'attachments': None,
       'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'content': 'Hello, how can I help you?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -125,11 +127,13 @@
     dict({
       'attachments': None,
       'content': 'Please call the test function',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'content': None,
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -146,6 +150,7 @@
     }),
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
@@ -154,6 +159,7 @@
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'content': 'I have successfully called the function',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,

@@ -14,6 +14,14 @@ from homeassistant.util import dt as dt_util
 
 from . import TuyaConfigEntry
 from .const import DOMAIN, DPCode
+from .models import DEVICE_WARNINGS
+
+_REDACTED_DPCODES = {
+    DPCode.ALARM_MESSAGE,
+    DPCode.ALARM_MSG,
+    DPCode.DOORBELL_PIC,
+    DPCode.MOVEMENT_DETECT_PIC,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -90,12 +98,13 @@ def _async_device_as_dict(
         "home_assistant": {},
         "set_up": device.set_up,
         "support_local": device.support_local,
+        "warnings": DEVICE_WARNINGS.get(device.id),
     }
 
     # Gather Tuya states
     for dpcode, value in device.status.items():
         # These statuses may contain sensitive information, redact these..
-        if dpcode in {DPCode.ALARM_MESSAGE, DPCode.MOVEMENT_DETECT_PIC}:
+        if dpcode in _REDACTED_DPCODES:
             data["status"][dpcode] = REDACTED
             continue
 

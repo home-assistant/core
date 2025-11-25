@@ -1,0 +1,975 @@
+{
+  "components": {
+    "cavity-01": {
+      "ovenSetpoint": {
+        "ovenSetpointRange": {
+          "value": null
+        },
+        "ovenSetpoint": {
+          "value": 0,
+          "timestamp": "2025-11-22T02:11:43.913Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [],
+          "timestamp": "2025-06-25T15:25:15.416Z"
+        }
+      },
+      "samsungce.definedRecipe": {
+        "definedRecipe": {
+          "value": {
+            "cavityId": "0",
+            "recipeType": "0",
+            "categoryId": 0,
+            "itemId": 0,
+            "servingSize": 0,
+            "browingLevel": 0,
+            "option": 0
+          },
+          "timestamp": "2025-11-22T02:11:44.009Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 0,
+          "unit": "C",
+          "timestamp": "2025-11-22T02:11:43.913Z"
+        }
+      },
+      "samsungce.ovenOperatingState": {
+        "completionTime": {
+          "value": "2025-11-22T02:11:43.786Z",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "progress": {
+          "value": 0,
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "ovenJobState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:44.009Z"
+        },
+        "operationTime": {
+          "value": "00:00:00",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        }
+      },
+      "samsungce.kitchenDeviceDefaults": {
+        "defaultOperationTime": {
+          "value": null
+        },
+        "defaultOvenMode": {
+          "value": "Convection",
+          "timestamp": "2025-06-25T15:25:16.932Z"
+        },
+        "defaultOvenSetpoint": {
+          "value": null
+        }
+      },
+      "custom.ovenCavityStatus": {
+        "ovenCavityStatus": {
+          "value": "on",
+          "timestamp": "2025-11-22T02:11:43.320Z"
+        }
+      },
+      "ovenMode": {
+        "supportedOvenModes": {
+          "value": ["Bake", "Others", "BottomHeat"],
+          "timestamp": "2025-11-21T12:50:25.529Z"
+        },
+        "ovenMode": {
+          "value": "Others",
+          "timestamp": "2025-11-22T02:11:43.795Z"
+        }
+      },
+      "ovenOperatingState": {
+        "completionTime": {
+          "value": "2025-11-22T02:11:43.786Z",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "machineState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "progress": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "supportedMachineStates": {
+          "value": null
+        },
+        "ovenJobState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:44.009Z"
+        },
+        "operationTime": {
+          "value": 0,
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        }
+      },
+      "samsungce.ovenMode": {
+        "supportedOvenModes": {
+          "value": ["Convection", "BottomConvection", "Bottom", "Autocook"],
+          "timestamp": "2025-11-21T12:50:25.528Z"
+        },
+        "ovenMode": {
+          "value": "NoOperation",
+          "timestamp": "2025-11-22T02:11:43.795Z"
+        }
+      }
+    },
+    "main": {
+      "samsungce.meatProbe": {
+        "temperatureSetpoint": {
+          "value": null
+        },
+        "temperature": {
+          "value": null
+        },
+        "status": {
+          "value": null
+        }
+      },
+      "samsungce.waterReservoir": {
+        "slotState": {
+          "value": null
+        }
+      },
+      "samsungce.kitchenDeviceDefaults": {
+        "defaultOperationTime": {
+          "value": null
+        },
+        "defaultOvenMode": {
+          "value": "Convection",
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        },
+        "defaultOvenSetpoint": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "40456741",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "50030018001611400A00000000000000",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "description": {
+          "value": "NV7000BW/EU2",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "releaseYear": {
+          "value": 22,
+          "timestamp": "2025-06-25T15:25:15.416Z"
+        },
+        "binaryId": {
+          "value": "TP1X_DA-KS-OVEN-0107X",
+          "timestamp": "2025-11-22T02:11:43.551Z"
+        }
+      },
+      "samsungce.quickControl": {
+        "version": {
+          "value": "1.0",
+          "timestamp": "2025-11-22T02:11:44.811Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "AKS-WW-TP1-22-OVEN-1_40250221",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnhw": {
+          "value": "Realtek",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "di": {
+          "value": "199d7863-ad04-793d-176d-658f10062575",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "dmv": {
+          "value": "1.2.1",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "n": {
+          "value": "Samsung Oven",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnmo": {
+          "value": "TP1X_DA-KS-OVEN-0107X|40456741|50030018001611400A00000000000000",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "vid": {
+          "value": "DA-KS-OVEN-0107X",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 3.0",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "mnos": {
+          "value": "TizenRT 3.1",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "pi": {
+          "value": "199d7863-ad04-793d-176d-658f10062575",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-06-25T15:31:56.915Z"
+        }
+      },
+      "samsungce.kitchenDeviceIdentification": {
+        "regionCode": {
+          "value": "EU",
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        },
+        "modelCode": {
+          "value": "NV7000BW/EU2",
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        },
+        "fuel": {
+          "value": null
+        },
+        "type": {
+          "value": "oven",
+          "timestamp": "2025-06-25T15:25:15.416Z"
+        },
+        "representativeComponent": {
+          "value": null
+        }
+      },
+      "samsungce.kitchenModeSpecification": {
+        "specification": {
+          "value": {
+            "single": [
+              {
+                "mode": "Autocook",
+                "supportedOperations": ["set"],
+                "supportedOptions": {}
+              },
+              {
+                "mode": "Convection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 30,
+                      "max": 250,
+                      "default": 160,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "TopHeatPluseConvection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 180,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "Conventional",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 30,
+                      "max": 250,
+                      "default": 180,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "LargeGrill",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 100,
+                      "max": 270,
+                      "default": 220,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "SmallGrill",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 100,
+                      "max": 270,
+                      "default": 220,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "BottomHeatPluseConvection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 200,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "PlateWarm",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 30,
+                      "max": 80,
+                      "default": 50,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "KeepWarm",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 100,
+                      "default": 60,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "Bottom",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 100,
+                      "max": 230,
+                      "default": 150,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "EcoConvection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 30,
+                      "max": 250,
+                      "default": 160,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "FanGrill",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 100,
+                      "max": 250,
+                      "default": 180,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "Defrost",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 30,
+                      "max": 60,
+                      "default": 30,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "SteamClean",
+                "supportedOperations": [],
+                "supportedOptions": {}
+              },
+              {
+                "mode": "AirSousvide",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 50,
+                      "max": 95,
+                      "default": 60,
+                      "resolution": 1
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              }
+            ],
+            "upper": [
+              {
+                "mode": "Convection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 160,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "TopConvection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 180,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "LargeGrill",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 220,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "Autocook",
+                "supportedOperations": ["set"],
+                "supportedOptions": {}
+              }
+            ],
+            "lower": [
+              {
+                "mode": "Convection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 160,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "BottomConvection",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 200,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "Bottom",
+                "supportedOperations": ["start", "set"],
+                "supportedOptions": {
+                  "temperature": {
+                    "C": {
+                      "min": 40,
+                      "max": 250,
+                      "default": 150,
+                      "resolution": 5
+                    }
+                  },
+                  "operationTime": {
+                    "min": "00:01:00",
+                    "max": "23:59:00",
+                    "default": "01:00:00",
+                    "resolution": "00:01:00"
+                  }
+                }
+              },
+              {
+                "mode": "Autocook",
+                "supportedOperations": ["set"],
+                "supportedOptions": {}
+              }
+            ]
+          },
+          "timestamp": "2025-11-21T12:50:25.529Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "samsungce.waterReservoir",
+            "samsungce.ovenDrainageRequirement"
+          ],
+          "timestamp": "2025-06-25T15:31:59.441Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25040101,
+          "timestamp": "2025-06-25T15:25:15.416Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "minVersion": {
+          "value": "3.0",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "KV1",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "protocolType": {
+          "value": "ble_ocf",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "tsId": {
+          "value": "DA01",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 0,
+          "unit": "C",
+          "timestamp": "2025-11-22T02:11:43.849Z"
+        }
+      },
+      "samsungce.ovenOperatingState": {
+        "completionTime": {
+          "value": "2025-11-22T02:11:43.822Z",
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        },
+        "progress": {
+          "value": 0,
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        },
+        "ovenJobState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "operationTime": {
+          "value": "00:00:00",
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        }
+      },
+      "sec.calmConnectionCare": {
+        "role": {
+          "value": ["things"],
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        },
+        "protocols": {
+          "value": null
+        },
+        "version": {
+          "value": "1.0",
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        }
+      },
+      "ovenMode": {
+        "supportedOvenModes": {
+          "value": ["Bake", "Others", "Broil"],
+          "timestamp": "2025-11-22T02:11:43.320Z"
+        },
+        "ovenMode": {
+          "value": "Others",
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        }
+      },
+      "samsungce.ovenMode": {
+        "supportedOvenModes": {
+          "value": ["Convection", "TopConvection", "LargeGrill", "Autocook"],
+          "timestamp": "2025-11-22T02:11:43.320Z"
+        },
+        "ovenMode": {
+          "value": "NoOperation",
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-11-22T02:11:43.617Z"
+        }
+      },
+      "ovenSetpoint": {
+        "ovenSetpointRange": {
+          "value": null
+        },
+        "ovenSetpoint": {
+          "value": 0,
+          "timestamp": "2025-11-22T02:11:43.849Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.doorState": {
+        "doorState": {
+          "value": "closed",
+          "timestamp": "2025-11-22T02:11:43.300Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.ovenDrainageRequirement": {
+        "drainageRequirement": {
+          "value": null
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": true,
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        },
+        "supportedWiFiFreq": {
+          "value": ["2.4G"],
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        },
+        "supportedAuthType": {
+          "value": ["OPEN", "WEP", "WPA-PSK", "WPA2-PSK", "SAE"],
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        },
+        "protocolType": {
+          "value": ["helper_hotspot", "ble_ocf"],
+          "timestamp": "2025-11-22T02:11:44.842Z"
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "25022100",
+              "description": "Version"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "04567A23011600, 04566A23042100",
+              "description": "Version"
+            },
+            {
+              "id": "2",
+              "swType": "Firmware",
+              "versionNumber": "01275A21123000",
+              "description": "Version"
+            }
+          ],
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-11-22T02:11:43.951Z"
+        }
+      },
+      "samsungce.definedRecipe": {
+        "definedRecipe": {
+          "value": {
+            "cavityId": "0",
+            "recipeType": "0",
+            "categoryId": 0,
+            "itemId": 0,
+            "servingSize": 0,
+            "browingLevel": 0,
+            "option": 0
+          },
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2025-11-22T02:11:43.845Z"
+        },
+        "otnDUID": {
+          "value": "43CPH4AI6NYHU",
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2025-06-25T15:25:15.416Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-11-22T02:11:43.552Z"
+        },
+        "operatingState": {
+          "value": "none",
+          "timestamp": "2025-11-22T02:11:43.845Z"
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "ovenOperatingState": {
+        "completionTime": {
+          "value": "2025-11-22T02:11:43.822Z",
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        },
+        "machineState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        },
+        "progress": {
+          "value": 0,
+          "unit": "%",
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        },
+        "supportedMachineStates": {
+          "value": null
+        },
+        "ovenJobState": {
+          "value": "ready",
+          "timestamp": "2025-11-22T02:11:43.790Z"
+        },
+        "operationTime": {
+          "value": 0,
+          "timestamp": "2025-11-22T02:11:43.826Z"
+        }
+      },
+      "samsungce.lamp": {
+        "brightnessLevel": {
+          "value": "off",
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        },
+        "supportedBrightnessLevel": {
+          "value": ["off", "high"],
+          "timestamp": "2025-11-22T02:11:43.760Z"
+        }
+      }
+    }
+  }
+}

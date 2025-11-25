@@ -2,19 +2,22 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import ModStatusLedsAndLogicOps, ModStatusVar
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import LedStatus, LogicOpStatus, Var, VarValue
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
+from homeassistant.components.lcn.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 SENSOR_VAR1 = "sensor.testmodule_sensor_var1"
 SENSOR_SETPOINT1 = "sensor.testmodule_sensor_setpoint1"
@@ -90,6 +93,63 @@ async def test_pushed_ledlogicop_status_change(
     state = hass.states.get(SENSOR_LOGICOP1)
     assert state is not None
     assert state.state == "all"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_method", "return_value"),
+    [
+        (
+            SENSOR_VAR1,
+            "request_status_variable",
+            ModStatusVar(LcnAddr(0, 7, False), Var.VAR1, VarValue.from_celsius(20)),
+        ),
+        (
+            SENSOR_LED6,
+            "request_status_led_and_logic_ops",
+            ModStatusLedsAndLogicOps(
+                LcnAddr(0, 7, False), [LedStatus.OFF] * 12, [LogicOpStatus.NONE] * 4
+            ),
+        ),
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entry: MockConfigEntry,
+    entity_id: str,
+    request_method: str,
+    return_value: ModStatusVar | ModStatusLedsAndLogicOps,
+) -> None:
+    """Test the availability of sensor entity."""
+    await init_integration(hass, entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # no response from device -> unavailable
+    with patch.object(MockDeviceConnection, request_method, return_value=None):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # response from device -> available
+    with patch.object(
+        MockDeviceConnection,
+        request_method,
+        return_value=return_value,
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

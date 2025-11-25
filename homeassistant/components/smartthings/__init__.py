@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
@@ -461,6 +462,7 @@ def create_devices(
             kwargs.update(
                 {
                     ATTR_MANUFACTURER: ocf.manufacturer_name,
+                    ATTR_MODEL_ID: ocf.model_code,
                     ATTR_MODEL: (
                         (ocf.model_number.split("|")[0]) if ocf.model_number else None
                     ),

@@ -62,6 +62,10 @@ from .common import (
     MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
     MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
+    MOCK_TEXT_SUBENTRY_DATA,
+    MOCK_VALVE_SUBENTRY_DATA_POSITION,
+    MOCK_VALVE_SUBENTRY_DATA_STATE,
+    MOCK_WATER_HEATER_SUBENTRY_DATA,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode, get_schema_suggested_value
@@ -3720,6 +3724,209 @@ async def test_migrate_of_incompatible_config_entry(
             "Milk notifier Outlet",
             id="switch",
         ),
+        pytest.param(
+            MOCK_TEXT_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "MOTD"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+                "text_advanced_settings": {
+                    "min": 0,
+                    "max": 10,
+                    "mode": "password",
+                    "pattern": "^[a-z_]*$",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "text_advanced_settings": {
+                            "min": 20,
+                            "max": 10,
+                            "mode": "password",
+                            "pattern": "^[a-z_]*$",
+                        },
+                    },
+                    {"text_advanced_settings": "max_below_min"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "text_advanced_settings": {
+                            "min": 0,
+                            "max": 10,
+                            "mode": "password",
+                            "pattern": "(",
+                        },
+                    },
+                    {"text_advanced_settings": "invalid_regular_expression"},
+                ),
+            ),
+            "Milk notifier MOTD",
+            id="text",
+        ),
+        pytest.param(
+            MOCK_VALVE_SUBENTRY_DATA_STATE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Ice cream"},
+            {"reports_position": False},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": True,
+                "optimistic": True,
+                "valve_payload_settings": {
+                    "payload_stop": "STOP",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Ice cream",
+            id="valve_state",
+        ),
+        pytest.param(
+            MOCK_VALVE_SUBENTRY_DATA_POSITION,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Ice cream"},
+            {"device_class": "water", "reports_position": True},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "position_closed": 0,
+                "position_open": 100,
+                "retain": True,
+                "optimistic": False,
+                "valve_payload_settings": {
+                    "payload_stop": "STOP",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Ice cream",
+            id="valve_postion",
+        ),
+        pytest.param(
+            MOCK_WATER_HEATER_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Boyler"},
+            {
+                "temperature_unit": "C",
+                "water_heater_feature_current_temperature": True,
+                "water_heater_feature_power": True,
+            },
+            (),
+            {
+                "mode_command_topic": "mode-command-topic",
+                "mode_command_template": "{{ value }}",
+                "mode_state_topic": "mode-state-topic",
+                "mode_state_template": "{{ value_json.mode }}",
+                "modes": ["off", "gas", "electric"],
+                # target temperature
+                "target_temperature_settings": {
+                    "temperature_command_topic": "temperature-command-topic",
+                    "temperature_command_template": "{{ value }}",
+                    "temperature_state_topic": "temperature-state-topic",
+                    "temperature_state_template": "{{ value_json.temperature }}",
+                    "min_temp": 43,
+                    "max_temp": 60,
+                    "precision": "0.1",
+                    "initial": 43,
+                },
+                # power settings
+                "water_heater_power_settings": {
+                    "power_command_topic": "power-command-topic",
+                    "power_command_template": "{{ value }}",
+                    "payload_on": "ON",
+                    "payload_off": "OFF",
+                },
+                # current temperature
+                "current_temperature_settings": {
+                    "current_temperature_topic": "current-temperature-topic",
+                    "current_temperature_template": "{{ value_json.temperature }}",
+                },
+            },
+            (
+                (
+                    {
+                        "modes": ["off", "gas"],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic#invalid"
+                        },
+                    },
+                    {"target_temperature_settings": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "modes": [],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic"
+                        },
+                    },
+                    {"modes": "empty_list_not_allowed"},
+                ),
+                (
+                    {
+                        "modes": ["off", "gas"],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic",
+                            "min_temp": 50.0,
+                            "max_temp": 45.0,
+                        },
+                    },
+                    {
+                        "target_temperature_settings": "max_below_min_temperature",
+                    },
+                ),
+            ),
+            "Milk notifier Boyler",
+            id="water_heater",
+        ),
     ],
 )
 async def test_subentry_configflow(
@@ -3770,6 +3977,10 @@ async def test_subentry_configflow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
     assert result["errors"] == {}
+    assert "description_placeholders" in result
+    for placeholder, translation in TRANSLATION_DESCRIPTION_PLACEHOLDERS.items():
+        assert placeholder in result["description_placeholders"]
+        assert result["description_placeholders"][placeholder] == translation
 
     # Process entity flow (initial step)
 

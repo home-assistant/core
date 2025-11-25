@@ -487,35 +487,17 @@ async def test_migrate_unique_id_virtual_components_roles(
 async def test_rpc_smoke_mute_alarm_button(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC smoke mute alarm button."""
     entity_id = f"{BUTTON_DOMAIN}.test_name_mute_alarm"
-    status = {
-        "sys": {"wakeup_period": 1000},
-        "smoke:0": {
-            "id": 0,
-            "alarm": False,
-            "mute": False,
-        },
-    }
-    monkeypatch.setattr(mock_rpc_device, "status", status)
-    config = {"smoke:0": {"id": 0, "name": None}}
-    monkeypatch.setattr(mock_rpc_device, "config", config)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(mock_rpc_device, "config", {"smoke:0": {"id": 0, "name": None}})
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    entry = await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(
-        hass,
-        BUTTON_DOMAIN,
-        "test_name_mute_alarm",
-        "smoke:0-smoke_mute",
-        entry,
-    )
 
     # Make device online
     mock_rpc_device.mock_online()
@@ -538,6 +520,12 @@ async def test_rpc_smoke_mute_alarm_button(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.smoke_mute_alarm.assert_called_once_with(0)
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(("action", "value"), [("turn_on", True), ("turn_off", False)])

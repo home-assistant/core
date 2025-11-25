@@ -82,6 +82,12 @@ set_program_and_options:
             - dishcare_dishwasher_program_maximum_cleaning
             - dishcare_dishwasher_program_mixed_load
             - dishcare_dishwasher_program_learning_dishwasher
+            - heating_ventilation_air_conditioning_air_conditioner_program_active_clean
+            - heating_ventilation_air_conditioning_air_conditioner_program_auto
+            - heating_ventilation_air_conditioning_air_conditioner_program_cool
+            - heating_ventilation_air_conditioning_air_conditioner_program_dry
+            - heating_ventilation_air_conditioning_air_conditioner_program_fan
+            - heating_ventilation_air_conditioning_air_conditioner_program_heat
             - laundry_care_dryer_program_cotton
             - laundry_care_dryer_program_synthetic
             - laundry_care_dryer_program_mix
@@ -136,6 +142,7 @@ set_program_and_options:
             - cooking_oven_program_microwave_90_watt
             - cooking_oven_program_microwave_180_watt
             - cooking_oven_program_microwave_360_watt
+            - cooking_oven_program_microwave_450_watt
             - cooking_oven_program_microwave_600_watt
             - cooking_oven_program_microwave_900_watt
             - cooking_oven_program_microwave_1000_watt
@@ -177,6 +184,28 @@ set_program_and_options:
             - laundry_care_washer_dryer_program_easy_care
             - laundry_care_washer_dryer_program_wash_and_dry_60
             - laundry_care_washer_dryer_program_wash_and_dry_90
+    air_conditioner_options:
+      collapsed: true
+      fields:
+        heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage:
+          example: 50
+          required: false
+          selector:
+            number:
+              min: 1
+              max: 100
+              step: 1
+              mode: box
+              unit_of_measurement: "%"
+        heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_mode:
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: fan_speed_mode
+              options:
+                - heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic
+                - heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual
     cleaning_robot_options:
       collapsed: true
       fields:

@@ -1,6 +1,7 @@
 """Test the Nederlandse Spoorwegen sensor."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -18,7 +19,7 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -28,6 +29,16 @@ from . import setup_integration
 from .const import API_KEY
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def mock_sensor_platform() -> Generator:
+    """Override PLATFORMS for NS integration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.PLATFORMS",
+        [Platform.SENSOR],
+    ) as mock_platform:
+        yield mock_platform
 
 
 async def test_config_import(
@@ -68,7 +79,35 @@ async def test_config_import(
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
 async def test_sensor(
     hass: HomeAssistant,
-    mock_nsapi,
+    mock_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_single_trip_sensor(
+    hass: HomeAssistant,
+    mock_single_trip_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_no_trips_sensor(
+    hass: HomeAssistant,
+    mock_no_trips_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,

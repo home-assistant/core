@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from ns_api import Trip
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -37,6 +38,33 @@ from .const import (
     ROUTE_MODEL,
 )
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
+
+
+def _get_departure_time(trip: Trip | None) -> datetime | None:
+    """Get next departure time from trip data."""
+    return trip.departure_time_actual or trip.departure_time_planned if trip else None
+
+
+def _get_time_str(time: datetime | None) -> str | None:
+    """Get time as string."""
+    return time.strftime("%H:%M") if time else None
+
+
+def _get_route(trip: Trip | None) -> list[str]:
+    """Get the route as a list of station names from trip data."""
+    if not trip or not (trip_parts := trip.trip_parts):
+        return []
+    route = []
+    if departure := trip.departure:
+        route.append(departure)
+    route.extend(part.destination for part in trip_parts)
+    return route
+
+
+def _get_delay(planned: datetime | None, actual: datetime | None) -> bool:
+    """Return True if delay is present, False otherwise."""
+    return bool(planned and actual and planned != actual)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +155,7 @@ async def async_setup_entry(
 
 
 class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
-    """Implementation of a NS Departure Sensor."""
+    """Implementation of a NS Departure Sensor (legacy)."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_attribution = "Data provided by NS"
@@ -163,94 +191,40 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             return None
 
         first_trip = route_data.first_trip
-        if first_trip.departure_time_actual:
-            return first_trip.departure_time_actual
-        return first_trip.departure_time_planned
+        return _get_departure_time(first_trip)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        route_data = self.coordinator.data
-        if not route_data:
-            return None
-
-        first_trip = route_data.first_trip
-        next_trip = route_data.next_trip
+        first_trip = self.coordinator.data.first_trip
+        next_trip = self.coordinator.data.next_trip
 
         if not first_trip:
             return None
 
-        route = []
-        if first_trip.trip_parts:
-            route = [first_trip.departure]
-            route.extend(k.destination for k in first_trip.trip_parts)
+        status = first_trip.status
 
-        # Static attributes
-        attributes = {
+        return {
             "going": first_trip.going,
-            "departure_time_planned": None,
-            "departure_time_actual": None,
-            "departure_delay": False,
+            "departure_time_planned": _get_time_str(first_trip.departure_time_planned),
+            "departure_time_actual": _get_time_str(first_trip.departure_time_actual),
+            "departure_delay": _get_delay(
+                first_trip.departure_time_planned,
+                first_trip.departure_time_actual,
+            ),
             "departure_platform_planned": first_trip.departure_platform_planned,
             "departure_platform_actual": first_trip.departure_platform_actual,
-            "arrival_time_planned": None,
-            "arrival_time_actual": None,
-            "arrival_delay": False,
+            "arrival_time_planned": _get_time_str(first_trip.arrival_time_planned),
+            "arrival_time_actual": _get_time_str(first_trip.arrival_time_actual),
+            "arrival_delay": _get_delay(
+                first_trip.arrival_time_planned,
+                first_trip.arrival_time_actual,
+            ),
             "arrival_platform_planned": first_trip.arrival_platform_planned,
             "arrival_platform_actual": first_trip.arrival_platform_actual,
-            "next": None,
-            "status": first_trip.status.lower() if first_trip.status else None,
+            "next": _get_time_str(_get_departure_time(next_trip)),
+            "status": status.lower() if status else None,
             "transfers": first_trip.nr_transfers,
-            "route": route,
+            "route": _get_route(first_trip),
             "remarks": None,
         }
-
-        # Planned departure attributes
-        if first_trip.departure_time_planned is not None:
-            attributes["departure_time_planned"] = (
-                first_trip.departure_time_planned.strftime("%H:%M")
-            )
-
-        # Actual departure attributes
-        if first_trip.departure_time_actual is not None:
-            attributes["departure_time_actual"] = (
-                first_trip.departure_time_actual.strftime("%H:%M")
-            )
-
-        # Delay departure attributes
-        if (
-            attributes["departure_time_planned"]
-            and attributes["departure_time_actual"]
-            and attributes["departure_time_planned"]
-            != attributes["departure_time_actual"]
-        ):
-            attributes["departure_delay"] = True
-
-        # Planned arrival attributes
-        if first_trip.arrival_time_planned is not None:
-            attributes["arrival_time_planned"] = (
-                first_trip.arrival_time_planned.strftime("%H:%M")
-            )
-
-        # Actual arrival attributes
-        if first_trip.arrival_time_actual is not None:
-            attributes["arrival_time_actual"] = first_trip.arrival_time_actual.strftime(
-                "%H:%M"
-            )
-
-        # Delay arrival attributes
-        if (
-            attributes["arrival_time_planned"]
-            and attributes["arrival_time_actual"]
-            and attributes["arrival_time_planned"] != attributes["arrival_time_actual"]
-        ):
-            attributes["arrival_delay"] = True
-
-        # Next trip attributes
-        if next_trip:
-            if next_trip.departure_time_actual is not None:
-                attributes["next"] = next_trip.departure_time_actual.strftime("%H:%M")
-            elif next_trip.departure_time_planned is not None:
-                attributes["next"] = next_trip.departure_time_planned.strftime("%H:%M")
-
-        return attributes

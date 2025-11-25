@@ -2170,7 +2170,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
         await condition.async_from_config(hass, config_3)
 
 
-async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
+async def test_platform_migrate_condition(hass: HomeAssistant) -> None:
     """Test a condition platform with a migration."""
 
     OPTIONS_SCHEMA_DICT = {
@@ -2236,6 +2236,29 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
         await async_validate_condition_config(hass, config_2_migrated)
         == config_2_migrated
     )
+
+
+async def test_platform_backwards_compatibility_for_new_style_configs(
+    hass: HomeAssistant,
+) -> None:
+    """Test backwards compatibility for old-style conditions with new-style configs."""
+    config_old_style = {
+        "condition": "numeric_state",
+        "entity_id": ["sensor.test"],
+        "above": 50,
+    }
+    result = await async_validate_condition_config(hass, config_old_style)
+    assert result == config_old_style
+
+    config_new_style = {
+        "condition": "numeric_state",
+        "options": {
+            "entity_id": ["sensor.test"],
+            "above": 50,
+        },
+    }
+    result = await async_validate_condition_config(hass, config_new_style)
+    assert result == config_old_style
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])

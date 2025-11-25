@@ -87,7 +87,11 @@ CONDITION_CLASSES: dict[str, list[str]] = {
         "Averses de neige faible",
         "Quelques flocons",
     ],
-    ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante"],
+    ATTR_CONDITION_SNOWY_RAINY: [
+        "Pluie et neige",
+        "Pluie verglaçante",
+        "Averses de pluie et neige",
+    ],
     ATTR_CONDITION_SUNNY: ["Ensoleillé"],
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],

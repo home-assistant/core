@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -247,14 +247,15 @@ class HomeConnectCoordinator(
                                             value=event.value,
                                         )
                                 else:
+                                    event_value = event.value
                                     if event_key in (
                                         EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                                         EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-                                    ):
+                                    ) and isinstance(event_value, str):
                                         await self.update_options(
                                             event_message_ha_id,
                                             event_key,
-                                            ProgramKey(cast(str, event.value)),
+                                            ProgramKey(event_value),
                                         )
                                     events[event_key] = event
                             self._call_event_listener(event_message)
