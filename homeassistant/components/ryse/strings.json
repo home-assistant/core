@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Already Configured",
+      "already_configured": "Already configured",
       "no_devices_found": "No RYSE BLE device found in pairing mode. Please Press PAIR button and retry"
     },
     "error": {
