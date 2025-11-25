@@ -1,6 +1,5 @@
 """Test the generic hygrostat config flow."""
 
-from datetime import timedelta
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
