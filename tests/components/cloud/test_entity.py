@@ -45,7 +45,7 @@ class DummyTool(llm.Tool):
     description = "Test tool"
     parameters = vol.Schema({vol.Required("value"): str})
 
-    async def async_call(self, hass, tool_input, llm_context):
+    async def async_call(self, hass: HomeAssistant, tool_input, llm_context):
         """No-op implementation."""
         return {"value": "done"}
 
