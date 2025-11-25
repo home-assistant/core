@@ -780,6 +780,7 @@ ignore = [
   "D213",     # Multi-line docstring summary should start at the second line
   "D406",     # Section name should end with a newline
   "D407",     # Section name underlining
+  "D417",     # Missing argument descriptions in docstring - to allow documenting only non-obvious parameters
   "E501",     # line too long
 
   "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
