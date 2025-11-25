@@ -2,6 +2,9 @@
   "services": {
     "scan": {
       "service": "mdi:magnify-scan"
+    },
+    "migrate": {
+      "service": "mdi:swap-horizontal"
     }
   }
 }
