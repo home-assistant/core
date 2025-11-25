@@ -178,7 +178,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.2
 
 # homeassistant.components.alexa_devices
-aioamazondevices==9.0.2
+aioamazondevices==9.0.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -240,7 +240,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.7.0
+aioesphomeapi==42.8.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -685,7 +685,7 @@ datapoint==0.12.1
 dbus-fast==3.1.2
 
 # homeassistant.components.debugpy
-debugpy==1.8.16
+debugpy==1.8.17
 
 # homeassistant.components.ecovacs
 deebot-client==16.3.0
@@ -763,7 +763,7 @@ elevenlabs==2.3.0
 elgato==5.1.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.12
+elkm1-lib==2.2.13
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4
@@ -1015,7 +1015,7 @@ habluetooth==5.7.0
 hanna-cloud==0.0.6
 
 # homeassistant.components.cloud
-hass-nabucasa==1.6.0
+hass-nabucasa==1.6.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1095,7 +1095,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.5.6
+imgw_pib==1.6.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.10
@@ -2190,7 +2190,7 @@ pyvlx==0.2.26
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.0.2
+pywaze==1.1.1
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.5
@@ -2502,7 +2502,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.5
+tuya-device-sharing-sdk==0.2.6
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
