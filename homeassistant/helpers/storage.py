@@ -550,9 +550,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     async def _async_write_data(self, data: dict) -> None:
         if "data_func" in data and is_callback(data["data_func"]):
             data["data"] = data.pop("data_func")()
-            mode, json_data = json_helper.prepare_save_json(
-                data, destination=self.path, encoder=self._encoder
-            )
+            mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
             await self.hass.async_add_executor_job(
                 self._write_prepared_data, mode, json_data
             )
@@ -563,9 +561,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         """Write the data."""
         if "data_func" in data:
             data["data"] = data.pop("data_func")()
-        mode, json_data = json_helper.prepare_save_json(
-            data, destination=self.path, encoder=self._encoder
-        )
+        mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
         self._write_prepared_data(mode, json_data)
 
     def _write_prepared_data(self, mode: str, json_data: str | bytes) -> None:

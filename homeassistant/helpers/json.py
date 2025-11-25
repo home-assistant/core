@@ -163,7 +163,6 @@ def _orjson_bytes_default_encoder(data: Any) -> bytes:
 def prepare_save_json(
     data: list | dict,
     *,
-    destination: str = "",
     encoder: type[json.JSONEncoder] | None = None,
 ) -> tuple[str, str | bytes]:
     """Prepare JSON data for saving to a file.
@@ -195,10 +194,7 @@ def prepare_save_json(
         formatted_data = format_unserializable_data(
             find_paths_unserializable_data(data, dump=dump)
         )
-        destination = f": {destination}" if destination else ""
-        msg = f"Failed to serialize to JSON{destination}. Bad data at {formatted_data}"
-        _LOGGER.error(msg)
-        raise SerializationError(msg) from error
+        raise SerializationError(f"Bad data at {formatted_data}") from error
     return (mode, json_data)
 
 
@@ -211,7 +207,11 @@ def save_json(
     atomic_writes: bool = False,
 ) -> None:
     """Save JSON data to a file."""
-    mode, json_data = prepare_save_json(data, destination=filename, encoder=encoder)
+    try:
+        mode, json_data = prepare_save_json(data, encoder=encoder)
+    except SerializationError as err:
+        _LOGGER.error("Failed to serialize to JSON: %s. %s", filename, err)
+        raise
     method = write_utf8_file_atomic if atomic_writes else write_utf8_file
     method(filename, json_data, private, mode=mode)
 
