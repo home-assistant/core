@@ -20,6 +20,7 @@ from homeassistant.components import http
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -52,9 +53,16 @@ class MusicAssistantAuthCallbackView(http.HomeAssistantView):
         token = request.query["token"]
 
         # Pass token directly to the config flow via user_input
-        await hass.config_entries.flow.async_configure(
-            flow_id=flow_id, user_input={CONF_TOKEN: token}
-        )
+        try:
+            await hass.config_entries.flow.async_configure(
+                flow_id=flow_id, user_input={CONF_TOKEN: token}
+            )
+        except UnknownFlow:
+            LOGGER.error("Authentication flow %s not found or expired", flow_id)
+            return http.web.Response(
+                text="Authentication flow expired or invalid. Please try again.",
+                status=400,
+            )
 
         # Return script to close the popup window
         return http.web.Response(
