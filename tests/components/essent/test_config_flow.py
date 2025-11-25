@@ -27,6 +27,12 @@ async def test_full_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Essent"
     assert result["data"] == {}
@@ -71,11 +77,5 @@ async def test_flow_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": error}
-
-    mock_essent_client.async_get_prices.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == error

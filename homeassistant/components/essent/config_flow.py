@@ -30,21 +30,18 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         client = EssentClient(async_get_clientsession(self.hass))
-        errors: dict[str, str] = {}
 
         try:
             await client.async_get_prices()
-        except (EssentConnectionError, EssentResponseError) as err:
-            _LOGGER.debug("Essent connection check failed: %s", err)
-            errors["base"] = "cannot_connect"
-        except EssentDataError as err:
-            _LOGGER.warning("Received invalid data while validating: %s", err)
-            errors["base"] = "invalid_data"
+        except (EssentConnectionError, EssentResponseError):
+            return self.async_abort(reason="cannot_connect")
+        except EssentDataError:
+            return self.async_abort(reason="invalid_data")
         except Exception:
             _LOGGER.exception("Unexpected error while validating the connection")
-            errors["base"] = "unknown"
+            return self.async_abort(reason="unknown")
 
-        if errors:
-            return self.async_show_form(step_id="user", errors=errors)
+        if user_input is None:
+            return self.async_show_form(step_id="user")
 
         return self.async_create_entry(title="Essent", data={})

@@ -18,7 +18,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EssentConfigEntry) -> bo
     # Start listener updates on the hour to advance cached tariffs
     coordinator.start_listener_schedule()
 
-    entry.async_on_unload(coordinator.async_shutdown)
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

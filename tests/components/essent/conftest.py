@@ -7,10 +7,6 @@ from essent_dynamic_pricing import EssentPrices
 import pytest
 
 from homeassistant.components.essent.const import DOMAIN
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -55,16 +51,3 @@ def mock_essent_client() -> Generator[AsyncMock]:
             load_json_object_fixture("prices.json", DOMAIN)
         )
         yield client
-
-
-@pytest.fixture
-async def setup_sensor_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_essent_client: AsyncMock,
-) -> MockConfigEntry:
-    """Set up Essent with sensor platform patched in."""
-    with patch("homeassistant.components.essent.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
-
-    return mock_config_entry

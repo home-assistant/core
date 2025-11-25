@@ -75,29 +75,3 @@ async def test_setup_retry_on_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_listener_reschedule_cancels_existing(
-    hass: HomeAssistant,
-    mock_essent_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Ensure scheduling cancels an existing listener before scheduling a new one."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    unsub_called = False
-
-    def _unsub() -> None:
-        nonlocal unsub_called
-        unsub_called = True
-
-    coordinator._unsub_listener = _unsub  # Pretend a listener is already scheduled
-    coordinator._schedule_listener_tick()
-
-    assert unsub_called is True
-    assert coordinator.listener_tick_scheduled is True
-
-    # Clean up the scheduled listener created by _schedule_listener_tick
-    coordinator._unsub_listener()
-    coordinator._unsub_listener = None

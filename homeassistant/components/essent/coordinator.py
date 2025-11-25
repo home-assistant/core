@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from essent_dynamic_pricing import (
@@ -25,11 +25,10 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-EssentData = EssentPrices
-type EssentConfigEntry = ConfigEntry["EssentDataUpdateCoordinator"]
+type EssentConfigEntry = ConfigEntry[EssentDataUpdateCoordinator]
 
 
-class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
+class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentPrices]):
     """Class to manage fetching Essent data."""
 
     config_entry: EssentConfigEntry
@@ -45,11 +44,6 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
         )
         self._client = EssentClient(async_get_clientsession(hass))
         self._unsub_listener: Callable[[], None] | None = None
-
-    @property
-    def listener_tick_scheduled(self) -> bool:
-        """Return whether the listener tick task is scheduled."""
-        return self._unsub_listener is not None
 
     def start_listener_schedule(self) -> None:
         """Start listener tick schedule after first successful data fetch."""
@@ -74,7 +68,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
             self._unsub_listener()
 
         now = dt_util.utcnow()
-        next_hour = now + UPDATE_INTERVAL
+        next_hour = now + timedelta(hours=1)
         next_run = datetime(
             next_hour.year,
             next_hour.month,
@@ -99,7 +93,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentData]):
             next_run,
         )
 
-    async def _async_update_data(self) -> EssentData:
+    async def _async_update_data(self) -> EssentPrices:
         """Fetch data from API."""
         try:
             return await self._client.async_get_prices()
