@@ -19,7 +19,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
-    CONF_APP_TYPE,
     CONF_ENDPOINT,
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
@@ -47,9 +46,6 @@ class HomeAssistantTuyaData(NamedTuple):
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
-    if CONF_APP_TYPE in entry.data:
-        raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
-
     token_listener = TokenListener(hass, entry)
     manager = Manager(
         TUYA_CLIENT_ID,
