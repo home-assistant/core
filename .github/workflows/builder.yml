@@ -14,6 +14,7 @@ env:
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
+  BASE_IMAGE_VERSION: "2025.11.0"
 
 jobs:
   init:
@@ -199,18 +200,9 @@ jobs:
       - name: Build variables
         id: vars
         shell: bash
-        env:
-          BASE_VERSION: "2025.11.0"
         run: |
-          echo "base_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "base_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ env.BASE_IMAGE_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "cache_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:latest" >> "$GITHUB_OUTPUT"
-
-          if [[ "${{ matrix.arch }}" == "amd64" ]]; then
-            echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.arch }}" == "aarch64" ]]; then
-            echo "platform=linux/arm64" >> "$GITHUB_OUTPUT"
-          fi
-
           echo "created=$(date --rfc-3339=seconds --utc)" >> "$GITHUB_OUTPUT"
 
       - name: Verify base image signature
