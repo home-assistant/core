@@ -164,7 +164,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 ) -> AsyncGenerator[
     conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
 ]:
-    """Transform an OpenAI delta stream into HA format."""
+    """Transform stream result into HA format."""
     last_summary_index = None
     last_role: Literal["assistant", "tool_result"] | None = None
     current_tool_call: ResponseFunctionToolCall | None = None
@@ -436,6 +436,8 @@ class BaseCloudLLMEntity(Entity):
         if tool_choice is not None:
             response_kwargs["tool_choice"] = tool_choice
 
+        response_kwargs["stream"] = True
+
         return response_kwargs
 
     async def _async_prepare_files_for_prompt(
@@ -505,7 +507,6 @@ class BaseCloudLLMEntity(Entity):
                 chat_log,
                 response_format,
             )
-            response_kwargs["stream"] = True
 
             try:
                 if type == "conversation":
