@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_average_today',
-    'unique_id': 'electricity_average_today',
+    'unique_id': 'electricity-average_today',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_average_today',
-    'unique_id': 'gas_average_today',
+    'unique_id': 'gas-average_today',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -147,7 +147,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_current_price_market_price',
-    'unique_id': 'electricity_current_price_market_price',
+    'unique_id': 'electricity-current_price_market_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -203,7 +203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_current_price',
-    'unique_id': 'electricity_current_price',
+    'unique_id': 'electricity-current_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -259,7 +259,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_current_price_ex_vat',
-    'unique_id': 'electricity_current_price_ex_vat',
+    'unique_id': 'electricity-current_price_ex_vat',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -315,7 +315,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_current_price_purchasing_fee',
-    'unique_id': 'electricity_current_price_purchasing_fee',
+    'unique_id': 'electricity-current_price_purchasing_fee',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -371,7 +371,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_current_price_tax',
-    'unique_id': 'electricity_current_price_tax',
+    'unique_id': 'electricity-current_price_tax',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -427,7 +427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_current_price_vat',
-    'unique_id': 'electricity_current_price_vat',
+    'unique_id': 'electricity-current_price_vat',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -483,7 +483,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_current_price_market_price',
-    'unique_id': 'gas_current_price_market_price',
+    'unique_id': 'gas-current_price_market_price',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -539,7 +539,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_current_price',
-    'unique_id': 'gas_current_price',
+    'unique_id': 'gas-current_price',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -595,7 +595,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_current_price_ex_vat',
-    'unique_id': 'gas_current_price_ex_vat',
+    'unique_id': 'gas-current_price_ex_vat',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -651,7 +651,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_current_price_purchasing_fee',
-    'unique_id': 'gas_current_price_purchasing_fee',
+    'unique_id': 'gas-current_price_purchasing_fee',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -707,7 +707,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_current_price_tax',
-    'unique_id': 'gas_current_price_tax',
+    'unique_id': 'gas-current_price_tax',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -763,7 +763,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_current_price_vat',
-    'unique_id': 'gas_current_price_vat',
+    'unique_id': 'gas-current_price_vat',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -819,7 +819,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_highest_price_today',
-    'unique_id': 'electricity_highest_price_today',
+    'unique_id': 'electricity-highest_price_today',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -875,7 +875,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_lowest_price_today',
-    'unique_id': 'electricity_lowest_price_today',
+    'unique_id': 'electricity-lowest_price_today',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -931,7 +931,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_next_price',
-    'unique_id': 'electricity_next_price',
+    'unique_id': 'electricity-next_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -987,7 +987,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_next_price',
-    'unique_id': 'gas_next_price',
+    'unique_id': 'gas-next_price',
     'unit_of_measurement': '€/m³',
   })
 # ---
