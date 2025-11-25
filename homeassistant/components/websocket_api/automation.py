@@ -104,8 +104,11 @@ def _get_automation_component_domains(
     If a filter is missing both domain and integration keys, None is added to the
     returned set.
     """
-    domains: set[str | None] = set()
     entity_filters_config = target_description.get("entity", [])
+    if not entity_filters_config:
+        return {None}
+
+    domains: set[str | None] = set()
     for entity_filter_config in entity_filters_config:
         filter_integration = entity_filter_config.get("integration")
         filter_domains = entity_filter_config.get("domain", [])
@@ -171,7 +174,7 @@ def _async_get_automation_components_for_target(
 
         entity_domain = entity_id.split(".")[0]
         entity_integration = entity_info["domain"]
-        for domain in (entity_domain, entity_integration):
+        for domain in (entity_domain, entity_integration, None):
             for component_data in domain_components.get(domain, []):
                 if component_data.component in matched_components:
                     continue
