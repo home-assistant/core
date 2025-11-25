@@ -7,7 +7,7 @@ import dataclasses
 from datetime import datetime
 from typing import Any
 
-from uiprotect.data.nvr import EventDetectedThumbnail
+from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -196,6 +196,15 @@ class ProtectDeviceVehicleEventEntity(
             self._thumbnail_timer_cancel()
             self._thumbnail_timer_cancel = None
 
+    @staticmethod
+    def _get_vehicle_thumbnails(event: Event) -> list[EventDetectedThumbnail]:
+        """Get vehicle thumbnails from event."""
+        if event.metadata and event.metadata.detected_thumbnails:
+            return [
+                t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
+            ]
+        return []
+
     @callback
     def _fire_vehicle_event(self, event_id: str) -> None:
         """Fire the vehicle detection event with best available thumbnail."""
@@ -205,18 +214,14 @@ class ProtectDeviceVehicleEventEntity(
             return
 
         # Get current vehicle thumbnails
-        current_thumbnails: list[EventDetectedThumbnail] = []
-        if event.metadata and event.metadata.detected_thumbnails:
-            current_thumbnails = [
-                t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
-            ]
-
+        current_thumbnails = self._get_vehicle_thumbnails(event)
         if not current_thumbnails:
             return
 
         # Start with just the event ID
         event_data: dict[str, Any] = {
             ATTR_EVENT_ID: event.id,
+            "thumbnail_count": len(current_thumbnails),
         }
 
         # Select best thumbnail
@@ -270,11 +275,7 @@ class ProtectDeviceVehicleEventEntity(
         # Check if detected_thumbnails just arrived for this event
         if event and event.type is EventType.SMART_DETECT:
             # Get current vehicle thumbnails
-            current_thumbnails: list[EventDetectedThumbnail] = []
-            if event.metadata and event.metadata.detected_thumbnails:
-                current_thumbnails = [
-                    t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
-                ]
+            current_thumbnails = self._get_vehicle_thumbnails(event)
 
             # Strategy: Wait 3 seconds after last thumbnail before firing event
             if current_thumbnails:
