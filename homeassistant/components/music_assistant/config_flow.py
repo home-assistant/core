@@ -25,7 +25,13 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import AUTH_SCHEMA_VERSION, CONF_TOKEN, DOMAIN, LOGGER
+from .const import (
+    AUTH_SCHEMA_VERSION,
+    CONF_TOKEN,
+    DOMAIN,
+    HASSIO_DISCOVERY_SCHEMA_VERSION,
+    LOGGER,
+)
 
 AUTH_CALLBACK_PATH = "/auth/music_assistant/callback"
 
@@ -78,28 +84,14 @@ STEP_AUTH_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
 def _parse_zeroconf_server_info(properties: dict[str, str]) -> ServerInfoMessage:
     """Parse zeroconf properties to ServerInfoMessage."""
 
-    def _parse_bool(value: str | bool) -> bool:
-        """Parse string boolean."""
-        if isinstance(value, bool):
-            return value
-        return value.lower() in ("true", "1", "yes")
-
-    def _parse_int(value: str | int) -> int:
-        """Parse string integer."""
-        if isinstance(value, int):
-            return value
-        return int(value)
-
     return ServerInfoMessage(
         server_id=properties["server_id"],
         server_version=properties["server_version"],
-        schema_version=_parse_int(properties["schema_version"]),
-        min_supported_schema_version=_parse_int(
-            properties["min_supported_schema_version"]
-        ),
+        schema_version=int(properties["schema_version"]),
+        min_supported_schema_version=int(properties["min_supported_schema_version"]),
         base_url=properties["base_url"],
-        homeassistant_addon=_parse_bool(properties["homeassistant_addon"]),
-        onboard_done=_parse_bool(properties["onboard_done"]),
+        homeassistant_addon=properties["homeassistant_addon"].lower() == "true",
+        onboard_done=properties["onboard_done"].lower() == "true",
     )
 
 
@@ -123,9 +115,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _ensure_callback_view_registered(self) -> None:
         """Ensure the auth callback view is registered."""
-        if self.hass.http is not None:
-            # register_view is idempotent - safe to call multiple times
-            self.hass.http.register_view(MusicAssistantAuthCallbackView())
+        # register_view is idempotent - safe to call multiple times
+        self.hass.http.register_view(MusicAssistantAuthCallbackView())
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -181,8 +172,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Music Assistant add-on.
         """
         # Build URL from add-on discovery info
-        # The add-on exposes the API on port 8095, but also has an internal-only
-        # port 8094 for the Home Assistant integration to connect to
+        # The add-on exposes the API on port 8095, but also hosts an internal-only
+        # webserver (default at port 8094) for the Home Assistant integration to connect to
+        # the info where the internal API is exposed is passed via discovery_info
         host = discovery_info.config["host"]
         port = discovery_info.config["port"]
         self.url = f"http://{host}:{port}"
@@ -355,15 +347,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         except (LookupError, KeyError, ValueError):
             return self.async_abort(reason="invalid_discovery_info")
 
-        LOGGER.debug(
-            "Zeroconf discovery: schema=%s, addon=%s, onboard_done=%s",
-            server_info.schema_version,
-            server_info.homeassistant_addon,
-            server_info.onboard_done,
-        )
-
-        # For servers with schema >= 28, apply additional filtering
-        if server_info.schema_version >= AUTH_SCHEMA_VERSION:
+        if server_info.schema_version >= HASSIO_DISCOVERY_SCHEMA_VERSION:
             # Ignore servers running as Home Assistant add-on
             # (they should be discovered through hassio discovery instead)
             if server_info.homeassistant_addon:
@@ -439,7 +423,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm reauth dialog."""
         if TYPE_CHECKING:
             assert self.url is not None
-            assert self.server_info is not None
 
         if user_input is not None:
             # Redirect to auth flow
