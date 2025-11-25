@@ -1029,7 +1029,9 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    mock_load_yaml.assert_called_once_with("services.yaml", None)
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
     assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, domain),
@@ -1117,7 +1119,9 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    mock_load_yaml.assert_called_once_with("services.yaml", None)
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
     assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, domain),

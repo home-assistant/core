@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_hardware",
   "integration_type": "system",
   "requirements": [
-    "universal-silabs-flasher==0.0.37",
+    "universal-silabs-flasher==0.1.2",
     "ha-silabs-firmware-client==0.3.0"
   ]
 }

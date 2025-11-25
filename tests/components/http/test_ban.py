@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from ipaddress import ip_address
+import logging
 import os
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
@@ -111,6 +112,60 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     assert resp.status == HTTPStatus.NOT_FOUND
 
     assert "Failed to load IP ban" in caplog.text
+
+
+async def test_access_from_banned_ip_with_invalid_ip_entry(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that invalid IP addresses in ban file are skipped gracefully.
+
+    An invalid IP entry (e.g., with typo like "Eo128.199.160.243") should
+    be logged as an error and skipped, allowing valid bans to still load.
+    The test ensures that valid IPs after invalid ones are still processed.
+    """
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    # Invalid IPs interspersed between valid ones to ensure continue works
+    data = {
+        "Eo128.199.160.243": {"banned_at": "2024-07-06T14:07:46"},
+        BANNED_IPS[0]: {"banned_at": "2016-11-16T19:20:03"},
+        "invalidip": {"banned_at": "2024-07-06T14:07:46"},
+        BANNED_IPS[1]: {"banned_at": "2016-11-16T19:20:03"},
+    }
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value=data,
+    ):
+        client = await aiohttp_client(app)
+
+    # Verify exactly 2 valid IPs were loaded (invalid ones skipped)
+    manager = app[KEY_BAN_MANAGER]
+    assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
+
+    # Valid banned IPs should still be blocked (even though they came after invalid ones)
+    for remote_addr in BANNED_IPS:
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.FORBIDDEN
+
+    # Non-banned IP should have access
+    set_real_ip("192.168.1.1")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    # Check that both invalid IP entries were logged
+    for ip in ("Eo128.199.160.243", "invalidip"):
+        assert (
+            "homeassistant.components.http.ban",
+            logging.ERROR,
+            f"Failed to load IP ban: invalid IP address {ip}",
+        ) in caplog.record_tuples
 
 
 async def test_no_ip_bans_file(
