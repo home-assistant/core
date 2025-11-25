@@ -194,7 +194,7 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        # Provide keep_alive in the initial user step (60 seconds)
+        # Keep_alive input data for test
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -204,11 +204,11 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
                 CONF_AC_MODE: False,
                 CONF_COLD_TOLERANCE: 0.3,
                 CONF_HOT_TOLERANCE: 0.3,
-                CONF_KEEP_ALIVE: 60,
+                CONF_KEEP_ALIVE: {"seconds": 60}, 
             },
         )
 
-        # Complete presets step
+        # Complete config flow
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -218,13 +218,14 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
 
         assert result["type"] == "create_entry"
 
-        # Keep-alive should be present in the created options
+        # Keep-alive should be a timedelta
         val = result["options"].get(CONF_KEEP_ALIVE)
         assert val is not None
-        # Accept either an int of seconds or a timedelta
+        # Let Home Assistant check timedelta object
         if hasattr(val, "total_seconds"):
             assert val.total_seconds() == 60
         else:
+            # What if it is an integer Does that happen?
             assert val == 60
 
         await hass.async_block_till_done()
