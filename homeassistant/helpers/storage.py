@@ -247,9 +247,18 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
         Args:
             serialize_in_event_loop: Whether to serialize data in the event loop.
+            Set to True (default) if data passed to async_save and data produced by
+            data_func passed to async_delay_save needs to be serialized in the event
+            loop because it is not thread safe.
+
             Set to False if the data passed to async_save and data produced by
             data_func passed to async_delay_save can safely be accessed from a
-            separate thread.
+            separate thread, i.e. the data is thread safe and not mutated by other
+            code while serialization is in progress.
+
+            Users should support serializing in a separate thread for stores which
+            are expected to store large amounts of data to avoid blocking the event
+            loop during serialization.
         """
         self.version = version
         self.minor_version = minor_version
@@ -453,8 +462,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         """Save data with an optional delay.
 
         data_func: A function that returns the data to save. If serialize_in_event_loop
-        is True, it will be called from the event loop, otherwise it will be called
-        from an executor.
+        is True, it will be called from and the returned data will be serialized in the
+        in the event loop. If serialize_in_event_loop is False, it will be called from
+        and the returned data will be serialized by a separate thread.
         """
         self._data = {
             "version": self.version,
