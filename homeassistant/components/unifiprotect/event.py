@@ -14,7 +14,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_at
 
 from . import Bootstrap
 from .const import (
@@ -39,6 +39,17 @@ from .data import (
     UFPConfigEntry,
 )
 from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
+
+
+# Select best thumbnail
+# Prefer thumbnails with LPR data, sorted by confidence
+# LPR can be in: 1) group.matched_name (UFP 6.0+) or 2) name field
+def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
+    """Sort key: (has_lpr, confidence, clock_best_wall)."""
+    has_lpr = bool((t.group and t.group.matched_name) or (t.name and len(t.name) > 0))
+    confidence = t.confidence if t.confidence else 0.0
+    clock = t.clock_best_wall.timestamp() if t.clock_best_wall else 0.0
+    return (has_lpr, confidence, clock)
 
 
 def _add_ulp_user_infos(
@@ -181,6 +192,7 @@ class ProtectDeviceVehicleEventEntity(
     entity_description: ProtectEventEntityDescription
     _thumbnail_timer_cancel: CALLBACK_TYPE | None = None
     _latest_event_id: str | None = None
+    _thumbnail_timer_due: float = 0.0
 
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
@@ -198,9 +210,13 @@ class ProtectDeviceVehicleEventEntity(
     def _async_timer_callback(self, *_: Any) -> None:
         """Handle timer expiration - fire the vehicle event."""
         self._thumbnail_timer_cancel = None
+        # Timer fired too early, re-arm and return
+        if self._thumbnail_timer_due > self.hass.loop.time():
+            self._async_set_thumbnail_timer()
+            return
+
         if self._latest_event_id:
             self._fire_vehicle_event(self._latest_event_id)
-            self._latest_event_id = None
 
     @staticmethod
     def _get_vehicle_thumbnails(event: Event) -> list[EventDetectedThumbnail]:
@@ -230,18 +246,6 @@ class ProtectDeviceVehicleEventEntity(
             "thumbnail_count": len(current_thumbnails),
         }
 
-        # Select best thumbnail
-        # Prefer thumbnails with LPR data, sorted by confidence
-        # LPR can be in: 1) group.matched_name (UFP 6.0+) or 2) name field
-        def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
-            """Sort key: (has_lpr, confidence, clock_best_wall)."""
-            has_lpr = bool(
-                (t.group and t.group.matched_name) or (t.name and len(t.name) > 0)
-            )
-            confidence = t.confidence if t.confidence else 0.0
-            clock = t.clock_best_wall.timestamp() if t.clock_best_wall else 0.0
-            return (has_lpr, confidence, clock)
-
         thumbnail = max(current_thumbnails, key=_thumbnail_sort_key)
 
         # Add confidence if available
@@ -266,6 +270,15 @@ class ProtectDeviceVehicleEventEntity(
         self.async_write_ha_state()
 
     @callback
+    def _async_set_thumbnail_timer(self) -> None:
+        """Set or reset the thumbnail timer."""
+        self._thumbnail_timer_cancel = async_call_at(
+            self.hass,
+            self._async_timer_callback,
+            self._thumbnail_timer_due,
+        )
+
+    @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -275,23 +288,23 @@ class ProtectDeviceVehicleEventEntity(
             self._event_end = event.end if event else None
 
         # Check if detected_thumbnails just arrived for this event
-        if event and event.type is EventType.SMART_DETECT:
-            # Get current vehicle thumbnails
-            current_thumbnails = self._get_vehicle_thumbnails(event)
+        if (
+            event
+            and event.type is EventType.SMART_DETECT
+            and self._get_vehicle_thumbnails(event)
+        ):
+            # If event ID changed, fire immediately for old event
+            if self._latest_event_id and self._latest_event_id != event.id:
+                self._fire_vehicle_event(self._latest_event_id)
 
-            # Strategy: Let timer fire at original time, process latest event
-            # Multiple events within window = 1 timer instead of N cancels + N schedules
-            if current_thumbnails:
-                # Always update to latest event ID
-                self._latest_event_id = event.id
-
-                # Only schedule timer if one isn't already running
-                if self._thumbnail_timer_cancel is None:
-                    self._thumbnail_timer_cancel = async_call_later(
-                        self.hass,
-                        VEHICLE_EVENT_DELAY_SECONDS,
-                        self._async_timer_callback,
-                    )
+            # Update to new event ID and schedule/extend timer
+            self._latest_event_id = event.id
+            self._thumbnail_timer_due = (
+                self.hass.loop.time() + VEHICLE_EVENT_DELAY_SECONDS
+            )
+            # Only schedule timer if one isn't already running
+            if self._thumbnail_timer_cancel is None:
+                self._async_set_thumbnail_timer()
 
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
