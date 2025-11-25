@@ -58,7 +58,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             return "mdi:led-strip-variant"
         else:
             return "mdi:triangle-outline"
-    
+
     @property
     def brightness(self) -> int:
         """Return the brightness of the light."""
