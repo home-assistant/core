@@ -7,13 +7,8 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
@@ -28,27 +23,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 # Integration is config entry only (deprecated YAML setup triggers repair issue)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Rejseplanen component from YAML (deprecated)."""
-    if DOMAIN in config:
-        # Create a repair issue to inform users to remove YAML configuration
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "yaml_deprecated",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="yaml_deprecated",
-        )
-        _LOGGER.warning(
-            "YAML configuration for Rejseplanen is deprecated. "
-            "Please remove the rejseplanen entry from your configuration.yaml "
-            "and set up the integration through the UI"
-        )
-
-    return True
 
 
 async def async_setup_entry(
@@ -78,7 +52,7 @@ async def async_setup_entry(
     except Exception as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Rejseplanen API: {ex}") from ex
 
-    # ✅ Register update listener for subentry changes - but use minimal reload
+    # Register update listener for subentry changes - but use minimal reload
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
     )

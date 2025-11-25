@@ -22,10 +22,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_point_in_time
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -68,7 +71,7 @@ class RejseplanenSensorEntityDescription(SensorEntityDescription):
     attr_fn: Callable[[list[Departure]], dict[str, Any]] | None = None
 
 
-# ✅ Define helper functions first, before SENSORS tuple
+# Define helper functions first, before SENSORS tuple
 def _calculate_due_in(date: Date, time: Time) -> int:
     """Calculate due in minutes."""
     tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
@@ -308,6 +311,28 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         ),
     ),
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Rejseplanen sensors (deprecated)."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_deprecated",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+    )
+    _LOGGER.warning(
+        "YAML configuration for Rejseplanen is deprecated. "
+        "Please remove the rejseplanen entry from your configuration.yaml "
+        "and set up the integration through the UI"
+    )
 
 
 async def async_setup_entry(

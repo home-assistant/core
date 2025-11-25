@@ -7,7 +7,6 @@ import zoneinfo
 from py_rejseplan.dataclasses.departure import DepartureType
 import pytest
 
-from homeassistant.components import rejseplanen
 from homeassistant.components.rejseplanen.const import DOMAIN
 from homeassistant.components.rejseplanen.sensor import (
     _calculate_due_in,
@@ -16,6 +15,7 @@ from homeassistant.components.rejseplanen.sensor import (
     _get_departure_timestamp,
     _get_departures_list_attributes,
     _get_next_departure_cleanup_time,
+    async_setup_platform,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import Platform
@@ -659,13 +659,17 @@ def test_get_departures_list_attributes() -> None:
     assert departure_info["is_cancelled"] is True
 
 
+@pytest.mark.asyncio
 async def test_yaml_configuration_creates_repair_issue(hass: HomeAssistant) -> None:
     """Test that YAML configuration creates a repair issue."""
     # Set up with YAML configuration
     config = {DOMAIN: {"api_key": "test_key"}}
 
-    result = await rejseplanen.async_setup(hass, config)
-    assert result is True
+    def dummy_add_entities(new_entities, update_before_add: bool = False) -> None:
+        """Dummy add entities function."""
+
+    result = await async_setup_platform(hass, config, dummy_add_entities, None)
+    assert result is None, "Setup should return None for YAML config"
 
     # Verify repair issue was created
     issue_registry = ir.async_get(hass)
