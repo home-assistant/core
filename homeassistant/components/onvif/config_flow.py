@@ -124,20 +124,6 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle user flow."""
-        if user_input:
-            if user_input["auto"]:
-                return await self.async_step_device()
-            return await self.async_step_configure()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
-        )
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -202,10 +188,10 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
         return self.async_abort(reason="already_configured")
 
-    async def async_step_device(
+    async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
-        """Handle WS-Discovery.
+        """Handle user flow with WS-Discovery.
 
         Let user choose between discovered devices and manual configuration.
         If no device is found allow user to manually input configuration.
@@ -246,7 +232,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 devices[device[CONF_HOST]] = description
 
             return self.async_show_form(
-                step_id="device",
+                step_id="user",
                 data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(devices)}),
             )
 

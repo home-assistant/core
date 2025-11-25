@@ -35,12 +35,6 @@
         "description": "Create camera entity for {profile} at {resolution} resolution?",
         "title": "Configure profiles"
       },
-      "device": {
-        "data": {
-          "host": "Select discovered ONVIF device"
-        },
-        "title": "Select ONVIF device"
-      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -51,9 +45,9 @@
       },
       "user": {
         "data": {
-          "auto": "Search automatically"
+          "host": "Select discovered ONVIF device"
         },
-        "description": "By selecting **Submit**, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
+        "description": "Select a discovered ONVIF device or choose to manually configure a device.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
         "title": "ONVIF device setup"
       }
     }
