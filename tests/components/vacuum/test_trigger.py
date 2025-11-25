@@ -24,7 +24,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_vacuums(hass: HomeAssistant) -> None:
+async def target_vacuums(hass: HomeAssistant) -> list[str]:
     """Create multiple vacuum entities associated with different targets."""
     return await target_entities(hass, "vacuum")
 

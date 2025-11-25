@@ -22,7 +22,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_fans(hass: HomeAssistant) -> None:
+async def target_fans(hass: HomeAssistant) -> list[str]:
     """Create multiple fan entities associated with different targets."""
     return await target_entities(hass, "fan")
 

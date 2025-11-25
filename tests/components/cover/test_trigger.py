@@ -23,7 +23,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_covers(hass: HomeAssistant) -> None:
+async def target_covers(hass: HomeAssistant) -> list[str]:
     """Create multiple cover entities associated with different targets."""
     return await target_entities(hass, "cover")
 

@@ -24,7 +24,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_lawn_mowers(hass: HomeAssistant) -> None:
+async def target_lawn_mowers(hass: HomeAssistant) -> list[str]:
     """Create multiple lawn mower entities associated with different targets."""
     return await target_entities(hass, "lawn_mower")
 

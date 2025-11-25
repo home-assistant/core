@@ -27,7 +27,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_alarm_control_panels(hass: HomeAssistant) -> None:
+async def target_alarm_control_panels(hass: HomeAssistant) -> list[str]:
     """Create multiple alarm control panel entities associated with different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
