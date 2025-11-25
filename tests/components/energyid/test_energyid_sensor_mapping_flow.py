@@ -1,5 +1,6 @@
 """Test EnergyID sensor mapping subentry flow (direct handler tests)."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -313,38 +314,56 @@ def test_get_suggested_entities_with_state_class(
     assert entity_entry.entity_id in result
 
 
+@pytest.mark.parametrize(
+    ("test_case"),
+    [
+        {
+            "name": "energy_original_device_class",
+            "unique_id": "energy_sensor",
+            "entity_id": "sensor.energy_test",
+            "original_device_class": SensorDeviceClass.ENERGY,
+            "device_class": None,
+            "state_value": "250",
+        },
+        {
+            "name": "power_original_device_class",
+            "unique_id": "power_sensor",
+            "entity_id": "sensor.power_test",
+            "original_device_class": SensorDeviceClass.POWER,
+            "device_class": None,
+            "state_value": "1500",
+        },
+        {
+            "name": "energy_user_override_device_class",
+            "unique_id": "override_sensor",
+            "entity_id": "sensor.override_test",
+            "original_device_class": None,
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_value": "300",
+        },
+    ],
+    ids=lambda x: x["name"],
+)
 def test_get_suggested_entities_with_device_class(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, test_case: dict[str, Any]
 ) -> None:
-    """Test that _get_suggested_entities includes sensor entities with energy device class."""
+    """Test that _get_suggested_entities includes sensor entities with various device class configurations."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "test",
-        "energy_sensor",
-        suggested_object_id="energy",
-        original_device_class=SensorDeviceClass.ENERGY,
+        test_case["unique_id"],
+        suggested_object_id=test_case["entity_id"].split(".", 1)[-1],
+        original_device_class=test_case["original_device_class"],
     )
-    hass.states.async_set(entity_entry.entity_id, "250")
+    if test_case["device_class"] is not None:
+        entity_registry.async_update_entity(
+            entity_entry.entity_id, device_class=test_case["device_class"]
+        )
+
+    hass.states.async_set(test_case["entity_id"], test_case["state_value"])
 
     result = _get_suggested_entities(hass)
-    assert entity_entry.entity_id in result
-
-
-def test_get_suggested_entities_with_original_device_class(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test that _get_suggested_entities includes sensor entities with power device class."""
-    entity_entry = entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "power_sensor",
-        suggested_object_id="power",
-        original_device_class=SensorDeviceClass.POWER,
-    )
-    hass.states.async_set(entity_entry.entity_id, "1500")
-
-    result = _get_suggested_entities(hass)
-    assert entity_entry.entity_id in result
+    assert test_case["entity_id"] in result
 
 
 async def test_subentry_entity_not_found_after_validation(
