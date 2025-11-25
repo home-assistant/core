@@ -21,5 +21,18 @@
       "name": "Motion"
     }
   },
-  "title": "Event"
+  "title": "Event",
+  "triggers": {
+    "detected": {
+      "description": "Triggers when an event is detected.",
+      "description_configured": "Triggers when an event is detected",
+      "fields": {
+        "event_type": {
+          "description": "The event types to trigger on. If empty, triggers on all event types.",
+          "name": "Event types"
+        }
+      },
+      "name": "When an event is detected"
+    }
+  }
 }
