@@ -37,8 +37,6 @@ ENV \
     UV_SYSTEM_PYTHON=true \
     UV_NO_CACHE=true
 
-ARG QEMU_CPU
-
 # Home Assistant S6-Overlay
 COPY rootfs /
 
