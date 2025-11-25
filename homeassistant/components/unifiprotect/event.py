@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import dataclasses
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
@@ -17,6 +17,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
 from . import Bootstrap
 from .const import (
@@ -183,6 +184,7 @@ class ProtectDeviceVehicleEventEntity(
     entity_description: ProtectEventEntityDescription
     _pending_event_id: str | None = None
     _thumbnail_timer_cancel: Callable[[], None] | None = None
+    _timer_finish_at: datetime | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
@@ -195,6 +197,7 @@ class ProtectDeviceVehicleEventEntity(
         if self._thumbnail_timer_cancel:
             self._thumbnail_timer_cancel()
             self._thumbnail_timer_cancel = None
+        self._timer_finish_at = None
 
     @staticmethod
     def _get_vehicle_thumbnails(event: Event) -> list[EventDetectedThumbnail]:
@@ -279,20 +282,30 @@ class ProtectDeviceVehicleEventEntity(
 
             # Strategy: Wait 3 seconds after last thumbnail before firing event
             if current_thumbnails:
-                # Cancel any existing timer and track this event
-                self._cancel_thumbnail_timer()
                 event_id = event.id
-                self._pending_event_id = event_id
-
-                # Start 3 second timer - must use callback wrapper for event loop safety
-                @callback
-                def _fire_event(_now: datetime) -> None:
-                    """Wrapper to fire event in event loop."""
-                    self._fire_vehicle_event(event_id)
-
-                self._thumbnail_timer_cancel = async_call_later(
-                    self.hass, VEHICLE_EVENT_DELAY_SECONDS, _fire_event
+                new_finish_at = dt_util.utcnow() + timedelta(
+                    seconds=VEHICLE_EVENT_DELAY_SECONDS
                 )
+
+                # Only reset timer if new event or pushing deadline further out
+                if (
+                    event_id != self._pending_event_id
+                    or self._timer_finish_at is None
+                    or new_finish_at > self._timer_finish_at
+                ):
+                    self._cancel_thumbnail_timer()
+                    self._pending_event_id = event_id
+                    self._timer_finish_at = new_finish_at
+
+                    # Start timer - must use callback wrapper for event loop safety
+                    @callback
+                    def _fire_event(_now: datetime) -> None:
+                        """Wrapper to fire event in event loop."""
+                        self._fire_vehicle_event(event_id)
+
+                    self._thumbnail_timer_cancel = async_call_later(
+                        self.hass, VEHICLE_EVENT_DELAY_SECONDS, _fire_event
+                    )
 
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
