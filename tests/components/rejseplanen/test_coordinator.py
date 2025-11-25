@@ -228,12 +228,15 @@ async def test_coordinator_get_filtered_departures_with_type_filter(
     """Test coordinator filters departures by departure type."""
     coordinator = init_integration.runtime_data
 
-    # Create mock departures with different product types
+    # Create mock departures with dynamic date and time based on now
+    base_dt = dt_util.now().replace(microsecond=0) + timedelta(minutes=15)
+    base_date = base_dt.strftime("%Y-%m-%d")
+
     mock_bus = MagicMock()
     mock_bus.stopExtId = 123456
     mock_bus.direction = "North"
-    mock_bus.date = "2025-11-06"
-    mock_bus.time = "10:00:00"
+    mock_bus.date = base_date
+    mock_bus.time = (base_dt + timedelta(minutes=0)).strftime("%H:%M:%S")
     mock_bus.rtDate = None
     mock_bus.rtTime = None
     mock_bus.product.cls_id = 1  # Bus type
@@ -241,8 +244,8 @@ async def test_coordinator_get_filtered_departures_with_type_filter(
     mock_train = MagicMock()
     mock_train.stopExtId = 123456
     mock_train.direction = "North"
-    mock_train.date = "2025-11-06"
-    mock_train.time = "10:05:00"
+    mock_train.date = base_date
+    mock_train.time = (base_dt + timedelta(minutes=5)).strftime("%H:%M:%S")
     mock_train.rtDate = None
     mock_train.rtTime = None
     mock_train.product.cls_id = 2  # Train type
@@ -250,15 +253,19 @@ async def test_coordinator_get_filtered_departures_with_type_filter(
     mock_metro = MagicMock()
     mock_metro.stopExtId = 123456
     mock_metro.direction = "North"
-    mock_metro.date = "2025-11-06"
-    mock_metro.time = "10:10:00"
+    mock_metro.date = base_date
+    mock_metro.time = (base_dt + timedelta(minutes=10)).strftime("%H:%M:%S")
     mock_metro.rtDate = None
     mock_metro.rtTime = None
     mock_metro.product.cls_id = 4  # Metro type
 
     # Set coordinator data with all three departures
     mock_board = MagicMock()
-    mock_board.departures = [mock_bus, mock_train, mock_metro]
+    mock_board.departures = [
+        mock_bus,
+        mock_train,
+        mock_metro,
+    ]
     coordinator.data = mock_board
 
     # Test filtering with departure_type_filter (bitflag for buses: 1)

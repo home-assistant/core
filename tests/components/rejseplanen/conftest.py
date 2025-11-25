@@ -1,6 +1,7 @@
 """Fixtures for Rejseplanen tests."""
 
 from collections.abc import Generator
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from py_rejseplan.dataclasses.departure import DepartureType
@@ -48,17 +49,24 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_departure_data() -> list[DepartureType]:
     """Return mock departure data."""
     mock_departure = MagicMock(spec=DepartureType)
+
+    mock_product = MagicMock()
+    mock_product.cls_id = 1  # Set to a valid filter value for your test
+    mock_departure.product = mock_product
+
     mock_departure.name = "Test Line"
     mock_departure.type = TransportClass.BUS
     mock_departure.direction = "North"
     mock_departure.stop = "Test Stop"
-    mock_departure.time = "12:00"
-    mock_departure.date = "2024-11-04"
+    mock_departure.time = datetime.now().time().replace(second=0, microsecond=0)
+    mock_departure.date = datetime.now().date()
     mock_departure.track = "1"
     mock_departure.final_stop = "Final Stop"
     mock_departure.messages = []
-    mock_departure.rtTime = "12:01"
-    mock_departure.rtDate = "2024-11-04"
+    mock_departure.rtTime = (
+        (datetime.now() + timedelta(minutes=1)).time().replace(second=0, microsecond=0)
+    )
+    mock_departure.rtDate = datetime.now().date()
     mock_departure.stopExtId = 123456  # Add missing stopExtId attribute
     return [mock_departure]
 

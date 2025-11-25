@@ -31,9 +31,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Rejseplanen from a config entry."""
     coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
-    config_entry.runtime_data = coordinator
 
-    # ✅ Create the service device entry
+    # Create the service device entry
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -45,12 +44,13 @@ async def async_setup_entry(
         configuration_url="https://www.rejseplanen.dk/",
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Rejseplanen API: {ex}") from ex
+
+    config_entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     # Register update listener for subentry changes - but use minimal reload
     config_entry.async_on_unload(
