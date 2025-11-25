@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientSession
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,17 +31,11 @@ class PranaSendBrightness:
         """Send brightness level (0-6 mapped) to the device."""
         mapping = {0: 0, 1: 1, 2: 2, 3: 4, 4: 8, 5: 16, 6: 32}
         brightness = mapping.get(brightness, 0)
-        request_data = {"brightness": brightness}
         _LOGGER.debug("Setting brightness to %s", brightness)
-        async with (
-            ClientSession() as session,
-            session.post(
-                f"http://{self.coordinator.entry.data.get('host')}:80/setBrightness",
-                json=request_data,
-            ) as resp,
-        ):
-            if resp.status != 200:
-                raise HomeAssistantError(f"HTTP {resp.status}")
+        try:
+            await self.coordinator.api_client.set_brightness(brightness=brightness)
+        except Exception as err:
+            raise HomeAssistantError(f"Error setting brightness: {err}") from err
 
 
 class PranaBrightness(LightEntity):
@@ -58,7 +50,6 @@ class PranaBrightness(LightEntity):
     def __init__(
         self,
         unique_id: str,
-        name: str,
         coordinator: PranaCoordinator,
         entry: ConfigEntry,
     ) -> None:
@@ -132,7 +123,6 @@ async def async_setup_entry(
         [
             PranaBrightness(
                 unique_id=f"{entry.entry_id}-brightness",
-                name="Display Brightness",
                 coordinator=coordinator,
                 entry=entry,
             )

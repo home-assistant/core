@@ -7,7 +7,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiohttp import ClientError, ClientSession
+from prana_local_api_client.exceptions import (
+    PranaApiCommunicationError,
+    PranaApiUpdateFailed,
+)
+from prana_local_api_client.prana_api_client import PranaLocalApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,33 +40,35 @@ class PranaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.entry = entry
         self.max_speed: int | None = None
 
+        host = self.entry.data.get("host")
+        if not host:
+            raise ValueError("Host is not specified in the config entry data")
+        self.api_client = PranaLocalApiClient(host=host, port=80)
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and normalize device state for all platforms."""
         _LOGGER.debug("Fetching data from Prana device")
+
         try:
-            state = await self.async_get_state()
-        except UpdateFailed:
-            # Pass through UpdateFailed unchanged
-            raise
-        except (ClientError, TimeoutError) as err:  # network related
+            async with self.api_client:
+                state = await self.api_client.get_state()
+        except PranaApiUpdateFailed as err:
+            raise UpdateFailed(f"HTTP error communicating with device: {err}") from err
+        except PranaApiCommunicationError as err:
             raise UpdateFailed(
                 f"Network error communicating with device: {err}"
             ) from err
         except Exception as err:
             raise UpdateFailed(f"Unexpected error updating device: {err}") from err
 
-        # Normalize fan max speeds (device reports *10 values)
-        try:
-            self.max_speed = state[PranaFanType.EXTRACT]["max_speed"] // 10
-            for key in (
-                PranaFanType.BOUNDED,
-                PranaFanType.SUPPLY,
-                PranaFanType.EXTRACT,
-            ):
-                if key in state:
-                    state[key]["max_speed"] = self.max_speed
-        except Exception:  # noqa: BLE001 - ignore malformed fan data
-            _LOGGER.debug("Fan speed normalization skipped due to malformed data")
+        self.max_speed = state[PranaFanType.EXTRACT]["max_speed"] // 10
+        for key in (
+            PranaFanType.BOUNDED,
+            PranaFanType.SUPPLY,
+            PranaFanType.EXTRACT,
+        ):
+            if key in state:
+                state[key]["max_speed"] = self.max_speed
 
         # Convert temperatures (device provides tenths of °C)
         for temp_key in (
@@ -76,13 +82,3 @@ class PranaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         _LOGGER.debug("Fetched state: %s", state)
         return state
-
-    async def async_get_state(self) -> dict[str, Any]:
-        """Perform the HTTP GET to retrieve raw state from device."""
-        async with (
-            ClientSession() as session,
-            session.get(f"http://{self.entry.data.get('host')}:80/getState") as resp,
-        ):
-            if resp.status != 200:
-                raise UpdateFailed(f"HTTP error {resp.status}")
-            return await resp.json()

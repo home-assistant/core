@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from aiohttp import ClientSession
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,14 +28,13 @@ class PranaSendSwitch:
 
     async def send(self) -> None:
         """Send the switch command."""
-        request_data = {"switchType": self.switch_type, "value": self.value}
-        url = f"http://{self.coordinator.entry.data.get('host')}:80/setSwitch"
-        async with (
-            ClientSession() as session,
-            session.post(url, json=request_data) as resp,
-        ):
-            if resp.status != 200:
-                raise HomeAssistantError(f"HTTP {resp.status}")
+
+        try:
+            await self.coordinator.api_client.set_switch(
+                switch_type=self.switch_type, value=self.value
+            )
+        except Exception as err:
+            raise HomeAssistantError(f"Error setting switch: {err}") from err
 
 
 class PranaSwitch(SwitchEntity):
@@ -50,7 +47,6 @@ class PranaSwitch(SwitchEntity):
     def __init__(
         self,
         unique_id: str,
-        name: str,
         coordinator: PranaCoordinator,
         switch_key: str,
         switch_type: str,
@@ -131,7 +127,6 @@ async def async_setup_entry(
         [
             PranaSwitch(
                 unique_id=f"{entry.entry_id}-bound",
-                name="Bound",
                 coordinator=coordinator,
                 switch_key="bounded",
                 switch_type=PranaSwitchType.BOUND,
@@ -139,7 +134,6 @@ async def async_setup_entry(
             ),
             PranaSwitch(
                 unique_id=f"{entry.entry_id}-heater",
-                name="Heater",
                 coordinator=coordinator,
                 switch_key="heater",
                 switch_type=PranaSwitchType.HEATER,
@@ -147,7 +141,6 @@ async def async_setup_entry(
             ),
             PranaSwitch(
                 unique_id=f"{entry.entry_id}-auto",
-                name="Auto",
                 coordinator=coordinator,
                 switch_key="Auto",
                 switch_type=PranaSwitchType.AUTO,
@@ -155,7 +148,6 @@ async def async_setup_entry(
             ),
             PranaSwitch(
                 unique_id=f"{entry.entry_id}-auto_plus",
-                name="Auto Plus",
                 coordinator=coordinator,
                 switch_key="Auto Plus",
                 switch_type=PranaSwitchType.AUTO_PLUS,
@@ -163,7 +155,6 @@ async def async_setup_entry(
             ),
             PranaSwitch(
                 unique_id=f"{entry.entry_id}-winter",
-                name="Winter",
                 coordinator=coordinator,
                 switch_key="winter",
                 switch_type=PranaSwitchType.WINTER,

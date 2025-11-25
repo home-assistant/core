@@ -28,7 +28,6 @@ class PranaSensor(SensorEntity):
     def __init__(
         self,
         unique_id: str,
-        name: str,
         coordinator: PranaCoordinator,
         sensor_key: str,
         device_info: DeviceInfo,
@@ -130,12 +129,11 @@ async def async_setup_entry(
         model="PRANA RECUPERATOR",
     )
 
-    def _maybe(sensor_type: str, key: str, label: str) -> PranaSensor | None:
+    def _maybe(sensor_type: str, key: str) -> PranaSensor | None:
         if coordinator.data.get(sensor_type) is None:
             return None
         return PranaSensor(
             unique_id=f"{entry.entry_id}-{key}",
-            name=label,
             coordinator=coordinator,
             sensor_key=key,
             device_info=device_info,
@@ -143,29 +141,13 @@ async def async_setup_entry(
         )
 
     sensors = [
-        _maybe(
-            PranaSensorType.INSIDE_TEMPERATURE,
-            "inside_temperature",
-            "Inside Temperature",
-        ),
-        _maybe(
-            PranaSensorType.OUTSIDE_TEMPERATURE,
-            "outside_temperature",
-            "Outside Temperature",
-        ),
-        _maybe(
-            PranaSensorType.INSIDE_TEMPERATURE_2,
-            "inside_temperature2",
-            "Inside Temperature 2",
-        ),
-        _maybe(
-            PranaSensorType.OUTSIDE_TEMPERATURE_2,
-            "outside_temperature2",
-            "Outside Temperature 2",
-        ),
-        _maybe(PranaSensorType.HUMIDITY, "humidity", "Humidity"),
-        _maybe(PranaSensorType.VOC, "voc", "VOC"),
-        _maybe(PranaSensorType.AIR_PRESSURE, "air_pressure", "Air Pressure"),
-        _maybe(PranaSensorType.CO2, "co2", "CO2"),
+        _maybe(PranaSensorType.INSIDE_TEMPERATURE, "inside_temperature"),
+        _maybe(PranaSensorType.OUTSIDE_TEMPERATURE, "outside_temperature"),
+        _maybe(PranaSensorType.INSIDE_TEMPERATURE_2, "inside_temperature2"),
+        _maybe(PranaSensorType.OUTSIDE_TEMPERATURE_2, "outside_temperature2"),
+        _maybe(PranaSensorType.HUMIDITY, "humidity"),
+        _maybe(PranaSensorType.VOC, "voc"),
+        _maybe(PranaSensorType.AIR_PRESSURE, "air_pressure"),
+        _maybe(PranaSensorType.CO2, "co2"),
     ]
     async_add_entities([s for s in sensors if s is not None], update_before_add=True)
