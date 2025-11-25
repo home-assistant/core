@@ -290,6 +290,7 @@ FLOWS = {
         "html5",
         "huawei_lte",
         "hue",
+        "hue_ble",
         "huisbaasje",
         "hunterdouglas_powerview",
         "husqvarna_automower",
