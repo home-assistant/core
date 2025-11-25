@@ -32,7 +32,7 @@
         "title": "Discovered Music Assistant server"
       },
       "hassio_confirm": {
-        "description": "Do you want to set up the Music Assistant add-on?",
+        "description": "Do you want to add the Music Assistant server to Home Assistant?",
         "title": "Discovered Music Assistant add-on"
       },
       "reauth_confirm": {
