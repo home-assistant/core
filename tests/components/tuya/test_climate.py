@@ -7,13 +7,18 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_TARGET_TEMP_STEP,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
@@ -29,6 +34,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import initialize_entry
 
@@ -48,6 +54,34 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
+async def test_us_customary_system(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: list[CustomerDevice],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test platform setup and discovery."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
+
+    for entity in entity_registry.entities.values():
+        state = hass.states.get(entity.entity_id)
+        assert state.attributes == snapshot(
+            name=entity.entity_id,
+            include=props(
+                ATTR_CURRENT_TEMPERATURE,
+                ATTR_MAX_TEMP,
+                ATTR_MIN_TEMP,
+                ATTR_TARGET_TEMP_STEP,
+                ATTR_TEMPERATURE,
+            ),
+        )
 
 
 @pytest.mark.parametrize(
