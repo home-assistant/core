@@ -600,7 +600,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         if (
             channel_name := get_rpc_channel_name(self.coordinator.device, self.key)
         ) and (
-            key := self.entity_description.translation_key
+            translation_key := self.entity_description.translation_key
             or (
                 self.entity_description.device_class
                 if self._default_to_device_class_name()
@@ -608,7 +608,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
             )
         ):
             self._attr_translation_placeholders = {"channel_name": channel_name}
-            self._attr_translation_key = f"{key}_with_channel_name"
+            self._attr_translation_key = f"{translation_key}_with_channel_name"
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
