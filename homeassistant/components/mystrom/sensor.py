@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import LIGHT_LUX, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
@@ -102,6 +102,7 @@ class MyStromSensor(SensorEntity):
         self._attr_unique_id = f"{mac}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
+            connections={(CONNECTION_NETWORK_MAC, mac)},
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=getattr(device, "firmware", None),
