@@ -1248,3 +1248,28 @@ S20_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+PRESENCE_SENSOR_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Presence Sensor",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xb8r\x9c\xbe\xcc\x00\x1a\x00\x82"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x10\xcc\xc8",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Presence Sensor",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb8r\x9c\xbe\xcc\x00\x1a\x00\x82"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x10\xcc\xc8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Presence Sensor"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
