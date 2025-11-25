@@ -16,6 +16,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
     NotifyEntity,
+    NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
@@ -329,6 +330,7 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
     def __init__(self, **values: Any) -> None:
         """Initialize the mock entity."""
         super().__init__(**values)
+        self._attr_supported_features = NotifyEntityFeature.TITLE
         self.send_message_mock_calls = MagicMock()
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
