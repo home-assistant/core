@@ -1,4 +1,4 @@
-"""Tests for Overkiz hybrid mode (local + cloud for same gateway)."""
+"""Unit tests for Overkiz hybrid mode (local + cloud for same gateway)."""
 
 from __future__ import annotations
 
