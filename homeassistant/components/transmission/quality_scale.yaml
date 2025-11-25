@@ -29,13 +29,19 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: |
+      Change to mock_setup_entry to avoid repetition when expanding tests.
 
   # Gold
-  devices: done
+  devices:
+    status: todo
+    comment: |
+      Add additional device detail including link to ui.
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -55,7 +61,10 @@ rules:
       Speed sensors change so frequently that disabling by default may be appropriate.
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: |
+      Add icons for sensors & switches.
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
