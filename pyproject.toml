@@ -544,7 +544,7 @@ filterwarnings = [
   "ignore:.*invalid escape sequence:SyntaxWarning:.*aprslib.parsing.common",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aprslib.parsing.common",
   # https://pypi.org/project/panasonic-viera/ - v0.4.2 - 2024-04-24
-  # https://github.com/florianholzapfel/panasonic-viera/blob/0.4.2/panasonic_viera/__init__.py#L789
+  # https://github.com/florianholzapfel/panasonic-viera/blob/0.4.4/panasonic_viera/remote_control.py#L665
   "ignore:.*invalid escape sequence:SyntaxWarning:.*panasonic_viera",
   # https://pypi.org/project/pyblackbird/ - v0.6 - 2023-03-15
   # https://github.com/koolsb/pyblackbird/pull/9 -> closed
