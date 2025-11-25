@@ -48,7 +48,7 @@ class RyseCoverEntity(CoverEntity):
         self._attr_is_closed: bool | None = None
         self._device.update_callback = self._update_position
         self._attr_device_info = DeviceInfo(
-            identifiers={("ryse", self._device.address)},
+            identifiers={(DOMAIN, self._device.address)},
             name=config_entry.title,
             manufacturer="RYSE",
             model="SmartShade BLE",
