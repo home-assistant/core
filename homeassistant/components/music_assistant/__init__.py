@@ -67,7 +67,6 @@ class MusicAssistantEntryData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
-    # Register services
     register_actions(hass)
 
     return True
