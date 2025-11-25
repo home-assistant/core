@@ -183,8 +183,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/automation/ @home-assistant/core
 /tests/components/automation/ @home-assistant/core
 /homeassistant/components/avea/ @pattyland
-/homeassistant/components/awair/ @ahayworth @danielsjf
-/tests/components/awair/ @ahayworth @danielsjf
+/homeassistant/components/awair/ @ahayworth @ricohageman
+/tests/components/awair/ @ahayworth @ricohageman
 /homeassistant/components/aws_s3/ @tomasbedrich
 /tests/components/aws_s3/ @tomasbedrich
 /homeassistant/components/axis/ @Kane610

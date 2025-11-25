@@ -186,7 +186,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aussie_broadband",
     "avea",
     "avion",
-    "awair",
     "aws",
     "axis",
     "azure_data_explorer",
