@@ -69,6 +69,8 @@ build.json @home-assistant/supervisor
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
 /tests/components/airnow/ @asymworks
+/homeassistant/components/airobot/ @mettolen
+/tests/components/airobot/ @mettolen
 /homeassistant/components/airos/ @CoMPaTech
 /tests/components/airos/ @CoMPaTech
 /homeassistant/components/airq/ @Sibgatulin @dl2080
@@ -181,8 +183,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/automation/ @home-assistant/core
 /tests/components/automation/ @home-assistant/core
 /homeassistant/components/avea/ @pattyland
-/homeassistant/components/awair/ @ahayworth @danielsjf
-/tests/components/awair/ @ahayworth @danielsjf
+/homeassistant/components/awair/ @ahayworth @ricohageman
+/tests/components/awair/ @ahayworth @ricohageman
 /homeassistant/components/aws_s3/ @tomasbedrich
 /tests/components/aws_s3/ @tomasbedrich
 /homeassistant/components/axis/ @Kane610
@@ -389,6 +391,8 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr/ @Robbie1221
 /homeassistant/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
+/homeassistant/components/duckdns/ @tr4nt0r
+/tests/components/duckdns/ @tr4nt0r
 /homeassistant/components/duke_energy/ @hunterjm
 /tests/components/duke_energy/ @hunterjm
 /homeassistant/components/duotecno/ @cereal2nd
@@ -468,6 +472,8 @@ build.json @home-assistant/supervisor
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco
 /tests/components/esphome/ @jesserockz @kbx81 @bdraco
+/homeassistant/components/essent/ @jaapp
+/tests/components/essent/ @jaapp
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
@@ -848,6 +854,8 @@ build.json @home-assistant/supervisor
 /tests/components/kraken/ @eifinger
 /homeassistant/components/kulersky/ @emlove
 /tests/components/kulersky/ @emlove
+/homeassistant/components/labs/ @home-assistant/core
+/tests/components/labs/ @home-assistant/core
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lamarzocco/ @zweckj
