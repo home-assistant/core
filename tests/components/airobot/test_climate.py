@@ -219,3 +219,32 @@ async def test_climate_unavailable_on_update_failure(
     state = hass.states.get("climate.test_thermostat")
     assert state
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("temp_floor", "temp_air", "expected_temp"),
+    [
+        (25.0, 22.0, 25.0),  # Floor sensor available - should use floor temp
+        (None, 22.0, 22.0),  # Floor sensor not available - should use air temp
+    ],
+)
+async def test_climate_current_temperature(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_status: ThermostatStatus,
+    mock_config_entry: MockConfigEntry,
+    temp_floor: float | None,
+    temp_air: float,
+    expected_temp: float,
+) -> None:
+    """Test current temperature prioritizes floor sensor when available."""
+    mock_status.temp_floor = temp_floor
+    mock_status.temp_air = temp_air
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test_thermostat")
+    assert state
+    assert state.attributes.get("current_temperature") == expected_temp
