@@ -1,4 +1,57 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "Camera is already configured",
+      "reconfigure_successful": "Camera reconfigured successfully",
+      "wrong_device": "The credentials provided are for a different camera"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the camera",
+      "invalid_auth": "Invalid authentication credentials",
+      "unknown": "Unexpected error occurred"
+    },
+    "step": {
+      "options": {
+        "data": {
+          "authentication": "Authentication type",
+          "control_light": "Enable light control",
+          "ffmpeg_arguments": "FFmpeg arguments",
+          "resolution": "Resolution",
+          "scan_interval": "Scan interval (seconds)",
+          "stream_source": "Stream source"
+        },
+        "description": "Configure additional options for your Amcrest camera.",
+        "title": "Amcrest camera options"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "name": "Name",
+          "password": "Password",
+          "port": "Port",
+          "username": "Username"
+        },
+        "description": "Enter the connection details for your Amcrest camera.",
+        "title": "Set up Amcrest camera"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "data": {
+          "authentication": "Authentication type",
+          "control_light": "Enable light control",
+          "ffmpeg_arguments": "FFmpeg arguments",
+          "resolution": "Resolution",
+          "scan_interval": "Scan interval (seconds)",
+          "stream_source": "Stream source"
+        },
+        "description": "Configure additional options for your Amcrest camera.",
+        "title": "Amcrest camera options"
+      }
+    }
+  },
   "services": {
     "disable_audio": {
       "description": "Disables audio stream.",
@@ -125,59 +178,6 @@
         }
       },
       "name": "Stop tour"
-    }
-  },
-  "config": {
-    "step": {
-      "user": {
-        "title": "Set up Amcrest camera",
-        "description": "Enter the connection details for your Amcrest camera.",
-        "data": {
-          "host": "Host",
-          "username": "Username",
-          "password": "Password",
-          "name": "Name",
-          "port": "Port"
-        }
-      },
-      "options": {
-        "title": "Amcrest camera options",
-        "description": "Configure additional options for your Amcrest camera.",
-        "data": {
-          "authentication": "Authentication type",
-          "resolution": "Resolution",
-          "stream_source": "Stream source",
-          "ffmpeg_arguments": "FFmpeg arguments",
-          "control_light": "Enable light control",
-          "scan_interval": "Scan interval (seconds)"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect to the camera",
-      "invalid_auth": "Invalid authentication credentials",
-      "unknown": "Unexpected error occurred"
-    },
-    "abort": {
-      "already_configured": "Camera is already configured",
-      "reconfigure_successful": "Camera reconfigured successfully",
-      "wrong_device": "The credentials provided are for a different camera"
-    }
-  },
-  "options": {
-    "step": {
-      "options": {
-        "title": "Amcrest camera options",
-        "description": "Configure additional options for your Amcrest camera.",
-        "data": {
-          "authentication": "Authentication type",
-          "resolution": "Resolution",
-          "stream_source": "Stream source",
-          "ffmpeg_arguments": "FFmpeg arguments",
-          "control_light": "Enable light control",
-          "scan_interval": "Scan interval (seconds)"
-        }
-      }
     }
   }
 }
