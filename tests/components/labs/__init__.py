@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_unordered import unordered
+
 
 def assert_stored_labs_data(
     hass_storage: dict[str, Any],
@@ -12,5 +14,5 @@ def assert_stored_labs_data(
         "version": 1,
         "minor_version": 1,
         "key": "core.labs",
-        "data": {"preview_feature_status": expected_data},
+        "data": {"preview_feature_status": unordered(expected_data)},
     }
