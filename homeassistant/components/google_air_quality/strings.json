@@ -132,7 +132,7 @@
           "heavily_polluted": "Heavily polluted",
           "heavy_air_pollution": "Heavy air pollution",
           "high_air_pollution": "High air pollution",
-          "high_air_quality": "High air pollution",
+          "high_air_quality": "High air quality",
           "high_health_risk": "High health risk",
           "horrible_air_quality": "Horrible air quality",
           "light_air_pollution": "Light air pollution",
@@ -172,13 +172,12 @@
           "very_bad_air_quality": "Very bad air quality",
           "very_good_air_quality": "Very good air quality",
           "very_high_air_pollution": "Very high air pollution",
-          "very_high_air_quality": "Very High air pollution",
+          "very_high_air_quality": "Very high air quality",
           "very_high_health_risk": "Very high health risk",
           "very_low_air_pollution": "Very low air pollution",
           "very_polluted": "Very polluted",
           "very_poor_air_quality": "Very poor air quality",
           "very_unfavorable_air_quality": "Very unfavorable air quality",
-          "very_unhealthy": "Very unhealthy air quality",
           "very_unhealthy_air_quality": "Very unhealthy air quality",
           "warning_air_pollution": "Warning level air pollution"
         }
