@@ -196,7 +196,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception during add-on discovery")
             return self.async_abort(reason="unknown")
 
-        # Check if server has completed onboarding
         if not server_info.onboard_done:
             return self.async_abort(reason="server_not_ready")
 
