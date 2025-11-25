@@ -5,9 +5,14 @@ from __future__ import annotations
 from pyvlx import PyVLX, PyVLXException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 
@@ -30,6 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
 
     entry.runtime_data = pyvlx
 
+    connections = None
+    if (mac := entry.data.get(CONF_MAC)) is not None:
+        connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -43,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         sw_version=(
             str(pyvlx.klf200.version.softwareversion) if pyvlx.klf200.version else None
         ),
+        connections=connections,
     )
 
     async def on_hass_stop(event):
@@ -51,6 +61,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         await pyvlx.disconnect()
 
     async def async_reboot_gateway(service_call: ServiceCall) -> None:
+        """Reboot the gateway (deprecated - use button entity instead)."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_reboot_service",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_reboot_service",
+            breaks_in_ha_version="2026.6.0",
+        )
+
         await pyvlx.reboot_gateway()
 
     entry.async_on_unload(
