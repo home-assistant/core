@@ -1,0 +1,26 @@
+{
+  "title": "Entity Migration",
+  "services": {
+    "scan": {
+      "name": "Scan for entity references",
+      "description": "Find all references to an entity across configurations.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "The entity to scan for references."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_entity_id": {
+      "message": "Invalid entity ID: {entity_id}"
+    },
+    "entity_not_found": {
+      "message": "Entity not found: {entity_id}"
+    },
+    "scan_failed": {
+      "message": "Failed to scan for entity references: {error}"
+    }
+  }
+}
