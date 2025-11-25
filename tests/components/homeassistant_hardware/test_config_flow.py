@@ -16,6 +16,7 @@ from ha_silabs_firmware_client import (
 import pytest
 from yarl import URL
 
+from homeassistant.components.homeassistant_hardware.const import Z2M_EMBER_DOCS_URL
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -577,10 +578,24 @@ async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
         assert pick_result["progress_action"] == "install_firmware"
         assert pick_result["step_id"] == "install_zigbee_firmware"
 
-        create_result = await consume_progress_flow(
+        show_z2m_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=("install_zigbee_firmware",),
+        )
+
+        # After firmware installation, Z2M docs link is shown
+        assert show_z2m_result["type"] is FlowResultType.FORM
+        assert show_z2m_result["step_id"] == "show_z2m_docs_url"
+        assert (
+            show_z2m_result["description_placeholders"]["z2m_docs_url"]
+            == Z2M_EMBER_DOCS_URL
+        )
+
+        # Submit the form to complete the flow
+        create_result = await hass.config_entries.flow.async_configure(
+            show_z2m_result["flow_id"],
+            user_input={},
         )
 
         assert create_result["type"] is FlowResultType.CREATE_ENTRY
