@@ -37,13 +37,19 @@ async def target_entities(hass: HomeAssistant, domain: str) -> None:
     config_entry.add_to_hass(hass)
 
     floor_reg = fr.async_get(hass)
-    floor = floor_reg.async_create("Test Floor")
+    floor = floor_reg.async_get_floor_by_name("Test Floor") or floor_reg.async_create(
+        "Test Floor"
+    )
 
     area_reg = ar.async_get(hass)
-    area = area_reg.async_create("Test Area", floor_id=floor.floor_id)
+    area = area_reg.async_get_area_by_name("Test Area") or area_reg.async_create(
+        "Test Area", floor_id=floor.floor_id
+    )
 
     label_reg = lr.async_get(hass)
-    label = label_reg.async_create("Test Label")
+    label = label_reg.async_get_label_by_name("Test Label") or label_reg.async_create(
+        "Test Label"
+    )
 
     device = dr.DeviceEntry(id="test_device", area_id=area.id, labels={label.label_id})
     mock_device_registry(hass, {device.id: device})
