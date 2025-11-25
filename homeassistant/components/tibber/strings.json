@@ -199,7 +199,7 @@
   },
   "exceptions": {
     "data_api_reauth_required": {
-      "message": "Reconnect Tibber so Home Assistant to enable the new Tibber Data API features."
+      "message": "Reconnect Tibber so Home Assistant can enable the new Tibber Data API features."
     },
     "graphql_required": {
       "message": "Configure the Tibber GraphQL API before calling this service."

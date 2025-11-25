@@ -50,7 +50,7 @@ class TibberRuntimeData:
             raise ConfigEntryAuthFailed("OAuth session not available")
         await self.session.async_ensure_token_valid()
         token = self.session.token
-        access_token = token.get(CONF_ACCESS_TOKEN)
+        access_token = token.get("access_token")
         if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
         if self._client is None:
