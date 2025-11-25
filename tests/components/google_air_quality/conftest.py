@@ -7,8 +7,10 @@ from unittest.mock import AsyncMock, Mock, patch
 from google_air_quality_api.model import AirQualityData
 import pytest
 
+from homeassistant.components.google_air_quality import CONF_REFERRER
 from homeassistant.components.google_air_quality.const import DOMAIN
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -34,47 +36,38 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_subentries() -> list[ConfigSubentryDataWithId]:
+    """Fixture for subentries."""
+    return [
+        ConfigSubentryDataWithId(
+            data={
+                CONF_LATITUDE: 10.1,
+                CONF_LONGITUDE: 20.1,
+            },
+            subentry_type="location",
+            title="Home",
+            subentry_id="home-subentry-id",
+            unique_id=None,
+        )
+    ]
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_subentries: list[ConfigSubentryDataWithId]
+) -> MockConfigEntry:
     """Fixture for a config and a subentry."""
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
-        data={"api_key": "test-api-key", "referrer": None},
+        data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
         entry_id="123456789",
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    "latitude": 10.1,
-                    "longitude": 20.1,
-                },
-                subentry_type="location",
-                title="Home",
-                subentry_id="home-subentry-id",
-                unique_id=None,
-            )
-        ],
+        subentries_data=[*mock_subentries],
     )
-    config_entry.add_to_hass(hass)
-    return config_entry
-
-
-@pytest.fixture(name="fixture_name")
-def mock_fixture_name() -> str | None:
-    """Provide a json fixture file to load air quality data."""
-    return None
-
-
-@pytest.fixture(name="api_error")
-def mock_api_error() -> Exception | None:
-    """Provide a json fixture file to load air quality data."""
-    return None
 
 
 @pytest.fixture(name="mock_api")
-def mock_client_api(
-    fixture_name: str,
-    api_error: Exception,
-) -> Generator[Mock]:
+def mock_client_api() -> Generator[Mock]:
     """Set up fake Google Air Quality API responses from fixtures."""
     responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
     with (
@@ -96,32 +89,15 @@ def mock_client_api(
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_api: Mock,
 ) -> AsyncGenerator[Any, Any]:
     """Fixture to set up the integration."""
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.google_air_quality.GoogleAirQualityApi",
         return_value=mock_api,
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        yield
-
-
-@pytest.fixture(name="setup_integration_and_subentry")
-async def mock_setup_integration_and_subentry(
-    hass: HomeAssistant,
-    config_and_subentry: MockConfigEntry,
-    mock_api: Mock,
-) -> AsyncGenerator[Any, Any]:
-    """Fixture to set up the integration with a subentry."""
-    config_and_subentry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.google_air_quality.GoogleAirQualityApi",
-        return_value=mock_api,
-    ):
-        await hass.config_entries.async_setup(config_and_subentry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield

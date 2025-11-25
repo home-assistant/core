@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.google_air_quality.const import (
     CONF_REFERRER,
     DOMAIN,
     SECTION_API_KEY_OPTIONS,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -51,7 +51,7 @@ async def test_create_entry(
 ) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -81,7 +81,7 @@ async def test_form_with_referrer(
 ) -> None:
     """Test we get the form and optional referrer is specified."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -123,7 +123,7 @@ async def test_form_exceptions(
 ) -> None:
     """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     mock_api.async_air_quality.side_effect = api_exception
@@ -177,8 +177,9 @@ async def test_form_api_key_already_configured(
     mock_api: AsyncMock,
 ) -> None:
     """Test user input for config_entry with API key that already exists."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -204,8 +205,9 @@ async def test_form_location_already_configured(
     mock_api: AsyncMock,
 ) -> None:
     """Test user input for a location that already exists."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -232,8 +234,9 @@ async def test_form_not_already_configured(
     mock_api: AsyncMock,
 ) -> None:
     """Test user input for config_entry different than the existing one."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -273,6 +276,7 @@ async def test_subentry_flow(
     mock_api: AsyncMock,
 ) -> None:
     """Test creating a location subentry."""
+    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -287,7 +291,7 @@ async def test_subentry_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "location"
 
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_NAME: "Work",
@@ -299,9 +303,9 @@ async def test_subentry_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Work"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Work"
+    assert result["data"] == {
         CONF_LATITUDE: 30.1,
         CONF_LONGITUDE: 40.1,
     }
@@ -321,6 +325,7 @@ async def test_subentry_flow_location_already_configured(
     mock_api: AsyncMock,
 ) -> None:
     """Test user input for a location that already exists."""
+    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     result = await hass.config_entries.subentries.async_init(
@@ -331,7 +336,7 @@ async def test_subentry_flow_location_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "location"
 
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_NAME: "Work",
@@ -342,8 +347,8 @@ async def test_subentry_flow_location_already_configured(
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
@@ -353,12 +358,11 @@ async def test_subentry_flow_entry_not_loaded(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test creating a location subentry when the parent entry is not loaded."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "location"),
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -36,7 +36,7 @@
               "referrer": "HTTP referrer"
             },
             "data_description": {
-              "referrer": "Specify this only if the API key has a [website application restriction](https://developers.google.com/maps/api-security-best-practices#restricting-api-keys)"
+              "referrer": "Specify this only if the API key has a [website application restriction]({restricting_api_keys_url})."
             },
             "name": "Optional API key options"
           }

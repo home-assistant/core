@@ -39,6 +39,9 @@ class AirQualitySensorEntityDescription(SensorEntityDescription):
     native_unit_of_measurement_fn: Callable[[AirQualityData], str | None] = (
         lambda _: None
     )
+    translation_placeholders_fn: Callable[[AirQualityData], dict[str, str]] | None = (
+        None
+    )
 
 
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
@@ -63,6 +66,9 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda x: x.indexes[1].aqi,
+        translation_placeholders_fn=lambda data: {
+            "local_aqi": data.indexes[1].display_name
+        },
     ),
     AirQualitySensorEntityDescription(
         key="local_category",
@@ -70,6 +76,9 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[1].category,
         options_fn=lambda x: x.indexes[1].category_options,
+        translation_placeholders_fn=lambda data: {
+            "local_aqi": data.indexes[1].display_name
+        },
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_dominant_pollutant",
@@ -84,6 +93,9 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.indexes[1].dominant_pollutant,
         options_fn=lambda x: x.indexes[1].pollutant_options,
+        translation_placeholders_fn=lambda data: {
+            "local_aqi": data.indexes[1].display_name
+        },
     ),
     AirQualitySensorEntityDescription(
         key="co",
@@ -157,7 +169,7 @@ class AirQualitySensorEntity(
     """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
 
     entity_description: AirQualitySensorEntityDescription
-    _attr_attribution = "Source: Includes air quality data from Google"
+    _attr_attribution = "Data provided by Google Air Quality"
     _attr_has_entity_name = True
 
     def __init__(
@@ -178,9 +190,10 @@ class AirQualitySensorEntity(
             name=subentry.title,
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_translation_placeholders = {
-            "local_aqi": coordinator.data.indexes[1].display_name
-        }
+        if description.translation_placeholders_fn:
+            self._attr_translation_placeholders = (
+                description.translation_placeholders_fn(coordinator.data)
+            )
 
     @property
     def native_value(self) -> StateType:

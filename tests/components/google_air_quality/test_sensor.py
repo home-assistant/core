@@ -20,6 +20,7 @@ async def test_sensor_snapshot(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Snapshot test of the sensors."""
+    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

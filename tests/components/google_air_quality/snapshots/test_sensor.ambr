@@ -39,7 +39,7 @@
 # name: test_sensor_snapshot[sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'carbon_monoxide',
       'friendly_name': 'Home Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -99,7 +99,7 @@
 # name: test_sensor_snapshot[sensor.home_lqi_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
       'friendly_name': 'Home LQI (DE) category',
       'options': list([
@@ -163,7 +163,7 @@
 # name: test_sensor_snapshot[sensor.home_lqi_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
       'friendly_name': 'Home LQI (DE) dominant pollutant',
       'options': list([
@@ -221,7 +221,7 @@
 # name: test_sensor_snapshot[sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'friendly_name': 'Home Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
@@ -274,7 +274,7 @@
 # name: test_sensor_snapshot[sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'friendly_name': 'Home Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
@@ -327,7 +327,7 @@
 # name: test_sensor_snapshot[sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'pm10',
       'friendly_name': 'Home PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -381,7 +381,7 @@
 # name: test_sensor_snapshot[sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'pm25',
       'friendly_name': 'Home PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -435,7 +435,7 @@
 # name: test_sensor_snapshot[sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'friendly_name': 'Home Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
@@ -494,7 +494,7 @@
 # name: test_sensor_snapshot[sensor.home_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
       'friendly_name': 'Home UAQI category',
       'options': list([
@@ -560,7 +560,7 @@
 # name: test_sensor_snapshot[sensor.home_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
       'friendly_name': 'Home UAQI dominant pollutant',
       'options': list([
@@ -620,7 +620,7 @@
 # name: test_sensor_snapshot[sensor.home_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Source: Includes air quality data from Google',
+      'attribution': 'Data provided by Google Air Quality',
       'device_class': 'aqi',
       'friendly_name': 'Home Universal Air Quality Index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
