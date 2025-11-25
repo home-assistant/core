@@ -27,7 +27,6 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     callback,
-    is_callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
@@ -242,8 +241,16 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         encoder: type[JSONEncoder] | None = None,
         minor_version: int = 1,
         read_only: bool = False,
+        serialize_in_event_loop: bool = True,
     ) -> None:
-        """Initialize storage class."""
+        """Initialize storage class.
+
+        Args:
+            serialize_in_event_loop: Whether to serialize data in the event loop.
+            Set to False if the data passed to async_save and data produced by
+            data_func passed to async_delay_save can safely be accessed from a
+            separate thread.
+        """
         self.version = version
         self.minor_version = minor_version
         self.key = key
@@ -259,6 +266,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._read_only = read_only
         self._next_write_time = 0.0
         self._manager = get_internal_store_manager(hass)
+        self._serialize_in_event_loop = serialize_in_event_loop
 
     @cached_property
     def path(self):
@@ -444,9 +452,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     ) -> None:
         """Save data with an optional delay.
 
-        data_func: A function that returns the data to save. If the function
-        is decorated with @callback, it will be called in the event loop. If
-        it is a regular function, it will be called from an executor.
+        data_func: A function that returns the data to save. If serialize_in_event_loop
+        is True, it will be called from the event loop, otherwise it will be called
+        from an executor.
         """
         self._data = {
             "version": self.version,
@@ -548,8 +556,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, data: dict) -> None:
-        if "data_func" in data and is_callback(data["data_func"]):
-            data["data"] = data.pop("data_func")()
+        if self._serialize_in_event_loop:
+            if "data_func" in data:
+                data["data"] = data.pop("data_func")()
             mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
             await self.hass.async_add_executor_job(
                 self._write_prepared_data, mode, json_data
