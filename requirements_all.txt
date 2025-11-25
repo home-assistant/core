@@ -43,9 +43,6 @@ PlexAPI==4.15.16
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
 
-# homeassistant.components.bluetooth_tracker
-# PyBluez==0.22
-
 # homeassistant.components.cast
 PyChromecast==14.0.9
 
@@ -702,9 +699,6 @@ brottsplatskartan==1.0.5
 # homeassistant.components.brunt
 brunt==1.2.0
 
-# homeassistant.components.bluetooth_tracker
-bt-proximity==0.2.1
-
 # homeassistant.components.bthome
 bthome-ble==3.15.0
 
@@ -779,7 +773,7 @@ datapoint==0.12.1
 dbus-fast==3.1.2
 
 # homeassistant.components.debugpy
-debugpy==1.8.16
+debugpy==1.8.17
 
 # homeassistant.components.decora_wifi
 decora-wifi==1.4
@@ -2630,7 +2624,7 @@ pyvlx==0.2.26
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.0.2
+pywaze==1.1.1
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.5
