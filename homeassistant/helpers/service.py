@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable, Sequence
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -46,7 +46,6 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
-from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -719,6 +718,193 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
+async def _run_entity_coros(
+    entities: list[Entity] | list[list[Entity]],
+    coros: Sequence[Coroutine[Any, Any, Any]],
+    call_context: Context,
+    update_pollables: bool = True,
+) -> dict[str, Any]:
+    """Run entity coroutines, handle exceptions, and return normalized results."""
+
+    async def _update_pollable_entities(
+        entities: list[Entity], call_context: Context
+    ) -> None:
+        """Set context and update pollable entities."""
+        pollable_entities = [e for e in entities if e.should_poll]
+        for e in pollable_entities:
+            e.async_set_context(call_context)
+        if pollable_entities:
+            await asyncio.gather(
+                *(e.async_update_ha_state(True) for e in pollable_entities)
+            )
+
+    batch_results: dict[str, Any] = {}
+
+    if coros:
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        for ents_for_batch, res in zip(entities, results, strict=True):
+            # Normalize to list for batch and non-batch entities
+            ents_list = (
+                ents_for_batch if isinstance(ents_for_batch, list) else [ents_for_batch]
+            )
+
+            if isinstance(res, BaseException):
+                _LOGGER.exception("Service call failed for %s", ents_list)
+                for e in ents_list:
+                    batch_results[e.entity_id] = None
+                continue
+
+            for e in ents_list:
+                batch_results[e.entity_id] = (
+                    res.get(e.entity_id) if isinstance(res, dict) else None
+                )
+
+    # Update pollable entities if requested
+    if update_pollables:
+        all_entities = [
+            e
+            for batch in entities
+            for e in (batch if isinstance(batch, list) else [batch])
+        ]
+        await _update_pollable_entities(all_entities, call_context)
+
+    # Always return a dictionary
+    return batch_results
+
+
+async def _handle_batchable_entities(
+    hass: HomeAssistant,
+    entities: list[Entity],
+    call: ServiceCall,
+    return_response: bool = True,
+) -> dict[str, Any] | None:
+    """Handle batching of entities, including normal entities and re-query for None results."""
+
+    def _prepare_entity_coros(
+        batches: dict[str, list[Entity]],
+        normal_entities: list[Entity],
+        call: ServiceCall,
+    ) -> tuple[list[list[Entity]], list[Coroutine[Any, Any, Any]]]:
+        """Return (entity_lists, coros) for batchable + normal entities."""
+        entity_lists: list[list[Entity]] = []
+        coros: list[Coroutine[Any, Any, Any]] = []
+
+        # Batchable
+        for config_entry_id, ents_for_batch in batches.items():
+            cls = type(ents_for_batch[0])
+            batch_method_name = getattr(cls, "_BATCH_MAP", {}).get(call.service)
+            if batch_method_name:
+                batch_method = getattr(cls, batch_method_name)
+                coros.append(
+                    batch_method(
+                        ents_for_batch,
+                        config_entry_id,
+                        **call.data,
+                        context=call.context,
+                    )
+                )
+                entity_lists.append(ents_for_batch)
+
+        # Normal
+        for entity in normal_entities:
+            coros.append(
+                entity.async_request_call(
+                    _handle_entity_call(
+                        call.hass, entity, call.service, call.data, call.context
+                    )
+                )
+            )
+            entity_lists.append([entity])
+
+        return entity_lists, coros
+
+    async def _run_query_for_none(
+        batch_results: dict[str, Any],
+        batches: dict[str, list[Entity]],
+        call: ServiceCall,
+    ) -> dict[str, Any]:
+        """Query batchable entities whose previous result was None."""
+        query_entity_lists: list[list[Entity]] = []
+        query_coros: list[Coroutine[Any, Any, Any]] = []
+
+        for config_entry_id, ents_for_batch in batches.items():
+            if any(batch_results.get(e.entity_id) is None for e in ents_for_batch):
+                cls = type(ents_for_batch[0])
+                batch_query_method = getattr(cls, "async_batch_query", None)
+                if batch_query_method:
+                    query_coros.append(
+                        batch_query_method(
+                            ents_for_batch,
+                            config_entry_id,
+                            **call.data,
+                            context=call.context,
+                        )
+                    )
+                    query_entity_lists.append(ents_for_batch)
+
+        if query_coros:
+            query_results = await _run_entity_coros(
+                query_entity_lists, query_coros, call.context, update_pollables=False
+            )
+            for entity_id, value in query_results.items():
+                if batch_results.get(entity_id) is None:
+                    batch_results[entity_id] = value
+
+        return batch_results
+
+    # --- Short-circuit if no batching is needed ---
+    if not any(getattr(type(e), "_BATCH_MAP", {}).get(call.service) for e in entities):
+        coros = [
+            e.async_request_call(
+                _handle_entity_call(hass, e, call.service, call.data, call.context)
+            )
+            for e in entities
+        ]
+        return await _run_entity_coros(entities, coros, call.context)
+
+    # --- Split entities into batchable and normal ---
+    batchable_entities: list[Entity] = []
+    normal_entities: list[Entity] = []
+
+    for entity in entities:
+        cls = type(entity)
+        batch_map = getattr(cls, "_BATCH_MAP", None)
+        batch_method_name = batch_map.get(call.service) if batch_map else None
+        batch_method = (
+            getattr(cls, batch_method_name, None) if batch_method_name else None
+        )
+
+        if batch_method:
+            batchable_entities.append(entity)
+        else:
+            normal_entities.append(entity)
+
+    # --- Prepare batches for batchable entities ---
+    registry = entity_registry.async_get(hass)
+    batches: dict[str, list[Entity]] = {}
+    for entity in batchable_entities:
+        entry = registry.async_get(entity.entity_id)
+        key = (
+            entry.config_entry_id
+            if entry and entry.config_entry_id
+            else entity.entity_id.split(".", 1)[0]
+        )
+        batches.setdefault(key, []).append(entity)
+
+    # --- Build coroutines ---
+    entity_lists, coros = _prepare_entity_coros(batches, normal_entities, call)
+
+    # Run all coroutines (update_pollables=False for query logic separately)
+    batch_results = await _run_entity_coros(
+        entity_lists, coros, call.context, update_pollables=True
+    )
+
+    # Run queries for batchable entities that returned None
+    batch_results = await _run_query_for_none(batch_results, batches, call)
+
+    return batch_results if return_response else None
+
+
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
@@ -733,6 +919,7 @@ async def entity_service_call(
 
     Calls all platforms simultaneously.
     """
+
     entity_perms: Callable[[str, str], bool] | None = None
     return_response = call.return_response
 
@@ -825,54 +1012,21 @@ async def entity_service_call(
         return None
 
     if len(entities) == 1:
-        # Single entity case avoids creating task
         entity = entities[0]
-        single_response = await _handle_entity_call(
-            hass, entity, func, data, call.context
-        )
-        if entity.should_poll:
-            # Context expires if the turn on commands took a long time.
-            # Set context again so it's there when we update
-            entity.async_set_context(call.context)
-            await entity.async_update_ha_state(True)
-        return {entity.entity_id: single_response} if return_response else None
 
-    # Use asyncio.gather here to ensure the returned results
-    # are in the same order as the entities list
-    results: list[ServiceResponse | BaseException] = await asyncio.gather(
-        *[
+        # Wrap the single entity call in a coroutine list
+        coros = [
             entity.async_request_call(
                 _handle_entity_call(hass, entity, func, data, call.context)
             )
-            for entity in entities
-        ],
-        return_exceptions=True,
-    )
+        ]
 
-    response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results, strict=False):
-        if isinstance(result, BaseException):
-            raise result from None
-        response_data[entity.entity_id] = result
+        # _run_entity_coros expects a list of entities (or list of lists)
+        result = await _run_entity_coros([entity], coros, call.context)
 
-    tasks: list[asyncio.Task[None]] = []
+        return result if return_response else None
 
-    for entity in entities:
-        if not entity.should_poll:
-            continue
-
-        # Context expires if the turn on commands took a long time.
-        # Set context again so it's there when we update
-        entity.async_set_context(call.context)
-        tasks.append(create_eager_task(entity.async_update_ha_state(True)))
-
-    if tasks:
-        done, pending = await asyncio.wait(tasks)
-        assert not pending
-        for future in done:
-            future.result()  # pop exception if have
-
-    return response_data if return_response and response_data else None
+    return await _handle_batchable_entities(hass, entities, call, return_response)
 
 
 async def _handle_entity_call(
