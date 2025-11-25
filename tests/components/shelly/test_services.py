@@ -1,6 +1,6 @@
 """Tests for Shelly services."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
@@ -24,7 +24,7 @@ async def test_service_get_kvs_value(
 
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
-    mock_rpc_device.call_rpc = AsyncMock(return_value={"value": "test_value"})
+    mock_rpc_device.kvs_get.return_value = {"value": "test_value"}
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -35,7 +35,7 @@ async def test_service_get_kvs_value(
     )
 
     assert response == {"value": "test_value"}
-    mock_rpc_device.call_rpc.assert_called_once_with("KVS.Get", {ATTR_KEY: "my_key"})
+    mock_rpc_device.kvs_get.assert_called_once_with("my_key")
 
 
 async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None:
@@ -99,7 +99,7 @@ async def test_service_get_kvs_value_exc(
 
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
-    mock_rpc_device.call_rpc = AsyncMock(side_effect=exc)
+    mock_rpc_device.kvs_get.side_effect = exc
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(

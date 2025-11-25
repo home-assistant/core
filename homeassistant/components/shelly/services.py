@@ -105,7 +105,7 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
         )
 
     try:
-        response = await runtime_data.rpc.device.call_rpc("KVS.Get", {ATTR_KEY: key})
+        response = await runtime_data.rpc.device.kvs_get(key)
     except RpcCallError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -145,9 +145,7 @@ async def async_set_kvs_value(call: ServiceCall) -> None:
         )
 
     try:
-        await runtime_data.rpc.device.call_rpc(
-            "KVS.Set", {ATTR_KEY: key, ATTR_VALUE: call.data[ATTR_VALUE]}
-        )
+        await runtime_data.rpc.device.kvs_set(key, call.data[ATTR_VALUE])
     except RpcCallError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
