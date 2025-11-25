@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["tfa-me-ha-local==1.0.1"]
+  "requirements": ["tfa-me-ha-local==1.0.2"]
 }

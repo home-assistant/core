@@ -1,7 +1,8 @@
 """TFA.me station integration: coordinator.py."""
 
+from datetime import datetime
 import logging
-import socket
+from typing import Any
 
 from tfa_me_ha_local.client import (
     TFAmeClient,
@@ -11,15 +12,16 @@ from tfa_me_ha_local.client import (
     TFAmeJSONError,
     TFAmeTimeoutError,
 )
-from tfa_me_ha_local.data import TFAmeDataForHA
 
 from homeassistant.components.sensor import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .data import resolve_tfa_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,82 +42,58 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         """Initialize data update coordinator."""
         self.host = host  # from config_entry.data[CONF_IP_ADDRESS]
         self.first_init = 0
-        self.ha = hass
-        self.config_entry = config_entry
         self.sensor_entity_list: list[str] = []  # [Entity ID strings]
         self.name_with_station_id = (
             name_with_station_id  # from config_entry.data[CONF_NAME_WITH_STATION_ID]
         )
         self.gateway_id = ""
-        self.poll_interval = interval  # former from config_entry.data[CONF_INTERVAL]
-        self.entities_added = 0
+        self.poll_interval = interval
+
+        # Resolve host only once for client construction:
+        resolved_host = resolve_tfa_host(host)
+
+        # Create a single reusable TFA.me client
+        session = async_get_clientsession(hass)
+        self._client = TFAmeClient(
+            resolved_host, "sensors", log_level=1, session=session
+        )
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=self.poll_interval,
-            config_entry=self.config_entry,
         )
 
     async def _async_update_data(self):
         """Request and update data."""
-        parsed_data = {}  # dict
-
-        # Try to get an IP for a mDNS host name:
-        # - when IP can be solved it returns the IP
-        # - when it is an IP it just returns the IP
-        if "-" in self.host:
-            # station ID, contains "-"
-            mdns_name = f"tfa-me-{self.host:}.local"
-            resolved_host = await self.resolve_mdns(mdns_name)
-        else:
-            resolved_host = self.host
+        parsed_data = {}  # dict for coordinator data
 
         # Try to update data from station URL: e.g. "http://192.168.1.38/sensors"
         try:
-            # New TFA.me client
-            tfa_me_client = TFAmeClient(resolved_host, "sensors", log_level=1)
-
             # Fetch all available sensors as JSON from TFA.me station
-            json_data = await tfa_me_client.async_get_sensors()
+            json_data = await self._client.async_get_sensors()
 
-            # New TFA.me data structure
-            tfa_me_data = TFAmeDataForHA(multiple_entities=True)
-
-            # Convert JSON to TFA.me data for HA
-            parsed_data = tfa_me_data.json_to_entities(json_data=json_data)
-            self.gateway_id = tfa_me_data.get_gateway_id()
+            # Convert JSON to entities dict. for HA coordinator
+            parsed_data = self.json_to_entities(json_data=json_data)
 
         # Specific error mapping
-        except (TFAmeTimeoutError, TFAmeConnectionError) as err:
-            # Device not reachable → after first start "NotReady", then "UpdateFailed"
-            msg: str = "Timeout general connection error: " + str(err.__doc__)
-            _LOGGER.error(msg)
-            if self.first_init == 0:
-                raise ConfigEntryNotReady(
-                    f"Cannot reach {resolved_host}: {err}"
-                ) from err
-            raise UpdateFailed(f"Connection problem: {err}") from err
-
         except (TFAmeHTTPError, TFAmeJSONError) as err:
             # Device responding but data invalid
-            msg: str = "HTTP or invalid response error: " + str(err.__doc__)
-            _LOGGER.error(msg)
+            _LOGGER.exception("Invalid response from TFA.me gateway %s", self.host)
             raise UpdateFailed(f"Invalid response: {err}") from err
 
-        except TFAmeException as err:
-            # All other client errors
-            msg: str = "All other client errors: " + str(err.__doc__)
-            _LOGGER.error(msg)
+        except (TFAmeTimeoutError, TFAmeConnectionError, TFAmeException) as err:
+            # Timeout, connection error, other unknown client error
+            _LOGGER.exception("Error while updating TFA.me data from %s", self.host)
             if self.first_init == 0:
-                raise ConfigEntryNotReady(f"TFA.me client error: {err}") from err
-            raise UpdateFailed(f"TFA.me client error: {err}") from err
+                raise ConfigEntryNotReady(f"Cannot reach {self.host}: {err}") from err
+            raise UpdateFailed(f"Connection problem: {err}") from err
 
-        except Exception as err:
-            # Fallback for unexpected errors
-            msg: str = "Fallback for unexpected errors: " + str(err.__doc__)
-            _LOGGER.error(msg)
+        except Exception as err:  # Fallback for unexpected errors
+            _LOGGER.exception(
+                "Unexpected error while updating TFA.me data from %s", self.host
+            )
             if self.first_init == 0:
                 raise ConfigEntryNotReady(f"Unexpected error: {err}") from err
             raise UpdateFailed(f"Unexpected error: {err}") from err
@@ -127,9 +105,75 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             # values are available with self.coordinator.data[self.entity_id]["keyword"]
             return parsed_data
 
-    async def resolve_mdns(self, host_str: str) -> str:
-        """Try to resolve host name and to get IP."""
+    def json_to_entities(self, json_data: dict) -> Any:
+        """Convert a TFA.me JSON dictionary into a HA dictionary for coordinator."""
+        parsed_data = {}
+
         try:
-            return socket.gethostbyname(host_str)  # Resolve: name to IP
-        except socket.gaierror:
-            return host_str  # Error, just return original string
+            # Get gateway ID
+            gateway_id: str = json_data.get("gateway_id", "tfame")
+            gateway_id = gateway_id.lower()
+            self.gateway_id = gateway_id
+            # Fallback time if "timestamp" is missing
+            formatted_time_str = datetime.now().replace(microsecond=0).isoformat() + "Z"
+
+            for sensor in json_data.get("sensors", []):
+                sensor_id = sensor["sensor_id"]
+
+                for m_name, values in sensor.get("measurements", {}).items():
+                    entity_id = f"sensor.{gateway_id}_{sensor_id}_{m_name}"
+
+                    # Base data for all entities
+                    base = {
+                        "sensor_id": sensor_id,
+                        "gateway_id": gateway_id,
+                        "sensor_name": sensor["name"],
+                        "measurement": m_name,
+                        "value": values["value"],
+                        "unit": values["unit"],
+                        "timestamp": sensor.get("timestamp", formatted_time_str),
+                        "ts": sensor["ts"],
+                    }
+                    parsed_data[entity_id] = base
+
+                    # Special cases
+                    # Low battery: remove unit
+                    if m_name == "lowbatt":
+                        parsed_data[entity_id]["unit"] = ""
+
+                    # Wind direction: create extra entity for degrees
+                    if m_name == "wind_direction":
+                        deg_id = f"{entity_id}_deg"
+                        parsed_data[deg_id] = {
+                            **base,
+                            "measurement": "wind_direction_deg",
+                            "unit": "°",
+                        }
+
+                    # Rain: relative, 1 hour, 24 hours
+                    if m_name == "rain":
+                        # relative
+                        parsed_data[f"{entity_id}_rel"] = {
+                            **base,
+                            "measurement": "rain_relative",
+                            "reset_rain": False,
+                        }
+
+                        # 1-hour rain
+                        parsed_data[f"{entity_id}_hour"] = {
+                            **base,
+                            "measurement": "rain_1_hour",
+                            "reset_rain": False,
+                        }
+
+                        # 24 hours rain
+                        parsed_data[f"{entity_id}_24hours"] = {
+                            **base,
+                            "measurement": "rain_24_hours",
+                            "reset_rain": False,
+                        }
+
+        except Exception as err:
+            raise TFAmeJSONError(f"Invalid JSON response: {err}") from err
+        else:
+            return parsed_data

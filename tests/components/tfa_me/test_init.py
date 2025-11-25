@@ -73,4 +73,3 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result is True
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]

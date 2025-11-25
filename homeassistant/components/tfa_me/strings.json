@@ -6,6 +6,7 @@
       "invalid_host": "Invalid IP or station ID.",
       "invalid_ip_host": "Invalid IP or station ID.",
       "invalid_name_with_station_id": "Invalid value for name_with_station_id",
+      "missing_identifier": "The station ID is missing in JSON.",
       "unknown": "Unexpected error."
     },
     "step": {
@@ -24,6 +25,54 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "barometric_pressure": {
+        "name": "Barometric pressure"
+      },
+      "co2": {
+        "name": "CO2, Air aquality"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "lowbatt": {
+        "name": "Low battery"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "rain_1_hour": {
+        "name": "Rain last hour"
+      },
+      "rain_24_hours": {
+        "name": "Rain last 24 hours"
+      },
+      "rain_relative": {
+        "name": "Relative rain"
+      },
+      "rssi": {
+        "name": "RSSI (Signal strength)"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_deg": {
+        "name": "Wind direction deg"
+      },
+
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      }
+    }
+  },
+
   "options": {
     "step": {
       "init": {

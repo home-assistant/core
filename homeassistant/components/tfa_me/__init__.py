@@ -21,15 +21,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> boo
     # Use default poll interval
     delta_interval = timedelta(seconds=LOCAL_POLL_INTERVAL)
 
-    # Use multiple entities option
+    # Use name with station ID option
     name_with_station_id = entry.data[CONF_NAME_WITH_STATION_ID]
 
-    # New DataUpdateCoordinator for cyclic requests
-    coordinator = TFAmeDataCoordinator(
+    # First request for sensor data
+    entry.runtime_data = coordinator = TFAmeDataCoordinator(
         hass, entry, host, delta_interval, name_with_station_id
     )
-
-    # First request for sensor data
     await coordinator.async_config_entry_first_refresh()
 
     # Save coordinator for later usage
@@ -37,7 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> boo
 
     assert entry.unique_id
 
-    _LOGGER.debug("Setting up platforms")
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -46,7 +43,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

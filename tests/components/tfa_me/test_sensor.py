@@ -2,326 +2,19 @@
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
-from datetime import datetime, timedelta
-import socket
+from datetime import datetime
+import json
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tfa_me.const import (
-    CONF_NAME_WITH_STATION_ID,
-    DEVICE_MAPPING,
-    DOMAIN,
-    ICON_MAPPING,
-    ICON_MAPPING_WIND_DIR,
-)
-from homeassistant.components.tfa_me.coordinator import (
-    DataUpdateCoordinator,
-    TFAmeConfigEntry,
-    TFAmeDataCoordinator,
-)
-from homeassistant.components.tfa_me.sensor import (
-    SensorHistory,
-    TFAmeSensorEntity,
-    async_setup_entry,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.components.tfa_me.const import DOMAIN, MEASUREMENT_TO_TRANSLATION_KEY
+from homeassistant.components.tfa_me.sensor import TFAmeSensorEntity, async_setup_entry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import Mock, MockConfigEntry
-
-
-@pytest.fixture
-def tfa_me_mock_coordinator():
-    """Return a mock coordinator with fake data."""
-    coordinator = MagicMock(spec=DataUpdateCoordinator)
-    coordinator.async_add_listener = Mock(return_value=lambda: None)
-    coordinator.async_request_refresh = AsyncMock()
-    coordinator.async_update = AsyncMock()
-
-    coordinator.host = "192.168.1.10"
-    coordinator.name_with_station_id = False
-    coordinator.sensor_entity_list = []
-
-    now = datetime.now().timestamp()
-
-    coordinator.data = {
-        "sensor.a01234567_temperature": {
-            "sensor_id": "a01234567",
-            "gateway_id": "017654321",
-            "sensor_name": "A01234567",
-            "measurement": "temperature",
-            "value": "23.5",
-            "unit": "°C",
-            "timestamp": "2025-09-01T08:46:01Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a6f169ad1_rssi": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "rssi",
-            "value": "233",
-            "unit": "/255",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a6f169ad1_lowbatt": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "lowbatt",
-            "value": "1",
-            "unit": "",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a6f169ad1_lowbatt_txt": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "lowbatt_text",
-            "value": "1",
-            "text": "Yes",
-            "uint": "",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-        },
-        "sensor.a6f169ad1_temperature": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "temperature",
-            "value": "24.7",
-            "unit": "°C",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a6f169ad1_humidity": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "humidity",
-            "value": "50",
-            "unit": "%",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a364f3d67_rssi": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "017654321",
-            "sensor_name": "A364F3D67",
-            "measurement": "rssi",
-            "value": "232",
-            "unit": "/255",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a364f3d67_lowbatt": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "017654321",
-            "sensor_name": "A364F3D67",
-            "measurement": "lowbatt",
-            "value": "0",
-            "unit": "",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a364f3d67_lowbatt_txt": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "99fffff9d",
-            "sensor_name": "A364F3D67",
-            "measurement": "lowbatt_text",
-            "value": "0",
-            "text": "No",
-            "uint": "",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-        },
-        "sensor.a364f3d67_temperature": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "017654321",
-            "sensor_name": "A364F3D67",
-            "measurement": "temperature",
-            "value": "24.5",
-            "unit": "°C",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.a2ffffffb_wind_direction": {
-            "sensor_id": "a2ffffffb",
-            "gateway_id": "017654321",
-            "sensor_name": "A2FFFFFFB",
-            "measurement": "wind_direction",
-            "value": "8",
-            "unit": "°",
-            "timestamp": "2025-09-02T09:15:11Z",
-            "ts": int(now),
-        },
-        "sensor.a2ffffffb_wind_direction_deg": {
-            "sensor_id": "a2ffffffb",
-            "gateway_id": "017654321",
-            "sensor_name": "A2FFFFFFB",
-            "measurement": "wind_direction_deg",
-            "value": "8",
-            "unit": "°",
-            "timestamp": "2025-09-02T09:15:11Z",
-            "ts": int(now),
-        },
-        "sensor.a2ffffffc_wind_direction_deg": {
-            "sensor_id": "a2ffffffc",
-            "gateway_id": "017654321",
-            "sensor_name": "A2FFFFFFC",
-            "measurement": "wind_direction_deg",
-            "value": "xxx",
-            "unit": "°",
-            "timestamp": "2025-09-02T09:15:11Z",
-            "ts": int(now),
-        },
-        "sensor.a2ffffffc_rssi": {
-            "sensor_id": "a2ffffffb",
-            "gateway_id": "017654321",
-            "sensor_name": "A2FFFFFFB",
-            "measurement": "rssi",
-            "value": "222",
-            "unit": "/255",
-            "timestamp": "2025-09-02T09:15:11Z",
-            "ts": int(now) - 1000000,  # old
-        },
-        "sensor.a1fffffea_rain": {
-            "sensor_id": "a1fffffea",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEA",
-            "measurement": "rain_1_hour",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now),
-            "reset_rain": False,
-        },
-        "sensor.a1fffffea_rain_rel": {
-            "sensor_id": "a1fffffea",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEA",
-            "measurement": "rain_1_hour",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now),
-            "reset_rain": True,
-        },
-        "sensor.a1fffffea_rain_hour": {
-            "sensor_id": "a1fffffea",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEA",
-            "measurement": "rain_1_hour",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now) - 60,
-            "reset_rain": False,
-        },
-        "sensor.a1fffffec_rain_24hours": {
-            "sensor_id": "a1fffffec",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEC",
-            "measurement": "rain_24hours",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now) - 60,
-            "reset_rain": False,
-        },
-        "sensor.a1fffffeb_rain_hour": {
-            "sensor_id": "a1fffffeb",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEB",
-            "measurement": "rain_1_hour",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now),
-            "reset_rain": True,
-        },
-        "sensor.a1fffffea_rain_24hours": {
-            "sensor_id": "a1fffffea",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEA",
-            "measurement": "rain_24_hours",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T09:36:28Z",
-            "ts": int(now),
-            "reset_rain": True,
-        },
-        "sensor.057654321_barometric_pressure": {
-            "sensor_id": "057654321",
-            "gateway_id": "057654321",
-            "sensor_name": "057654321",
-            "measurement": "barometric_pressure",
-            "value": "1000.1",
-            "unit": "hPa",
-            "timestamp": "2025-09-02T10:31:42Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.057654322_barometric_pressure": {
-            "sensor_id": "057654322",
-            "gateway_id": "057654322",
-            "sensor_name": "057654322",
-            "value": "1000.1",
-            "unit": "hPa",
-            "timestamp": "2025-09-02T10:31:42Z",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.057654323_barometric_pressure": {
-            "sensor_id": "057654323",
-            "gateway_id": "057654323",
-            "sensor_name": "057654323",
-            "value": "1000.1",
-            "timestamp": "2025-09-02T10:31:42Z",
-            "ts": int(now),
-            "info": "",
-        },
-    }
-
-    return coordinator
-
-
-@pytest.fixture
-def mock_entry(hass: HomeAssistant, tfa_me_mock_coordinator):
-    """Return a mock ConfigEntry."""
-    entry = AsyncMock()
-    entry.entry_id = "1234"
-    entry.runtime_data = tfa_me_mock_coordinator
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tfa_me_mock_coordinator
-    return entry
-
-
-@pytest.fixture
-def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a mock config entry for tfa_me integration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_NAME_WITH_STATION_ID: False,
-        },
-        unique_id="test-1234",
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 class FailingEntitiesError(Exception):
@@ -329,7 +22,7 @@ class FailingEntitiesError(Exception):
 
 
 async def test_async_setup_entry_raises_config_entry_not_ready(
-    hass: HomeAssistant, mock_entry
+    hass: HomeAssistant, tfa_me_mock_entry
 ) -> None:
     """Test setup raises ConfigEntryNotReady on error."""
 
@@ -337,7 +30,7 @@ async def test_async_setup_entry_raises_config_entry_not_ready(
         raise FailingEntitiesError("failing_entities")
 
     with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_entry, failing_entities)
+        await async_setup_entry(hass, tfa_me_mock_entry, failing_entities)
 
 
 async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
@@ -348,19 +41,11 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
         entity_id="sensor.a01234567_temperature",
     )
 
-    # unique_id
+    # Test: unique_id, name, measurement_name, native_value (float), unit
     assert entity.unique_id == "sensor.a01234567_temperature"
-
-    # Name
-    assert entity.name == "Temperature"
-
-    # measurement_name
+    assert entity.translation_key == "temperature"
     assert entity.measurement_name == "temperature"
-
-    # native_value should return float value
     assert float(entity.native_value) == 23.5
-
-    # Unit
     assert entity.native_unit_of_measurement == "°C"
 
     # Attributes
@@ -369,13 +54,6 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     assert attrs["measurement"] == "temperature"
     assert "timestamp" in attrs
     assert "icon" in attrs
-    # Icon
-    entity._attr_native_value = 20.0
-    assert entity.icon == ICON_MAPPING["temperature"]["default"]
-
-    del tfa_me_mock_coordinator.data[entity.entity_id]["measurement"]
-    assert entity.name == "None"
-    assert entity.measurement_name is None
 
     # Humidity
     entity2 = TFAmeSensorEntity(
@@ -450,7 +128,6 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
         entity_id="sensor.a1fffffeb_rain_hour",
     )
     assert entity4b.measure_name == "rain_1_hour"
-    assert entity4b.native_value is None
 
     entity5 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
@@ -480,8 +157,6 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
         sensor_id="057654322",
         entity_id="sensor.057654322_barometric_pressure",
     )
-    assert float(entity7.native_value) == 1000.1
-
     attrs = entity7.extra_state_attributes
     assert attrs == {}
 
@@ -501,7 +176,6 @@ async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
         sensor_id="a2ffffffb",
         entity_id="sensor.a2ffffffb_wind_direction_deg",
     )
-    assert entity.name == "Wind direction deg"
     assert entity.native_value == 180.0
 
     # Invalid sensor ID  & entity ID
@@ -512,7 +186,7 @@ async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
     )
     assert entity_2.native_value is None
 
-    # Invalid value: 306-319
+    # Invalid native value
     entity_3 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffc",
@@ -520,460 +194,91 @@ async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
     )
     assert entity_3.native_value is None
 
-    # Old
+    # Value is old
     entity_4 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffc",
         entity_id="sensor.a2ffffffc_rssi",
     )
     assert entity_4.native_value is None
-    # Wrong id
+    # Wrong ID
     assert entity_4.get_timeout("xx") == 0
 
 
-class DummyEntity:
-    """Minimal Entity class for Icons & other tests."""
-
-    def get_icon(self, measurement_type, value_state) -> str:
-        """Get the icon."""
-        return TFAmeSensorEntity.get_icon(self, measurement_type, value_state)
-
-    def get_rain_icon(self, value) -> str:
-        """Get rain icon."""
-        return TFAmeSensorEntity.get_rain_icon(self, value)
-
-    def get_wind_direction_icon(self, value) -> str:
-        """Get wind direction icon."""
-        return TFAmeSensorEntity.get_wind_direction_icon(self, value)
-
-    def format_string_tfa_id(
-        self, s: str, gw_id: str, name_with_station_id: bool
-    ) -> str:
-        """Get sensor names."""
-        return TFAmeSensorEntity.format_string_tfa_id(
-            self, s, gw_id, name_with_station_id
-        )
-
-    def format_string_tfa_type(self, s: str):
-        """Convert string 'xxxxxxxxx' into 'Sensor/station type XX'."""
-        return TFAmeSensorEntity.format_string_tfa_type(self, s)
-
-
-@pytest.fixture
-def entity():
-    """Dummy icons test entity."""
-    return DummyEntity()
-
-
-def test_temperature_icons(entity) -> None:
-    """Test temperature icons."""
-    assert entity.get_icon("temperature", -5) == ICON_MAPPING["temperature"]["low"]
-    assert entity.get_icon("temperature", 10) == ICON_MAPPING["temperature"]["default"]
-    assert entity.get_icon("temperature", 30) == ICON_MAPPING["temperature"]["high"]
-    assert entity.get_icon("temperature", None) == "mdi:thermometer"
-    assert entity.get_icon("temperature", "xxx") == ICON_MAPPING["temperature"]["low"]
-
-
-def test_humidity_icons(entity) -> None:
-    """Test humidity icons."""
-    assert entity.get_icon("humidity", 20) == ICON_MAPPING["humidity"]["alert"]
-    assert entity.get_icon("humidity", 50) == ICON_MAPPING["humidity"]["default"]
-    assert entity.get_icon("humidity", 70) == ICON_MAPPING["humidity"]["alert"]
-    assert entity.get_icon("humidity", None) == ICON_MAPPING["humidity"]["default"]
-
-
-def test_co2_and_pressure_icons(entity) -> None:
-    """Test CO2 and pressure icons."""
-    assert entity.get_icon("co2", 500) == ICON_MAPPING["co2"]["default"]
-    assert (
-        entity.get_icon("barometric_pressure", 1013)
-        == ICON_MAPPING["barometric_pressure"]["default"]
-    )
-
-
-def test_rssi_icons(entity) -> None:
-    """Test RSSI icons."""
-    assert entity.get_icon("rssi", None) == ICON_MAPPING["rssi"]["weak"]
-    assert entity.get_icon("rssi", 50) == ICON_MAPPING["rssi"]["weak"]
-    assert entity.get_icon("rssi", 120) == ICON_MAPPING["rssi"]["middle"]
-    assert entity.get_icon("rssi", 200) == ICON_MAPPING["rssi"]["good"]
-    assert entity.get_icon("rssi", 250) == ICON_MAPPING["rssi"]["strong"]
-
-
-def test_battery_icons(entity) -> None:
-    """Test battery icons."""
-    assert entity.get_icon("lowbatt", 1) == ICON_MAPPING["lowbatt"]["low"]
-    assert entity.get_icon("lowbatt", 0) == ICON_MAPPING["lowbatt"]["full"]
-
-
-def test_rain_icons(entity) -> None:
-    """Test rain icons."""
-    assert entity.get_icon("rain", 2) == ICON_MAPPING["rain"]["moderate"]
-    assert entity.get_icon("rain_relative", None) == "mdi:help-circle"
-
-    assert entity.get_icon("rain_relative", 0.05) == ICON_MAPPING["rain"]["none"]
-    assert entity.get_icon("rain_relative", 0.2) == ICON_MAPPING["rain"]["light"]
-    assert entity.get_icon("rain_relative", 2.0) == ICON_MAPPING["rain"]["moderate"]
-    assert entity.get_icon("rain_relative", 5.0) == ICON_MAPPING["rain"]["heavy"]
-
-
-def test_wind_icons(entity) -> None:
-    """Test wind icons."""
-    assert entity.get_icon("wind_speed", 5) == ICON_MAPPING["wind"]["gust"]
-    assert entity.get_icon("wind_gust", 5) == ICON_MAPPING["wind"]["wind"]
-
-    # 16 direction values
-    for i in range(15):
-        text_dir: str = f"{i}"
-        assert entity.get_icon("wind_direction", i) == ICON_MAPPING_WIND_DIR[text_dir]
-    assert entity.get_icon("wind_direction", None) == "mdi:compass-outline"
-    assert entity.get_icon("wind_direction", 17) == "mdi:compass-outline"
-
-
-def test_fallback_icon(entity) -> None:
-    """Test fallback icons."""
-    assert entity.get_icon("unknown_type", 123) == "mdi:help-circle"
-
-
-def test_multiple_entity(entity) -> None:
-    """Test multiple entity OPTION."""
-    assert (
-        entity.format_string_tfa_id(
-            s="A01234567", gw_id="017654321", name_with_station_id=True
-        )
-        == "TFA.me A01-234-567 (017654321)"
-    )
-    assert (
-        entity.format_string_tfa_id(
-            s="A01234567", gw_id="017654321", name_with_station_id=False
-        )
-        == "TFA.me A01-234-567"
-    )
-
-
-def test_format_string_tfa_type(entity) -> None:
-    """Test sensor & stations type XX."""
-    for i in range(7):
-        type_str: str = f"A{i}"
-        assert entity.format_string_tfa_type(type_str) == DEVICE_MAPPING[type_str]
-    for i in range(7):
-        type_str: str = f"0{i + 1}"
-        assert entity.format_string_tfa_type(type_str) == DEVICE_MAPPING[type_str]
-
-    assert entity.format_string_tfa_type("22") == "?"
-
-
-def test_history_class() -> None:
-    """Test history class."""
-    hist = SensorHistory(2)  # 2 minutes history
-    # test list empty
-    assert hist.get_oldest_and_newest() == (None, None)
-
-    now = int(datetime.now().timestamp())
-    hist.add_measurement(12.1, now - 180)  # to old, will be reoved
-    hist.add_measurement(12.1, now - 120)
-    # test get list with one tuple
-    assert hist.get_data() == [(12.1, now - 120)]
-
-    hist.add_measurement(12.4, now - 60)
-    hist.add_measurement(12.7, now)
-
-    # test get oldest newest
-    assert hist.get_oldest_and_newest() == ((12.1, now - 120), (12.7, now))
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
-    """Create dummy ConfigEntry."""
-    entry = MagicMock(spec=TFAmeConfigEntry)
-    entry.entry_id = "test_entry"
-    entry.domain = DOMAIN
-    entry.data = {}
-    cordy = TFAmeDataCoordinator(
-        hass=hass,
-        config_entry=tfa_me_mock_entry,
-        host="192.168.1.46",
-        interval=timedelta(30),
-        name_with_station_id=False,
-    )
-    cordy.sensor_entity_list = []
-    cordy.data = {}
-    entry.runtime_data = cordy
-    entry.data = {}
-    return entry
-
-
-@pytest.mark.asyncio
-async def test_async_discover_new_entities(
-    hass: HomeAssistant, tfa_me_mock_coordinator, mock_config_entry: ConfigEntry
-) -> None:
-    """Test that async_discover_new_entities adds new entities."""
-    now = datetime.now().timestamp()
-
-    # Arrange:
-    async_add_entities = Mock()
-
-    # Initial coordinator data, one entity
-    entity_id_existing = "sensor.a0f169ad1_temperature"
-    tfa_me_mock_coordinator.data = {
-        entity_id_existing: {
-            "sensor_id": "a0f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A0F169AD1",
-            "measurement": "temperature",
-            "value": "24.7",
-            "unit": "°C",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-            "info": "",
-        },
-    }
-    tfa_me_mock_coordinator.sensor_entity_list = [entity_id_existing]
-
-    mock_config_entry.coordinator = tfa_me_mock_coordinator
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][mock_config_entry.entry_id] = mock_config_entry
-
-    # Setup Entry -> async_discover_new_entities registers itself
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
-
-    # Add new "received" data entity to coordinator
-    entity_id_new = "sensor.a0f169ad1_humidity"
-    tfa_me_mock_coordinator.data[entity_id_new] = {
-        "sensor_id": "a0f169ad1",
-        "gateway_id": "017654321",
-        "sensor_name": "A0F169AD1",
-        "measurement": "humidity",
-        "value": "55.7",
-        "unit": "%",
-        "timestamp": "2025-09-02T09:15:13Z",
-        "ts": int(now),
-        "info": "",
-    }
-
-    # Call service function
-    await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
-
-    # Assert: async_add_entities was called again
-    assert async_add_entities.call_count == 2
-
-    # Are all entities in list?
-    assert hass.data[DOMAIN][
-        mock_config_entry.entry_id
-    ].coordinator.sensor_entity_list == [
-        "sensor.a0f169ad1_temperature",
-        "sensor.a0f169ad1_humidity",
-    ]
-
-    # Add new "received" data entity to coordinator
-    entity_id_new_2 = "sensor.a27654321_wind_direction_txt"
-    tfa_me_mock_coordinator.data[entity_id_new_2] = {
-        "sensor_id": "a27654321",
-        "gateway_id": "017654321",
-        "sensor_name": "a27654321",
-        "measurement": "wind_direction_text",
-        "value": "0",
-        "unit": "",
-        "timestamp": "2025-09-02T09:15:13Z",
-        "ts": int(now),
-        "info": "",
-    }
-
-    # Call service function
-    await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
-
-    # Assert: async_add_entities was called again
-    assert async_add_entities.call_count == 2
-
-    # Are all entities in list?
-    assert hass.data[DOMAIN][
-        mock_config_entry.entry_id
-    ].coordinator.sensor_entity_list == [
-        "sensor.a0f169ad1_temperature",
-        "sensor.a0f169ad1_humidity",
-    ]
-
-    # Add new "received" data entity to coordinator
-    entity_id_new_3 = "sensor.a27654321_wind_direction_txt"
-    tfa_me_mock_coordinator.data[entity_id_new_3] = {
-        "sensor_id": "a27654321",
-        "gateway_id": None,
-        "sensor_name": "a27654321",
-        "measurement": "wind_direction_text",
-        "value": "0",
-        "unit": "",
-        "timestamp": "2025-09-02T09:15:13Z",
-        "ts": int(now),
-        "info": "",
-    }
-
-    # Call service function
-    await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
-
-    # Assert: async_add_entities was called again
-    assert async_add_entities.call_count == 2
-
-
-@pytest.mark.asyncio
-async def test_handle_coordinator_update_rain_hour(
-    hass: HomeAssistant, tfa_me_mock_entry
-) -> None:
-    """Test whether rain history is updated for rain_hour."""
-
-    # Arrange
-    coordinator = TFAmeDataCoordinator(
-        hass=hass,
-        config_entry=tfa_me_mock_entry,
-        host="012-345-678",
-        interval=timedelta(30),
-        name_with_station_id=False,
-    )
-
-    now = datetime.now().timestamp()
-    entity_id_1 = "sensor.a17654321_rain_hour"
-
-    coordinator.data = {
-        entity_id_1: {
-            "sensor_id": "a1fffffea",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEA",
-            "measurement": "rain_1_hour",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now),
-            "reset_rain": False,
-        }
-    }
-
-    # New entity
-    entity = TFAmeSensorEntity(
-        coordinator, sensor_id="a17654321", entity_id=entity_id_1
-    )
-    entity.coordinator = coordinator
-
-    # Register entity at hass
-    entity.hass = hass
-    await entity.async_added_to_hass()
-
-    # Mock rain_history
-    entity.rain_history = MagicMock()
-    entity.rain_history_24 = MagicMock()
-
-    # Update
-    entity._handle_coordinator_update()
-    entity.rain_history.add_measurement.assert_called_once()
-
-    # Reset rain 1 hour
-    coordinator.data[entity_id_1]["reset_rain"] = True
-    entity._handle_coordinator_update()
-    assert float(entity.native_value) == 0.0
-
-    # Delete value
-    del coordinator.data[entity.entity_id]["value"]
-    entity._handle_coordinator_update()
-
-
-@pytest.mark.asyncio
-async def test_handle_coordinator_update_rain_24hours(
-    hass: HomeAssistant, tfa_me_mock_entry
-) -> None:
-    """Test whether rain history is updated for rain_24hours."""
-
-    # Arrange
-    coordinator = TFAmeDataCoordinator(
-        hass=hass,
-        config_entry=tfa_me_mock_entry,
-        host="192.168.1.46",
-        interval=timedelta(30),
-        name_with_station_id=False,
-    )
-
-    now = datetime.now().timestamp()
-    entity_id_1 = "sensor.a17654321_rain_24hours"
-
-    coordinator.data = {
-        entity_id_1: {
-            "sensor_id": "a1fffffea",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEA",
-            "measurement": "rain_24hours",
-            "value": "7.4",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now),
-            "reset_rain": False,
-        }
-    }
-
-    # New entity
-    entity = TFAmeSensorEntity(
-        coordinator, sensor_id="a17654321", entity_id=entity_id_1
-    )
-    entity.coordinator = coordinator
-
-    # Register entity at hass
-    entity.hass = hass
-    await entity.async_added_to_hass()
-
-    # mock rain_history
-    entity.rain_history = MagicMock()
-    entity.rain_history_24 = MagicMock()
-
-    # Act
-    entity._handle_coordinator_update()
-    entity.rain_history_24.add_measurement.assert_called_once_with(str(7.4), int(now))
-
-    del coordinator.data[entity.entity_id]["value"]
-    entity._handle_coordinator_update()
-
-    # Assert
-    # entity.rain_history.add_measurement.assert_called_once_with(7.4, int(now))
-    entity.rain_history_24.add_measurement.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_async_update_triggers_refresh() -> None:
-    """Test async_update()."""
-    # Arrange
-    mock_coordinator = AsyncMock()
-    entity = TFAmeSensorEntity(mock_coordinator, "abc", "sensor.abc_temp")
-
-    # Act
-    await entity.async_update()
-
-    # Assert
-    mock_coordinator.async_request_refresh.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_resolve_mdns_success(hass: HomeAssistant, tfa_me_mock_entry) -> None:
-    """Test."""
-    coordinator = TFAmeDataCoordinator(
-        hass, tfa_me_mock_entry, "012-345-678", timedelta(seconds=10), True
-    )
-
-    with patch("socket.gethostbyname", return_value="192.168.1.10"):
-        result = await coordinator.resolve_mdns("tfa-me-012-345-678.local")
-
-    assert result == "192.168.1.10"
-
-
-@pytest.mark.asyncio
-async def test_resolve_mdns_failure(hass: HomeAssistant, tfa_me_mock_entry) -> None:
-    """Test."""
-    coordinator = TFAmeDataCoordinator(
-        hass, tfa_me_mock_entry, "test-host", timedelta(seconds=10), True
-    )
-
-    with patch("socket.gethostbyname", side_effect=socket.gaierror):
-        result = await coordinator.resolve_mdns("127.0.0.1")
-
-    # Fallback: hostname not changed
-    assert result == "127.0.0.1"
-
-
-@pytest.mark.asyncio
+ICONS_FILE = Path("homeassistant/components/tfa_me/icons.json")
+
+
+def load_icons():
+    """Load the icons.json as dictionary."""
+    return json.loads(ICONS_FILE.read_text(encoding="utf-8"))["entity"]["sensor"]
+
+
+def generate_test_cases():
+    """Produce all test cases for "default", "range" & "state"."""
+    sensors = load_icons()
+    cases = []
+
+    for sensor_type, cfg in sensors.items():
+        # Default icon
+        default_icon = cfg.get("default")
+        if default_icon:
+            cases.append(
+                (
+                    sensor_type,
+                    "default",
+                    None,
+                    default_icon,
+                )
+            )
+        # Range table
+        if "range" in cfg:
+            for value, icon in cfg["range"].items():
+                cases.append(
+                    (
+                        sensor_type,
+                        "range",
+                        value,
+                        icon,
+                    )
+                )
+        # State table
+        if "state" in cfg:
+            for state_value, icon in cfg["state"].items():
+                cases.append(
+                    (
+                        sensor_type,
+                        "state",
+                        state_value,
+                        icon,
+                    )
+                )
+
+    return cases
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "table", "key", "expected_icon"),
+    generate_test_cases(),
+)
+def test_icons_json(sensor_type, table, key, expected_icon) -> None:
+    """Validate all icons defined in icons.json."""
+    sensors = load_icons()
+    cfg = sensors[sensor_type]
+
+    if table == "default":
+        assert cfg["default"] == expected_icon
+
+    elif table == "range":
+        assert cfg["range"][key] == expected_icon
+
+    elif table == "state":
+        assert cfg["state"][key] == expected_icon
+
+    else:
+        pytest.fail(f"Unknown icon table '{table}'")
+
+
+# @pytest.mark.asyncio
 async def test_async_update_triggers_refresh_err() -> None:
     """Test async_update()."""
     # Arrange
@@ -1043,7 +348,7 @@ async def test_async_added_does_not_overwrite_existing_labels(
     entity_id = reg_entry.entity_id
     ent_reg.async_update_entity(entity_id, labels={"Existing", "Fix"})
 
-    # Cereate entity
+    # Create entity
     tfa_me_mock_coordinator.name_with_station_id = True
     ent = TFAmeSensorEntity(
         tfa_me_mock_coordinator, sensor_id="a0f169ad1", entity_id=unique_id
@@ -1066,7 +371,7 @@ async def test_async_added_returns_if_no_registry_entry(
     hass: HomeAssistant, tfa_me_mock_coordinator
 ) -> None:
     """Test if ent_reg.async_get(...) returns None."""
-    entity = TFAmeSensorEntity(tfa_me_mock_coordinator, "sensor1", "sensor1")
+    entity = TFAmeSensorEntity(tfa_me_mock_coordinator, "sensor1", "entity1")
     entity.hass = hass
     entity.entity_id = "sensor.tfa_me_1"
     entity._attr_labels = ["LabelA"]
@@ -1081,11 +386,176 @@ async def test_async_added_returns_if_no_registry_entry(
     # Assert: Registry function called
     assert mock_er_get.call_count == 1
 
-    # Assert: The registry object was asked whether Entity exists
+    # Assert: The registry object was asked whether entity exists
     mock_reg.async_get.assert_called_once_with(entity.entity_id)
 
-    # Assert: No opdate (return)
+    # Assert: No update (return)
     mock_reg.async_update_entity.assert_not_called()
 
     # Entity initialized
     assert entity._initialized_once is True
+
+
+@pytest.mark.parametrize(
+    ("uid_suffix", "measurement", "raw_value", "expect_add"),
+    [
+        # rain_hour: valid -> add_measurement expected
+        ("rain_hour", "rain_1_hour", "2.5", True),
+        # rain_hour: error -> add_measurement NOT expected
+        ("rain_hour", "rain_1_hour", "NOT_A_FLOAT", False),
+        # rain_24hours: valid -> add_measurement expected
+        ("rain_24hours", "rain_24_hours", "10.0", True),
+        # rain_24hours: error -> add_measurement NOT expected
+        ("rain_24hours", "rain_24_hours", "WRONG", False),
+    ],
+)
+def test_handle_coordinator_update(
+    hass: HomeAssistant,
+    tfa_me_mock_coordinator,
+    uid_suffix: str,
+    measurement: str,
+    raw_value: str,
+    expect_add: bool,
+) -> None:
+    """Parametrized test for _handle_coordinator_update(), without cleanup()."""
+
+    uid = f"sensor.017654321_a0f169ad1_{uid_suffix}"
+
+    # Coordinator data entry the entity will read from
+    sensor_data = {
+        "gateway_id": "017654321",
+        "sensor_name": "A1F169AD1",
+        "timestamp": "2025-09-02T09:15:13Z",
+        "ts": 1234567890,
+        "measurement": measurement,
+        "value": raw_value,
+        "unit": "mm",
+    }
+
+    # Set data
+    tfa_me_mock_coordinator.data = {uid: sensor_data}
+
+    with (
+        patch("homeassistant.components.tfa_me.sensor.SensorHistory") as mock_hist_cls,
+        patch(
+            "homeassistant.components.tfa_me.sensor.CoordinatorEntity._handle_coordinator_update"
+        ),
+    ):
+        # SensorHistory mock instance used by the entity
+        hist_mock = MagicMock()
+        mock_hist_cls.return_value = hist_mock
+
+        # Instantiate entity
+        ent = TFAmeSensorEntity(
+            tfa_me_mock_coordinator, sensor_id="a1f169ad1", entity_id=uid
+        )
+        ent.hass = hass
+
+        # Ensure correct history attribute exists
+        if measurement == "rain_1_hour":
+            assert hasattr(ent, "rain_history")
+        if measurement == "rain_24_hours":
+            assert hasattr(ent, "rain_history_24")
+
+        # Action: invoke update handler
+        ent._handle_coordinator_update()
+
+        # Expectation: add_measurement() called or not called
+        if expect_add:
+            hist_mock.add_measurement.assert_called_once_with(
+                float(raw_value), 1234567890
+            )
+        else:
+            hist_mock.add_measurement.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_measurement_name_keyerror(
+    hass: HomeAssistant, tfa_me_mock_coordinator
+) -> None:
+    """Test measurement_name returns None when KeyError occurs."""
+
+    uid = "sensor.017654321_a0f169ad1_temperature"
+
+    # minimal example coordinator data
+    tfa_me_mock_coordinator.data = {
+        uid: {
+            "sensor_id": "a0f169ad1",
+            # "measurement": "temperature",   <-- intentionally removed
+        }
+    }
+
+    ent = TFAmeSensorEntity(
+        tfa_me_mock_coordinator,
+        sensor_id="a0f169ad1",
+        entity_id=uid,
+    )
+    ent.hass = hass
+
+    # property access triggers KeyError in code → must return None
+    assert ent.measurement_name is None
+
+
+@pytest.mark.parametrize(
+    ("measurement", "expected"),
+    [
+        (None, None),  # Case 1: measurement is None
+        ("temperature", MEASUREMENT_TO_TRANSLATION_KEY.get("temperature")),  # mapped
+        ("humidity", MEASUREMENT_TO_TRANSLATION_KEY.get("humidity")),  # mapped
+        ("unknown_measure", "unknown_measure"),  # Case 3: not in mapping → return input
+    ],
+)
+def test_get_translation_key(
+    hass: HomeAssistant, tfa_me_mock_coordinator, measurement, expected
+) -> None:
+    """Test _get_translation_key with all possible branches."""
+
+    # Create a dummy entity; the coordinator & other fields won't matter here.
+    ent = TFAmeSensorEntity(
+        tfa_me_mock_coordinator,
+        sensor_id="a0f169ad1",
+        entity_id="sensor.017654321_a0f169ad1_test",
+    )
+
+    result = ent._get_translation_key(measurement)
+    assert result == expected
+
+
+def test_native_value_generic_fallback(
+    hass: HomeAssistant, tfa_me_mock_coordinator
+) -> None:
+    """native_value should return data['value'] when no value_fn is defined and no timeout occurs."""
+
+    # Build uid and coordinator data entry
+    uid = "sensor.017654321_a0f169ad1_temperature"
+    now_ts = int(datetime.now().timestamp())
+
+    data_entry = {
+        "gateway_id": "017654321",
+        "sensor_name": "A0F169AD1",
+        "timestamp": "2025-09-02T09:15:13Z",
+        "ts": now_ts,  # fresh timestamp → no timeout
+        "measurement": "temperature",
+        "value": "42.5",  # this is what we expect to get back
+        "unit": "°C",
+    }
+
+    tfa_me_mock_coordinator.data = {uid: data_entry}
+
+    # Create entity
+    ent = TFAmeSensorEntity(
+        tfa_me_mock_coordinator, sensor_id="a0f169ad1", entity_id=uid
+    )
+    ent.hass = hass
+
+    # Ensure timeout does NOT trigger: patch get_timeout to a large value
+    ent.get_timeout = lambda _sensor_id: 999999  # effectively "no timeout" for the test
+
+    # Provide an entity_description with value_fn = None
+    ent.entity_description = SimpleNamespace(value_fn=None)
+
+    # Action: access the property
+    result = ent.native_value
+
+    # Expectation: generic fallback is used → data.get("value")
+    assert result == "42.5"

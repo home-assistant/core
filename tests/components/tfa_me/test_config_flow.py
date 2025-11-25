@@ -2,7 +2,8 @@
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
-from unittest.mock import AsyncMock, patch
+import contextlib
+from unittest.mock import patch
 
 import pytest
 
@@ -26,140 +27,129 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_create_entry_success_with_ip(hass: HomeAssistant) -> None:
-    """Test: Successful generation of an entry."""
-
-    mock_client = AsyncMock()
-    mock_client.get_identifier.return_value = "unique-device-123"
-
-    with patch(
-        "homeassistant.components.tfa_me.config_flow.TFAmeData",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_NAME_WITH_STATION_ID: False,
-            },
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"].startswith("TFA.me Station")
-    assert result["data"][CONF_IP_ADDRESS] == "192.168.1.10"
-
-
-@pytest.mark.asyncio
-async def test_create_entry_with_tfa_exception(hass: HomeAssistant) -> None:
-    """Test flow handles TFAmeException correctly."""
-
-    with patch(
-        "homeassistant.components.tfa_me.config_flow.TFAmeData",
-        side_effect=TFAmeException("host_empty"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
+@pytest.mark.parametrize(
+    (
+        "patch_target",
+        "patch_kwargs",
+        "initial_user_input",
+        "error_key",
+        "expected_error",
+        "check_in_values",
+    ),
+    [
+        (  # 1) TFAmeException raised -> error stored under "base"
+            "homeassistant.components.tfa_me.config_flow.TFAmeData",
+            {"side_effect": TFAmeException("host_empty")},
+            {
                 CONF_IP_ADDRESS: "192.168.0.10",
                 CONF_NAME_WITH_STATION_ID: True,
             },
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"]["base"] == "host_empty"
-
-
-@pytest.mark.asyncio
-async def test_invalid_ip(hass: HomeAssistant) -> None:
-    """Test: Invalid Hostname/IP."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_IP_ADDRESS: "not-an-ip",
-            CONF_NAME_WITH_STATION_ID: False,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"][CONF_IP_ADDRESS] == "invalid_ip_host"
-
-
-@pytest.mark.asyncio
-async def test_invalid_name_with_station_id(hass: HomeAssistant) -> None:
-    """Test: Invalid entity class, not bool."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_IP_ADDRESS: "192.168.1.10",
-            CONF_NAME_WITH_STATION_ID: 123,  # wrong value
-        },
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert "invalid_name_with_station_id" in result["errors"].values()
-
-
-@pytest.mark.asyncio
-async def test_cannot_connect(hass: HomeAssistant) -> None:
-    """Test: Connections fails."""
-    with patch(
-        "homeassistant.components.tfa_me.config_flow.TFAmeData.get_identifier",
-        side_effect=Exception("connection error"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"]["base"] in ("cannot_connect", "unknown")
-
-
-@pytest.mark.asyncio
-async def test_cannot_connect_2(hass: HomeAssistant) -> None:
-    """Test: Connections fails."""
-    with patch(
-        "homeassistant.components.tfa_me.config_flow.TFAmeData.get_identifier",
-        side_effect=Exception("connection error"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"]["base"] in ("cannot_connect", "unknown")
-
-
-@pytest.mark.asyncio
-async def test_create_entry_success_with_id(hass: HomeAssistant) -> None:
-    """Test: Successful generation of an entry."""
-
-    with patch(
-        "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
-        return_value="127.0.0.1",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_IP_ADDRESS: "012-345-678",
+            "base",
+            "host_empty",
+            False,
+        ),
+        (  # 2) Invalid IP/hostname -> error stored under CONF_IP_ADDRESS
+            None,
+            None,
+            {
+                CONF_IP_ADDRESS: "NotIP",
                 CONF_NAME_WITH_STATION_ID: False,
             },
+            CONF_IP_ADDRESS,
+            "invalid_ip_host",
+            False,
+        ),
+        (  # 3) Invalid CONF_NAME_WITH_STATION_ID type -> only the value matters
+            None,
+            None,
+            {
+                CONF_IP_ADDRESS: "192.168.1.10",
+                CONF_NAME_WITH_STATION_ID: 123,  # wrong value type
+            },
+            None,  # key is not relevant here
+            "invalid_name_with_station_id",
+            True,  # check error via values()
+        ),
+        (  # 4) Generic exception while connecting -> error on "base"
+            "homeassistant.components.tfa_me.config_flow.TFAmeData.get_identifier",
+            {"side_effect": Exception("connection error")},
+            {
+                CONF_IP_ADDRESS: "192.168.1.10",
+                CONF_NAME_WITH_STATION_ID: True,
+            },
+            "base",
+            ("cannot_connect", "unknown"),  # both are allowed
+            False,
+        ),
+    ],
+    ids=[
+        "tfa_exception_host_empty",
+        "invalid_ip_host",
+        "invalid_name_with_station_id",
+        "cannot_connect",
+    ],
+)
+async def test_config_flow_errors_recover(
+    hass: HomeAssistant,
+    patch_target,
+    patch_kwargs,
+    initial_user_input,
+    error_key,
+    expected_error,
+    check_in_values,
+) -> None:
+    """Test all error cases of the config flow and ensure recovery to CREATE_ENTRY."""
+
+    # Optional patch to simulate specific failure mode
+    if patch_target is not None:
+        cm = patch(patch_target, **(patch_kwargs or {}))
+    else:
+        cm = contextlib.nullcontext()
+
+    # Step 1: Trigger the error on initial init
+    with cm:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=initial_user_input,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == ("TFA.me Station '012-345-678'")
-    assert result["data"][CONF_IP_ADDRESS] == "012-345-678"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    # Validate the error reported by the flow
+    if check_in_values:
+        # We only care that the expected_error appears in the error values
+        if isinstance(expected_error, tuple):
+            assert any(v in expected_error for v in result["errors"].values())
+        else:
+            assert expected_error in result["errors"].values()
+    else:
+        # We expect a specific key to be present with a specific value (or one of several)
+        assert error_key in result["errors"]
+        if isinstance(expected_error, tuple):
+            assert result["errors"][error_key] in expected_error
+        else:
+            assert result["errors"][error_key] == expected_error
+
+    # Step 2: User corrects the input and retries
+    with (
+        patch(
+            "homeassistant.components.tfa_me.config_flow.TFAmeData.get_identifier",
+            return_value="192.168.1.10",
+        ),
+        patch(
+            "homeassistant.components.tfa_me.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IP_ADDRESS: "192.168.1.10",
+                CONF_NAME_WITH_STATION_ID: True,
+            },
+        )
+
+    # Step 3: Ensure the flow recovers and creates an entry
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "TFA.me Station '192.168.1.10'"

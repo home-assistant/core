@@ -5,62 +5,23 @@ DEFAULT_STATION_NAME = "TFA.me Station"
 CONF_NAME_WITH_STATION_ID = "name_with_station_id"
 LOCAL_POLL_INTERVAL = 60
 
-# Used icons for entities, see also
-# https://pictogrammers.com/library/mdi/
-ICON_MAPPING = {
-    "temperature": {
-        "default": "mdi:thermometer",
-        "high": "mdi:thermometer-high",
-        "low": "mdi:thermometer-low",
-    },
-    "humidity": {"default": "mdi:water-percent", "alert": "mdi:water-percent-alert"},
-    "co2": {"default": "mdi:molecule-co2"},
-    "barometric_pressure": {"default": "mdi:gauge"},
-    "rssi": {
-        "default": "mdi:wifi",
-        "weak": "mdi:wifi-strength-1",
-        "middle": "mdi:wifi-strength-2",
-        "good": "mdi:wifi-strength-3",
-        "strong": "mdi:wifi-strength-4",
-    },
-    "lowbatt": {
-        "default": "mdi:battery",
-        "low": "mdi:battery-alert",
-        "full": "mdi:battery",
-    },
-    "wind_direction": {"default": "mdi:compass-outline"},
-    "wind": {
-        "default": "mdi:weather-windy",
-        "wind": "mdi:weather-windy-variant",
-        "gust": "mdi:weather-windy",
-    },
-    "rain": {
-        "none": "mdi:weather-sunny",
-        "light": "mdi:weather-partly-rainy",
-        "moderate": "mdi:weather-rainy",
-        "heavy": "mdi:weather-pouring",
-    },
+MEASUREMENT_TO_TRANSLATION_KEY = {
+    "temperature": "temperature",
+    "temperature_probe": "temperature",
+    "humidity": "humidity",
+    "co2": "co2",
+    "barometric_pressure": "barometric_pressure",
+    "rssi": "rssi",
+    "lowbatt": "lowbatt",
+    "wind_direction": "wind_direction",
+    "wind_direction_deg": "wind_direction",
+    "wind_speed": "wind_speed",
+    "wind_gust": "wind_gust",
+    "rain": "rain",
+    "rain_rel": "rain_relative",
+    "rain_hour": "rain_1_hour",
+    "rain_24hours": "rain_24_hours",
 }
-
-ICON_MAPPING_WIND_DIR = {
-    "0": "mdi:arrow-down",  # N (North)
-    "1": "mdi:arrow-down",  # N (North)
-    "2": "mdi:arrow-bottom-left",  # NE (North-East)
-    "3": "mdi:arrow-bottom-left",  # NE (North-East)
-    "4": "mdi:arrow-left",  # E (East)
-    "5": "mdi:arrow-left",  # E (East)
-    "6": "mdi:arrow-top-left",  # SE (South-East)
-    "7": "mdi:arrow-top-left",  # SE (South-East)
-    "8": "mdi:arrow-up",  # S (South)
-    "9": "mdi:arrow-up",  # S (South)
-    "10": "mdi:arrow-top-right",  # SW (South-West)
-    "11": "mdi:arrow-top-right",  # SW (South-West)
-    "12": "mdi:arrow-right",  # W (West)
-    "13": "mdi:arrow-right",  # W (West)
-    "14": "mdi:arrow-bottom-right",  # NW (North-West)
-    "15": "mdi:arrow-bottom-right",  # NW (North-West)
-}
-
 
 # Short description of all stations & sensors
 DEVICE_MAPPING = {
@@ -73,7 +34,6 @@ DEVICE_MAPPING = {
     "06": "Station 06: T/H",
     "07": "Station 07: T/H",
     "08": "Station 08: T/H",
-    # Add other stations here ...
     # Debug station ID
     "99": "Station 99: T/H/BP/CO2",
     # Sensors
@@ -84,14 +44,13 @@ DEVICE_MAPPING = {
     "A4": "Sensor Prof. A4: T/H/TP",
     "A5": "Sensor A5: T",
     "A6": "Sensor Prof. A6: T/H",
-    # Add other sensors here ...
 }
 
-# Timeout time use sensor marked "old"/unavailable
+# Timeout time to mark sensor values "old"/unavailable
 # Rule: Timeout time = 2 * (transmission interval in seconds) + 30
-TIMEOUT_FOR_1_MIN = (2 * 1 * 60) + 30
-TIMEOUT_FOR_5_MIN = (2 * 5 * 60) + 30
-TIMEOUT_FOR_120_MIN = (2 * 120 * 60) + 30
+TIMEOUT_FOR_1_MIN = 150
+TIMEOUT_FOR_5_MIN = 630
+TIMEOUT_FOR_120_MIN = 14430
 
 TIMEOUT_MAPPING = {
     # Stations
@@ -103,7 +62,6 @@ TIMEOUT_MAPPING = {
     "06": TIMEOUT_FOR_5_MIN,
     "07": TIMEOUT_FOR_5_MIN,
     "08": TIMEOUT_FOR_5_MIN,
-    # Add other stations here ...
     # Debug station ID
     "99": TIMEOUT_FOR_5_MIN,
     # Sensors
@@ -114,5 +72,4 @@ TIMEOUT_MAPPING = {
     "A4": TIMEOUT_FOR_1_MIN,  # Sensor Prof. A4: T/H/TP
     "A5": TIMEOUT_FOR_5_MIN,  # Sensor A5: T
     "A6": TIMEOUT_FOR_1_MIN,  # Sensor Prof. A6: T/H
-    # Add other sensors here ...
 }

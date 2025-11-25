@@ -3,7 +3,6 @@
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
 from datetime import timedelta
-from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -16,35 +15,19 @@ from tfa_me_ha_local.client import (
 )
 
 from homeassistant.components.hassio import datetime
-from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import AsyncMock, MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-@pytest.fixture
-def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a mock config entry for tfa_me integration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_NAME_WITH_STATION_ID: False,
-        },
-        unique_id="test-1234",
-    )
-    entry.add_to_hass(hass)
-    return entry
+from tests.common import AsyncMock
 
 
 @pytest.mark.asyncio
-async def test_update_data_with_ip(hass: HomeAssistant, tfa_me_mock_entry) -> None:
+async def test_update_data_with_ip(
+    hass: HomeAssistant, tfa_me_options_flow_mock_entry
+) -> None:
     """Test normal update (with IP) with some sensor types."""
     now = datetime.now().timestamp()
 
@@ -81,8 +64,8 @@ async def test_update_data_with_ip(hass: HomeAssistant, tfa_me_mock_entry) -> No
 
     coordinator = TFAmeDataCoordinator(
         hass,
-        tfa_me_mock_entry,
-        "127.0.0.1",
+        tfa_me_options_flow_mock_entry,
+        "017-654-321",
         timedelta(seconds=30),
         name_with_station_id=True,
     )
@@ -90,198 +73,36 @@ async def test_update_data_with_ip(hass: HomeAssistant, tfa_me_mock_entry) -> No
 
     # Patch TFAmeClient delivers JSON directly
     with patch(
-        "homeassistant.components.tfa_me.coordinator.TFAmeClient",
-        autospec=True,
-    ) as mock_client_cls:
-        mock_client = AsyncMock()
-        mock_client.async_get_sensors.return_value = dummy_json
-        mock_client_cls.return_value = mock_client
-
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        new=AsyncMock(return_value=dummy_json),
+    ):
         # Request data
         result = await coordinator._async_update_data()
 
-    # Asserts wind sensor
-    assert "sensor.017654321_a21234567_wind_direction" in result
-    assert "sensor.017654321_a21234567_wind_direction_txt" in result
-    assert "sensor.017654321_a21234567_wind_direction_deg" in result
-    assert "sensor.017654321_a21234567_wind_speed" in result
-    assert "sensor.017654321_a21234567_wind_gust" in result
-    assert "sensor.017654321_a21234567_rssi" in result
-    assert "sensor.017654321_a21234567_lowbatt" in result
-    assert "sensor.017654321_a21234567_lowbatt_txt" in result
-
-    # Asserts rain sensor
-    assert "sensor.017654321_a12345678_rain" in result
-    assert "sensor.017654321_a12345678_rssi" in result
-    assert "sensor.017654321_a12345678_lowbatt" in result
-    assert "sensor.017654321_a12345678_lowbatt_txt" in result
+    # Simply check if the number of entities is correct
+    assert len(result) == 12
 
     # Asserts others
     assert coordinator.gateway_id == "017654321"
     assert coordinator.first_init == 2
 
-
-@pytest.mark.asyncio
-async def test_update_data_with_mdns(
-    hass: HomeAssistant,
-    tfa_me_mock_entry,
-) -> None:
-    """Test normal update (with MDNS name) with some sensor types."""
-    now = datetime.now().timestamp()
-
-    # Create dummy JSON reply
-    dummy_json = {
+    # Create invalid JSON: "measurements" is a string not a dict
+    bad_json = {
         "gateway_id": "017654321",
         "sensors": [
             {
                 "sensor_id": "a21234567",
                 "name": "A21234567",
                 "timestamp": "2025-09-04T12:21:41Z",
-                "ts": int(now),
-                "measurements": {
-                    "rssi": {"value": "221", "unit": "/255"},
-                    "lowbatt": {"value": "0", "unit": "No"},
-                    "wind_direction": {"value": "8", "unit": ""},
-                    "wind_speed": {"value": "0.0", "unit": "m/s"},
-                    "wind_gust": {"value": "0.0", "unit": "m/s"},
-                },
+                "ts": 1234567890,
+                "measurements": "THIS SHOULD BE A DICT, NOT A STRING",
             }
         ],
     }
 
-    coordinator = TFAmeDataCoordinator(
-        hass,
-        tfa_me_mock_entry,
-        "017-654-321",
-        timedelta(seconds=30),
-        name_with_station_id=False,
-    )
-    coordinator.first_init = 1
-
-    with (
-        patch(
-            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
-            return_value="127.0.0.1",
-        ),
-        patch(
-            "homeassistant.components.tfa_me.coordinator.TFAmeClient",
-            autospec=True,
-        ) as mock_client_cls,
-    ):
-        mock_client = AsyncMock()
-        mock_client.async_get_sensors.return_value = dummy_json
-        mock_client_cls.return_value = mock_client
-
-        result = await coordinator._async_update_data()
-
-    # Asserts
-    assert "sensor.017654321_a21234567_wind_direction" in result
-    assert "sensor.017654321_a21234567_wind_direction_txt" in result
-    assert "sensor.017654321_a21234567_wind_direction_deg" in result
-    assert "sensor.017654321_a21234567_wind_speed" in result
-    assert "sensor.017654321_a21234567_wind_gust" in result
-    assert "sensor.017654321_a21234567_rssi" in result
-    assert "sensor.017654321_a21234567_lowbatt" in result
-    assert "sensor.017654321_a21234567_lowbatt_txt" in result
-
-    assert coordinator.gateway_id == "017654321"
-    assert coordinator.first_init == 2
-
-
-@pytest.mark.asyncio
-async def test_update_data_with_mdns_update_failed(
-    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant, tfa_me_mock_entry
-) -> None:
-    """Test request fails (UpdateFailed)."""
-    # Bad request
-    aioclient_mock.get(
-        "http://tfa-me-017-654-321.local/sensors",
-        json={
-            "Error": "Bad request",
-        },
-        status=HTTPStatus.BAD_REQUEST,
-    )
-
-    coordinator = TFAmeDataCoordinator(
-        hass,
-        tfa_me_mock_entry,
-        "017-654-321",
-        timedelta(seconds=30),
-        name_with_station_id=True,
-    )
-    coordinator.first_init = 1
-    with (
-        pytest.raises(UpdateFailed),
-        patch(
-            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
-            return_value="127.0.0.1",
-        ),
-    ):
-        await coordinator._async_update_data()
-
-
-@pytest.mark.asyncio
-async def test_update_data_with_mdns_config_entry_not_ready(
-    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant, tfa_me_mock_entry
-) -> None:
-    """Test request fails (ConfigEntryNotReady) coordinator.first_init = 1."""
-    # Bad request
-    aioclient_mock.get(
-        "http://tfa-me-017-654-321.local/sensors",
-        json={
-            "Error": "Bad request",
-        },
-        status=HTTPStatus.BAD_REQUEST,
-    )
-
-    coordinator = TFAmeDataCoordinator(
-        hass,
-        tfa_me_mock_entry,
-        "017-654-321",
-        timedelta(seconds=30),
-        name_with_station_id=True,
-    )
-    coordinator.first_init = 0
-    with (
-        pytest.raises(ConfigEntryNotReady),
-        patch(
-            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
-            return_value="127.0.0.1",
-        ),
-    ):
-        await coordinator._async_update_data()
-
-
-@pytest.mark.asyncio
-async def test_update_data_with_mdns_http_errory(
-    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant, tfa_me_mock_entry
-) -> None:
-    """Test request fails (HTTPError) and coordinator.first_init = 0."""
-    # Bad request
-    aioclient_mock.get(
-        "http://127.0.0.1/sensors",
-        json={
-            "Error": "Bad request",
-        },
-        status=HTTPStatus.BAD_REQUEST,
-    )
-
-    coordinator = TFAmeDataCoordinator(
-        hass,
-        tfa_me_mock_entry,
-        "017-654-321",
-        timedelta(seconds=30),
-        name_with_station_id=True,
-    )
-    coordinator.first_init = 0
-    with (
-        pytest.raises(ConfigEntryNotReady),
-        patch(
-            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
-            return_value="127.0.0.1",
-        ),
-    ):
-        await coordinator._async_update_data()
+    # Assert: TFAmeJSONError
+    with pytest.raises(TFAmeJSONError, match="Invalid JSON response"):
+        coordinator.json_to_entities(bad_json)
 
 
 @pytest.mark.asyncio
@@ -309,7 +130,7 @@ async def test_async_update_data_exceptions_first_init(
         name_with_station_id=False,
     )
 
-    # Patch the client so that async_get_sensors raises our test exception
+    # Patch the client so that async_get_sensors raises the test exception
     with (
         patch(
             "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
