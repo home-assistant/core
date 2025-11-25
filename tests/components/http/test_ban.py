@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from ipaddress import ip_address
+import logging
 import os
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
