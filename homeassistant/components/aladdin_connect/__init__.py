@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from genie_partner_sdk.client import AladdinConnectClient
-from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -36,22 +35,7 @@ async def async_setup_entry(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
 
-    sdk_doors = await client.get_doors()
-
-    # Convert SDK GarageDoor objects to integration GarageDoor objects
-    doors = [
-        GarageDoor(
-            {
-                "device_id": door.device_id,
-                "door_number": door.door_number,
-                "name": door.name,
-                "status": door.status,
-                "link_status": door.link_status,
-                "battery_level": door.battery_level,
-            }
-        )
-        for door in sdk_doors
-    ]
+    doors = await client.get_doors()
 
     entry.runtime_data = {
         door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)

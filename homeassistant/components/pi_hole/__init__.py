@@ -129,10 +129,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
                         raise ConfigEntryAuthFailed
         except HoleError as err:
             if str(err) == "Authentication failed: Invalid password":
-                raise ConfigEntryAuthFailed from err
-            raise UpdateFailed(f"Failed to communicate with API: {err}") from err
+                raise ConfigEntryAuthFailed(
+                    f"Pi-hole {name} at host {host}, reported an invalid password"
+                ) from err
+            raise UpdateFailed(
+                f"Pi-hole {name} at host {host}, update failed with HoleError: {err}"
+            ) from err
         if not isinstance(api.data, dict):
-            raise ConfigEntryAuthFailed
+            raise ConfigEntryAuthFailed(
+                f"Pi-hole {name} at host {host}, returned an unexpected response: {api.data}, assuming authentication failed"
+            )
 
     coordinator = DataUpdateCoordinator(
         hass,

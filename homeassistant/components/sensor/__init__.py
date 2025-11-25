@@ -361,25 +361,30 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _is_valid_suggested_unit(self, suggested_unit_of_measurement: str) -> bool:
         """Validate the suggested unit.
 
-        Validate that a unit converter exists for the sensor's device class and that the
-        unit converter supports both the native and the suggested units of measurement.
+        Validate that the native unit of measurement can be converted to the
+        suggested unit of measurement, either because they are the same or
+        because a unit converter supports both.
         """
-        # Make sure we can convert the units
-        if self.native_unit_of_measurement != suggested_unit_of_measurement and (
-            (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
-            or self.__native_unit_of_measurement_compat
-            not in unit_converter.VALID_UNITS
-            or suggested_unit_of_measurement not in unit_converter.VALID_UNITS
-        ):
-            if not self._invalid_suggested_unit_of_measurement_reported:
-                self._invalid_suggested_unit_of_measurement_reported = True
-                raise ValueError(
-                    f"Entity {type(self)} suggest an incorrect "
-                    f"unit of measurement: {suggested_unit_of_measurement}."
-                )
-            return False
+        # No need to check the unit converter if the units are the same
+        if self.__native_unit_of_measurement_compat == suggested_unit_of_measurement:
+            return True
 
-        return True
+        # Make sure there is a unit converter and it supports both units
+        if (
+            (unit_converter := UNIT_CONVERTERS.get(self.device_class))
+            and self.__native_unit_of_measurement_compat in unit_converter.VALID_UNITS
+            and suggested_unit_of_measurement in unit_converter.VALID_UNITS
+        ):
+            return True
+
+        # Report invalid suggested unit only once per entity
+        if not self._invalid_suggested_unit_of_measurement_reported:
+            self._invalid_suggested_unit_of_measurement_reported = True
+            raise ValueError(
+                f"Entity {type(self)} suggest an incorrect "
+                f"unit of measurement: {suggested_unit_of_measurement}."
+            )
+        return False
 
     def _get_initial_suggested_unit(self) -> str | UndefinedType:
         """Return the initial unit."""
@@ -473,7 +478,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @property
     def __native_unit_of_measurement_compat(self) -> str | None:
-        """Process ambiguous units."""
+        """Handle wrong character coding in unit provided by integrations.
+
+        SensorEntity should read the sensor's native unit through this property instead
+        of through native_unit_of_measurement.
+        """
         native_unit_of_measurement = self.native_unit_of_measurement
         return AMBIGUOUS_UNITS.get(
             native_unit_of_measurement,
@@ -853,16 +862,25 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
         assert self.registry_entry
         if (
-            (sensor_options := self.registry_entry.options.get(primary_key))
-            and secondary_key in sensor_options
-            and (device_class := self.device_class) in UNIT_CONVERTERS
-            and self.__native_unit_of_measurement_compat
-            in UNIT_CONVERTERS[device_class].VALID_UNITS
-            and (custom_unit := sensor_options[secondary_key])
-            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            sensor_options := self.registry_entry.options.get(primary_key)
+        ) is None or secondary_key not in sensor_options:
+            return UNDEFINED
+
+        if (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return UNDEFINED
+
+        if (
+            self.__native_unit_of_measurement_compat
+            not in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
-            return cast(str, custom_unit)
-        return UNDEFINED
+            return UNDEFINED
+
+        if (custom_unit := sensor_options[secondary_key]) not in UNIT_CONVERTERS[
+            device_class
+        ].VALID_UNITS:
+            return UNDEFINED
+
+        return cast(str, custom_unit)
 
     @callback
     def async_registry_entry_updated(self) -> None:

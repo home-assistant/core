@@ -100,8 +100,9 @@ ATTR_PIN_VALUE = "pin"
 ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-DEFAULT_SOCKET_MIN_RETRY = 15
 
+WEBSOCKET_RECONNECT_RETRIES = 3
+WEBSOCKET_RETRY_DELAY = 2
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
@@ -290,7 +291,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+    _verify_domain_control = verify_domain_control(DOMAIN)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -419,6 +420,7 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
+        self._websocket_reconnect_retries: int = 0
         self._websocket_reconnect_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
@@ -469,6 +471,8 @@ class SimpliSafe:
         """Start a websocket reconnection loop."""
         assert self._api.websocket
 
+        self._websocket_reconnect_retries += 1
+
         try:
             await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
@@ -479,9 +483,21 @@ class SimpliSafe:
             LOGGER.error("Failed to connect to websocket: %s", err)
         except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
+        else:
+            self._websocket_reconnect_retries = 0
 
-        LOGGER.debug("Reconnecting to websocket")
-        await self._async_cancel_websocket_loop()
+        if self._websocket_reconnect_retries >= WEBSOCKET_RECONNECT_RETRIES:
+            LOGGER.error("Max websocket connection retries exceeded")
+            return
+
+        delay = WEBSOCKET_RETRY_DELAY * (2 ** (self._websocket_reconnect_retries - 1))
+        LOGGER.info(
+            "Retrying websocket connection in %s seconds (attempt %s/%s)",
+            delay,
+            self._websocket_reconnect_retries,
+            WEBSOCKET_RECONNECT_RETRIES,
+        )
+        await asyncio.sleep(delay)
         self._websocket_reconnect_task = self._hass.async_create_task(
             self._async_start_websocket_loop()
         )

@@ -66,8 +66,6 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
         if webhook_id == self.webhook_id and data[ATTR_EVENT] in (
             "alarm_snooze_clicked",
             "alarm_snooze_canceled",
-            "alarm_alert_start",
-            "alarm_alert_dismiss",
             "alarm_skip_next",
             "show_skip_next_alarm",
             "alarm_rescheduled",
@@ -84,6 +82,12 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
                 label := data.get(ATTR_VALUE2, ALARM_LABEL_DEFAULT)
             ):
                 self._attr_native_value = label
+
+            if (
+                data[ATTR_EVENT] == "alarm_rescheduled"
+                and data.get(ATTR_VALUE1) is None
+            ):
+                self._attr_native_value = None
 
             self.async_write_ha_state()
 

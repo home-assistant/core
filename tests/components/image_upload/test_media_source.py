@@ -8,6 +8,8 @@ from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components import media_source
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -61,7 +63,7 @@ async def test_browsing(
     assert item.children[0].thumbnail == f"/api/image/serve/{image_id}/256x256"
 
     with pytest.raises(
-        media_source.BrowseError,
+        BrowseError,
         match="Unknown item",
     ):
         await media_source.async_browse_media(
@@ -84,7 +86,7 @@ async def test_resolving(
 
     invalid_id = "aabbccddeeff"
     with pytest.raises(
-        media_source.Unresolvable,
+        Unresolvable,
         match=f"Could not resolve media item: {invalid_id}",
     ):
         await media_source.async_resolve_media(

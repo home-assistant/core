@@ -8,7 +8,7 @@ from unittest.mock import patch
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 from freezegun import freeze_time
-from habluetooth import HaScanner
+from habluetooth import BluetoothScanningMode, HaScanner
 
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
@@ -21,7 +21,6 @@ from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothChange,
-    BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
@@ -1911,3 +1910,133 @@ async def test_no_repair_issue_for_remote_scanner(
             and "bluetooth_adapter_missing_permissions" in issue.issue_id
         ]
         assert len(issues) == 0
+
+
+@pytest.mark.usefixtures("one_adapter")
+async def test_repair_issue_created_for_passive_mode_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test repair issue is created when scanner falls back to passive mode."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    manager = _get_manager()
+
+    scanner = HaScanner(
+        mode=BluetoothScanningMode.ACTIVE,
+        adapter="hci0",
+        address="00:11:22:33:44:55",
+    )
+    scanner.async_setup()
+
+    cancel = manager.async_register_scanner(scanner, connection_slots=1)
+
+    # Set scanner to passive mode when active was requested
+    scanner.set_requested_mode(BluetoothScanningMode.ACTIVE)
+    scanner.set_current_mode(BluetoothScanningMode.PASSIVE)
+
+    manager.on_scanner_start(scanner)
+
+    # Check repair issue is created
+    issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
+    registry = ir.async_get(hass)
+    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    # Should default to USB translation key when adapter type is unknown
+    assert issue.translation_key == "bluetooth_adapter_passive_mode_usb"
+    assert not issue.is_fixable
+
+    cancel()
+
+
+async def test_repair_issue_created_for_passive_mode_fallback_uart(
+    hass: HomeAssistant,
+) -> None:
+    """Test repair issue is created with UART-specific message for UART adapters."""
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
+            "hci0": {
+                "address": "00:11:22:33:44:55",
+                "sw_version": "homeassistant",
+                "hw_version": "uart:bcm2711",
+                "passive_scan": False,
+                "manufacturer": "Raspberry Pi",
+                "product": "BCM2711",
+                "adapter_type": "uart",  # UART adapter type
+            }
+        },
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        manager = _get_manager()
+
+        scanner = HaScanner(
+            mode=BluetoothScanningMode.ACTIVE,
+            adapter="hci0",
+            address="00:11:22:33:44:55",
+        )
+        scanner.async_setup()
+
+        cancel = manager.async_register_scanner(scanner, connection_slots=1)
+
+        # Set scanner to passive mode when active was requested
+        scanner.set_requested_mode(BluetoothScanningMode.ACTIVE)
+        scanner.set_current_mode(BluetoothScanningMode.PASSIVE)
+
+        manager.on_scanner_start(scanner)
+
+        # Check repair issue is created with UART-specific translation key
+        issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
+        registry = ir.async_get(hass)
+        issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.severity == ir.IssueSeverity.WARNING
+        assert issue.translation_key == "bluetooth_adapter_passive_mode_uart"
+        assert not issue.is_fixable
+
+        cancel()
+
+
+@pytest.mark.usefixtures("one_adapter")
+async def test_repair_issue_deleted_when_passive_mode_resolved(
+    hass: HomeAssistant,
+) -> None:
+    """Test repair issue is deleted when scanner no longer in passive mode."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    manager = _get_manager()
+
+    scanner = HaScanner(
+        mode=BluetoothScanningMode.ACTIVE,
+        adapter="hci0",
+        address="00:11:22:33:44:55",
+    )
+    scanner.async_setup()
+
+    cancel = manager.async_register_scanner(scanner, connection_slots=1)
+
+    # Initially set scanner to passive mode when active was requested
+    scanner.set_requested_mode(BluetoothScanningMode.ACTIVE)
+    scanner.set_current_mode(BluetoothScanningMode.PASSIVE)
+
+    manager.on_scanner_start(scanner)
+
+    # Check repair issue is created
+    issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
+    registry = ir.async_get(hass)
+    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    assert issue is not None
+
+    # Now simulate scanner recovering to active mode
+    scanner.set_current_mode(BluetoothScanningMode.ACTIVE)
+    manager.on_scanner_start(scanner)
+
+    # Check repair issue is deleted
+    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    assert issue is None
+
+    cancel()

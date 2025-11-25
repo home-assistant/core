@@ -24,8 +24,9 @@ restore:
 
 set_sleep_timer:
   target:
-    device:
+    entity:
       integration: sonos
+      domain: media_player
   fields:
     sleep_time:
       selector:
@@ -36,13 +37,15 @@ set_sleep_timer:
 
 clear_sleep_timer:
   target:
-    device:
+    entity:
       integration: sonos
+      domain: media_player
 
 play_queue:
   target:
-    device:
+    entity:
       integration: sonos
+      domain: media_player
   fields:
     queue_position:
       selector:
@@ -53,8 +56,9 @@ play_queue:
 
 remove_from_queue:
   target:
-    device:
+    entity:
       integration: sonos
+      domain: media_player
   fields:
     queue_position:
       selector:
@@ -71,8 +75,9 @@ get_queue:
 
 update_alarm:
   target:
-    device:
+    entity:
       integration: sonos
+      domain: media_player
   fields:
     alarm_id:
       required: true

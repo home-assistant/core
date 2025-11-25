@@ -229,7 +229,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 )
                 self._async_update_motion_state(None, state)
 
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     @callback
     def run(self) -> None:
         """Handle accessory driver started event.

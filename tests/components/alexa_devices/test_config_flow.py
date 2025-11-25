@@ -9,7 +9,11 @@ from aioamazondevices.exceptions import (
 )
 import pytest
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -48,10 +52,13 @@ async def test_full_flow(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         },
     }
     assert result["result"].unique_id == TEST_USERNAME
-    mock_amazon_devices_client.login_mode_interactive.assert_called_once_with("023123")
+    mock_amazon_devices_client.login.login_mode_interactive.assert_called_once_with(
+        "023123"
+    )
 
 
 @pytest.mark.parametrize(
@@ -70,7 +77,7 @@ async def test_flow_errors(
     error: str,
 ) -> None:
     """Test flow errors."""
-    mock_amazon_devices_client.login_mode_interactive.side_effect = exception
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -92,7 +99,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -158,6 +165,16 @@ async def test_reauth_successful(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+    assert mock_config_entry.data == {
+        CONF_CODE: "000000",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "other_fake_password",
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -181,7 +198,7 @@ async def test_reauth_not_successful(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = side_effect
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -194,7 +211,7 @@ async def test_reauth_not_successful(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -206,8 +223,15 @@ async def test_reauth_not_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "fake_password"
-    assert mock_config_entry.data[CONF_CODE] == "111111"
+    assert mock_config_entry.data == {
+        CONF_CODE: "111111",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "fake_password",
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
 
 
 async def test_reconfigure_successful(
@@ -240,7 +264,14 @@ async def test_reconfigure_successful(
     assert reconfigure_result["reason"] == "reconfigure_successful"
 
     # changed entry
-    assert mock_config_entry.data[CONF_PASSWORD] == new_password
+    assert mock_config_entry.data == {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: new_password,
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
 
 
 @pytest.mark.parametrize(
@@ -266,7 +297,7 @@ async def test_reconfigure_fails(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = side_effect
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = side_effect
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -280,7 +311,7 @@ async def test_reconfigure_fails(
     assert reconfigure_result["step_id"] == "reconfigure"
     assert reconfigure_result["errors"] == {"base": error}
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -297,5 +328,6 @@ async def test_reconfigure_fails(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         },
     }

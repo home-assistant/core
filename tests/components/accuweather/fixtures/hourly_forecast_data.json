@@ -1,0 +1,1334 @@
+[
+  {
+    "DateTime": "2025-09-12t16:00:00+02:00",
+    "EpochDateTime": 1757685600,
+    "WeatherIcon": 2,
+    "IconPhrase": "przewa\u017cnie s\u0142onecznie",
+    "HasPrecipitation": false,
+    "IsDaylight": true,
+    "Temperature": {
+      "Value": 22.5,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 22.6,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 20.8,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "WetBulbTemperature": {
+      "Value": 15.6,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 19.4,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 11.1,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 14.8,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 239,
+        "Localized": "WSW",
+        "English": "WSW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 24.1,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 48,
+    "IndoorRelativeHumidity": 48,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 10058.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 2,
+    "UVIndexFloat": 2.4,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 1,
+    "ThunderstormProbability": 0,
+    "RainProbability": 1,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 13,
+    "Evapotranspiration": {
+      "Value": 0.3,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 525.5,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 9.0
+  },
+  {
+    "DateTime": "2025-09-12t17:00:00+02:00",
+    "EpochDateTime": 1757689200,
+    "WeatherIcon": 2,
+    "IconPhrase": "przewa\u017cnie s\u0142onecznie",
+    "HasPrecipitation": false,
+    "IsDaylight": true,
+    "Temperature": {
+      "Value": 23.1,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 22.9,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 21.6,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "WetBulbTemperature": {
+      "Value": 16.2,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 20.1,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 11.7,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 238,
+        "Localized": "WSW",
+        "English": "WSW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 22.2,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 48,
+    "IndoorRelativeHumidity": 48,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 2,
+    "UVIndexFloat": 1.7,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 1,
+    "ThunderstormProbability": 0,
+    "RainProbability": 1,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 17,
+    "Evapotranspiration": {
+      "Value": 0.3,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 386.6,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 9.0
+  },
+  {
+    "DateTime": "2025-09-12t18:00:00+02:00",
+    "EpochDateTime": 1757692800,
+    "WeatherIcon": 2,
+    "IconPhrase": "przewa\u017cnie s\u0142onecznie",
+    "HasPrecipitation": false,
+    "IsDaylight": true,
+    "Temperature": {
+      "Value": 21.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 20.6,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 20.6,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "WetBulbTemperature": {
+      "Value": 15.8,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 19.1,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 232,
+        "Localized": "SW",
+        "English": "SW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 18.5,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 56,
+    "IndoorRelativeHumidity": 56,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 1,
+    "UVIndexFloat": 1.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 1,
+    "ThunderstormProbability": 0,
+    "RainProbability": 1,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 23,
+    "Evapotranspiration": {
+      "Value": 0.3,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 224.7,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 7.0
+  },
+  {
+    "DateTime": "2025-09-12t19:00:00+02:00",
+    "EpochDateTime": 1757696400,
+    "WeatherIcon": 2,
+    "IconPhrase": "przewa\u017cnie s\u0142onecznie",
+    "HasPrecipitation": false,
+    "IsDaylight": true,
+    "Temperature": {
+      "Value": 19.5,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 18.2,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 18.2,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "WetBulbTemperature": {
+      "Value": 15.4,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 17.9,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.2,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 224,
+        "Localized": "SW",
+        "English": "SW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 16.7,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 62,
+    "IndoorRelativeHumidity": 60,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.2,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 2,
+    "ThunderstormProbability": 0,
+    "RainProbability": 2,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 29,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 52.2,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 2.0
+  },
+  {
+    "DateTime": "2025-09-12t20:00:00+02:00",
+    "EpochDateTime": 1757700000,
+    "WeatherIcon": 35,
+    "IconPhrase": "zachmurzenie umiarkowane",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 17.7,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 16.7,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 16.7,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Przyjemnie"
+    },
+    "WetBulbTemperature": {
+      "Value": 14.6,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 16.7,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.1,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 11.1,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 219,
+        "Localized": "SW",
+        "English": "SW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 14.8,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 69,
+    "IndoorRelativeHumidity": 60,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 3,
+    "ThunderstormProbability": 0,
+    "RainProbability": 3,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 34,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-12t21:00:00+02:00",
+    "EpochDateTime": 1757703600,
+    "WeatherIcon": 35,
+    "IconPhrase": "zachmurzenie umiarkowane",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 15.8,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 14.9,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 14.9,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.7,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 15.6,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 11.9,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 11.1,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 230,
+        "Localized": "SW",
+        "English": "SW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 77,
+    "IndoorRelativeHumidity": 59,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 3,
+    "ThunderstormProbability": 0,
+    "RainProbability": 3,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 30,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-12t22:00:00+02:00",
+    "EpochDateTime": 1757707200,
+    "WeatherIcon": 34,
+    "IconPhrase": "przewa\u017cnie bezchmurnie",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 14.6,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 13.8,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 13.8,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 14.9,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.0,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 9.3,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 259,
+        "Localized": "W",
+        "English": "W"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 84,
+    "IndoorRelativeHumidity": 60,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 3,
+    "ThunderstormProbability": 0,
+    "RainProbability": 3,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 26,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-12t23:00:00+02:00",
+    "EpochDateTime": 1757710800,
+    "WeatherIcon": 34,
+    "IconPhrase": "przewa\u017cnie bezchmurnie",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 14.4,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 13.8,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 13.8,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 14.9,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.2,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 9.3,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 272,
+        "Localized": "W",
+        "English": "W"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 86,
+    "IndoorRelativeHumidity": 60,
+    "Visibility": {
+      "Value": 16.1,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 4,
+    "ThunderstormProbability": 0,
+    "RainProbability": 4,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 22,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-13t00:00:00+02:00",
+    "EpochDateTime": 1757714400,
+    "WeatherIcon": 35,
+    "IconPhrase": "zachmurzenie umiarkowane",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 13.9,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 13.5,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 13.5,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.0,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 14.5,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.2,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 7.4,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 265,
+        "Localized": "W",
+        "English": "W"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 13.0,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 89,
+    "IndoorRelativeHumidity": 60,
+    "Visibility": {
+      "Value": 11.3,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 4,
+    "ThunderstormProbability": 0,
+    "RainProbability": 4,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 48,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-13t01:00:00+02:00",
+    "EpochDateTime": 1757718000,
+    "WeatherIcon": 36,
+    "IconPhrase": "przej\u015bciowe zachmurzenia",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 13.6,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 13.2,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 13.2,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.0,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 14.0,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 7.4,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 256,
+        "Localized": "WSW",
+        "English": "WSW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 11.1,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 91,
+    "IndoorRelativeHumidity": 61,
+    "Visibility": {
+      "Value": 11.3,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 4,
+    "ThunderstormProbability": 0,
+    "RainProbability": 4,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 74,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-13t02:00:00+02:00",
+    "EpochDateTime": 1757721600,
+    "WeatherIcon": 7,
+    "IconPhrase": "pochmurno",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 13.9,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 13.5,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 13.5,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.1,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 13.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.3,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 7.4,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 244,
+        "Localized": "WSW",
+        "English": "WSW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 11.1,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 90,
+    "IndoorRelativeHumidity": 61,
+    "Visibility": {
+      "Value": 9.7,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 9144.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 5,
+    "ThunderstormProbability": 0,
+    "RainProbability": 5,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 100,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  },
+  {
+    "DateTime": "2025-09-13t03:00:00+02:00",
+    "EpochDateTime": 1757725200,
+    "WeatherIcon": 7,
+    "IconPhrase": "pochmurno",
+    "HasPrecipitation": false,
+    "IsDaylight": false,
+    "Temperature": {
+      "Value": 14.0,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "RealFeelTemperature": {
+      "Value": 13.6,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "RealFeelTemperatureShade": {
+      "Value": 13.6,
+      "Unit": "C",
+      "UnitType": 17,
+      "Phrase": "Ch\u0142odno"
+    },
+    "WetBulbTemperature": {
+      "Value": 13.0,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "WetBulbGlobeTemperature": {
+      "Value": 13.4,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "DewPoint": {
+      "Value": 12.2,
+      "Unit": "C",
+      "UnitType": 17
+    },
+    "Wind": {
+      "Speed": {
+        "Value": 7.4,
+        "Unit": "km/h",
+        "UnitType": 7
+      },
+      "Direction": {
+        "Degrees": 229,
+        "Localized": "SW",
+        "English": "SW"
+      }
+    },
+    "WindGust": {
+      "Speed": {
+        "Value": 9.3,
+        "Unit": "km/h",
+        "UnitType": 7
+      }
+    },
+    "RelativeHumidity": 89,
+    "IndoorRelativeHumidity": 60,
+    "Visibility": {
+      "Value": 9.7,
+      "Unit": "km",
+      "UnitType": 6
+    },
+    "Ceiling": {
+      "Value": 7376.0,
+      "Unit": "m",
+      "UnitType": 5
+    },
+    "UVIndex": 0,
+    "UVIndexFloat": 0.0,
+    "UVIndexText": "niskie",
+    "PrecipitationProbability": 5,
+    "ThunderstormProbability": 0,
+    "RainProbability": 5,
+    "SnowProbability": 0,
+    "IceProbability": 0,
+    "TotalLiquid": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Rain": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "Snow": {
+      "Value": 0.0,
+      "Unit": "cm",
+      "UnitType": 4
+    },
+    "Ice": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "CloudCover": 98,
+    "Evapotranspiration": {
+      "Value": 0.0,
+      "Unit": "mm",
+      "UnitType": 3
+    },
+    "SolarIrradiance": {
+      "Value": 0.0,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
+    "AccuLumenBrightnessIndex": 0.0
+  }
+]

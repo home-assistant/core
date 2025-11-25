@@ -19,7 +19,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_DEVICE_ID, TEST_SERIAL_NUMBER
+from .const import TEST_DEVICE_1_ID, TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, mock_device_registry
 
@@ -49,7 +49,7 @@ async def test_send_sound_service(
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
     )
     assert device_entry
 
@@ -79,7 +79,7 @@ async def test_send_text_service(
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
     )
     assert device_entry
 
@@ -108,7 +108,7 @@ async def test_send_text_service(
         ),
         (
             "wrong_sound_name",
-            TEST_DEVICE_ID,
+            TEST_DEVICE_1_ID,
             "invalid_sound_value",
             {
                 "sound": "wrong_sound_name",
@@ -128,7 +128,7 @@ async def test_invalid_parameters(
     """Test invalid service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_ID, identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
     )
     mock_device_registry(
         hass,
@@ -164,7 +164,7 @@ async def test_config_entry_not_loaded(
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
     )
     assert device_entry
 

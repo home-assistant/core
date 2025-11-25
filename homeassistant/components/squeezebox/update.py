@@ -118,7 +118,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
         rs = self.coordinator.data[UPDATE_PLUGINS_RELEASE_SUMMARY]
         return (
             (rs or "")
-            + "The Plugins will be updated on the next restart triggred by selecting the Install button. Allow enough time for the service to restart. It will become briefly unavailable."
+            + "The Plugins will be updated on the next restart triggered by selecting the Update button. Allow enough time for the service to restart. It will become briefly unavailable."
             if self.coordinator.can_server_restart
             else rs
         )

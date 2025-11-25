@@ -8,7 +8,7 @@ import logging
 import ssl
 from typing import Any, cast
 
-from pylutron_caseta import BUTTON_STATUS_PRESSED
+from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -25,6 +25,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ACTION_MULTITAP,
     ACTION_PRESS,
     ACTION_RELEASE,
     ATTR_ACTION,
@@ -448,6 +449,8 @@ def _async_subscribe_keypad_events(
 
         if event_type == BUTTON_STATUS_PRESSED:
             action = ACTION_PRESS
+        elif event_type == BUTTON_STATUS_MULTITAP:
+            action = ACTION_MULTITAP
         else:
             action = ACTION_RELEASE
 

@@ -46,7 +46,7 @@ async def test_config_flow_success(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
@@ -56,7 +56,7 @@ async def test_config_flow_success(
             assert result["step_id"] == "code"
             assert result["errors"] == {}
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=USER_DATA,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -101,7 +101,7 @@ async def test_config_flow_failures_request_code(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4",
             side_effect=request_code_side_effect,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -111,7 +111,7 @@ async def test_config_flow_failures_request_code(
             assert result["errors"] == request_code_errors
         # Recover from error
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
@@ -121,7 +121,7 @@ async def test_config_flow_failures_request_code(
             assert result["step_id"] == "code"
             assert result["errors"] == {}
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=USER_DATA,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -163,7 +163,7 @@ async def test_config_flow_failures_code_login(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
@@ -174,7 +174,7 @@ async def test_config_flow_failures_code_login(
             assert result["errors"] == {}
         # Raise exception for invalid code
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             side_effect=code_login_side_effect,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -183,7 +183,7 @@ async def test_config_flow_failures_code_login(
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == code_login_errors
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=USER_DATA,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -236,7 +236,7 @@ async def test_reauth_flow(
     # Request a new code
     with (
         patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ),
         patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
     ):
@@ -250,7 +250,7 @@ async def test_reauth_flow(
     new_user_data.rriot.s = "new_password_hash"
     with (
         patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=new_user_data,
         ),
         patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
@@ -280,7 +280,7 @@ async def test_account_already_configured(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
@@ -289,7 +289,7 @@ async def test_account_already_configured(
         assert result["step_id"] == "code"
         assert result["type"] is FlowResultType.FORM
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=USER_DATA,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -313,7 +313,7 @@ async def test_reauth_wrong_account(
         "homeassistant.components.roborock.async_setup_entry", return_value=True
     ):
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
@@ -324,7 +324,7 @@ async def test_reauth_wrong_account(
         new_user_data = deepcopy(USER_DATA)
         new_user_data.rruid = "new_rruid"
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=new_user_data,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -354,7 +354,7 @@ async def test_discovery_not_setup(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL}
@@ -364,7 +364,7 @@ async def test_discovery_not_setup(
             assert result["step_id"] == "code"
             assert result["errors"] == {}
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=USER_DATA,
         ):
             result = await hass.config_entries.flow.async_configure(
