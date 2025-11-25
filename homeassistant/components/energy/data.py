@@ -341,7 +341,7 @@ class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         data = old_data
-        if old_major_version == 1:
+        if old_major_version == 1 and old_minor_version < 2:
             # Add device_consumption_water field if it doesn't exist
             data.setdefault("device_consumption_water", [])
         return data
