@@ -1,7 +1,7 @@
 """Helpers for cloud LLM chat handling."""
 
 import base64
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Iterable
 from enum import Enum
 import json
 import logging
@@ -16,13 +16,22 @@ from hass_nabucasa.llm import (
     LLMResponseError,
     LLMServiceError,
 )
-from litellm import ResponseFunctionToolCall, ResponsesAPIStreamEvents
+from litellm import (
+    ResponseFunctionToolCall,
+    ResponseInputParam,
+    ResponsesAPIStreamEvents,
+)
 from openai.types.responses import (
     FunctionToolParam,
+    ResponseInputItemParam,
     ResponseReasoningItem,
     ToolParam,
     WebSearchToolParam,
 )
+from openai.types.responses.response_input_param import (
+    ImageGenerationCall as ImageGenerationCallParam,
+)
+from openai.types.responses.response_output_item import ImageGenerationCall
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -50,34 +59,97 @@ class ResponseItemType(str, Enum):
     IMAGE = "image"
 
 
-def _convert_content_to_chat_message(
-    content: conversation.Content,
-) -> dict[str, Any] | None:
-    """Convert ChatLog content to a responses message."""
-    if content.role not in ("user", "system", "tool_result", "assistant"):
-        return None
+def _convert_content_to_param(
+    chat_content: Iterable[conversation.Content],
+) -> ResponseInputParam:
+    """Convert any native chat message for this agent to the native format."""
+    messages: ResponseInputParam = []
+    reasoning_summary: list[str] = []
+    web_search_calls: dict[str, dict[str, Any]] = {}
 
-    text_content = cast(
-        conversation.SystemContent
-        | conversation.UserContent
-        | conversation.AssistantContent,
-        content,
-    )
+    for content in chat_content:
+        if isinstance(content, conversation.ToolResultContent):
+            if (
+                content.tool_name == "web_search_call"
+                and content.tool_call_id in web_search_calls
+            ):
+                web_search_call = web_search_calls.pop(content.tool_call_id)
+                web_search_call["status"] = content.tool_result.get(
+                    "status", "completed"
+                )
+                messages.append(cast("ResponseInputItemParam", web_search_call))
+            else:
+                messages.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": content.tool_call_id,
+                        "output": json.dumps(content.tool_result),
+                    }
+                )
+            continue
 
-    if not text_content.content:
-        return None
+        if content.content:
+            role: Literal["user", "assistant", "system", "developer"] = content.role
+            if role == "system":
+                role = "developer"
+            messages.append(
+                {"type": "message", "role": role, "content": content.content}
+            )
 
-    content_type = "output_text" if text_content.role == "assistant" else "input_text"
+        if isinstance(content, conversation.AssistantContent):
+            if content.tool_calls:
+                for tool_call in content.tool_calls:
+                    if (
+                        tool_call.external
+                        and tool_call.tool_name == "web_search_call"
+                        and "action" in tool_call.tool_args
+                    ):
+                        web_search_calls[tool_call.id] = {
+                            "type": "web_search_call",
+                            "id": tool_call.id,
+                            "action": tool_call.tool_args["action"],
+                            "status": "completed",
+                        }
+                    else:
+                        messages.append(
+                            {
+                                "type": "function_call",
+                                "name": tool_call.tool_name,
+                                "arguments": json.dumps(tool_call.tool_args),
+                                "call_id": tool_call.id,
+                            }
+                        )
 
-    return {
-        "role": text_content.role,
-        "content": [
-            {
-                "type": content_type,
-                "text": text_content.content,
-            }
-        ],
-    }
+            if content.thinking_content:
+                reasoning_summary.append(content.thinking_content)
+
+            if isinstance(content.native, ResponseReasoningItem):
+                messages.append(
+                    {
+                        "type": "reasoning",
+                        "id": content.native.id,
+                        "summary": (
+                            [
+                                {
+                                    "type": "summary_text",
+                                    "text": summary,
+                                }
+                                for summary in reasoning_summary
+                            ]
+                            if content.thinking_content
+                            else []
+                        ),
+                        "encrypted_content": content.native.encrypted_content,
+                    }
+                )
+                reasoning_summary = []
+
+            elif isinstance(content.native, ImageGenerationCall):
+                messages.append(
+                    cast(ImageGenerationCallParam, content.native.to_dict())
+                )
+
+    return messages
 
 
 def _format_tool(
@@ -381,25 +453,16 @@ class BaseCloudLLMEntity(Entity):
     async def _prepare_chat_for_generation(
         self,
         chat_log: conversation.ChatLog,
+        messages: ResponseInputParam,
         response_format: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Prepare kwargs for Cloud LLM from the chat log."""
 
-        messages = [
-            message
-            for content in chat_log.content
-            if (message := _convert_content_to_chat_message(content))
-        ]
-
-        if not messages or messages[-1]["role"] != "user":
-            raise HomeAssistantError("No user prompt found")
-
-        last_content = chat_log.content[-1]
+        last_content: Any = chat_log.content[-1]
         if last_content.role == "user" and last_content.attachments:
             files = await self._async_prepare_files_for_prompt(last_content.attachments)
-            user_message = messages[-1]
-            current_content = user_message.get("content", [])
-            user_message["content"] = [*(current_content or []), *files]
+            current_content = last_content.content
+            last_content = [*(current_content or []), *files]
 
         tools: list[ToolParam] = []
         tool_choice: str | None = None
@@ -503,8 +566,11 @@ class BaseCloudLLMEntity(Entity):
                     },
                 }
 
+            messages = _convert_content_to_param(chat_log.content)
+
             response_kwargs = await self._prepare_chat_for_generation(
                 chat_log,
+                messages,
                 response_format,
             )
 
@@ -518,15 +584,21 @@ class BaseCloudLLMEntity(Entity):
                         **response_kwargs,
                     )
 
-                async for _ in chat_log.async_add_delta_content_stream(
-                    agent_id=self.entity_id,
-                    stream=_transform_stream(
-                        chat_log,
-                        raw_stream,
-                        True,
-                    ),
-                ):
-                    pass
+                messages.extend(
+                    _convert_content_to_param(
+                        [
+                            content
+                            async for content in chat_log.async_add_delta_content_stream(
+                                self.entity_id,
+                                _transform_stream(
+                                    chat_log,
+                                    raw_stream,
+                                    True,
+                                ),
+                            )
+                        ]
+                    )
+                )
 
             except LLMAuthenticationError as err:
                 raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
