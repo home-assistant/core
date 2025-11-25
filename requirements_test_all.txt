@@ -807,6 +807,9 @@ eq3btsmart==2.3.0
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
 
+# homeassistant.components.essent
+essent-dynamic-pricing==0.2.7
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.16
 
@@ -1440,7 +1443,7 @@ p1monitor==3.2.0
 paho-mqtt==2.1.0
 
 # homeassistant.components.panasonic_viera
-panasonic-viera==0.4.2
+panasonic-viera==0.4.4
 
 # homeassistant.components.dunehd
 pdunehd==1.3.2
@@ -2652,7 +2655,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.1.2
+yalexs-ble==3.2.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
