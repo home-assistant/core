@@ -17,13 +17,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DEFAULT_CONVERSATION_NAME,
-    DOMAIN,
-    LOGGER,
-    RECOMMENDED,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -46,11 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
         # Use model from first conversation subentry for validation
         subentries = list(entry.subentries.values())
         if subentries:
-            model_id = subentries[0].data.get(
-                CONF_CHAT_MODEL, RECOMMENDED[CONF_CHAT_MODEL]
-            )
+            model_id = subentries[0].data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
         else:
-            model_id = RECOMMENDED[CONF_CHAT_MODEL]
+            model_id = DEFAULT[CONF_CHAT_MODEL]
         model = await client.models.retrieve(model_id=model_id, timeout=10.0)
         LOGGER.debug("Anthropic model: %s", model.display_name)
     except anthropic.AuthenticationError as err:

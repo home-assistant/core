@@ -84,11 +84,11 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
     NON_THINKING_MODELS,
-    RECOMMENDED,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -601,18 +601,18 @@ class AnthropicBaseLLMEntity(Entity):
             raise TypeError("First message must be a system message")
         messages = _convert_content(chat_log.content[1:])
 
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED[CONF_CHAT_MODEL])
+        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
         model_args = MessageCreateParamsStreaming(
             model=model,
             messages=messages,
-            max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED[CONF_MAX_TOKENS]),
+            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             system=system.content,
             stream=True,
         )
 
         thinking_budget = options.get(
-            CONF_THINKING_BUDGET, RECOMMENDED[CONF_THINKING_BUDGET]
+            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
         )
         if (
             not model.startswith(tuple(NON_THINKING_MODELS))
@@ -624,7 +624,7 @@ class AnthropicBaseLLMEntity(Entity):
         else:
             model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
             model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, RECOMMENDED[CONF_TEMPERATURE]
+                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
             )
 
         tools: list[ToolUnionParam] = []

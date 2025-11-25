@@ -16,8 +16,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.anthropic.config_flow import (
-    RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CONVERSATION_OPTIONS,
+    DEFAULT_AI_TASK_OPTIONS,
+    DEFAULT_CONVERSATION_OPTIONS,
 )
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
@@ -33,10 +33,10 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -85,13 +85,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "data": DEFAULT_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
         },
         {
             "subentry_type": "ai_task_data",
-            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "data": DEFAULT_AI_TASK_OPTIONS,
             "title": DEFAULT_AI_TASK_NAME,
             "unique_id": None,
         },
@@ -142,13 +142,13 @@ async def test_creating_conversation_subentry(
 
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_NAME: "Mock name", **RECOMMENDED_CONVERSATION_OPTIONS},
+        {CONF_NAME: "Mock name", **DEFAULT_CONVERSATION_OPTIONS},
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Mock name"
 
-    processed_options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
+    processed_options = DEFAULT_CONVERSATION_OPTIONS.copy()
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
@@ -473,7 +473,7 @@ async def test_model_list_error(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-opus",
-                CONF_MAX_TOKENS: RECOMMENDED[CONF_MAX_TOKENS],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
             },
         ),
         (  # Model with web search options
@@ -510,7 +510,7 @@ async def test_model_list_error(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
-                CONF_MAX_TOKENS: RECOMMENDED[CONF_MAX_TOKENS],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -548,7 +548,7 @@ async def test_model_list_error(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                CONF_MAX_TOKENS: RECOMMENDED[CONF_MAX_TOKENS],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
@@ -575,8 +575,8 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED[CONF_CHAT_MODEL],
-                CONF_MAX_TOKENS: RECOMMENDED[CONF_MAX_TOKENS],
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -587,9 +587,9 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED[CONF_CHAT_MODEL],
-                CONF_MAX_TOKENS: RECOMMENDED[CONF_MAX_TOKENS],
-                CONF_THINKING_BUDGET: RECOMMENDED[CONF_THINKING_BUDGET],
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
