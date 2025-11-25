@@ -289,7 +289,7 @@ class TargetStateChangeTracker:
         )
 
         tracked_entities = self._entity_filter(
-            selected.referenced.union(selected.indirectly_referenced)
+            selected.referenced | selected.indirectly_referenced
         )
 
         @callback

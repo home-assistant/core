@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_entities[climate.saunum_leil-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 100,
+      'min_temp': 40,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.saunum_leil',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'saunum',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 9>,
+    'translation_key': None,
+    'unique_id': '01K98T2T85R5GN0ZHYV25VFMMA',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.saunum_leil-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 75.0,
+      'fan_mode': 'medium',
+      'fan_modes': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Saunum Leil',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 100,
+      'min_temp': 40,
+      'supported_features': <ClimateEntityFeature: 9>,
+      'temperature': 80,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.saunum_leil',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
