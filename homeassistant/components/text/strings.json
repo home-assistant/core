@@ -42,5 +42,12 @@
       "name": "Set value"
     }
   },
-  "title": "Text"
+  "title": "Text",
+  "triggers": {
+    "changed": {
+      "description": "Triggers when the text changes.",
+      "description_configured": "[%key:component::text::triggers::changed::description%]",
+      "name": "When the text changes"
+    }
+  }
 }

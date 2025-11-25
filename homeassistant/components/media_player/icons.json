@@ -104,5 +104,10 @@
     "volume_up": {
       "service": "mdi:volume-plus"
     }
+  },
+  "triggers": {
+    "stopped_playing": {
+      "trigger": "mdi:stop"
+    }
   }
 }
