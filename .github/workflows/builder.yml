@@ -87,6 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch: ["amd64", "aarch64"]
         include:
           - arch: amd64
             os: ubuntu-latest
