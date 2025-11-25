@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import dataclasses
+from datetime import datetime
 from typing import Any
 
 from uiprotect.data.nvr import EventDetectedThumbnail
@@ -180,14 +181,13 @@ class ProtectDeviceVehicleEventEntity(
     """A UniFi Protect vehicle detection event entity."""
 
     entity_description: ProtectEventEntityDescription
-    _last_event_id_with_thumbnails: str | None = None
     _pending_event_id: str | None = None
     _thumbnail_timer_cancel: Callable[[], None] | None = None
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel timer when entity is removed."""
-        self._cancel_thumbnail_timer()
-        await super().async_will_remove_from_hass()
+    async def async_added_to_hass(self) -> None:
+        """Register cleanup callback when entity is added."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self._cancel_thumbnail_timer)
 
     @callback
     def _cancel_thumbnail_timer(self) -> None:
@@ -254,8 +254,7 @@ class ProtectDeviceVehicleEventEntity(
         self._trigger_event(EVENT_TYPE_VEHICLE_DETECTED, event_data)
         self.async_write_ha_state()
 
-        # Remember this event
-        self._last_event_id_with_thumbnails = event.id
+        # Clear pending event tracking and timer
         self._pending_event_id = None
         self._cancel_thumbnail_timer()
 
@@ -279,20 +278,16 @@ class ProtectDeviceVehicleEventEntity(
 
             # Strategy: Wait 3 seconds after last thumbnail before firing event
             if current_thumbnails:
-                # Is this a new event or same event with new thumbnails?
-                if event.id != self._pending_event_id:
-                    # New event - cancel any pending timer
-                    self._cancel_thumbnail_timer()
-                    self._pending_event_id = event.id
-
-                # Cancel existing timer (we got a new thumbnail)
+                # Cancel any existing timer and track this event
                 self._cancel_thumbnail_timer()
+                event_id = event.id
+                self._pending_event_id = event_id
 
                 # Start 3 second timer - must use callback wrapper for event loop safety
                 @callback
-                def _fire_event(_now: Any) -> None:
+                def _fire_event(_now: datetime) -> None:
                     """Wrapper to fire event in event loop."""
-                    self._fire_vehicle_event(event.id)
+                    self._fire_vehicle_event(event_id)
 
                 self._thumbnail_timer_cancel = async_call_later(
                     self.hass, VEHICLE_EVENT_DELAY_SECONDS, _fire_event
