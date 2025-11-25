@@ -3680,6 +3680,15 @@ async def test_get_triggers_for_target(
             )
         ),
     )
+    mock_platform(
+        hass,
+        "component2.trigger",
+        Mock(
+            async_get_triggers=AsyncMock(
+                return_value={"match_all": Mock, "other_integration": Mock}
+            )
+        ),
+    )
 
     def get_common_trigger_descriptions(domain: str):
         return f"""
@@ -3741,9 +3750,25 @@ async def test_get_triggers_for_target(
                   - light.LightEntityFeature.TRANSITION
     """
 
+    component2_trigger_descriptions = """
+        match_all:
+          target:
+
+        other_integration:
+          target:
+            entity:
+              - domain: light
+                supported_features:
+                  - light.LightEntityFeature.EFFECT
+              - integration: test
+                domain: light
+    """
+
     def _load_yaml(fname, secrets=None):
         if fname.endswith("component1/triggers.yaml"):
             trigger_descriptions = component1_trigger_descriptions
+        elif fname.endswith("component2/triggers.yaml"):
+            trigger_descriptions = component2_trigger_descriptions
         else:
             trigger_descriptions = get_common_trigger_descriptions(fname.split("/")[-2])
         with io.StringIO(trigger_descriptions) as file:
@@ -3754,6 +3779,7 @@ async def test_get_triggers_for_target(
     assert await async_setup_component(hass, "switch", {})
     assert await async_setup_component(hass, "sensor", {})
     assert await async_setup_component(hass, "component1", {})
+    assert await async_setup_component(hass, "component2", {})
     await hass.async_block_till_done()
 
     async def assert_triggers(target: dict[str, list[str]], expected: list[str]) -> Any:
@@ -3771,44 +3797,52 @@ async def test_get_triggers_for_target(
     await assert_triggers({"entity_id": ["light.unknown_entity"]}, [])
 
     # Test entity target - entity not in registry
-    await assert_triggers({"entity_id": ["light.not_registry"]}, ["light.turned_on"])
+    await assert_triggers(
+        {"entity_id": ["light.not_registry"]},
+        ["component2.match_all", "component2.other_integration", "light.turned_on"],
+    )
 
     # Test entity targets
     await assert_triggers(
         {"entity_id": ["light.component1_light", "switch.component1_switch"]},
         [
-            "light.turned_on",
             "component1",
             "component1.light_message",
+            "component2.match_all",
+            "light.turned_on",
             "switch.turned_on",
         ],
     )
     await assert_triggers(
         {"entity_id": ["light.component1_flash_light"]},
         [
-            "light.turned_on",
             "component1",
-            "component1.light_message",
             "component1.light_flash",
+            "component1.light_message",
+            "component2.match_all",
+            "light.turned_on",
         ],
     )
     await assert_triggers(
         {"entity_id": ["light.component1_effect_flash_light"]},
         [
-            "light.turned_on",
             "component1",
-            "component1.light_message",
             "component1.light_flash",
+            "component1.light_message",
+            "component2.match_all",
+            "component2.other_integration",
+            "light.turned_on",
         ],
     )
     await assert_triggers(
         {"entity_id": ["light.component1_flash_transition_light"]},
         [
-            "light.turned_on",
             "component1",
-            "component1.light_message",
-            "component1.light_flash",
             "component1.light_dance",
+            "component1.light_flash",
+            "component1.light_message",
+            "component2.match_all",
+            "light.turned_on",
         ],
     )
 
@@ -3816,9 +3850,11 @@ async def test_get_triggers_for_target(
     await assert_triggers(
         {"device_id": ["device1", "device2"]},
         [
-            "light.turned_on",
             "component1",
             "component1.light_message",
+            "component2.match_all",
+            "component2.other_integration",
+            "light.turned_on",
             "sensor.turned_on",
             "switch.turned_on",
         ],
@@ -3827,13 +3863,24 @@ async def test_get_triggers_for_target(
     # Test area target - multiple areas
     await assert_triggers(
         {"area_id": ["kitchen", "living_room"]},
-        ["light.turned_on", "switch.turned_on"],
+        [
+            "component2.match_all",
+            "component2.other_integration",
+            "light.turned_on",
+            "switch.turned_on",
+        ],
     )
 
     # Test label target - multiple labels
     await assert_triggers(
         {"label_id": ["label_1", "label_2"]},
-        ["light.turned_on", "component1", "switch.turned_on"],
+        [
+            "light.turned_on",
+            "component1",
+            "component2.match_all",
+            "component2.other_integration",
+            "switch.turned_on",
+        ],
     )
     # Test mixed target types
     await assert_triggers(
@@ -3844,9 +3891,11 @@ async def test_get_triggers_for_target(
             "label_id": ["label_1"],
         },
         [
-            "light.turned_on",
             "component1",
             "component1.light_message",
+            "component2.match_all",
+            "component2.other_integration",
+            "light.turned_on",
             "sensor.turned_on",
             "switch.turned_on",
         ],
