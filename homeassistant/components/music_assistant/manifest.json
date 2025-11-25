@@ -1,7 +1,7 @@
 {
   "domain": "music_assistant",
   "name": "Music Assistant",
-  "after_dependencies": ["hassio", "media_source", "media_player"],
+  "after_dependencies": ["hassio", "http", "media_source", "media_player"],
   "codeowners": ["@music-assistant", "@arturpragacz"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/music_assistant",
