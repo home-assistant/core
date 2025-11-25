@@ -27,7 +27,14 @@ class Reference:
     """Path to the YAML file for YAML-based configs."""
 
     def as_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
+        """
+        Return a dictionary representation of the Reference suitable for JSON serialization.
+        
+        The dictionary contains "config_type", "config_id", "config_name", "location", and "file_path" (a string when present, otherwise None).
+        
+        Returns:
+            dict[str, Any]: Mapping of field names to JSON-serializable values.
+        """
         return {
             "config_type": self.config_type,
             "config_id": self.config_id,
@@ -54,7 +61,16 @@ class ScanResult:
     """Whether the source entity is location-based (for future Epic 3)."""
 
     def as_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
+        """
+        Produce a dictionary representation of the ScanResult suitable for JSON serialization.
+        
+        Returns:
+            result (dict[str, Any]): Dictionary with keys:
+                - `source_entity_id` (str): The scanned entity ID.
+                - `references` (dict[str, list[dict[str, Any]]]): Mapping from config type to a list of Reference dictionaries produced by Reference.as_dict().
+                - `total_count` (int): Total number of references found.
+                - `is_location_based` (bool): Whether the source entity is location-based.
+        """
         return {
             "source_entity_id": self.source_entity_id,
             "references": {
