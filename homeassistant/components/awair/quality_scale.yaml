@@ -1,38 +1,73 @@
 rules:
   # Bronze
-  action-setup: done
-  appropriate-polling: done
+  action-setup:
+    status: exempt
+    comment: No actions defined
+  appropriate-polling:
+    status: done
+    comment: |
+      We fetch both user and devices, could probably slow one down
   brands: done
-  common-modules: todo
-  config-flow: done
-  config-flow-test-coverage: todo
-  dependency-transparency: done
+  common-modules: done
+  config-flow:
+    status: todo
+    comment: |
+      data_description fields are missing
+      Should not abort in cloud step when anything else than invalid access token
+      Find out why access token is optional
+      Discovered devices step is redundant
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Move happy flow to the top and merge with `test_show_form`
+      Reuse `result`
+      Cloud tests should initialize with data directly
+      Tests should finish in CREATE_ENTRY
+  dependency-transparency:
+    status: todo
+    comment: |
+      Dependency is not built in the CI
   docs-actions: todo
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: todo
+  entity-event-setup:
+    status: exempt
+    comment: No explicit event subscription
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: No actions defined
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable: todo
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      Patch objects where we use them
+      Use test helpers to load JSON
+      typo `no_devicess_fixture`
+      Make common config entries for cloud and local
+      Test setup of the integration
 
   # Gold
-  devices: done
+  devices:
+    status: done
+    comment: |
+      Can move to shorthand attribute
+      Can remove typecast
   diagnostics: todo
   discovery: done
   discovery-update-info: done
@@ -45,7 +80,10 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class: done
+  entity-device-class:
+    status: done
+    comment: |
+      Can remove rounding
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
