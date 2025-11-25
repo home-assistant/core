@@ -41,6 +41,7 @@ MOCK_VERSION_2 = 2
 MOCK_MINOR_VERSION_1 = 1
 MOCK_MINOR_VERSION_2 = 2
 MOCK_KEY = "storage-test"
+MOCK_KEY2 = "storage-test-2"
 MOCK_DATA = {"hello": "world"}
 MOCK_DATA2 = {"goodbye": "cruel world"}
 
@@ -150,6 +151,19 @@ async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
     """Test thread handling when saving with a delay."""
     calls = []
 
+    async def assert_storage_data(store_key: str, expected_data: str) -> None:
+        """Assert storage data."""
+
+        def read_storage_data(store_key: str) -> str:
+            """Read storage data."""
+            with open(
+                tmpdir / f"temp_storage/.storage/{store_key}", encoding="utf-8"
+            ) as f:
+                return f.read()
+
+        store_data = await asyncio.to_thread(read_storage_data, store_key)
+        assert store_data == expected_data
+
     config_dir = await asyncio.to_thread(tmpdir.mkdir, "temp_storage")
     async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
 
@@ -164,7 +178,7 @@ async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
             """Produce data to store."""
             assert threading.get_ident() == hass.loop_thread_id
             calls.append("callback")
-            return MOCK_DATA
+            return MOCK_DATA2
 
         store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
         store.async_delay_save(data_producer_thread_safe, 1)
@@ -172,13 +186,35 @@ async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done()
 
-        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+        store = storage.Store(hass, MOCK_VERSION, MOCK_KEY2)
         store.async_delay_save(data_producer_callback, 1)
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done()
 
         assert calls == ["thread_safe", "callback"]
+        expected_data = (
+            "{\n"
+            '  "version": 1,\n'
+            '  "minor_version": 1,\n'
+            '  "key": "storage-test",\n'
+            '  "data": {\n'
+            '    "hello": "world"\n'
+            "  }\n"
+            "}"
+        )
+        await assert_storage_data(MOCK_KEY, expected_data)
+        expected_data = (
+            "{\n"
+            '  "version": 1,\n'
+            '  "minor_version": 1,\n'
+            '  "key": "storage-test-2",\n'
+            '  "data": {\n'
+            '    "goodbye": "cruel world"\n'
+            "  }\n"
+            "}"
+        )
+        await assert_storage_data(MOCK_KEY2, expected_data)
 
         await hass.async_stop(force=True)
 

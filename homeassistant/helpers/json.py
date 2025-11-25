@@ -160,15 +160,22 @@ def _orjson_bytes_default_encoder(data: Any) -> bytes:
     )
 
 
-def save_json(
-    filename: str,
+def prepare_save_json(
     data: list | dict,
-    private: bool = False,
     *,
+    destination: str = "",
     encoder: type[json.JSONEncoder] | None = None,
-    atomic_writes: bool = False,
-) -> None:
-    """Save JSON data to a file."""
+) -> tuple[str, str | bytes]:
+    """Prepare JSON data for saving to a file.
+
+    Returns a tuple of (mode, json_data) where mode is either 'w' or 'wb'
+    and json_data is either a str or bytes depending on the mode.
+
+    Args:
+        data: Data to serialize.
+        encoder: Optional custom JSON encoder.
+        destination: Optional destination which will be included in error messages.
+    """
     dump: Callable[[Any], Any]
     try:
         # For backwards compatibility, if they pass in the
@@ -188,10 +195,23 @@ def save_json(
         formatted_data = format_unserializable_data(
             find_paths_unserializable_data(data, dump=dump)
         )
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {formatted_data}"
+        destination = f": {destination}" if destination else ""
+        msg = f"Failed to serialize to JSON{destination}. Bad data at {formatted_data}"
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
+    return (mode, json_data)
 
+
+def save_json(
+    filename: str,
+    data: list | dict,
+    private: bool = False,
+    *,
+    encoder: type[json.JSONEncoder] | None = None,
+    atomic_writes: bool = False,
+) -> None:
+    """Save JSON data to a file."""
+    mode, json_data = prepare_save_json(data, destination=filename, encoder=encoder)
     method = write_utf8_file_atomic if atomic_writes else write_utf8_file
     method(filename, json_data, private, mode=mode)
 
