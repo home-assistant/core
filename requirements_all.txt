@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.2
 
 # homeassistant.components.alexa_devices
-aioamazondevices==9.0.2
+aioamazondevices==9.0.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.7.0
+aioesphomeapi==42.8.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -872,7 +872,7 @@ elgato==5.1.2
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.12
+elkm1-lib==2.2.13
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4
@@ -1195,7 +1195,7 @@ holidays==0.84
 home-assistant-frontend==20251105.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.11.7
+home-assistant-intents==2025.11.24
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.4.0
@@ -3023,7 +3023,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.5
+tuya-device-sharing-sdk==0.2.6
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
@@ -3041,7 +3041,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.26.0
+uiprotect==7.28.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
