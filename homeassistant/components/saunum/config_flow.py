@@ -8,7 +8,7 @@ from typing import Any
 from pysaunum import SaunumClient, SaunumException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
@@ -57,19 +57,8 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        reconfigure_entry = (
-            self._get_reconfigure_entry() if self.source == "reconfigure" else None
-        )
-
         if user_input is not None:
-            # Check for duplicate configuration
-            if reconfigure_entry:
-                # During reconfiguration, only check for duplicates if host changed
-                if reconfigure_entry.data.get(CONF_HOST) != user_input[CONF_HOST]:
-                    self._async_abort_entries_match(user_input)
-            else:
-                # During initial setup, always check for duplicates
-                self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(user_input)
 
             try:
                 await validate_input(user_input)
@@ -79,19 +68,18 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if reconfigure_entry:
-                    return self.async_update_reload_and_abort(
-                        reconfigure_entry,
-                        data_updates=user_input,
+                if self.source == SOURCE_USER:
+                    return self.async_create_entry(
+                        title="Saunum",
+                        data=user_input,
                     )
-                return self.async_create_entry(
-                    title="Saunum",
-                    data=user_input,
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
                 )
 
-        step_id = "reconfigure" if reconfigure_entry else "user"
         return self.async_show_form(
-            step_id=step_id,
+            step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
