@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp.client_exceptions import ClientError
 import tibber
 from tibber.data_api import TibberDataAPI, TibberDevice
+
+if TYPE_CHECKING:
+    from . import TibberRuntimeData
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -199,7 +202,7 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        runtime_data: Any,
+        runtime_data: TibberRuntimeData,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

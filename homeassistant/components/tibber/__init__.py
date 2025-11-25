@@ -127,11 +127,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
-    runtime = TibberRuntimeData(
+    hass.data[DOMAIN] = TibberRuntimeData(
         tibber_connection=tibber_connection,
         session=session,
     )
-    hass.data[DOMAIN] = runtime
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
