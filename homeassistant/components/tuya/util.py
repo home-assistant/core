@@ -52,26 +52,6 @@ def parse_dptype(dptype: str) -> DPType | None:
         return _DPTYPE_MAPPING.get(dptype)
 
 
-def get_dptype(
-    device: CustomerDevice, dpcode: DPCode | None, *, prefer_function: bool = False
-) -> DPType | None:
-    """Find a matching DPType type information for this device DPCode."""
-    if dpcode is None:
-        return None
-
-    lookup_tuple = (
-        (device.function, device.status_range)
-        if prefer_function
-        else (device.status_range, device.function)
-    )
-
-    for device_specs in lookup_tuple:
-        if current_definition := device_specs.get(dpcode):
-            return parse_dptype(current_definition.type)
-
-    return None
-
-
 def remap_value(
     value: float,
     from_min: float = 0,
