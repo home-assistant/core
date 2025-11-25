@@ -36,23 +36,44 @@ SENSOR_TYPES: tuple[MyStromSensorEntityDescription, ...] = (
         translation_key="avg_consumption",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda device: getattr(device, "consumedWs", None),
+        value_fn=(
+            lambda device: device.consumedWs
+            if isinstance(device, MyStromSwitch)
+            else None
+        ),
     ),
     MyStromSensorEntityDescription(
         key="consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda device: getattr(device, "consumption", None),
+        value_fn=(
+            lambda device: device.consumption
+            if isinstance(device, MyStromSwitch)
+            else None
+        ),
     ),
     MyStromSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        # the switch property is called "temperature", the PIR property "temperature_compensated"
-        value_fn=lambda device: getattr(
-            device, "temperature", getattr(device, "temperature_compensated", None)
+        value_fn=(
+            lambda device: device.temperature
+            if isinstance(device, MyStromSwitch)
+            else None
+        ),
+    ),
+    MyStromSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=(
+            lambda device: float(device.temperature_compensated)
+            if isinstance(device, MyStromPir)
+            and device.temperature_compensated is not None
+            else None
         ),
     ),
     MyStromSensorEntityDescription(
@@ -60,7 +81,11 @@ SENSOR_TYPES: tuple[MyStromSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
-        value_fn=lambda device: getattr(device, "intensity", None),
+        value_fn=(
+            lambda device: float(device.intensity)
+            if isinstance(device, MyStromPir) and device.intensity is not None
+            else None
+        ),
     ),
 )
 
