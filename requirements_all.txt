@@ -43,9 +43,6 @@ PlexAPI==4.15.16
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
 
-# homeassistant.components.bluetooth_tracker
-# PyBluez==0.22
-
 # homeassistant.components.cast
 PyChromecast==14.0.9
 
@@ -701,9 +698,6 @@ brottsplatskartan==1.0.5
 
 # homeassistant.components.brunt
 brunt==1.2.0
-
-# homeassistant.components.bluetooth_tracker
-bt-proximity==0.2.1
 
 # homeassistant.components.bthome
 bthome-ble==3.15.0
