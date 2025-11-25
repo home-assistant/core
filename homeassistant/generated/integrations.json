@@ -123,6 +123,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "airobot": {
+      "name": "Airobot",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airq": {
       "name": "air-Q",
       "integration_type": "hub",
@@ -782,12 +788,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "bluetooth_tracker": {
-      "name": "Bluetooth Tracker",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "bmw_connected_drive": {
       "name": "BMW Connected Drive",
       "integration_type": "hub",
@@ -1387,12 +1387,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "dominos": {
-      "name": "Dominos Pizza",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "doods": {
       "name": "DOODS - Dedicated Open Object Detection Service",
       "integration_type": "hub",
@@ -1467,7 +1461,7 @@
     "duckdns": {
       "name": "Duck DNS",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "duke_energy": {
@@ -1831,6 +1825,13 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "essent": {
+      "name": "Essent",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "etherscan": {
       "name": "Etherscan",
@@ -2573,6 +2574,12 @@
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hanna": {
+      "name": "Hanna",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5407,12 +5414,6 @@
           "config_flow": false,
           "name": "Raspberry Pi"
         },
-        "rpi_camera": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "Raspberry Pi Camera"
-        },
         "rpi_power": {
           "integration_type": "hub",
           "config_flow": true,
@@ -5763,7 +5764,7 @@
       "iot_class": "local_push"
     },
     "saunum": {
-      "name": "Saunum Leil",
+      "name": "Saunum",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
