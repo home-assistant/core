@@ -4,13 +4,21 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+LABEL \
+    io.hass.type="core" \
+    org.opencontainers.image.authors="The Home Assistant Authors" \
+    org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
+    org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
+    org.opencontainers.image.licenses="Apache-2.0" \
+    org.opencontainers.image.source="https://github.com/home-assistant/core" \
+    org.opencontainers.image.title="Home Assistant" \
+    org.opencontainers.image.url="https://www.home-assistant.io/"
+
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
     UV_SYSTEM_PYTHON=true \
     UV_NO_CACHE=true
-
-ARG QEMU_CPU
 
 # Home Assistant S6-Overlay
 COPY rootfs /
