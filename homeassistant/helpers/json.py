@@ -173,7 +173,6 @@ def prepare_save_json(
     Args:
         data: Data to serialize.
         encoder: Optional custom JSON encoder.
-        destination: Optional destination which will be included in error messages.
     """
     dump: Callable[[Any], Any]
     try:

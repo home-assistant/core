@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import json
 import os
+from pathlib import Path
 import threading
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
@@ -147,7 +148,7 @@ async def test_saving_with_delay(
     }
 
 
-async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
+async def test_saving_with_delay_threading(tmp_path: Path) -> None:
     """Test thread handling when saving with a delay."""
     calls = []
 
@@ -156,16 +157,12 @@ async def test_saving_with_delay_threading(tmpdir: py.path.local) -> None:
 
         def read_storage_data(store_key: str) -> str:
             """Read storage data."""
-            with open(
-                tmpdir / f"temp_storage/.storage/{store_key}", encoding="utf-8"
-            ) as f:
-                return f.read()
+            return Path(tmp_path / f".storage/{store_key}").read_text(encoding="utf-8")
 
         store_data = await asyncio.to_thread(read_storage_data, store_key)
         assert store_data == expected_data
 
-    config_dir = await asyncio.to_thread(tmpdir.mkdir, "temp_storage")
-    async with async_test_home_assistant(config_dir=config_dir.strpath) as hass:
+    async with async_test_home_assistant(config_dir=tmp_path) as hass:
 
         def data_producer_thread_safe() -> Any:
             """Produce data to store."""
