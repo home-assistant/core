@@ -359,6 +359,7 @@ jobs:
           cosign-release: "v2.2.3"
 
       - name: Verify architecture image signatures
+        shell: bash
         run: |
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
           for arch in $ARCHS; do
@@ -408,6 +409,7 @@ jobs:
 
       - name: Push architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
+        shell: bash
         run: |
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
           for arch in $ARCHS; do
@@ -423,6 +425,7 @@ jobs:
         uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v3.7.1
 
       - name: Create and push multi-arch manifests
+        shell: bash
         run: |
           # Build list of architecture images dynamically
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
