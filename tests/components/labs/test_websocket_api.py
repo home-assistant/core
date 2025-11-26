@@ -417,7 +417,7 @@ async def test_websocket_update_preview_feature_backup_scenarios(
         mock_backup_manager.async_create_automatic_backup = AsyncMock()
 
     with patch(
-        "homeassistant.components.labs.async_get_manager",
+        "homeassistant.components.labs.websocket_api.async_get_manager",
         return_value=mock_backup_manager,
     ):
         await client.send_json_auto_id(
@@ -679,7 +679,7 @@ async def test_websocket_backup_timeout_handling(
     )
 
     with patch(
-        "homeassistant.components.labs.async_get_manager",
+        "homeassistant.components.labs.websocket_api.async_get_manager",
         return_value=mock_backup_manager,
     ):
         await client.send_json_auto_id(
