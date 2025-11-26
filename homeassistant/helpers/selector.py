@@ -57,6 +57,8 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
+    # Context keys that are allowed to be used in the selector, with list of allowed selector types
+    allowed_context_keys: dict[str, list[str]] = {}
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
@@ -345,6 +347,8 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
     """Selector for an entity attribute."""
 
     selector_type = "attribute"
+
+    allowed_context_keys = {"filter_entity": ["entity"]}
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
@@ -1039,6 +1043,8 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
+    allowed_context_keys = {"filter_entity": [EntitySelector.selector_type]}
+
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("accept"): [str],
@@ -1384,6 +1390,12 @@ class StateSelector(Selector[StateSelectorConfig]):
     """Selector for an entity state."""
 
     selector_type = "state"
+
+    allowed_context_keys = {
+        "filter_entity": [EntitySelector.selector_type],
+        "filter_target": ["target"],
+        "filter_attribute": [AttributeSelector.selector_type],
+    }
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
