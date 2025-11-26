@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     StateType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -65,7 +64,7 @@ def _calc_rain_last_24h(entity: "TFAmeSensorEntity", data: dict[str, Any]) -> fl
 
 
 # All TFA.me entity descriptions
-TFA_ME_SENSOR_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
+TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     # Temperature & temperature probe
     "temperature": TFAmeSensorEntityDescription(
         key="temperature",
@@ -215,26 +214,15 @@ async def async_setup_entry(
     # Get coordinator
     coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
     # Initialize first refresh/request and wait for parsed JSON data from coordinator
+    sensors_start = []
+    for unique_id in coordinator.data:
+        sensor_id = coordinator.data[unique_id]["sensor_id"]
+        if unique_id not in coordinator.sensor_entity_list:
+            sensors_start.append(TFAmeSensorEntity(coordinator, sensor_id, unique_id))
+            coordinator.sensor_entity_list.append(unique_id)
 
-    try:
-        # Wait for coordinator.async_config_entry_first_refresh() then collect all entities
-        sensors_start = []
-        for unique_id in coordinator.data:
-            sensor_id = coordinator.data[unique_id]["sensor_id"]
-            if unique_id not in coordinator.sensor_entity_list:
-                if "_txt" not in unique_id:
-                    sensors_start.append(
-                        TFAmeSensorEntity(coordinator, sensor_id, unique_id)
-                    )
-                    coordinator.sensor_entity_list.append(unique_id)
-
-        # Add all entities
-        async_add_entities(sensors_start, True)
-
-    except Exception as error:
-        raise ConfigEntryNotReady(
-            f"Station not available: {error}"
-        ) from error  # Catch errors here
+    # Add all entities
+    async_add_entities(sensors_start, True)
 
 
 class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
@@ -307,7 +295,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             self.measure_name = self.coordinator.data[self.uid]["measurement"]
             self.init_measure_value = self.coordinator.data[self.uid]["value"]
 
-            description = TFA_ME_SENSOR_DESCRIPTIONS.get(self.measure_name)
+            description = TFA_ME_ENTITY_DESCRIPTIONS.get(self.measure_name)
             if description is not None:
                 self.entity_description = description
                 # Set icon translations for entity, MDI icon: https://pictogrammers.com/library/mdi/

@@ -33,7 +33,7 @@ async def test_options_flow_action_rain(
     assert tfa_me_options_flow_mock_entry.state == ConfigEntryState.LOADED
 
     # Update list and add coordinator to hass.data
-    tfa_me_mock_coordinator.sensor_entity_list = ["sensor.a1fffffea_rain_rel"]
+    tfa_me_mock_coordinator.sensor_entity_list = ["sensor.017654321_a1fffffea_rain_rel"]
     hass.data.setdefault(DOMAIN, {})[tfa_me_options_flow_mock_entry.entry_id] = (
         tfa_me_mock_coordinator
     )

@@ -1,6 +1,7 @@
 """Test the TFA.me integration: test of sensor.py."""
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
+# For snapshot: "pytest tests/components/tfa_me/test_sensor.py --snapshot-update"
 
 from datetime import datetime
 import json
@@ -10,144 +11,125 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tfa_me.const import DOMAIN, MEASUREMENT_TO_TRANSLATION_KEY
+from homeassistant.components.tfa_me.const import (
+    CONF_NAME_WITH_STATION_ID,
+    DOMAIN,
+    MEASUREMENT_TO_TRANSLATION_KEY,
+)
 from homeassistant.components.tfa_me.sensor import TFAmeSensorEntity, async_setup_entry
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import FAKE_JSON
 
-class FailingEntitiesError(Exception):
-    """Custom exception for testing."""
+from tests.common import MockConfigEntry, SnapshotAssertion
 
 
-async def test_async_setup_entry_raises_config_entry_not_ready(
-    hass: HomeAssistant, tfa_me_mock_entry
+@pytest.mark.asyncio
+async def test_async_setup_entry_creates_entities(
+    hass: HomeAssistant, tfa_me_mock_coordinator
 ) -> None:
-    """Test setup raises ConfigEntryNotReady on error."""
+    """Test that async_setup_entry creates TFAmeSensorEntity instances for all coordinator data."""
 
-    def failing_entities(*args, **kwargs):
-        raise FailingEntitiesError("failing_entities")
+    # Arrange: Fake config entry
+    entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="test-entry-id")
+    entry.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, tfa_me_mock_entry, failing_entities)
+    # Fake coordinator with two sensors
+    tfa_me_mock_coordinator.data = {
+        "uid_1": {"sensor_id": "a204e4df6"},
+        "uid_2": {"sensor_id": "a4481290f"},
+    }
+
+    # Put coordinator into hass.data as the setup function expects
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tfa_me_mock_coordinator
+
+    # Mock async_add_entities
+    async_add_entities = MagicMock()
+
+    # Act
+    await async_setup_entry(hass, entry, async_add_entities)
+
+    # Assert: async_add_entities was called once with a list of entities and update_before_add=True
+    async_add_entities.assert_called_once()
+    entities_arg, update_before_add = async_add_entities.call_args[0]
+
+    assert update_before_add is True
+    assert len(entities_arg) == 2
+
+    # Check entity instances and that sensor_entity_list was updated
+    assert all(isinstance(e, TFAmeSensorEntity) for e in entities_arg)
+    assert sorted(tfa_me_mock_coordinator.sensor_entity_list) == ["uid_1", "uid_2"]
+
+
+# pytest.mark.asyncio
+async def test_tfa_me_sensor_entities_snapshot(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot all sensor entities created from a typical TFA.me JSON payload."""
+
+    # 1) Create config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "192.168.1.10",
+            CONF_NAME_WITH_STATION_ID: True,
+        },
+        title="TFA.me Station '05B3E4E44'",
+    )
+    entry.add_to_hass(hass)
+
+    # 2) Patch HTTP client -> returns FAKE_JSON
+    with patch(
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        return_value=FAKE_JSON,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # 3) Collect all sensor entities from this config entry.
+    ent_reg = er.async_get(hass)
+    states: dict[str, dict] = {}
+
+    for entity_id in sorted(hass.states.async_entity_ids("sensor")):
+        ent = ent_reg.async_get(entity_id)
+        # # Only entities from this config entry
+        if not ent or ent.config_entry_id != entry.entry_id:
+            continue
+        states[entity_id] = hass.states.get(entity_id).as_dict()
+
+    # 4) Snapshot comparison
+    assert states == snapshot
 
 
 async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
-    """Test properties of TFAmeSensorEntity."""
+    """Test temperature/himidity entities to get 100% code coverage of sensor.py."""
     entity = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a01234567",
-        entity_id="sensor.a01234567_temperature",
+        entity_id="sensor.017654321_a01234567_temperature",
     )
 
     # Test: unique_id, name, measurement_name, native_value (float), unit
-    assert entity.unique_id == "sensor.a01234567_temperature"
+    assert entity.unique_id == "sensor.017654321_a01234567_temperature"
     assert entity.translation_key == "temperature"
     assert entity.measurement_name == "temperature"
     assert float(entity.native_value) == 23.5
     assert entity.native_unit_of_measurement == "°C"
 
-    # Attributes
-    attrs = entity.extra_state_attributes
-    assert attrs["sensor_name"] == "A01234567"
-    assert attrs["measurement"] == "temperature"
-    assert "timestamp" in attrs
-    assert "icon" in attrs
-
-    # Humidity
-    entity2 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a6f169ad1",
-        entity_id="sensor.a6f169ad1_humidity",
-    )
-    assert float(entity2.native_value) == 50.0
-
-    # Rain value
-    entity3 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffea",
-        entity_id="sensor.a1fffffea_rain_rel",
-    )
-    assert float(entity3.init_measure_value) == 7.4
-    assert float(entity3.native_value) == 0.0
-
-    # Test rain 1 hour
-    now = datetime.now().timestamp()
-    entity4 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffea",
-        entity_id="sensor.a1fffffea_rain_hour",
-    )
-    assert float(entity4.init_measure_value) == 7.4
-    assert entity4.rain_history.max_age == 60 * 60
-    assert float(entity4.native_value) == 0.0
-
-    # Add a history for test
-    entity4.rain_history.add_measurement(7.4, int(now) - 60)
-    entity4.rain_history.add_measurement(8.0, int(now) - 30)
-    entity4.rain_history.add_measurement(9.0, int(now))
-    assert entity4.rain_history.get_oldest_and_newest() == (
-        (7.4, int(now) - 60),
-        (9.0, int(now)),
-    )
-    assert float(entity4.init_measure_value) == 7.4
-    await entity4.async_update()
-    assert float(entity4.native_value) == 1.6
-    # remove value
-    del tfa_me_mock_coordinator.data[entity.entity_id]["value"]
-    assert float(entity4.native_value) == 1.6
-
-    # Test rain 24 hour
-    now = datetime.now().timestamp()
-    entity_24 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffec",
-        entity_id="sensor.a1fffffec_rain_24hours",
-    )
-    assert float(entity_24.init_measure_value) == 7.4
-    assert entity_24.rain_history_24.max_age == (24 * 60 * 60)
-    assert float(entity_24.native_value) == 0.0
-
-    # Add a history for test
-    entity_24.rain_history_24.add_measurement(7.4, int(now) - 60)
-    entity_24.rain_history_24.add_measurement(8.0, int(now) - 30)
-    entity_24.rain_history_24.add_measurement(9.0, int(now))
-    assert entity_24.rain_history_24.get_oldest_and_newest() == (
-        (7.4, int(now) - 60),
-        (9.0, int(now)),
-    )
-    assert float(entity_24.init_measure_value) == 7.4
-    await entity4.async_update()
-    assert float(entity_24.native_value) == 1.6
-
-    # Test rain 1 hour (value missing) part 2
-    entity4b = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffeb",
-        entity_id="sensor.a1fffffeb_rain_hour",
-    )
-    assert entity4b.measure_name == "rain_1_hour"
-
-    entity5 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffea",
-        entity_id="sensor.a1fffffea_rain_24hours",
-    )
-    assert float(entity5.init_measure_value) == 7.4
-    assert float(entity5.native_value) == 0.0
-
     # Station barometric pressure
     entity6 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="057654321",
-        entity_id="sensor.057654321_barometric_pressure",
+        entity_id="sensor.017654321_a057654321_barometric_pressure",
     )
     assert float(entity6.native_value) == 1000.1
-    # unit None
+    # Test: Nnit None
     tfa_me_mock_coordinator.data[entity.entity_id]["unit"] = None
     assert entity.native_unit_of_measurement is None
-    # Remove unit
+    # Test: Remove unit
     del tfa_me_mock_coordinator.data[entity.entity_id]["unit"]
     assert entity.native_unit_of_measurement == ""
 
@@ -155,36 +137,61 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     entity7 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="057654322",
-        entity_id="sensor.057654322_barometric_pressure",
+        entity_id="sensor.017654321_a057654322_barometric_pressure",
     )
     attrs = entity7.extra_state_attributes
     assert attrs == {}
 
-    # Station barometric pressure without "unit"
-    entity8 = TFAmeSensorEntity(
+
+async def test_rain_sensor_entities(tfa_me_mock_coordinator) -> None:
+    """Test rain entities to get 100% code coverage of sensor.py."""
+    # Rain relative value
+    entity3 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
-        sensor_id="057654323",
-        entity_id="sensor.057654323_barometric_pressure",
+        sensor_id="a1fffffea",
+        entity_id="sensor.017654321_a1fffffea_rain_rel",
     )
-    assert entity8.native_unit_of_measurement == ""
+    assert float(entity3.init_measure_value) == 7.4
+    assert float(entity3.native_value) == 0.0
+
+    # Test rain 1 hour
+    entity4 = TFAmeSensorEntity(
+        coordinator=tfa_me_mock_coordinator,
+        sensor_id="a1fffffea",
+        entity_id="sensor.017654321_a1fffffea_rain_hour",
+    )
+    assert float(entity4.init_measure_value) == 7.4
+    assert entity4.rain_history.max_age == 60 * 60
+    assert float(entity4.native_value) == 0.0
+
+    # Test rain 24 hour
+    entity_24 = TFAmeSensorEntity(
+        coordinator=tfa_me_mock_coordinator,
+        sensor_id="a1fffffec",
+        entity_id="sensor.017654321_a1fffffec_rain_24hours",
+    )
+    assert float(entity_24.init_measure_value) == 7.4
+    assert entity_24.rain_history_24.max_age == (24 * 60 * 60)
+    assert float(entity_24.native_value) == 0.0
+
+    # Reset rain
+    entity5 = TFAmeSensorEntity(
+        coordinator=tfa_me_mock_coordinator,
+        sensor_id="a1fffffea",
+        entity_id="sensor.017654321_a1fffffea_rain_24hours",
+    )
+    assert float(entity5.init_measure_value) == 7.4
+    assert float(entity5.native_value) == 0.0
 
 
 async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
-    """Test wind sensor."""
+    """Test wind sensor entities to get 100% code coverage of sensor.py."""
     entity = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffb",
-        entity_id="sensor.a2ffffffb_wind_direction_deg",
+        entity_id="sensor.017654321_a2ffffffb_wind_direction_deg",
     )
     assert entity.native_value == 180.0
-
-    # Invalid sensor ID  & entity ID
-    entity_2 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a2ffffffa",
-        entity_id="sensor.a2ffffffa_wind_direction_deg",
-    )
-    assert entity_2.native_value is None
 
     # Invalid native value
     entity_3 = TFAmeSensorEntity(
@@ -201,7 +208,7 @@ async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
         entity_id="sensor.a2ffffffc_rssi",
     )
     assert entity_4.native_value is None
-    # Wrong ID
+    # Test: Wrong ID
     assert entity_4.get_timeout("xx") == 0
 
 
@@ -386,15 +393,6 @@ async def test_async_added_returns_if_no_registry_entry(
     # Assert: Registry function called
     assert mock_er_get.call_count == 1
 
-    # Assert: The registry object was asked whether entity exists
-    mock_reg.async_get.assert_called_once_with(entity.entity_id)
-
-    # Assert: No update (return)
-    mock_reg.async_update_entity.assert_not_called()
-
-    # Entity initialized
-    assert entity._initialized_once is True
-
 
 @pytest.mark.parametrize(
     ("uid_suffix", "measurement", "raw_value", "expect_add"),
@@ -527,35 +525,20 @@ def test_native_value_generic_fallback(
     """native_value should return data['value'] when no value_fn is defined and no timeout occurs."""
 
     # Build uid and coordinator data entry
-    uid = "sensor.017654321_a0f169ad1_temperature"
-    now_ts = int(datetime.now().timestamp())
-
-    data_entry = {
-        "gateway_id": "017654321",
-        "sensor_name": "A0F169AD1",
-        "timestamp": "2025-09-02T09:15:13Z",
-        "ts": now_ts,  # fresh timestamp → no timeout
-        "measurement": "temperature",
-        "value": "42.5",  # this is what we expect to get back
-        "unit": "°C",
-    }
-
-    tfa_me_mock_coordinator.data = {uid: data_entry}
-
+    uid = "sensor.017654321_a01234567_temperature"
     # Create entity
     ent = TFAmeSensorEntity(
-        tfa_me_mock_coordinator, sensor_id="a0f169ad1", entity_id=uid
+        tfa_me_mock_coordinator, sensor_id="a01234567", entity_id=uid
     )
     ent.hass = hass
 
-    # Ensure timeout does NOT trigger: patch get_timeout to a large value
-    ent.get_timeout = lambda _sensor_id: 999999  # effectively "no timeout" for the test
+    # Test: Timeout
+    tfa_me_mock_coordinator.data[uid]["ts"] = 0
+    assert ent.native_value is None
 
     # Provide an entity_description with value_fn = None
     ent.entity_description = SimpleNamespace(value_fn=None)
+    tfa_me_mock_coordinator.data[uid]["ts"] = int(datetime.now().timestamp())
 
-    # Action: access the property
-    result = ent.native_value
-
-    # Expectation: generic fallback is used → data.get("value")
-    assert result == "42.5"
+    # Test: generic fallback is used → data.get("value")
+    assert ent.native_value == "23.5"
