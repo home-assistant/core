@@ -425,32 +425,28 @@ jobs:
         run: |
           # Build list of architecture images dynamically
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
-          ARCH_IMAGES=""
+          ARCH_IMAGES=()
           for arch in $ARCHS; do
-            ARCH_IMAGES="${ARCH_IMAGES} ${{ matrix.registry }}/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+            ARCH_IMAGES+=("${{ matrix.registry }}/${arch}-homeassistant:${{ needs.init.outputs.version }}")
           done
 
           # Build list of all tags for single manifest creation
           # Note: Using sep-tags=',' in metadata-action for easier parsing
-          TAG_ARGS=""
-          SIMPLE_TAGS=()
+          TAG_ARGS=()
           IFS=',' read -ra TAGS <<< "${{ steps.meta.outputs.tags }}"
-          for full_tag in "${TAGS[@]}"; do
-            # Extract tag (everything after last colon)
-            tag="${full_tag##*:}"
-            TAG_ARGS="${TAG_ARGS} --tag ${{ matrix.registry }}/home-assistant:${tag}"
-            SIMPLE_TAGS+=("${tag}")
+          for tag in "${TAGS[@]}"; do
+            TAG_ARGS+=("--tag" "${tag}")
           done
 
           # Create manifest with ALL tags in a single operation (much faster!)
-          echo "Creating multi-arch manifest with tags: ${SIMPLE_TAGS[*]}"
-          docker buildx imagetools create ${TAG_ARGS} ${ARCH_IMAGES}
+          echo "Creating multi-arch manifest with tags: ${TAGS[*]}"
+          docker buildx imagetools create "${TAG_ARGS[@]}" "${ARCH_IMAGES[@]}"
 
           # Sign each tag separately (signing requires individual tag names)
           echo "Signing all tags..."
-          for tag in "${SIMPLE_TAGS[@]}"; do
-            echo "Signing ${{ matrix.registry }}/home-assistant:${tag}"
-            cosign sign --yes "${{ matrix.registry }}/home-assistant:${tag}"
+          for tag in "${TAGS[@]}"; do
+            echo "Signing ${tag}"
+            cosign sign --yes "${tag}"
           done
 
           echo "All manifests created and signed successfully"
