@@ -1,9 +1,12 @@
 """Test vacuum triggers."""
 
+from collections.abc import Generator
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.vacuum import VacuumActivity
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -23,12 +26,45 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
+@pytest.fixture(name="enable_experimental_triggers_conditions")
+def enable_experimental_triggers_conditions() -> Generator[None]:
+    """Enable experimental triggers and conditions."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture
 async def target_vacuums(hass: HomeAssistant) -> list[str]:
     """Create multiple vacuum entities associated with different targets."""
     return await target_entities(hass, "vacuum")
 
 
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        "vacuum.docked",
+        "vacuum.errored",
+        "vacuum.paused_cleaning",
+        "vacuum.started_cleaning",
+    ],
+)
+async def test_vacuum_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the vacuum triggers are gated by the labs flag."""
+    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
+        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
+        "feature to be enabled in Home Assistant Labs settings (feature flag: "
+        "'new_triggers_conditions')"
+    ) in caplog.text
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -96,6 +132,7 @@ async def test_vacuum_state_trigger_behavior_any(
         service_calls.clear()
 
 
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -162,6 +199,7 @@ async def test_vacuum_state_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),

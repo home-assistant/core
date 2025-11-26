@@ -1,9 +1,12 @@
 """Test cover trigger."""
 
+from collections.abc import Generator
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, CoverState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -22,12 +25,50 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
+@pytest.fixture(name="enable_experimental_triggers_conditions")
+def enable_experimental_triggers_conditions() -> Generator[None]:
+    """Enable experimental triggers and conditions."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture
 async def target_covers(hass: HomeAssistant) -> list[str]:
     """Create multiple cover entities associated with different targets."""
     return await target_entities(hass, "cover")
 
 
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        "cover.awning_opened",
+        "cover.blind_opened",
+        "cover.curtain_opened",
+        "cover.door_opened",
+        "cover.garage_opened",
+        "cover.gate_opened",
+        "cover.shade_opened",
+        "cover.shutter_opened",
+        "cover.window_opened",
+    ],
+)
+async def test_cover_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the cover triggers are gated by the labs flag."""
+    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
+        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
+        "feature to be enabled in Home Assistant Labs settings (feature flag: "
+        "'new_triggers_conditions')"
+    ) in caplog.text
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 def parametrize_opened_trigger_states(
     trigger: str, device_class: str
 ) -> list[tuple[str, dict, str, list[StateDescription]]]:
@@ -79,6 +120,7 @@ def parametrize_opened_trigger_states(
     ]
 
 
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -136,6 +178,7 @@ async def test_cover_state_attribute_trigger_behavior_any(
         service_calls.clear()
 
 
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -197,6 +240,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
