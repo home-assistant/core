@@ -9,7 +9,11 @@ from homeassistant import config
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -258,6 +262,50 @@ async def test_reload_sensors_that_reference_other_template_sensors(
     assert hass.states.get("sensor.test1").state == "3"
     assert hass.states.get("sensor.test2").state == "1"
     assert hass.states.get("sensor.test3").state == "2"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": DOMAIN,
+                "sensors": {
+                    "state": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}"
+                    },
+                    "state2": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}"
+                    },
+                    "state3": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}"
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_reload_removes_legacy_deprecation(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that we can reload and remove all template sensors."""
+    hass.states.async_set("sensor.test_sensor", "old")
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+    assert hass.states.get("sensor.state").state == "old"
+    assert hass.states.get("sensor.state2").state == "old"
+    assert hass.states.get("sensor.state3").state == "old"
+
+    assert len(issue_registry.issues) == 3
+
+    await async_yaml_patch_helper(hass, "legacy_template_deprecation.yaml")
+    assert len(hass.states.async_all()) == 4
+    assert hass.states.get("sensor.state").state == "old"
+    assert hass.states.get("sensor.state2").state == "old"
+    assert hass.states.get("sensor.state3").state == "old"
+    assert len(issue_registry.issues) == 1
 
 
 async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:

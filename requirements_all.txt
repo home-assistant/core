@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.2
 
 # homeassistant.components.alexa_devices
-aioamazondevices==9.0.3
+aioamazondevices==10.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -782,7 +782,7 @@ debugpy==1.8.17
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==16.3.0
+deebot-client==16.4.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -888,6 +888,9 @@ emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
+
+# homeassistant.components.energyid
+energyid-webhooks==0.0.14
 
 # homeassistant.components.energyzero
 energyzero==2.1.1
@@ -1087,7 +1090,7 @@ google-nest-sdm==9.1.0
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==1.1.1
+google_air_quality_api==1.1.2
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1195,7 +1198,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251105.1
+home-assistant-frontend==20251126.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.11.24
@@ -3047,7 +3050,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.28.0
+uiprotect==7.29.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3243,7 +3246,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.79
+zha==0.0.80
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
