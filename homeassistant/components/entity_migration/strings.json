@@ -10,6 +10,32 @@
           "description": "The entity to scan for references."
         }
       }
+    },
+    "migrate": {
+      "name": "Migrate entity references",
+      "description": "Migrate all references from one entity to another.",
+      "fields": {
+        "source_entity_id": {
+          "name": "Source entity ID",
+          "description": "The entity to migrate references from."
+        },
+        "target_entity_id": {
+          "name": "Target entity ID",
+          "description": "The entity to migrate references to."
+        },
+        "dry_run": {
+          "name": "Dry run",
+          "description": "Preview changes without applying them."
+        },
+        "create_backup": {
+          "name": "Create backup",
+          "description": "Create a backup of affected files before migration."
+        },
+        "force": {
+          "name": "Force migration",
+          "description": "Bypass compatibility warnings and force migration."
+        }
+      }
     }
   },
   "exceptions": {
@@ -21,6 +47,15 @@
     },
     "scan_failed": {
       "message": "Failed to scan for entity references: {error}"
+    },
+    "migration_failed": {
+      "message": "Migration failed: {error}"
+    },
+    "validation_failed": {
+      "message": "Validation failed: {error}"
+    },
+    "target_not_found": {
+      "message": "Target entity {target_entity_id} does not exist"
     }
   }
 }
