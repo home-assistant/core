@@ -595,6 +595,17 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 
         return self.entity_description.available(self.sub_status)
 
+    def configure_translation_attributes(self) -> None:
+        """Configure translation attributes."""
+        if (
+            channel_name := get_rpc_channel_name(self.coordinator.device, self.key)
+        ) and (
+            translation_key := self.entity_description.translation_key
+            or (self.device_class if self._default_to_device_class_name() else None)
+        ):
+            self._attr_translation_placeholders = {"channel_name": channel_name}
+            self._attr_translation_key = f"{translation_key}_with_channel_name"
+
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
