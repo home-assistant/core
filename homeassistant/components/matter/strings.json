@@ -103,9 +103,6 @@
       },
       "water_leak": {
         "name": "Water leak"
-      },
-      "window_covering_config_status_operational": {
-        "name": "Problem"
       }
     },
     "button": {
