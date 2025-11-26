@@ -14,7 +14,8 @@ env:
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
-  BASE_IMAGE_VERSION: "2025.11.0"
+  # Base image version from https://github.com/home-assistant/docker
+  BASE_IMAGE_VERSION: "2025.11.3"
   ARCHITECTURES: '["amd64", "aarch64"]'
 
 jobs:
