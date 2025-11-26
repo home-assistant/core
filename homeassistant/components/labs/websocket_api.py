@@ -9,9 +9,9 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.backup import async_get_manager
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.labs import EVENT_LABS_UPDATED, EventLabsUpdatedData
 
-from .const import EVENT_LABS_UPDATED, LABS_DATA
-from .models import EventLabsUpdatedData
+from .const import LABS_DATA
 
 
 @callback

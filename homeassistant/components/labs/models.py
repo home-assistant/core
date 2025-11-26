@@ -9,14 +9,6 @@ if TYPE_CHECKING:
     from homeassistant.helpers.storage import Store
 
 
-class EventLabsUpdatedData(TypedDict):
-    """Event data for labs_updated event."""
-
-    domain: str
-    preview_feature: str
-    enabled: bool
-
-
 @dataclass(frozen=True, kw_only=True, slots=True)
 class LabPreviewFeature:
     """Lab preview feature definition."""

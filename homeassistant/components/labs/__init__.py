@@ -7,36 +7,24 @@ in the Home Assistant Labs UI for users to enable or disable.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.generated.labs import LABS_PREVIEW_FEATURES
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_custom_components
 
-from .const import DOMAIN, EVENT_LABS_UPDATED, LABS_DATA, STORAGE_KEY, STORAGE_VERSION
-from .models import (
-    EventLabsUpdatedData,
-    LabPreviewFeature,
-    LabsData,
-    LabsStoreData,
-    NativeLabsStoreData,
-)
+from .const import DOMAIN, LABS_DATA, STORAGE_KEY, STORAGE_VERSION
+from .models import LabPreviewFeature, LabsData, LabsStoreData, NativeLabsStoreData
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-__all__ = [
-    "EVENT_LABS_UPDATED",
-    "EventLabsUpdatedData",
-    "async_is_preview_feature_enabled",
-    "async_listen",
-]
+__all__ = []
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -134,55 +122,3 @@ async def _async_scan_all_preview_features(
 
     _LOGGER.debug("Loaded %d total lab preview features", len(preview_features))
     return preview_features
-
-
-@callback
-def async_is_preview_feature_enabled(
-    hass: HomeAssistant, domain: str, preview_feature: str
-) -> bool:
-    """Check if a lab preview feature is enabled.
-
-    Args:
-        hass: HomeAssistant instance
-        domain: Integration domain
-        preview_feature: Preview feature name
-
-    Returns:
-        True if the preview feature is enabled, False otherwise
-    """
-    if LABS_DATA not in hass.data:
-        return False
-
-    labs_data = hass.data[LABS_DATA]
-    return (domain, preview_feature) in labs_data.data.preview_feature_status
-
-
-@callback
-def async_listen(
-    hass: HomeAssistant,
-    domain: str,
-    preview_feature: str,
-    listener: Callable[[], None],
-) -> Callable[[], None]:
-    """Listen for changes to a specific preview feature.
-
-    Args:
-        hass: HomeAssistant instance
-        domain: Integration domain
-        preview_feature: Preview feature name
-        listener: Callback to invoke when the preview feature is toggled
-
-    Returns:
-        Callable to unsubscribe from the listener
-    """
-
-    @callback
-    def _async_feature_updated(event: Event[EventLabsUpdatedData]) -> None:
-        """Handle labs feature update event."""
-        if (
-            event.data["domain"] == domain
-            and event.data["preview_feature"] == preview_feature
-        ):
-            listener()
-
-    return hass.bus.async_listen(EVENT_LABS_UPDATED, _async_feature_updated)

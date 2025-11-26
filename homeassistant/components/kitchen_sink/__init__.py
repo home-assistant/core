@@ -11,7 +11,6 @@ from random import random
 
 import voluptuous as vol
 
-from homeassistant.components.labs import async_is_preview_feature_enabled, async_listen
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -39,6 +38,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.labs import async_is_preview_feature_enabled, async_listen
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (

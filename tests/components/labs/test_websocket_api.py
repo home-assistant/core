@@ -7,12 +7,12 @@ from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.labs import (
+from homeassistant.components.labs import async_setup
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.labs import (
     EVENT_LABS_UPDATED,
     async_is_preview_feature_enabled,
-    async_setup,
 )
-from homeassistant.core import HomeAssistant
 
 from . import assert_stored_labs_data
 
