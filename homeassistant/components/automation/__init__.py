@@ -135,7 +135,7 @@ def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool
     """Check if the platform is a disabled experimental trigger platform."""
     return (
         platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
-        and labs.async_is_preview_feature_enabled(
+        and not labs.async_is_preview_feature_enabled(
             hass,
             DOMAIN,
             NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
