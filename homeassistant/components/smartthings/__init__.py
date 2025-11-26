@@ -433,6 +433,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             else:
                 _LOGGER.info("Successfully cleaned up old smart app during migration")
+            data[OLD_DATA] = {CONF_LOCATION_ID: old_data[CONF_LOCATION_ID]}
         hass.config_entries.async_update_entry(
             entry,
             data=data,
