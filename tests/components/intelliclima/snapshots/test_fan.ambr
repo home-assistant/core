@@ -1,4 +1,43 @@
 # serializer version: 1
+# name: test_all_fan_entities.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        '00:11:22:33:44:55',
+      ),
+      tuple(
+        'mac',
+        '00:11:22:33:44:55',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'intelliclima',
+        '56789',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Fantini Cosmi',
+    'model': 'ECOCOMFORT 2.0',
+    'model_id': None,
+    'name': 'Test VMC',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '11223344',
+    'sw_version': '0.6.8',
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_fan_entities[fan.test_vmc_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6,7 +45,6 @@
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
-        'off',
         'forward',
         'reverse',
         'alternate',
@@ -52,7 +90,6 @@
       'percentage_step': 25.0,
       'preset_mode': 'forward',
       'preset_modes': list([
-        'off',
         'forward',
         'reverse',
         'alternate',

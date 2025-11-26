@@ -4,15 +4,12 @@ from dataclasses import dataclass
 import math
 from typing import Any
 
-from pyintelliclima import IntelliClimaECO
-
 from homeassistant.components.fan import (
     FanEntity,
     FanEntityDescription,
     FanEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -35,7 +32,6 @@ from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 from .entity import IntelliClimaECOEntity
 
 PRESET_MODES_TO_INTELLICLIMA_MODE = {
-    "off": FAN_MODE_OFF,
     "forward": FAN_MODE_IN,
     "reverse": FAN_MODE_OUT,
     "alternate": FAN_MODE_ALTERNATE,
@@ -101,36 +97,25 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         | FanEntityFeature.TURN_ON
     )
 
-    def __init__(
-        self,
-        coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the fan."""
-        super().__init__(coordinator, device, description)
-
-        self._speed = device.speed_set
-        self._mode = device.mode_set
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+        return self._device_id in self.coordinator.data.ecocomfort2
 
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        if self._device_id not in self.coordinator.data.ecocomfort2:
-            return False
-
-        device_data: IntelliClimaECO = self.coordinator.data.ecocomfort2[
-            self._device_id
-        ]
-        return device_data.mode_set != FAN_MODE_OFF
+        return (
+            self.coordinator.data.ecocomfort2[self._device_id].mode_set != FAN_MODE_OFF
+        )
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if self._device_id not in self.coordinator.data.ecocomfort2:
-            return None
-
         device_data = self.coordinator.data.ecocomfort2[self._device_id]
+
         if device_data.speed_set == FAN_SPEED_AUTO:
             return None
 
@@ -146,15 +131,16 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        if self._device_id not in self.coordinator.data.ecocomfort2:
-            return None
-
         device_data = self.coordinator.data.ecocomfort2[self._device_id]
+
+        if device_data.mode_set == FAN_MODE_OFF:
+            return None
         if (
             device_data.speed_set == FAN_SPEED_AUTO
             and device_data.mode_set == FAN_MODE_SENSOR
         ):
             return "auto"
+
         return INTELLICLIMA_MODE_TO_PRESET_MODES[device_data.mode_set]
 
     @property
@@ -168,25 +154,13 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn on the fan."""
-        if percentage in (None, 0):
-            # default to sleep speed
-            percentage = 25
+        """Turn on the fan.
 
-        self._speed = str(
-            math.ceil(
-                percentage_to_ranged_value(
-                    self.entity_description.speed_range,
-                    percentage,  # type: ignore[arg-type]
-                )
-            )
-        )
-
-        if preset_mode in (None, "off"):
-            # default to alternate mode
-            preset_mode = "alternate"
-
-        await self.async_set_preset_mode(preset_mode)  # type: ignore[arg-type]
+        Defaults back to 25% if percentage argument is 0 to prevent loop of turning off/on
+        infinitely.
+        """
+        percentage = 25 if percentage == 0 else percentage
+        await self.async_set_mode_speed(preset_mode=preset_mode, percentage=percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
@@ -195,56 +169,46 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage."""
-        # Find closest speed
-        self._speed = str(
-            math.ceil(
-                percentage_to_ranged_value(
-                    self.entity_description.speed_range, percentage
-                )
-            )
-        )
-
-        if self._speed == FAN_SPEED_OFF:
-            return await self.async_turn_off()
-
-        await self.async_set_mode_speed()
-        return None
+        return await self.async_set_mode_speed(percentage=percentage)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        self._mode = PRESET_MODES_TO_INTELLICLIMA_MODE[preset_mode]
-        if preset_mode == "auto":
-            self._speed = FAN_SPEED_AUTO
-            await self.async_set_mode_speed_auto()
-        elif preset_mode == "off":
-            self._speed = FAN_SPEED_OFF
-            await self.async_turn_off()
-        else:
-            self._speed = (
-                FAN_SPEED_SLEEP if self._speed == FAN_SPEED_AUTO else self._speed
-            )  # need to set speed to non-auto mode, defaulting to sleep speed
-            await self.async_set_mode_speed()
+        return await self.async_set_mode_speed(preset_mode=preset_mode)
 
-    async def async_set_mode_speed(self) -> None:
+    async def async_set_mode_speed(
+        self, preset_mode: str | None = None, percentage: int | None = None
+    ) -> None:
         """Set mode and speed.
 
-        Checks if mode is not set to 'off'. If so, defaults back to 'alternate'.
-        Checks if speed is not set to 'off', If so, defaults back to 'sleep'.
-        Turning off has a separate, different api call.
+        If preset_mode or percentage are None, it first defaults to the respective property.
+        If that is also None, then preset_mode defaults to 'alternate' and percentage to 25 (sleep)
         """
-        self._mode = FAN_MODE_ALTERNATE if self._mode == FAN_MODE_OFF else self._mode
-        self._speed = FAN_SPEED_SLEEP if self._speed == FAN_SPEED_OFF else self._speed
+        preset_mode = self.preset_mode if preset_mode is None else preset_mode
+        percentage = self.percentage if percentage is None else percentage
+
+        preset_mode = "alternate" if preset_mode is None else preset_mode
+        percentage = 25 if percentage is None else percentage
+
+        if preset_mode == "auto":
+            # auto is a special case with special mode and speed setting
+            mode = FAN_MODE_SENSOR
+            speed = FAN_SPEED_AUTO
+        elif percentage == 0:
+            # Setting fan speed to zero turns off the fan
+            return await self.async_turn_off()
+        else:
+            mode = PRESET_MODES_TO_INTELLICLIMA_MODE[preset_mode]
+            speed = str(
+                math.ceil(
+                    percentage_to_ranged_value(
+                        self.entity_description.speed_range,
+                        percentage,
+                    )
+                )
+            )
+
+        speed = FAN_SPEED_SLEEP if speed == FAN_SPEED_OFF else speed
         await self.coordinator.api.ecocomfort.set_mode_speed(
-            self._device_sn, self._mode, self._speed
+            self._device_sn, mode, speed
         )
-        await self.coordinator.async_request_refresh()
-
-    async def async_set_mode_speed_auto(self) -> None:
-        """Set mode and speed for the 'auto' preset-mode."""
-        await self.coordinator.api.ecocomfort.set_mode_speed_auto(self._device_sn)
-        await self.coordinator.async_request_refresh()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
+        return await self.coordinator.async_request_refresh()
