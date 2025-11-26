@@ -3535,7 +3535,7 @@ async def test_reload_when_labs_flag_changes(
     test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
 
     # Check we reload whenever the labs flag is set, even if it's already enabled
-    for _ in range(2):
+    for enabled in (True, True, False, False):
         test_reload_event.clear()
         calls.clear()
 
@@ -3558,7 +3558,7 @@ async def test_reload_when_labs_flag_changes(
                     "type": "labs/update",
                     "domain": "automation",
                     "preview_feature": "new_triggers_conditions",
-                    "enabled": True,
+                    "enabled": enabled,
                 }
             )
 
