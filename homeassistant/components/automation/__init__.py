@@ -114,6 +114,8 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
+NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
+
 
 class IfAction(Protocol):
     """Define the format of if_action."""

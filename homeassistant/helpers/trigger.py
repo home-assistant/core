@@ -138,7 +138,7 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
-    from homeassistant.components import labs  # noqa: PLC0415
+    from homeassistant.components import automation, labs  # noqa: PLC0415
 
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
     hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
@@ -153,7 +153,10 @@ async def async_setup(hass: HomeAssistant) -> None:
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
     labs.async_listen(
-        hass, "automation", "new_triggers_conditions", new_triggers_conditions_listener
+        hass,
+        automation.DOMAIN,
+        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
     )
 
     await async_process_integration_platforms(
@@ -723,12 +726,14 @@ class PluggableAction:
 @callback
 def _is_experimental_trigger_enabled(hass: HomeAssistant, platform: str) -> bool:
     """Check if an experimental trigger platform is enabled."""
-    from homeassistant.components import labs  # noqa: PLC0415
+    from homeassistant.components import automation, labs  # noqa: PLC0415
 
     return (
         platform not in _EXPERIMENTAL_TRIGGER_PLATFORMS
         or labs.async_is_preview_feature_enabled(
-            hass, "automation", "new_triggers_conditions"
+            hass,
+            automation.DOMAIN,
+            automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
         )
     )
 
@@ -741,10 +746,12 @@ async def _async_get_trigger_platform(
     platform = _PLATFORM_ALIASES.get(platform, platform)
 
     if not _is_experimental_trigger_enabled(hass, platform):
+        from homeassistant.components import automation  # noqa: PLC0415
+
         raise vol.Invalid(
             f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
             "conditions' feature to be enabled in Home Assistant Labs settings "
-            "(feature flag: 'new_triggers_conditions')"
+            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
         )
 
     try:
