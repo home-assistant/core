@@ -12,7 +12,7 @@ from typing import Any, Protocol, cast
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import labs, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -113,6 +113,34 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
+
+NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
+
+_EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "alarm_control_panel",
+    "assist_satellite",
+    "climate",
+    "cover",
+    "fan",
+    "lawn_mower",
+    "light",
+    "media_player",
+    "text",
+    "vacuum",
+}
+
+
+@callback
+def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental trigger platform."""
+    return (
+        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
 
 
 class IfAction(Protocol):
