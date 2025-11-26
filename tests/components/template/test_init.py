@@ -6,9 +6,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config
+from homeassistant.components import labs
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -17,7 +18,14 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
@@ -586,3 +594,97 @@ async def test_fail_non_numerical_number_settings(
         "The 'My template' number template needs to be reconfigured, "
         "max must be a number, got '{{ 100 }}'" in caplog.text
     )
+
+
+async def test_reload_when_labs_flag_changes(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calls: list[ServiceCall],
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test automations are reloaded when labs flag changes."""
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "triggers": {
+                    "trigger": "event",
+                    "event_type": "test_event",
+                },
+                "sensor": {
+                    "name": "hello",
+                    "state": "{{ trigger.event.event_type }}",
+                },
+            }
+        },
+    )
+    assert await async_setup_component(hass, labs.DOMAIN, {})
+    assert hass.states.get("sensor.hello") is not None
+    assert hass.states.get("sensor.bye") is None
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event") == 1
+    assert listeners.get("test_event2") is None
+
+    context = Context()
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data.get("event") == "test_event"
+
+    test_reload_event = async_capture_events(hass, "event_template_reloaded")
+
+    # Check we reload whenever the labs flag is set, even if it's already enabled
+    for enabled in (True, True, False, False):
+        test_reload_event.clear()
+        calls.clear()
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                DOMAIN: {
+                    "triggers": {
+                        "trigger": "event",
+                        "event_type": "test_event",
+                    },
+                    "sensor": {
+                        "name": "bye",
+                        "state": "{{ trigger.event.event_type }}",
+                    },
+                }
+            },
+        ):
+            await ws_client.send_json_auto_id(
+                {
+                    "type": "labs/update",
+                    "domain": "template",
+                    "preview_feature": "new_triggers_conditions",
+                    "enabled": enabled,
+                }
+            )
+
+            msg = await ws_client.receive_json()
+            assert msg["success"]
+            await hass.async_block_till_done()
+
+        assert len(test_reload_event) == 1
+
+        assert hass.states.get("sensor.hello") is None
+        assert hass.states.get("sensor.bye") is not None
+        listeners = hass.bus.async_listeners()
+        assert listeners.get("test_event") is None
+        assert listeners.get("test_event2") == 1
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 0
+
+        hass.bus.async_fire("test_event2")
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+        assert calls[-1].data.get("event") == "test_event2"
