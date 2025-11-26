@@ -9,6 +9,9 @@ from typing import Any, Self
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import target as target_helpers
+from homeassistant.helpers.condition import (
+    async_get_all_descriptions as async_get_all_condition_descriptions,
+)
 from homeassistant.helpers.entity import (
     entity_sources,
     get_device_class,
@@ -194,6 +197,16 @@ async def async_get_triggers_for_target(
 ) -> set[str]:
     """Get triggers for a target."""
     descriptions = await async_get_all_trigger_descriptions(hass)
+    return _async_get_automation_components_for_target(
+        hass, target_selector, expand_group, descriptions
+    )
+
+
+async def async_get_conditions_for_target(
+    hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
+) -> set[str]:
+    """Get conditions for a target."""
+    descriptions = await async_get_all_condition_descriptions(hass)
     return _async_get_automation_components_for_target(
         hass, target_selector, expand_group, descriptions
     )
