@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import logging
 import re
 from typing import Any
 
+import paho.mqtt.client as mqtt
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,15 +36,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
-    # Here we validate that the data provided by the user is valid.
-    # Broker and Port are required, username and password are optional.
-    # If the data seems correct, we can proceed to set up the connection.
-
-    # Make sure the hostname is either an IP address or a valid hostname.
     broker = data[CONF_BROKER]
+    port = data[CONF_PORT]
+    username = data.get(CONF_USERNAME)
+    password = data.get(CONF_PASSWORD)
 
-    # Check if broker is a valid IP address
+    # Validate broker format
     try:
         ipaddress.ip_address(broker)
     except ValueError as err:
@@ -50,49 +49,139 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$"
         )
         if not hostname_regex.match(broker):
+            raise InvalidHost("Broker is not a valid IP address or hostname") from err
+
+    # Validate port range
+    if not isinstance(port, int) or not (0 < port < 65536):
+        raise InvalidPort("Port must be an integer between 1 and 65535")
+
+    # Validate required fields
+    if not broker or not port:
+        raise CannotConnect("Broker and port are required")
+
+    # Test MQTT connection
+    await _test_mqtt_connection(hass, broker, port, username, password)
+
+    return {"title": "Venus OS Hub", "host": str(broker)}
+
+
+async def _test_mqtt_connection(
+    hass: HomeAssistant,
+    broker: str,
+    port: int,
+    username: str | None,
+    password: str | None,
+) -> None:
+    """Test MQTT connection, authentication, and discovery support."""
+    connection_result = asyncio.Event()
+    discovery_topics_found = asyncio.Event()
+    auth_error = asyncio.Event()
+    connection_error = asyncio.Event()
+
+    discovered_topics: set[str] = set()
+
+    def on_connect(client, userdata, flags, rc):
+        """Handle MQTT connection callback."""
+        if rc == 0:
+            _LOGGER.debug("MQTT connection successful")
+            # Subscribe to homeassistant discovery topics to check if they exist
+            client.subscribe("homeassistant/#")
+            connection_result.set()
+        elif rc == 5:  # MQTT_ERR_AUTH
+            _LOGGER.debug("MQTT authentication failed")
+            auth_error.set()
+        else:
+            _LOGGER.debug("MQTT connection failed with code %s", rc)
+            connection_error.set()
+
+    def on_message(client, userdata, msg):
+        """Handle MQTT message callback."""
+        topic = msg.topic
+        if topic.startswith("homeassistant/"):
+            discovered_topics.add(topic)
+            # We found at least one discovery topic
+            if not discovery_topics_found.is_set():
+                discovery_topics_found.set()
+
+    def on_disconnect(client, userdata, rc):
+        """Handle MQTT disconnect callback."""
+        _LOGGER.debug("MQTT disconnected with code %s", rc)
+
+    # Create MQTT client
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.on_disconnect = on_disconnect
+
+    # Set credentials if provided
+    if username and password:
+        client.username_pw_set(username, password)
+
+    try:
+        # Attempt connection in executor to avoid blocking
+        await hass.async_add_executor_job(client.connect, broker, port, 10)
+
+        # Start the client loop in background
+        client.loop_start()
+
+        # Create tasks for the wait conditions
+        connection_task = asyncio.create_task(connection_result.wait())
+        auth_task = asyncio.create_task(auth_error.wait())
+        error_task = asyncio.create_task(connection_error.wait())
+
+        # Wait for connection result with timeout
+        try:
+            done, pending = await asyncio.wait(
+                (connection_task, auth_task, error_task),
+                timeout=10.0,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+
+            # Cancel pending tasks
+            for task in pending:
+                task.cancel()
+
+        except TimeoutError:
+            # Cancel all tasks on timeout
+            for task in (connection_task, auth_task, error_task):
+                task.cancel()
             raise CannotConnect(
-                "Broker is not a valid IP address or hostname."
-            ) from err
+                "Connection timeout - device may be unreachable"
+            ) from None
 
-    # Check if port is a valid integer
-    if not isinstance(data[CONF_PORT], int) or not (0 < data[CONF_PORT] < 65536):
-        raise CannotConnect("Port must be an integer between 1 and 65535.")
+        # Check what happened
+        if auth_error.is_set():
+            raise InvalidAuth("Invalid username or password")
 
-    #  TO-DO validate the data can be used to set up a connection.
+        if connection_error.is_set():
+            raise CannotConnect("Failed to connect to MQTT broker")
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-    # )
+        if not connection_result.is_set():
+            raise CannotConnect("Connection failed for unknown reason")
 
-    # hub = PlaceholderHub(data[CONF_BROKER])
+        # Wait a bit for discovery messages to arrive
+        try:
+            await asyncio.wait_for(discovery_topics_found.wait(), timeout=5.0)
+        except TimeoutError:
+            # No discovery topics found
+            raise NoDiscoverySupport(
+                "No Home Assistant discovery topics found - device may not support MQTT discovery"
+            ) from None
 
-    # if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-    #     raise InvalidAuth
+        _LOGGER.debug("Found %d discovery topics", len(discovered_topics))
 
-    # Username and password are optional, so you can check if they are provided
-    # and handle them accordingly.
-    # But broker and port are required
-    if not data[CONF_BROKER] or not data[CONF_PORT]:
-        raise CannotConnect
-    # If you have a real library, you can use it to connect to the device.
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    # Ensure all returned values are str for mypy compatibility
-    return {"title": "Venus OS Hub", "host": str(data[CONF_BROKER])}
+    except OSError as err:
+        raise CannotConnect(f"Network error connecting to {broker}:{port}") from err
+    finally:
+        # Clean up
+        client.loop_stop()
+        client.disconnect()
 
 
 class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Victron Energy."""
 
     VERSION = 1
-    # CONNECTION_CLASS = ConfigFlow.CONNECTION_CLASS_LOCAL_PUSH
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -106,6 +195,12 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except InvalidHost:
+                errors["base"] = "invalid_host"
+            except InvalidPort:
+                errors["base"] = "invalid_port"
+            except NoDiscoverySupport:
+                errors["base"] = "no_discovery_support"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -171,6 +266,12 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except InvalidHost:
+                errors["base"] = "invalid_host"
+            except InvalidPort:
+                errors["base"] = "invalid_port"
+            except NoDiscoverySupport:
+                errors["base"] = "no_discovery_support"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -208,6 +309,12 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except InvalidHost:
+                errors["base"] = "invalid_host"
+            except InvalidPort:
+                errors["base"] = "invalid_port"
+            except NoDiscoverySupport:
+                errors["base"] = "no_discovery_support"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -236,4 +343,16 @@ class CannotConnect(HomeAssistantError):
 
 
 class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+    """Error to indicate there is invalid authentication."""
+
+
+class InvalidHost(HomeAssistantError):
+    """Error to indicate invalid host format."""
+
+
+class InvalidPort(HomeAssistantError):
+    """Error to indicate invalid port."""
+
+
+class NoDiscoverySupport(HomeAssistantError):
+    """Error to indicate no Home Assistant discovery support found."""
