@@ -8,12 +8,12 @@ from typing import Any, cast
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
 from fitbit_web_api import ApiClient, Configuration, DevicesApi
-from fitbit_web_api.models.device import Device
 from fitbit_web_api.exceptions import (
     ApiException,
     OpenApiException,
     UnauthorizedException,
 )
+from fitbit_web_api.models.device import Device
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
