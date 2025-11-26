@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
-import aiohttp
+from aiohttp import ClientResponseError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -153,11 +153,12 @@ class MieleButton(MieleEntity, ButtonEntity):
                 self._device_id,
                 {PROCESS_ACTION: self.entity_description.press_data},
             )
-        except aiohttp.ClientResponseError as ex:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting button state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                 },
-            ) from ex
+            ) from err

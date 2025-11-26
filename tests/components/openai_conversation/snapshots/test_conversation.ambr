@@ -39,11 +39,13 @@
     dict({
       'attachments': None,
       'content': 'Please call the test function',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': 'Thinking',
@@ -52,6 +54,7 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': ResponseReasoningItem(id='rs_A', summary=[], type='reasoning', content=None, encrypted_content='AAABBB', status=None),
       'role': 'assistant',
       'thinking_content': 'Thinking more',
@@ -60,6 +63,7 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -76,6 +80,7 @@
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
@@ -84,6 +89,7 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -100,6 +106,7 @@
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
@@ -108,6 +115,7 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': 'Cool',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -171,11 +179,13 @@
     dict({
       'attachments': None,
       'content': 'Please call the test function',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -192,6 +202,7 @@
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
@@ -200,6 +211,7 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': 'Cool',
+      'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -207,7 +219,7 @@
     }),
   ])
 # ---
-# name: test_web_search
+# name: test_web_search[False]
   list([
     dict({
       'content': "What's on the latest news?",
@@ -224,7 +236,40 @@
       'type': 'web_search_call',
     }),
     dict({
-      'content': 'Home Assistant now supports ChatGPT Search in Assist',
+      'content': 'Home Assistant now supports ChatGPT Search in Assist.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_web_search[True]
+  list([
+    dict({
+      'content': "What's on the latest news?",
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'action': dict({
+        'query': 'query',
+        'type': 'search',
+      }),
+      'id': 'ws_A',
+      'status': 'completed',
+      'type': 'web_search_call',
+    }),
+    dict({
+      'content': 'Home Assistant now supports ChatGPT Search in Assist ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)).',
       'role': 'assistant',
       'type': 'message',
     }),

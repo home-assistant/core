@@ -194,7 +194,7 @@
         "name": "Altitude above sea level"
       },
       "auto_relock_timer": {
-        "name": "Autorelock time"
+        "name": "Auto-relock time"
       },
       "cook_time": {
         "name": "Cooking time"
@@ -245,6 +245,16 @@
       },
       "device_energy_management_mode": {
         "name": "Energy management mode"
+      },
+      "door_lock_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "no_remote_lock_unlock": "No remote lock/unlock",
+          "normal": "Normal",
+          "passage": "Passage",
+          "privacy": "Privacy",
+          "vacation": "Vacation"
+        }
       },
       "door_lock_sound_volume": {
         "name": "Sound volume",

@@ -22,11 +22,9 @@ from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
 from music_assistant_models.player_queue import PlayerQueue
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerDeviceClass,
@@ -41,38 +39,26 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import MusicAssistantConfigEntry
 from .const import (
     ATTR_ACTIVE,
     ATTR_ACTIVE_QUEUE,
-    ATTR_ALBUM,
-    ATTR_ANNOUNCE_VOLUME,
-    ATTR_ARTIST,
-    ATTR_AUTO_PLAY,
     ATTR_CURRENT_INDEX,
     ATTR_CURRENT_ITEM,
     ATTR_ELAPSED_TIME,
     ATTR_ITEMS,
     ATTR_MASS_PLAYER_TYPE,
-    ATTR_MEDIA_ID,
-    ATTR_MEDIA_TYPE,
     ATTR_NEXT_ITEM,
     ATTR_QUEUE_ID,
     ATTR_RADIO_MODE,
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
-    ATTR_SOURCE_PLAYER,
-    ATTR_URL,
-    ATTR_USE_PRE_ANNOUNCE,
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
@@ -115,10 +101,12 @@ QUEUE_OPTION_MAP = {
     MediaPlayerEnqueue.REPLACE: QueueOption.REPLACE,
 }
 
-SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
-SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
-SERVICE_TRANSFER_QUEUE = "transfer_queue"
-SERVICE_GET_QUEUE = "get_queue"
+REPEAT_MODE_MAPPING_TO_HA = {
+    MassRepeatMode.OFF: RepeatMode.OFF,
+    MassRepeatMode.ONE: RepeatMode.ONE,
+    MassRepeatMode.ALL: RepeatMode.ALL,
+    # UNKNOWN is intentionally not mapped - will return None
+}
 
 
 async def async_setup_entry(
@@ -135,44 +123,6 @@ async def async_setup_entry(
 
     # register callback to add players when they are discovered
     entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
-
-    # add platform service for play_media with advanced options
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_PLAY_MEDIA_ADVANCED,
-        {
-            vol.Required(ATTR_MEDIA_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
-            vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Coerce(QueueOption),
-            vol.Optional(ATTR_ARTIST): cv.string,
-            vol.Optional(ATTR_ALBUM): cv.string,
-            vol.Optional(ATTR_RADIO_MODE): vol.Coerce(bool),
-        },
-        "_async_handle_play_media",
-    )
-    platform.async_register_entity_service(
-        SERVICE_PLAY_ANNOUNCEMENT,
-        {
-            vol.Required(ATTR_URL): cv.string,
-            vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
-            vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
-        },
-        "_async_handle_play_announcement",
-    )
-    platform.async_register_entity_service(
-        SERVICE_TRANSFER_QUEUE,
-        {
-            vol.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
-            vol.Optional(ATTR_AUTO_PLAY): vol.Coerce(bool),
-        },
-        "_async_handle_transfer_queue",
-    )
-    platform.async_register_entity_service(
-        SERVICE_GET_QUEUE,
-        schema=None,
-        func="_async_handle_get_queue",
-        supports_response=SupportsResponse.ONLY,
-    )
 
 
 class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
@@ -657,7 +607,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # player has an MA queue active (either its own queue or some group queue)
         self._attr_app_id = DOMAIN
         self._attr_shuffle = queue.shuffle_enabled
-        self._attr_repeat = queue.repeat_mode.value
+        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
         if not (cur_item := queue.current_item):
             # queue is empty
             return
