@@ -35,29 +35,23 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("service", "api_method", "has_torrents"),
+    ("service", "api_method"),
     [
-        (SERVICE_TURN_ON, "start_all", True),
-        (SERVICE_TURN_OFF, "stop_torrent", True),
-        (SERVICE_TURN_ON, "start_all", False),
-        (SERVICE_TURN_OFF, "stop_torrent", False),
+        (SERVICE_TURN_ON, "start_all"),
+        (SERVICE_TURN_OFF, "stop_torrent"),
     ],
 )
-async def test_on_off_switch(
+async def test_on_off_switch_without_torrents(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_torrent,
     service: str,
     api_method: str,
-    has_torrents: bool,
 ) -> None:
     """Test on/off switch."""
     client = mock_transmission_client.return_value
-    if has_torrents:
-        client.get_torrents.return_value = [mock_torrent()]
-    else:
-        client.get_torrents.return_value = []
+    client.get_torrents.return_value = []
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -70,10 +64,40 @@ async def test_on_off_switch(
         blocking=True,
     )
 
-    if has_torrents:
-        getattr(client, api_method).assert_called_once()
-    else:
-        getattr(client, api_method).assert_not_called()
+    getattr(client, api_method).assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method"),
+    [
+        (SERVICE_TURN_ON, "start_all"),
+        (SERVICE_TURN_OFF, "stop_torrent"),
+    ],
+)
+async def test_on_off_switch_with_torrents(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_torrent,
+    service: str,
+    api_method: str,
+) -> None:
+    """Test on/off switch."""
+    client = mock_transmission_client.return_value
+    client.get_torrents.return_value = [mock_torrent()]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.transmission_switch"},
+        blocking=True,
+    )
+
+    getattr(client, api_method).assert_called_once()
 
 
 @pytest.mark.parametrize(

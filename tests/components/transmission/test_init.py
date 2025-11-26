@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from transmission_rpc.error import (
     TransmissionAuthError,
@@ -13,6 +14,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.transmission.const import (
     DEFAULT_PATH,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DOMAIN,
 )
@@ -20,11 +22,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PATH, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import MOCK_CONFIG_DATA_VERSION_1_1, OLD_MOCK_CONFIG_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_config_flow_entry_migrate_1_1_to_1_2(
@@ -181,21 +182,22 @@ async def test_coordinator_update_error(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator handles TransmissionError during update."""
-    client = mock_transmission_client.return_value
-
+    """Test the sensors go unavailable."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success
-
+    # Make the coordinator fail on next update
+    client = mock_transmission_client.return_value
     client.session_stats.side_effect = TransmissionError("Connection failed")
 
-    await coordinator.async_refresh()
+    # Trigger an update to make entities unavailable
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert not coordinator.last_update_success
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert str(coordinator.last_exception) == "Unable to connect to Transmission client"
+    # Verify entities are unavailable
+    state = hass.states.get("sensor.transmission_status")
+    assert state is not None
+    assert state.state == "unavailable"

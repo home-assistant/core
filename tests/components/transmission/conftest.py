@@ -33,7 +33,6 @@ def mock_config_entry() -> MockConfigEntry:
         title="Transmission",
         data=MOCK_CONFIG_DATA,
         entry_id="01J0BC4QM2YBRP6H5G933AETT7",
-        unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )
 
 

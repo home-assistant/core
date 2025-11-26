@@ -20,12 +20,12 @@ from . import MOCK_CONFIG_DATA, setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_form(
+async def test_full_flow(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test we get the form."""
+    """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -35,7 +35,6 @@ async def test_form(
         result["flow_id"],
         MOCK_CONFIG_DATA,
     )
-    await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["title"] == "Transmission"

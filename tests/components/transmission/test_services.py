@@ -31,15 +31,9 @@ async def test_service_config_entry_not_loaded_state(
     """Test service call when config entry is in failed state."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.transmission.async_setup_entry", return_value=False
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
-
-    with pytest.raises(ServiceValidationError, match="is not loaded"):
+    with pytest.raises(ServiceValidationError, match="service_not_found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_TORRENT,
@@ -76,12 +70,12 @@ async def test_service_integration_not_found(
 
 
 @pytest.mark.parametrize(
-    ("payload", "expected_torrent", "expected_download_dir"),
+    ("payload", "expected_torrent", "kwargs"),
     [
         (
             {ATTR_TORRENT: "magnet:?xt=urn:btih:test"},
             "magnet:?xt=urn:btih:test",
-            None,
+            {},
         ),
         (
             {
@@ -89,22 +83,22 @@ async def test_service_integration_not_found(
                 ATTR_DOWNLOAD_PATH: "/custom/path",
             },
             "magnet:?xt=urn:btih:test",
-            "/custom/path",
+            {"download_dir": "/custom/path"},
         ),
         (
             {ATTR_TORRENT: "http://example.com/test.torrent"},
             "http://example.com/test.torrent",
-            None,
+            {},
         ),
         (
             {ATTR_TORRENT: "ftp://example.com/test.torrent"},
             "ftp://example.com/test.torrent",
-            None,
+            {},
         ),
         (
             {ATTR_TORRENT: "/config/test.torrent"},
             "/config/test.torrent",
-            None,
+            {},
         ),
     ],
 )
@@ -114,7 +108,7 @@ async def test_add_torrent_service_success(
     mock_config_entry: MockConfigEntry,
     payload: dict[str, str],
     expected_torrent: str,
-    expected_download_dir: str | None,
+    kwargs: dict[str, str | None],
 ) -> None:
     """Test successful torrent addition with url and path sources."""
     client = mock_transmission_client.return_value
@@ -134,12 +128,7 @@ async def test_add_torrent_service_success(
             blocking=True,
         )
 
-    if expected_download_dir:
-        client.add_torrent.assert_called_once_with(
-            expected_torrent, download_dir=expected_download_dir
-        )
-    else:
-        client.add_torrent.assert_called_once_with(expected_torrent)
+    client.add_torrent.assert_called_once_with(expected_torrent, **kwargs)
 
 
 async def test_add_torrent_service_invalid_path(
