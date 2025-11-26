@@ -1,6 +1,5 @@
 """Support for services."""
 
-from json import JSONDecodeError
 from typing import Any, cast
 
 from aioshelly.const import RPC_GENERATIONS
@@ -18,7 +17,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.util.json import JsonValueType, json_loads
+from homeassistant.util.json import JsonValueType
 
 from .const import ATTR_KEY, ATTR_VALUE, CONF_SLEEP_PERIOD, DOMAIN
 from .coordinator import ShellyConfigEntry
@@ -130,12 +129,7 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
     response = await _async_execute_action(call, "kvs_get", (key,))
 
     result: dict[str, JsonValueType] = {}
-    raw_value = response[ATTR_VALUE]
-    try:
-        value = json_loads(raw_value)
-    except JSONDecodeError:
-        value = raw_value
-    result[ATTR_VALUE] = value
+    result[ATTR_VALUE] = response[ATTR_VALUE]
 
     return result
 

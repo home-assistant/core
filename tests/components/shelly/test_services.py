@@ -19,21 +19,10 @@ from homeassistant.helpers import device_registry as dr
 from . import init_integration
 
 
-@pytest.mark.parametrize(
-    ("raw_value", "expected_value"),
-    [
-        ("test_value", "test_value"),
-        (42, 42),
-        ('{"a":1}', {"a": 1}),
-        ('[{"a":1},{"b":2}]', [{"a": 1}, {"b": 2}]),
-    ],
-)
 async def test_service_get_kvs_value(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     device_registry: dr.DeviceRegistry,
-    raw_value,
-    expected_value,
 ) -> None:
     """Test get_kvs_value service."""
     entry = await init_integration(hass, 2)
@@ -42,7 +31,7 @@ async def test_service_get_kvs_value(
 
     mock_rpc_device.kvs_get.return_value = {
         "etag": "16mLia9TRt8lGhj9Zf5Dp6Hw==",
-        "value": raw_value,
+        "value": "test_value",
     }
 
     response = await hass.services.async_call(
@@ -53,7 +42,7 @@ async def test_service_get_kvs_value(
         return_response=True,
     )
 
-    assert response == {"value": expected_value}
+    assert response == {"value": "test_value"}
     mock_rpc_device.kvs_get.assert_called_once_with("test_key")
 
 
