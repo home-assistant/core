@@ -278,7 +278,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="auth_error")
             # OAuth2 callback sends token as "code" parameter
             if "code" in user_input:
-                # Token was received from OAuth2 callback, store it and complete external step
                 self.token = user_input["code"]
                 return self.async_external_step_done(next_step_id="finish_auth")
 
@@ -335,7 +334,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception during connection test")
             return self.async_abort(reason="unknown")
 
-        # Check if this is a reauth flow
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
@@ -384,7 +382,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_URL: self.url, CONF_TOKEN: self.token},
                 )
 
-        # Show form for manual token entry
         return self.async_show_form(
             step_id="auth_manual",
             data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
