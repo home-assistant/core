@@ -17,6 +17,8 @@ import pytest
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
     MusicAssistantConfigFlow,
+    _get_server_info,
+    _test_connection,
 )
 from homeassistant.components.music_assistant.const import (
     AUTH_SCHEMA_VERSION,
@@ -988,3 +990,70 @@ async def test_auth_step_with_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_error"
+
+
+async def test_get_server_info_helper(
+    hass: HomeAssistant,
+) -> None:
+    """Test _get_server_info helper function."""
+    expected_server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.get_server_info"
+    ) as mock_lib_get_server_info:
+        mock_lib_get_server_info.return_value = expected_server_info
+
+        result = await _get_server_info(hass, "http://localhost:8095")
+
+        assert result == expected_server_info
+        mock_lib_get_server_info.assert_called_once()
+
+
+async def test_test_connection_helper(
+    hass: HomeAssistant,
+) -> None:
+    """Test _test_connection helper function."""
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.MusicAssistantClient"
+    ) as mock_client:
+        mock_instance = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_instance
+
+        await _test_connection(hass, "http://localhost:8095", "test_token")
+
+        mock_instance.send_command.assert_called_once_with("info")
+
+
+async def test_auth_with_redirect_uri(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test auth step with redirect URI available."""
+    flow = MusicAssistantConfigFlow()
+    flow.hass = hass
+    flow.url = "http://localhost:8095"
+    flow.flow_id = "test_flow_id"
+    flow.server_info = mock_get_server_info.return_value
+
+    with (
+        patch(
+            "homeassistant.components.music_assistant.config_flow.async_get_redirect_uri",
+            return_value="http://localhost:8123/auth/external/callback",
+        ),
+        patch(
+            "homeassistant.components.music_assistant.config_flow._encode_jwt",
+            return_value="test_jwt_state",
+        ),
+    ):
+        result = await flow.async_step_auth()
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
+    assert "http://localhost:8095/login" in result["url"]
+    assert (
+        "return_url=http%3A%2F%2Flocalhost%3A8123%2Fauth%2Fexternal%2Fcallback%3Fstate%3Dtest_jwt_state"
+        in result["url"]
+    )
+    assert "device_name=Home+Assistant" in result["url"]
