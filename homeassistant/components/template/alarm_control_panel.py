@@ -37,6 +37,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import validators as tcv
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -205,7 +206,9 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_code_format = self._config[CONF_CODE_FORMAT].value
 
         self.setup_state_template(
-            CONF_STATE, "_attr_alarm_state", validator=self._validate_state
+            CONF_STATE,
+            "_attr_alarm_state",
+            validator=tcv.enum(self, CONF_STATE, AlarmControlPanelState),
         )
 
         self._attr_supported_features: AlarmControlPanelEntityFeature = (
@@ -237,18 +240,6 @@ class AbstractTemplateAlarmControlPanel(
             and self._attr_alarm_state is None
         ):
             self._attr_alarm_state = AlarmControlPanelState(last_state.state)
-
-    def _validate_state(self, result: Any) -> Any:
-        if result in AlarmControlPanelState:
-            return AlarmControlPanelState(result)
-
-        _LOGGER.error(
-            "Received invalid alarm panel state: %s for entity %s. Expected one of %s",
-            result,
-            self.entity_id,
-            ", ".join(AlarmControlPanelState),
-        )
-        return None
 
     async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
         """Arm the panel to specified state with supplied script."""
@@ -374,7 +365,6 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
             self.async_write_ha_state()
             return
 
-        if (rendered := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_alarm_state = self._validate_state(rendered)
+        if self.handle_rendered_result(CONF_STATE):
             self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()

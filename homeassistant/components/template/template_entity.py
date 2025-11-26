@@ -215,7 +215,9 @@ class TemplateEntity(AbstractTemplateEntity):
             (CONF_PICTURE, "_attr_entity_picture", cv.string),
             (CONF_NAME, "_attr_name", cv.string),
         ):
-            if template := self.add_template(option, attribute, validator):
+            if template := self.add_template(
+                option, attribute, validator, add_if_static=option != CONF_NAME
+            ):
                 with contextlib.suppress(TemplateError):
                     setattr(
                         self,

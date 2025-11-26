@@ -103,6 +103,23 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._render_attributes(rendered, variables)
         self._rendered = rendered
 
+    def handle_rendered_result(self, key: str) -> bool:
+        """Get a rendered result and return the value."""
+        if (rendered := self._rendered.get(key)) is not None:
+            if (entity_template := self._templates.get(key)) is not None:
+                value = rendered
+                if entity_template.validator:
+                    value = entity_template.validator(rendered)
+
+                if entity_template.on_update:
+                    entity_template.on_update(value)
+                else:
+                    setattr(self, entity_template.attribute, value)
+
+                return True
+
+        return False
+
     @callback
     def _process_data(self) -> None:
         """Process new data."""

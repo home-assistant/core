@@ -103,10 +103,11 @@ class AbstractTemplateEntity(Entity):
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool = False,
+        add_if_static: bool = True,
     ) -> Template | None:
         """Add a template."""
         if (template := self._config.get(option)) and isinstance(template, Template):
-            if not template.is_static:
+            if add_if_static or (not template.is_static):
                 self._templates[option] = EntityTemplate(
                     attribute, template, validator, on_update, none_on_template_error
                 )

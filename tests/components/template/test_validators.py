@@ -42,7 +42,7 @@ def expect_boolean_off(false_value: Any = False) -> list[tuple[Any, Any]]:
     ]
 
 
-def expect_none(*args: Any) -> list[tuple, None]:
+def expect_none(*args: Any) -> list[tuple[Any, None]]:
     """Tuple of results that should return None."""
     return [(v, None) for v in args]
 
