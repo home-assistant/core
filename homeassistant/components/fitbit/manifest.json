@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/fitbit",
   "iot_class": "cloud_polling",
   "loggers": ["fitbit", "fitbit_web_api"],
-  "requirements": ["fitbit==0.3.1", "fitbit-web-api==2.13.3"]
+  "requirements": ["fitbit==0.3.1", "fitbit-web-api==2.13.5"]
 }
