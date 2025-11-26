@@ -1,6 +1,6 @@
 """Tests for Transmission init."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from transmission_rpc.error import (
@@ -20,31 +20,16 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PATH, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import MOCK_CONFIG_DATA, MOCK_CONFIG_DATA_VERSION_1_1, OLD_MOCK_CONFIG_DATA
+from . import MOCK_CONFIG_DATA_VERSION_1_1, OLD_MOCK_CONFIG_DATA
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
-def mock_api():
-    """Mock an api."""
-    with patch("transmission_rpc.Client") as api:
-        yield api
-
-
-async def test_successful_config_entry(hass: HomeAssistant) -> None:
-    """Test settings up integration from config entry."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_config_flow_entry_migrate_1_1_to_1_2(hass: HomeAssistant) -> None:
+async def test_config_flow_entry_migrate_1_1_to_1_2(
+    hass: HomeAssistant,
+) -> None:
     """Test that config flow entry is migrated correctly from v1.1 to v1.2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,59 +51,59 @@ async def test_config_flow_entry_migrate_1_1_to_1_2(hass: HomeAssistant) -> None
 
 
 async def test_setup_failed_connection_error(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test integration failed due to connection error."""
+    mock_config_entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-    entry.add_to_hass(hass)
+    mock_transmission_client.side_effect = TransmissionConnectError()
 
-    mock_api.side_effect = TransmissionConnectError()
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_failed_auth_error(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test integration failed due to invalid credentials error."""
+    mock_config_entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-    entry.add_to_hass(hass)
+    mock_transmission_client.side_effect = TransmissionAuthError()
 
-    mock_api.side_effect = TransmissionAuthError()
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_failed_unexpected_error(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test integration failed due to unexpected error."""
+    mock_config_entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-    entry.add_to_hass(hass)
+    mock_transmission_client.side_effect = TransmissionError()
 
-    mock_api.side_effect = TransmissionError()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test removing integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -184,3 +169,27 @@ async def test_migrate_unique_id(
 
     assert migrated_entity
     assert migrated_entity.unique_id == new_unique_id
+
+
+async def test_coordinator_update_error(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator handles TransmissionError during update."""
+    client = mock_transmission_client.return_value
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.last_update_success
+
+    client.session_stats.side_effect = TransmissionError("Connection failed")
+
+    await coordinator.async_refresh()
+
+    assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert str(coordinator.last_exception) == "Unable to connect to Transmission client"
