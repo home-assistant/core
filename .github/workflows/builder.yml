@@ -386,10 +386,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Generate all Docker tags based on version string
-      # Version format: YYYY.MM.PATCH or YYYY.MM.PATCHbN (beta)
+      # Version format: YYYY.MM.PATCH, YYYY.MM.PATCHbN (beta), or YYYY.MM.PATCH.devYYYYMMDDHHMM (dev)
       # Examples:
-      #   2024.11.1       -> tags: 2024.11.1, 2024.11, stable, latest, beta, rc
-      #   2024.11.0b3     -> tags: 2024.11.0b3, beta, rc
+      #   2025.12.1     (stable)    -> tags: 2025.12.1, 2025.12, stable, latest, beta, rc
+      #   2025.12.0b3   (beta)      -> tags: 2025.12.0b3, beta, rc
+      #   2025.12.0.dev202511250240 -> tags: 2025.12.0.dev202511250240Z, dev
       - name: Generate Docker metadata
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
@@ -399,8 +400,8 @@ jobs:
           tags: |
             type=raw,value=${{ needs.init.outputs.version }},priority=9999
             type=raw,value=dev,enable=${{ contains(needs.init.outputs.version, 'd') }}
-            type=raw,value=beta,enable=${{ contains(needs.init.outputs.version, 'b') }}
-            type=raw,value=rc,enable=${{ contains(needs.init.outputs.version, 'b') }}
+            type=raw,value=beta,enable=${{ !contains(needs.init.outputs.version, 'd') }}
+            type=raw,value=rc,enable=${{ !contains(needs.init.outputs.version, 'd') }}
             type=raw,value=stable,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
             type=raw,value=latest,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
