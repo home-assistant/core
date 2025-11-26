@@ -34,6 +34,17 @@
       "light": {
         "name": "[%key:component::light::title%]"
       }
+    },
+    "sensor": {
+      "current_temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "heater_elements_active": {
+        "name": "Heater elements active"
+      },
+      "on_time": {
+        "name": "On time"
+      }
     }
   },
   "exceptions": {
