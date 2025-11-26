@@ -63,8 +63,6 @@ from .utils import (
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
-    get_entity_translation_attributes,
-    get_rpc_channel_name,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
@@ -106,26 +104,14 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if not description.role:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
-
         if self.option_map:
             if description.role == ROLE_GENERIC:
                 self._attr_options = list(self.option_map.values())
             else:
                 self._attr_options = list(self.option_map)
+
+        if not description.role:
+            self.configure_translation_attributes()
 
     @property
     def native_value(self) -> StateType:
@@ -1898,19 +1884,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         self.restored_data: SensorExtraStoredData | None = None
 
         if coordinator.device.initialized:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
+            self.configure_translation_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
