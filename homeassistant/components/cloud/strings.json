@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "ai_task": {
+      "cloud_ai": {
+        "name": "Home Assistant Cloud AI"
+      }
+    }
+  },
   "exceptions": {
     "backup_size_too_large": {
       "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
