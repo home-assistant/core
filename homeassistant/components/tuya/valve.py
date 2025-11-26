@@ -94,14 +94,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := VALVES.get(device.category):
                 entities.extend(
-                    TuyaValveEntity(
-                        device,
-                        manager,
-                        description,
-                        DPCodeBooleanWrapper(description.key),
-                    )
+                    TuyaValveEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)

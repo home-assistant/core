@@ -15,7 +15,10 @@ from httpx import URL, Request, Response
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.anthropic.config_flow import RECOMMENDED_OPTIONS
+from homeassistant.components.anthropic.config_flow import (
+    DEFAULT_AI_TASK_OPTIONS,
+    DEFAULT_CONVERSATION_OPTIONS,
+)
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -30,11 +33,10 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_THINKING_BUDGET,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -74,7 +76,6 @@ async def test_form(hass: HomeAssistant) -> None:
                 "api_key": "bla",
             },
         )
-        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
@@ -84,10 +85,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_OPTIONS,
+            "data": DEFAULT_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
-        }
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": DEFAULT_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
     ]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -135,14 +142,13 @@ async def test_creating_conversation_subentry(
 
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_NAME: "Mock name", **RECOMMENDED_OPTIONS},
+        {CONF_NAME: "Mock name", **DEFAULT_CONVERSATION_OPTIONS},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Mock name"
 
-    processed_options = RECOMMENDED_OPTIONS.copy()
+    processed_options = DEFAULT_CONVERSATION_OPTIONS.copy()
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
@@ -302,7 +308,6 @@ async def test_subentry_web_search_user_location(
                 "user_location": True,
             },
         )
-        await hass.async_block_till_done()
 
     assert (
         mock_create.call_args.kwargs["messages"][0]["content"] == "Where are the "
@@ -330,6 +335,99 @@ async def test_subentry_web_search_user_location(
         "web_search": True,
         "web_search_max_uses": 5,
     }
+
+
+async def test_model_list(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test fetching and processing the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are a helpful assistant",
+            "recommended": False,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == [
+        {
+            "label": "Claude Haiku 4.5",
+            "value": "claude-haiku-4-5",
+        },
+        {
+            "label": "Claude Sonnet 4.5",
+            "value": "claude-sonnet-4-5",
+        },
+        {
+            "label": "Claude Opus 4.1",
+            "value": "claude-opus-4-1",
+        },
+        {
+            "label": "Claude Opus 4",
+            "value": "claude-opus-4-0",
+        },
+        {
+            "label": "Claude Sonnet 4",
+            "value": "claude-sonnet-4-0",
+        },
+        {
+            "label": "Claude Sonnet 3.7",
+            "value": "claude-3-7-sonnet",
+        },
+        {
+            "label": "Claude Haiku 3.5",
+            "value": "claude-3-5-haiku",
+        },
+        {
+            "label": "Claude Haiku 3",
+            "value": "claude-3-haiku-20240307",
+        },
+        {
+            "label": "Claude Opus 3",
+            "value": "claude-3-opus-20240229",
+        },
+    ]
+
+
+async def test_model_list_error(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test exception handling during fetching the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        side_effect=InternalServerError(
+            message=None,
+            response=Response(
+                status_code=500,
+                request=Request(method="POST", url=URL()),
+            ),
+            body=None,
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {
+                "prompt": "You are a helpful assistant",
+                "recommended": False,
+            },
+        )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == []
 
 
 @pytest.mark.parametrize(
@@ -375,7 +473,7 @@ async def test_subentry_web_search_user_location(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-opus",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
             },
         ),
         (  # Model with web search options
@@ -412,7 +510,7 @@ async def test_subentry_web_search_user_location(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -450,7 +548,7 @@ async def test_subentry_web_search_user_location(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
@@ -477,8 +575,8 @@ async def test_subentry_web_search_user_location(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -489,9 +587,9 @@ async def test_subentry_web_search_user_location(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -557,3 +655,122 @@ async def test_subentry_options_switching(
     assert subentry_flow["type"] is FlowResultType.ABORT
     assert subentry_flow["reason"] == "reconfigure_successful"
     assert subentry.data == expected_options
+
+
+async def test_creating_ai_task_subentry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test creating an AI task subentry."""
+    old_subentries = set(mock_config_entry.subentries)
+    # Original conversation + original ai_task
+    assert len(mock_config_entry.subentries) == 2
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    assert not result.get("errors")
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Custom AI Task",
+            CONF_RECOMMENDED: True,
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == "Custom AI Task"
+    assert result2.get("data") == {
+        CONF_RECOMMENDED: True,
+    }
+
+    assert (
+        len(mock_config_entry.subentries) == 3
+    )  # Original conversation + original ai_task + new ai_task
+
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry = mock_config_entry.subentries[new_subentry_id]
+    assert new_subentry.subentry_type == "ai_task_data"
+    assert new_subentry.title == "Custom AI Task"
+
+
+async def test_ai_task_subentry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an AI task subentry when entry is not loaded."""
+    # Don't call mock_init_component to simulate not loaded state
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "entry_not_loaded"
+
+
+async def test_creating_ai_task_subentry_advanced(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test creating an AI task subentry with advanced settings."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    # Go to advanced settings
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Advanced AI Task",
+            CONF_RECOMMENDED: False,
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "advanced"
+
+    # Configure advanced settings
+    result3 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_MAX_TOKENS: 200,
+            CONF_TEMPERATURE: 0.5,
+        },
+    )
+
+    assert result3.get("type") is FlowResultType.FORM
+    assert result3.get("step_id") == "model"
+
+    # Configure model settings
+    result4 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_WEB_SEARCH: False,
+        },
+    )
+
+    assert result4.get("type") is FlowResultType.CREATE_ENTRY
+    assert result4.get("title") == "Advanced AI Task"
+    assert result4.get("data") == {
+        CONF_RECOMMENDED: False,
+        CONF_CHAT_MODEL: "claude-sonnet-4-5",
+        CONF_MAX_TOKENS: 200,
+        CONF_TEMPERATURE: 0.5,
+        CONF_WEB_SEARCH: False,
+        CONF_WEB_SEARCH_MAX_USES: 5,
+        CONF_WEB_SEARCH_USER_LOCATION: False,
+        CONF_THINKING_BUDGET: 0,
+    }
