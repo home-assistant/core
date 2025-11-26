@@ -317,6 +317,7 @@ FLOWS = {
         "inels",
         "inkbird",
         "insteon",
+        "intelliclima",
         "intellifire",
         "iometer",
         "ios",
