@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  appropriate-polling:
-    status: exempt
-    comment: |
-      This integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -39,7 +36,7 @@ rules:
   unique-config-entry: done
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: No options to configure
@@ -71,7 +68,7 @@ rules:
       This integration has a fixed single device.
   entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default: done # No entities qualify to be disabled by default
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
