@@ -39,6 +39,7 @@ class VictronMqttManager:
         self._connected = asyncio.Event()
         self._subscribed_topics: set[str] = set()
         self._topic_entity_map: dict[str, list[Entity]] = {}
+        self._entity_registry: dict[str, Entity] = {}  # Track entities by unique_id
         self._unique_id: str | None = None
         self._keepalive_task_started = False
         self._platforms_setup_complete = False
@@ -190,20 +191,39 @@ class VictronMqttManager:
         new_sensors = []
         new_switches = []
         new_numbers = []
+        updated_entities = []
+
         for unique_id, component_cfg in components.items():
             # Attach device info to each component config
             component_cfg = dict(component_cfg)  # shallow copy
             component_cfg["device"] = device_info
             platform = component_cfg.get("platform")
-            if platform == "sensor":
-                entity = MQTTDiscoveredSensor(component_cfg, unique_id)
-                new_sensors.append(entity)
-            elif platform == "switch":
-                entity = MQTTDiscoveredSwitch(component_cfg, unique_id)
-                new_switches.append(entity)
-            elif platform == "number":
-                entity = MQTTDiscoveredNumber(component_cfg, unique_id)
-                new_numbers.append(entity)
+
+            # Check if entity already exists
+            existing_entity = self._entity_registry.get(unique_id)
+            if existing_entity and hasattr(existing_entity, 'update_config'):
+                # Update existing entity configuration
+                existing_entity.update_config(component_cfg)
+                updated_entities.append(existing_entity)
+                _LOGGER.debug(
+                    "Updated existing entity %s with new configuration", unique_id
+                )
+                # Trigger state update to reflect any changes
+                existing_entity.async_write_ha_state()
+            else:
+                # Create new entity
+                if platform == "sensor":
+                    entity = MQTTDiscoveredSensor(component_cfg, unique_id)
+                    new_sensors.append(entity)
+                    self._entity_registry[unique_id] = entity
+                elif platform == "switch":
+                    entity = MQTTDiscoveredSwitch(component_cfg, unique_id)
+                    new_switches.append(entity)
+                    self._entity_registry[unique_id] = entity
+                elif platform == "number":
+                    entity = MQTTDiscoveredNumber(component_cfg, unique_id)
+                    new_numbers.append(entity)
+                    self._entity_registry[unique_id] = entity
 
         if new_sensors:
             if self._sensor_add_entities:
@@ -222,6 +242,11 @@ class VictronMqttManager:
                 self._number_add_entities(new_numbers)
             else:
                 self._pending_numbers.extend(new_numbers)
+
+        if updated_entities:
+            _LOGGER.info(
+                "Updated configuration for %d existing entities", len(updated_entities)
+            )
 
     def register_entity_for_topic(self, topic: str, entity: Entity) -> None:
         """Register an entity for a topic."""
