@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import StateType
@@ -49,6 +50,16 @@ class MQTTDiscoveredSensor(SensorEntity):
         self._attr_suggested_display_precision = config.get(
             "suggested_display_precision"
         )
+
+        # Set entity category for diagnostic entities
+        entity_category = config.get("entity_category")
+        if entity_category == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        elif entity_category == "config":
+            self._attr_entity_category = EntityCategory.CONFIG
+        else:
+            self._attr_entity_category = None
+
         self._attr_native_value: Any = None
         self._device_info_raw = config.get("device")
 
