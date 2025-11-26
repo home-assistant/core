@@ -41,6 +41,8 @@ class VictronMqttManager:
         self._topic_entity_map: dict[str, list[Entity]] = {}
         self._unique_id: str | None = None
         self._keepalive_task_started = False
+        self._platforms_setup_complete = False
+        self._initial_keepalive_sent = False
 
     def set_sensor_add_entities(
         self, add_entities: Callable[[Sequence[Entity]], None]
@@ -233,6 +235,33 @@ class VictronMqttManager:
         if self.client:
             self.client.subscribe(topic)
 
+    def set_platforms_setup_complete(self) -> None:
+        """Mark that all platforms have been set up and send initial keepalive."""
+        self._platforms_setup_complete = True
+        self.hass.loop.call_soon_threadsafe(
+            lambda: asyncio.create_task(self._send_initial_keepalive())
+        )
+
+    async def _send_initial_keepalive(self) -> None:
+        """Send initial keepalive without suppress-republish to trigger data republishing."""
+        if self._initial_keepalive_sent or not self._unique_id:
+            return
+
+        # Wait for MQTT connection if not ready yet
+        await self._connected.wait()
+
+        if self.client is not None:
+            topic = f"R/{self._unique_id}/keepalive"
+            # Send keepalive without suppress-republish to trigger republishing
+            payload = json.dumps({"keepalive-options": []})
+            self.client.publish(topic, payload=payload, qos=0, retain=False)
+            _LOGGER.info(
+                "Published initial republish keepalive to topic: %s with payload: %s",
+                topic,
+                payload,
+            )
+            self._initial_keepalive_sent = True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Victron Energy from a config entry."""
@@ -242,6 +271,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.runtime_data = manager
         manager.start()
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+        # Signal that all platforms are set up and ready
+        manager.set_platforms_setup_complete()
+
     except OSError as err:
         _LOGGER.debug("MQTT connection failed: %s", err)
         raise ConfigEntryNotReady from err
