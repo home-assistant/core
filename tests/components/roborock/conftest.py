@@ -199,7 +199,7 @@ def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
     return dnd_trait
 
 
-def create_v1_properties(network_info: NetworkInfo) -> Mock:
+def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
     v1_properties.status = make_mock_trait(
