@@ -39,9 +39,7 @@ SERVICE_SET_KVS_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): vol.Any(
-            str, int, float, bool, dict, list, type(None)
-        ),
+        vol.Required(ATTR_VALUE): vol.Any(str, int, float, bool, dict, list, None),
     }
 )
 
