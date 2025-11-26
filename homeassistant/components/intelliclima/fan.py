@@ -1,15 +1,13 @@
 """Fan platform for IntelliClima VMC."""
 
-from dataclasses import dataclass
 import math
 from typing import Any
 
-from homeassistant.components.fan import (
-    FanEntity,
-    FanEntityDescription,
-    FanEntityFeature,
-)
+from pyintelliclima.intelliclima_types import IntelliClimaECO
+
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -43,29 +41,6 @@ INTELLICLIMA_MODE_TO_PRESET_MODES = {
 }
 
 
-@dataclass(frozen=True)
-class IntelliClimaFanRequiredKeysMixin:
-    """Required keys for fan entity."""
-
-    speed_range: tuple[int, int]
-
-
-@dataclass(frozen=True)
-class IntelliClimaFanEntityDescription(
-    FanEntityDescription, IntelliClimaFanRequiredKeysMixin
-):
-    """Describes a fan entity."""
-
-
-INTELLICLIMA_FANS: tuple[IntelliClimaFanEntityDescription, ...] = (
-    IntelliClimaFanEntityDescription(
-        key="fan",
-        translation_key="fan",
-        speed_range=(int(FAN_SPEED_SLEEP), int(FAN_SPEED_HIGH)),
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IntelliClimaConfigEntry,
@@ -74,14 +49,14 @@ async def async_setup_entry(
     """Set up IntelliClima VMC fans."""
     coordinator: IntelliClimaCoordinator = entry.runtime_data
 
-    entities: list[IntelliClimaVMCFan] = []
-    for ecocomfort2 in coordinator.data.ecocomfort2_devices.values():
-        entities.extend(
-            IntelliClimaVMCFan(
-                coordinator=coordinator, device=ecocomfort2, description=description
-            )
-            for description in INTELLICLIMA_FANS
+    entities: list[IntelliClimaVMCFan] = [
+        IntelliClimaVMCFan(
+            coordinator=coordinator,
+            device=ecocomfort2,
+            description=EntityDescription(key="fan", translation_key="fan"),
         )
+        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+    ]
 
     async_add_entities(entities)
 
@@ -89,13 +64,23 @@ async def async_setup_entry(
 class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     """Representation of an IntelliClima VMC fan."""
 
-    entity_description: IntelliClimaFanEntityDescription
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.SET_SPEED
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
+
+    def __init__(
+        self,
+        coordinator: IntelliClimaCoordinator,
+        device: IntelliClimaECO,
+        description: EntityDescription,
+    ) -> None:
+        """Class initializer."""
+        super().__init__(coordinator, device, description)
+
+        self._speed_range = (int(FAN_SPEED_SLEEP), int(FAN_SPEED_HIGH))
 
     @property
     def available(self) -> bool:
@@ -107,32 +92,27 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return (
-            self.coordinator.data.ecocomfort2_devices[self._device_id].mode_set
-            != FAN_MODE_OFF
-        )
+        return self._device_data.mode_set != FAN_MODE_OFF
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        device_data = self.coordinator.data.ecocomfort2_devices[self._device_id]
+        device_data = self._device_data
 
         if device_data.speed_set == FAN_SPEED_AUTO:
             return None
 
-        return ranged_value_to_percentage(
-            self.entity_description.speed_range, int(device_data.speed_set)
-        )
+        return ranged_value_to_percentage(self._speed_range, int(device_data.speed_set))
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(self.entity_description.speed_range)
+        return int_states_in_range(self._speed_range)
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        device_data = self.coordinator.data.ecocomfort2_devices[self._device_id]
+        device_data = self._device_data
 
         if device_data.mode_set == FAN_MODE_OFF:
             return None
@@ -206,7 +186,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         speed = str(
             math.ceil(
                 percentage_to_ranged_value(
-                    self.entity_description.speed_range,
+                    self._speed_range,
                     percentage,
                 )
             )

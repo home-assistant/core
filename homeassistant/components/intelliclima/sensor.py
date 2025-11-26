@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyintelliclima.intelliclima_types import IntelliClimaECO
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,7 +27,7 @@ from .entity import IntelliClimaECOEntity
 class IntelliClimaSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntelliClimaCoordinator, str], int | float | str | None]
+    value_fn: Callable[[IntelliClimaECO], int | float | str | None]
 
 
 @dataclass(frozen=True)
@@ -42,9 +44,7 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda coordinator, device_id: float(
-            coordinator.data.ecocomfort2_devices[device_id].tamb
-        ),
+        value_fn=lambda device_data: float(device_data.tamb),
     ),
     IntelliClimaSensorEntityDescription(
         key="humidity",
@@ -52,9 +52,7 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda coordinator, device_id: float(
-            coordinator.data.ecocomfort2_devices[device_id].rh
-        ),
+        value_fn=lambda device_data: float(device_data.rh),
     ),
     IntelliClimaSensorEntityDescription(
         key="voc",
@@ -62,9 +60,7 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        value_fn=lambda coordinator, device_id: float(
-            coordinator.data.ecocomfort2_devices[device_id].voc_state
-        ),
+        value_fn=lambda device_data: float(device_data.voc_state),
     ),
 )
 
@@ -97,4 +93,4 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
     @property
     def native_value(self) -> int | float | str | None:
         """Use this to get the correct value."""
-        return self.entity_description.value_fn(self.coordinator, self._device_id)
+        return self.entity_description.value_fn(self._device_data)

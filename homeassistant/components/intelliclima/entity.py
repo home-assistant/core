@@ -1,6 +1,6 @@
 """Platform for shared base classes for sensors."""
 
-from pyintelliclima import IntelliClimaC800, IntelliClimaECO
+from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -69,3 +69,7 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         }
 
         return info
+
+    @property
+    def _device_data(self) -> IntelliClimaECO:
+        return self.coordinator.data.ecocomfort2_devices[self._device_id]

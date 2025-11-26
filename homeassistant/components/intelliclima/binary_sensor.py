@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyintelliclima.intelliclima_types import IntelliClimaECO
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -20,7 +22,7 @@ from .entity import IntelliClimaECOEntity
 class IntelliClimaBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntelliClimaCoordinator, str], bool | None]
+    value_fn: Callable[[IntelliClimaECO], bool | None]
 
 
 @dataclass(frozen=True)
@@ -34,27 +36,18 @@ INTELLICLIMA_BINARY_SENSORS: tuple[IntelliClimaBinarySensorEntityDescription, ..
     IntelliClimaBinarySensorEntityDescription(
         key="master_satellite",
         translation_key="master_satellite",
-        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2_devices[
-            device_id
-        ].role
-        == "1",
+        value_fn=lambda device_data: device_data.role == "1",
     ),
     IntelliClimaBinarySensorEntityDescription(
         key="winter_summer",
         translation_key="winter_summer",
-        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2_devices[
-            device_id
-        ].ws
-        == "0",
+        value_fn=lambda device_data: device_data.ws == "0",
     ),
     IntelliClimaBinarySensorEntityDescription(
         key="filter_cleaning",
         translation_key="filter_cleaning",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2_devices[
-            device_id
-        ].sanification
-        is not None,
+        value_fn=lambda device_data: device_data.sanification is not None,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
@@ -88,4 +81,4 @@ class IntelliClimaBinarySensor(IntelliClimaECOEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Use this to get the correct value."""
-        return self.entity_description.value_fn(self.coordinator, self._device_id)
+        return self.entity_description.value_fn(self._device_data)
