@@ -169,7 +169,10 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage."""
-        return await self.async_set_mode_speed(percentage=percentage)
+        preset_mode = "alternate" if self.preset_mode == "auto" else self.preset_mode
+        return await self.async_set_mode_speed(
+            preset_mode=preset_mode, percentage=percentage
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
@@ -191,21 +194,22 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
         if preset_mode == "auto":
             # auto is a special case with special mode and speed setting
-            mode = FAN_MODE_SENSOR
-            speed = FAN_SPEED_AUTO
-        elif percentage == 0:
+            await self.coordinator.api.ecocomfort.set_mode_speed_auto(self._device_sn)
+            return await self.coordinator.async_request_refresh()
+
+        if percentage == 0:
             # Setting fan speed to zero turns off the fan
             return await self.async_turn_off()
-        else:
-            mode = PRESET_MODES_TO_INTELLICLIMA_MODE[preset_mode]
-            speed = str(
-                math.ceil(
-                    percentage_to_ranged_value(
-                        self.entity_description.speed_range,
-                        percentage,
-                    )
+
+        mode = PRESET_MODES_TO_INTELLICLIMA_MODE[preset_mode]
+        speed = str(
+            math.ceil(
+                percentage_to_ranged_value(
+                    self.entity_description.speed_range,
+                    percentage,
                 )
             )
+        )
 
         speed = FAN_SPEED_SLEEP if speed == FAN_SPEED_OFF else speed
         await self.coordinator.api.ecocomfort.set_mode_speed(
