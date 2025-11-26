@@ -1,5 +1,7 @@
 """Test NextDNS diagnostics."""
 
+from unittest.mock import AsyncMock
+
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -17,6 +19,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test config entry diagnostics."""
     await init_integration(hass, mock_config_entry)

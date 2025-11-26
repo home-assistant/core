@@ -20,14 +20,14 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER
+from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
-    get_block_entity_name,
+    get_rpc_channel_name,
     get_rpc_device_info,
-    get_rpc_entity_name,
+    get_rpc_key,
     get_rpc_key_instances,
     get_rpc_role_by_key,
 )
@@ -295,10 +295,6 @@ def async_setup_entry_rest(
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
-    # BlockEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
     available: Callable[[Block], bool] | None = None
@@ -311,10 +307,6 @@ class BlockEntityDescription(EntityDescription):
 class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
-    # BlockEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
     sub_key: str | None = None
 
     value: Callable[[Any, Any], Any] | None = None
@@ -323,7 +315,6 @@ class RpcEntityDescription(EntityDescription):
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
-    options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
@@ -332,10 +323,6 @@ class RpcEntityDescription(EntityDescription):
 @dataclass(frozen=True)
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
-
-    # BlockEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
 
@@ -384,7 +371,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.block = block
-        self._attr_name = get_block_entity_name(coordinator.device, block)
+
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
@@ -426,9 +413,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
+
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
     def available(self) -> bool:
@@ -480,9 +467,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
         self.entity_description = description
 
         self._attr_unique_id: str = f"{super().unique_id}-{self.attribute}"
-        self._attr_name = get_block_entity_name(
-            coordinator.device, block, description.name
-        )
 
     @property
     def attribute_value(self) -> StateType:
@@ -520,9 +504,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self.block_coordinator = coordinator
         self.attribute = attribute
         self.entity_description = description
-        self._attr_name = get_block_entity_name(
-            coordinator.device, None, description.name
-        )
+
         self._attr_unique_id = f"{coordinator.mac}-{attribute}"
         self._attr_device_info = get_entity_block_device_info(coordinator)
         self._last_value = None
@@ -559,11 +541,13 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self.attribute = attribute
         self.entity_description = description
 
+        if description.role == ROLE_GENERIC:
+            self._attr_name = get_rpc_channel_name(coordinator.device, key)
+
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._last_value = None
-        id_key = key.split(":")[-1]
-        self._id = int(id_key) if id_key.isnumeric() else None
+        has_id, _, component_id = get_rpc_key(key)
+        self._id = int(component_id) if has_id and component_id.isnumeric() else None
 
         if description.unit is not None:
             self._attr_native_unit_of_measurement = description.unit(
@@ -637,9 +621,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
             self._attr_unique_id = (
                 f"{self.coordinator.mac}-{block.description}-{attribute}"
             )
-            self._attr_name = get_block_entity_name(
-                coordinator.device, block, description.name
-            )
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
 
@@ -700,11 +681,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_unique_id = f"{coordinator.mac}-{key}-{attribute}"
         self._last_value = None
 
-        if coordinator.device.initialized:
-            self._attr_name = get_rpc_entity_name(
-                coordinator.device, key, description.name
-            )
-        elif entry is not None:
+        if not coordinator.device.initialized and entry is not None:
             self._attr_name = cast(str, entry.original_name)
 
     async def async_update(self) -> None:

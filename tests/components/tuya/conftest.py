@@ -192,7 +192,7 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
 
     device.function = {
         key: DeviceFunction(
-            code=value.get("code"),
+            code=key,
             type=value["type"],
             values=json_dumps(value["value"]),
         )
@@ -200,7 +200,7 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
     }
     device.status_range = {
         key: DeviceStatusRange(
-            code=value.get("code"),
+            code=key,
             type=value["type"],
             values=json_dumps(value["value"]),
         )
@@ -214,6 +214,9 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
             (dp_type := device.function.get(key)) and dp_type.type == "Json"
         ):
             device.status[key] = json_dumps(value)
+        if value == "**REDACTED**":
+            # It was redacted, which may cause issue with b64decode
+            device.status[key] = ""
     return device
 
 

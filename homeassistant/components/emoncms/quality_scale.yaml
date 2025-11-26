@@ -1,0 +1,84 @@
+rules:
+  # todo : add get_feed_list to the library
+  # todo : see if we can drop some extra attributes
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      test_reconfigure_api_error should use a mock config entry fixture
+      test_user_flow_failure should use a mock config entry fixture
+      move test_user_flow_* to the top of the file
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      No events are explicitly registered by the integration.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: todo
+  test-coverage:
+    status: todo
+    comment: |
+      test the entry state in test_failure
+
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: done
+  docs-examples:
+    status: exempt
+    comment: |
+      This integration does not provide any automation
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class:
+    status: todo
+    comment: change device_class=SensorDeviceClass.SIGNAL_STRENGTH to SOUND_PRESSURE
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

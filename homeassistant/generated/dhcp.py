@@ -14,6 +14,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "FC0FE7*",
     },
     {
+        "domain": "airobot",
+        "hostname": "airobot-thermostat-*",
+    },
+    {
         "domain": "airthings",
         "hostname": "airthings-view",
     },
@@ -1361,6 +1365,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "wmspro",
         "registered_devices": True,
+    },
+    {
+        "domain": "xbox",
+        "hostname": "xbox*",
     },
     {
         "domain": "yale",

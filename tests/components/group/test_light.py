@@ -404,6 +404,33 @@ async def test_color_hs(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], ATTR_HS_COLOR: (355, 100)},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_COLOR_MODE] == "hs"
+    assert state.attributes[ATTR_HS_COLOR] == (357.5, 75)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity1.entity_id], ATTR_HS_COLOR: (5, 90)},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_COLOR_MODE] == "hs"
+    assert state.attributes[ATTR_HS_COLOR] == (360, 95)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
 
 async def test_color_rgb(hass: HomeAssistant) -> None:
     """Test rgbw color reporting."""

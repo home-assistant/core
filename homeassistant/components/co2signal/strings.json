@@ -1,13 +1,14 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_data": "No data is available for the location you have selected.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
-      "user": {
-        "data": {
-          "location": "[%key:common::config_flow::data::location%]",
-          "api_key": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Visit the [Electricity Maps page]({register_link}) to request a token."
-      },
       "coordinates": {
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
@@ -23,15 +24,14 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::access_token%]"
         }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::access_token%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "description": "Visit the [Electricity Maps page]({register_link}) to request a token."
       }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_data": "No data is available for the location you have selected."
-    },
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
@@ -57,9 +57,9 @@
   "selector": {
     "location": {
       "options": {
-        "use_home_location": "Use home location",
         "specify_coordinates": "Specify coordinates",
-        "specify_country_code": "Specify country code"
+        "specify_country_code": "Specify country code",
+        "use_home_location": "Use home location"
       }
     }
   }
