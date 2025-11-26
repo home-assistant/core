@@ -68,3 +68,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: AnglianWaterConfigEntry
+) -> bool:
+    """Migrate config entry."""
+    return True
