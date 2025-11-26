@@ -15,6 +15,7 @@ env:
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   BASE_IMAGE_VERSION: "2025.11.0"
+  ARCHITECTURES: '["amd64", "aarch64"]'
 
 jobs:
   init:
@@ -25,6 +26,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
+      architectures: ${{ env.ARCHITECTURES }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -85,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: ["amd64", "aarch64"]
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
         include:
           - arch: amd64
             os: ubuntu-latest
@@ -227,6 +229,7 @@ jobs:
           file: ./Dockerfile
           platforms: ${{ steps.vars.outputs.platform }}
           push: true
+          provenance: false
           cache-from: ${{ steps.cache.outcome == 'success' && steps.vars.outputs.cache_image || '' }}
           build-args: |
             BUILD_FROM=${{ steps.vars.outputs.base_image }}
@@ -355,25 +358,9 @@ jobs:
         with:
           cosign-release: "v2.2.3"
 
-      - name: Pull and verify architecture images
+      - name: Verify architecture image signatures
         run: |
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
-
-          # Pull all images in parallel (fast!)
-          echo "Pulling all architecture images in parallel..."
-          PIDS=()
-          for arch in $ARCHS; do
-            docker pull "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" &
-            PIDS+=($!)
-          done
-
-          # Wait for all pulls to complete
-          for pid in "${PIDS[@]}"; do
-            wait "$pid"
-          done
-
-          # Verify sequentially (cosign has cache locking issues when parallel)
-          echo "Verifying all architecture images..."
           for arch in $ARCHS; do
             echo "Verifying ${arch} image signature..."
             cosign verify \
@@ -381,9 +368,7 @@ jobs:
               --certificate-identity-regexp https://github.com/home-assistant/core/.* \
               "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
           done
-
-          echo "✓ All images pulled and verified successfully"
-          docker images | grep homeassistant
+          echo "✓ All images verified successfully"
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
@@ -423,10 +408,10 @@ jobs:
       - name: Push architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
         run: |
-          # Dynamically push all architecture images to DockerHub
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
           for arch in $ARCHS; do
             echo "Pushing ${arch} to DockerHub..."
+            docker pull "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
             docker tag "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
               "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
             docker push "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
