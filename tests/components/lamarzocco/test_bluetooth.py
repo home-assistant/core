@@ -10,7 +10,7 @@ from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccess
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
+from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -57,37 +57,6 @@ def build_entity_id(
     return f"{platform}.{serial_number}"
 
 
-async def test_bluetooth_coordinator_setup(
-    hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
-    mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
-) -> None:
-    """Test Bluetooth coordinator is set up correctly."""
-    await async_init_integration(hass, mock_config_entry_bluetooth)
-
-    # Verify Bluetooth coordinator was created
-    assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is not None
-    assert mock_lamarzocco.get_model_info_from_bluetooth.called
-
-
-async def test_bluetooth_coordinator_disabled_when_option_false(
-    hass: HomeAssistant,
-    mock_config_entry_bluetooth: MockConfigEntry,
-) -> None:
-    """Test Bluetooth coordinator is not created when disabled in options."""
-    mock_config_entry_bluetooth.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry_bluetooth, options={CONF_USE_BLUETOOTH: False}
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry_bluetooth.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify Bluetooth coordinator was not created
-    assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is None
-
-
 async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
@@ -100,10 +69,6 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
 
     await async_init_integration(hass, mock_config_entry_bluetooth)
     await hass.async_block_till_done()
-
-    # Get the bluetooth coordinator
-    coordinator = mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator
-    assert coordinator is not None
 
     # Reset call count after initial setup
     mock_lamarzocco.get_dashboard_from_bluetooth.reset_mock()
@@ -182,9 +147,6 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     """Test entities become unavailable when cloud fails and no bluetooth coordinator exists."""
     await async_init_integration(hass, mock_config_entry)
 
-    # Verify no bluetooth coordinator was created
-    assert mock_config_entry.runtime_data.bluetooth_coordinator is None
-
     # Water tank sensor (even with bt_offline_mode=True, needs BT coordinator to work)
     water_tank_sensor = (
         f"binary_sensor.{mock_lamarzocco.serial_number}_water_tank_empty"
@@ -247,17 +209,6 @@ async def test_bluetooth_coordinator_handles_connection_failure(
     state = hass.states.get(water_tank_sensor)
     assert state
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_no_bluetooth_coordinator_without_mac(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test no Bluetooth coordinator is created when MAC address is not available."""
-    await async_init_integration(hass, mock_config_entry)
-
-    # Verify Bluetooth coordinator was not created
-    assert mock_config_entry.runtime_data.bluetooth_coordinator is None
 
 
 async def test_bluetooth_coordinator_triggers_entity_updates(
@@ -327,10 +278,6 @@ async def test_setup_through_bluetooth_only(
 
     await async_init_integration(hass, mock_config_entry_bluetooth)
     assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
-
-    # Verify Bluetooth coordinator was created
-    assert mock_config_entry_bluetooth.runtime_data.bluetooth_coordinator is not None
-    assert mock_lamarzocco_bluetooth.get_model_info_from_bluetooth.called
 
     # Check all Bluetooth entities are available
     for entity_id in entities:
