@@ -1,7 +1,7 @@
 {
   "domain": "music_assistant",
   "name": "Music Assistant",
-  "after_dependencies": ["media_source", "media_player"],
+  "after_dependencies": ["media_source"],
   "codeowners": ["@music-assistant", "@arturpragacz"],
   "config_flow": true,
   "dependencies": ["auth"],
