@@ -61,32 +61,28 @@ def validate_field_schema(trigger_schema: dict[str, Any]) -> dict[str, Any]:
                     )
 
                 # Check if field exists in trigger schema fields or target
-                field_exists = False
-                if "fields" in trigger_schema:
-                    field_exists = field_ref in trigger_schema["fields"]
-                    if (
-                        field_exists
-                        and "selector" in trigger_schema["fields"][field_ref]
+                trigger_fields = trigger_schema["fields"]
+                field_exists = field_ref in trigger_fields
+                if field_exists and "selector" in trigger_fields[field_ref]:
+                    # Check if the selector type is allowed for this context key
+                    field_selector_config = trigger_fields[field_ref][CONF_SELECTOR]
+                    field_selector_class = selector.selector(field_selector_config)
+                    if field_selector_class.selector_type not in allowed_keys.get(
+                        context_key, set()
                     ):
-                        # Check if the selector type is allowed for this context key
-                        field_selector_config = trigger_schema["fields"][field_ref][
-                            CONF_SELECTOR
-                        ]
-                        field_selector_class = selector.selector(field_selector_config)
-                        if field_selector_class.selector_type not in allowed_keys.get(
-                            context_key, []
-                        ):
-                            raise vol.Invalid(
-                                f"The context '{context_key}' for '{field_name}' references '{field_ref}', but '{context_key}' does not allow selectors of type '{field_selector_class.selector_type}'. Allowed selector types: {', '.join(allowed_keys.get(context_key, []))}"
-                            )
+                        raise vol.Invalid(
+                            f"The context '{context_key}' for '{field_name}' references '{field_ref}', but '{context_key}' "
+                            f"does not allow selectors of type '{field_selector_class.selector_type}'. Allowed selector types: {', '.join(allowed_keys.get(context_key, set()))}"
+                        )
                 if not field_exists and "target" in trigger_schema:
                     # Target is a special field that always exists when defined
                     field_exists = field_ref == "target"
                     if field_exists and "target" not in allowed_keys.get(
-                        context_key, []
+                        context_key, set()
                     ):
                         raise vol.Invalid(
-                            f"The context '{context_key}' for '{field_name}' references 'target', but '{context_key}' does not allow 'target'. Allowed selector types: {', '.join(allowed_keys.get(context_key, []))}"
+                            f"The context '{context_key}' for '{field_name}' references 'target', but '{context_key}' "
+                            f"does not allow 'target'. Allowed selector types: {', '.join(allowed_keys.get(context_key, set()))}"
                         )
 
                 if not field_exists:
@@ -105,7 +101,7 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("required"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
         vol.Optional("context"): {
-            str: str
+            str: str  # key is context key, value is field name in the schema which value should be used
         },  # Will be validated in validate_field_schema
     }
 )
