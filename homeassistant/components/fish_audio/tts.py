@@ -17,7 +17,13 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FishAudioConfigEntry
-from .const import CONF_BACKEND, CONF_VOICE_ID, DOMAIN, TTS_SUPPORTED_LANGUAGES
+from .const import (
+    CONF_BACKEND,
+    CONF_LATENCY,
+    CONF_VOICE_ID,
+    DOMAIN,
+    TTS_SUPPORTED_LANGUAGES,
+)
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +53,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND]
+    _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND, CONF_LATENCY]
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
@@ -88,6 +94,9 @@ class FishAudioTTSEntity(TextToSpeechEntity):
 
         voice_id = options.get(CONF_VOICE_ID, self.sub_entry.data.get(CONF_VOICE_ID))
         backend = options.get(CONF_BACKEND, self.sub_entry.data.get(CONF_BACKEND))
+        latency = options.get(
+            CONF_LATENCY, self.sub_entry.data.get(CONF_LATENCY, "balanced")
+        )
 
         _LOGGER.debug("Voice ID: %s", voice_id)
         if voice_id is None:
@@ -97,7 +106,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             _LOGGER.error("Backend model not configured")
             return None, None
 
-        request = TTSRequest(text=message, reference_id=voice_id)
+        request = TTSRequest(text=message, reference_id=voice_id, latency=latency)
         func = partial(self.session.tts, request=request, backend=backend)
         try:
             response = await self.hass.async_add_executor_job(func)

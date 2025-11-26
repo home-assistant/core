@@ -35,12 +35,14 @@ from .const import (
     CONF_API_KEY,
     CONF_BACKEND,
     CONF_LANGUAGE,
+    CONF_LATENCY,
     CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_USER_ID,
     CONF_VOICE_ID,
     DOMAIN,
+    LATENCY_OPTIONS,
     SIGNUP_URL,
     SORT_BY_OPTIONS,
     TTS_SUPPORTED_LANGUAGES,
@@ -112,6 +114,18 @@ def get_model_selection_schema(
                 SelectSelectorConfig(
                     options=[
                         SelectOptionDict(value=opt, label=opt) for opt in BACKEND_MODELS
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Required(
+                CONF_LATENCY,
+                default=options.get(CONF_LATENCY, "balanced"),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=opt, label=opt)
+                        for opt in LATENCY_OPTIONS
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
                 )
