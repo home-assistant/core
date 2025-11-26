@@ -5,10 +5,8 @@ from unittest.mock import Mock
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import ATTR_KEY, ATTR_VALUE, DOMAIN
 from homeassistant.components.shelly.services import (
-    ATTR_KEY,
-    ATTR_VALUE,
     SERVICE_GET_KVS_VALUE,
     SERVICE_SET_KVS_VALUE,
 )

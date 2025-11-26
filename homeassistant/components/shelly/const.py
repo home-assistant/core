@@ -344,4 +344,5 @@ ROLE_GENERIC = "generic"
 
 TRV_CHANNEL = 0
 
-CONF_KEY: Final = "key"
+ATTR_KEY = "key"
+ATTR_VALUE = "value"

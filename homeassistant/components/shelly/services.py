@@ -21,12 +21,9 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import JsonValueType, json_loads
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN
+from .const import ATTR_KEY, ATTR_VALUE, CONF_SLEEP_PERIOD, DOMAIN
 from .coordinator import ShellyConfigEntry
 from .utils import get_device_entry_gen
-
-ATTR_KEY = "key"
-ATTR_VALUE = "value"
 
 SERVICE_GET_KVS_VALUE = "get_kvs_value"
 SERVICE_SET_KVS_VALUE = "set_kvs_value"
