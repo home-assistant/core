@@ -15,13 +15,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: todo
-    comment: subscribe is ok, unsubscribe needs to be added
+  entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: todo
-    comment: scenes need fixing
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup:
@@ -41,7 +37,7 @@ rules:
   reauthentication-flow: todo
   test-coverage:
     status: todo
-    comment: cleanup mock_config_entry vs mock_user_config_entry, cleanup mock_pyvlx vs mock_velux_client, remove unused freezer in test_cover_closed, add tests where missing
+    comment: add tests where missing
 
   # Gold
   devices:
