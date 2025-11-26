@@ -99,7 +99,7 @@ async def test_form_no_devices(
     """Test we handle no devices found error."""
     # Return empty devices list
     mock_cloud_interface.get_all_device_status.return_value = IntelliClimaDevices(
-        ecocomfort2={}, c800={}
+        ecocomfort2_devices={}, c800_devices={}
     )
 
     result = await hass.config_entries.flow.async_init(

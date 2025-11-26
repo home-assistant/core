@@ -34,7 +34,7 @@ INTELLICLIMA_BINARY_SENSORS: tuple[IntelliClimaBinarySensorEntityDescription, ..
     IntelliClimaBinarySensorEntityDescription(
         key="master_satellite",
         translation_key="master_satellite",
-        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2[
+        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2_devices[
             device_id
         ].role
         == "1",
@@ -42,7 +42,7 @@ INTELLICLIMA_BINARY_SENSORS: tuple[IntelliClimaBinarySensorEntityDescription, ..
     IntelliClimaBinarySensorEntityDescription(
         key="winter_summer",
         translation_key="winter_summer",
-        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2[
+        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2_devices[
             device_id
         ].ws
         == "0",
@@ -51,7 +51,7 @@ INTELLICLIMA_BINARY_SENSORS: tuple[IntelliClimaBinarySensorEntityDescription, ..
         key="filter_cleaning",
         translation_key="filter_cleaning",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2[
+        value_fn=lambda coordinator, device_id: coordinator.data.ecocomfort2_devices[
             device_id
         ].sanification
         is not None,
@@ -69,7 +69,7 @@ async def async_setup_entry(
     coordinator: IntelliClimaCoordinator = entry.runtime_data
 
     entities: list[IntelliClimaBinarySensor] = []
-    for ecocomfort2 in coordinator.data.ecocomfort2.values():
+    for ecocomfort2 in coordinator.data.ecocomfort2_devices.values():
         entities.extend(
             IntelliClimaBinarySensor(
                 coordinator=coordinator, device=ecocomfort2, description=description

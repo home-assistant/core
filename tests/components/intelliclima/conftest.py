@@ -108,7 +108,7 @@ def single_eco_device() -> IntelliClimaDevices:
         online_status_debug="mock",
     )
 
-    return IntelliClimaDevices(ecocomfort2={eco.id: eco}, c800={})
+    return IntelliClimaDevices(ecocomfort2_devices={eco.id: eco}, c800_devices={})
 
 
 @pytest.fixture

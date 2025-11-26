@@ -43,7 +43,7 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda coordinator, device_id: float(
-            coordinator.data.ecocomfort2[device_id].tamb
+            coordinator.data.ecocomfort2_devices[device_id].tamb
         ),
     ),
     IntelliClimaSensorEntityDescription(
@@ -53,7 +53,7 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda coordinator, device_id: float(
-            coordinator.data.ecocomfort2[device_id].rh
+            coordinator.data.ecocomfort2_devices[device_id].rh
         ),
     ),
     IntelliClimaSensorEntityDescription(
@@ -63,7 +63,7 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda coordinator, device_id: float(
-            coordinator.data.ecocomfort2[device_id].voc_state
+            coordinator.data.ecocomfort2_devices[device_id].voc_state
         ),
     ),
 )
@@ -78,7 +78,7 @@ async def async_setup_entry(
     coordinator: IntelliClimaCoordinator = entry.runtime_data
 
     entities: list[IntelliClimaSensor] = []
-    for ecocomfort2 in coordinator.data.ecocomfort2.values():
+    for ecocomfort2 in coordinator.data.ecocomfort2_devices.values():
         entities.extend(
             IntelliClimaSensor(
                 coordinator=coordinator, device=ecocomfort2, description=description

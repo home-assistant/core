@@ -1,6 +1,6 @@
 """The IntelliClima VMC integration."""
 
-from pyintelliclima import IntelliClimaAPI
+from pyintelliclima.api import IntelliClimaAPI
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     LOGGER.info(
         "Discovered %d IntelliClima VMC device(s)",
-        len(coordinator.data.ecocomfort2),
+        len(coordinator.data.ecocomfort2_devices),
     )
 
     # Store coordinator

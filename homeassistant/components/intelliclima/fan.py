@@ -75,7 +75,7 @@ async def async_setup_entry(
     coordinator: IntelliClimaCoordinator = entry.runtime_data
 
     entities: list[IntelliClimaVMCFan] = []
-    for ecocomfort2 in coordinator.data.ecocomfort2.values():
+    for ecocomfort2 in coordinator.data.ecocomfort2_devices.values():
         entities.extend(
             IntelliClimaVMCFan(
                 coordinator=coordinator, device=ecocomfort2, description=description
@@ -102,19 +102,20 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         """Return if entity is available."""
         if not super().available:
             return False
-        return self._device_id in self.coordinator.data.ecocomfort2
+        return self._device_id in self.coordinator.data.ecocomfort2_devices
 
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
         return (
-            self.coordinator.data.ecocomfort2[self._device_id].mode_set != FAN_MODE_OFF
+            self.coordinator.data.ecocomfort2_devices[self._device_id].mode_set
+            != FAN_MODE_OFF
         )
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        device_data = self.coordinator.data.ecocomfort2[self._device_id]
+        device_data = self.coordinator.data.ecocomfort2_devices[self._device_id]
 
         if device_data.speed_set == FAN_SPEED_AUTO:
             return None
@@ -131,7 +132,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        device_data = self.coordinator.data.ecocomfort2[self._device_id]
+        device_data = self.coordinator.data.ecocomfort2_devices[self._device_id]
 
         if device_data.mode_set == FAN_MODE_OFF:
             return None
