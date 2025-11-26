@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaEntity
+from .entity import IntelliClimaECOEntity
 
 
 @dataclass(frozen=True)
@@ -80,7 +80,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class IntelliClimaBinarySensor(IntelliClimaEntity, BinarySensorEntity):
+class IntelliClimaBinarySensor(IntelliClimaECOEntity, BinarySensorEntity):
     """Extends IntelliClimaEntity with Binary Sensor specific logic."""
 
     entity_description: IntelliClimaBinarySensorEntityDescription

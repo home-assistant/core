@@ -32,7 +32,7 @@ from .const import (
     FAN_SPEED_SLEEP,
 )
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaEntity
+from .entity import IntelliClimaECOEntity
 
 PRESET_MODES_TO_INTELLICLIMA_MODE = {
     "off": FAN_MODE_OFF,
@@ -90,7 +90,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class IntelliClimaVMCFan(IntelliClimaEntity, FanEntity):
+class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     """Representation of an IntelliClima VMC fan."""
 
     entity_description: IntelliClimaFanEntityDescription
