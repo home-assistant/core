@@ -418,7 +418,7 @@ jobs:
 
           # Pull images from github container registry and verify signature
           docker pull "ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull --platform linux/arm64 "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
           validate_image "ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
           validate_image "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
