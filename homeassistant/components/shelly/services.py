@@ -1,6 +1,7 @@
 """Support for services."""
 
 from json import JSONDecodeError
+from typing import Any, cast
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
@@ -91,9 +92,10 @@ def async_get_config_entry_for_service_call(
     )
 
 
-async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
-    """Handle the get_kvs_value service call."""
-    key = call.data[ATTR_KEY]
+async def _async_execute_action(
+    call: ServiceCall, method: str, args: tuple
+) -> dict[str, Any]:
+    """Execute action on the device."""
     config_entry = async_get_config_entry_for_service_call(call)
 
     runtime_data = config_entry.runtime_data
@@ -105,8 +107,10 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
             translation_placeholders={"device": config_entry.title},
         )
 
+    action_method = getattr(runtime_data.rpc.device, method)
+
     try:
-        response = await runtime_data.rpc.device.kvs_get(key)
+        response = await action_method(*args)
     except RpcCallError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -120,51 +124,36 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
             translation_placeholders={"device": config_entry.title},
         ) from err
     else:
-        result: dict[str, JsonValueType] = {}
-        raw_value = response[ATTR_VALUE]
-        try:
-            value = json_loads(raw_value)
-        except JSONDecodeError:
-            value = raw_value
-        result[ATTR_VALUE] = value
+        return cast(dict[str, Any], response)
 
-        return result
+
+async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
+    """Handle the get_kvs_value service call."""
+    key = call.data[ATTR_KEY]
+
+    response = await _async_execute_action(call, "kvs_get", (key,))
+
+    result: dict[str, JsonValueType] = {}
+    raw_value = response[ATTR_VALUE]
+    try:
+        value = json_loads(raw_value)
+    except JSONDecodeError:
+        value = raw_value
+    result[ATTR_VALUE] = value
+
+    return result
 
 
 async def async_set_kvs_value(call: ServiceCall) -> None:
     """Handle the set_kvs_value service call."""
     key = call.data[ATTR_KEY]
-    config_entry = async_get_config_entry_for_service_call(call)
-
-    runtime_data = config_entry.runtime_data
-
-    if not runtime_data.rpc:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_initialized",
-            translation_placeholders={"device": config_entry.title},
-        )
-
     raw_value = call.data[ATTR_VALUE]
     if isinstance(raw_value, (dict, list)):
         value = json_dumps(raw_value)
     else:
         value = raw_value
 
-    try:
-        await runtime_data.rpc.device.kvs_set(key, value)
-    except RpcCallError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="rpc_call_error",
-            translation_placeholders={"device": config_entry.title},
-        ) from err
-    except DeviceConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="device_communication_error",
-            translation_placeholders={"device": config_entry.title},
-        ) from err
+    await _async_execute_action(call, "kvs_set", (key, value))
 
 
 @callback
