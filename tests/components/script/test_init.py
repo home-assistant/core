@@ -1927,5 +1927,5 @@ async def test_reload_when_labs_flag_changes(
             assert state.attributes["restored"] is True
             assert not hass.services.has_service(script.DOMAIN, inactive_object_id)
 
-        assert hass.states.get("script.test2") is not None
+        assert hass.states.get(f"script.{active_object_id}") is not None
         assert hass.services.has_service(script.DOMAIN, active_object_id)
