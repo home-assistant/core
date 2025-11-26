@@ -358,19 +358,6 @@ jobs:
         with:
           cosign-release: "v2.2.3"
 
-      - name: Verify architecture image signatures
-        shell: bash
-        run: |
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
-          for arch in $ARCHS; do
-            echo "Verifying ${arch} image signature..."
-            cosign verify \
-              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-              --certificate-identity-regexp https://github.com/home-assistant/core/.* \
-              "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
-          done
-          echo "✓ All images verified successfully"
-
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
@@ -385,6 +372,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify architecture image signatures
+        shell: bash
+        run: |
+          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+          for arch in $ARCHS; do
+            echo "Verifying ${arch} image signature..."
+            cosign verify \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              --certificate-identity-regexp https://github.com/home-assistant/core/.* \
+              "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+          done
+          echo "✓ All images verified successfully"
 
       # Generate all Docker tags based on version string
       # Version format: YYYY.MM.PATCH, YYYY.MM.PATCHbN (beta), or YYYY.MM.PATCH.devYYYYMMDDHHMM (dev)
