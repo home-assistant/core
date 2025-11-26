@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from .const import CONF_BROKER, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
 
 
 class VictronMqttManager:
@@ -31,7 +31,11 @@ class VictronMqttManager:
         self.entry = entry
         self.client: mqtt.Client | None = None
         self._sensor_add_entities: Callable[[Sequence[Entity]], None] | None = None
+        self._switch_add_entities: Callable[[Sequence[Entity]], None] | None = None
+        self._number_add_entities: Callable[[Sequence[Entity]], None] | None = None
         self._pending_sensors: list[Entity] = []
+        self._pending_switches: list[Entity] = []
+        self._pending_numbers: list[Entity] = []
         self._connected = asyncio.Event()
         self._subscribed_topics: set[str] = set()
         self._topic_entity_map: dict[str, list[Entity]] = {}
@@ -46,6 +50,24 @@ class VictronMqttManager:
         if self._pending_sensors:
             self._sensor_add_entities(self._pending_sensors)
             self._pending_sensors = []
+
+    def set_switch_add_entities(
+        self, add_entities: Callable[[Sequence[Entity]], None]
+    ) -> None:
+        """Set the callback to add switch entities."""
+        self._switch_add_entities = add_entities
+        if self._pending_switches:
+            self._switch_add_entities(self._pending_switches)
+            self._pending_switches = []
+
+    def set_number_add_entities(
+        self, add_entities: Callable[[Sequence[Entity]], None]
+    ) -> None:
+        """Set the callback to add number entities."""
+        self._number_add_entities = add_entities
+        if self._pending_numbers:
+            self._number_add_entities(self._pending_numbers)
+            self._pending_numbers = []
 
     def start(self) -> None:
         """Start the MQTT client in a background thread and prepare keepalive publishing."""
@@ -154,26 +176,50 @@ class VictronMqttManager:
         # Import here to avoid circular imports
         # pylint: disable=import-outside-toplevel
         from .sensor import MQTTDiscoveredSensor
+        from .switch import MQTTDiscoveredSwitch
+        from .number import MQTTDiscoveredNumber
 
-        # New format: data contains "components" (dict of sensors) and "device"
+        # New format: data contains "components" (dict of sensors/switches/numbers) and "device"
         components = data.get("components")
         device_info = data.get("device")
         if not components or not device_info:
             _LOGGER.debug("Invalid discovery message: missing components or device")
             return
-        new_entities = []
-        for unique_id, sensor_cfg in components.items():
-            # Attach device info to each sensor config
-            sensor_cfg = dict(sensor_cfg)  # shallow copy
-            sensor_cfg["device"] = device_info
-            if sensor_cfg.get("platform") == "sensor":
-                entity = MQTTDiscoveredSensor(sensor_cfg, unique_id)
-                new_entities.append(entity)
-        if new_entities:
+        new_sensors = []
+        new_switches = []
+        new_numbers = []
+        for unique_id, component_cfg in components.items():
+            # Attach device info to each component config
+            component_cfg = dict(component_cfg)  # shallow copy
+            component_cfg["device"] = device_info
+            platform = component_cfg.get("platform")
+            if platform == "sensor":
+                entity = MQTTDiscoveredSensor(component_cfg, unique_id)
+                new_sensors.append(entity)
+            elif platform == "switch":
+                entity = MQTTDiscoveredSwitch(component_cfg, unique_id)
+                new_switches.append(entity)
+            elif platform == "number":
+                entity = MQTTDiscoveredNumber(component_cfg, unique_id)
+                new_numbers.append(entity)
+
+        if new_sensors:
             if self._sensor_add_entities:
-                self._sensor_add_entities(new_entities)
+                self._sensor_add_entities(new_sensors)
             else:
-                self._pending_sensors.extend(new_entities)
+                self._pending_sensors.extend(new_sensors)
+
+        if new_switches:
+            if self._switch_add_entities:
+                self._switch_add_entities(new_switches)
+            else:
+                self._pending_switches.extend(new_switches)
+
+        if new_numbers:
+            if self._number_add_entities:
+                self._number_add_entities(new_numbers)
+            else:
+                self._pending_numbers.extend(new_numbers)
 
     def register_entity_for_topic(self, topic: str, entity: Entity) -> None:
         """Register an entity for a topic."""
