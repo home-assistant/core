@@ -7,7 +7,8 @@ from typing import Any, cast
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
-from fitbit_web_api import ApiClient, Configuration, Device, DevicesApi
+from fitbit_web_api import ApiClient, Configuration, DevicesApi
+from fitbit_web_api.models.device import Device
 from fitbit_web_api.exceptions import (
     ApiException,
     OpenApiException,
@@ -158,7 +159,7 @@ class FitbitApi(ABC):
             _LOGGER.debug("Error from fitbit API: %s", err)
             raise FitbitApiException("Error from fitbit API") from err
         except OpenApiException as err:
-            _LOGGER.debug("Connection communicating with fitbit API: %s", err)
+            _LOGGER.debug("Error communicating with fitbit API: %s", err)
             raise FitbitApiException("Communication error from fitbit API") from err
 
 
