@@ -117,6 +117,10 @@ SERVICE_TRIGGER = "trigger"
 
 NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
+_EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "light",
+}
+
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
@@ -129,6 +133,19 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "text",
     "vacuum",
 }
+
+
+@callback
+def is_disabled_experimental_condition(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental condition platform."""
+    return (
+        platform in _EXPERIMENTAL_CONDITION_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
 
 
 @callback
