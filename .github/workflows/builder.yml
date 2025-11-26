@@ -190,10 +190,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-        with:
-          cosign-release: "v2.5.3"
+      - <<: &install_cosign
+          name: Install Cosign
+          uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+          with:
+            cosign-release: "v2.5.3"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
@@ -353,10 +354,7 @@ jobs:
       matrix:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-        with:
-          cosign-release: "v2.2.3"
+      - <<: *install_cosign
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
