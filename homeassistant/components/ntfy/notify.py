@@ -30,6 +30,10 @@ from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
 
+_DESCRIPTION_PLACEHOLDERS = {
+    "markdown_guide_url": "https://www.markdownguide.org/basic-syntax/"
+}
+
 PARALLEL_UPDATES = 0
 
 
@@ -81,6 +85,7 @@ async def async_setup_entry(
         SERVICE_PUBLISH,
         SERVICE_PUBLISH_SCHEMA,
         "publish",
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
 
