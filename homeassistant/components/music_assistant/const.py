@@ -7,6 +7,13 @@ DOMAIN_EVENT = f"{DOMAIN}_event"
 
 DEFAULT_NAME = "Music Assistant"
 
+# Schema version where mandatory authentication was added to the MA webserver
+AUTH_SCHEMA_VERSION = 28
+# Schema version where hassio discovery support was added
+HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+
+CONF_TOKEN = "token"
+
 ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"
