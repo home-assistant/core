@@ -323,7 +323,7 @@ def send_message_exception_fixture() -> Exception | None:
 def fake_vacuum_command_fixture(
     fake_vacuum: FakeDevice,
     send_message_exception: Exception | None,
-) -> Mock:
+) -> AsyncMock:
     """Get the fake vacuum device command trait for asserting that commands happened."""
     assert fake_vacuum.v1_properties is not None
     command_trait = fake_vacuum.v1_properties.command
