@@ -67,6 +67,19 @@ from .typing import ConfigType, TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
+_EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    # "alarm_control_panel",
+    # "assist_satellite",
+    # "climate",
+    # "cover",
+    # "fan",
+    # "lawn_mower",
+    # "light",
+    # "media_player",
+    "text",
+    # "vacuum",
+}
+
 _PLATFORM_ALIASES = {
     "device": "device_automation",
     "event": "homeassistant",
@@ -124,9 +137,22 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
+    from homeassistant.components import labs  # noqa: PLC0415
+
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        # Invalidate the cache
+        hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+
+    labs.async_listen(
+        hass, "automation", "new_triggers_conditions", new_triggers_conditions_listener
+    )
+
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
     )
@@ -697,6 +723,17 @@ async def _async_get_trigger_platform(
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
+
+    from homeassistant.components import labs  # noqa: PLC0415
+
+    if (
+        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass, "automation", "new_triggers_conditions"
+        )
+    ):
+        raise vol.Invalid(f"Trigger '{trigger_key}' is not enabled")
+
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
@@ -976,6 +1013,8 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
+    from homeassistant.components import labs  # noqa: PLC0415
+
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -1022,6 +1061,13 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
+        if (
+            domain in _EXPERIMENTAL_TRIGGER_PLATFORMS
+            and not labs.async_is_preview_feature_enabled(
+                hass, "automation", "new_triggers_conditions"
+            )
+        ):
+            continue
 
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(

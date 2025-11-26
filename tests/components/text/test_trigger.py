@@ -1,7 +1,10 @@
 """Test text trigger."""
 
+from typing import Any
+
 import pytest
 
+from homeassistant.components.labs import DOMAIN as LABS_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
@@ -18,6 +21,24 @@ from tests.components import (
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
+
+
+@pytest.fixture(autouse=True, name="enable_experimental_triggers_conditions")
+async def enable_experimental_triggers_conditions(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Enable experimental triggers and conditions."""
+    hass_storage["core.labs"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "core.labs",
+        "data": {
+            "preview_feature_status": [
+                {"domain": "automation", "preview_feature": "new_triggers_conditions"}
+            ]
+        },
+    }
+    await async_setup_component(hass, LABS_DOMAIN, {})
 
 
 @pytest.fixture
