@@ -407,22 +407,23 @@ jobs:
             type=raw,value=latest,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
 
-      - name: Push architecture images to DockerHub
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v3.7.1
+
+      - name: Copy architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
         shell: bash
         run: |
+          # Use imagetools to copy images directly between registries (server-side copy)
+          # This preserves provenance/attestations and is much faster than pull/push
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
           for arch in $ARCHS; do
-            echo "Pushing ${arch} to DockerHub..."
-            docker pull "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
-            docker tag "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
-              "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
-            docker push "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+            echo "Copying ${arch} image to DockerHub..."
+            docker buildx imagetools create \
+              --tag "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
+              "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
             cosign sign --yes "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
           done
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v3.7.1
 
       - name: Create and push multi-arch manifests
         shell: bash
