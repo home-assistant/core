@@ -1,4 +1,4 @@
-"""Sensor platform for Victron Energy integration."""
+"""Switch platform for Victron Energy integration."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -14,7 +14,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 
@@ -26,30 +25,32 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Victron Energy sensors from a config entry."""
+    """Set up Victron Energy switches from a config entry."""
     manager = hass.data[DOMAIN]["manager"]
-    manager.set_sensor_add_entities(async_add_entities)
+    manager.set_switch_add_entities(async_add_entities)
 
 
-class MQTTDiscoveredSensor(SensorEntity):
-    """Representation of a discovered MQTT sensor."""
+class MQTTDiscoveredSwitch(SwitchEntity):
+    """Representation of a discovered MQTT switch."""
 
     def __init__(self, config: dict[str, Any], unique_id: str) -> None:
-        """Initialize the sensor."""
+        """Initialize the switch."""
         self._attr_name = config.get("name")
         self._state_topic = config.get("state_topic")
+        self._command_topic = config.get("command_topic")
         self._value_template = config.get("value_template")
         self._attr_unique_id = unique_id
-        self._desired_entity_id = f"sensor.{unique_id}"
-        self._attr_entity_id = f"sensor.{unique_id}"
-        self._attr_native_unit_of_measurement = config.get("unit_of_measurement")
+        self._desired_entity_id = f"switch.{unique_id}"
+        self._attr_entity_id = f"switch.{unique_id}"
         self._attr_icon = config.get("icon")
         self._attr_device_class = config.get("device_class")
-        self._attr_state_class = config.get("state_class")
         self._attr_enabled_by_default = config.get("enabled_by_default", True)
-        self._attr_suggested_display_precision = config.get(
-            "suggested_display_precision"
-        )
+
+        # Payload configuration
+        self._payload_on = config.get("payload_on", "ON")
+        self._payload_off = config.get("payload_off", "OFF")
+        self._state_on = config.get("state_on", "ON")
+        self._state_off = config.get("state_off", "OFF")
 
         # Set entity category for diagnostic entities
         entity_category = config.get("entity_category")
@@ -60,10 +61,10 @@ class MQTTDiscoveredSensor(SensorEntity):
         else:
             self._attr_entity_category = None
 
-        self._attr_native_value: Any = None
+        self._attr_is_on: bool | None = None
         self._device_info_raw = config.get("device")
 
-        _LOGGER.debug("MQTTDiscoveredSensor config: %s", config)
+        _LOGGER.debug("MQTTDiscoveredSwitch config: %s", config)
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -101,11 +102,11 @@ class MQTTDiscoveredSensor(SensorEntity):
         return self._attr_unique_id or ""
 
     @property
-    def device_class(self) -> SensorDeviceClass | None:
+    def device_class(self) -> SwitchDeviceClass | None:
         """Return the device class for the entity."""
         if self._attr_device_class:
             try:
-                return SensorDeviceClass(self._attr_device_class)
+                return SwitchDeviceClass(self._attr_device_class)
             except ValueError:
                 return None
         return None
@@ -114,7 +115,7 @@ class MQTTDiscoveredSensor(SensorEntity):
         """Subscribe to MQTT topic and set entity_id when the entity is added to Home Assistant."""
         manager = self.hass.data[DOMAIN]["manager"]
         _LOGGER.debug(
-            "Registering entity for topic %s (id: %s)", self._state_topic, id(self)
+            "Registering switch entity for topic %s (id: %s)", self._state_topic, id(self)
         )
         if self._state_topic is not None:
             manager.register_entity_for_topic(str(self._state_topic), self)
@@ -127,10 +128,10 @@ class MQTTDiscoveredSensor(SensorEntity):
         )
 
     def handle_mqtt_message(self, msg) -> None:
-        """Handle incoming MQTT message for this sensor."""
+        """Handle incoming MQTT message for this switch."""
         payload = msg.payload.decode()
         _LOGGER.debug(
-            "Received MQTT message for %s (id: %s): %s",
+            "Received MQTT message for switch %s (id: %s): %s",
             self._attr_name,
             id(self),
             payload,
@@ -140,7 +141,7 @@ class MQTTDiscoveredSensor(SensorEntity):
         try:
             json_payload = json.loads(payload)
         except json.JSONDecodeError as err:
-            _LOGGER.debug("Failed to decode sensor message JSON: %s", err)
+            _LOGGER.debug("Failed to decode switch message JSON: %s", err)
             json_payload = None
 
         if self._value_template:
@@ -155,38 +156,68 @@ class MQTTDiscoveredSensor(SensorEntity):
         else:
             value = payload
 
-        if value == "unknown":
-            value = None
-
-        # Try to cast to float if the unit is set (for measurements)
-        if self._attr_native_unit_of_measurement and value is not None:
-            try:
-                value = float(value)
-            except (ValueError, TypeError):
-                value = None
+        # Determine switch state based on payload
+        if value == self._state_on:
+            self._attr_is_on = True
+        elif value == self._state_off:
+            self._attr_is_on = False
+        elif str(value).lower() in ("true", "1", "on", "yes"):
+            self._attr_is_on = True
+        elif str(value).lower() in ("false", "0", "off", "no"):
+            self._attr_is_on = False
+        else:
+            _LOGGER.debug("Unknown switch state value: %s", value)
+            self._attr_is_on = None
 
         _LOGGER.debug(
-            "Setting state for %s to %s (type: %s)", self._attr_name, value, type(value)
+            "Setting switch state for %s to %s (from value: %s)",
+            self._attr_name,
+            self._attr_is_on,
+            value,
         )
-        self._attr_native_value = value
         self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
         _LOGGER.debug(
-            "native_value for %s is %s (type: %s, id: %s)",
+            "is_on for %s is %s (id: %s)",
             self._attr_name,
-            self._attr_native_value,
-            type(self._attr_native_value),
+            self._attr_is_on,
             id(self),
         )
-        if (
-            self._attr_native_unit_of_measurement
-            and self._attr_native_value is not None
-        ):
-            try:
-                return float(self._attr_native_value)
-            except (ValueError, TypeError):
-                return self._attr_native_value
-        return self._attr_native_value
+        return self._attr_is_on
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        if self._command_topic:
+            manager = self.hass.data[DOMAIN]["manager"]
+            if manager.client:
+                _LOGGER.debug(
+                    "Turning on switch %s by publishing %s to %s",
+                    self._attr_name,
+                    self._payload_on,
+                    self._command_topic,
+                )
+                manager.client.publish(
+                    self._command_topic, self._payload_on, qos=0, retain=False
+                )
+            else:
+                _LOGGER.error("MQTT client not available for switch %s", self._attr_name)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        if self._command_topic:
+            manager = self.hass.data[DOMAIN]["manager"]
+            if manager.client:
+                _LOGGER.debug(
+                    "Turning off switch %s by publishing %s to %s",
+                    self._attr_name,
+                    self._payload_off,
+                    self._command_topic,
+                )
+                manager.client.publish(
+                    self._command_topic, self._payload_off, qos=0, retain=False
+                )
+            else:
+                _LOGGER.error("MQTT client not available for switch %s", self._attr_name)
