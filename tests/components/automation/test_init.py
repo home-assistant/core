@@ -3566,8 +3566,6 @@ async def test_reload_when_labs_flag_changes(
             assert msg["success"]
             await hass.async_block_till_done()
 
-            await hass.async_block_till_done()
-
         assert len(test_reload_event) == 1
 
         assert hass.states.get("automation.hello") is None
