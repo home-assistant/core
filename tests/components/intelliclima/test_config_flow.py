@@ -7,6 +7,7 @@ from pyintelliclima.api import (
     IntelliClimaAuthError,
     IntelliClimaDevices,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.intelliclima.const import DOMAIN
@@ -41,11 +42,27 @@ async def test_form(
     assert result["data"] == DATA_CONFIG
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cloud_interface
+@pytest.mark.parametrize(
+    ("side_effect", "errors", "patch_devices"),
+    [
+        # invalid_auth
+        (IntelliClimaAuthError, {"base": "invalid_auth"}, False),
+        # cannot_connect
+        (IntelliClimaAPIError, {"base": "cannot_connect"}, False),
+        # unknown
+        (RuntimeError("Unexpected error"), {"base": "unknown"}, False),
+    ],
+)
+async def test_form_auth_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_cloud_interface,
+    side_effect,
+    errors,
+    patch_devices,
 ) -> None:
-    """Test we handle invalid auth."""
-    mock_cloud_interface.authenticate.side_effect = IntelliClimaAuthError
+    """Test we handle authentication-related errors and recover."""
+    mock_cloud_interface.authenticate.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -57,54 +74,17 @@ async def test_form_invalid_auth(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == errors
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    # Erase the error
+    # Recover: clear side effect and complete flow successfully
     mock_cloud_interface.authenticate.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         DATA_CONFIG,
     )
+
     await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "IntelliClima (SuperUser)"
-    assert result["data"] == DATA_CONFIG
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cloud_interface
-) -> None:
-    """Test we handle cannot connect error."""
-    mock_cloud_interface.authenticate.side_effect = IntelliClimaAPIError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        DATA_CONFIG,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    # Erase the error
-    mock_cloud_interface.authenticate.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        DATA_CONFIG,
-    )
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IntelliClima (SuperUser)"
     assert result["data"] == DATA_CONFIG
@@ -141,41 +121,6 @@ async def test_form_no_devices(
 
     # Reset the return_value to its default state
     mock_cloud_interface.get_all_device_status.return_value = single_eco_device
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        DATA_CONFIG,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "IntelliClima (SuperUser)"
-    assert result["data"] == DATA_CONFIG
-
-
-async def test_form_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cloud_interface
-) -> None:
-    """Test we handle unknown errors."""
-    mock_cloud_interface.authenticate.side_effect = RuntimeError("Unexpected error")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        DATA_CONFIG,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    # Erase the error
-    mock_cloud_interface.authenticate.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
