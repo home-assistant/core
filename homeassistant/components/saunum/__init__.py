@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import logging
-
 from pysaunum import SaunumClient, SaunumConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import PLATFORMS
 from .coordinator import LeilSaunaCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.LIGHT,
+]
 
 type LeilSaunaConfigEntry = ConfigEntry[LeilSaunaCoordinator]
 

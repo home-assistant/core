@@ -19,7 +19,6 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper
-from .util import get_dpcode
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {
@@ -80,6 +79,12 @@ async def async_setup_entry(
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, DPCode.MODE, prefer_function=True
                         ),
+                        pause_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.PAUSE
+                        ),
+                        status_wrapper=DPCodeEnumWrapper.find_dpcode(
+                            device, DPCode.STATUS
+                        ),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.POWER_GO, prefer_function=True
                         ),
@@ -108,6 +113,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         fan_speed_wrapper: DPCodeEnumWrapper | None,
         locate_wrapper: DPCodeBooleanWrapper | None,
         mode_wrapper: DPCodeEnumWrapper | None,
+        pause_wrapper: DPCodeBooleanWrapper | None,
+        status_wrapper: DPCodeEnumWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
     ) -> None:
         """Init Tuya vacuum."""
@@ -116,13 +123,15 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._fan_speed_wrapper = fan_speed_wrapper
         self._locate_wrapper = locate_wrapper
         self._mode_wrapper = mode_wrapper
+        self._pause_wrapper = pause_wrapper
+        self._status_wrapper = status_wrapper
         self._switch_wrapper = switch_wrapper
 
         self._attr_fan_speed_list = []
         self._attr_supported_features = (
             VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
         )
-        if get_dpcode(self.device, DPCode.PAUSE):
+        if pause_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
         if charge_wrapper or (
@@ -151,13 +160,12 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return Tuya vacuum device state."""
-        if self.device.status.get(DPCode.PAUSE) and not (
-            self.device.status.get(DPCode.STATUS)
-        ):
+        if (status := self._read_wrapper(self._status_wrapper)) is not None:
+            return TUYA_STATUS_TO_HA.get(status)
+
+        if self._read_wrapper(self._pause_wrapper):
             return VacuumActivity.PAUSED
-        if not (status := self.device.status.get(DPCode.STATUS)):
-            return None
-        return TUYA_STATUS_TO_HA.get(status)
+        return None
 
     async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
@@ -167,9 +175,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Stop the device."""
         await self._async_send_dpcode_update(self._switch_wrapper, False)
 
-    def pause(self, **kwargs: Any) -> None:
+    async def async_pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
+        await self.async_stop(**kwargs)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""

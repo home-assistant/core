@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -48,6 +47,7 @@ from .utils import (
     format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_key_id,
     get_rpc_key_ids,
     get_rpc_key_instances,
     get_rpc_role_by_key,
@@ -358,9 +358,6 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
             config, ble_addr, coordinator.mac, fw_ver
         )
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
     @rpc_call
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
@@ -372,19 +369,6 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
 
     entity_description: RpcButtonDescription
     _id: int
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcButtonDescription,
-    ) -> None:
-        """Initialize select."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
 
     @rpc_call
     async def async_press(self) -> None:
@@ -400,28 +384,13 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
 
     entity_description: RpcButtonDescription
 
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcButtonDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
     @rpc_call
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
 
-        _id = int(self.key.split(":")[-1])
-        await self.coordinator.device.smoke_mute_alarm(_id)
+        await self.coordinator.device.smoke_mute_alarm(get_rpc_key_id(self.key))
 
     @property
     def available(self) -> bool:

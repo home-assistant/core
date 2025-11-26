@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION, MODEL_PLUS_SMOKE
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -272,6 +272,34 @@ async def test_rpc_binary_sensor(
     assert entry.unique_id == "123456789ABC-cover:0-overpower"
 
 
+async def test_rpc_binary_sensor_input_custom_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC binary sensor."""
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "input:1",
+        {
+            "id": 1,
+            "type": "switch",
+            "invert": False,
+            "factory_reset": True,
+            "name": "test channel",
+        },
+    )
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "input:1",
+        {"id": 1, "state": True},
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel"))
+    assert state.state == STATE_ON
+
+
 async def test_rpc_binary_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -331,6 +359,35 @@ async def test_rpc_sleeping_binary_sensor(
         entry := entity_registry.async_get("binary_sensor.test_name_external_power")
     )
     assert entry.unique_id == "123456789ABC-devicepower:0-external_power"
+
+
+async def test_rpc_sleeping_binary_sensor_with_channel_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC online sleeping binary sensor with channel name."""
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel_name_smoke"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+
+    # Sensor should be created when device is online
+    assert hass.states.get(entity_id) is None
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["friendly_name"] == "Test name test channel name smoke"
+    assert state.state == STATE_OFF
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "smoke:0", "alarm", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
 
 async def test_rpc_restored_sleeping_binary_sensor(

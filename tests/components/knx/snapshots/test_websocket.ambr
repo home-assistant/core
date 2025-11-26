@@ -1296,7 +1296,7 @@
                   'validDPTs': list([
                     dict({
                       'main': 5,
-                      'sub': 1,
+                      'sub': 3,
                     }),
                   ]),
                   'write': dict({

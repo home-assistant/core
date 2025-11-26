@@ -46,11 +46,12 @@ async def test_async_setup_entry_connection_failed(
 async def test_device_entry(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test device registry entry."""
     assert (
         device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, "01K98T2T85R5GN0ZHYV25VFMMA")}
+            identifiers={(DOMAIN, mock_config_entry.entry_id)}
         )
     )
     assert device_entry == snapshot

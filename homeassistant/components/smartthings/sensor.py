@@ -1054,6 +1054,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_machine_state",
+                },
             )
         ],
         Attribute.WASHER_JOB_STATE: [
@@ -1080,6 +1084,10 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: JOB_STATE_MAP.get(value, value),
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_job_state",
+                },
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -1088,6 +1096,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
                 value_fn=dt_util.parse_datetime,
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_completion_time",
+                },
             )
         ],
     },

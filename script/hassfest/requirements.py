@@ -272,8 +272,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "abode": {"jaraco-abode": {"jaraco-net"}},
     # https://github.com/coinbase/coinbase-advanced-py
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
-    # https://github.com/ggrammar/pizzapi
-    "dominos": {"homeassistant": {"pizzapi"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1

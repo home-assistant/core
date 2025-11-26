@@ -30,8 +30,7 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.components.music_assistant.media_player import (
+from homeassistant.components.music_assistant.const import (
     ATTR_ALBUM,
     ATTR_ANNOUNCE_VOLUME,
     ATTR_ARTIST,
@@ -42,6 +41,9 @@ from homeassistant.components.music_assistant.media_player import (
     ATTR_SOURCE_PLAYER,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    DOMAIN,
+)
+from homeassistant.components.music_assistant.services import (
     SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
     SERVICE_PLAY_MEDIA_ADVANCED,

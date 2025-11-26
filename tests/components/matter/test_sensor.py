@@ -233,7 +233,7 @@ async def test_eve_thermo_sensor(
     assert state.state == "18.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_outdoor(
     hass: HomeAssistant,
     matter_client: MagicMock,

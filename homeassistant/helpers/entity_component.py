@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import timedelta
 import logging
 from types import ModuleType
@@ -251,6 +251,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service."""
         service.async_register_entity_service(
@@ -263,6 +265,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             required_features=required_features,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders=description_placeholders,
         )
 
     async def async_setup_platform(

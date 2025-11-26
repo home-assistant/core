@@ -205,7 +205,7 @@ async def test_async_update_sources_remote(
     assert mock_mozart_client.get_remote_menu.call_count == 1
 
     # Send the remote menu Websocket event
-    notification_callback(WebsocketNotificationTag(value="remoteMenuChanged"))
+    await notification_callback(WebsocketNotificationTag(value="remoteMenuChanged"))
 
     assert mock_mozart_client.get_available_sources.call_count == 2
     assert mock_mozart_client.get_remote_menu.call_count == 2
@@ -293,7 +293,7 @@ async def test_async_update_playback_error(
     playback_error_callback(TEST_PLAYBACK_ERROR)
 
     assert (
-        "Exception in _async_update_playback_error when dispatching '11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
+        "Exception in _async_update_playback_error when dispatching 'bang_olufsen_11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
         in caplog.text
     )
 
@@ -485,7 +485,7 @@ async def test_async_update_beolink_line_in(
 
     # Set source
     source_change_callback(BangOlufsenSource.LINE_IN)
-    beolink_callback(WebsocketNotificationTag(value="beolinkListeners"))
+    await beolink_callback(WebsocketNotificationTag(value="beolinkListeners"))
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes["group_members"] == []
@@ -561,7 +561,7 @@ async def test_async_update_name_and_beolink(
         mock_mozart_client.get_notification_notifications.call_args[0][0]
     )
     # Trigger callback
-    configuration_callback(WebsocketNotificationTag(value="configuration"))
+    await configuration_callback(WebsocketNotificationTag(value="configuration"))
 
     await hass.async_block_till_done()
 

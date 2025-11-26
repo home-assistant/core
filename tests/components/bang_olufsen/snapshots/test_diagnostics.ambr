@@ -44,11 +44,11 @@
       'attributes': dict({
         'beolink': dict({
           'listeners': dict({
-            'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
             'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
           }),
           'peers': dict({
-            'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
             'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
           }),
           'self': dict({
