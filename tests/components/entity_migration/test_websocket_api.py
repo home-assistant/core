@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
-from homeassistant.components.entity_migration.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
 
@@ -110,6 +105,31 @@ async def test_websocket_scan_missing_entity_id(
 
     response = await client.receive_json()
     assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
+async def test_websocket_scan_nonexistent_entity(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: None,
+    mock_all_helpers: dict[str, MagicMock],
+) -> None:
+    """Test WebSocket scan with non-existent entity."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "entity_migration/scan",
+            "entity_id": "sensor.does_not_exist",
+        }
+    )
+
+    response = await client.receive_json()
+    # Scanner should succeed but find no references for non-existent entity
+    assert response["success"]
+    assert response["result"]["source_entity_id"] == "sensor.does_not_exist"
+    assert response["result"]["total_count"] == 0
 
 
 async def test_websocket_scan_requires_admin(

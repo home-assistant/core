@@ -74,7 +74,7 @@ def mock_persons_with_entity() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_lovelace_data() -> Generator[MagicMock]:
+def mock_lovelace_data() -> Generator[None]:
     """Mock lovelace data."""
     with patch(
         "homeassistant.components.entity_migration.scanner.LOVELACE_DATA",

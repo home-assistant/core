@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.entity_migration.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -57,7 +58,7 @@ async def test_service_scan_invalid_entity_format(
     init_integration: None,
 ) -> None:
     """Test scan service with invalid entity ID format."""
-    with pytest.raises(Exception):
+    with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "scan",

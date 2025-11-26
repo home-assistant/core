@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 from homeassistant.components.entity_migration.const import (
     CONFIG_TYPE_AUTOMATION,
-    CONFIG_TYPE_DASHBOARD,
     CONFIG_TYPE_GROUP,
     CONFIG_TYPE_PERSON,
     CONFIG_TYPE_SCENE,
