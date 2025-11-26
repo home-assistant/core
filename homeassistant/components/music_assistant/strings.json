@@ -21,7 +21,9 @@
         "data": {
           "token": "Long-lived access token"
         },
-        "description": "Create a long-lived access token in your Music Assistant server settings and paste it here.",
+        "data_description": {
+          "token": "Create a long-lived access token in your Music Assistant server settings and paste it here"
+        },
         "title": "Enter long-lived access token"
       },
       "discovery_confirm": {
