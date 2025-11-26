@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import UnitOfTime
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -332,6 +333,7 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         key="delay",
         translation_key="delay",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda departures: (
             _get_delay_minutes(departures, 0) if departures else None
         ),
