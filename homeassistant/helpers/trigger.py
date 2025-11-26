@@ -83,6 +83,7 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
+TRIGGER_DISABLED_TRIGGERS: HassKey[set[str]] = HassKey("trigger_disabled_triggers")
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
@@ -124,9 +125,27 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
+    from homeassistant.components import automation, labs  # noqa: PLC0415
+
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+    hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        # Invalidate the cache
+        hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+        hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
+
+    labs.async_listen(
+        hass,
+        automation.DOMAIN,
+        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
+    )
+
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
     )
@@ -694,9 +713,19 @@ class PluggableAction:
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
+    from homeassistant.components import automation  # noqa: PLC0415
+
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
+
+    if automation.is_disabled_experimental_trigger(hass, platform):
+        raise vol.Invalid(
+            f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
+            "conditions' feature to be enabled in Home Assistant Labs settings "
+            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
+        )
+
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
@@ -976,6 +1005,8 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
+    from homeassistant.components import automation  # noqa: PLC0415
+
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -984,7 +1015,9 @@ async def async_get_all_descriptions(
     all_triggers = set(triggers)
     previous_all_triggers = set(descriptions_cache)
     # If the triggers are the same, we can return the cache
-    if previous_all_triggers == all_triggers:
+
+    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
+    if previous_all_triggers | hass.data[TRIGGER_DISABLED_TRIGGERS] == all_triggers:  # type: ignore[index]
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1022,6 +1055,9 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
+        if automation.is_disabled_experimental_trigger(hass, domain):
+            hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
+            continue
 
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(
