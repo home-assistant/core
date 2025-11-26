@@ -155,36 +155,9 @@ class AmcrestSensor(SensorEntity):
                         f"{storage['used'][0]} {storage['used'][1]}"
                     )
                 try:
-                    # Handle case where used_percent might be "N/A" string
-                    _LOGGER.debug(
-                        "Processing storage used_percent: %s (type: %s)",
-                        storage.get("used_percent"),
-                        type(storage.get("used_percent")),
-                    )
-                    if (
-                        storage["used_percent"] == "N/A"
-                        or storage["used_percent"] is None
-                    ):
-                        _LOGGER.debug(
-                            "Setting native_value to None due to N/A or None value"
-                        )
-                        self._attr_native_value = None
-                    else:
-                        value = round(float(storage["used_percent"]), 2)
-                        _LOGGER.debug(
-                            "Setting native_value to: %s (type: %s)", value, type(value)
-                        )
-                        self._attr_native_value = value
-                except (ValueError, TypeError):
-                    _LOGGER.debug("Exception occurred, setting native_value to None")
-                    self._attr_native_value = None
-
-            _LOGGER.debug(
-                "Final native_value for %s: %s (type: %s)",
-                self.name,
-                self._attr_native_value,
-                type(self._attr_native_value),
-            )
+                    self._attr_native_value = f"{storage['used_percent']:.2f}"
+                except ValueError:
+                    self._attr_native_value = storage["used_percent"]
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
