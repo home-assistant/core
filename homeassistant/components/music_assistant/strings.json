@@ -2,21 +2,18 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_discovered_addon": "Music Assistant server is running as a Home Assistant add-on and should be discovered automatically",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_server_version": "[%key:component::music_assistant::config::error::invalid_server_version%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "server_not_ready": "Music Assistant server has not completed initial setup yet",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "error": {
+      "auth_error": "Authentication error, please try again",
       "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_server_version": "The Music Assistant server is not the correct version",
-      "no_token": "No authentication token received",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "auth_failed": "[%key:component::music_assistant::config::abort::auth_failed%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "[%key:component::music_assistant::config::abort::invalid_server_version%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

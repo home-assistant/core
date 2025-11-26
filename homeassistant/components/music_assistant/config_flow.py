@@ -189,10 +189,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._set_confirm_only()
-        return self.async_show_form(
-            step_id="hassio_confirm",
-            description_placeholders={"url": self.url},
-        )
+        return self.async_show_form(step_id="hassio_confirm")
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
