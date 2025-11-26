@@ -1,42 +1,83 @@
 rules:
-  # Bronze (mandatory) - Basic requirements
+  # Bronze (mandatory)
   action-setup:
     status: exempt
     comment: Integration does not register custom actions
-  appropriate-polling: done
+  appropriate-polling:
+    status: done
   brands:
     status: exempt
     comment: Integration uses generic public transport API without specific brands
-  common-modules: done
-  config-flow: done
-  config-flow-test-coverage: done
-  dependency-transparency: done
+  common-modules:
+    status: done
+  config-flow:
+    status: done
+  config-flow-test-coverage:
+    status: done
+  dependency-transparency:
+    status: done
   docs-actions:
     status: exempt
     comment: Integration does not provide custom actions
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
-  entity-event-setup: done
-  entity-unique-id: done
-  has-entity-name: done
-  runtime-data: done
-  test-before-configure: done
-  test-before-setup: done
-  unique-config-entry: done
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  entity-event-setup:
+    status: done
+  entity-unique-id:
+    status: done
+  has-entity-name:
+    status: done
+  runtime-data:
+    status: done
+  test-before-configure:
+    status: done
+  test-before-setup:
+    status: done
+  unique-config-entry:
+    status: done
 
-  # Silver - Enhanced functionality
+  # Silver
   action-exceptions:
     status: exempt
     comment: Integration does not provide custom actions
-  config-entry-unloading: done
-  docs-configuration-parameters: done
-  docs-installation-parameters: done
-  entity-unavailable: done
-  integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: done
+  config-entry-unloading:
+    status: done
+  docs-configuration-parameters:
+    status: done
+  docs-installation-parameters:
+    status: done
+  entity-unavailable:
+    status: done
+  integration-owner:
+    status: done
+  log-when-unavailable:
+    status: done
+  parallel-updates:
+    status: done
   reauthentication-flow:
     status: exempt
     comment: Integration does not use authentication requiring reauth
-  test-coverage: done
+  test-coverage:
+    status: done
+
+  # Gold
+  devices:
+    status: todo
+    comment: Needs explicit device_registry.async_get_or_create per subentry to
+      ensure devices are owned by subentries (not yet implemented)
+  diagnostics:
+    status: todo
+    comment: Coordinator exposes diagnostics_attributes but integration-level
+      diagnostics collection (async_get_config_entry_diagnostics) is not added
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+
+  # Platinum
+  strict-typing: todo
+  async-dependency: todo
+  inject-websession: todo
