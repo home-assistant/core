@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from enum import Enum
+import hashlib
 import itertools
 import logging
 from typing import Any
@@ -212,7 +213,8 @@ def format_migration_config(
         items = []
         for item in config:
             if isinstance(item, types):
-                items.append(format_migration_config(item, depth + 1))
+                if len(item) > 0:
+                    items.append(format_migration_config(item, depth + 1))
             else:
                 items.append(_format_template(item))
         return items  # type: ignore[return-value]
@@ -220,7 +222,8 @@ def format_migration_config(
     formatted_config = {}
     for field, value in config.items():
         if isinstance(value, types):
-            formatted_config[field] = format_migration_config(value, depth + 1)
+            if len(value) > 0:
+                formatted_config[field] = format_migration_config(value, depth + 1)
         else:
             formatted_config[field] = _format_template(value)
 
@@ -243,7 +246,7 @@ def create_legacy_template_issue(
     elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
         breadcrumb = name.template
 
-    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hex(hash(frozenset(config)))}"
+    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hashlib.md5(','.join(config.keys()).encode()).hexdigest()}"
 
     if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
         hass.data[DATA_DEPRECATION] = deprecation_list = []
@@ -253,6 +256,8 @@ def create_legacy_template_issue(
     try:
         modified_yaml = format_migration_config(config)
         yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
+        # Format to show up properly in a numbered bullet on the repair.
+        yaml_config = "    ```\n    " + yaml_config.replace("\n", "\n    ") + "```"
     except RecursionError:
         yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
 

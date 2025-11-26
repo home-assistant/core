@@ -529,7 +529,7 @@
       "title": "Deprecated battery level option in {entity_name}"
     },
     "deprecated_legacy_templates": {
-      "description": "The legacy `platform: template` syntax for `{domain}` is being removed in Home Assitant Core 2026.6.\n\nPlease migrate `{breadcrumb}` to the modern template syntax.\n\n1. Remove existing template definition.\n2. Add new template definition:```\n{config}\n```\n3. Restart Home Assistant or reload template entities.",
+      "description": "The legacy `platform: template` syntax for `{domain}` is being removed in Home Assitant Core 2026.6.\n\nPlease migrate `{breadcrumb}` to the modern template syntax.\n\n1. Remove existing template definition.\n2. Add new template definition:\n{config}\n3. Restart Home Assistant or reload template entities.",
       "title": "Legacy {domain} template deprecation"
     }
   },
