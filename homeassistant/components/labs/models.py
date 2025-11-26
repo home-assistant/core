@@ -1,4 +1,4 @@
-"""Constants for the Home Assistant Labs integration."""
+"""Data models for the Home Assistant Labs integration."""
 
 from __future__ import annotations
 

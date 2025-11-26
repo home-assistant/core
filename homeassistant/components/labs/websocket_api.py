@@ -1,9 +1,4 @@
-"""The Home Assistant Labs integration.
-
-This integration provides preview features that can be toggled on/off by users.
-Integrations can register lab preview features in their manifest.json which will appear
-in the Home Assistant Labs UI for users to enable or disable.
-"""
+"""Websocket API for the Home Assistant Labs integration."""
 
 from __future__ import annotations
 
