@@ -189,21 +189,10 @@ async def test_service_get_kvs_value_sleeping_device(
     assert exc_info.value.translation_placeholders == {"device": entry.title}
 
 
-@pytest.mark.parametrize(
-    ("raw_value", "expected_value"),
-    [
-        ("test_value", "test_value"),
-        (42, 42),
-        ({"a": 1}, '{"a":1}'),
-        ([{"a": 1}, {"b": 2}], '[{"a":1},{"b":2}]'),
-    ],
-)
 async def test_service_set_kvs_value(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     device_registry: dr.DeviceRegistry,
-    raw_value,
-    expected_value,
 ) -> None:
     """Test set_kvs_value service."""
     entry = await init_integration(hass, 2)
@@ -213,8 +202,8 @@ async def test_service_set_kvs_value(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_KVS_VALUE,
-        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key", ATTR_VALUE: raw_value},
+        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key", ATTR_VALUE: "test_value"},
         blocking=True,
     )
 
-    mock_rpc_device.kvs_set.assert_called_once_with("test_key", expected_value)
+    mock_rpc_device.kvs_set.assert_called_once_with("test_key", "test_value")

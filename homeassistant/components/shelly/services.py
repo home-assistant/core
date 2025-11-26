@@ -18,7 +18,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import JsonValueType, json_loads
 
 from .const import ATTR_KEY, ATTR_VALUE, CONF_SLEEP_PERIOD, DOMAIN
@@ -143,14 +142,9 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
 
 async def async_set_kvs_value(call: ServiceCall) -> None:
     """Handle the set_kvs_value service call."""
-    key = call.data[ATTR_KEY]
-    raw_value = call.data[ATTR_VALUE]
-    if isinstance(raw_value, (dict, list)):
-        value = json_dumps(raw_value)
-    else:
-        value = raw_value
-
-    await _async_execute_action(call, "kvs_set", (key, value))
+    await _async_execute_action(
+        call, "kvs_set", (call.data[ATTR_KEY], call.data[ATTR_VALUE])
+    )
 
 
 @callback
