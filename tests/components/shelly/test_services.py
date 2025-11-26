@@ -6,7 +6,12 @@ from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 
 from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.components.shelly.services import ATTR_KEY, SERVICE_GET_KVS_VALUE
+from homeassistant.components.shelly.services import (
+    ATTR_KEY,
+    ATTR_VALUE,
+    SERVICE_GET_KVS_VALUE,
+    SERVICE_SET_KVS_VALUE,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -16,26 +21,42 @@ from homeassistant.helpers import device_registry as dr
 from . import init_integration
 
 
+@pytest.mark.parametrize(
+    ("raw_value", "expected_value"),
+    [
+        ("test_value", "test_value"),
+        (42, 42),
+        ('{"a":1}', {"a": 1}),
+        ('[{"a":1},{"b":2}]', [{"a": 1}, {"b": 2}]),
+    ],
+)
 async def test_service_get_kvs_value(
-    hass: HomeAssistant, mock_rpc_device: Mock, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+    raw_value,
+    expected_value,
 ) -> None:
     """Test get_kvs_value service."""
     entry = await init_integration(hass, 2)
 
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
-    mock_rpc_device.kvs_get.return_value = {"value": "test_value"}
+    mock_rpc_device.kvs_get.return_value = {
+        "etag": "16mLia9TRt8lGhj9Zf5Dp6Hw==",
+        "value": raw_value,
+    }
 
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_KVS_VALUE,
-        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
         blocking=True,
         return_response=True,
     )
 
-    assert response == {"value": "test_value"}
-    mock_rpc_device.kvs_get.assert_called_once_with("my_key")
+    assert response == {"value": expected_value}
+    mock_rpc_device.kvs_get.assert_called_once_with("test_key")
 
 
 async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None:
@@ -46,7 +67,7 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: "invalid_device_id", ATTR_KEY: "my_key"},
+            {ATTR_DEVICE_ID: "invalid_device_id", ATTR_KEY: "test_key"},
             blocking=True,
             return_response=True,
         )
@@ -70,7 +91,7 @@ async def test_service_get_kvs_value_block_device(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
             blocking=True,
             return_response=True,
         )
@@ -105,7 +126,7 @@ async def test_service_get_kvs_value_exc(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
             blocking=True,
             return_response=True,
         )
@@ -134,7 +155,7 @@ async def test_config_entry_not_loaded(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
             blocking=True,
             return_response=True,
         )
@@ -160,7 +181,7 @@ async def test_service_get_kvs_value_sleeping_device(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "my_key"},
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
             blocking=True,
             return_response=True,
         )
@@ -168,3 +189,34 @@ async def test_service_get_kvs_value_sleeping_device(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "kvs_not_supported"
     assert exc_info.value.translation_placeholders == {"device": entry.title}
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_value"),
+    [
+        ("test_value", "test_value"),
+        (42, 42),
+        ({"a": 1}, '{"a":1}'),
+        ([{"a": 1}, {"b": 2}], '[{"a":1},{"b":2}]'),
+    ],
+)
+async def test_service_set_kvs_value(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+    raw_value,
+    expected_value,
+) -> None:
+    """Test set_kvs_value service."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_KVS_VALUE,
+        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key", ATTR_VALUE: raw_value},
+        blocking=True,
+    )
+
+    mock_rpc_device.kvs_set.assert_called_once_with("test_key", expected_value)
