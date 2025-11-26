@@ -1,28 +1,24 @@
 """Tests Starlink integration init/unload."""
 
-import copy
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.starlink.const import DOMAIN
+from homeassistant.components.starlink.sensor import uptime_to_stable_datetime
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util import dt as dt_util
 
 from .patchers import (
     HISTORY_STATS_SUCCESS_PATCHER,
     LOCATION_DATA_SUCCESS_PATCHER,
     SLEEP_DATA_SUCCESS_PATCHER,
-    STATUS_DATA_FIXTURE,
     STATUS_DATA_SUCCESS_PATCHER,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
 async def test_successful_entry(hass: HomeAssistant) -> None:
@@ -122,95 +118,21 @@ async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
         assert hass.states.get(entity_id).state == str(1 + 0.01572462736977)
 
 
-async def test_last_restart_state(hass: HomeAssistant) -> None:
-    """Test Starlink last restart state."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
-    )
-    entity_id = "sensor.starlink_last_restart"
+async def test_uptime_to_stable_datetime(freezer: FrozenDateTimeFactory) -> None:
+    """Test uptime to stable datetime."""
+    utc_now = datetime.fromisoformat("2025-10-22T13:31:29+00:00")
+    freezer.move_to(utc_now)
 
-    with (
-        LOCATION_DATA_SUCCESS_PATCHER,
-        SLEEP_DATA_SUCCESS_PATCHER,
-        STATUS_DATA_SUCCESS_PATCHER,
-        HISTORY_STATS_SUCCESS_PATCHER,
-        patch(
-            "homeassistant.components.starlink.sensor.now",
-            return_value=datetime.fromisoformat("2025-10-22T13:31:29+00:00"),
-        ),
-    ):
-        entry.add_to_hass(hass)
+    assert uptime_to_stable_datetime(804138).isoformat() == "2025-10-13T06:09:11+00:00"
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    freezer.move_to(utc_now + timedelta(seconds=5))
 
-        assert entry.runtime_data
-        assert entry.runtime_data.data
-        assert entry.runtime_data.data.status["uptime"] == 804138
+    assert uptime_to_stable_datetime(804144).isoformat() == "2025-10-13T06:09:11+00:00"
 
-        assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
+    freezer.move_to(utc_now + timedelta(seconds=10))
 
-        status_data = copy.deepcopy(STATUS_DATA_FIXTURE)
-        status_data[0]["uptime"] = 804144
+    assert uptime_to_stable_datetime(804134).isoformat() == "2025-10-13T06:09:11+00:00"
 
-        with (
-            patch(
-                "homeassistant.components.starlink.coordinator.status_data",
-                return_value=status_data,
-            ),
-            patch(
-                "homeassistant.components.starlink.sensor.now",
-                return_value=datetime.fromisoformat("2025-10-22T13:31:34+00:00"),
-            ),
-        ):
-            await entry.runtime_data.async_refresh()
+    freezer.move_to(utc_now + timedelta(seconds=15))
 
-            assert entry.runtime_data.data.status["uptime"] == 804144
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
-
-        status_data[0]["uptime"] = 804134
-
-        with (
-            patch(
-                "homeassistant.components.starlink.coordinator.status_data",
-                return_value=status_data,
-            ),
-            patch(
-                "homeassistant.components.starlink.sensor.now",
-                return_value=datetime.fromisoformat("2025-10-22T13:31:39+00:00"),
-            ),
-        ):
-            await entry.runtime_data.async_refresh()
-
-            assert entry.runtime_data.data.status["uptime"] == 804134
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
-
-        status_data[0]["uptime"] = 100
-
-        with (
-            patch(
-                "homeassistant.components.starlink.coordinator.status_data",
-                return_value=status_data,
-            ),
-            patch(
-                "homeassistant.components.starlink.sensor.now",
-                return_value=datetime.fromisoformat("2025-10-22T13:31:44+00:00"),
-            ),
-        ):
-            await entry.runtime_data.async_refresh()
-
-            assert entry.runtime_data.data.status["uptime"] == 100
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        assert hass.states.get(entity_id).state == "2025-10-22T13:30:04+00:00"
+    assert uptime_to_stable_datetime(100).isoformat() == "2025-10-22T13:30:04+00:00"
