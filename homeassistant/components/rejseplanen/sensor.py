@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -46,10 +45,8 @@ from .const import (
     ATTR_TRACK,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
-    CONF_NAME,
     CONF_ROUTE,
     CONF_STOP_ID,
-    DEFAULT_STOP_NAME,
     DOMAIN,
 )
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
@@ -342,87 +339,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Rejseplanen sensors."""
     coordinator = config_entry.runtime_data
-    entities: list[SensorEntity] = []
-    device_registry = dr.async_get(hass)
-
-    # Add service-level diagnostic sensors (associated with main service device)
-    entities.extend(
-        [
-            RejseplanenDiagnosticSensor(
-                coordinator=coordinator,
-                config_entry=config_entry,
-                key="last_update_time",
-                name="Last update time",
-                device_class=SensorDeviceClass.TIMESTAMP,
-            ),
-            RejseplanenDiagnosticSensor(
-                coordinator=coordinator,
-                config_entry=config_entry,
-                key="update_interval",
-                name="Update interval",
-                native_unit_of_measurement="s",
-            ),
-        ]
-    )
 
     # Process all subentries (stop configurations)
     for subentry_id, subentry in config_entry.subentries.items():
         if subentry.subentry_type != "stop":
             continue
 
-        config = subentry.data
-        name = config.get(CONF_NAME, DEFAULT_STOP_NAME)
-        stop_id = int(config[CONF_STOP_ID])
-        route = config.get(CONF_ROUTE, [])
-        direction = config.get(CONF_DIRECTION, [])
-        departure_type = config.get(CONF_DEPARTURE_TYPE, [])
+        config = dict(subentry.data)
+        config["subentry_id"] = subentry_id
 
-        # Register stop with coordinator
-        coordinator.add_stop_id(stop_id)
-
-        # ✅ Create device for this subentry
-        device_identifier = f"{config_entry.entry_id}-subentry-{subentry_id}"
+        subentry_entities = [
+            RejseplanenTransportSensor(
+                coordinator=coordinator, config=config, entity_description=description
+            )
+            for description in SENSORS
+        ]
         _LOGGER.debug(
-            "Creating device for subentry %s with identifier %s, stop_id %s",
+            "Adding %d entities for subentry %s (stop_id: %d)",
+            len(subentry_entities),
             subentry_id,
-            device_identifier,
-            stop_id,
+            int(config[CONF_STOP_ID]),
         )
-
-        device = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
+        async_add_entities(
+            subentry_entities,
             config_subentry_id=subentry_id,
-            identifiers={(DOMAIN, device_identifier)},
-            name=name or f"Stop {stop_id}",
-            manufacturer="Rejseplanen",
-            model="Public transport stop",
-            via_device=(DOMAIN, config_entry.entry_id),
         )
-        _LOGGER.debug(
-            "Device created/found: %s, subentries: %s",
-            device.name,
-            device.config_entries_subentries.get(config_entry.entry_id, set()),
-        )
-
-        entities.extend(
-            [
-                RejseplanenTransportSensor(
-                    coordinator=coordinator,
-                    entity_description=description,
-                    stop_id=stop_id,
-                    entry_id=config_entry.entry_id,
-                    subentry_id=subentry_id,
-                    name=name,
-                    route=route,
-                    direction=direction,
-                    departure_type=departure_type,
-                    device_id=device.id,  # Pass the device ID to associate with created device
-                )
-                for description in SENSORS
-            ]
-        )
-
-    async_add_entities(entities)
 
 
 class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
@@ -454,38 +395,40 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
     def __init__(
         self,
         coordinator: RejseplanenDataUpdateCoordinator,
+        config: dict[str, Any],
         entity_description: RejseplanenSensorEntityDescription,
-        stop_id: int,
-        entry_id: str,
-        subentry_id: str,
-        name: str | None,
-        route: list[str],
-        direction: list[str],
-        departure_type: list[str],
-        device_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, stop_id, entry_id, subentry_id, name, device_id)
-
+        super().__init__(coordinator, int(config[CONF_STOP_ID]))
         self.entity_description = entity_description
-        self._route = route
-        self._direction = direction
-        self._departure_type = departure_type
+
         self._departure_cleanup_unsubscribe: CALLBACK_TYPE | None = None
         self._last_cleanup_time: datetime | None = None
 
-        self._attr_unique_id = f"{subentry_id}_{entity_description.key}"
+        self._stop_id = int(config[CONF_STOP_ID])
+        self._route = config.get(CONF_ROUTE, [])
+        self._direction = config.get(CONF_DIRECTION, [])
+        self._departure_type = config.get(CONF_DEPARTURE_TYPE, [])
+        self._attr_unique_id = f"{config.get('subentry_id')}_{entity_description.key}"
 
         # Calculate bitflag for filtering
         self._departure_type_bitflag = coordinator.api.calculate_departure_type_bitflag(
-            departure_type
+            self._departure_type
+        )
+        # Create a device for this configured stop using the configuration
+        # values so the device entry contains useful metadata for the stop.
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, str(config.get("subentry_id")))},
+            name=config.get("name") or f"Rejseplanen stop {self._stop_id}",
+            manufacturer="Rejseplanen",
+            sw_version=str(self._stop_id),
         )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
 
-        # ✅ Use async_on_remove for proper cleanup registration
+        # Use async_on_remove for proper cleanup registration
         self.async_on_remove(self._cancel_cleanup_trigger)
         self._schedule_next_cleanup()
 
@@ -556,45 +499,3 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
             direction_filter=self._direction if self._direction else None,
             departure_type_filter=self._departure_type_bitflag,
         )
-
-
-class RejseplanenDiagnosticSensor(SensorEntity):
-    """Diagnostic sensor for Rejseplanen coordinator-level information."""
-
-    _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(
-        self,
-        coordinator: RejseplanenDataUpdateCoordinator,
-        config_entry: RejseplanenConfigEntry,
-        key: str,
-        name: str,
-        device_class: SensorDeviceClass | None = None,
-        native_unit_of_measurement: str | None = None,
-    ) -> None:
-        """Initialize the diagnostic sensor."""
-        self.coordinator = coordinator
-        self._key = key
-        self._attr_name = name
-        self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = native_unit_of_measurement
-        self._attr_unique_id = f"{config_entry.entry_id}_{key}"
-
-        # Associate with the main service device
-        self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-        )
-
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        diagnostics = self.coordinator.diagnostics_attributes
-
-        if self._key == "last_update_time":
-            return diagnostics.get("last_update_time")
-        if self._key == "update_interval":
-            return diagnostics.get("update_interval")
-
-        return None

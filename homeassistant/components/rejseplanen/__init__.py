@@ -7,8 +7,7 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
@@ -31,18 +30,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Rejseplanen from a config entry."""
     coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
-
-    # Create the service device entry
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        name="Rejseplanen",
-        manufacturer="Rejseplanen",
-        model="Public transport API",
-        entry_type=DeviceEntryType.SERVICE,
-        configuration_url="https://www.rejseplanen.dk/",
-    )
 
     try:
         await coordinator.async_config_entry_first_refresh()

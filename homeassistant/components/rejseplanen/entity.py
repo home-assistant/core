@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import RejseplanenDataUpdateCoordinator
@@ -22,33 +21,12 @@ class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
         self,
         coordinator: RejseplanenDataUpdateCoordinator,
         stop_id: int,
-        entry_id: str,
-        subentry_id: str,
-        name: str | None,
-        device_id: str | None = None,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
 
-        self._stop_id = stop_id
-        self._entry_id = entry_id
-        self._subentry_id = subentry_id
         self._unavailable_logged = False
-
-        # Store device_id for proper association during entity registry
-        self._target_device_id = device_id
-
-    async def async_internal_added_to_hass(self) -> None:
-        """Handle entity being added to hass - override for device association."""
-        # First, call parent to handle normal entity registration
-        await super().async_internal_added_to_hass()
-
-        # If we have a target device_id, update the entity registry to associate with device
-        if self._target_device_id and self.registry_entry:
-            entity_registry = er.async_get(self.hass)
-            entity_registry.async_update_entity(
-                self.registry_entry.entity_id, device_id=self._target_device_id
-            )
+        self._stop_id = stop_id
 
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to hass."""
