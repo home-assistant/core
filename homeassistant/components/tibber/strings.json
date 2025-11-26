@@ -2,10 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "oauth_invalid_token": "[%key:common::config_flow::abort::oauth2_error%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The connected account does not match {email}. Sign in with the same Tibber account and try again."
     },
@@ -15,21 +13,15 @@
       "timeout": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
-      "graphql": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter your access token from {url}"
-      },
       "reauth_confirm": {
         "description": "Reconnect your Tibber account to refresh access.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
-          "api_type": "API type"
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Select which Tibber API you want to configure. See {url} for documentation."
+        "description": "Enter your access token from {url}"
       }
     }
   },
@@ -55,15 +47,6 @@
       },
       "average_power": {
         "name": "Average power"
-      },
-      "battery_battery_power": {
-        "name": "Battery power"
-      },
-      "battery_battery_state_of_charge": {
-        "name": "Battery state of charge"
-      },
-      "battery_stored_energy": {
-        "name": "Stored energy"
       },
       "charging_current_max": {
         "name": "Maximum charging current"
@@ -101,30 +84,6 @@
       },
       "estimated_hour_consumption": {
         "name": "Estimated consumption current hour"
-      },
-      "ev_charger_charge_current": {
-        "name": "Charge current"
-      },
-      "ev_charger_charging_state": {
-        "name": "Charging state"
-      },
-      "ev_charger_power": {
-        "name": "Charging power"
-      },
-      "ev_charger_session_energy": {
-        "name": "Session energy"
-      },
-      "ev_charger_total_energy": {
-        "name": "Total energy"
-      },
-      "heat_pump_measured_temperature": {
-        "name": "Measured temperature"
-      },
-      "heat_pump_operation_mode": {
-        "name": "Operation mode"
-      },
-      "heat_pump_target_temperature": {
-        "name": "Target temperature"
       },
       "last_meter_consumption": {
         "name": "Last meter consumption"
@@ -165,26 +124,11 @@
       "signal_strength": {
         "name": "Signal strength"
       },
-      "solar_power": {
-        "name": "Solar power"
-      },
-      "solar_power_production": {
-        "name": "Power production"
-      },
       "storage_state_of_charge": {
         "name": "Storage state of charge"
       },
       "storage_target_state_of_charge": {
         "name": "Storage target state of charge"
-      },
-      "thermostat_measured_temperature": {
-        "name": "Measured temperature"
-      },
-      "thermostat_operation_mode": {
-        "name": "Operation mode"
-      },
-      "thermostat_target_temperature": {
-        "name": "Target temperature"
       },
       "voltage_phase1": {
         "name": "Voltage phase1"
@@ -201,9 +145,6 @@
     "data_api_reauth_required": {
       "message": "Reconnect Tibber so Home Assistant can enable the new Tibber Data API features."
     },
-    "graphql_required": {
-      "message": "Configure the Tibber GraphQL API before calling this service."
-    },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
     },
@@ -212,14 +153,6 @@
     },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"
-    }
-  },
-  "selector": {
-    "api_type": {
-      "options": {
-        "data_api": "Data API (OAuth2)",
-        "graphql": "GraphQL API (access token)"
-      }
     }
   },
   "services": {

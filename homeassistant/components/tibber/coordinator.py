@@ -217,10 +217,7 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
     async def _async_get_client(self) -> TibberDataAPI:
         """Get the Tibber Data API client with error handling."""
         try:
-            return cast(
-                TibberDataAPI,
-                await self._runtime_data.async_get_client(self.hass),
-            )
+            return await self._runtime_data.async_get_client(self.hass)
         except ConfigEntryAuthFailed:
             raise
         except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
