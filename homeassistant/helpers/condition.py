@@ -160,9 +160,6 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
-    await async_process_integration_platforms(
-        hass, "condition", _register_condition_platform, wait_for_platforms=True
-    )
 
     @callback
     def new_triggers_conditions_listener() -> None:
@@ -176,6 +173,10 @@ async def async_setup(hass: HomeAssistant) -> None:
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
         new_triggers_conditions_listener,
+    )
+
+    await async_process_integration_platforms(
+        hass, "condition", _register_condition_platform, wait_for_platforms=True
     )
 
 

@@ -104,10 +104,10 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
         "light.is_on",
     ],
 )
-async def test_light_triggers_gated_by_labs_flag(
+async def test_light_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the light triggers are gated by the labs flag."""
+    """Test the light conditions are gated by the labs flag."""
     await setup_automation_with_light_condition(
         hass, condition=condition, target={ATTR_LABEL_ID: "test_label"}, behavior="any"
     )
