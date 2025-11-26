@@ -154,6 +154,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._flow_data["record_name"],
                     data=self._flow_data,
                     description="add_sensor_mapping_hint",
+                    description_placeholders={"integration_name": NAME},
                 )
 
             if auth_status == "needs_claim":
@@ -228,6 +229,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self._flow_data["record_name"],
             data=self._flow_data,
             description="add_sensor_mapping_hint",
+            description_placeholders={"integration_name": NAME},
         )
 
     async def async_step_reauth(
