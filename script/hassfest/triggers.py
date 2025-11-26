@@ -95,7 +95,7 @@ def validate_field_schema(trigger_schema: dict[str, Any]) -> dict[str, Any]:
                         f"in trigger schema fields or target"
                     )
 
-    return field_schema
+    return trigger_schema
 
 
 FIELD_SCHEMA = vol.Schema(
