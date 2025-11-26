@@ -35,7 +35,6 @@ from .utils import (
     get_block_custom_name,
     get_block_number_of_channels,
     get_device_entry_gen,
-    get_rpc_channel_name,
     get_rpc_custom_name,
     get_rpc_key,
     get_rpc_key_id,
@@ -160,8 +159,7 @@ def _async_setup_rpc_entry(
     )
     script_events = config_entry.runtime_data.rpc_script_events
     for script in script_instances:
-        script_name = get_rpc_channel_name(coordinator.device, script)
-        if script_name == BLE_SCRIPT_NAME:
+        if get_rpc_custom_name(coordinator.device, script) == BLE_SCRIPT_NAME:
             continue
 
         if script_events and (event_types := script_events[get_rpc_key_id(script)]):
@@ -212,9 +210,6 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
                 and get_block_number_of_channels(coordinator.device, block) > 1
                 else ""
             }
-
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
         else:
             self._attr_name = get_block_channel_name(coordinator.device, block)
 
@@ -253,17 +248,17 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
 
         if description.key == "input":
             _, component, component_id = get_rpc_key(key)
-            if not get_rpc_custom_name(coordinator.device, key):
+            if custom_name := get_rpc_custom_name(coordinator.device, key):
+                self._attr_name = custom_name
+            else:
                 self._attr_translation_placeholders = {
                     "input_number": component_id
                     if get_rpc_number_of_channels(coordinator.device, component) > 1
                     else ""
                 }
-            else:
-                self._attr_name = get_rpc_channel_name(coordinator.device, key)
             self.event_id = int(component_id)
         elif description.key == "script":
-            self._attr_name = get_rpc_channel_name(coordinator.device, key)
+            self._attr_name = get_rpc_custom_name(coordinator.device, key)
             self.event_id = get_rpc_key_id(key)
 
     async def async_added_to_hass(self) -> None:
