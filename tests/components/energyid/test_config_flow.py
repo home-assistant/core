@@ -1,6 +1,6 @@
 """Test EnergyID config flow."""
 
-import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
@@ -29,6 +29,15 @@ TEST_PROVISIONING_SECRET = "test_prov_secret"
 TEST_RECORD_NUMBER = "site_12345"
 TEST_RECORD_NAME = "My Test Site"
 MAX_POLLING_ATTEMPTS = 60
+
+
+@pytest.fixture(name="mock_polling_interval", autouse=True)
+def mock_polling_interval_fixture() -> Generator[int]:
+    """Mock polling interval to 0 for faster tests."""
+    with patch(
+        "homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0
+    ) as polling_interval:
+        yield polling_interval
 
 
 async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> None:
@@ -109,6 +118,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
             },
         )
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+        assert result_external["step_id"] == "auth_and_claim"
 
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
@@ -334,8 +344,6 @@ async def test_config_flow_external_step_claimed_during_display(
 ) -> None:
     """Test when device gets claimed while external step is being displayed."""
     call_count = 0
-    polling_started = asyncio.Event()
-    real_sleep = asyncio.sleep  # Store real sleep to avoid recursion
 
     def create_mock_client(*args, **kwargs):
         nonlocal call_count
@@ -351,20 +359,9 @@ async def test_config_flow_external_step_claimed_during_display(
             mock_client.recordName = TEST_RECORD_NAME
         return mock_client
 
-    async def slow_sleep(_interval):
-        """Sleep that takes long enough for task to be running when we continue."""
-        polling_started.set()
-        await real_sleep(10)  # Use real sleep, long enough to ensure task is not done
-
-    with (
-        patch(
-            "homeassistant.components.energyid.config_flow.WebhookClient",
-            side_effect=create_mock_client,
-        ),
-        patch(
-            "homeassistant.components.energyid.config_flow.asyncio.sleep",
-            side_effect=slow_sleep,
-        ),
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        side_effect=create_mock_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -382,10 +379,7 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
 
-        # Wait for polling to start
-        await asyncio.wait_for(polling_started.wait(), timeout=1.0)
-
-        # User continues - device is claimed, polling task should be cancelled
+        # User continues immediately - device is claimed, polling task should be cancelled
         result_claimed = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
@@ -401,26 +395,12 @@ async def test_config_flow_external_step_claimed_during_display(
 
 async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
     """Test auth_and_claim step when device is not claimed after polling."""
-    polling_started = asyncio.Event()
-    real_sleep = asyncio.sleep  # Store real sleep to avoid recursion
-
-    async def slow_sleep(_interval):
-        """Sleep that takes long enough for task to be running when we continue."""
-        polling_started.set()
-        await real_sleep(10)  # Use real sleep, long enough to ensure task is not done
-
     mock_client = MagicMock()
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
-    with (
-        patch(
-            "homeassistant.components.energyid.config_flow.WebhookClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.energyid.config_flow.asyncio.sleep",
-            side_effect=slow_sleep,
-        ),
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -438,10 +418,7 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
         )
         assert result2["type"] is FlowResultType.EXTERNAL_STEP
 
-        # Wait for polling to start
-        await asyncio.wait_for(polling_started.wait(), timeout=1.0)
-
-        # User continues - device still not claimed, polling task should be cancelled
+        # User continues immediately - device still not claimed, polling task should be cancelled
         result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         assert result3["type"] is FlowResultType.EXTERNAL_STEP
         assert result3["step_id"] == "auth_and_claim"
