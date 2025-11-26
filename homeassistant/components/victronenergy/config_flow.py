@@ -226,6 +226,9 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id = discovery_info.upnp.get("X_VrmPortalId")
         if unique_id is None:
             return self.async_abort(reason="missing_unique_id")
+        home_assistant_discovery = discovery_info.upnp.get("X_HomeAssistantDiscovery")
+        if home_assistant_discovery is None:
+            return self.async_abort(reason="no_discovery_support")
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
