@@ -130,7 +130,7 @@ async def test_error_on_wrong_credentials(
     ("exception", "error"),
     [
         (TransmissionError, "cannot_connect"),
-        (TransmissionConnectError, "invalid_auth"),
+        (TransmissionConnectError, "cannot_connect"),
     ],
 )
 async def test_flow_errors(
@@ -151,7 +151,7 @@ async def test_flow_errors(
         MOCK_CONFIG_DATA,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     mock_transmission_client.side_effect = None
     result = await hass.config_entries.flow.async_configure(

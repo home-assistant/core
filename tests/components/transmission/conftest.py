@@ -42,8 +42,8 @@ def mock_transmission_client() -> Generator[AsyncMock]:
     """Mock a Transmission client."""
     with (
         patch(
-            "transmission_rpc.Client",
-            autospec=True,
+            "homeassistant.components.transmission.transmission_rpc.Client",
+            autospec=False,
         ) as mock_client_class,
     ):
         client = mock_client_class.return_value
