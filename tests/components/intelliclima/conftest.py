@@ -129,8 +129,8 @@ def mock_cloud_interface(single_eco_device) -> Generator[AsyncMock]:
         mock_client = mock_client.return_value
 
         # Mock other async methods if needed
-        mock_client.authenticate = AsyncMock(return_value=True)
-        mock_client.get_all_device_status = AsyncMock(return_value=single_eco_device)
+        mock_client.authenticate.return_value = True
+        mock_client.get_all_device_status.return_value = single_eco_device
 
         # Sub-API used by the fan entity
         mock_client.ecocomfort = SimpleNamespace(
