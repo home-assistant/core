@@ -40,6 +40,9 @@ PLATFORMS = [
     Platform.WEATHER,
 ]
 
+RESULT_ON = ("1", "true", "yes", "on", "enable")
+RESULT_OFF = ("0", "false", "no", "off", "disable")
+
 
 class TemplateConfig(dict):
     """Dummy class to allow adding attributes."""
