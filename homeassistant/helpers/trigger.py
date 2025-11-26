@@ -68,16 +68,16 @@ from .typing import ConfigType, TemplateVarsType
 _LOGGER = logging.getLogger(__name__)
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
-    # "alarm_control_panel",
-    # "assist_satellite",
-    # "climate",
-    # "cover",
-    # "fan",
-    # "lawn_mower",
-    # "light",
-    # "media_player",
+    "alarm_control_panel",
+    "assist_satellite",
+    "climate",
+    "cover",
+    "fan",
+    "lawn_mower",
+    "light",
+    "media_player",
     "text",
-    # "vacuum",
+    "vacuum",
 }
 
 _PLATFORM_ALIASES = {
