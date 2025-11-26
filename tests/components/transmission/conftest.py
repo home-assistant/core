@@ -9,14 +9,8 @@ from transmission_rpc.session import Session, SessionStats
 from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.transmission.const import DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
+
+from . import MOCK_CONFIG_DATA
 
 from tests.common import MockConfigEntry
 
@@ -37,14 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Transmission",
-        data={
-            CONF_HOST: "0.0.0.0",
-            CONF_SSL: False,
-            CONF_PATH: "/transmission/rpc",
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "pass",
-            CONF_PORT: 9091,
-        },
+        data=MOCK_CONFIG_DATA,
         entry_id="01J0BC4QM2YBRP6H5G933AETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )
