@@ -252,16 +252,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"url": self.url},
         )
 
-    def _check_external_auth_available(self) -> bool:
-        """Check if external auth (redirect) is available."""
-        try:
-            async_get_redirect_uri(self.hass)
-        except RuntimeError:
-            # No current request context or missing required headers
-            return False
-        else:
-            return True
-
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
