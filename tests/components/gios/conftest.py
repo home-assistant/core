@@ -24,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="123",
         data={
             CONF_STATION_ID: 123,
-            CONF_NAME: "Station name",
+            CONF_NAME: "Home",
         },
         entry_id="86129426118ae32020417a53712d6eef",
     )
@@ -53,7 +53,7 @@ def mock_gios_sensors() -> GiosSensors:
 def mock_gios_stations() -> dict[int, GiosStation]:
     """Return the default mocked gios stations."""
     return {
-        123: GiosStation(id=123, name="Test Name 1", latitude=99.99, longitude=88.88),
+        123: GiosStation(id=123, name="Home", latitude=99.99, longitude=88.88),
         321: GiosStation(id=321, name="Test Name 2", latitude=77.77, longitude=66.66),
     }
 
