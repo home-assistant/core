@@ -1,9 +1,10 @@
 {
   "domain": "music_assistant",
   "name": "Music Assistant",
-  "after_dependencies": ["http", "media_source", "media_player"],
+  "after_dependencies": ["media_source", "media_player"],
   "codeowners": ["@music-assistant", "@arturpragacz"],
   "config_flow": true,
+  "dependencies": ["auth"],
   "documentation": "https://www.home-assistant.io/integrations/music_assistant",
   "iot_class": "local_push",
   "loggers": ["music_assistant"],
