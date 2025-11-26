@@ -1272,6 +1272,9 @@ async def async_get_all_descriptions(
 
         description = {"fields": yaml_description.get("fields", {})}
 
+        if (target := yaml_description.get("target")) is not None:
+            description["target"] = target
+
         new_descriptions_cache[missing_condition] = description
 
     hass.data[CONDITION_DESCRIPTION_CACHE] = new_descriptions_cache
