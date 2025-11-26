@@ -15,7 +15,7 @@ from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 # diagnostics module will not be imported in the executor.
 from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -170,6 +170,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.async_stop()
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    # Clear the stored session credentials when the integration is removed
+    if entry.state is ConfigEntryState.LOADED:
+        # Integration is loaded, use the existing API client
+        try:
+            await entry.runtime_data.api.clear_session()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Failed to clear session credentials: %s", err)
+    else:
+        # Integration is not loaded, create temporary client to clear session
+        protect = async_create_api_client(hass, entry)
+        try:
+            await protect.clear_session()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Failed to clear session credentials: %s", err)
 
 
 async def async_remove_config_entry_device(
