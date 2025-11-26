@@ -56,7 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-# ✅ Buffer time after departure for cleanup
+# Buffer time after departure for cleanup
 DEPARTURE_CLEANUP_BUFFER = timedelta(seconds=15)
 
 

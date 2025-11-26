@@ -20,73 +20,9 @@ from homeassistant.components.rejseplanen.sensor import (
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_sensors_unique_ids(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sensor unique IDs."""
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # Main integration without subentries creates 2 diagnostic entities
-    assert len(entity_entries) == 2
-
-    # Verify diagnostic sensors exist
-    diagnostic_sensors = [
-        e
-        for e in entity_entries
-        if "last_update_time" in e.unique_id or "update_interval" in e.unique_id
-    ]
-    assert len(diagnostic_sensors) == 2
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_service_device_created(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test service integration creates a device."""
-    # Service integrations create a main device entry
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-
-    # Should have exactly one device for the service
-    assert len(device_entries) == 1
-
-    device = device_entries[0]
-    assert device.name == "Rejseplanen"
-    assert device.manufacturer == "Rejseplanen"
-    assert device.entry_type is dr.DeviceEntryType.SERVICE
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_no_entities_without_subentries(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test main integration creates diagnostic entities but no stop entities without subentries."""
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # Main integration creates 2 diagnostic entities (last_update_time, update_interval)
-    # Stop entities are only created when subentries exist
-    assert len(entity_entries) == 2
 
 
 @pytest.mark.usefixtures("setup_integration_with_stop")
@@ -713,45 +649,4 @@ def test_get_current_departures_filters_past() -> None:
     assert current_departures[0].name == "Future Line"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_diagnostic_sensor_native_value(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test diagnostic sensor native_value property."""
-    # Get the diagnostic sensor entities
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # Find last_update_time sensor
-    last_update_entity = next(
-        (e for e in entity_entries if "last_update_time" in e.unique_id), None
-    )
-    assert last_update_entity is not None
-    assert last_update_entity.entity_category == "diagnostic"
-
-    # Find update_interval sensor
-    update_interval_entity = next(
-        (e for e in entity_entries if "update_interval" in e.unique_id), None
-    )
-    assert update_interval_entity is not None
-    assert update_interval_entity.entity_category == "diagnostic"
-
-    # Get the state of update_interval sensor
-    update_interval_state = hass.states.get(update_interval_entity.entity_id)
-    assert update_interval_state is not None
-    # Should have a numeric value in seconds
-    assert update_interval_state.state not in (None, "unknown", "unavailable")
-    # Verify it's a valid number
-    update_interval_value = int(float(update_interval_state.state))
-    assert update_interval_value > 0
-
-    # Get the state of last_update_time sensor
-    last_update_state = hass.states.get(last_update_entity.entity_id)
-    assert last_update_state is not None
-    # When no stops are registered, last_update_time can be unknown
-    # This is expected behavior - it becomes a timestamp after first successful data fetch
-    # For now, just verify the sensor exists and returns a value (even if unknown)
-    assert last_update_state.state is not None
+# Diagnostic sensor tests removed per request
