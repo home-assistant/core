@@ -129,9 +129,9 @@ class AmcrestSwitch(SwitchEntity):
         key = self.entity_description.key
         if key == PRIVACY_MODE_KEY:
             await self._api.async_set_privacy(mode)
-        if key == MOTION_RECORDING_ENABLED_KEY:
+        elif key == MOTION_RECORDING_ENABLED_KEY:
             await self._api.async_set_motion_recording(mode)
-        if key == AUDIO_ENABLED_KEY:
+        elif key == AUDIO_ENABLED_KEY:
             await self._api.async_set_audio_enabled(mode)
 
     async def async_update(self) -> None:

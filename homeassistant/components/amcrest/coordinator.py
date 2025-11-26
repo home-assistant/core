@@ -94,19 +94,6 @@ class AmcrestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             channel = self.device.channel
             # Get camera states using helper methods that would be in camera.py
             # For now, let's use the basic API calls with proper parameters
-            # (
-            #     is_streaming,
-            #     is_recording,
-            #     motion_detection_enabled,
-            #     audio_enabled,
-            #     color_bw,
-            # ) = await asyncio.gather(
-            #     api.async_is_video_enabled(channel=self.device.channel),
-            #     api.async_record_mode,
-            #     api.async_is_motion_detector_on(channel=self.device.channel),
-            #     api.async_is_audio_enabled(channel=self.device.channel),
-            #     api.async_day_night_color,
-            # )
 
             required_entity_data_function_map: dict[
                 str, Callable[[], Awaitable[Any]] | Awaitable[Any]
@@ -178,7 +165,6 @@ class AmcrestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         _LOGGER.debug("Fetched '%s': %s", key, results[i])
                         data_results[key] = results[i]
 
-            # _LOGGER.debug("enabled entity data: %s", data_results)
             # Extract individual variables for backwards compatibility
             online = not isinstance(data_results["online"], AmcrestError)
             is_streaming = data_results["is_streaming"]
