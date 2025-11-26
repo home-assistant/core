@@ -1,7 +1,7 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 from copy import deepcopy
 import logging
 import pathlib
@@ -154,10 +154,11 @@ def make_mock_trait(
     trait = AsyncMock(spec=trait_spec or V1TraitMixin)
     if dataclass_template is not None:
         # Copy all attributes and property methods (e.g. computed properties)
-        for attr_name in dir(deepcopy(dataclass_template)):
+        template_copy = deepcopy(dataclass_template)
+        for attr_name in dir(template_copy):
             if attr_name.startswith("_"):
                 continue
-            setattr(trait, attr_name, getattr(dataclass_template, attr_name))
+            setattr(trait, attr_name, getattr(template_copy, attr_name))
     trait.refresh = AsyncMock()
     return trait
 
@@ -179,17 +180,23 @@ def make_mock_switch(
     return trait
 
 
-def set_timer_fn(obj: DoNotDisturbTrait) -> Callable[[DnDTimer], Awaitable[None]]:
+def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
     """Make a function for the fake timer trait that emulates the real behavior."""
+    dnd_trait = make_mock_switch(
+        trait_spec=DoNotDisturbTrait,
+        dataclass_template=dataclass_template,
+    )
 
-    async def update_timer_attributes(timer: DnDTimer) -> None:
-        setattr(obj, "start_hour", timer.start_hour)
-        setattr(obj, "start_minute", timer.start_minute)
-        setattr(obj, "end_hour", timer.end_hour)
-        setattr(obj, "end_minute", timer.end_minute)
-        setattr(obj, "enabled", timer.enabled)
+    async def set_dnd_timer(timer: DnDTimer) -> None:
+        setattr(dnd_trait, "start_hour", timer.start_hour)
+        setattr(dnd_trait, "start_minute", timer.start_minute)
+        setattr(dnd_trait, "end_hour", timer.end_hour)
+        setattr(dnd_trait, "end_minute", timer.end_minute)
+        setattr(dnd_trait, "enabled", timer.enabled)
 
-    return update_timer_attributes
+    dnd_trait.set_dnd_timer = AsyncMock()
+    dnd_trait.set_dnd_timer.side_effect = set_dnd_timer
+    return dnd_trait
 
 
 def create_v1_properties(network_info: NetworkInfo) -> Mock:
@@ -199,12 +206,7 @@ def create_v1_properties(network_info: NetworkInfo) -> Mock:
         trait_spec=StatusTrait,
         dataclass_template=STATUS,
     )
-    v1_properties.dnd = make_mock_switch(
-        trait_spec=DoNotDisturbTrait,
-        dataclass_template=DND_TIMER,
-    )
-    v1_properties.dnd.set_dnd_timer = AsyncMock()
-    v1_properties.dnd.set_dnd_timer.side_effect = set_timer_fn(v1_properties.dnd)
+    v1_properties.dnd = make_dnd_timer(dataclass_template=DND_TIMER)
     v1_properties.clean_summary = make_mock_trait(
         trait_spec=CleanSummaryTrait,
         dataclass_template=CLEAN_SUMMARY,
