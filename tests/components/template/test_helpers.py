@@ -13,6 +13,7 @@ from homeassistant.components.template.cover import LEGACY_FIELDS as COVER_LEGAC
 from homeassistant.components.template.fan import LEGACY_FIELDS as FAN_LEGACY_FIELDS
 from homeassistant.components.template.helpers import (
     async_setup_template_platform,
+    format_migration_config,
     rewrite_legacy_to_modern_config,
     rewrite_legacy_to_modern_configs,
 )
@@ -29,7 +30,9 @@ from homeassistant.components.template.vacuum import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
@@ -377,3 +380,260 @@ async def test_platform_not_ready(
             None,
             {"coordinator": None, "entities": []},
         )
+
+
+@pytest.mark.parametrize(
+    ("domain", "config", "breadcrumb"),
+    [
+        (
+            "template",
+            {
+                "template": [
+                    {
+                        "sensors": {
+                            "undocumented_configuration": {
+                                "value_template": "{{ 'armed_away' }}",
+                            }
+                        }
+                    },
+                ]
+            },
+            "undocumented_configuration",
+        ),
+        (
+            "template",
+            {
+                "template": [
+                    {
+                        "binary_sensors": {
+                            "undocumented_configuration": {
+                                "value_template": "{{ 'armed_away' }}",
+                            }
+                        }
+                    },
+                ]
+            },
+            "undocumented_configuration",
+        ),
+        (
+            "alarm_control_panel",
+            {
+                "alarm_control_panel": {
+                    "platform": "template",
+                    "panels": {
+                        "safe_alarm_panel": {
+                            "value_template": "{{ 'armed_away' }}",
+                        }
+                    },
+                },
+            },
+            "safe_alarm_panel",
+        ),
+        (
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "sun_up": {
+                            "value_template": "{{ state_attr('sun.sun', 'elevation') > 0 }}",
+                        }
+                    },
+                },
+            },
+            "sun_up",
+        ),
+        (
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "garage_door": {
+                            "value_template": "{{ states('sensor.garage_door')|float > 0 }}",
+                            "open_cover": {"action": "script.toggle"},
+                            "close_cover": {"action": "script.toggle"},
+                        }
+                    },
+                },
+            },
+            "garage_door",
+        ),
+        (
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "bedroom_fan": {
+                            "value_template": "{{ states('input_boolean.state') }}",
+                            "turn_on": {"action": "script.toggle"},
+                            "turn_off": {"action": "script.toggle"},
+                        }
+                    },
+                },
+            },
+            "bedroom_fan",
+        ),
+        (
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "theater_lights": {
+                            "value_template": "{{ states('input_boolean.state') }}",
+                            "turn_on": {"action": "script.toggle"},
+                            "turn_off": {"action": "script.toggle"},
+                        }
+                    },
+                },
+            },
+            "theater_lights",
+        ),
+        (
+            "lock",
+            {
+                "lock": {
+                    "platform": "template",
+                    "value_template": "{{ states('input_boolean.state') }}",
+                    "lock": {"action": "script.toggle"},
+                    "unlock": {"action": "script.toggle"},
+                },
+            },
+            "Template Entity",
+        ),
+        (
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "It {{ states.sensor.test_state.state }}.",
+                            "attribute_templates": {"something": "{{ 'bar' }}"},
+                        }
+                    },
+                },
+            },
+            "test_template_sensor",
+        ),
+        (
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "skylight": {
+                            "value_template": "{{ is_state('sensor.skylight', 'on') }}",
+                            "turn_on": {"action": "script.toggle"},
+                            "turn_off": {"action": "script.toggle"},
+                        }
+                    },
+                },
+            },
+            "skylight",
+        ),
+        (
+            "vacuum",
+            {
+                "vacuum": {
+                    "platform": "template",
+                    "vacuums": {
+                        "living_room_vacuum": {
+                            "start": {"action": "script.start"},
+                            "attribute_templates": {"something": "{{ 'bar' }}"},
+                        }
+                    },
+                },
+            },
+            "living_room_vacuum",
+        ),
+        (
+            "weather",
+            {
+                "weather": {
+                    "platform": "template",
+                    "name": "My Weather Station",
+                    "unique_id": "Foobar",
+                    "condition_template": "{{ 'rainy' }}",
+                    "temperature_template": "{{ 20 }}",
+                    "humidity_template": "{{ 50 }}",
+                },
+            },
+            "unique_id: Foobar",
+        ),
+        (
+            "weather",
+            {
+                "weather": {
+                    "platform": "template",
+                    "name": "My Weather Station",
+                    "condition_template": "{{ 'rainy' }}",
+                    "temperature_template": "{{ 20 }}",
+                    "humidity_template": "{{ 50 }}",
+                },
+            },
+            "My Weather Station",
+        ),
+    ],
+)
+async def test_legacy_deprecation(
+    hass: HomeAssistant,
+    domain: str,
+    config: dict,
+    breadcrumb: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test legacy configuration raises issue."""
+
+    await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = next(iter(issue_registry.issues.values()))
+
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders["breadcrumb"] == breadcrumb
+
+
+@pytest.mark.parametrize(
+    ("domain", "config"),
+    [
+        (
+            "template",
+            {"template": [{"sensor": {"name": "test_template_sensor", "state": "OK"}}]},
+        ),
+        (
+            "template",
+            {
+                "template": [
+                    {
+                        "triggers": {"trigger": "event", "event_type": "test"},
+                        "sensor": {"name": "test_template_sensor", "state": "OK"},
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_modern_configuration_does_not_raise_issue(
+    hass: HomeAssistant,
+    domain: str,
+    config: dict,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test modern configuration does not raise issue."""
+
+    await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
+async def test_yaml_config_recursion_depth(hass: HomeAssistant) -> None:
+    """Test recursion depth when formatting ConfigType."""
+
+    with pytest.raises(RecursionError):
+        format_migration_config({1: {2: {3: {4: {5: {6: [{7: {8: {9: {10: {}}}}}]}}}}}})
