@@ -87,21 +87,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         await client.login()
         setup = await client.get_setup()
 
-        # Filter devices for cloud mode - exclude devices already managed by local entries
+        # Hybrid mode: cloud only exposes devices not in local
         devices = setup.devices
         if api_type == APIType.CLOUD:
-            local_device_urls = _get_entry_device_urls(
-                hass, entry.entry_id, APIType.LOCAL
-            )
-            if local_device_urls:
-                original_count = len(devices)
-                devices = [d for d in devices if d.device_url not in local_device_urls]
-                filtered_count = original_count - len(devices)
-                if filtered_count > 0:
-                    LOGGER.debug(
-                        "Filtered %d devices from cloud entry (managed by local entry)",
-                        filtered_count,
+            local_entry = _find_hybrid_local_entry(hass, entry)
+            if local_entry:
+                # Wait for local to be loaded before filtering devices out
+                if local_entry.state in (
+                    ConfigEntryState.NOT_LOADED,
+                    ConfigEntryState.SETUP_IN_PROGRESS,
+                ):
+                    raise ConfigEntryNotReady(
+                        "Waiting for local API entry to load first"
                     )
+
+                # Filter devices
+                devices = _hybrid_filter_local_devices(local_entry, devices)
 
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
@@ -312,22 +313,60 @@ def create_cloud_client(
     )
 
 
-def _get_entry_device_urls(
-    hass: HomeAssistant, current_entry_id: str, api_type: APIType
-) -> set[str]:
-    """Get device URLs managed by entries with specified API type (excluding current entry)."""
-    device_urls: set[str] = set()
+def _get_gateway_id_from_unique_id(unique_id: str | None) -> str | None:
+    """Extract gateway ID from unique_id (format: 'XXXX-XXXX-XXXX-local/cloud')."""
+    if not unique_id:
+        return None
+    return unique_id.rsplit("-", 1)[0]
 
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.entry_id == current_entry_id:
+
+def _find_hybrid_local_entry(
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+) -> OverkizDataConfigEntry | None:
+    """Find a local entry for the same gateway.
+
+    Returns the local entry if one exists for the same gateway, None otherwise.
+    """
+    gateway_id = _get_gateway_id_from_unique_id(entry.unique_id)
+
+    for other_entry in hass.config_entries.async_entries(DOMAIN):
+        if other_entry.entry_id == entry.entry_id:
             continue
-
-        if entry.state != ConfigEntryState.LOADED:
+        if other_entry.data.get(CONF_API_TYPE) != APIType.LOCAL:
             continue
+        if _get_gateway_id_from_unique_id(other_entry.unique_id) != gateway_id:
+            continue
+        return other_entry
 
-        if entry.data.get(CONF_API_TYPE) == api_type:
-            # Get devices from the loaded entry's runtime_data
-            if hasattr(entry, "runtime_data") and entry.runtime_data:
-                device_urls.update(entry.runtime_data.coordinator.devices.keys())
+    return None
 
-    return device_urls
+
+def _hybrid_filter_local_devices(
+    local_entry: OverkizDataConfigEntry,
+    devices: list[Device],
+) -> list[Device]:
+    """Filter out devices already managed by a local entry.
+
+    Returns a filtered list of devices excluding those managed by the local entry.
+    """
+    if not hasattr(local_entry, "runtime_data") or not local_entry.runtime_data:
+        return devices
+
+    local_device_urls = set(local_entry.runtime_data.coordinator.devices.keys())
+
+    if not local_device_urls:
+        return devices
+
+    original_count = len(devices)
+    filtered = [d for d in devices if d.device_url not in local_device_urls]
+    filtered_count = original_count - len(filtered)
+
+    if filtered_count > 0:
+        LOGGER.debug(
+            "Filtered %d devices from cloud entry (managed by local entry)",
+            filtered_count,
+        )
+
+    return filtered
+

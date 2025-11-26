@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from pyoverkiz.enums import APIType
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.overkiz import _get_entry_device_urls, async_migrate_entry
+from homeassistant.components.overkiz import (
+    _get_gateway_id_from_unique_id,
+    _hybrid_filter_local_devices,
+    async_migrate_entry,
+)
 from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -256,25 +258,10 @@ async def test_migration_v1_to_v2_defaults_to_cloud(hass: HomeAssistant) -> None
     assert mock_entry.unique_id == f"{TEST_GATEWAY_ID}-cloud"
 
 
-async def test_cloud_filters_devices_managed_by_local(hass: HomeAssistant) -> None:
-    """Test that cloud entry filters out devices already managed by local entry."""
-    # Create a mock local entry that appears loaded with devices
-    local_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
-        data={
-            "host": TEST_HOST,
-            "token": TEST_TOKEN,
-            "verify_ssl": True,
-            "hub": TEST_SERVER,
-            "api_type": "local",
-        },
-    )
-    local_entry.add_to_hass(hass)
-
-    # Mock the entry state and runtime_data
-    local_entry._async_set_state(hass, ConfigEntryState.LOADED, None)
+def test_hybrid_filter_local_devices_filters_managed_devices() -> None:
+    """Test that _hybrid_filter_local_devices filters out devices managed by local entry."""
+    # Create a mock local entry with devices
+    local_entry = Mock()
     local_entry.runtime_data = Mock()
     local_entry.runtime_data.coordinator = Mock()
     local_entry.runtime_data.coordinator.devices = {
@@ -283,90 +270,50 @@ async def test_cloud_filters_devices_managed_by_local(hass: HomeAssistant) -> No
         "io://1234-5678-9012/device_c": Mock(),
     }
 
-    # Get local device URLs (excluding a different entry)
-    local_urls = _get_entry_device_urls(hass, "other_entry_id", APIType.LOCAL)
-
-    # Should return the local entry's device URLs
-    assert local_urls == {
-        "io://1234-5678-9012/device_a",
-        "io://1234-5678-9012/device_b",
-        "io://1234-5678-9012/device_c",
-    }
-
-
-async def test_cloud_uses_device_when_local_doesnt_have_it(
-    hass: HomeAssistant,
-) -> None:
-    """Test that cloud entry keeps devices not managed by local entry."""
-    # Create a mock local entry with only some devices
-    local_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
-        data={
-            "host": TEST_HOST,
-            "token": TEST_TOKEN,
-            "verify_ssl": True,
-            "hub": TEST_SERVER,
-            "api_type": "local",
-        },
-    )
-    local_entry.add_to_hass(hass)
-
-    local_entry._async_set_state(hass, ConfigEntryState.LOADED, None)
-    local_entry.runtime_data = Mock()
-    local_entry.runtime_data.coordinator = Mock()
-    local_entry.runtime_data.coordinator.devices = {
-        "io://1234-5678-9012/device_a": Mock(),
-        "io://1234-5678-9012/device_b": Mock(),
-    }
-
-    # Simulate cloud devices (some overlap, some don't)
+    # Simulate cloud devices (some overlap with local)
     cloud_devices = [
         Mock(device_url="io://1234-5678-9012/device_a"),  # In local - should filter
         Mock(device_url="io://1234-5678-9012/device_b"),  # In local - should filter
-        Mock(device_url="io://1234-5678-9012/device_c"),  # Not in local - should keep
+        Mock(device_url="io://1234-5678-9012/device_c"),  # In local - should filter
         Mock(device_url="io://1234-5678-9012/device_d"),  # Not in local - should keep
+        Mock(device_url="io://1234-5678-9012/device_e"),  # Not in local - should keep
     ]
 
-    local_urls = _get_entry_device_urls(hass, "cloud_entry_id", APIType.LOCAL)
+    # Filter devices
+    filtered = _hybrid_filter_local_devices(local_entry, cloud_devices)
 
-    # Filter cloud devices (same logic as in async_setup_entry)
-    filtered_devices = [d for d in cloud_devices if d.device_url not in local_urls]
-
-    # Should only have devices C and D
-    assert len(filtered_devices) == 2
-    assert filtered_devices[0].device_url == "io://1234-5678-9012/device_c"
-    assert filtered_devices[1].device_url == "io://1234-5678-9012/device_d"
+    # Should only have devices D and E
+    assert len(filtered) == 2
+    assert filtered[0].device_url == "io://1234-5678-9012/device_d"
+    assert filtered[1].device_url == "io://1234-5678-9012/device_e"
 
 
-async def test_get_entry_device_urls_excludes_current_entry(
-    hass: HomeAssistant,
-) -> None:
-    """Test that _get_entry_device_urls excludes the current entry."""
-    local_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
-        data={
-            "host": TEST_HOST,
-            "token": TEST_TOKEN,
-            "verify_ssl": True,
-            "hub": TEST_SERVER,
-            "api_type": "local",
-        },
-    )
-    local_entry.add_to_hass(hass)
+def test_hybrid_filter_local_devices_returns_all_when_no_runtime_data() -> None:
+    """Test that _hybrid_filter_local_devices returns all devices when local entry has no runtime_data."""
+    # Local entry without runtime_data (not yet loaded)
+    local_entry = Mock(spec=[])  # Empty spec means no attributes
 
-    local_entry._async_set_state(hass, ConfigEntryState.LOADED, None)
-    local_entry.runtime_data = Mock()
-    local_entry.runtime_data.coordinator = Mock()
-    local_entry.runtime_data.coordinator.devices = {
-        "io://1234-5678-9012/device_a": Mock(),
-    }
+    cloud_devices = [
+        Mock(device_url="io://1234-5678-9012/device_a"),
+        Mock(device_url="io://1234-5678-9012/device_b"),
+    ]
 
-    # When we pass the local entry's own ID, it should exclude itself
-    local_urls = _get_entry_device_urls(hass, local_entry.entry_id, APIType.LOCAL)
+    filtered = _hybrid_filter_local_devices(local_entry, cloud_devices)
 
-    # Should return empty set since we're excluding the only local entry
-    assert local_urls == set()
+    # Should return all devices since local entry has no runtime_data
+    assert len(filtered) == 2
+
+
+def test_get_gateway_id_from_unique_id() -> None:
+    """Test extracting gateway ID from unique_id."""
+    # Test with local suffix
+    assert _get_gateway_id_from_unique_id("1234-5678-9012-local") == "1234-5678-9012"
+
+    # Test with cloud suffix
+    assert _get_gateway_id_from_unique_id("1234-5678-9012-cloud") == "1234-5678-9012"
+
+    # Test with None
+    assert _get_gateway_id_from_unique_id(None) is None
+
+    # Test with empty string
+    assert _get_gateway_id_from_unique_id("") is None
