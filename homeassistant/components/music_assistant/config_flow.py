@@ -282,24 +282,25 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_external_step_done(next_step_id="finish_auth")
 
         # Check if we can use external auth (redirect flow)
-        if self._check_external_auth_available():
-            # Use OAuth2 callback URL with JWT-encoded state
+        try:
             redirect_uri = async_get_redirect_uri(self.hass)
-            state = _encode_jwt(
-                self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
-            )
-            # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
-            params = urlencode(
-                {
-                    "return_url": f"{redirect_uri}?state={state}",
-                    "device_name": "Home Assistant",
-                }
-            )
-            login_url = f"{self.url}/login?{params}"
-            return self.async_external_step(step_id="auth", url=login_url)
+        except RuntimeError:
+            # No current request context or missing required headers
+            return await self.async_step_auth_manual()
 
-        # Fallback to manual token entry if no request context
-        return await self.async_step_auth_manual()
+        # Use OAuth2 callback URL with JWT-encoded state
+        state = _encode_jwt(
+            self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
+        )
+        # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
+        params = urlencode(
+            {
+                "return_url": f"{redirect_uri}?state={state}",
+                "device_name": "Home Assistant",
+            }
+        )
+        login_url = f"{self.url}/login?{params}"
+        return self.async_external_step(step_id="auth", url=login_url)
 
     async def async_step_finish_auth(
         self, user_input: dict[str, Any] | None = None
