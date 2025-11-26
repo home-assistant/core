@@ -83,14 +83,13 @@ class LunatoneLight(
         super().__init__(coordinator)
         self._device_id = device_id
         self._interface_serial_number = interface_serial_number
-        self._device = self.coordinator.data.get(self._device_id)
+        self._device = self.coordinator.data[self._device_id]
         self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.unique_id
-        assert self._device
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=self._device.name,
@@ -113,7 +112,6 @@ class LunatoneLight(
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        assert self._device
         return value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
 
     @property
@@ -131,13 +129,11 @@ class LunatoneLight(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data.get(self._device_id)
+        self._device = self.coordinator.data[self._device_id]
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        assert self._device
-
         if brightness_supported(self.supported_color_modes):
             await self._device.fade_to_brightness(
                 brightness_to_value(
@@ -153,8 +149,6 @@ class LunatoneLight(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        assert self._device
-
         if brightness_supported(self.supported_color_modes):
             self._last_brightness = self.brightness
             await self._device.fade_to_brightness(0)
