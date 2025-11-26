@@ -1,6 +1,6 @@
 {
   "domain": "yale",
-  "name": "Yale",
+  "name": "Yale Home",
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["application_credentials", "cloud"],
@@ -13,5 +13,5 @@
   "documentation": "https://www.home-assistant.io/integrations/yale",
   "iot_class": "cloud_push",
   "loggers": ["socketio", "engineio", "yalexs"],
-  "requirements": ["yalexs==9.2.0", "yalexs-ble==3.1.2"]
+  "requirements": ["yalexs==9.2.0", "yalexs-ble==3.2.1"]
 }
