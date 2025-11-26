@@ -160,6 +160,12 @@
           "acid": "pH-",
           "alcalyne": "pH+"
         }
+      },
+      "water_meter_total_permanent": {
+        "name": "Water meter total"
+      },
+      "water_meter_total_resettable": {
+        "name": "Water meter resettable"
       }
     },
     "switch": {

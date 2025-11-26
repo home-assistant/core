@@ -59,6 +59,19 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         use_dynamic_unit=True,
     ),
     PooldoseSensorEntityDescription(
+        key="water_meter_total_permanent",
+        translation_key="water_meter_total_permanent",
+        device_class=SensorDeviceClass.VOLUME,
+        use_dynamic_unit=True,
+    ),
+    PooldoseSensorEntityDescription(
+        key="water_meter_total_resettable",
+        translation_key="water_meter_total_resettable",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.VOLUME,
+        use_dynamic_unit=True,
+    ),
+    PooldoseSensorEntityDescription(
         key="ph_type_dosing",
         translation_key="ph_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -223,8 +236,8 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             and (data := self.get_data()) is not None
             and (device_unit := data.get("unit"))
         ):
-            # Map device unit to Home Assistant unit, return None if unknown
-            return UNIT_MAPPING.get(device_unit)
+            # Map device unit (upper case) to Home Assistant unit, return None if unknown
+            return UNIT_MAPPING.get(device_unit.upper())
 
         # Fall back to static unit from entity description
         return super().native_unit_of_measurement
