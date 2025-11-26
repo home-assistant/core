@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -127,6 +128,12 @@ class EntityMigrationScanner:
 
         entity_registry = er.async_get(self.hass)
 
+        # Determine file path for YAML automations
+        automations_yaml_path = Path(self.hass.config.path("automations.yaml"))
+        automations_file_path = (
+            automations_yaml_path if automations_yaml_path.exists() else None
+        )
+
         for auto_entity_id in automation_ids:
             # Get automation name from entity registry or state
             entry = entity_registry.async_get(auto_entity_id)
@@ -147,6 +154,7 @@ class EntityMigrationScanner:
                     config_id=auto_id,
                     config_name=name,
                     location=location,
+                    file_path=automations_file_path,
                 )
                 for location in locations or [LOCATION_ENTITY]
             )
@@ -178,6 +186,10 @@ class EntityMigrationScanner:
         script_ids = script.scripts_with_entity(self.hass, entity_id)
         entity_registry = er.async_get(self.hass)
 
+        # Determine file path for YAML scripts
+        scripts_yaml_path = Path(self.hass.config.path("scripts.yaml"))
+        scripts_file_path = scripts_yaml_path if scripts_yaml_path.exists() else None
+
         for script_entity_id in script_ids:
             entry = entity_registry.async_get(script_entity_id)
             if entry:
@@ -194,6 +206,7 @@ class EntityMigrationScanner:
                     config_id=script_id,
                     config_name=name,
                     location=LOCATION_SEQUENCE,
+                    file_path=scripts_file_path,
                 )
             )
 
@@ -205,6 +218,10 @@ class EntityMigrationScanner:
 
         scene_ids = scene.scenes_with_entity(self.hass, entity_id)
         entity_registry = er.async_get(self.hass)
+
+        # Determine file path for YAML scenes
+        scenes_yaml_path = Path(self.hass.config.path("scenes.yaml"))
+        scenes_file_path = scenes_yaml_path if scenes_yaml_path.exists() else None
 
         for scene_entity_id in scene_ids:
             entry = entity_registry.async_get(scene_entity_id)
@@ -222,6 +239,7 @@ class EntityMigrationScanner:
                     config_id=scene_id,
                     config_name=name,
                     location=LOCATION_ENTITY,
+                    file_path=scenes_file_path,
                 )
             )
 
@@ -233,6 +251,10 @@ class EntityMigrationScanner:
 
         group_ids = group.groups_with_entity(self.hass, entity_id)
         entity_registry = er.async_get(self.hass)
+
+        # Determine file path for YAML groups
+        groups_yaml_path = Path(self.hass.config.path("groups.yaml"))
+        groups_file_path = groups_yaml_path if groups_yaml_path.exists() else None
 
         for group_entity_id in group_ids:
             entry = entity_registry.async_get(group_entity_id)
@@ -250,6 +272,7 @@ class EntityMigrationScanner:
                     config_id=grp_id,
                     config_name=name,
                     location=LOCATION_MEMBER,
+                    file_path=groups_file_path,
                 )
             )
 
