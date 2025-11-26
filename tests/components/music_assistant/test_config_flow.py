@@ -955,3 +955,36 @@ async def test_finish_auth_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
+
+
+async def test_auth_step_with_oauth2_callback(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test auth step receiving OAuth2 callback with code parameter."""
+    flow = MusicAssistantConfigFlow()
+    flow.hass = hass
+    flow.url = "http://localhost:8095"
+    flow.server_info = mock_get_server_info.return_value
+
+    result = await flow.async_step_auth(user_input={"code": "test_session_token"})
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+    assert result["step_id"] == "finish_auth"
+    assert flow.token == "test_session_token"
+
+
+async def test_auth_step_with_error(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test auth step receiving error from OAuth2 callback."""
+    flow = MusicAssistantConfigFlow()
+    flow.hass = hass
+    flow.url = "http://localhost:8095"
+    flow.server_info = mock_get_server_info.return_value
+
+    result = await flow.async_step_auth(user_input={"error": "access_denied"})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "auth_error"

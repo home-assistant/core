@@ -17,12 +17,14 @@ from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import voluptuous as vol
 
-from homeassistant.components import http
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    _encode_jwt,
+    async_get_redirect_uri,
+)
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -34,48 +36,8 @@ from .const import (
     LOGGER,
 )
 
-AUTH_CALLBACK_PATH = "/auth/music_assistant/callback"
-
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
-
-
-class MusicAssistantAuthCallbackView(http.HomeAssistantView):
-    """Music Assistant authorization callback view."""
-
-    requires_auth = False
-    url = AUTH_CALLBACK_PATH
-    name = "auth:music_assistant:callback"
-
-    async def get(self, request: http.web.Request) -> http.web.Response:
-        """Receive authorization token from Music Assistant."""
-        if "flow_id" not in request.query:
-            return http.web.Response(text="Missing flow_id parameter", status=400)
-
-        if "token" not in request.query:
-            return http.web.Response(text="Missing token parameter", status=400)
-
-        hass = request.app[http.KEY_HASS]
-        flow_id = request.query["flow_id"]
-        token = request.query["token"]
-
-        # Pass token directly to the config flow via user_input
-        try:
-            await hass.config_entries.flow.async_configure(
-                flow_id=flow_id, user_input={CONF_TOKEN: token}
-            )
-        except UnknownFlow:
-            LOGGER.error("Authentication flow %s not found or expired", flow_id)
-            return http.web.Response(
-                text="Authentication flow expired or invalid. Please try again.",
-                status=400,
-            )
-
-        # Return script to close the popup window
-        return http.web.Response(
-            headers={"content-type": "text/html"},
-            text="<script>window.close()</script>Success! You can close this window.",
-        )
 
 
 STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
@@ -125,11 +87,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.url: str | None = None
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
-
-    def _ensure_callback_view_registered(self) -> None:
-        """Ensure the auth callback view is registered."""
-        # register_view is idempotent - safe to call multiple times
-        self.hass.http.register_view(MusicAssistantAuthCallbackView())
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -300,11 +257,13 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _check_external_auth_available(self) -> bool:
         """Check if external auth (redirect) is available."""
-        if (req := http.current_request.get()) is None:
+        try:
+            async_get_redirect_uri(self.hass)
+        except RuntimeError:
+            # No current request context or missing required headers
             return False
-        if req.headers.get("HA-Frontend-Base") is None:
-            return False
-        return True
+        else:
+            return True
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
@@ -314,22 +273,30 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.url is not None
 
         # Check if we're returning from the external auth step with a token
-        if user_input is not None and CONF_TOKEN in user_input:
-            # Token was received from callback, store it and complete external step
-            self.token = user_input[CONF_TOKEN]
-            return self.async_external_step_done(next_step_id="finish_auth")
+        if user_input is not None:
+            if "error" in user_input:
+                return self.async_abort(reason="auth_error")
+            # OAuth2 callback sends token as "code" parameter
+            if "code" in user_input:
+                # Token was received from OAuth2 callback, store it and complete external step
+                self.token = user_input["code"]
+                return self.async_external_step_done(next_step_id="finish_auth")
 
         # Check if we can use external auth (redirect flow)
         if self._check_external_auth_available():
-            # Ensure callback view is registered before redirecting
-            self._ensure_callback_view_registered()
+            # Use OAuth2 callback URL with JWT-encoded state
+            redirect_uri = async_get_redirect_uri(self.hass)
+            state = _encode_jwt(
+                self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
+            )
 
-            # Build MA login URL with callback
-            req = http.current_request.get()
-            ha_host = req.headers.get("HA-Frontend-Base")  # type: ignore[union-attr]
-            callback_url = f"{ha_host}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
+            # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
+            # (we use "code" parameter to match OAuth2 callback expectations)
             params = urlencode(
-                {"return_url": callback_url, "device_name": "Home Assistant"}
+                {
+                    "return_url": f"{redirect_uri}?state={state}",
+                    "device_name": "Home Assistant",
+                }
             )
             login_url = f"{self.url}/login?{params}"
             return self.async_external_step(step_id="auth", url=login_url)
