@@ -187,14 +187,6 @@ async def test_coordinator_conditional_api_calls(
         coordinator.data["audio_detected"] is not None
     )  # Should have value (entity is enabled)
 
-    _LOGGER.info(
-        "Coordinator conditional fetching test passed. Enabled entities: %s",
-        ", ".join([k for k, v in coordinator.data.items() if v is not None]),
-    )
     assert (
         coordinator.data["crossline_detected"] is None
     )  # Should be None (not enabled)
-
-    _LOGGER.info(
-        "Coordinator conditional fetching test passed. Enabled entities: motion_detected, storage_info"
-    )
