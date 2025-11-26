@@ -204,7 +204,7 @@ async def async_get_services_for_target(
 ) -> set[str]:
     """Get services for a target."""
     descriptions = await async_get_all_service_descriptions(hass)
-    # Flatten dicts to bey keyed by domain.name to match trigger/condition format
+    # Flatten dicts to be keyed by domain.name to match trigger/condition format
     descriptions_flatten = {
         f"{domain}.{service_name}": desc
         for domain, services in descriptions.items()
