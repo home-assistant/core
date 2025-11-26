@@ -8,6 +8,7 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 astroid==4.0.1
+attrs==25.4.0
 coverage==7.10.6
 freezegun==1.5.2
 go2rtc-client==0.3.0
