@@ -29,6 +29,8 @@ from .const import (
 )
 from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
