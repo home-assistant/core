@@ -211,11 +211,6 @@ class LunatoneLineBroadcastLight(
         line_status = self.coordinator.data.lines[str(self._broadcast.line)].line_status
         return super().available and line_status == LineStatus.OK
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the line to turn on."""
         await self._broadcast.fade_to_brightness(
