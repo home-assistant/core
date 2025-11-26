@@ -115,9 +115,9 @@ async def test_sensor_extra_state_attributes(
     """Test sensor extra state attributes are populated."""
     _main_entry, subentry = setup_integration_with_stop
 
-    # Verify the sensor entity was created
+    # Verify the sensor entity was created (use the 'departures' sensor key)
     entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{subentry.subentry_id}_next_departure"
+        Platform.SENSOR, DOMAIN, f"{subentry.subentry_id}_departures"
     )
     assert entity_id is not None
 
@@ -165,7 +165,7 @@ async def test_sensor_unavailable_when_no_data(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{subentry_id}_next_departure"
+        Platform.SENSOR, DOMAIN, f"{subentry_id}_departure_time"
     )
     assert entity_id is not None
 
@@ -185,7 +185,7 @@ async def test_device_info_on_subentry_sensor(
     _main_entry, subentry = setup_integration_with_stop
 
     entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{subentry.subentry_id}_next_departure"
+        Platform.SENSOR, DOMAIN, f"{subentry.subentry_id}_line"
     )
     assert entity_id is not None
 
