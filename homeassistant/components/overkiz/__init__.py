@@ -101,8 +101,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
                         "Waiting for local API entry to load first"
                     )
 
-                # Filter devices
+                original_count = len(devices)
                 devices = _hybrid_filter_local_devices(local_entry, devices)
+                filtered_count = original_count - len(devices)
+
+                if filtered_count > 0:
+                    LOGGER.debug(
+                        "Filtered %d devices from cloud entry (managed by local entry)",
+                        filtered_count,
+                    )
+
 
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
@@ -358,15 +366,5 @@ def _hybrid_filter_local_devices(
     if not local_device_urls:
         return devices
 
-    original_count = len(devices)
-    filtered = [d for d in devices if d.device_url not in local_device_urls]
-    filtered_count = original_count - len(filtered)
-
-    if filtered_count > 0:
-        LOGGER.debug(
-            "Filtered %d devices from cloud entry (managed by local entry)",
-            filtered_count,
-        )
-
-    return filtered
+    return [d for d in devices if d.device_url not in local_device_urls]
 

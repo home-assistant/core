@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.client import OverkizClient
@@ -35,6 +35,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import _get_gateway_id_from_unique_id
 from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 
 
@@ -346,9 +347,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        # Extract gateway_id from unique_id (format: "XXXX-XXXX-XXXX-local/cloud")
-        unique_id = cast(str, self.unique_id)
-        gateway_id = unique_id.rsplit("-", 1)[0]
+        gateway_id = _get_gateway_id_from_unique_id(self.unique_id)
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
