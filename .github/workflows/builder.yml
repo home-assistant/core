@@ -412,8 +412,8 @@ jobs:
         if: matrix.registry == 'docker.io/homeassistant'
         shell: bash
         run: |
-          # Use imagetools to copy images directly between registries (server-side copy)
-          # This preserves provenance/attestations and is much faster than pull/push
+          # Use imagetools to copy image blobs directly between registries
+          # This preserves provenance/attestations and seems to be much faster than pull/push
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
           for arch in $ARCHS; do
             echo "Copying ${arch} image to DockerHub..."
