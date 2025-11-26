@@ -37,20 +37,26 @@
   },
   "entity": {
     "sensor": {
-      "departures": {
-        "name": "All departures"
+      "delay": {
+        "name": "Delayed by"
       },
-      "next_departure": {
-        "name": "Next departure"
+      "departure_time": {
+        "name": "Departing in"
       },
-      "next_direction": {
-        "name": "Next direction"
+      "direction": {
+        "name": "Towards"
       },
-      "next_line": {
-        "name": "Next line"
+      "is_delayed": {
+        "name": "Delayed"
       },
-      "next_track": {
-        "name": "Next track"
+      "line": {
+        "name": "Line"
+      },
+      "no_departures": {
+        "name": "Number of departures"
+      },
+      "track": {
+        "name": "Departing from track"
       }
     }
   },

@@ -145,7 +145,6 @@ def _get_departure_attributes(
 
     if not current_departures or len(current_departures) <= index:
         return _get_empty_departure_attributes()
-
     departure = current_departures[index]
     tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
 
@@ -183,17 +182,58 @@ def _get_departure_attributes(
     }
 
 
-def _get_departures_list_attributes(departures: list[Departure]) -> dict[str, Any]:
-    """Get structured departures data for dashboard display."""
+def _get_is_delayed(departures: list[Departure], index: int) -> bool | None:
+    """Get whether the departure at index is delayed."""
     current_departures = _get_current_departures(departures)
 
-    if not current_departures:
-        return {"departures": [], "last_updated": datetime.now().isoformat()}
+    if not current_departures or len(current_departures) <= index:
+        return None
 
-    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
-    departures_data = []
+    departure = current_departures[index]
+    planned_datetime = datetime.combine(departure.date, departure.time)
+    realtime_datetime = datetime.combine(
+        departure.rtDate or departure.date, departure.rtTime or departure.time
+    )
 
-    for i, departure in enumerate(current_departures):
+    delay_seconds = (realtime_datetime - planned_datetime).total_seconds()
+    delay_minutes = round(delay_seconds / 60) if delay_seconds != 0 else 0
+
+    return delay_minutes > 0
+
+
+def _get_delay_minutes(departures: list[Departure], index: int) -> int | None:
+    """Get delay minutes for the departure at index."""
+    current_departures = _get_current_departures(departures)
+
+    if not current_departures or len(current_departures) <= index:
+        return None
+
+    departure = current_departures[index]
+    planned_datetime = datetime.combine(departure.date, departure.time)
+    realtime_datetime = datetime.combine(
+        departure.rtDate or departure.date, departure.rtTime or departure.time
+    )
+
+    delay_seconds = (realtime_datetime - planned_datetime).total_seconds()
+    delay_minutes = round(delay_seconds / 60) if delay_seconds != 0 else 0
+
+    return max(0, delay_minutes)
+
+
+def _format_departures_for_dashboard(
+    departures: list[Departure], tz: zoneinfo.ZoneInfo
+) -> list[dict[str, Any]]:
+    """Format a list of Departure objects for the dashboard.
+
+    Returns a list of dicts with keys:
+      - index, line, direction, track, due_in, due_in_text,
+      - scheduled_time, realtime_time, is_delayed, delay_minutes,
+      - delay_text, is_cancelled, status_icon, line_type
+    """
+    departures_data: list[dict[str, Any]] = []
+    now = datetime.now(tz)
+
+    for i, departure in enumerate(departures):
         planned_datetime = datetime.combine(departure.date, departure.time).replace(
             tzinfo=tz
         )
@@ -206,9 +246,10 @@ def _get_departures_list_attributes(departures: list[Departure]) -> dict[str, An
         delay_minutes = round(delay_seconds / 60) if delay_seconds != 0 else 0
         is_delayed = delay_minutes > 0
 
-        now = datetime.now(tz)
         due_in_seconds = (realtime_datetime - now).total_seconds()
         due_in = round(due_in_seconds / 60) if due_in_seconds > 0 else 0
+
+        is_cancelled = hasattr(departure, "cancelled") and departure.cancelled
 
         departure_info = {
             "index": i,
@@ -222,17 +263,27 @@ def _get_departures_list_attributes(departures: list[Departure]) -> dict[str, An
             "is_delayed": is_delayed,
             "delay_minutes": delay_minutes if is_delayed else 0,
             "delay_text": f"+{delay_minutes} min" if is_delayed else None,
-            "is_cancelled": hasattr(departure, "cancelled") and departure.cancelled,
+            "is_cancelled": is_cancelled,
             "status_icon": "🔴" if is_delayed else "🟢",
             "line_type": departure.type if hasattr(departure, "type") else None,
         }
 
         departures_data.append(departure_info)
 
+    return departures_data
+
+
+def _get_departures_list_attributes(departures: list[Departure]) -> dict[str, Any]:
+    """Get structured departures data for dashboard display."""
+    current_departures = _get_current_departures(departures)
+
+    if not current_departures:
+        return {"departures": [], "last_updated": datetime.now().isoformat()}
+
+    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+
     return {
-        "departures": departures_data,
         "total_departures": len(current_departures),
-        "next_departure_in": departures_data[0]["due_in"] if departures_data else None,
         "last_updated": datetime.now(tz).isoformat(),
     }
 
@@ -261,27 +312,8 @@ def _get_empty_departure_attributes() -> dict[str, Any]:
 # SENSORS tuple definition
 SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
     RejseplanenSensorEntityDescription(
-        key="next_departure",
-        translation_key="next_departure",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda departures: (
-            _get_departure_timestamp(departures, 0) if departures else None
-        ),
-        attr_fn=lambda departures: (
-            _get_departure_attributes(departures, 0)
-            if departures
-            else _get_empty_departure_attributes()
-        ),
-    ),
-    RejseplanenSensorEntityDescription(
-        key="departures",
-        translation_key="departures",
-        value_fn=lambda departures: len(_get_current_departures(departures)),
-        attr_fn=_get_departures_list_attributes,
-    ),
-    RejseplanenSensorEntityDescription(
-        key="next_line",
-        translation_key="next_line",
+        key="line",
+        translation_key="line",
         value_fn=lambda departures: (
             _get_current_departures(departures)[0].name
             if _get_current_departures(departures)
@@ -289,8 +321,24 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         ),
     ),
     RejseplanenSensorEntityDescription(
-        key="next_direction",
-        translation_key="next_direction",
+        key="departure_time",
+        translation_key="departure_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda departures: (
+            _get_departure_timestamp(departures, 0) if departures else None
+        ),
+    ),
+    RejseplanenSensorEntityDescription(
+        key="delay",
+        translation_key="delay",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda departures: (
+            _get_delay_minutes(departures, 0) if departures else None
+        ),
+    ),
+    RejseplanenSensorEntityDescription(
+        key="direction",
+        translation_key="direction",
         value_fn=lambda departures: (
             _get_current_departures(departures)[0].direction
             if _get_current_departures(departures)
@@ -298,14 +346,20 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         ),
     ),
     RejseplanenSensorEntityDescription(
-        key="next_track",
-        translation_key="next_track",
+        key="track",
+        translation_key="track",
         value_fn=lambda departures: (
             _get_current_departures(departures)[0].rtTrack
             or _get_current_departures(departures)[0].track
             if _get_current_departures(departures)
             else None
         ),
+    ),
+    RejseplanenSensorEntityDescription(
+        key="departures",
+        translation_key="no_departures",
+        value_fn=lambda departures: len(_get_current_departures(departures)),
+        attr_fn=_get_departures_list_attributes,
     ),
 )
 
@@ -371,26 +425,6 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
 
     entity_description: RejseplanenSensorEntityDescription
     _attr_icon = "mdi:bus"
-
-    _attr_extra_state_attributes_to_ignore = {
-        # Time-based attributes that change frequently
-        ATTR_DUE_IN,
-        ATTR_DUE_AT,
-        ATTR_REALTIME_TIME,
-        ATTR_REAL_TIME_AT,  # Legacy duplicate
-        # Large structured data
-        "departures",
-        # Frequently changing metadata
-        "has_realtime",
-        "last_updated",
-        # Dynamic departure list attributes
-        "next_departure_in",
-        "total_departures",
-        # Individual departure attributes that change frequently
-        "due_in_text",
-        "delay_text",
-        "status_icon",
-    }
 
     def __init__(
         self,
