@@ -15,6 +15,13 @@ from .models import EventLabsUpdatedData
 
 
 @callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the number websocket API."""
+    websocket_api.async_register_command(hass, websocket_list_preview_features)
+    websocket_api.async_register_command(hass, websocket_update_preview_feature)
+
+
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "labs/list"})
 def websocket_list_preview_features(

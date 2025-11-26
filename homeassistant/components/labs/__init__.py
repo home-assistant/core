@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 
-from homeassistant.components import websocket_api
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.generated.labs import LABS_PREVIEW_FEATURES
 from homeassistant.helpers import config_validation as cv
@@ -26,10 +25,7 @@ from .models import (
     LabsStoreData,
     NativeLabsStoreData,
 )
-from .websocket_api import (
-    websocket_list_preview_features,
-    websocket_update_preview_feature,
-)
+from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,8 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         preview_features=lab_preview_features,
     )
 
-    websocket_api.async_register_command(hass, websocket_list_preview_features)
-    websocket_api.async_register_command(hass, websocket_update_preview_feature)
+    async_setup_ws_api(hass)
 
     return True
 
