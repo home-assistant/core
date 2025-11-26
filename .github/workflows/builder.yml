@@ -390,7 +390,7 @@ jobs:
       # Examples:
       #   2025.12.1     (stable)    -> tags: 2025.12.1, 2025.12, stable, latest, beta, rc
       #   2025.12.0b3   (beta)      -> tags: 2025.12.0b3, beta, rc
-      #   2025.12.0.dev202511250240 -> tags: 2025.12.0.dev202511250240Z, dev
+      #   2025.12.0.dev202511250240 -> tags: 2025.12.0.dev202511250240, dev
       - name: Generate Docker metadata
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
