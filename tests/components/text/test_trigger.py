@@ -1,11 +1,16 @@
 """Test text trigger."""
 
-from typing import Any
+from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.labs import DOMAIN as LABS_DOMAIN
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_LABEL_ID,
+    CONF_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -23,22 +28,14 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
-@pytest.fixture(autouse=True, name="enable_experimental_triggers_conditions")
-async def enable_experimental_triggers_conditions(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
+@pytest.fixture(name="enable_experimental_triggers_conditions")
+def enable_experimental_triggers_conditions() -> Generator[None]:
     """Enable experimental triggers and conditions."""
-    hass_storage["core.labs"] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "core.labs",
-        "data": {
-            "preview_feature_status": [
-                {"domain": "automation", "preview_feature": "new_triggers_conditions"}
-            ]
-        },
-    }
-    await async_setup_component(hass, LABS_DOMAIN, {})
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -47,6 +44,21 @@ async def target_texts(hass: HomeAssistant) -> list[str]:
     return await target_entities(hass, "text")
 
 
+@pytest.mark.parametrize("trigger_key", ["text.changed"])
+async def test_text_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the text.changed trigger is gated by the labs flag."""
+    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
+        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
+        "feature to be enabled in Home Assistant Labs settings (feature flag: "
+        "'new_triggers_conditions')"
+    ) in caplog.text
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("text"),

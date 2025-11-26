@@ -96,6 +96,7 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
+TRIGGER_DISABLED_TRIGGERS: HassKey[set[str]] = HassKey("trigger_disabled_triggers")
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
@@ -140,6 +141,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     from homeassistant.components import labs  # noqa: PLC0415
 
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+    hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
 
@@ -148,6 +150,7 @@ async def async_setup(hass: HomeAssistant) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+        hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
     labs.async_listen(
         hass, "automation", "new_triggers_conditions", new_triggers_conditions_listener
@@ -717,6 +720,19 @@ class PluggableAction:
                 await task
 
 
+@callback
+def _is_experimental_trigger_enabled(hass: HomeAssistant, platform: str) -> bool:
+    """Check if an experimental trigger platform is enabled."""
+    from homeassistant.components import labs  # noqa: PLC0415
+
+    return (
+        platform not in _EXPERIMENTAL_TRIGGER_PLATFORMS
+        or labs.async_is_preview_feature_enabled(
+            hass, "automation", "new_triggers_conditions"
+        )
+    )
+
+
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
@@ -724,15 +740,12 @@ async def _async_get_trigger_platform(
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
 
-    from homeassistant.components import labs  # noqa: PLC0415
-
-    if (
-        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
-        and not labs.async_is_preview_feature_enabled(
-            hass, "automation", "new_triggers_conditions"
+    if not _is_experimental_trigger_enabled(hass, platform):
+        raise vol.Invalid(
+            f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
+            "conditions' feature to be enabled in Home Assistant Labs settings "
+            "(feature flag: 'new_triggers_conditions')"
         )
-    ):
-        raise vol.Invalid(f"Trigger '{trigger_key}' is not enabled")
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -1013,8 +1026,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
-    from homeassistant.components import labs  # noqa: PLC0415
-
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -1023,7 +1034,9 @@ async def async_get_all_descriptions(
     all_triggers = set(triggers)
     previous_all_triggers = set(descriptions_cache)
     # If the triggers are the same, we can return the cache
-    if previous_all_triggers == all_triggers:
+
+    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
+    if previous_all_triggers | hass.data[TRIGGER_DISABLED_TRIGGERS] == all_triggers:  # type: ignore[index]
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1061,12 +1074,8 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
-        if (
-            domain in _EXPERIMENTAL_TRIGGER_PLATFORMS
-            and not labs.async_is_preview_feature_enabled(
-                hass, "automation", "new_triggers_conditions"
-            )
-        ):
+        if not _is_experimental_trigger_enabled(hass, domain):
+            hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
             continue
 
         if (
