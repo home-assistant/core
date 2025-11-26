@@ -181,7 +181,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.2
 
 # homeassistant.components.alexa_devices
-aioamazondevices==9.0.3
+aioamazondevices==10.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -782,6 +782,9 @@ emulated-roku==0.3.0
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
+
+# homeassistant.components.energyid
+energyid-webhooks==0.0.14
 
 # homeassistant.components.energyzero
 energyzero==2.1.1
