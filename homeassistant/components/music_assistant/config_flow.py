@@ -289,9 +289,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             state = _encode_jwt(
                 self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
             )
-
             # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
-            # (we use "code" parameter to match OAuth2 callback expectations)
             params = urlencode(
                 {
                     "return_url": f"{redirect_uri}?state={state}",
