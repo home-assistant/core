@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import validators as tcv
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -207,8 +208,8 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         return self._code_format
 
     def _handle_state(self, result: Any) -> None:
-        self._state = self._result_handler.enum(
-            CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
+        self._state = tcv.enum(
+            self, CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
         )(result)
 
     @callback

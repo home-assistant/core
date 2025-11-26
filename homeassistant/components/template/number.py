@@ -26,8 +26,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import validators as tcv
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -172,28 +173,28 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
             self.add_template_attribute(
                 "_attr_native_value",
                 self._template,
-                validator=self._result_handler.number(CONF_STATE),
+                validator=tcv.number(self, CONF_STATE),
                 none_on_template_error=True,
             )
         if self._step_template is not None:
             self.add_template_attribute(
                 "_attr_native_step",
                 self._step_template,
-                validator=self._result_handler.number(CONF_STEP),
+                validator=tcv.number(self, CONF_STEP),
                 none_on_template_error=True,
             )
         if self._min_template is not None:
             self.add_template_attribute(
                 "_attr_native_min_value",
                 self._min_template,
-                validator=self._result_handler.number(CONF_MIN),
+                validator=tcv.number(self, CONF_MIN),
                 none_on_template_error=True,
             )
         if self._max_template is not None:
             self.add_template_attribute(
                 "_attr_native_max_value",
                 self._max_template,
-                validator=self._result_handler.number(CONF_MAX),
+                validator=tcv.number(self, CONF_MAX),
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
@@ -247,7 +248,7 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
             (CONF_MAX, "_attr_native_max_value"),
         ):
             if (rendered := self._rendered.get(key)) is not None:
-                setattr(self, attr, self._result_handler.number(key)(rendered))
+                setattr(self, attr, tcv.number(self, key)(rendered))
                 write_ha_state = True
 
         if len(self._rendered) > 0:

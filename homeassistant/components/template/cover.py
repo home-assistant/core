@@ -38,8 +38,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -276,8 +277,8 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
     def _update_opening_and_closing(self, result: Any) -> None:
         if (
-            state := self._result_handler.enum(
-                CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
+            state := tcv.enum(
+                self, CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
             )(result)
         ) is not None:
             if not self._position_template:
@@ -409,7 +410,7 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
             self.add_template_attribute(
                 "_position",
                 self._position_template,
-                self._result_handler.number(CONF_POSITION, minimum=0.0, maximum=100.0),
+                tcv.number(self, CONF_POSITION, minimum=0.0, maximum=100.0),
                 None,
                 none_on_template_error=True,
             )
@@ -417,7 +418,7 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
             self.add_template_attribute(
                 "_tilt_value",
                 self._tilt_template,
-                self._result_handler.number(CONF_TILT, minimum=0.0, maximum=100.0),
+                tcv.number(self, CONF_TILT, minimum=0.0, maximum=100.0),
                 None,
                 none_on_template_error=True,
             )
@@ -479,12 +480,12 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
             (
                 CONF_POSITION,
                 "_position",
-                self._result_handler.number(CONF_POSITION, minimum=0.0, maximum=100.0),
+                tcv.number(self, CONF_POSITION, minimum=0.0, maximum=100.0),
             ),
             (
                 CONF_TILT,
                 "_tilt_value",
-                self._result_handler.number(CONF_TILT, minimum=0.0, maximum=100.0),
+                tcv.number(self, CONF_TILT, minimum=0.0, maximum=100.0),
             ),
         ):
             if (rendered := self._rendered.get(key)) is not None:

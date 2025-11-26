@@ -35,8 +35,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import validators as tcv
 from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -215,7 +216,7 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
             self.add_template_attribute(
                 "_attr_is_on",
                 self._template,
-                validator=self._result_handler.boolean(CONF_STATE),
+                validator=tcv.boolean(self, CONF_STATE),
                 none_on_template_error=True,
             )
 
@@ -271,7 +272,7 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
 
         write_ha_state = False
         if (state := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_is_on = self._result_handler.boolean(CONF_STATE)(state)
+            self._attr_is_on = tcv.boolean(self, CONF_STATE)(state)
             write_ha_state = True
 
         elif len(self._rendered) > 0:

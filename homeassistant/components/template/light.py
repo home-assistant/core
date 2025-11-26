@@ -49,8 +49,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
-from . import TriggerUpdateCoordinator
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -609,22 +610,22 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     @callback
     def _update_brightness(self, brightness):
         """Update the brightness from the template."""
-        self._brightness = self._result_handler.number(
-            CONF_LEVEL, minimum=0.0, maximum=255.0, return_type=int
+        self._brightness = tcv.number(
+            self, CONF_LEVEL, minimum=0.0, maximum=255.0, return_type=int
         )(brightness)
 
     @callback
     def _update_effect_list(self, effect_list):
         """Update the effect list from the template."""
-        self._effect_list = self._result_handler.list_of_strings(
-            CONF_EFFECT_LIST, none_on_empty=True
+        self._effect_list = tcv.list_of_strings(
+            self, CONF_EFFECT_LIST, none_on_empty=True
         )(effect_list)
 
     @callback
     def _update_effect(self, effect):
         """Update the effect from the template."""
-        self._effect = self._result_handler.item_in_list(
-            CONF_EFFECT, self._effect_list, items_attribute=CONF_EFFECT_LIST
+        self._effect = tcv.item_in_list(
+            self, CONF_EFFECT, self._effect_list, items_attribute=CONF_EFFECT_LIST
         )(str(effect))
 
     @callback
@@ -1028,7 +1029,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
                 self._attr_available = True
             return
 
-        self._state = self._result_handler.boolean(CONF_STATE)(result)
+        self._state = tcv.boolean(self, CONF_STATE)(result)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
