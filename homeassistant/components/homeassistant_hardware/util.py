@@ -416,6 +416,10 @@ async def async_flash_silabs_firmware(
                 await flasher.flash_firmware(
                     fw_image, progress_callback=progress_callback
                 )
+            except PermissionError as err:
+                raise HomeAssistantError(
+                    "Failed to flash firmware: Device is used by another application"
+                ) from err
             except Exception as err:
                 raise HomeAssistantError("Failed to flash firmware") from err
 

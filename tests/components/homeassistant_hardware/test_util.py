@@ -666,7 +666,22 @@ async def test_async_flash_silabs_firmware_expected_type_not_probed(
         )
 
 
-async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error_msg"),
+    [
+        (
+            RuntimeError("Failure!"),
+            "Failed to flash firmware",
+        ),
+        (
+            PermissionError("The serial port is locked by another application"),
+            "Failed to flash firmware: Device is used by another application",
+        ),
+    ],
+)
+async def test_async_flash_silabs_firmware_flash_failure(
+    hass: HomeAssistant, side_effect: Exception, expected_error_msg: str
+) -> None:
     """Test async_flash_silabs_firmware flash failure."""
     await async_setup_component(hass, "homeassistant_hardware", {})
 
@@ -675,7 +690,7 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
 
     mock_flasher = Mock()
     mock_flasher.enter_bootloader = AsyncMock()
-    mock_flasher.flash_firmware = AsyncMock(side_effect=RuntimeError("Failure!"))
+    mock_flasher.flash_firmware = AsyncMock(side_effect=side_effect)
 
     with (
         patch(
@@ -695,7 +710,7 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
         patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
-        pytest.raises(HomeAssistantError, match="Failed to flash firmware") as exc,
+        pytest.raises(HomeAssistantError, match=expected_error_msg) as exc,
     ):
         await async_flash_silabs_firmware(
             hass=hass,
