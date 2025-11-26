@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from functools import wraps
 import math
 import statistics
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import jinja2
 from jinja2 import pass_environment
@@ -77,6 +77,10 @@ class MathExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "bitwise_xor", self.bitwise_xor, as_global=True, as_filter=True
                 ),
+                # Value constraint functions (as globals and filters)
+                TemplateFunction("clamp", self.clamp, as_global=True, as_filter=True),
+                TemplateFunction("wrap", self.wrap, as_global=True, as_filter=True),
+                TemplateFunction("remap", self.remap, as_global=True, as_filter=True),
             ],
         )
 
@@ -327,3 +331,114 @@ class MathExtension(BaseTemplateExtension):
     def bitwise_xor(first_value: Any, second_value: Any) -> Any:
         """Perform a bitwise xor operation."""
         return first_value ^ second_value
+
+    @staticmethod
+    def clamp(value: Any, min_value: Any, max_value: Any) -> Any:
+        """Filter and function to clamp a value between min and max bounds.
+
+        Constrains value to the range [min_value, max_value] (inclusive).
+        """
+        try:
+            value_num = float(value)
+            min_value_num = float(min_value)
+            max_value_num = float(max_value)
+        except (ValueError, TypeError) as err:
+            raise ValueError(
+                f"function requires numeric arguments, "
+                f"got {value=}, {min_value=}, {max_value=}"
+            ) from err
+        return max(min_value_num, min(max_value_num, value_num))
+
+    @staticmethod
+    def wrap(value: Any, min_value: Any, max_value: Any) -> Any:
+        """Filter and function to wrap a value within a range.
+
+        Wraps value cyclically within [min_value, max_value) (inclusive min, exclusive max).
+        """
+        try:
+            value_num = float(value)
+            min_value_num = float(min_value)
+            max_value_num = float(max_value)
+        except (ValueError, TypeError) as err:
+            raise ValueError(
+                f"function requires numeric arguments, "
+                f"got {value=}, {min_value=}, {max_value=}"
+            ) from err
+        try:
+            range_size = max_value_num - min_value_num
+            return ((value_num - min_value_num) % range_size) + min_value_num
+        except ZeroDivisionError:  # be lenient: if the range is empty, just clamp
+            return min_value_num
+
+    @staticmethod
+    def remap(
+        value: Any,
+        in_min: Any,
+        in_max: Any,
+        out_min: Any,
+        out_max: Any,
+        *,
+        steps: int = 0,
+        edges: Literal["none", "clamp", "wrap", "mirror"] = "none",
+    ) -> Any:
+        """Filter and function to remap a value from one range to another.
+
+        Maps value from input range [in_min, in_max] to output range [out_min, out_max].
+
+        The steps parameter, if greater than 0, quantizes the output into
+        the specified number of discrete steps.
+
+        The edges parameter controls how out-of-bounds input values are handled:
+        - "none": No special handling; values outside the input range are extrapolated into the output range.
+        - "clamp": Values outside the input range are clamped to the nearest boundary.
+        - "wrap": Values outside the input range are wrapped around cyclically.
+        - "mirror": Values outside the input range are mirrored back into the range.
+        """
+        try:
+            value_num = float(value)
+            in_min_num = float(in_min)
+            in_max_num = float(in_max)
+            out_min_num = float(out_min)
+            out_max_num = float(out_max)
+        except (ValueError, TypeError) as err:
+            raise ValueError(
+                f"function requires numeric arguments, "
+                f"got {value=}, {in_min=}, {in_max=}, {out_min=}, {out_max=}"
+            ) from err
+
+        # Apply edge behavior in original space for accuracy.
+        if edges == "clamp":
+            value_num = max(in_min_num, min(in_max_num, value_num))
+        elif edges == "wrap":
+            if in_min_num == in_max_num:
+                raise ValueError(f"{in_min=} must not equal {in_max=}")
+
+            range_size = in_max_num - in_min_num  # Validated against div0 above.
+            value_num = ((value_num - in_min_num) % range_size) + in_min_num
+        elif edges == "mirror":
+            if in_min_num == in_max_num:
+                raise ValueError(f"{in_min=} must not equal {in_max=}")
+
+            range_size = in_max_num - in_min_num  # Validated against div0 above.
+            # Determine which period we're in and whether it should be mirrored
+            offset = value_num - in_min_num
+            period = math.floor(offset / range_size)
+            position_in_period = offset - (period * range_size)
+
+            if (period < 0) or (period % 2 != 0):
+                position_in_period = range_size - position_in_period
+
+            value_num = in_min_num + position_in_period
+        # Unknown "edges" values are left as-is; no use throwing an error.
+
+        steps = max(steps, 0)
+
+        if not steps and (in_min_num == out_min_num and in_max_num == out_max_num):
+            return value_num  # No remapping needed. Save some cycles and floating-point precision.
+
+        normalized = (value_num - in_min_num) / (in_max_num - in_min_num)
+
+        if steps:
+            normalized = round(normalized * steps) / steps
+
+        return out_min_num + (normalized * (out_max_num - out_min_num))
