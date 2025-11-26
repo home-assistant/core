@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from daybetter_python import APIError
+
 from homeassistant import config_entries
 from homeassistant.components.daybetter_services.const import (
     CONF_TOKEN,
@@ -95,7 +97,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
-            side_effect=Exception("Connection error"),
+            side_effect=APIError("Connection error"),
         ),
         patch(
             "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
@@ -123,7 +125,7 @@ async def test_single_instance(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
