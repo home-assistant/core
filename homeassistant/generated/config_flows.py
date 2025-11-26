@@ -186,6 +186,7 @@ FLOWS = {
         "emonitor",
         "emulated_roku",
         "energenie_power_sockets",
+        "energyid",
         "energyzero",
         "enigma2",
         "enocean",
