@@ -13,7 +13,6 @@ from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 from homeassistant.util.ssl import get_default_context
 
 if TYPE_CHECKING:
@@ -48,7 +47,7 @@ class HomeLinkMQTTMessage(TypedDict):
     data: dict[str, HomeLinkEventData]  # Each key is a button id
 
 
-class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
+class HomeLinkCoordinator:
     """HomeLink integration coordinator."""
 
     def __init__(
