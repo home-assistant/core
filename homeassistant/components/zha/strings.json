@@ -318,6 +318,9 @@
       "valve_alarm": {
         "name": "Valve alarm"
       },
+      "valve_state": {
+        "name": "Valve state"
+      },
       "water_leak": {
         "name": "Water leak"
       },
@@ -683,6 +686,9 @@
       "max_brightness": {
         "name": "Maximum brightness"
       },
+      "max_cool_setpoint_limit": {
+        "name": "Max cool setpoint limit"
+      },
       "max_heat_setpoint_limit": {
         "name": "Max heat setpoint limit"
       },
@@ -706,6 +712,9 @@
       },
       "min_brightness": {
         "name": "Minimum brightness"
+      },
+      "min_cool_setpoint_limit": {
+        "name": "Min cool setpoint limit"
       },
       "min_heat_setpoint_limit": {
         "name": "Min heat setpoint limit"
@@ -775,6 +784,9 @@
       },
       "opening_duration": {
         "name": "Opening duration"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
       },
       "output_time": {
         "name": "Output time"
@@ -955,6 +967,9 @@
       }
     },
     "select": {
+      "actuator_type": {
+        "name": "Actuator type"
+      },
       "adaptation_run_command": {
         "name": "Adaptation run command"
       },
@@ -1060,6 +1075,9 @@
       "heat_transfer_medium": {
         "name": "Heat transfer medium"
       },
+      "heater_type": {
+        "name": "Heater type"
+      },
       "heating_emitter_type": {
         "name": "Heating emitter type"
       },
@@ -1120,6 +1138,9 @@
       "on_led_color": {
         "name": "On LED color"
       },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
       "operation_mode": {
         "name": "Operation mode"
       },
@@ -1153,6 +1174,9 @@
       "screen_orientation": {
         "name": "Screen orientation"
       },
+      "sensor_connection": {
+        "name": "Sensor connection"
+      },
       "sensor_mode": {
         "name": "Sensor mode"
       },
@@ -1183,6 +1207,9 @@
       "switch_type": {
         "name": "Switch type"
       },
+      "temperature_display_mode": {
+        "name": "Temperature display mode"
+      },
       "thermostat_application": {
         "name": "Thermostat application"
       },
@@ -1191,6 +1218,9 @@
       },
       "valve_orientation": {
         "name": "Valve orientation"
+      },
+      "valve_status_led": {
+        "name": "Valve status LED"
       },
       "viewing_direction": {
         "name": "Viewing direction"
@@ -1284,8 +1314,14 @@
       "energy_produced_ph_c": {
         "name": "Energy produced phase C"
       },
+      "error_code": {
+        "name": "Error code"
+      },
       "error_status": {
         "name": "Error status"
+      },
+      "external_temperature": {
+        "name": "External temperature"
       },
       "fault_code": {
         "name": "Fault code"
@@ -1295,6 +1331,9 @@
       },
       "formaldehyde": {
         "name": "Formaldehyde concentration"
+      },
+      "heating_demand": {
+        "name": "Heating demand"
       },
       "hooks_state": {
         "name": "Hooks state"
@@ -1381,6 +1420,9 @@
       },
       "load_estimate": {
         "name": "Load estimate"
+      },
+      "local_temperature": {
+        "name": "Local temperature"
       },
       "local_temperature_floor": {
         "name": "Floor temperature"
