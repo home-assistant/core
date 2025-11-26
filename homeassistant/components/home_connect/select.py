@@ -412,13 +412,18 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event and isinstance(event_value := event.value, str):
-            self._attr_extra_state_attributes = {"raw_value": event_value}
             try:
-                self._attr_current_option = PROGRAMS_TRANSLATION_KEYS_MAP.get(
-                    ProgramKey(event_value)
-                )
+                program_key = ProgramKey(event_value)
+                current_option = PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key)
+                if current_option is not None:
+                    self._attr_current_option = current_option
+                else:
+                    # ProgramKey succeeded but no translation found; set to None and log raw value
+                    self._attr_current_option = None
+                self._attr_extra_state_attributes = {"raw_value": event_value}
             except ValueError:
                 self._attr_current_option = None
+                self._attr_extra_state_attributes = {"raw_value": event_value}
         else:
             self._attr_current_option = None
             self._attr_extra_state_attributes = {"raw_value": None}
