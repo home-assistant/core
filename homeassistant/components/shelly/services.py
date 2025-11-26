@@ -17,6 +17,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import JsonValueType, json_loads
 
 from .const import CONF_SLEEP_PERIOD, DOMAIN
@@ -38,7 +39,9 @@ SERVICE_SET_KVS_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): str,
+        vol.Required(ATTR_VALUE): vol.Any(
+            str, int, float, bool, dict, list, type(None)
+        ),
     }
 )
 
@@ -144,8 +147,14 @@ async def async_set_kvs_value(call: ServiceCall) -> None:
             translation_placeholders={"device": config_entry.title},
         )
 
+    raw_value = call.data[ATTR_VALUE]
+    if isinstance(raw_value, (dict, list)):
+        value = json_dumps(raw_value)
+    else:
+        value = raw_value
+
     try:
-        await runtime_data.rpc.device.kvs_set(key, call.data[ATTR_VALUE])
+        await runtime_data.rpc.device.kvs_set(key, value)
     except RpcCallError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

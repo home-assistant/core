@@ -24,4 +24,4 @@ set_kvs_value:
     value:
       required: true
       selector:
-        text:
+        object:
