@@ -172,6 +172,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool
     return unload_ok
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    # Clear the stored session credentials when the integration is removed
+    if hasattr(entry, "runtime_data"):
+        # Integration is loaded, use the existing API client
+        await entry.runtime_data.api.clear_session()
+    else:
+        # Integration is not loaded, create temporary client to clear session
+        protect = async_create_api_client(hass, entry)
+        await protect.clear_session()
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
