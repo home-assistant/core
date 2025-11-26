@@ -42,20 +42,22 @@ async def async_setup_entry(
     coordinator_devices = config_entry.runtime_data.coordinator_devices
     dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
 
-    broadcast_entities = [
+    entities: list[LightEntity] = [
         LunatoneLineBroadcastLight(
             coordinator_info, coordinator_devices, dali_line_broadcast
         )
         for dali_line_broadcast in dali_line_broadcasts
     ]
-    light_entities = [
-        LunatoneLight(
-            coordinator_devices, device_id, coordinator_info.data.device.serial
-        )
-        for device_id in coordinator_devices.data
-    ]
+    entities.extend(
+        [
+            LunatoneLight(
+                coordinator_devices, device_id, coordinator_info.data.device.serial
+            )
+            for device_id in coordinator_devices.data
+        ]
+    )
 
-    async_add_entities([*broadcast_entities, *light_entities])
+    async_add_entities(entities)
 
 
 class LunatoneLight(
