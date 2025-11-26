@@ -67,19 +67,6 @@ from .typing import ConfigType, TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
-_EXPERIMENTAL_TRIGGER_PLATFORMS = {
-    "alarm_control_panel",
-    "assist_satellite",
-    "climate",
-    "cover",
-    "fan",
-    "lawn_mower",
-    "light",
-    "media_player",
-    "text",
-    "vacuum",
-}
-
 _PLATFORM_ALIASES = {
     "device": "device_automation",
     "event": "homeassistant",
@@ -723,31 +710,16 @@ class PluggableAction:
                 await task
 
 
-@callback
-def _is_experimental_trigger_enabled(hass: HomeAssistant, platform: str) -> bool:
-    """Check if an experimental trigger platform is enabled."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
-    return (
-        platform not in _EXPERIMENTAL_TRIGGER_PLATFORMS
-        or labs.async_is_preview_feature_enabled(
-            hass,
-            automation.DOMAIN,
-            automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        )
-    )
-
-
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
+    from homeassistant.components import automation  # noqa: PLC0415
+
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
 
-    if not _is_experimental_trigger_enabled(hass, platform):
-        from homeassistant.components import automation  # noqa: PLC0415
-
+    if automation.is_disabled_experimental_trigger(hass, platform):
         raise vol.Invalid(
             f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
             "conditions' feature to be enabled in Home Assistant Labs settings "
@@ -1033,6 +1005,8 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
+    from homeassistant.components import automation  # noqa: PLC0415
+
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -1081,7 +1055,7 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
-        if not _is_experimental_trigger_enabled(hass, domain):
+        if automation.is_disabled_experimental_trigger(hass, domain):
             hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
             continue
 
