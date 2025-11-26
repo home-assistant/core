@@ -35,11 +35,6 @@ class IntelliClimaCoordinator(DataUpdateCoordinator[IntelliClimaDevices]):
         # Authenticate and get initial device list
         try:
             await self.api.authenticate()
-            self.data = await self._async_update_data()
-            LOGGER.info(
-                "Discovered %d IntelliClima VMC device(s)",
-                len(self.data.ecocomfort2),
-            )
         except IntelliClimaAPIError as err:
             raise UpdateFailed(f"Failed to set up IntelliClima: {err}") from err
 
