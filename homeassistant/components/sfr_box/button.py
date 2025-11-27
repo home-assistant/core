@@ -24,6 +24,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import SFRConfigEntry
 from .entity import SFREntity
 
+# Coordinator is used to centralize the data updates
+# but better to queue action calls to avoid conflicts
+PARALLEL_UPDATES = 1
+
 
 def with_error_wrapping[**_P, _R](
     func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_R]],
