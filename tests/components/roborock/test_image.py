@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 from roborock import RoborockException
-from roborock.data import MultiMapsListMapInfo, RoborockStateCode
+from roborock.data import RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, make_home_trait
-from .mock_data import HOME_DATA, MAP_DATA, ROOM_MAPPING, STATUS
+from .mock_data import (
+    HOME_DATA,
+    MAP_DATA,
+    MULTI_MAP_LIST_NO_MAP_NAMES,
+    ROOM_MAPPING,
+    STATUS,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -175,28 +181,9 @@ async def test_empty_room_name(
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test entity naming when no map name is set."""
-    multi_map_list_map_infos = [
-        MultiMapsListMapInfo.from_dict(
-            {
-                "mapFlag": 0,
-                "addTime": 1686235489,
-                "length": 0,
-                "name": "",
-            },
-        ),
-        MultiMapsListMapInfo.from_dict(
-            {
-                "mapFlag": 1,
-                "addTime": 1697579901,
-                "length": 0,
-                "name": "",
-                "bakMaps": [{"addTime": 1695521431}],
-            },
-        ),
-    ]
     assert fake_vacuum.v1_properties
     fake_vacuum.v1_properties.home = make_home_trait(
-        map_info=multi_map_list_map_infos,
+        map_info=MULTI_MAP_LIST_NO_MAP_NAMES.map_info,
         current_map=STATUS.current_map,
         room_mapping=ROOM_MAPPING,
         rooms=HOME_DATA.rooms,
