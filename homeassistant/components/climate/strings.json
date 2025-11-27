@@ -298,6 +298,28 @@
   },
   "title": "Climate",
   "triggers": {
+    "started_cooling": {
+      "description": "Triggers when a climate started cooling.",
+      "description_configured": "[%key:component::climate::triggers::started_cooling::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate started cooling"
+    },
+    "started_drying": {
+      "description": "Triggers when a climate started drying.",
+      "description_configured": "[%key:component::climate::triggers::started_drying::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate started drying"
+    },
     "started_heating": {
       "description": "Triggers when a climate starts to heat.",
       "description_configured": "[%key:component::climate::triggers::started_heating::description%]",
