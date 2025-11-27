@@ -28,6 +28,7 @@
     "tts": {
       "abort": {
         "already_configured": "This TTS voice is already configured.",
+        "cannot_connect": "Failed to connect to Fish Audio",
         "entry_not_loaded": "Cannot add TTS voice while the configuration is disabled.",
         "no_models_found": "No voices found matching the specified filters. Please adjust your filters and try again.",
         "reconfigure_successful": "Your TTS voice has been updated successfully. The integration will now reload with the new settings."
@@ -47,12 +48,14 @@
           "data": {
             "language": "Filter by language",
             "self_only": "Show only my private voices",
-            "sort_by": "Sort voices by"
+            "sort_by": "Sort voices by",
+            "title": "Filter by name"
           },
           "data_description": {
-            "language": "Display only voices that support the selected language.",
+            "language": "Display only voices that support the selected language. Leave empty to show all languages.",
             "self_only": "When checked, this will only show the voices you have personally created or cloned.",
-            "sort_by": "Choose the order in which the voices are displayed."
+            "sort_by": "Choose the order in which the voices are displayed.",
+            "title": "Filter voices by name."
           },
           "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
           "title": "Voice selection filters"

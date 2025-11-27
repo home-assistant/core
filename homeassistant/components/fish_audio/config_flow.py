@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
 from typing import Any
 
-from fish_audio_sdk import Session
-from fish_audio_sdk.exceptions import HttpCodeErr
-from fish_audio_sdk.schemas import APICreditEntity
+from fishaudio import AsyncFishAudio
+from fishaudio.exceptions import AuthenticationError, FishAudioError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -39,6 +37,7 @@ from .const import (
     CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
+    CONF_TITLE,
     CONF_USER_ID,
     CONF_VOICE_ID,
     DOMAIN,
@@ -68,23 +67,24 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
     """Return the schema for the filter step."""
     return vol.Schema(
         {
+            vol.Optional(CONF_TITLE, default=options.get(CONF_TITLE, "")): str,
             vol.Optional(
-                CONF_SELF_ONLY, default=options.get(CONF_SELF_ONLY, False)
-            ): bool,
-            vol.Optional(
-                CONF_LANGUAGE, default=options.get(CONF_LANGUAGE, "en")
+                CONF_LANGUAGE, default=options.get(CONF_LANGUAGE, "Any")
             ): LanguageSelector(
                 LanguageSelectorConfig(
                     languages=TTS_SUPPORTED_LANGUAGES,
                 )
             ),
             vol.Optional(
-                CONF_SORT_BY, default=options.get(CONF_SORT_BY, "score")
+                CONF_SORT_BY, default=options.get(CONF_SORT_BY, "task_count")
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=SORT_BY_OPTIONS, mode=SelectSelectorMode.DROPDOWN
                 )
             ),
+            vol.Optional(
+                CONF_SELF_ONLY, default=options.get(CONF_SELF_ONLY, False)
+            ): bool,
         }
     )
 
@@ -104,7 +104,6 @@ def get_model_selection_schema(
                     options=model_options,
                     mode=SelectSelectorMode.DROPDOWN,
                     custom_value=True,
-                    sort=True,
                 )
             ),
             vol.Required(
@@ -140,31 +139,33 @@ def get_model_selection_schema(
 
 async def _validate_api_key(
     hass: HomeAssistant, api_key: str
-) -> tuple[APICreditEntity, Session]:
+) -> tuple[str, AsyncFishAudio]:
     """Validate the user input allows us to connect."""
-    session = Session(api_key)
+    client = AsyncFishAudio(api_key=api_key)
 
     try:
-        credit_info = await hass.async_add_executor_job(session.get_api_credit)
-    except HttpCodeErr as exc:
-        if exc.status == 401:
-            raise InvalidAuthError(exc) from exc
+        # Validate API key and get user info
+        credit_info = await client.account.get_credits()
+        user_id = credit_info.user_id
+    except AuthenticationError as exc:
+        raise InvalidAuthError(exc) from exc
+    except FishAudioError as exc:
         raise CannotConnectError(exc) from exc
     except Exception as exc:
         raise UnexpectedError(exc) from exc
 
-    return credit_info, session
+    return user_id, client
 
 
 class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fish Audio."""
 
     VERSION = 1
-    session: Session | None
+    client: AsyncFishAudio | None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.session = None
+        self.client = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -181,7 +182,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         try:
-            credit_info, self.session = await _validate_api_key(
+            user_id, self.client = await _validate_api_key(
                 self.hass, user_input[CONF_API_KEY]
             )
         except InvalidAuthError:
@@ -191,12 +192,12 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         except UnexpectedError:
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(credit_info.user_id)
+            await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
 
             data: dict[str, Any] = {
                 CONF_API_KEY: user_input[CONF_API_KEY],
-                CONF_USER_ID: credit_info.user_id,
+                CONF_USER_ID: user_id,
             }
 
             return self.async_create_entry(
@@ -225,30 +226,38 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
 
     config_data: dict[str, Any]
     models: list[SelectOptionDict]
-    session: Session
+    client: AsyncFishAudio
 
     def __init__(self) -> None:
         """Initialize the subentry flow handler."""
         super().__init__()
-        self.models = []
+        self.models: list[SelectOptionDict] = []
 
     async def _async_get_models(
-        self, self_only: bool, language: str | None, sort_by: str
+        self, self_only: bool, language: str | None, title: str | None, sort_by: str
     ) -> list[SelectOptionDict]:
         """Get the available models."""
-        func = partial(
-            self.session.list_models,
-            self_only=self_only,
-            language=language,
-            sort_by=sort_by,
-        )
         try:
-            models_response = await self.hass.async_add_executor_job(func)
+            voices_response = await self.client.voices.list(
+                self_only=self_only,
+                language=language
+                if language and language.strip() and language != "Any"
+                else None,
+                title=title if title and title.strip() else None,
+                sort_by=sort_by,
+            )
         except Exception as exc:
             raise CannotGetModelsError(exc) from exc
-        models = models_response.items
 
-        return [SelectOptionDict(value=model.id, label=model.title) for model in models]
+        voices = voices_response.items
+
+        return [
+            SelectOptionDict(
+                value=voice.id,
+                label=f"{voice.title} - {voice.task_count} uses",
+            )
+            for voice in voices
+        ]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -272,7 +281,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         if entry.state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        self.session = entry.runtime_data
+        self.client = entry.runtime_data
 
         if user_input is not None:
             self.config_data.update(user_input)
@@ -295,13 +304,17 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                 self.models = await self._async_get_models(
                     self_only=self.config_data.get(CONF_SELF_ONLY, False),
                     language=self.config_data.get(CONF_LANGUAGE),
-                    sort_by=self.config_data.get(CONF_SORT_BY, "score"),
+                    title=self.config_data.get(CONF_TITLE),
+                    sort_by=self.config_data.get(CONF_SORT_BY, "task_count"),
                 )
             except CannotGetModelsError:
                 return self.async_abort(reason="cannot_connect")
 
             if not self.models:
                 return self.async_abort(reason="no_models_found")
+
+            if CONF_VOICE_ID not in self.config_data and self.models:
+                self.config_data[CONF_VOICE_ID] = self.models[0]["value"]
 
         if user_input is not None:
             if (
