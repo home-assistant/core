@@ -32,10 +32,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Change to mock_setup_entry to avoid repetition when expanding tests.
+  test-coverage: done
 
   # Gold
   devices:
