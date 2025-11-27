@@ -17,8 +17,12 @@ from homeassistant.components.media_player import (
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
+    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
     LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
@@ -76,6 +80,16 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_THEATRE = "Beosound Theatre"
     # Remote devices
     BEOREMOTE_ONE = "Beoremote One"
+
+
+class BangOlufsenAttribute(StrEnum):
+    """Enum for extra_state_attribute keys."""
+
+    BEOLINK = "beolink"
+    BEOLINK_PEERS = "peers"
+    BEOLINK_SELF = "self"
+    BEOLINK_LEADER = "leader"
+    BEOLINK_LISTENERS = "listeners"
 
 
 # Physical "buttons" on devices
