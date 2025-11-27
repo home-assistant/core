@@ -55,10 +55,7 @@ rules:
       Speed sensors change so frequently that disabling by default may be appropriate.
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: todo
-    comment: |
-      Add icons for sensors & switches.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
