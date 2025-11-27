@@ -44,9 +44,6 @@
       "electricity_next_price": {
         "name": "Next electricity price"
       },
-      "gas_average_today": {
-        "name": "Average gas price today"
-      },
       "gas_current_price": {
         "name": "Current gas price"
       },
