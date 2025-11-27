@@ -1153,6 +1153,29 @@ MULTI_MAP_LIST = MultiMapsList.from_dict(
         ],
     }
 )
+MULTI_MAP_LIST_NO_MAP_NAMES = MultiMapsList.from_dict(
+    {
+        "maxMultiMap": 4,
+        "maxBakMap": 1,
+        "multiMapCount": 2,
+        "mapInfo": [
+            {
+                "mapFlag": 0,
+                "addTime": 1686235489,
+                "length": 0,
+                "name": "",
+                "bakMaps": [{"addTime": 1673304288}],
+            },
+            {
+                "mapFlag": 1,
+                "addTime": 1697579901,
+                "length": 0,
+                "name": "",
+                "bakMaps": [{"addTime": 1695521431}],
+            },
+        ],
+    }
+)
 
 MAP_DATA = MapData(0, 0)
 MAP_DATA.image = ImageData(
