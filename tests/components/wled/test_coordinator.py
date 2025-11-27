@@ -215,4 +215,6 @@ async def test_fail_when_other_device(
 
     assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason
-    assert "MAC address does not match the configured device." in mock_config_entry.reason
+    assert (
+        "MAC address does not match the configured device." in mock_config_entry.reason
+    )
