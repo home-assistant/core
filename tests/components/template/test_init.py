@@ -602,7 +602,7 @@ async def test_reload_when_labs_flag_changes(
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
 ) -> None:
-    """Test automations are reloaded when labs flag changes."""
+    """Test templates are reloaded when labs flag changes."""
     ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(
