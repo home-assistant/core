@@ -432,7 +432,7 @@ def requirements_output() -> str:
         "\n",
         "# Home Assistant Core\n",
     ]
-    output.append("\n".join(core_requirements()))
+    output.append("\n".join(sorted(core_requirements())))
     output.append("\n")
 
     return "".join(output)
