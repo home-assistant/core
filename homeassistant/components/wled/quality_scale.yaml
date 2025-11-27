@@ -61,16 +61,13 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: todo
     comment: |
-      I see two problems:
-      - Unsupported WLED version.
-      - MAC address mismatch e.g. we connect to the device, but
-        it turns out that it has a different MAC address than before.
+      I see one problem: unsupported WLED version.
   stale-devices:
     status: exempt
     comment: |
