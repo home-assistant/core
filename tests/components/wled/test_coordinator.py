@@ -213,8 +213,6 @@ async def test_fail_when_other_device(
 
     await hass.async_block_till_done()
 
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert entry is not None
-    assert entry.state == ConfigEntryState.SETUP_ERROR
-    assert entry.reason
-    assert "MAC address does not match the configured device." in entry.reason
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason
+    assert "MAC address does not match the configured device." in mock_config_entry.reason
