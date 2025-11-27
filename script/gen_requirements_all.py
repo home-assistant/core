@@ -235,29 +235,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
-# Base components as specified by homeassistant/helpers/service.py
-BASE_COMPONENTS = (
-    "ai_task",
-    "alarm_control_panel",
-    "assist_satellite",
-    "calendar",
-    "camera",
-    "climate",
-    "cover",
-    "fan",
-    "humidifier",
-    "light",
-    "lock",
-    "media_player",
-    "notify",
-    "remote",
-    "siren",
-    "todo",
-    "update",
-    "vacuum",
-    "water_heater",
-)
-
 
 def has_tests(module: str) -> bool:
     """Test if a module has tests.
@@ -374,6 +351,24 @@ def gather_modules() -> dict[str, list[str]] | None:
     return reqs
 
 
+def gather_entity_platform_requirements() -> set[str]:
+    """Gather all of the requirements from manifests for entity platforms."""
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
+    reqs = set()
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if integration.disabled:
+            continue
+
+        if integration.integration_type != "entity":
+            continue
+
+        reqs.update(gather_recursive_requirements(integration.domain))
+    return reqs
+
+
 def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
@@ -459,8 +454,7 @@ def requirements_output() -> str:
 
     requirements = set()
     requirements.update(core_requirements())
-    for domain in BASE_COMPONENTS:
-        requirements.update(gather_recursive_requirements(domain))
+    requirements.update(gather_entity_platform_requirements())
 
     output.append("\n".join(sorted(requirements)))
     output.append("\n")
