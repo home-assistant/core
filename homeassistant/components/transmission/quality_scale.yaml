@@ -25,20 +25,20 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: todo
+    comment: |
+      Remove the torrent attributes/configuration and change to a get_torrents service.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices:
-    status: todo
-    comment: |
-      Add additional device detail including link to ui.
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
