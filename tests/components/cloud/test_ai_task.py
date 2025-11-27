@@ -21,7 +21,9 @@ from homeassistant.components import ai_task, conversation
 from homeassistant.components.cloud.ai_task import (
     CloudLLMTaskEntity,
     async_prepare_image_generation_attachments,
+    async_setup_entry,
 )
+from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
@@ -44,6 +46,21 @@ def mock_cloud_ai_task_entity(hass: HomeAssistant) -> CloudLLMTaskEntity:
     entity.entity_id = "ai_task.cloud_ai_task"
     entity.hass = hass
     return entity
+
+
+async def test_setup_entry_skips_when_not_logged_in(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup_entry exits early when not logged in."""
+    cloud = MagicMock()
+    cloud.is_logged_in = False
+    entry = MockConfigEntry(domain="cloud")
+    entry.add_to_hass(hass)
+    hass.data[DATA_CLOUD] = cloud
+
+    async_add_entities = AsyncMock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    async_add_entities.assert_not_called()
 
 
 @pytest.fixture(name="mock_handle_chat_log")
