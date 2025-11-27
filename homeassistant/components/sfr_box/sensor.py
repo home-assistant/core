@@ -26,6 +26,9 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import SFRConfigEntry
 from .entity import SFRCoordinatorEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SFRBoxSensorEntityDescription[_T](SensorEntityDescription):
