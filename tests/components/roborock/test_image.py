@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 from roborock import RoborockException
-from roborock.data import RoborockStateCode
+from roborock.data import MultiMapsListMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
@@ -16,8 +16,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import FakeDevice
-from .mock_data import MAP_DATA
+from .conftest import FakeDevice, make_home_trait
+from .mock_data import HOME_DATA, MAP_DATA, ROOM_MAPPING, STATUS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -38,7 +38,12 @@ async def test_floorplan_image(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
-    assert len(hass.states.async_all("image")) == 4
+    assert sorted([state.entity_id for state in hass.states.async_all("image")]) == [
+        "image.roborock_s7_2_downstairs",
+        "image.roborock_s7_2_upstairs",
+        "image.roborock_s7_maxv_downstairs",
+        "image.roborock_s7_maxv_upstairs",
+    ]
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     # Load the image on demand
@@ -161,3 +166,57 @@ async def test_map_status_change(
         body = await resp.read()
         assert body is not None
         assert body != old_body
+
+
+async def test_empty_room_name(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test entity naming when no map name is set."""
+    multi_map_list_map_infos = [
+        MultiMapsListMapInfo.from_dict(
+            {
+                "mapFlag": 0,
+                "addTime": 1686235489,
+                "length": 0,
+                "name": "",
+            },
+        ),
+        MultiMapsListMapInfo.from_dict(
+            {
+                "mapFlag": 1,
+                "addTime": 1697579901,
+                "length": 0,
+                "name": "",
+                "bakMaps": [{"addTime": 1695521431}],
+            },
+        ),
+    ]
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.home = make_home_trait(
+        map_info=multi_map_list_map_infos,
+        current_map=STATUS.current_map,
+        room_mapping=ROOM_MAPPING,
+        rooms=HOME_DATA.rooms,
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Missing names are populated with a default name based on the map flag
+    assert sorted([state.entity_id for state in hass.states.async_all("image")]) == [
+        "image.roborock_s7_2_downstairs",
+        "image.roborock_s7_2_upstairs",
+        "image.roborock_s7_maxv_map_0",
+        "image.roborock_s7_maxv_map_1",
+    ]
+
+    # Verify the map image can be loaded.
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_map_0")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body is not None
+    assert body == b"\x89PNG-001"
