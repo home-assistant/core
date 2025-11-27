@@ -39,6 +39,7 @@ class MQTTDiscoveredNumber(NumberEntity):
         self._state_topic = config.get("state_topic")
         self._command_topic = config.get("command_topic")
         self._value_template = config.get("value_template")
+        self._command_template = config.get("command_template")
         self._attr_unique_id = unique_id
         self._desired_entity_id = f"number.{unique_id}"
         self._attr_entity_id = f"number.{unique_id}"
@@ -136,6 +137,41 @@ class MQTTDiscoveredNumber(NumberEntity):
             self.entity_id, new_entity_id=self._desired_entity_id
         )
 
+    def update_config(self, config: dict[str, Any]) -> None:
+        """Update the number configuration."""
+        self._attr_name = config.get("name", self._attr_name)
+        self._value_template = config.get("value_template")
+        self._command_template = config.get("command_template")
+        self._attr_native_unit_of_measurement = config.get("unit_of_measurement")
+        self._attr_icon = config.get("icon")
+        self._attr_device_class = config.get("device_class")
+        self._attr_enabled_by_default = config.get("enabled_by_default", True)
+
+        # Update number-specific configuration
+        self._attr_native_min_value = config.get("min", 0)
+        self._attr_native_max_value = config.get("max", 100)
+        self._attr_native_step = config.get("step", 1)
+
+        # Update mode configuration
+        mode = config.get("mode", "auto")
+        if mode == "box":
+            self._attr_mode = NumberMode.BOX
+        elif mode == "slider":
+            self._attr_mode = NumberMode.SLIDER
+        else:
+            self._attr_mode = NumberMode.AUTO
+
+        # Update entity category
+        entity_category = config.get("entity_category")
+        if entity_category == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        elif entity_category == "config":
+            self._attr_entity_category = EntityCategory.CONFIG
+        else:
+            self._attr_entity_category = None
+
+        _LOGGER.debug("Updated number config for %s: %s", self._attr_name, config)
+
     def handle_mqtt_message(self, msg) -> None:
         """Handle incoming MQTT message for this number."""
         payload = msg.payload.decode()
@@ -210,14 +246,38 @@ class MQTTDiscoveredNumber(NumberEntity):
                 # Ensure value is within bounds
                 value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))
 
+                # Apply command template if specified
+                payload = str(value)
+                if self._command_template:
+                    template = Template(self._command_template, self.hass)
+                    try:
+                        rendered_value = template.async_render({"value": value})
+                        # Ensure the rendered value is converted to string for MQTT
+                        payload = str(rendered_value) if rendered_value is not None else str(value)
+                        _LOGGER.debug(
+                            "Applied command_template for %s: %s -> %s (type: %s)",
+                            self._attr_name,
+                            value,
+                            payload,
+                            type(rendered_value),
+                        )
+                    except (TypeError, ValueError) as err:
+                        _LOGGER.debug(
+                            "Failed to render command_template for %s: %s",
+                            self._attr_name,
+                            err,
+                        )
+                        payload = str(value)
+
                 _LOGGER.debug(
-                    "Setting number %s to %s by publishing to %s",
+                    "Setting number %s to %s by publishing %s to %s",
                     self._attr_name,
                     value,
+                    payload,
                     self._command_topic,
                 )
                 manager.client.publish(
-                    self._command_topic, str(value), qos=0, retain=False
+                    self._command_topic, payload, qos=0, retain=False
                 )
             else:
                 _LOGGER.error("MQTT client not available for number %s", self._attr_name)

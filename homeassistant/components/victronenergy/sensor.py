@@ -126,6 +126,30 @@ class MQTTDiscoveredSensor(SensorEntity):
             self.entity_id, new_entity_id=self._desired_entity_id
         )
 
+    def update_config(self, config: dict[str, Any]) -> None:
+        """Update the sensor configuration."""
+        self._attr_name = config.get("name", self._attr_name)
+        self._value_template = config.get("value_template")
+        self._attr_native_unit_of_measurement = config.get("unit_of_measurement")
+        self._attr_icon = config.get("icon")
+        self._attr_device_class = config.get("device_class")
+        self._attr_state_class = config.get("state_class")
+        self._attr_enabled_by_default = config.get("enabled_by_default", True)
+        self._attr_suggested_display_precision = config.get(
+            "suggested_display_precision"
+        )
+
+        # Update entity category
+        entity_category = config.get("entity_category")
+        if entity_category == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        elif entity_category == "config":
+            self._attr_entity_category = EntityCategory.CONFIG
+        else:
+            self._attr_entity_category = None
+
+        _LOGGER.debug("Updated sensor config for %s: %s", self._attr_name, config)
+
     def handle_mqtt_message(self, msg) -> None:
         """Handle incoming MQTT message for this sensor."""
         payload = msg.payload.decode()

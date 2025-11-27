@@ -127,6 +127,31 @@ class MQTTDiscoveredSwitch(SwitchEntity):
             self.entity_id, new_entity_id=self._desired_entity_id
         )
 
+    def update_config(self, config: dict[str, Any]) -> None:
+        """Update the switch configuration."""
+        self._attr_name = config.get("name", self._attr_name)
+        self._value_template = config.get("value_template")
+        self._attr_icon = config.get("icon")
+        self._attr_device_class = config.get("device_class")
+        self._attr_enabled_by_default = config.get("enabled_by_default", True)
+
+        # Update payload configuration
+        self._payload_on = config.get("payload_on", "ON")
+        self._payload_off = config.get("payload_off", "OFF")
+        self._state_on = config.get("state_on", "ON")
+        self._state_off = config.get("state_off", "OFF")
+
+        # Update entity category
+        entity_category = config.get("entity_category")
+        if entity_category == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        elif entity_category == "config":
+            self._attr_entity_category = EntityCategory.CONFIG
+        else:
+            self._attr_entity_category = None
+
+        _LOGGER.debug("Updated switch config for %s: %s", self._attr_name, config)
+
     def handle_mqtt_message(self, msg) -> None:
         """Handle incoming MQTT message for this switch."""
         payload = msg.payload.decode()
