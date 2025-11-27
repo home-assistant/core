@@ -143,13 +143,6 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         self.transport: str = cast(
             str, config_entry.data.get(CONF_TRANSPORT, TRANSPORT_SSE)
         )
-        if self.transport not in (TRANSPORT_SSE, TRANSPORT_STREAMABLE_HTTP):
-            _LOGGER.warning(
-                "Invalid transport value '%s' in config entry; falling back to '%s'",
-                self.transport,
-                TRANSPORT_SSE,
-            )
-            self.transport = TRANSPORT_SSE
 
     async def _async_update_data(self) -> list[llm.Tool]:
         """Fetch data from API endpoint.
