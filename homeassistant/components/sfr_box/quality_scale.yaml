@@ -40,7 +40,6 @@ rules:
       - 93% on diagnostics / 92% on sensors, need to improve overall coverage
       - It would be nice to use the snapshot helper as currently it would just throw everything in a list
       - We also test the devices in each platform, kinda overkill
-      - assert not hass.data.get(DOMAIN) not needed
       - We should use entity_registry_enabled_by_default instead to enable entities
   integration-owner: done
   docs-installation-parameters:
