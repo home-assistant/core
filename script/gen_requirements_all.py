@@ -235,6 +235,29 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
+# Base components as specified by homeassistant/helpers/service.py
+BASE_COMPONENTS = (
+    "ai_task",
+    "alarm_control_panel",
+    "assist_satellite",
+    "calendar",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "humidifier",
+    "light",
+    "lock",
+    "media_player",
+    "notify",
+    "remote",
+    "siren",
+    "todo",
+    "update",
+    "vacuum",
+    "water_heater",
+)
+
 
 def has_tests(module: str) -> bool:
     """Test if a module has tests.
@@ -271,6 +294,7 @@ def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
     data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
+
     return dependencies
 
 
@@ -432,7 +456,13 @@ def requirements_output() -> str:
         "\n",
         "# Home Assistant Core\n",
     ]
-    output.append("\n".join(sorted(core_requirements())))
+
+    requirements = set()
+    requirements.update(core_requirements())
+    for domain in BASE_COMPONENTS:
+        requirements.update(gather_recursive_requirements(domain))
+
+    output.append("\n".join(sorted(requirements)))
     output.append("\n")
 
     return "".join(output)
