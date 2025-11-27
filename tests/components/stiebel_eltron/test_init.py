@@ -41,7 +41,7 @@ async def test_async_setup_success(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
-@pytest.mark.usefixtures("mock_stiebel_eltron_client")
+@pytest.mark.usefixtures("mock_get_controller_model")
 async def test_async_setup_already_configured(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -103,7 +103,7 @@ async def test_async_setup_with_non_existing_hub(
 async def test_async_setup_import_failure(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_stiebel_eltron_client: AsyncMock,
+    mock_get_controller_model: AsyncMock,
 ) -> None:
     """Test async_setup with import failure."""
     config = {
@@ -121,7 +121,7 @@ async def test_async_setup_import_failure(
     }
 
     # Simulate an import failure
-    mock_stiebel_eltron_client.update.side_effect = Exception("Import failure")
+    mock_get_controller_model.side_effect = Exception
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
@@ -138,13 +138,12 @@ async def test_async_setup_import_failure(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
-@pytest.mark.usefixtures("mock_modbus")
 async def test_async_setup_cannot_connect(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_stiebel_eltron_client: AsyncMock,
 ) -> None:
-    """Test async_setup with import failure."""
+    """Test async_setup with cannot connect error."""
     config = {
         DOMAIN: {
             CONF_NAME: "Stiebel Eltron",
