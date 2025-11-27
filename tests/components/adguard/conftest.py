@@ -2,7 +2,14 @@
 
 from unittest.mock import AsyncMock
 
-from adguardhome.update import AdGuardHomeAvailableUpdate
+from adguardhome import AdGuardHome
+from adguardhome.filtering import AdGuardHomeFiltering
+from adguardhome.parental import AdGuardHomeParental
+from adguardhome.querylog import AdGuardHomeQueryLog
+from adguardhome.safebrowsing import AdGuardHomeSafeBrowsing
+from adguardhome.safesearch import AdGuardHomeSafeSearch
+from adguardhome.stats import AdGuardHomeStats
+from adguardhome.update import AdGuardHomeAvailableUpdate, AdGuardHomeUpdate
 import pytest
 
 from homeassistant.components.adguard import DOMAIN
@@ -38,7 +45,14 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_adguard() -> AsyncMock:
     """Fixture for setting up the component."""
-    adguard_mock = AsyncMock()
+    adguard_mock = AsyncMock(spec=AdGuardHome)
+    adguard_mock.filtering = AsyncMock(spec=AdGuardHomeFiltering)
+    adguard_mock.parental = AsyncMock(spec=AdGuardHomeParental)
+    adguard_mock.querylog = AsyncMock(spec=AdGuardHomeQueryLog)
+    adguard_mock.safebrowsing = AsyncMock(spec=AdGuardHomeSafeBrowsing)
+    adguard_mock.safesearch = AsyncMock(spec=AdGuardHomeSafeSearch)
+    adguard_mock.stats = AsyncMock(spec=AdGuardHomeStats)
+    adguard_mock.update = AsyncMock(spec=AdGuardHomeUpdate)
 
     # static properties
     adguard_mock.host = "127.0.0.1"
@@ -48,6 +62,10 @@ async def mock_adguard() -> AsyncMock:
 
     # async method mocks
     adguard_mock.version = AsyncMock(return_value="v0.107.50")
+    adguard_mock.protection_enabled = AsyncMock(return_value=True)
+    adguard_mock.parental.enabled = AsyncMock(return_value=True)
+    adguard_mock.safesearch.enabled = AsyncMock(return_value=True)
+    adguard_mock.safebrowsing.enabled = AsyncMock(return_value=True)
     adguard_mock.stats.dns_queries = AsyncMock(return_value=666)
     adguard_mock.stats.blocked_filtering = AsyncMock(return_value=1337)
     adguard_mock.stats.blocked_percentage = AsyncMock(return_value=200.75)
@@ -56,11 +74,8 @@ async def mock_adguard() -> AsyncMock:
     adguard_mock.stats.replaced_safesearch = AsyncMock(return_value=18)
     adguard_mock.stats.avg_processing_time = AsyncMock(return_value=31.41)
     adguard_mock.filtering.rules_count = AsyncMock(return_value=100)
-    adguard_mock.filtering.add_url = AsyncMock()
-    adguard_mock.filtering.remove_url = AsyncMock()
-    adguard_mock.filtering.enable_url = AsyncMock()
-    adguard_mock.filtering.disable_url = AsyncMock()
-    adguard_mock.filtering.refresh = AsyncMock()
+    adguard_mock.filtering.enabled = AsyncMock(return_value=True)
+    adguard_mock.querylog.enabled = AsyncMock(return_value=True)
     adguard_mock.update.update_available = AsyncMock(
         return_value=AdGuardHomeAvailableUpdate(
             new_version="v0.107.59",
@@ -70,6 +85,5 @@ async def mock_adguard() -> AsyncMock:
             disabled=False,
         )
     )
-    adguard_mock.update.begin_update = AsyncMock()
 
     return adguard_mock
