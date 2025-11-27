@@ -26,7 +26,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'sw_version': 'v1.10.2',
+    'sw_version': 'v2.0.0',
     'via_device_id': None,
   })
 # ---

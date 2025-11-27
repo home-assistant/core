@@ -48,7 +48,9 @@ class SwitchbotDevices:
         default_factory=list
     )
     buttons: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
-    climates: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
+    climates: list[tuple[Remote | Device, SwitchBotCoordinator]] = field(
+        default_factory=list
+    )
     covers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
@@ -121,6 +123,17 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.climates.append((device, coordinator))
+
+    if (
+        isinstance(device, Remote | Device)
+        and device.device_type == "Smart Radiator Thermostat"
+    ):
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.climates.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+
     if (
         isinstance(device, Device)
         and (
@@ -158,6 +171,7 @@ async def make_device_data(
         "Robot Vacuum Cleaner K10+ Pro Combo",
         "Robot Vacuum Cleaner S10",
         "S20",
+        "Robot Vacuum Cleaner K11 Plus",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
@@ -187,6 +201,15 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in [
+        "Relay Switch 2PM",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.sensors.append((device, coordinator))
+        devices_data.switches.append((device, coordinator))
+
     if isinstance(device, Device) and device.device_type.startswith("Air Purifier"):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -195,6 +218,7 @@ async def make_device_data(
     if isinstance(device, Device) and device.device_type in [
         "Motion Sensor",
         "Contact Sensor",
+        "Presence Sensor",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True

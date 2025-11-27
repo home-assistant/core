@@ -9,6 +9,7 @@
     "conversation",
     "dhcp",
     "energy",
+    "file",
     "go2rtc",
     "history",
     "homeassistant_alerts",

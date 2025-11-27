@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
+from pooldose.type_definitions import DeviceInfoDict, StructuredValuesDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,10 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 type PooldoseConfigEntry = ConfigEntry[PooldoseCoordinator]
 
 
-class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
     """Coordinator for PoolDose integration."""
 
-    device_info: dict[str, Any]
+    device_info: DeviceInfoDict
+    config_entry: PooldoseConfigEntry
 
     def __init__(
         self,
@@ -45,7 +46,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.device_info = self.client.device_info
         _LOGGER.debug("Device info: %s", self.device_info)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> StructuredValuesDict:
         """Fetch data from the PoolDose API."""
         try:
             status, instant_values = await self.client.instant_values_structured()
@@ -61,7 +62,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if status != RequestStatus.SUCCESS:
             raise UpdateFailed(f"API returned status: {status}")
 
-        if instant_values is None:
+        if not instant_values:
             raise UpdateFailed("No data received from API")
 
         _LOGGER.debug("Instant values structured: %s", instant_values)

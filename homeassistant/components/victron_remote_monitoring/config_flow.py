@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -69,7 +69,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         client = VictronVRMClient(
             token=api_token,
-            client_session=get_async_client(self.hass),
+            client_session=async_get_clientsession(self.hass),
         )
         try:
             sites = await client.users.list_sites()
@@ -86,7 +86,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
         """Validate access to the selected site and return its data."""
         client = VictronVRMClient(
             token=api_token,
-            client_session=get_async_client(self.hass),
+            client_session=async_get_clientsession(self.hass),
         )
         try:
             site_data = await client.users.get_site(site_id)

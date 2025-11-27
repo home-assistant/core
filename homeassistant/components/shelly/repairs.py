@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, MODEL_WALL_DISPLAY
+from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
@@ -19,10 +19,11 @@ from .const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
     CONF_BLE_SCANNER_MODE,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
+    DEPRECATED_FIRMWARES,
     DOMAIN,
+    OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
-    WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID,
-    WALL_DISPLAY_MIN_FIRMWARE,
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
@@ -70,21 +71,25 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
 
 
 @callback
-def async_manage_wall_display_firmware_unsupported_issue(
+def async_manage_deprecated_firmware_issue(
     hass: HomeAssistant,
     entry: ShellyConfigEntry,
 ) -> None:
-    """Manage the Wall Display firmware unsupported issue."""
-    issue_id = WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
+    """Manage deprecated firmware issue."""
+    issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=entry.unique_id)
 
     if TYPE_CHECKING:
         assert entry.runtime_data.rpc is not None
 
     device = entry.runtime_data.rpc.device
+    model = entry.data["model"]
 
-    if entry.data["model"] == MODEL_WALL_DISPLAY:
+    if model in DEPRECATED_FIRMWARES:
+        min_firmware = DEPRECATED_FIRMWARES[model]["min_firmware"]
+        ha_version = DEPRECATED_FIRMWARES[model]["ha_version"]
+
         firmware = AwesomeVersion(device.shelly["ver"])
-        if firmware < WALL_DISPLAY_MIN_FIRMWARE:
+        if firmware < min_firmware:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -92,11 +97,12 @@ def async_manage_wall_display_firmware_unsupported_issue(
                 is_fixable=True,
                 is_persistent=True,
                 severity=ir.IssueSeverity.WARNING,
-                translation_key="wall_display_firmware_unsupported",
+                translation_key="deprecated_firmware",
                 translation_placeholders={
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
+                    "ha_version": ha_version,
                 },
                 data={"entry_id": entry.entry_id},
             )
@@ -133,6 +139,45 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="outbound_websocket_incorrectly_enabled",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_manage_open_wifi_ap_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the open WiFi AP issue."""
+    issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    # Check if WiFi AP is enabled and is open (no password)
+    if (
+        (wifi_config := device.config.get("wifi"))
+        and (ap_config := wifi_config.get("ap"))
+        and ap_config.get("enable")
+        and ap_config.get("is_open")
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="open_wifi_ap",
             translation_placeholders={
                 "device_name": device.name,
                 "ip_address": device.ip_address,
@@ -224,6 +269,49 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
         return self.async_create_entry(title="", data={})
 
 
+class DisableOpenWiFiApFlow(RepairsFlow):
+    """Handler for Disable Open WiFi AP flow."""
+
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+        """Initialize."""
+        self._device = device
+        self.issue_id = issue_id
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        try:
+            result = await self._device.wifi_setconfig(ap_enable=False)
+            if result.get("restart_required"):
+                await self._device.trigger_reboot()
+        except (DeviceConnectionError, RpcCallError):
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
@@ -241,11 +329,14 @@ async def async_create_fix_flow(
 
     if (
         "ble_scanner_firmware_unsupported" in issue_id
-        or "wall_display_firmware_unsupported" in issue_id
+        or "deprecated_firmware" in issue_id
     ):
         return FirmwareUpdateFlow(device)
 
     if "outbound_websocket_incorrectly_enabled" in issue_id:
         return DisableOutboundWebSocketFlow(device)
+
+    if "open_wifi_ap" in issue_id:
+        return DisableOpenWiFiApFlow(device, issue_id)
 
     return ConfirmRepairFlow()
