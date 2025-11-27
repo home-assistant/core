@@ -131,7 +131,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self._retry_after: float | None = None
         self.last_update_success = True
-        self.last_exception: Exception | None = None
+        self.last_exception: BaseException | None = None
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -492,7 +492,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
+            self.last_update_success = False
             raise
+
+        except asyncio.CancelledError as err:
+            self.last_exception = err
+            self.last_update_success = False
+
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                raise
 
         except Exception as err:
             self.last_exception = err
