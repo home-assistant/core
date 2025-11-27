@@ -26,30 +26,18 @@ rules:
   brands: done
 
   ## Silver
-  config-entry-unloading:
-    status: todo
-    comment: Under review
-  log-when-unavailable:
-    status: todo
-    comment: Under review
-  entity-unavailable:
-    status: todo
-    comment: Under review
-  action-exceptions:
-    status: todo
-    comment: Under review
-  reauthentication-flow:
-    status: todo
-    comment: Under review
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
   parallel-updates:
     status: todo
-    comment: Under review
+    comment: Updates are managed by the coordinator, actions need it
   test-coverage:
     status: todo
-    comment: Under review
-  integration-owner:
-    status: todo
-    comment: Under review
+    comment: 93% on diagnostics / 92% on sensors, need to improve overall coverage
+  integration-owner: done
   docs-installation-parameters:
     status: todo
     comment: Under review
