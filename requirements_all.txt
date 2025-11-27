@@ -959,6 +959,9 @@ fing_agent_api==1.0.3
 fints==3.1.0
 
 # homeassistant.components.fitbit
+fitbit-web-api==2.13.5
+
+# homeassistant.components.fitbit
 fitbit==0.3.1
 
 # homeassistant.components.fivem
@@ -2557,7 +2560,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.7.1
+python-roborock==3.8.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
