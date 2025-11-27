@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pystiebeleltron import StiebelEltronModbusError
 import pytest
 
 from homeassistant.components.stiebel_eltron.const import CONF_HUB, DEFAULT_HUB, DOMAIN
@@ -11,7 +12,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
-@pytest.mark.usefixtures("mock_stiebel_eltron_client")
+@pytest.mark.usefixtures("mock_get_controller_model")
 async def test_async_setup_success(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -141,7 +142,7 @@ async def test_async_setup_import_failure(
 async def test_async_setup_cannot_connect(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_stiebel_eltron_client: AsyncMock,
+    mock_get_controller_model: AsyncMock,
 ) -> None:
     """Test async_setup with cannot connect error."""
     config = {
@@ -159,7 +160,7 @@ async def test_async_setup_cannot_connect(
     }
 
     # Simulate a cannot connect error
-    mock_stiebel_eltron_client.update.return_value = False
+    mock_get_controller_model.side_effect = StiebelEltronModbusError
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
