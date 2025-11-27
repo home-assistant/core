@@ -24,7 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN
+from .const import DATA_HASS_CONFIG, DOMAIN
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
@@ -50,7 +50,7 @@ class TibberRuntimeData:
             raise ConfigEntryAuthFailed("OAuth session not available")
         await self.session.async_ensure_token_valid()
         token = self.session.token
-        access_token = token.get("access_token")
+        access_token = token.get(CONF_ACCESS_TOKEN)
         if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
         if self._client is None:
@@ -75,11 +75,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    if AUTH_IMPLEMENTATION not in entry.data:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="data_api_reauth_required",
-        )
+    if "auth_implementation" not in entry.data:
+        entry.async_start_reauth(hass)
+        return False
 
     tibber_connection = tibber.Tibber(
         access_token=entry.data[CONF_ACCESS_TOKEN],

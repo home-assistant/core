@@ -5,7 +5,7 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "The connected account does not match {email}. Sign in with the same Tibber account and try again."
+      "wrong_account": "The connected account does not match {title}. Sign in with the same Tibber account and try again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
