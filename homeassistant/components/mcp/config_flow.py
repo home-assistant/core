@@ -112,7 +112,7 @@ async def async_discover_oauth_config(
     )
 
 
-async def async_autodiscover_transport(mcp_server_url: str) -> tuple[str, str]:
+async def async_autodiscover_transport(mcp_server_url: str) -> str:
     """Autodiscover the transport protocol for the MCP server.
 
     According to the MCP specification for backwards compatibility:
@@ -149,9 +149,8 @@ async def async_autodiscover_transport(mcp_server_url: str) -> tuple[str, str]:
                 timeout=5,
             )
             response.raise_for_status()
-            final_url = str(response.url)
             _LOGGER.debug("Transport autodiscovery: Streamable HTTP detected")
-            return TRANSPORT_STREAMABLE_HTTP, final_url
+            return TRANSPORT_STREAMABLE_HTTP
     except httpx.HTTPStatusError as error:
         if 400 <= error.response.status_code < 500:
             # Try SSE transport (old HTTP+SSE transport)
@@ -165,14 +164,13 @@ async def async_autodiscover_transport(mcp_server_url: str) -> tuple[str, str]:
                 if response.headers.get("content-type", "").startswith(
                     "text/event-stream"
                 ):
-                    final_url = str(response.url)
                     _LOGGER.debug("Transport autodiscovery: SSE transport detected")
-                    return TRANSPORT_SSE, final_url
+                    return TRANSPORT_SSE
     # If both methods fail, fall back to default
     _LOGGER.debug(
         "Transport autodiscovery: Failed to detect transport, using default SSE"
     )
-    return TRANSPORT_SSE, mcp_server_url
+    return TRANSPORT_SSE
 
 
 async def validate_input(
@@ -235,19 +233,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             # Autodiscover transport protocol instead of setting default
             try:
-                transport, final_url = await async_autodiscover_transport(
-                    user_input[CONF_URL]
-                )
+                transport = await async_autodiscover_transport(user_input[CONF_URL])
                 user_input[CONF_TRANSPORT] = transport
-                # Update URL if it was redirected
-                if final_url != user_input[CONF_URL]:
-                    _LOGGER.info(
-                        "URL redirected from %s to %s", user_input[CONF_URL], final_url
-                    )
-                    user_input[CONF_URL] = final_url
                 _LOGGER.info(
                     "Autodiscovered transport: %s for URL: %s",
-                    transport,
+                    user_input[CONF_TRANSPORT],
                     user_input[CONF_URL],
                 )
                 info = await validate_input(self.hass, user_input)
