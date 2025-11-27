@@ -46,6 +46,7 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .models import StatisticMeanType, StatisticPeriod
+from .queries import get_entity_disk_usage, get_entity_disk_usage_limited
 from .statistics import (
     UNIT_CLASS_TO_UNIT_CONVERTER,
     async_add_external_statistics,
@@ -59,7 +60,7 @@ from .statistics import (
     update_statistics_issues,
     validate_statistics,
 )
-from .util import PERIOD_SCHEMA, get_instance, resolve_period
+from .util import PERIOD_SCHEMA, get_instance, resolve_period, session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,14 +112,62 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
     websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
+    websocket_api.async_register_command(hass, ws_get_entity_disk_usage)
+    websocket_api.async_register_command(hass, ws_get_entity_exclusions)
     websocket_api.async_register_command(hass, ws_get_statistic_during_period)
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
+    websocket_api.async_register_command(hass, ws_update_entity_exclusions)
     websocket_api.async_register_command(hass, ws_update_statistics_issues)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
+
+
+def _get_entity_disk_usage_data(
+    hass: HomeAssistant, limit: int | None
+) -> list[dict[str, Any]]:
+    """Get entity disk usage data in the executor."""
+    with session_scope(hass=hass, read_only=True) as session:
+        if limit is not None:
+            stmt = get_entity_disk_usage_limited(limit)
+        else:
+            stmt = get_entity_disk_usage()
+        result = session.execute(stmt)
+        return [
+            {
+                "entity_id": row.entity_id,
+                "state_count": row.state_count,
+                "estimated_bytes": row.estimated_bytes or 0,
+            }
+            for row in result
+        ]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/get_entity_disk_usage",
+        vol.Optional("limit"): cv.positive_int,
+    }
+)
+@websocket_api.async_response
+async def ws_get_entity_disk_usage(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return disk usage statistics per entity.
+
+    Returns a list of entities sorted by disk usage (descending), with:
+    - entity_id: The entity identifier
+    - state_count: Number of state records
+    - estimated_bytes: Estimated disk usage in bytes
+    """
+    instance = get_instance(hass)
+    result = await instance.async_add_executor_job(
+        _get_entity_disk_usage_data, hass, msg.get("limit")
+    )
+    connection.send_result(msg["id"], result)
 
 
 def _ws_get_statistic_during_period(
@@ -601,3 +650,125 @@ def ws_import_statistics(
     else:
         async_add_external_statistics(hass, metadata, stats, _called_from_ws_api=True)
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/get_entity_exclusions",
+    }
+)
+@callback
+def ws_get_entity_exclusions(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get entity exclusions from both YAML config and storage.
+
+    Returns a dict with entity_id -> source ("yaml" or "storage") mapping.
+    """
+    instance = get_instance(hass)
+    exclusions_store = instance.exclusions_store
+
+    if exclusions_store is None:
+        connection.send_result(msg["id"], {"exclusions": {}})
+        return
+
+    # Get storage exclusions with source info
+    result = exclusions_store.get_exclusions_data()
+
+    connection.send_result(
+        msg["id"],
+        {
+            "exclusions": result,
+            "storage_exclusions": sorted(exclusions_store.excluded_entities),
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/update_entity_exclusions",
+        vol.Optional("add"): vol.All([str], vol.Length(min=1)),
+        vol.Optional("remove"): vol.All([str], vol.Length(min=1)),
+    }
+)
+@websocket_api.async_response
+async def ws_update_entity_exclusions(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Update entity exclusions in storage.
+
+    Allows adding and/or removing entities from the exclusion list.
+    Changes are persisted and take effect immediately.
+    """
+    instance = get_instance(hass)
+    exclusions_store = instance.exclusions_store
+
+    if exclusions_store is None:
+        connection.send_error(
+            msg["id"],
+            "not_initialized",
+            "Exclusions store not initialized",
+        )
+        return
+
+    add_entities = msg.get("add", [])
+    remove_entities = msg.get("remove", [])
+
+    if not add_entities and not remove_entities:
+        connection.send_error(
+            msg["id"],
+            "invalid_request",
+            "Must specify at least one entity to add or remove",
+        )
+        return
+
+    # Validate entity IDs
+    invalid_entities = [
+        entity_id
+        for entity_id in add_entities + remove_entities
+        if not valid_entity_id(entity_id)
+    ]
+
+    if invalid_entities:
+        connection.send_error(
+            msg["id"],
+            "invalid_entity_id",
+            f"Invalid entity IDs: {', '.join(invalid_entities)}",
+        )
+        return
+
+    # Check for non-existent entities (warning only)
+    entity_states = hass.states
+    warnings = [
+        f"Entity '{entity_id}' does not exist"
+        for entity_id in add_entities
+        if entity_states.get(entity_id) is None
+    ]
+
+    # Apply changes - using loops since methods have side effects
+    added = [
+        entity_id
+        for entity_id in add_entities
+        if exclusions_store.add_exclusion(entity_id)
+    ]
+    removed = [
+        entity_id
+        for entity_id in remove_entities
+        if exclusions_store.remove_exclusion(entity_id)
+    ]
+
+    # Persist changes
+    if added or removed:
+        await exclusions_store.async_save()
+
+    connection.send_result(
+        msg["id"],
+        {
+            "added": added,
+            "removed": removed,
+            "warnings": warnings,
+            "current_exclusions": sorted(exclusions_store.excluded_entities),
+        },
+    )
