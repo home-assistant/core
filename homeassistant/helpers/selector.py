@@ -23,7 +23,7 @@ from . import config_validation as cv
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
 # Reusable validator for non-empty strings
-NON_EMPTY_STRING = vol.All(cv.string, vol.Length(min=1))
+NON_EMPTY_STRING_SCHEMA = vol.All(cv.string, vol.Length(min=1))
 
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
@@ -268,7 +268,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        addon: str = vol.Schema(NON_EMPTY_STRING)(data)
+        addon: str = NON_EMPTY_STRING_SCHEMA(data)
         return addon
 
 
@@ -307,11 +307,11 @@ class AreaSelector(Selector[AreaSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            area_id: str = vol.Schema(NON_EMPTY_STRING)(data)
+            area_id: str = NON_EMPTY_STRING_SCHEMA(data)
             return area_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [vol.Schema(NON_EMPTY_STRING)(val) for val in data]
+        return [NON_EMPTY_STRING_SCHEMA(val) for val in data]
 
 
 class AssistPipelineSelectorConfig(BaseSelectorConfig, total=False):
@@ -332,7 +332,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        pipeline: str = vol.Schema(NON_EMPTY_STRING)(data)
+        pipeline: str = NON_EMPTY_STRING_SCHEMA(data)
         return pipeline
 
 
@@ -364,7 +364,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        attribute: str = vol.Schema(NON_EMPTY_STRING)(data)
+        attribute: str = NON_EMPTY_STRING_SCHEMA(data)
         return attribute
 
 
@@ -539,7 +539,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        config: str = vol.Schema(NON_EMPTY_STRING)(data)
+        config: str = NON_EMPTY_STRING_SCHEMA(data)
         return config
 
 
@@ -599,7 +599,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        agent: str = vol.Schema(NON_EMPTY_STRING)(data)
+        agent: str = NON_EMPTY_STRING_SCHEMA(data)
         return agent
 
 
@@ -925,7 +925,7 @@ class IconSelector(Selector[IconSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        icon: str = vol.Schema(NON_EMPTY_STRING)(data)
+        icon: str = NON_EMPTY_STRING_SCHEMA(data)
         return icon
 
 
@@ -1598,7 +1598,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        theme: str = vol.Schema(NON_EMPTY_STRING)(data)
+        theme: str = NON_EMPTY_STRING_SCHEMA(data)
         return theme
 
 
