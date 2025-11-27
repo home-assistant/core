@@ -3,9 +3,11 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.wled.const import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -21,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_wled")
@@ -189,3 +191,28 @@ async def test_no_current_measurement(
 
     assert hass.states.get("sensor.wled_rgb_light_max_current") is None
     assert hass.states.get("sensor.wled_rgb_light_estimated_current") is None
+
+
+async def test_fail_when_other_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Ensure no data are updated when mac address mismatch."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.state == "127.0.0.1"
+
+    device = mock_wled.update.return_value
+    device.info.mac_address = "invalid"
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.state == "unavailable"
