@@ -754,8 +754,8 @@ class ConfigEntry[_DataT = Any]:
         error_reason_translation_key = None
         error_reason_translation_placeholders = None
 
+        result = False
         try:
-            result = False
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
