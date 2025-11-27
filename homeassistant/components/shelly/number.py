@@ -108,9 +108,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         if description.mode_fn is not None:
             self._attr_mode = description.mode_fn(coordinator.device.config[key])
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
     @property
     def native_value(self) -> float | None:
         """Return value of number."""
@@ -410,9 +407,6 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         """Initialize the sleeping sensor."""
         self.restored_data: NumberExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

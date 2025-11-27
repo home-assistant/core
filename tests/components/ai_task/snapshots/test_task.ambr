@@ -6,16 +6,19 @@
         You are a Home Assistant expert and help users with their tasks.
         Current time is 15:59:00. Today's date is 2025-06-14.
       ''',
+      'created': HAFakeDatetime(2025, 6, 14, 22, 59, tzinfo=datetime.timezone.utc),
       'role': 'system',
     }),
     dict({
       'attachments': None,
       'content': 'Test prompt',
+      'created': HAFakeDatetime(2025, 6, 14, 22, 59, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'ai_task.test_task_entity',
       'content': 'Mock result',
+      'created': HAFakeDatetime(2025, 6, 14, 22, 59, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
