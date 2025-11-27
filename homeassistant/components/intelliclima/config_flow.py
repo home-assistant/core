@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -62,6 +63,9 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except IntelliClimaAPIError:
                 errors["base"] = "cannot_connect"
+            except AbortFlow:
+                # Re-raise so Home Assistant can turn this into an ABORT result
+                raise
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

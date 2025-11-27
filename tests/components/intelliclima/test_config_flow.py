@@ -131,3 +131,37 @@ async def test_form_no_devices(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IntelliClima (SuperUser)"
     assert result["data"] == DATA_CONFIG
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_cloud_interface,
+) -> None:
+    """Test creating a second config for the same account aborts."""
+
+    # First successful config entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        DATA_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "IntelliClima (SuperUser)"
+    assert result["data"] == DATA_CONFIG
+
+    # Second attempt with the same account
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        DATA_CONFIG,
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
