@@ -9,7 +9,7 @@ from homeassistant import config
 from homeassistant.components import labs
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -599,7 +599,6 @@ async def test_fail_non_numerical_number_settings(
 async def test_reload_when_labs_flag_changes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    calls: list[ServiceCall],
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
 ) -> None:
@@ -617,7 +616,7 @@ async def test_reload_when_labs_flag_changes(
                 },
                 "sensor": {
                     "name": "hello",
-                    "state": "{{ trigger.event.event_type }}",
+                    "state": "{{ trigger.event.data.stuff }}",
                 },
             }
         },
@@ -630,18 +629,21 @@ async def test_reload_when_labs_flag_changes(
     assert listeners.get("test_event2") is None
 
     context = Context()
-    hass.bus.async_fire("test_event", context=context)
+    hass.bus.async_fire("test_event", {"stuff": "foo"}, context=context)
     await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert calls[0].data.get("event") == "test_event"
+    assert hass.states.get("sensor.hello").state == "foo"
 
     test_reload_event = async_capture_events(hass, "event_template_reloaded")
 
     # Check we reload whenever the labs flag is set, even if it's already enabled
-    for enabled in (True, True, False, False):
+    last_state = "unknown"
+    for enabled, set_state in (
+        (True, "foo"),
+        (True, "bar"),
+        (False, "beer"),
+        (False, "good"),
+    ):
         test_reload_event.clear()
-        calls.clear()
 
         with patch(
             "homeassistant.config.load_yaml_config_file",
@@ -650,11 +652,11 @@ async def test_reload_when_labs_flag_changes(
                 DOMAIN: {
                     "triggers": {
                         "trigger": "event",
-                        "event_type": "test_event",
+                        "event_type": "test_event2",
                     },
                     "sensor": {
                         "name": "bye",
-                        "state": "{{ trigger.event.event_type }}",
+                        "state": "{{ trigger.event.data.stuff }}",
                     },
                 }
             },
@@ -662,7 +664,7 @@ async def test_reload_when_labs_flag_changes(
             await ws_client.send_json_auto_id(
                 {
                     "type": "labs/update",
-                    "domain": "template",
+                    "domain": "automation",
                     "preview_feature": "new_triggers_conditions",
                     "enabled": enabled,
                 }
@@ -680,11 +682,11 @@ async def test_reload_when_labs_flag_changes(
         assert listeners.get("test_event") is None
         assert listeners.get("test_event2") == 1
 
-        hass.bus.async_fire("test_event")
+        hass.bus.async_fire("test_event", {"stuff": "foo"}, context=context)
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert hass.states.get("sensor.bye").state == last_state
 
-        hass.bus.async_fire("test_event2")
+        hass.bus.async_fire("test_event2", {"stuff": set_state}, context=context)
         await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[-1].data.get("event") == "test_event2"
+        assert hass.states.get("sensor.bye").state == set_state
+        last_state = set_state

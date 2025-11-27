@@ -8,7 +8,10 @@ import logging
 from typing import Any
 
 from homeassistant import config as conf_util
-from homeassistant.components.automation import NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG
+from homeassistant.components.automation import (
+    DOMAIN as AUTOMATION_DOMAIN,
+    NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+)
 from homeassistant.components.labs import async_listen as async_labs_listen
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -95,11 +98,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def new_triggers_conditions_listener() -> None:
         """Handle new_triggers_conditions flag change."""
-        hass.services.call(DOMAIN, SERVICE_RELOAD)
+        hass.async_create_task(
+            _reload_config(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
+        )
 
     async_labs_listen(
         hass,
-        DOMAIN,
+        AUTOMATION_DOMAIN,
         NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
         new_triggers_conditions_listener,
     )
