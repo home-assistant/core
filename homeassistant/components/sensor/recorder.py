@@ -415,12 +415,13 @@ def warn_dip(
             return
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is not"
+                "Entity %s %shas state class %s, but its state is not"
                 " strictly increasing. Triggered by state %s (previous state: %s) with"
                 " last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             previous_fstate,
             state.last_updated.isoformat(),
@@ -438,11 +439,12 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         domain = entity_info["domain"] if entity_info else None
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is "
+                "Entity %s %shas state class %s, but its state is "
                 "negative. Triggered by state %s with last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
