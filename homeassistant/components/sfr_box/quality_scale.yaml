@@ -31,9 +31,7 @@ rules:
   entity-unavailable: done
   action-exceptions: done
   reauthentication-flow: done
-  parallel-updates:
-    status: todo
-    comment: Updates are managed by the coordinator, actions need it
+  parallel-updates: done
   test-coverage:
     status: todo
     comment: 93% on diagnostics / 92% on sensors, need to improve overall coverage
