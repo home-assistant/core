@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["fish_audio_sdk"],
   "quality_scale": "bronze",
-  "requirements": ["fish-audio-sdk==2025.4.2"]
+  "requirements": ["fish-audio-sdk==1.1.0"]
 }

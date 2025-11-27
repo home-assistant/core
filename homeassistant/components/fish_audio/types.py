@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from fish_audio_sdk import Session
+from fishaudio import AsyncFishAudio
 
 from homeassistant.config_entries import ConfigEntry
 
-type FishAudioConfigEntry = ConfigEntry[Session]
+type FishAudioConfigEntry = ConfigEntry[AsyncFishAudio]

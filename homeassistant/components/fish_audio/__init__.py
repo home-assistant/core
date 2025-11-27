@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from fish_audio_sdk import Session
-from fish_audio_sdk.exceptions import HttpCodeErr
+from fishaudio import AsyncFishAudio
+from fishaudio.exceptions import AuthenticationError, FishAudioError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -21,18 +21,17 @@ PLATFORMS: list[Platform] = [Platform.TTS]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FishAudioConfigEntry) -> bool:
     """Set up Fish Audio from a config entry."""
-    session = Session(entry.data[CONF_API_KEY])
+    client = AsyncFishAudio(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(session.get_api_credit)
-    except HttpCodeErr as exc:
-        if exc.status == 401:
-            raise ConfigEntryAuthFailed(f"Invalid API key: {exc.message}") from exc
-        if exc.status == 422:
-            raise ConfigEntryNotReady(f"Invalid API key: {exc.message}") from exc
-        raise ConfigEntryNotReady(f"Unknown error: {exc.message}") from exc
+        # Validate API key by getting account credits.
+        await client.account.get_credits()
+    except AuthenticationError as exc:
+        raise ConfigEntryAuthFailed(f"Invalid API key: {exc}") from exc
+    except FishAudioError as exc:
+        raise ConfigEntryNotReady(f"Error connecting to Fish Audio: {exc}") from exc
 
-    entry.runtime_data = session
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
