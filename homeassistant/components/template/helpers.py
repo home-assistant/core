@@ -46,6 +46,7 @@ from .const import (
     CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
     DOMAIN,
+    PLATFORMS,
 )
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
@@ -234,6 +235,8 @@ def create_legacy_template_issue(
     hass: HomeAssistant, config: ConfigType, domain: str
 ) -> None:
     """Create a repair for legacy template entities."""
+    if domain not in PLATFORMS:
+        return
 
     breadcrumb = "Template Entity"
     # Default entity id should be in most legacy configuration because
