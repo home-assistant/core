@@ -386,7 +386,7 @@
       "name": "Reset gateway"
     },
     "send_transparent_command": {
-      "description": "Sends custom otgw commands ({opentherm_gateway_firmware_url}) through a transparent interface.",
+      "description": "Sends custom OTGW commands ({opentherm_gateway_firmware_url}) through a transparent interface.",
       "fields": {
         "gateway_id": {
           "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]",
