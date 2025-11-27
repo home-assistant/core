@@ -94,8 +94,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud AI Task entity."""
-    cloud = hass.data[DATA_CLOUD]
-    if not cloud.is_logged_in:
+    if not (cloud := hass.data[DATA_CLOUD]).is_logged_in:
         return
     try:
         await cloud.llm.async_ensure_token()
