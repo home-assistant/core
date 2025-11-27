@@ -12,12 +12,14 @@ from aioesphomeapi import (
     AreaInfo,
     DeviceInfo,
     EncryptionPlaintextAPIError,
+    ExecuteServiceResponse,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     LogLevel,
     RequiresEncryptionAPIError,
     SubDeviceInfo,
+    SupportsResponseType,
     UserService,
     UserServiceArg,
     UserServiceArgType,
@@ -49,7 +51,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -2812,3 +2814,457 @@ async def test_no_zwave_proxy_subscribe_without_feature_flags(
 
     # Verify subscribe_zwave_proxy_request was NOT called
     mock_client.subscribe_zwave_proxy_request.assert_not_called()
+
+
+async def test_execute_service_response_type_none(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with SupportsResponseType.NONE (fire and forget)."""
+    service = UserService(
+        name="fire_forget_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.NONE,
+    )
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, "test_fire_forget_service")
+
+    # Call the service - should be fire and forget
+    await hass.services.async_call(
+        DOMAIN, "test_fire_forget_service", {"arg1": True}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    # Verify execute_service was called without call_id or on_response
+    mock_client.execute_service.assert_called_once()
+    call_args = mock_client.execute_service.call_args
+    assert call_args[0][1] == {"arg1": True}
+    # Should not have call_id or on_response kwargs for NONE type
+    assert "call_id" not in call_args[1] or call_args[1].get("call_id", 0) == 0
+
+
+async def test_execute_service_response_type_status(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with SupportsResponseType.STATUS."""
+    service = UserService(
+        name="status_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.STATUS,
+    )
+
+    # Set up mock response
+    response = ExecuteServiceResponse(
+        call_id=1,
+        success=True,
+        error_message="",
+        response_data=b"",
+    )
+
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        if on_response:
+            on_response(response)
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    # Call the service - should wait for response but not return data
+    # Note: STATUS maps to SupportsResponse.NONE so we can't use return_response=True
+    await hass.services.async_call(
+        DOMAIN, "test_status_service", {"arg1": True}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    # Verify return_response was False (STATUS doesn't need response_data)
+    call_args = mock_client.execute_service.call_args
+    assert call_args[1].get("return_response") is False
+
+
+async def test_execute_service_response_type_optional_without_return(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with SupportsResponseType.OPTIONAL when caller doesn't request response."""
+    service = UserService(
+        name="optional_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.OPTIONAL,
+    )
+
+    # Set up mock response
+    response = ExecuteServiceResponse(
+        call_id=1,
+        success=True,
+        error_message="",
+        response_data=b'{"result": "data"}',
+    )
+
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        if on_response:
+            on_response(response)
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    # Call without return_response - should still wait but not return data
+    result = await hass.services.async_call(
+        DOMAIN, "test_optional_service", {"arg1": True}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert result is None
+
+    # Verify return_response was False (caller didn't request it)
+    call_args = mock_client.execute_service.call_args
+    assert call_args[1].get("return_response") is False
+
+
+async def test_execute_service_response_type_optional_with_return(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with SupportsResponseType.OPTIONAL when caller requests response."""
+    service = UserService(
+        name="optional_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.OPTIONAL,
+    )
+
+    # Set up mock response with data
+    response = ExecuteServiceResponse(
+        call_id=1,
+        success=True,
+        error_message="",
+        response_data=b'{"result": "data"}',
+    )
+
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        if on_response:
+            on_response(response)
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    # Call with return_response=True
+    result = await hass.services.async_call(
+        DOMAIN,
+        "test_optional_service",
+        {"arg1": True},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    # Should return parsed JSON data
+    assert result == {"result": "data"}
+
+    # Verify return_response was True
+    call_args = mock_client.execute_service.call_args
+    assert call_args[1].get("return_response") is True
+
+
+async def test_execute_service_response_type_only(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with SupportsResponseType.ONLY."""
+    service = UserService(
+        name="only_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.ONLY,
+    )
+
+    # Set up mock response
+    response = ExecuteServiceResponse(
+        call_id=1,
+        success=True,
+        error_message="",
+        response_data=b'{"status": "ok", "value": 42}',
+    )
+
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        if on_response:
+            on_response(response)
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    # Call the service - ONLY type always returns data
+    result = await hass.services.async_call(
+        DOMAIN, "test_only_service", {"arg1": True}, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+
+    assert result == {"status": "ok", "value": 42}
+
+    # Verify return_response was True
+    call_args = mock_client.execute_service.call_args
+    assert call_args[1].get("return_response") is True
+
+
+async def test_execute_service_timeout(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service timeout handling."""
+    service = UserService(
+        name="slow_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.STATUS,
+    )
+
+    # Don't call on_response to simulate timeout
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        pass  # Never respond
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    # Patch timeout to be very short for testing
+    with (
+        patch(
+            "homeassistant.components.esphome.manager.asyncio.wait_for",
+            side_effect=TimeoutError(),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, "test_slow_service", {"arg1": True}, blocking=True
+        )
+
+    assert "Timeout" in str(exc_info.value)
+
+
+async def test_execute_service_connection_error(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service connection error handling."""
+    service = UserService(
+        name="error_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.NONE,
+    )
+
+    mock_client.execute_service = Mock(
+        side_effect=APIConnectionError("Connection lost")
+    )
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, "test_error_service", {"arg1": True}, blocking=True
+        )
+
+    assert "Connection lost" in str(exc_info.value)
+
+
+async def test_execute_service_connection_error_with_response(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service connection error when waiting for response."""
+    service = UserService(
+        name="error_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.STATUS,  # Uses response path
+    )
+
+    mock_client.execute_service = Mock(
+        side_effect=APIConnectionError("Connection lost")
+    )
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, "test_error_service", {"arg1": True}, blocking=True
+        )
+
+    assert "Connection lost" in str(exc_info.value)
+
+
+async def test_execute_service_failure_response(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with failure response from device."""
+    service = UserService(
+        name="failing_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.STATUS,
+    )
+
+    # Set up mock failure response
+    response = ExecuteServiceResponse(
+        call_id=1,
+        success=False,
+        error_message="Device reported error: invalid argument",
+        response_data=b"",
+    )
+
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        if on_response:
+            on_response(response)
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, "test_failing_service", {"arg1": True}, blocking=True
+        )
+
+    assert "invalid argument" in str(exc_info.value)
+
+
+async def test_service_registration_response_types(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that services are registered with correct SupportsResponse types."""
+    services = [
+        UserService(
+            name="none_service",
+            key=1,
+            args=[],
+            supports_response=SupportsResponseType.NONE,
+        ),
+        UserService(
+            name="optional_service",
+            key=2,
+            args=[],
+            supports_response=SupportsResponseType.OPTIONAL,
+        ),
+        UserService(
+            name="only_service",
+            key=3,
+            args=[],
+            supports_response=SupportsResponseType.ONLY,
+        ),
+        UserService(
+            name="status_service",
+            key=4,
+            args=[],
+            supports_response=SupportsResponseType.STATUS,
+        ),
+    ]
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=services,
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    # Verify all services are registered
+    assert hass.services.has_service(DOMAIN, "test_none_service")
+    assert hass.services.has_service(DOMAIN, "test_optional_service")
+    assert hass.services.has_service(DOMAIN, "test_only_service")
+    assert hass.services.has_service(DOMAIN, "test_status_service")
+
+    # Verify response types are correctly mapped
+    # NONE -> SupportsResponse.NONE
+    # OPTIONAL -> SupportsResponse.OPTIONAL
+    # ONLY -> SupportsResponse.ONLY
+    # STATUS -> SupportsResponse.NONE (no data returned to HA)
+    service_handlers = hass.services._services.get(DOMAIN, {})
+    assert (
+        service_handlers["test_none_service"].supports_response == SupportsResponse.NONE
+    )
+    assert (
+        service_handlers["test_optional_service"].supports_response
+        == SupportsResponse.OPTIONAL
+    )
+    assert (
+        service_handlers["test_only_service"].supports_response == SupportsResponse.ONLY
+    )
+    assert (
+        service_handlers["test_status_service"].supports_response
+        == SupportsResponse.NONE
+    )
