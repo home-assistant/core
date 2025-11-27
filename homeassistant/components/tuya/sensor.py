@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import struct
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -49,6 +48,7 @@ from .models import (
     DPCodeWrapper,
     EnumTypeData,
 )
+from .raw_data_models import ElectricityData
 
 
 class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
@@ -120,153 +120,52 @@ class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
         return raw_value.get("voltage")
 
 
-def _u24_be(value: bytes) -> int:
-    """Parse 3-byte big-endian unsigned integer.
+class _RawElectricityDataWrapper(DPCodeBase64Wrapper):
+    """Custom DPCode Wrapper for extracting ElectricityData from base64."""
 
-    Returns the integer value. Caller ensures the length is 3.
-    """
-    # struct doesn't support 3-byte directly; prepend 0x00 and unpack as uint32
-    return struct.unpack(">L", b"\x00" + value)[0]
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from T."""
+        raise NotImplementedError
 
-
-def _parse_phase_payload_v00(raw_value: bytes) -> tuple[float, float, float] | None:
-    """Parse legacy v00 8-byte payload: V(2B,0.1V) + I(3B,0.001A) + P(3B,0.001kW).
-
-    Returns (voltage_V, current_mA, power_W).
-    """
-    if len(raw_value) < 8:
-        return None
-    voltage_v = struct.unpack(">H", raw_value[0:2])[0] / 10.0
-    current_ma = float(_u24_be(raw_value[2:5]))  # 0.001A == 1 mA
-    power_w = float(_u24_be(raw_value[5:8]))  # 0.001 kW == 1 W
-    return voltage_v, current_ma, power_w
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_bytes(device)) is None or (
+            value := ElectricityData.from_bytes(raw_value)
+        ) is None:
+            return None
+        return self._convert(value)
 
 
-def _parse_phase_payload_v01_v02(raw_value: bytes) -> tuple[float, float, float] | None:
-    """Parse v01/v02 framed payloads.
-
-    Format:
-    - v01: [ver=0x01][len=0x0F][data(15 bytes)]
-    - v02: [ver=0x02][len=0x0F][data(15 bytes)][sign_bitmap(1 byte)]
-
-    Data layout (big-endian):
-    - voltage: 2B, unit 0.1 V
-    - current: 3B, unit 0.001 A (i.e., mA)
-    - active power: 3B, unit 0.001 kW (i.e., W)
-    - reactive power: 3B, unit 0.001 kVar (ignored here)
-    - apparent power: 3B, unit 0.001 kVA (ignored here)
-    - power factor: 1B, unit 0.01 (ignored here)
-
-    Sign bitmap (v02 only, 1 bit means negative):
-    bit0 current, bit1 active power, bit2 reactive, bit3 power factor.
-
-    Returns (voltage_V, current_mA, power_W) if parsed; otherwise None.
-    """
-    if len(raw_value) < 2:
-        return None
-    ver = raw_value[0]
-    if ver not in (0x01, 0x02):
-        return None
-    data_len = raw_value[1]
-    # Expect 15-byte data area for v01/v02
-    if data_len != 0x0F:
-        return None
-    expect_len = 2 + data_len + (1 if ver == 0x02 else 0)
-    if len(raw_value) < expect_len:
-        return None
-    data = raw_value[2 : 2 + data_len]
-    sign_bitmap = 0
-    if ver == 0x02:
-        sign_bitmap = raw_value[2 + data_len]
-
-    try:
-        voltage_v = struct.unpack(">H", data[0:2])[0] / 10.0
-        current_ma_val = _u24_be(data[2:5])  # mA
-        power_w_val = _u24_be(data[5:8])  # W
-
-        if ver == 0x02:
-            # bit0: current negative; bit1: active power negative
-            if sign_bitmap & 0x01:
-                current_ma_val = -current_ma_val
-            if sign_bitmap & 0x02:
-                power_w_val = -power_w_val
-
-        return voltage_v, float(current_ma_val), float(power_w_val)
-    except (struct.error, ValueError, IndexError):
-        # Defensive: return None if payload is malformed despite prior length checks
-        return None
-
-
-def _parse_phase_payload_auto(raw_value: bytes) -> tuple[float, float, float] | None:
-    """Dispatch parser for phase payload across v00/v01/v02.
-
-    Returns (voltage_V, current_mA, power_W) or None if cannot be parsed.
-    """
-    # Try framed formats first (v01/v02)
-    parsed = _parse_phase_payload_v01_v02(raw_value)
-    if parsed is not None:
-        return parsed
-    # Then try legacy 8-byte v00
-    return _parse_phase_payload_v00(raw_value)
-
-
-class _RawElectricityCurrentWrapper(DPCodeBase64Wrapper):
+class _RawElectricityCurrentWrapper(_RawElectricityDataWrapper):
     """Custom DPCode Wrapper for extracting electricity current from base64."""
 
     native_unit = UnitOfElectricCurrent.MILLIAMPERE
     suggested_unit = UnitOfElectricCurrent.AMPERE
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None:
-            return None
-        parsed = _parse_phase_payload_auto(raw_value)
-        if parsed is None:
-            # Fallback to legacy slicing if the payload is unexpected
-            if len(raw_value) >= 5:
-                return struct.unpack(">L", b"\x00" + raw_value[2:5])[0]
-            return None
-        _voltage_v, current_ma, _power_w = parsed
-        return current_ma
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.current
 
 
-class _RawElectricityPowerWrapper(DPCodeBase64Wrapper):
+class _RawElectricityPowerWrapper(_RawElectricityDataWrapper):
     """Custom DPCode Wrapper for extracting electricity power from base64."""
 
     native_unit = UnitOfPower.WATT
     suggested_unit = UnitOfPower.KILO_WATT
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None:
-            return None
-        parsed = _parse_phase_payload_auto(raw_value)
-        if parsed is None:
-            # Fallback to legacy slicing if the payload is unexpected
-            if len(raw_value) >= 8:
-                return struct.unpack(">L", b"\x00" + raw_value[5:8])[0]
-            return None
-        _voltage_v, _current_ma, power_w = parsed
-        return power_w
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.power
 
 
-class _RawElectricityVoltageWrapper(DPCodeBase64Wrapper):
+class _RawElectricityVoltageWrapper(_RawElectricityDataWrapper):
     """Custom DPCode Wrapper for extracting electricity voltage from base64."""
 
     native_unit = UnitOfElectricPotential.VOLT
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None:
-            return None
-        parsed = _parse_phase_payload_auto(raw_value)
-        if parsed is None:
-            # Fallback to legacy slicing if the payload is unexpected
-            if len(raw_value) >= 2:
-                return struct.unpack(">H", raw_value[0:2])[0] / 10.0
-            return None
-        voltage_v, _current_ma, _power_w = parsed
-        return voltage_v
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.voltage
 
 
 CURRENT_WRAPPER = (_RawElectricityCurrentWrapper, _JsonElectricityCurrentWrapper)
