@@ -112,6 +112,34 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle unexpected errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
+            return_value={"code": 1, "data": {"hassCodeToken": "test_token"}},
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
+            side_effect=RuntimeError("unexpected"),
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USER_CODE: "123456"},
+        )
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_single_instance(hass: HomeAssistant) -> None:
     """Test that only one instance can be configured."""
     entry = MockConfigEntry(
@@ -225,3 +253,27 @@ async def test_reauth_invalid_code(hass: HomeAssistant) -> None:
             assert result2["errors"] == {"base": "invalid_code"}
     finally:
         hass.config_entries.async_reload = original_reload
+
+
+async def test_form_integrate_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle integrate call raising connection errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
+            side_effect=APIError("boom"),
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USER_CODE: "123456"},
+        )
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
