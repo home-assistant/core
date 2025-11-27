@@ -394,7 +394,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
 def warn_dip(
     hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
 ) -> None:
-    """Log a warning once if a sensor with state_class_total has a decreasing value.
+    """Log a warning once if a sensor with state class TOTAL_INCREASING has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
     rounding issues with databases storing the state as a single precision float, which
@@ -430,7 +430,7 @@ def warn_dip(
 
 
 def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
-    """Log a warning once if a sensor with state_class_total has a negative value."""
+    """Log a warning once if a sensor with state class TOTAL_INCREASING has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
