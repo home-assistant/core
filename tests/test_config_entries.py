@@ -9728,6 +9728,7 @@ async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> N
     # Verify the target flow exists
     hass.config_entries.flow.async_get(result["next_flow"][1])
 
+
 async def test_canceled_exceptions_are_propagated(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
