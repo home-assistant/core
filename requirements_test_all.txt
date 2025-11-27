@@ -880,6 +880,9 @@ forecast-solar==4.2.0
 # homeassistant.components.freebox
 freebox-api==1.2.2
 
+# homeassistant.components.fressnapf_tracker
+fressnapftracker==0.1.2
+
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.0

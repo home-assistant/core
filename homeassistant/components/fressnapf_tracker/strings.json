@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "invalid_phone_number": "Please enter a valid phone number.",
+      "invalid_sms_code": "The SMS code you entered is invalid.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data::phone_number%]"
+        },
+        "data_description": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data_description::phone_number%]"
+        },
+        "description": "Re-authenticate with your Fressnapf Tracker account to refresh your credentials."
+      },
+      "reconfigure_sms_code": {
+        "data": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data::sms_code%]"
+        },
+        "data_description": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data_description::sms_code%]"
+        }
+      },
+      "sms_code": {
+        "data": {
+          "sms_code": "SMS code"
+        },
+        "data_description": {
+          "sms_code": "Enter the SMS code you received on your phone."
+        }
+      },
+      "user": {
+        "data": {
+          "phone_number": "Phone number"
+        },
+        "data_description": {
+          "phone_number": "Enter your phone number in international format (e.g., +4917612345678)."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
+      },
+      "entry_type": "Device",
+      "error": {},
+      "initiate_flow": {
+        "user": "Add device"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "serial_number": "Serial number"
+          },
+          "data_description": {
+            "serial_number": "Select the serial number of the tracker you want to add."
+          },
+          "title": "Add device"
+        }
+      }
+    }
+  }
+}
