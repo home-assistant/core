@@ -39,7 +39,10 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _box: SFRBox
-    _config: dict[str, Any] = {}
+
+    def __init__(self) -> None:
+        """Initialize SFR Box flow."""
+        self._config: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -47,6 +50,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             box = SFRBox(
                 ip=user_input[CONF_HOST], client=async_get_clientsession(self.hass)
             )
@@ -60,7 +64,6 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                     assert system_info is not None
                 await self.async_set_unique_id(system_info.mac_addr)
                 self._abort_if_unique_id_configured()
-                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
                 self._box = box
                 self._config.update(user_input)
                 return await self.async_step_choose_auth()
