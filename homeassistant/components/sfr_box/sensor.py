@@ -26,6 +26,9 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import SFRConfigEntry
 from .entity import SFRCoordinatorEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SFRBoxSensorEntityDescription[_T](SensorEntityDescription):
@@ -250,6 +253,4 @@ class SFRBoxSensor[_T](SFRCoordinatorEntity[_T], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the device."""
-        if self.coordinator.data is None:
-            return None
         return self.entity_description.value_fn(self.coordinator.data)
