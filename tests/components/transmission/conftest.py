@@ -47,6 +47,8 @@ def mock_transmission_client() -> Generator[AsyncMock]:
     ):
         client = mock_client_class.return_value
 
+        client.server_version = "4.0.5 (a6fe2a64aa)"
+
         session_stats_data = {
             "uploadSpeed": 1,
             "downloadSpeed": 1,
