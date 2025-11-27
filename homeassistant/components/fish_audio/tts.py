@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
 from typing import Any
 
-from fish_audio_sdk import TTSRequest
-from fish_audio_sdk.exceptions import HttpCodeErr
+from fishaudio.exceptions import FishAudioError, RateLimitError
 
 from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
 from homeassistant.config_entries import ConfigSubentry
@@ -57,7 +55,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
-        self.session = entry.runtime_data
+        self.client = entry.runtime_data
         self.sub_entry = sub_entry
         self._attr_unique_id = sub_entry.subentry_id
         title = sub_entry.title
@@ -106,16 +104,22 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             _LOGGER.error("Backend model not configured")
             return None, None
 
-        request = TTSRequest(text=message, reference_id=voice_id, latency=latency)
-        func = partial(self.session.tts, request=request, backend=backend)
         try:
-            response = await self.hass.async_add_executor_job(func)
-        except HttpCodeErr as err:
-            if err.code == 402:
-                _LOGGER.exception("Fish Audio TTS request failed")
-                raise HomeAssistantError(str(err)) from err
+            audio = await self.client.tts.convert(
+                text=message,
+                reference_id=voice_id,
+                latency=latency,
+                model=backend,
+                format="mp3",
+            )
+        except RateLimitError as err:
+            _LOGGER.error("Fish Audio TTS rate limited: %s", err)
+            raise HomeAssistantError(f"Rate limited: {err}") from err
+        except FishAudioError as err:
+            _LOGGER.error("Fish Audio TTS request failed: %s", err)
+            raise HomeAssistantError(f"TTS request failed: {err}") from err
         except Exception:
-            _LOGGER.exception("Fish Audio TTS request failed")
+            _LOGGER.exception("Fish Audio TTS request failed with unexpected error")
             return None, None
 
-        return "mp3", b"".join(response)
+        return "mp3", audio
