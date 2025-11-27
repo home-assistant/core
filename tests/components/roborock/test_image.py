@@ -7,7 +7,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
-from roborock import RoborockException
+from roborock import MultiMapsList, RoborockException
 from roborock.data import RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
@@ -20,6 +20,7 @@ from .conftest import FakeDevice, make_home_trait
 from .mock_data import (
     HOME_DATA,
     MAP_DATA,
+    MULTI_MAP_LIST,
     MULTI_MAP_LIST_NO_MAP_NAMES,
     ROOM_MAPPING,
     STATUS,
@@ -44,12 +45,7 @@ async def test_floorplan_image(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
-    assert sorted([state.entity_id for state in hass.states.async_all("image")]) == [
-        "image.roborock_s7_2_downstairs",
-        "image.roborock_s7_2_upstairs",
-        "image.roborock_s7_maxv_downstairs",
-        "image.roborock_s7_maxv_upstairs",
-    ]
+    assert len(hass.states.async_all("image")) == 4
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     # Load the image on demand
@@ -174,36 +170,54 @@ async def test_map_status_change(
         assert body != old_body
 
 
-async def test_empty_room_name(
+@pytest.mark.parametrize(
+    ("multi_maps_list", "expected_entity_ids"),
+    [
+        (
+            MULTI_MAP_LIST,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                "image.roborock_s7_maxv_downstairs",
+                "image.roborock_s7_maxv_upstairs",
+            },
+        ),
+        (
+            MULTI_MAP_LIST_NO_MAP_NAMES,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                # Expect default names based on map flags
+                "image.roborock_s7_maxv_map_0",
+                "image.roborock_s7_maxv_map_1",
+            },
+        ),
+    ],
+)
+async def test_image_entity_naming(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_roborock_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
+    multi_maps_list: MultiMapsList,
+    expected_entity_ids: set[str],
 ) -> None:
     """Test entity naming when no map name is set."""
+    # Override one of the vacuums multi map list response based on the
+    # test parameterization
     assert fake_vacuum.v1_properties
     fake_vacuum.v1_properties.home = make_home_trait(
-        map_info=MULTI_MAP_LIST_NO_MAP_NAMES.map_info,
+        map_info=multi_maps_list.map_info or [],
         current_map=STATUS.current_map,
         room_mapping=ROOM_MAPPING,
         rooms=HOME_DATA.rooms,
     )
 
+    # Setup the config entry
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Missing names are populated with a default name based on the map flag
-    assert sorted([state.entity_id for state in hass.states.async_all("image")]) == [
-        "image.roborock_s7_2_downstairs",
-        "image.roborock_s7_2_upstairs",
-        "image.roborock_s7_maxv_map_0",
-        "image.roborock_s7_maxv_map_1",
-    ]
-
-    # Verify the map image can be loaded.
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_map_0")
-    assert resp.status == HTTPStatus.OK
-    body = await resp.read()
-    assert body is not None
-    assert body == b"\x89PNG-001"
+    # Verify the image entities are created with the expected names
+    assert {
+        state.entity_id for state in hass.states.async_all("image")
+    } == expected_entity_ids
