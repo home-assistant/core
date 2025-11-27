@@ -1,13 +1,6 @@
 rules:
-  # Special note, doesn't fall in any of the categories below
-  # Why can the coordinator state be None? As in, I understand that it can be None if it doesn't support it, but wouldn't these coordinators not be created at all?
-
   ## Bronze
-  config-flow:
-    status: todo
-    comment: |
-      SFRBoxFlowHandler has a classvar _config. This can be dangerous
-      self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]}) can be tested at the first if statement
+  config-flow: done
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage:
