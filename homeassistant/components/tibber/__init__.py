@@ -24,7 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import DATA_HASS_CONFIG, DOMAIN
+from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    if "auth_implementation" not in entry.data:
+    if AUTH_IMPLEMENTATION not in entry.data:
         entry.async_start_reauth(hass)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

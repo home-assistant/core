@@ -200,7 +200,7 @@ async def test_full_flow_success(
     data = result["data"]
     assert data[CONF_TOKEN]["access_token"] == "mock-access-token"
     assert data[CONF_ACCESS_TOKEN] == "graphql-token"
-    assert data["auth_implementation"] == DOMAIN
+    assert data[AUTH_IMPLEMENTATION] == DOMAIN
     assert result["title"] == "Mock Name"
 
 

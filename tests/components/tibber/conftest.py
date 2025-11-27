@@ -11,7 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.tibber.const import DOMAIN
+from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -62,7 +62,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_ACCESS_TOKEN: "token",
-            "auth_implementation": DOMAIN,
+            AUTH_IMPLEMENTATION: DOMAIN,
         },
         unique_id="tibber",
     )
