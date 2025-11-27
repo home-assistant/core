@@ -20,6 +20,17 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+DOOR_LOCK_OPERATING_MODE_MAP = {
+    clusters.DoorLock.Enums.OperatingModeEnum.kNormal: "normal",
+    clusters.DoorLock.Enums.OperatingModeEnum.kVacation: "vacation",
+    clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy: "privacy",
+    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "no_remote_lock_unlock",
+    clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
+}
+DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {
+    v: k for k, v in DOOR_LOCK_OPERATING_MODE_MAP.items()
+}
+
 NUMBER_OF_RINSES_STATE_MAP = {
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "off",
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNormal: "normal",
@@ -30,6 +41,7 @@ NUMBER_OF_RINSES_STATE_MAP = {
 NUMBER_OF_RINSES_STATE_MAP_REVERSE = {
     v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()
 }
+
 PUMP_OPERATION_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kNormal: "normal",
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kMinimum: "minimum",
@@ -579,5 +591,18 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4619,),
         product_id=(4097,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="DoorLockOperatingMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="door_lock_operating_mode",
+            options=list(DOOR_LOCK_OPERATING_MODE_MAP.values()),
+            device_to_ha=DOOR_LOCK_OPERATING_MODE_MAP.get,
+            ha_to_device=DOOR_LOCK_OPERATING_MODE_MAP_REVERSE.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.DoorLock.Attributes.OperatingMode,),
     ),
 ]

@@ -66,6 +66,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    llm,
     start as ha_start,
     template,
     translation,
@@ -76,8 +77,13 @@ from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent_manager import get_agent_manager
-from .chat_log import AssistantContent, ChatLog
-from .const import DOMAIN, ConversationEntityFeature
+from .chat_log import AssistantContent, ChatLog, ToolResultContent
+from .const import (
+    DOMAIN,
+    METADATA_CUSTOM_FILE,
+    METADATA_CUSTOM_SENTENCE,
+    ConversationEntityFeature,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
@@ -91,8 +97,6 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
-METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
-METADATA_CUSTOM_FILE = "hass_custom_file"
 METADATA_FUZZY_MATCH = "hass_fuzzy_match"
 
 ERROR_SENTINEL = object()
@@ -202,10 +206,9 @@ class IntentCache:
 async def async_setup_default_agent(
     hass: HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
-    config_intents: dict[str, Any],
 ) -> None:
     """Set up entity registry listener for the default agent."""
-    agent = DefaultAgent(hass, config_intents)
+    agent = DefaultAgent(hass)
     await entity_component.async_add_entities([agent])
     await get_agent_manager(hass).async_setup_default_agent(agent)
 
@@ -230,14 +233,14 @@ class DefaultAgent(ConversationEntity):
     _attr_name = "Home Assistant"
     _attr_supported_features = ConversationEntityFeature.CONTROL
 
-    def __init__(self, hass: HomeAssistant, config_intents: dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents | object] = {}
         self._load_intents_lock = asyncio.Lock()
 
-        # intent -> [sentences]
-        self._config_intents: dict[str, Any] = config_intents
+        # Intents from common conversation config
+        self._config_intents: dict[str, Any] = {}
 
         # Sentences that will trigger a callback (skipping intent recognition)
         self._triggers_details: list[TriggerDetails] = []
@@ -428,6 +431,8 @@ class DefaultAgent(ConversationEntity):
     ) -> ConversationResult:
         """Handle a message."""
         response: intent.IntentResponse | None = None
+        tool_input: llm.ToolInput | None = None
+        tool_result: dict[str, Any] = {}
 
         # Check if a trigger matched
         if trigger_result := await self.async_recognize_sentence_trigger(user_input):
@@ -435,6 +440,16 @@ class DefaultAgent(ConversationEntity):
             response_text = await self._handle_trigger_result(
                 trigger_result, user_input
             )
+
+            # Create tool result
+            tool_input = llm.ToolInput(
+                tool_name="trigger_sentence",
+                tool_args={},
+                external=True,
+            )
+            tool_result = {
+                "response": response_text,
+            }
 
             # Convert to conversation result
             response = intent.IntentResponse(
@@ -445,8 +460,42 @@ class DefaultAgent(ConversationEntity):
         if response is None:
             # Match intents
             intent_result = await self.async_recognize_intent(user_input)
+
             response = await self._async_process_intent_result(
                 intent_result, user_input
+            )
+
+            if response.response_type != intent.IntentResponseType.ERROR:
+                assert intent_result is not None
+                assert intent_result.intent is not None
+                # Create external tool call for the intent
+                tool_input = llm.ToolInput(
+                    tool_name=intent_result.intent.name,
+                    tool_args={
+                        entity.name: entity.value or entity.text
+                        for entity in intent_result.entities_list
+                    },
+                    external=True,
+                )
+                # Create tool result from intent response
+                tool_result = llm.IntentResponseDict(response)
+
+        # Add tool call and result to chat log if we have one
+        if tool_input is not None:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
+                    agent_id=user_input.agent_id,
+                    content=None,
+                    tool_calls=[tool_input],
+                )
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                ToolResultContent(
+                    agent_id=user_input.agent_id,
+                    tool_call_id=tool_input.id,
+                    tool_name=tool_input.tool_name,
+                    tool_result=tool_result,
+                )
             )
 
         speech: str = response.speech.get("plain", {}).get("speech", "")
@@ -1035,6 +1084,14 @@ class DefaultAgent(ConversationEntity):
         # Intents have changed, so we must clear the cache
         self._intent_cache.clear()
 
+    @callback
+    def update_config_intents(self, intents: dict[str, Any]) -> None:
+        """Update config intents."""
+        self._config_intents = intents
+
+        # Intents have changed, so we must clear the cache
+        self._intent_cache.clear()
+
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
@@ -1159,33 +1216,10 @@ class DefaultAgent(ConversationEntity):
                     custom_sentences_path,
                 )
 
-        # Load sentences from HA config for default language only
-        if self._config_intents and (
-            self.hass.config.language in (language, language_variant)
-        ):
-            hass_config_path = self.hass.config.path()
-            merge_dict(
-                intents_dict,
-                {
-                    "intents": {
-                        intent_name: {
-                            "data": [
-                                {
-                                    "sentences": sentences,
-                                    "metadata": {
-                                        METADATA_CUSTOM_SENTENCE: True,
-                                        METADATA_CUSTOM_FILE: hass_config_path,
-                                    },
-                                }
-                            ]
-                        }
-                        for intent_name, sentences in self._config_intents.items()
-                    }
-                },
-            )
-            _LOGGER.debug(
-                "Loaded intents from configuration.yaml",
-            )
+        merge_dict(
+            intents_dict,
+            self._config_intents,
+        )
 
         if not intents_dict:
             return None

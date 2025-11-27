@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ollama
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -461,6 +461,27 @@ async def test_subentry_reconfigure_with_download(
         ollama.CONF_NUM_CTX: 8192.0,
         ollama.CONF_THINK: True,
     }
+
+
+async def test_filter_invalid_llms(
+    hass: HomeAssistant,
+    mock_init_component,
+    mock_config_entry_with_assist_invalid_api: MockConfigEntry,
+) -> None:
+    """Test reconfiguring subentry when one of the configured LLM APIs has been removed."""
+    subentry = next(iter(mock_config_entry_with_assist_invalid_api.subentries.values()))
+
+    assert len(subentry.data.get(CONF_LLM_HASS_API)) == 2
+    assert "invalid_api" in subentry.data.get(CONF_LLM_HASS_API)
+    assert "assist" in subentry.data.get(CONF_LLM_HASS_API)
+
+    valid_apis = ollama.config_flow.filter_invalid_llm_apis(
+        hass, subentry.data[CONF_LLM_HASS_API]
+    )
+
+    assert len(valid_apis) == 1
+    assert "invalid_api" not in valid_apis
+    assert "assist" in valid_apis
 
 
 async def test_creating_ai_task_subentry(
