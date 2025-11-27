@@ -25,10 +25,7 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: todo
-    comment: |
-      Remove the torrent attributes/configuration and change to a get_torrents service.
+  docs-configuration-parameters: todo
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
