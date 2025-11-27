@@ -40,10 +40,10 @@ rules:
   integration-owner: done
   docs-installation-parameters:
     status: todo
-    comment: Under review
+    comment: not yet documented
   docs-configuration-parameters:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: No options flow
 
   ## Gold
   entity-translations: done
@@ -58,7 +58,7 @@ rules:
   diagnostics: done
   exception-translations:
     status: todo
-    comment: not yet done
+    comment: not yet documented
   icon-translations: done
   reconfiguration-flow:
     status: todo
@@ -70,25 +70,21 @@ rules:
   repair-issues: done
   docs-use-cases:
     status: todo
-    comment: Under review
-  docs-supported-devices:
-    status: todo
-    comment: Under review
-  docs-supported-functions:
-    status: todo
-    comment: Under review
+    comment: not yet documented
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-data-update:
     status: todo
-    comment: Under review
+    comment: not yet documented
   docs-known-limitations:
     status: todo
-    comment: Under review
+    comment: not yet documented
   docs-troubleshooting:
     status: todo
-    comment: Under review
+    comment: not yet documented
   docs-examples:
     status: todo
-    comment: Under review
+    comment: not yet documented
 
   ## Platinum
   async-dependency:
