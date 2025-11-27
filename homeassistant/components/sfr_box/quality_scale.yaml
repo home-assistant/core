@@ -5,9 +5,7 @@ rules:
   unique-config-entry: done
   config-flow-test-coverage:
     status: todo
-    comment: |
-      - test_config_flow_skip_auth -> I'd split the happy from the not happy flows
-      - We should test created mac address
+    comment: We should test created mac address
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -40,7 +38,6 @@ rules:
     status: todo
     comment: |
       - 93% on diagnostics / 92% on sensors, need to improve overall coverage
-      - you can use load_json_object_fixture
       - It would be nice to use the snapshot helper as currently it would just throw everything in a list
       - We also test the devices in each platform, kinda overkill
       - assert not hass.data.get(DOMAIN) not needed
