@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import labs, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.labs import async_listen as async_labs_listen
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -116,6 +117,10 @@ SERVICE_TRIGGER = "trigger"
 
 NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
+_EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "light",
+}
+
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
@@ -128,6 +133,19 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "text",
     "vacuum",
 }
+
+
+@callback
+def is_disabled_experimental_condition(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental condition platform."""
+    return (
+        platform in _EXPERIMENTAL_CONDITION_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
 
 
 @callback
@@ -343,6 +361,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RELOAD,
         reload_helper.execute_service,
         schema=vol.Schema({vol.Optional(CONF_ID): str}),
+    )
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        hass.async_create_task(
+            reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
+        )
+
+    async_labs_listen(
+        hass,
+        DOMAIN,
+        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
     )
 
     websocket_api.async_register_command(hass, websocket_config)
