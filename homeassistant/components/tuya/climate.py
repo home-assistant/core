@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -24,16 +24,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
-from .entity import TuyaEntity
-from .models import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    IntegerTypeData,
-    find_dpcode,
+from .const import (
+    CELSIUS_ALIASES,
+    FAHRENHEIT_ALIASES,
+    TUYA_DISCOVERY_NEW,
+    DeviceCategory,
+    DPCode,
 )
-from .util import get_dpcode
+from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -92,6 +91,84 @@ CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
 }
 
 
+def _get_temperature_wrapper(
+    wrappers: list[DPCodeIntegerWrapper | None], aliases: set[str]
+) -> DPCodeIntegerWrapper | None:
+    """Return first wrapper with matching unit."""
+    return next(
+        (
+            wrapper
+            for wrapper in wrappers
+            if wrapper is not None
+            and (unit := wrapper.type_information.unit)
+            and unit.lower() in aliases
+        ),
+        None,
+    )
+
+
+def _get_temperature_wrappers(
+    device: CustomerDevice, system_temperature_unit: UnitOfTemperature
+) -> tuple[DPCodeIntegerWrapper | None, DPCodeIntegerWrapper | None, UnitOfTemperature]:
+    """Get temperature wrappers for current and set temperatures."""
+    # Get all possible temperature dpcodes
+    temp_current = DPCodeIntegerWrapper.find_dpcode(
+        device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP)
+    )
+    temp_current_f = DPCodeIntegerWrapper.find_dpcode(
+        device, (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F)
+    )
+    temp_set = DPCodeIntegerWrapper.find_dpcode(
+        device, DPCode.TEMP_SET, prefer_function=True
+    )
+    temp_set_f = DPCodeIntegerWrapper.find_dpcode(
+        device, DPCode.TEMP_SET_F, prefer_function=True
+    )
+
+    # Get wrappers for celsius and fahrenheit
+    # We need to check the unit of measurement
+    current_celsius = _get_temperature_wrapper(
+        [temp_current, temp_current_f], CELSIUS_ALIASES
+    )
+    current_fahrenheit = _get_temperature_wrapper(
+        [temp_current_f, temp_current], FAHRENHEIT_ALIASES
+    )
+    set_celsius = _get_temperature_wrapper([temp_set, temp_set_f], CELSIUS_ALIASES)
+    set_fahrenheit = _get_temperature_wrapper(
+        [temp_set_f, temp_set], FAHRENHEIT_ALIASES
+    )
+
+    # Return early if we have the right wrappers for the system unit
+    if system_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if (
+            (current_fahrenheit and set_fahrenheit)
+            or (current_fahrenheit and not set_celsius)
+            or (set_fahrenheit and not current_celsius)
+        ):
+            return current_fahrenheit, set_fahrenheit, UnitOfTemperature.FAHRENHEIT
+    if (
+        (current_celsius and set_celsius)
+        or (current_celsius and not set_fahrenheit)
+        or (set_celsius and not current_fahrenheit)
+    ):
+        return current_celsius, set_celsius, UnitOfTemperature.CELSIUS
+
+    # If we don't have the right wrappers, return whatever is available
+    # and assume system unit
+    if system_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        return (
+            temp_current_f or temp_current,
+            temp_set_f or temp_set,
+            UnitOfTemperature.FAHRENHEIT,
+        )
+
+    return (
+        temp_current or temp_current_f,
+        temp_set or temp_set_f,
+        UnitOfTemperature.CELSIUS,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -107,15 +184,18 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if device and device.category in CLIMATE_DESCRIPTIONS:
+                temperature_wrappers = _get_temperature_wrappers(
+                    device, hass.config.units.temperature_unit
+                )
                 entities.append(
                     TuyaClimateEntity(
                         device,
                         manager,
                         CLIMATE_DESCRIPTIONS[device.category],
-                        hass.config.units.temperature_unit,
                         current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, DPCode.HUMIDITY_CURRENT
                         ),
+                        current_temperature_wrapper=temperature_wrappers[0],
                         fan_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device,
                             (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
@@ -124,12 +204,23 @@ async def async_setup_entry(
                         hvac_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, DPCode.MODE, prefer_function=True
                         ),
+                        set_temperature_wrapper=temperature_wrappers[1],
+                        swing_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                            device, (DPCode.SWING, DPCode.SHAKE), prefer_function=True
+                        ),
+                        swing_h_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.SWITCH_HORIZONTAL, prefer_function=True
+                        ),
+                        swing_v_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.SWITCH_VERTICAL, prefer_function=True
+                        ),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
                         target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, DPCode.HUMIDITY_SET, prefer_function=True
                         ),
+                        temperature_unit=temperature_wrappers[2],
                     )
                 )
         async_add_entities(entities)
@@ -144,9 +235,7 @@ async def async_setup_entry(
 class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     """Tuya Climate Device."""
 
-    _current_temperature: IntegerTypeData | None = None
     _hvac_to_tuya: dict[str, str]
-    _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
 
@@ -155,13 +244,18 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
-        system_temperature_unit: UnitOfTemperature,
         *,
         current_humidity_wrapper: _RoundedIntegerWrapper | None,
+        current_temperature_wrapper: DPCodeIntegerWrapper | None,
         fan_mode_wrapper: DPCodeEnumWrapper | None,
         hvac_mode_wrapper: DPCodeEnumWrapper | None,
+        set_temperature_wrapper: DPCodeIntegerWrapper | None,
+        swing_wrapper: DPCodeBooleanWrapper | None,
+        swing_h_wrapper: DPCodeBooleanWrapper | None,
+        swing_v_wrapper: DPCodeBooleanWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
         target_humidity_wrapper: _RoundedIntegerWrapper | None,
+        temperature_unit: UnitOfTemperature,
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
@@ -169,78 +263,26 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         super().__init__(device, device_manager)
         self._current_humidity_wrapper = current_humidity_wrapper
+        self._current_temperature = current_temperature_wrapper
         self._fan_mode_wrapper = fan_mode_wrapper
         self._hvac_mode_wrapper = hvac_mode_wrapper
+        self._set_temperature = set_temperature_wrapper
+        self._swing_wrapper = swing_wrapper
+        self._swing_h_wrapper = swing_h_wrapper
+        self._swing_v_wrapper = swing_v_wrapper
         self._switch_wrapper = switch_wrapper
         self._target_humidity_wrapper = target_humidity_wrapper
-
-        # If both temperature values for celsius and fahrenheit are present,
-        # use whatever the device is set to, with a fallback to celsius.
-        prefered_temperature_unit = None
-        if all(
-            dpcode in device.status
-            for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_CURRENT_F)
-        ) or all(
-            dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
-        ):
-            prefered_temperature_unit = UnitOfTemperature.CELSIUS
-            if any(
-                "f" in device.status[dpcode].lower()
-                for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
-                if isinstance(device.status.get(dpcode), str)
-            ):
-                prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
-
-        # Default to System Temperature Unit
-        self._attr_temperature_unit = system_temperature_unit
-
-        # Figure out current temperature, use preferred unit or what is available
-        celsius_type = find_dpcode(
-            self.device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
-        )
-        fahrenheit_type = find_dpcode(
-            self.device,
-            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F),
-            dptype=DPType.INTEGER,
-        )
-        if fahrenheit_type and (
-            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
-            or (
-                prefered_temperature_unit == UnitOfTemperature.CELSIUS
-                and not celsius_type
-            )
-        ):
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-            self._current_temperature = fahrenheit_type
-        elif celsius_type:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-            self._current_temperature = celsius_type
-
-        # Figure out setting temperature, use preferred unit or what is available
-        celsius_type = find_dpcode(
-            self.device, DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
-        )
-        fahrenheit_type = find_dpcode(
-            self.device, DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
-        )
-        if fahrenheit_type and (
-            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
-            or (
-                prefered_temperature_unit == UnitOfTemperature.CELSIUS
-                and not celsius_type
-            )
-        ):
-            self._set_temperature = fahrenheit_type
-        elif celsius_type:
-            self._set_temperature = celsius_type
+        self._attr_temperature_unit = temperature_unit
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_scaled
-            self._attr_min_temp = self._set_temperature.min_scaled
-            self._attr_target_temperature_step = self._set_temperature.step_scaled
+            self._attr_max_temp = self._set_temperature.type_information.max_scaled
+            self._attr_min_temp = self._set_temperature.type_information.min_scaled
+            self._attr_target_temperature_step = (
+                self._set_temperature.type_information.step_scaled
+            )
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
@@ -282,24 +324,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_fan_modes = fan_mode_wrapper.type_information.range
 
         # Determine swing modes
-        if get_dpcode(
-            self.device,
-            (
-                DPCode.SHAKE,
-                DPCode.SWING,
-                DPCode.SWITCH_HORIZONTAL,
-                DPCode.SWITCH_VERTICAL,
-            ),
-        ):
+        if swing_wrapper or swing_h_wrapper or swing_v_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
-            if get_dpcode(self.device, (DPCode.SHAKE, DPCode.SWING)):
+            if swing_wrapper:
                 self._attr_swing_modes.append(SWING_ON)
 
-            if get_dpcode(self.device, DPCode.SWITCH_HORIZONTAL):
+            if swing_h_wrapper:
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if get_dpcode(self.device, DPCode.SWITCH_VERTICAL):
+            if swing_v_wrapper:
                 self._attr_swing_modes.append(SWING_VERTICAL)
 
         if switch_wrapper:
@@ -336,66 +370,40 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Set new target humidity."""
         await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
 
-    def set_swing_mode(self, swing_mode: str) -> None:
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        # The API accepts these all at once and will ignore the codes
-        # that don't apply to the device being controlled.
-        self._send_command(
-            [
-                {
-                    "code": DPCode.SHAKE,
-                    "value": swing_mode == SWING_ON,
-                },
-                {
-                    "code": DPCode.SWING,
-                    "value": swing_mode == SWING_ON,
-                },
-                {
-                    "code": DPCode.SWITCH_VERTICAL,
-                    "value": swing_mode in (SWING_BOTH, SWING_VERTICAL),
-                },
-                {
-                    "code": DPCode.SWITCH_HORIZONTAL,
-                    "value": swing_mode in (SWING_BOTH, SWING_HORIZONTAL),
-                },
-            ]
-        )
+        commands = []
+        if self._swing_wrapper:
+            commands.append(
+                self._swing_wrapper.get_update_command(
+                    self.device, swing_mode == SWING_ON
+                )
+            )
+        if self._swing_v_wrapper:
+            commands.append(
+                self._swing_v_wrapper.get_update_command(
+                    self.device, swing_mode in (SWING_BOTH, SWING_VERTICAL)
+                )
+            )
+        if self._swing_h_wrapper:
+            commands.append(
+                self._swing_h_wrapper.get_update_command(
+                    self.device, swing_mode in (SWING_BOTH, SWING_HORIZONTAL)
+                )
+            )
+        if commands:
+            await self._async_send_commands(commands)
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if TYPE_CHECKING:
-            # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
-            assert self._set_temperature is not None
-
-        self._send_command(
-            [
-                {
-                    "code": self._set_temperature.dpcode,
-                    "value": round(
-                        self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
-                    ),
-                }
-            ]
+        await self._async_send_dpcode_update(
+            self._set_temperature, kwargs[ATTR_TEMPERATURE]
         )
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._current_temperature is None:
-            return None
-
-        temperature = self.device.status.get(self._current_temperature.dpcode)
-        if temperature is None:
-            return None
-
-        if self._current_temperature.scale == 0 and self._current_temperature.step != 1:
-            # The current temperature can have a scale of 0 or 1 and is used for
-            # rounding, Home Assistant doesn't need to round but we will always
-            # need to divide the value by 10^1 in case of 0 as scale.
-            # https://developer.tuya.com/en/docs/iot/shift-temperature-scale-follow-the-setting-of-app-account-center?id=Ka9qo7so58efq#title-7-Round%20values
-            temperature = temperature / 10
-
-        return self._current_temperature.scale_value(temperature)
+        return self._read_wrapper(self._current_temperature)
 
     @property
     def current_humidity(self) -> int | None:
@@ -405,14 +413,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        if self._set_temperature is None:
-            return None
-
-        temperature = self.device.status.get(self._set_temperature.dpcode)
-        if temperature is None:
-            return None
-
-        return self._set_temperature.scale_value(temperature)
+        return self._read_wrapper(self._set_temperature)
 
     @property
     def target_humidity(self) -> int | None:
@@ -458,13 +459,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str:
         """Return swing mode."""
-        if any(
-            self.device.status.get(dpcode) for dpcode in (DPCode.SHAKE, DPCode.SWING)
-        ):
+        if self._read_wrapper(self._swing_wrapper):
             return SWING_ON
 
-        horizontal = self.device.status.get(DPCode.SWITCH_HORIZONTAL)
-        vertical = self.device.status.get(DPCode.SWITCH_VERTICAL)
+        horizontal = self._read_wrapper(self._swing_h_wrapper)
+        vertical = self._read_wrapper(self._swing_v_wrapper)
         if horizontal and vertical:
             return SWING_BOTH
         if horizontal:
