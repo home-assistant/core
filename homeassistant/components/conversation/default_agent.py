@@ -66,6 +66,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    llm,
     start as ha_start,
     template,
     translation,
@@ -76,7 +77,7 @@ from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent_manager import get_agent_manager
-from .chat_log import AssistantContent, ChatLog
+from .chat_log import AssistantContent, ChatLog, ToolResultContent
 from .const import (
     DOMAIN,
     METADATA_CUSTOM_FILE,
@@ -430,6 +431,8 @@ class DefaultAgent(ConversationEntity):
     ) -> ConversationResult:
         """Handle a message."""
         response: intent.IntentResponse | None = None
+        tool_input: llm.ToolInput | None = None
+        tool_result: dict[str, Any] = {}
 
         # Check if a trigger matched
         if trigger_result := await self.async_recognize_sentence_trigger(user_input):
@@ -437,6 +440,16 @@ class DefaultAgent(ConversationEntity):
             response_text = await self._handle_trigger_result(
                 trigger_result, user_input
             )
+
+            # Create tool result
+            tool_input = llm.ToolInput(
+                tool_name="trigger_sentence",
+                tool_args={},
+                external=True,
+            )
+            tool_result = {
+                "response": response_text,
+            }
 
             # Convert to conversation result
             response = intent.IntentResponse(
@@ -447,8 +460,42 @@ class DefaultAgent(ConversationEntity):
         if response is None:
             # Match intents
             intent_result = await self.async_recognize_intent(user_input)
+
             response = await self._async_process_intent_result(
                 intent_result, user_input
+            )
+
+            if response.response_type != intent.IntentResponseType.ERROR:
+                assert intent_result is not None
+                assert intent_result.intent is not None
+                # Create external tool call for the intent
+                tool_input = llm.ToolInput(
+                    tool_name=intent_result.intent.name,
+                    tool_args={
+                        entity.name: entity.value or entity.text
+                        for entity in intent_result.entities_list
+                    },
+                    external=True,
+                )
+                # Create tool result from intent response
+                tool_result = llm.IntentResponseDict(response)
+
+        # Add tool call and result to chat log if we have one
+        if tool_input is not None:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
+                    agent_id=user_input.agent_id,
+                    content=None,
+                    tool_calls=[tool_input],
+                )
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                ToolResultContent(
+                    agent_id=user_input.agent_id,
+                    tool_call_id=tool_input.id,
+                    tool_name=tool_input.tool_name,
+                    tool_result=tool_result,
+                )
             )
 
         speech: str = response.speech.get("plain", {}).get("speech", "")
