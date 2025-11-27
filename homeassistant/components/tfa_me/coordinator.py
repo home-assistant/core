@@ -102,7 +102,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             if self.first_init < 2:
                 self.first_init += 1
 
-            # values are available with self.coordinator.data[self.entity_id]["keyword"]
+            # values are available at self.coordinator.data[self.entity_id]["keyword"]
             return parsed_data
 
     def json_to_entities(self, json_data: dict) -> Any:

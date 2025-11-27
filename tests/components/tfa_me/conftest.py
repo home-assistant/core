@@ -73,8 +73,8 @@ def tfa_me_mock_coordinator():
     coordinator.host = "192.168.1.10"
     coordinator.name_with_station_id = False
     coordinator.sensor_entity_list = []
-
     now = datetime.now().timestamp()
+    # Some entities used for 100% test coverage
     coordinator.data = {
         "sensor.017654321_a01234567_temperature": {
             "sensor_id": "a01234567",
@@ -83,88 +83,6 @@ def tfa_me_mock_coordinator():
             "measurement": "temperature",
             "value": "23.5",
             "unit": "°C",
-            "timestamp": "2025-09-01T08:46:01Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a6f169ad1_rssi": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "rssi",
-            "value": "233",
-            "unit": "/255",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a6f169ad1_lowbatt": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "lowbatt",
-            "value": "1",
-            "unit": "",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a6f169ad1_temperature": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "temperature",
-            "value": "24.7",
-            "unit": "°C",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a6f169ad1_humidity": {
-            "sensor_id": "a6f169ad1",
-            "gateway_id": "017654321",
-            "sensor_name": "A6F169AD1",
-            "measurement": "humidity",
-            "value": "50",
-            "unit": "%",
-            "timestamp": "2025-09-02T09:15:13Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a364f3d67_rssi": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "017654321",
-            "sensor_name": "A364F3D67",
-            "measurement": "rssi",
-            "value": "232",
-            "unit": "/255",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a364f3d67_lowbatt": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "017654321",
-            "sensor_name": "A364F3D67",
-            "measurement": "lowbatt",
-            "value": "0",
-            "unit": "",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a364f3d67_lowbatt_txt": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "99fffff9d",
-            "sensor_name": "A364F3D67",
-            "measurement": "lowbatt_text",
-            "value": "0",
-            "text": "No",
-            "uint": "",
-            "timestamp": "2025-09-02T09:12:33Z",
-            "ts": int(now),
-        },
-        "sensor.017654321_a364f3d67_temperature": {
-            "sensor_id": "a364f3d67",
-            "gateway_id": "017654321",
-            "sensor_name": "A364F3D67",
-            "measurement": "temperature",
-            "value": "24.5",
-            "unit": "°C",
-            "timestamp": "2025-09-02T09:12:33Z",
             "ts": int(now),
         },
         "sensor.017654321_a2ffffffb_wind_direction": {
@@ -174,7 +92,6 @@ def tfa_me_mock_coordinator():
             "measurement": "wind_direction",
             "value": "8",
             "unit": "°",
-            "timestamp": "2025-09-02T09:15:11Z",
             "ts": int(now),
         },
         "sensor.017654321_a2ffffffb_wind_direction_deg": {
@@ -184,7 +101,6 @@ def tfa_me_mock_coordinator():
             "measurement": "wind_direction_deg",
             "value": "8",
             "unit": "°",
-            "timestamp": "2025-09-02T09:15:11Z",
             "ts": int(now),
         },
         "sensor.017654321_a2ffffffc_wind_direction_deg": {
@@ -192,9 +108,8 @@ def tfa_me_mock_coordinator():
             "gateway_id": "017654321",
             "sensor_name": "A2FFFFFFC",
             "measurement": "wind_direction_deg",
-            "value": "xxx",
+            "value": "xxx",  # Set to invalid value
             "unit": "°",
-            "timestamp": "2025-09-02T09:15:11Z",
             "ts": int(now),
         },
         "sensor.017654321_a2ffffffc_rssi": {
@@ -204,8 +119,7 @@ def tfa_me_mock_coordinator():
             "measurement": "rssi",
             "value": "222",
             "unit": "/255",
-            "timestamp": "2025-09-02T09:15:11Z",
-            "ts": int(now) - 1000000,  # old
+            "ts": int(now) - 1000000,  # Set to old value
         },
         "sensor.017654321_a1fffffea_rain": {
             "sensor_id": "a1fffffea",
@@ -214,7 +128,6 @@ def tfa_me_mock_coordinator():
             "measurement": "rain_1_hour",
             "value": "7.4",
             "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
             "ts": int(now),
             "reset_rain": False,
         },
@@ -225,7 +138,6 @@ def tfa_me_mock_coordinator():
             "measurement": "rain_1_hour",
             "value": "7.4",
             "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
             "ts": int(now),
             "reset_rain": True,
         },
@@ -236,7 +148,6 @@ def tfa_me_mock_coordinator():
             "measurement": "rain_1_hour",
             "value": "7.4",
             "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
             "ts": int(now) - 60,
             "reset_rain": False,
         },
@@ -247,19 +158,8 @@ def tfa_me_mock_coordinator():
             "measurement": "rain_24_hours",
             "value": "7.4",
             "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
             "ts": int(now) - 60,
             "reset_rain": False,
-        },
-        "sensor.017654321_a1fffffeb_rain_hour": {
-            "sensor_id": "a1fffffeb",
-            "gateway_id": "017654321",
-            "sensor_name": "A1FFFFFEB",
-            "measurement": "rain_1_hour",
-            "unit": "mm",
-            "timestamp": "2025-09-02T07:36:30Z",
-            "ts": int(now),
-            "reset_rain": True,
         },
         "sensor.017654321_a1fffffea_rain_24hours": {
             "sensor_id": "a1fffffea",
@@ -268,7 +168,6 @@ def tfa_me_mock_coordinator():
             "measurement": "rain_24_hours",
             "value": "7.4",
             "unit": "mm",
-            "timestamp": "2025-09-02T09:36:28Z",
             "ts": int(now),
             "reset_rain": True,
         },
@@ -279,7 +178,6 @@ def tfa_me_mock_coordinator():
             "measurement": "barometric_pressure",
             "value": "1000.1",
             "unit": "hPa",
-            "timestamp": "2025-09-02T10:31:42Z",
             "ts": int(now),
             "info": "",
         },
@@ -289,22 +187,15 @@ def tfa_me_mock_coordinator():
             "sensor_name": "057654322",
             "value": "1000.1",
             "unit": "hPa",
-            "timestamp": "2025-09-02T10:31:42Z",
             "ts": int(now),
-        },
-        "sensor.017654321_a057654323_barometric_pressure": {
-            "sensor_id": "057654323",
-            "gateway_id": "057654323",
-            "sensor_name": "057654323",
-            "value": "1000.1",
-            "timestamp": "2025-09-02T10:31:42Z",
-            "ts": int(now),
+            # "measurement" missing
         },
     }
 
     return coordinator
 
 
+# Original JSON data from a TFA.me station for snapahot testing
 FAKE_JSON = {
     "gateway_id": "05B3E4E44",
     "sensors": [
@@ -371,18 +262,6 @@ FAKE_JSON = {
             },
         },
         {
-            "sensor_id": "a0c1bb88e",
-            "name": "A0C1BB88E",
-            "timestamp": "2025-11-26T15:06:56Z",
-            "ts": "1764169616",
-            "measurements": {
-                "rssi": {"value": "226", "unit": "/255"},
-                "lowbatt": {"value": "1", "unit": "Yes"},
-                "temperature": {"value": "24.4", "unit": "°C"},
-                "humidity": {"value": "38", "unit": "%"},
-            },
-        },
-        {
             "sensor_id": "05b3e4e44",
             "name": "05B3E4E44",
             "timestamp": "2025-11-26T15:07:26Z",
@@ -396,39 +275,6 @@ FAKE_JSON = {
             },
         },
         {
-            "sensor_id": "a57a989b1",
-            "name": "A57A989B1",
-            "timestamp": "2025-11-26T15:09:39Z",
-            "ts": "1764169779",
-            "measurements": {
-                "rssi": {"value": "225", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
-                "temperature": {"value": "22.8", "unit": "°C"},
-            },
-        },
-        {
-            "sensor_id": "a1fffffdc",
-            "name": "A1FFFFFDC",
-            "timestamp": "2025-11-26T14:13:32Z",
-            "ts": "1764166412",
-            "measurements": {
-                "rssi": {"value": "217", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
-                "rain": {"value": "75.9", "unit": "mm"},
-            },
-        },
-        {
-            "sensor_id": "a1ffffff1",
-            "name": "A1FFFFFF1",
-            "timestamp": "2025-11-26T13:17:44Z",
-            "ts": "1764163064",
-            "measurements": {
-                "rssi": {"value": "170", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
-                "rain": {"value": "0.0", "unit": "mm"},
-            },
-        },
-        {
             "sensor_id": "a1fffffea",
             "name": "A1FFFFFEA",
             "timestamp": "2025-11-26T15:01:57Z",
@@ -437,29 +283,6 @@ FAKE_JSON = {
                 "rssi": {"value": "192", "unit": "/255"},
                 "lowbatt": {"value": "0", "unit": "No"},
                 "rain": {"value": "7.4", "unit": "mm"},
-            },
-        },
-        {
-            "sensor_id": "a51a4e079",
-            "name": "A51A4E079",
-            "timestamp": "2025-11-26T15:07:32Z",
-            "ts": "1764169652",
-            "measurements": {
-                "rssi": {"value": "226", "unit": "/255"},
-                "lowbatt": {"value": "1", "unit": "Yes"},
-                "temperature": {"value": "19.2", "unit": "°C"},
-            },
-        },
-        {
-            "sensor_id": "a6ffffff1",
-            "name": "A6FFFFFF1",
-            "timestamp": "2025-11-26T15:11:24Z",
-            "ts": "1764169884",
-            "measurements": {
-                "rssi": {"value": "214", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
-                "temperature": {"value": "21.5", "unit": "°C"},
-                "humidity": {"value": "60", "unit": "%"},
             },
         },
     ],

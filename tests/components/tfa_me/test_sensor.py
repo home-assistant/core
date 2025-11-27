@@ -197,7 +197,7 @@ async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
     entity_3 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffc",
-        entity_id="sensor.a2ffffffc_wind_direction_deg",
+        entity_id="sensor.017654321_a2ffffffc_wind_direction_deg",
     )
     assert entity_3.native_value is None
 
@@ -205,7 +205,7 @@ async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
     entity_4 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffc",
-        entity_id="sensor.a2ffffffc_rssi",
+        entity_id="sensor.017654321_a2ffffffc_rssi",
     )
     assert entity_4.native_value is None
     # Test: Wrong ID
