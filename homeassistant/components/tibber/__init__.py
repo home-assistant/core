@@ -77,7 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if "auth_implementation" not in entry.data:
         entry.async_start_reauth(hass)
-        return False
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="data_api_reauth_required",
+        )
 
     tibber_connection = tibber.Tibber(
         access_token=entry.data[CONF_ACCESS_TOKEN],

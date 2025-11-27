@@ -191,9 +191,8 @@ async def test_full_flow_success(
     data_api_client.get_userinfo = AsyncMock(return_value={"name": "Mock Name"})
 
     with patch(
-        "homeassistant.components.tibber.config_flow.TibberDataAPI",
+        "homeassistant.components.tibber.config_flow.tibber_data_api.TibberDataAPI",
         return_value=data_api_client,
-        create=True,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
