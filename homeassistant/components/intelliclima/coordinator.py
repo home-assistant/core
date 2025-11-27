@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for IntelliClima."""
 
-from datetime import timedelta
-
 from pyintelliclima import IntelliClimaAPI, IntelliClimaAPIError, IntelliClimaDevices
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,11 +22,10 @@ class IntelliClimaCoordinator(DataUpdateCoordinator[IntelliClimaDevices]):
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=DEFAULT_SCAN_INTERVAL,
             config_entry=entry,
         )
         self.api = api
-        self.data = IntelliClimaDevices.empty()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator - called once during first refresh."""
