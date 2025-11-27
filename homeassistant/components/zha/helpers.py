@@ -130,6 +130,7 @@ from .const import (
     ATTR_CLUSTER_NAME,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_NAMES,
+    ATTR_EXPOSES_FEATURES,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
@@ -140,7 +141,6 @@ from .const import (
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
-    ATTR_QUIRK_ID,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
@@ -341,7 +341,7 @@ class ZHADeviceProxy(EventBase):
             ATTR_NAME: self.device.name or ieee,
             ATTR_QUIRK_APPLIED: self.device.quirk_applied,
             ATTR_QUIRK_CLASS: self.device.quirk_class,
-            ATTR_QUIRK_ID: self.device.quirk_id,
+            ATTR_EXPOSES_FEATURES: self.device.exposes_features,
             ATTR_MANUFACTURER_CODE: self.device.manufacturer_code,
             ATTR_POWER_SOURCE: self.device.power_source,
             ATTR_LQI: self.device.lqi,
@@ -1370,6 +1370,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
             device_overrides=overrides_config,
         ),
         local_timezone=ZoneInfo(hass.config.time_zone),
+        country_code=hass.config.country,
     )
 
 
