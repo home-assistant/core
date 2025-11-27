@@ -20,8 +20,8 @@ from anthropic.types import (
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
-from homeassistant.components.anthropic import CONF_CHAT_MODEL
 from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -184,13 +184,10 @@ async def mock_init_component(
             ),
         ]
     )
-    with (
-        patch("anthropic.resources.models.AsyncModels.retrieve"),
-        patch(
-            "anthropic.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-            return_value=model_list,
-        ),
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        return_value=model_list,
     ):
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
