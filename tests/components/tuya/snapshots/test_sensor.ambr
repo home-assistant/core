@@ -5630,7 +5630,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '599.296',
+    'state': '0.072',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_power-entry]
@@ -5689,7 +5689,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18.432',
+    'state': '0.008',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_voltage-entry]
@@ -5745,7 +5745,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '52.7',
+    'state': '234.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_supply_frequency-entry]
