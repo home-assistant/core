@@ -25,8 +25,8 @@ def _storage_path_prefix(hass: HomeAssistant, entry_id: str) -> Path:
     return Path(hass.config.path(STORAGE_PATH)) / entry_id
 
 
-async def async_remove_map_storage(hass: HomeAssistant, entry_id: str) -> None:
-    """Remove all map storage associated with a config entry.
+async def async_cleanup_map_storage(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove map storage in the old format, if any.
 
     This removes all on-disk map files for the given config entry. This is the
     old format that was replaced by the `CacheStore` implementation.
@@ -34,13 +34,13 @@ async def async_remove_map_storage(hass: HomeAssistant, entry_id: str) -> None:
 
     def remove(path_prefix: Path) -> None:
         try:
-            if path_prefix.exists():
+            if path_prefix.exists() and path_prefix.is_dir():
+                _LOGGER.debug("Removing maps from disk store: %s", path_prefix)
                 shutil.rmtree(path_prefix, ignore_errors=True)
         except OSError as err:
             _LOGGER.error("Unable to remove map files in %s: %s", path_prefix, err)
 
     path_prefix = _storage_path_prefix(hass, entry_id)
-    _LOGGER.debug("Removing maps from disk store: %s", path_prefix)
     await hass.async_add_executor_job(remove, path_prefix)
 
 

@@ -33,7 +33,7 @@ from .coordinator import (
     RoborockWashingMachineUpdateCoordinator,
     RoborockWetDryVacUpdateCoordinator,
 )
-from .roborock_storage import CacheStore, async_remove_map_storage
+from .roborock_storage import CacheStore, async_cleanup_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -42,6 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
+    await async_cleanup_map_storage(hass, entry.entry_id)
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     user_params = UserParams(
@@ -245,6 +246,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) ->
 
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
-    await async_remove_map_storage(hass, entry.entry_id)
     store = CacheStore(hass, entry.entry_id)
     await store.async_remove()
