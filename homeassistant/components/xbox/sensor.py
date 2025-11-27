@@ -36,6 +36,8 @@ from .entity import (
     check_deprecated_entity,
 )
 
+PARALLEL_UPDATES = 0
+
 MAP_JOIN_RESTRICTIONS = {
     "local": "invite_only",
     "followed": "joinable",
@@ -335,7 +337,7 @@ class XboxStorageDeviceSensorEntity(
         )
 
     @property
-    def data(self):
+    def data(self) -> StorageDevice | None:
         """Storage device data."""
         consoles = self.coordinator.data.result
         console = next((c for c in consoles if c.id == self._console.id), None)
