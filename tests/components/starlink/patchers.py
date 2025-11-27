@@ -19,9 +19,10 @@ SLEEP_DATA_SUCCESS_PATCHER = patch(
     return_value=json.loads(load_fixture("sleep_data_success.json", "starlink")),
 )
 
+STATUS_DATA_TARGET = "homeassistant.components.starlink.coordinator.status_data"
+STATUS_DATA_FIXTURE = json.loads(load_fixture("status_data_success.json", "starlink"))
 STATUS_DATA_SUCCESS_PATCHER = patch(
-    "homeassistant.components.starlink.coordinator.status_data",
-    return_value=json.loads(load_fixture("status_data_success.json", "starlink")),
+    STATUS_DATA_TARGET, return_value=STATUS_DATA_FIXTURE
 )
 
 HISTORY_STATS_SUCCESS_PATCHER = patch(
