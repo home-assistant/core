@@ -34,6 +34,21 @@ def cloud_conversation_entity(hass: HomeAssistant) -> CloudConversationEntity:
     return entity
 
 
+async def test_setup_entry_skips_when_not_logged_in(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup_entry exits early when not logged in."""
+    cloud = MagicMock()
+    cloud.is_logged_in = False
+    entry = MockConfigEntry(domain="cloud")
+    entry.add_to_hass(hass)
+    hass.data[DATA_CLOUD] = cloud
+
+    async_add_entities = AsyncMock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    async_add_entities.assert_not_called()
+
+
 def test_entity_availability(
     cloud_conversation_entity: CloudConversationEntity,
 ) -> None:

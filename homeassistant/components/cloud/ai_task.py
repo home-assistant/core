@@ -6,6 +6,7 @@ import io
 from json import JSONDecodeError
 import logging
 
+from hass_nabucasa import NabuCasaBaseError
 from hass_nabucasa.llm import (
     LLMAuthenticationError,
     LLMError,
@@ -93,10 +94,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud AI Task entity."""
-    cloud = hass.data[DATA_CLOUD]
+    if not (cloud := hass.data[DATA_CLOUD]).is_logged_in:
+        return
     try:
         await cloud.llm.async_ensure_token()
-    except LLMError:
+    except (LLMError, NabuCasaBaseError):
         return
 
     async_add_entities([CloudLLMTaskEntity(cloud, config_entry)])
