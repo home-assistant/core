@@ -23,8 +23,22 @@ from .conftest import MOCK_CODE, MOCK_DEVICE_ID, MOCK_HOST, MOCK_PORT
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("pre_normalized_code", "normalized_code"),
+    [
+        (
+            "abc 123",
+            "ABC123",
+        ),
+        (" 123456 ", "123456"),
+        ("123ABC", "123ABC"),
+    ],
+    ids=["alphanumeric_lower_space", "numeric_space", "alphanumeric_no_space"],
+)
 async def test_user_setup(
     hass: HomeAssistant,
+    pre_normalized_code: str,
+    normalized_code: str,
     mock_droplet_discovery: AsyncMock,
     mock_droplet_connection: AsyncMock,
     mock_droplet: AsyncMock,
@@ -39,12 +53,12 @@ async def test_user_setup(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_CODE: MOCK_CODE, CONF_IP_ADDRESS: "192.168.1.2"},
+        user_input={CONF_CODE: pre_normalized_code, CONF_IP_ADDRESS: "192.168.1.2"},
     )
     assert result is not None
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
-        CONF_CODE: MOCK_CODE,
+        CONF_CODE: normalized_code,
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
         CONF_IP_ADDRESS: MOCK_HOST,
         CONF_PORT: MOCK_PORT,
@@ -133,8 +147,22 @@ async def test_user_setup_already_configured(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("pre_normalized_code", "normalized_code"),
+    [
+        (
+            "abc 123",
+            "ABC123",
+        ),
+        (" 123456 ", "123456"),
+        ("123ABC", "123ABC"),
+    ],
+    ids=["alphanumeric_lower_space", "numeric_space", "alphanumeric_no_space"],
+)
 async def test_zeroconf_setup(
     hass: HomeAssistant,
+    pre_normalized_code: str,
+    normalized_code: str,
     mock_droplet_discovery: AsyncMock,
     mock_droplet: AsyncMock,
     mock_droplet_connection: AsyncMock,
@@ -159,7 +187,7 @@ async def test_zeroconf_setup(
     assert result.get("step_id") == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_CODE: MOCK_CODE}
+        result["flow_id"], user_input={CONF_CODE: pre_normalized_code}
     )
     assert result is not None
     assert result.get("type") is FlowResultType.CREATE_ENTRY
@@ -167,7 +195,7 @@ async def test_zeroconf_setup(
         CONF_DEVICE_ID: MOCK_DEVICE_ID,
         CONF_IP_ADDRESS: MOCK_HOST,
         CONF_PORT: MOCK_PORT,
-        CONF_CODE: MOCK_CODE,
+        CONF_CODE: normalized_code,
     }
     assert result.get("context") is not None
     assert result.get("context", {}).get("unique_id") == MOCK_DEVICE_ID
