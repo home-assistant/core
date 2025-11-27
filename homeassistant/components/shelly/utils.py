@@ -647,7 +647,7 @@ def async_remove_shelly_rpc_entities(
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP[(platform)]
+    component = VIRTUAL_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
