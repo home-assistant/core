@@ -479,10 +479,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
     @property
     def available(self) -> bool:
         """Return whether the sensor is available."""
-        device = self.coordinator.data.get(self._device_id)
-        if device is None:
-            return False
-        return self.native_value is not None
+        return super().available and self.native_value is not None
 
 
 class TibberSensor(SensorEntity):
