@@ -41,34 +41,6 @@ async def target_covers(hass: HomeAssistant) -> list[str]:
     return await target_entities(hass, "cover")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "cover.awning_opened",
-        "cover.blind_opened",
-        "cover.curtain_opened",
-        "cover.door_opened",
-        "cover.garage_opened",
-        "cover.gate_opened",
-        "cover.shade_opened",
-        "cover.shutter_opened",
-        "cover.window_opened",
-    ],
-)
-async def test_cover_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the cover triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
-
-
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 def parametrize_opened_trigger_states(
     trigger: str, device_class: str
 ) -> list[tuple[str, dict, str, list[StateDescription]]]:
@@ -118,6 +90,33 @@ def parametrize_opened_trigger_states(
             )
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        "cover.awning_opened",
+        "cover.blind_opened",
+        "cover.curtain_opened",
+        "cover.door_opened",
+        "cover.garage_opened",
+        "cover.gate_opened",
+        "cover.shade_opened",
+        "cover.shutter_opened",
+        "cover.window_opened",
+    ],
+)
+async def test_cover_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the cover triggers are gated by the labs flag."""
+    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
+        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
+        "feature to be enabled in Home Assistant Labs settings (feature flag: "
+        "'new_triggers_conditions')"
+    ) in caplog.text
 
 
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
