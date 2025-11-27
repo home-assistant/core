@@ -1,9 +1,20 @@
 rules:
+  # Special note, doesn't fall in any of the categories below
+  # Why can the coordinator state be None? As in, I understand that it can be None if it doesn't support it, but wouldn't these coordinators not be created at all?
+
   ## Bronze
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: |
+      SFRBoxFlowHandler has a classvar _config. This can be dangerous
+      self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]}) can be tested at the first if statement
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - test_config_flow_skip_auth -> I'd split the happy from the not happy flows
+      - We should test created mac address
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -34,7 +45,13 @@ rules:
   parallel-updates: done
   test-coverage:
     status: todo
-    comment: 93% on diagnostics / 92% on sensors, need to improve overall coverage
+    comment: |
+      - 93% on diagnostics / 92% on sensors, need to improve overall coverage
+      - you can use load_json_object_fixture
+      - It would be nice to use the snapshot helper as currently it would just throw everything in a list
+      - We also test the devices in each platform, kinda overkill
+      - assert not hass.data.get(DOMAIN) not needed
+      - We should use entity_registry_enabled_by_default instead to enable entities
   integration-owner: done
   docs-installation-parameters:
     status: todo
@@ -45,8 +62,15 @@ rules:
 
   ## Gold
   entity-translations: done
-  entity-device-class: done
-  devices: done
+  entity-device-class:
+    status: todo
+    comment: |
+      What does DSL counter count?
+      What is the state of CRC?
+      line_status and training and net_infra and mode -> unknown shouldn't be an option and the entity should return None instead
+  devices:
+    status: todo
+    comment: MAC address can be set to the connections
   entity-category: done
   entity-disabled-by-default: done
   discovery:

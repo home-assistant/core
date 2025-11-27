@@ -1879,6 +1879,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "sesame",
     "seven_segments",
     "seventeentrack",
+    "sfr_box",
     "sharkiq",
     "shell_command",
     "shodan",
