@@ -10,7 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from roborock import RoborockCategory
+from roborock import HomeDataRoom, MultiMapsListMapInfo, RoborockCategory
 from roborock.data import (
     CombinedMapInfo,
     DnDTimer,
@@ -199,6 +199,41 @@ def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
     return dnd_trait
 
 
+def make_home_trait(
+    map_info: list[MultiMapsListMapInfo],
+    current_map: int | None,
+    room_mapping: dict[int, int],
+    rooms: list[HomeDataRoom],
+) -> AsyncMock:
+    """Create a mock roborock home trait."""
+    home_trait = make_mock_trait(trait_spec=HomeTrait)
+    home_map_info = {
+        map_data.map_flag: CombinedMapInfo(
+            name=map_data.name,
+            map_flag=map_data.map_flag,
+            rooms=[
+                NamedRoomMapping(
+                    segment_id=room_mapping[room.id],
+                    iot_id=room.id,
+                    name=room.name,
+                )
+                for room in rooms
+            ],
+        )
+        for map_data in map_info
+    }
+    home_map_content = {
+        map_data.map_flag: MapContent(
+            image_content=b"\x89PNG-001", map_data=deepcopy(MAP_DATA)
+        )
+        for map_data in map_info
+    }
+    home_trait.home_map_info = home_map_info
+    home_trait.current_map_data = home_map_info[current_map]
+    home_trait.home_map_content = home_map_content
+    return home_trait
+
+
 def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
@@ -239,31 +274,12 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     )
     v1_properties.wash_towel_mode = make_mock_trait(trait_spec=WashTowelModeTrait)
     v1_properties.smart_wash_params = make_mock_trait(trait_spec=SmartWashParamsTrait)
-    v1_properties.home = make_mock_trait(trait_spec=HomeTrait)
-    home_map_info = {
-        map_data.map_flag: CombinedMapInfo(
-            name=map_data.name,
-            map_flag=map_data.map_flag,
-            rooms=[
-                NamedRoomMapping(
-                    segment_id=ROOM_MAPPING[room.id],
-                    iot_id=room.id,
-                    name=room.name,
-                )
-                for room in HOME_DATA.rooms
-            ],
-        )
-        for map_data in MULTI_MAP_LIST.map_info
-    }
-    home_map_content = {
-        map_data.map_flag: MapContent(
-            image_content=b"\x89PNG-001", map_data=deepcopy(MAP_DATA)
-        )
-        for map_data in MULTI_MAP_LIST.map_info
-    }
-    v1_properties.home.home_map_info = home_map_info
-    v1_properties.home.current_map_data = home_map_info[STATUS.current_map]
-    v1_properties.home.home_map_content = home_map_content
+    v1_properties.home = make_home_trait(
+        map_info=MULTI_MAP_LIST.map_info,
+        current_map=STATUS.current_map,
+        room_mapping=ROOM_MAPPING,
+        rooms=HOME_DATA.rooms,
+    )
     v1_properties.network_info = make_mock_trait(
         trait_spec=NetworkInfoTrait,
         dataclass_template=network_info,
