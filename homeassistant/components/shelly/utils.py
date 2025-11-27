@@ -994,3 +994,11 @@ def async_migrate_rpc_virtual_components_unique_ids(
             }
 
     return None
+
+
+def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
+    """Return true if BLE scanner is supported."""
+    return (
+        entry.runtime_data.rpc_supports_scripts
+        and not entry.runtime_data.rpc_zigbee_firmware
+    )
