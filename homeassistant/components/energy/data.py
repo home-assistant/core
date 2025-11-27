@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
 
@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
+STORAGE_MINOR_VERSION = 2
 STORAGE_KEY = DOMAIN
 
 
@@ -164,6 +165,7 @@ class EnergyPreferences(TypedDict):
 
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
+    device_consumption_water: NotRequired[list[DeviceConsumption]]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -328,14 +330,31 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
 )
 
 
+class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
+    """Energy preferences store with migration support."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        data = old_data
+        if old_major_version == 1 and old_minor_version < 2:
+            # Add device_consumption_water field if it doesn't exist
+            data.setdefault("device_consumption_water", [])
+        return data
+
+
 class EnergyManager:
     """Manage the instance energy prefs."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = storage.Store[EnergyPreferences](
-            hass, STORAGE_VERSION, STORAGE_KEY
+        self._store = _EnergyPreferencesStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_MINOR_VERSION
         )
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
@@ -350,6 +369,7 @@ class EnergyManager:
         return {
             "energy_sources": [],
             "device_consumption": [],
+            "device_consumption_water": [],
         }
 
     async def async_update(self, update: EnergyPreferencesUpdate) -> None:
@@ -362,6 +382,7 @@ class EnergyManager:
         for key in (
             "energy_sources",
             "device_consumption",
+            "device_consumption_water",
         ):
             if key in update:
                 data[key] = update[key]

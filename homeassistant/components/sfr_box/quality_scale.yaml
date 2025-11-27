@@ -1,0 +1,113 @@
+rules:
+  ## Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - test_config_flow_skip_auth -> I'd split the happy from the not happy flows
+      - We should test created mac address
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: local_polling without events
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: There are no service actions
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: There are no service actions
+  brands: done
+
+  ## Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage:
+    status: todo
+    comment: |
+      - 93% on diagnostics / 92% on sensors, need to improve overall coverage
+      - you can use load_json_object_fixture
+      - It would be nice to use the snapshot helper as currently it would just throw everything in a list
+      - We also test the devices in each platform, kinda overkill
+      - assert not hass.data.get(DOMAIN) not needed
+      - We should use entity_registry_enabled_by_default instead to enable entities
+  integration-owner: done
+  docs-installation-parameters:
+    status: todo
+    comment: not yet documented
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow
+
+  ## Gold
+  entity-translations: done
+  entity-device-class:
+    status: todo
+    comment: |
+      What does DSL counter count?
+      What is the state of CRC?
+      line_status and training and net_infra and mode -> unknown shouldn't be an option and the entity should return None instead
+  devices:
+    status: todo
+    comment: MAC address can be set to the connections
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: todo
+    comment: Should be possible
+  stale-devices: done
+  diagnostics: done
+  exception-translations:
+    status: todo
+    comment: not yet documented
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Need to be able to manually change the IP address
+  dynamic-devices: done
+  discovery-update-info:
+    status: todo
+    comment: Discovery is not yet implemented
+  repair-issues: done
+  docs-use-cases:
+    status: todo
+    comment: not yet documented
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update:
+    status: todo
+    comment: not yet documented
+  docs-known-limitations:
+    status: todo
+    comment: not yet documented
+  docs-troubleshooting:
+    status: todo
+    comment: not yet documented
+  docs-examples:
+    status: todo
+    comment: not yet documented
+
+  ## Platinum
+  async-dependency:
+    status: done
+    comment: sfrbox-api is asynchronous
+  inject-websession:
+    status: done
+    comment: sfrbox-api uses injected aiohttp websession
+  strict-typing:
+    status: done
+    comment: sfrbox-api is fully typed, and integration uses strict typing

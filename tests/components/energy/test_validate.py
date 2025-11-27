@@ -26,6 +26,7 @@ async def test_validation_empty_config(hass: HomeAssistant) -> None:
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -80,6 +81,7 @@ async def test_validation(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [[], []],
         "device_consumption": [[]],
+        "device_consumption_water": [],
     }
 
 
@@ -106,6 +108,7 @@ async def test_validation_device_consumption_entity_missing(
                 },
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -127,6 +130,7 @@ async def test_validation_device_consumption_stat_missing(
                 }
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -150,6 +154,7 @@ async def test_validation_device_consumption_entity_unavailable(
                 }
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -173,6 +178,7 @@ async def test_validation_device_consumption_entity_non_numeric(
                 },
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -204,6 +210,7 @@ async def test_validation_device_consumption_entity_unexpected_unit(
                 }
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -227,6 +234,7 @@ async def test_validation_device_consumption_recorder_not_tracked(
                 }
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -258,6 +266,7 @@ async def test_validation_device_consumption_no_last_reset(
                 }
             ]
         ],
+        "device_consumption_water": [],
     }
 
 
@@ -293,6 +302,7 @@ async def test_validation_solar(
             ]
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -344,6 +354,7 @@ async def test_validation_battery(
             ]
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -438,6 +449,7 @@ async def test_validation_grid(
             ]
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -510,6 +522,7 @@ async def test_validation_grid_external_cost_compensation(
             ]
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -585,6 +598,7 @@ async def test_validation_grid_price_not_exist(
             ]
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -646,6 +660,7 @@ async def test_validation_grid_auto_cost_entity_errors(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [[]],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -715,6 +730,7 @@ async def test_validation_grid_price_errors(
             [expected],
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -848,6 +864,7 @@ async def test_validation_gas(
             ],
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -881,6 +898,7 @@ async def test_validation_gas_no_costs_tracking(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [[]],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -928,6 +946,7 @@ async def test_validation_grid_no_costs_tracking(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [[]],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -1058,6 +1077,7 @@ async def test_validation_water(
             ],
         ],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -1091,4 +1111,138 @@ async def test_validation_water_no_costs_tracking(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [[]],
         "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
+async def test_validation_device_consumption_water_entity_missing(
+    hass: HomeAssistant, mock_energy_manager
+) -> None:
+    """Test validating missing entity for water device."""
+    await mock_energy_manager.async_update(
+        {"device_consumption_water": [{"stat_consumption": "sensor.not_exist"}]}
+    )
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [
+            [
+                {
+                    "type": "statistics_not_defined",
+                    "affected_entities": {("sensor.not_exist", None)},
+                    "translation_placeholders": None,
+                },
+                {
+                    "type": "entity_not_defined",
+                    "affected_entities": {("sensor.not_exist", None)},
+                    "translation_placeholders": None,
+                },
+            ]
+        ],
+    }
+
+
+async def test_validation_device_consumption_water_entity_unexpected_unit(
+    hass: HomeAssistant, mock_energy_manager, mock_get_metadata
+) -> None:
+    """Test validating water device with unexpected unit."""
+    await mock_energy_manager.async_update(
+        {"device_consumption_water": [{"stat_consumption": "sensor.unexpected_unit"}]}
+    )
+    hass.states.async_set(
+        "sensor.unexpected_unit",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [
+            [
+                {
+                    "type": "entity_unexpected_unit_water",
+                    "affected_entities": {("sensor.unexpected_unit", "beers")},
+                    "translation_placeholders": {
+                        "water_units": "CCF, ft³, m³, gal, L, MCF"
+                    },
+                }
+            ]
+        ],
+    }
+
+
+async def test_validation_device_consumption_water_valid_units(
+    hass: HomeAssistant, mock_energy_manager, mock_get_metadata
+) -> None:
+    """Test validating water device with valid water units."""
+    await mock_energy_manager.async_update(
+        {
+            "device_consumption_water": [
+                {"stat_consumption": "sensor.water_m3"},
+                {"stat_consumption": "sensor.water_l"},
+                {"stat_consumption": "sensor.water_gal"},
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.water_m3",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_l",
+        "1000.0",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "L",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_gal",
+        "100.0",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "gal",
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [[], [], []],
+    }
+
+
+async def test_validation_device_consumption_water_recorder_not_tracked(
+    hass: HomeAssistant, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+) -> None:
+    """Test validating water device based on untracked entity."""
+    mock_is_entity_recorded["sensor.not_recorded"] = False
+    await mock_energy_manager.async_update(
+        {"device_consumption_water": [{"stat_consumption": "sensor.not_recorded"}]}
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [
+            [
+                {
+                    "type": "recorder_untracked",
+                    "affected_entities": {("sensor.not_recorded", None)},
+                    "translation_placeholders": None,
+                }
+            ]
+        ],
     }

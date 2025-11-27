@@ -120,6 +120,29 @@
       "ph_type_dosing": {
         "default": "mdi:beaker"
       }
+    },
+    "switch": {
+      "frequency_input": {
+        "default": "mdi:sine-wave",
+        "state": {
+          "off": "mdi:pulse",
+          "on": "mdi:sine-wave"
+        }
+      },
+      "pause_dosing": {
+        "default": "mdi:pause",
+        "state": {
+          "off": "mdi:play",
+          "on": "mdi:pause"
+        }
+      },
+      "pump_monitoring": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off",
+          "on": "mdi:pump"
+        }
+      }
     }
   }
 }

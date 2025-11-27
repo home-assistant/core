@@ -99,7 +99,7 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -138,7 +138,7 @@ async def test_template_variables(
         create_content_block(0, ["Okay, let", " me take care of that for you", "."])
     ]
     with (
-        patch("anthropic.resources.models.AsyncModels.retrieve"),
+        patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock),
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

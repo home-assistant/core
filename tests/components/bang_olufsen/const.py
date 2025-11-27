@@ -168,6 +168,7 @@ TEST_PLAYBACK_METADATA = PlaybackContentMetadata(
     title="Test title",
     total_duration_seconds=123,
     track=1,
+    source_internal_id="123",
 )
 TEST_PLAYBACK_ERROR = PlaybackError(error="Test error")
 TEST_PLAYBACK_PROGRESS = PlaybackProgress(progress=123)

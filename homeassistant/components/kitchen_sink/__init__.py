@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.issue_registry import (
@@ -81,11 +81,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     @callback
-    def service_handler(call: ServiceCall | None = None) -> None:
+    def service_handler(call: ServiceCall | None = None) -> ServiceResponse:
         """Do nothing."""
+        return None
 
     hass.services.async_register(
-        DOMAIN, "test_service_1", service_handler, SCHEMA_SERVICE_TEST_SERVICE_1
+        DOMAIN,
+        "test_service_1",
+        service_handler,
+        SCHEMA_SERVICE_TEST_SERVICE_1,
+        description_placeholders={
+            "meep_1": "foo",
+            "meep_2": "bar",
+            "meep_3": "beer",
+            "meep_4": "milk",
+            "meep_5": "https://example.com",
+        },
     )
 
     return True

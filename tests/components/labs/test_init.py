@@ -12,7 +12,8 @@ from homeassistant.components.labs import (
     async_is_preview_feature_enabled,
     async_listen,
 )
-from homeassistant.components.labs.const import DOMAIN, LABS_DATA, LabPreviewFeature
+from homeassistant.components.labs.const import DOMAIN, LABS_DATA
+from homeassistant.components.labs.models import LabPreviewFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component

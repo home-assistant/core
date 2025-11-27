@@ -161,6 +161,17 @@
           "alcalyne": "pH+"
         }
       }
+    },
+    "switch": {
+      "frequency_input": {
+        "name": "Frequency input"
+      },
+      "pause_dosing": {
+        "name": "Pause dosing"
+      },
+      "pump_monitoring": {
+        "name": "Pump monitoring"
+      }
     }
   }
 }

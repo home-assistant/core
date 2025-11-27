@@ -20,6 +20,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import SFRConfigEntry
 from .entity import SFRCoordinatorEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SFRBoxBinarySensorEntityDescription[_T](BinarySensorEntityDescription):
@@ -94,6 +97,4 @@ class SFRBoxBinarySensor[_T](SFRCoordinatorEntity[_T], BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the native value of the device."""
-        if self.coordinator.data is None:
-            return None
         return self.entity_description.value_fn(self.coordinator.data)
