@@ -174,7 +174,7 @@ async def test_config_flow_with_auth(
 async def test_config_flow_with_auth_failure(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test user flow (with authentication) with failure and recovery.."""
+    """Test user flow (with authentication) with failure and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
