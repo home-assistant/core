@@ -30,10 +30,18 @@ from .entity import ShellyBlockEntity, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
+    get_block_channel,
+    get_block_channel_name,
+    get_block_custom_name,
+    get_block_number_of_channels,
     get_device_entry_gen,
-    get_rpc_entity_name,
+    get_rpc_custom_name,
+    get_rpc_key,
+    get_rpc_key_id,
     get_rpc_key_instances,
+    get_rpc_number_of_channels,
     is_block_momentary_input,
+    is_block_single_device,
     is_rpc_momentary_input,
 )
 
@@ -74,7 +82,6 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
 SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     key="script",
     translation_key="script",
-    device_class=None,
     entity_registry_enabled_default=False,
 )
 
@@ -152,12 +159,10 @@ def _async_setup_rpc_entry(
     )
     script_events = config_entry.runtime_data.rpc_script_events
     for script in script_instances:
-        script_name = get_rpc_entity_name(coordinator.device, script)
-        if script_name == BLE_SCRIPT_NAME:
+        if get_rpc_custom_name(coordinator.device, script) == BLE_SCRIPT_NAME:
             continue
 
-        script_id = int(script.split(":")[-1])
-        if script_events and (event_types := script_events[script_id]):
+        if script_events and (event_types := script_events[get_rpc_key_id(script)]):
             entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
 
     # If a script is removed, from the device configuration, we need to remove orphaned entities
@@ -195,6 +200,19 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
+        if not (
+            (single := is_block_single_device(coordinator.device, block))
+            and get_block_custom_name(coordinator.device, block)
+        ):
+            self._attr_translation_placeholders = {
+                "input_number": get_block_channel(block)
+                if single
+                and get_block_number_of_channels(coordinator.device, block) > 1
+                else ""
+            }
+        else:
+            self._attr_name = get_block_channel_name(coordinator.device, block)
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -224,11 +242,24 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
-        self.event_id = int(key.split(":")[-1])
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description
+
+        if description.key == "input":
+            _, component, component_id = get_rpc_key(key)
+            if custom_name := get_rpc_custom_name(coordinator.device, key):
+                self._attr_name = custom_name
+            else:
+                self._attr_translation_placeholders = {
+                    "input_number": component_id
+                    if get_rpc_number_of_channels(coordinator.device, component) > 1
+                    else ""
+                }
+            self.event_id = int(component_id)
+        elif description.key == "script":
+            self._attr_name = get_rpc_custom_name(coordinator.device, key)
+            self.event_id = get_rpc_key_id(key)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
