@@ -1,0 +1,10 @@
+{
+  "domain": "inverse",
+  "name": "Inverses the state of a entity with two states",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/inverse",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}
