@@ -1,5 +1,6 @@
 """Test that the devices and entities are correctly configured."""
 
+import time
 from unittest.mock import patch
 
 from homelink.model.button import Button
@@ -7,7 +8,7 @@ from homelink.model.device import Device
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
@@ -49,10 +50,25 @@ async def test_setup_config(
             domain=DOMAIN,
             unique_id=None,
             version=1,
-            data={"auth_implementation": "gentex_homelink"},
+            data={
+                "auth_implementation": "gentex_homelink",
+                "token": {"refresh_token": "refresh"},
+            },
             state=ConfigEntryState.LOADED,
         )
         config_entry.add_to_hass(hass)
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            OAUTH2_TOKEN,
+            json={
+                "access_token": "updated-access-token",
+                "refresh_token": "updated-refresh-token",
+                "expires_at": time.time() + 3600,
+                "expires_in": 3600,
+            },
+        )
+
         result = await async_setup_entry(hass, config_entry)
 
         # Assert configuration worked without errors

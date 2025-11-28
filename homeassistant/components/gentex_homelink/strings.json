@@ -10,6 +10,7 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
@@ -22,6 +23,18 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Email address associated with your HomeLink account",
+          "password": "Password associated with your HomeLink account"
+        },
+        "description": "The HomeLink integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {

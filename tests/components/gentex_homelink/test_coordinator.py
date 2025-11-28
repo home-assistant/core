@@ -9,7 +9,7 @@ from homelink.model.device import Device
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import EVENT_PRESSED
+from homeassistant.components.gentex_homelink.const import EVENT_PRESSED, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -50,11 +50,26 @@ async def test_get_state_updates(
             version=1,
             data={
                 "auth_implementation": "gentex_homelink",
-                "token": {"expires_at": time.time() + 10000, "access_token": ""},
+                "token": {
+                    "expires_at": time.time() + 10000,
+                    "access_token": "",
+                    "refresh_token": "",
+                },
                 "last_update_id": None,
             },
             state=ConfigEntryState.LOADED,
         )
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            OAUTH2_TOKEN,
+            json={
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "expires_at": time.time() + 3600,
+                "expires_in": 3600,
+            },
+        )
+
         config_entry.add_to_hass(hass)
         result = await async_setup_entry(hass, config_entry)
         # Assert configuration worked without errors
@@ -98,7 +113,9 @@ async def test_get_state_updates(
         )
 
 
-async def test_request_sync(hass: HomeAssistant) -> None:
+async def test_request_sync(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that the config entry is reloaded when a requestSync request is sent."""
     updatedDeviceInst = Device(id="TestDevice", name="TestDevice")
     updatedDeviceInst.buttons = [
@@ -118,11 +135,27 @@ async def test_request_sync(hass: HomeAssistant) -> None:
             version=1,
             data={
                 "auth_implementation": "gentex_homelink",
-                "token": {"expires_at": time.time() + 10000, "access_token": ""},
+                "token": {
+                    "expires_at": time.time() + 10000,
+                    "access_token": "",
+                    "refresh_token": "",
+                },
                 "last_update_id": None,
             },
             state=ConfigEntryState.LOADED,
         )
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            OAUTH2_TOKEN,
+            json={
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "expires_at": time.time() + 3600,
+                "expires_in": 3600,
+            },
+        )
+
         config_entry.add_to_hass(hass)
         result = await async_setup_entry(hass, config_entry)
         # Assert configuration worked without errors
