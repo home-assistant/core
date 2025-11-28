@@ -19,17 +19,17 @@ async def test_sensors(
 
 
 async def test_sensor_device_info(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test sensor device info."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.green_planet_energy_highest_price_today")
 
     assert entry is not None
     assert entry.device_id is not None
 
-    # Get device registry and check device
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device is not None
