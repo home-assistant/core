@@ -34,10 +34,7 @@ rules:
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
-  test-coverage:
-    status: todo
-    comment: |
-      - 93% on diagnostics / 92% on sensors, need to improve overall coverage
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters:
     status: todo
