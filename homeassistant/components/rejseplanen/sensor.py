@@ -183,14 +183,18 @@ def _get_departure_attributes(
     }
 
 
-def _get_is_delayed(departures: list[Departure], index: int) -> bool | None:
+def _get_is_delayed(departures: list[Departure], index: int) -> bool:
     """Get whether the departure at index is delayed."""
     current_departures = _get_current_departures(departures)
 
     if not current_departures or len(current_departures) <= index:
-        return None
+        return False
 
     departure = current_departures[index]
+
+    if departure.rtDate is None and departure.rtTime is None:
+        return False
+
     planned_datetime = datetime.combine(departure.date, departure.time)
     realtime_datetime = datetime.combine(
         departure.rtDate or departure.date, departure.rtTime or departure.time

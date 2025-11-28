@@ -68,18 +68,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         return board
 
     @property
-    def diagnostics_attributes(self) -> dict:
-        """Coordinator-level diagnostics for the status entity."""
-        return {
-            "last_update_time": self.last_update_success_time,
-            "update_interval": (
-                int(self.update_interval.total_seconds())
-                if self.update_interval
-                else None
-            ),
-        }
-
-    @property
     def available(self) -> bool:
         """Return if the coordinator is available.
 

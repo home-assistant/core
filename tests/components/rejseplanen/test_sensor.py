@@ -7,14 +7,17 @@ import zoneinfo
 from py_rejseplan.dataclasses.departure import DepartureType
 import pytest
 
-from homeassistant.components.rejseplanen.const import DOMAIN
+from homeassistant.components.rejseplanen import sensor as rp_sensor
+from homeassistant.components.rejseplanen.const import CONF_STOP_ID, DOMAIN
 from homeassistant.components.rejseplanen.sensor import (
     _calculate_due_in,
     _format_departures_for_dashboard,
     _get_current_departures,
+    _get_delay_minutes,
     _get_departure_attributes,
     _get_departure_timestamp,
     _get_departures_list_attributes,
+    _get_is_delayed,
     _get_next_departure_cleanup_time,
     async_setup_platform,
 )
@@ -624,4 +627,265 @@ def test_get_current_departures_filters_past() -> None:
     assert current_departures[0].name == "Future Line"
 
 
-# Diagnostic sensor tests removed per request
+def test_get_is_delayed() -> None:
+    """Test delay detection logic."""
+    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+    now = datetime.now(tz).replace(second=0, microsecond=0)
+    future_dt = now + timedelta(minutes=10)
+
+    dep_no_realtime = MagicMock(spec=DepartureType)
+    dep_no_realtime.date = future_dt.date()
+    dep_no_realtime.time = future_dt.time()
+    dep_no_realtime.rtDate = None
+    dep_no_realtime.rtTime = None
+
+    result = _get_is_delayed([dep_no_realtime], 0)
+    assert result is False, "No realtime data should not indicate delay"
+
+    dep_on_time = MagicMock(spec=DepartureType)
+    dep_on_time.date = now.date()
+    dep_on_time.time = future_dt.time()
+    dep_on_time.rtDate = now.date()
+    dep_on_time.rtTime = future_dt.time()
+
+    result = _get_is_delayed([dep_on_time], 0)
+    assert result is False, "On-time realtime should not indicate delay"
+
+    dep_delayed = MagicMock(spec=DepartureType)
+    dep_delayed.date = future_dt.date()
+    dep_delayed.time = future_dt.time()
+    dep_delayed.rtDate = future_dt.date()
+    dep_delayed.rtTime = (future_dt + timedelta(minutes=5)).time()
+
+    result = _get_is_delayed([dep_delayed], 0)
+    assert result is True, "Delayed realtime should indicate delay"
+
+    result = _get_is_delayed([], 0)
+    assert result is False, "Empty departures list should not indicate delay"
+
+
+def test_get_delay_minutes() -> None:
+    """Test getter for delay in minutes."""
+    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+    dep_dt = datetime.now(tz).replace(second=0, microsecond=0) + timedelta(minutes=20)
+
+    result = _get_delay_minutes([], 0)
+    assert result is None, "No departures should yield None delay"
+
+    dep_on_time = MagicMock(spec=DepartureType)
+    dep_on_time.date = dep_dt.date()
+    dep_on_time.time = dep_dt.time()
+    dep_on_time.rtDate = dep_dt.date()
+    dep_on_time.rtTime = dep_dt.time()
+
+    result = _get_delay_minutes([dep_on_time], 0)
+    assert result == 0, "On-time departure should yield 0 minutes delay"
+
+    dep_delayed = MagicMock(spec=DepartureType)
+    dep_delayed.date = dep_dt.date()
+    dep_delayed.time = dep_dt.time()
+    dep_delayed.rtDate = dep_dt.date()
+    dep_delayed.rtTime = (dep_dt + timedelta(minutes=5)).time()
+
+    result = _get_delay_minutes([dep_delayed], 0)
+    assert result == 5, "Delayed departure should yield correct delay"
+
+
+# Additional tests for delay calculation and cancelled detection
+def test_get_departure_attributes_delay_and_cancelled() -> None:
+    """Test _get_departure_attributes delay calculation and cancelled detection."""
+    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+    now = datetime.now(tz)
+
+    # Realtime later than planned -> positive delay
+    dep = MagicMock(spec=DepartureType)
+    dep.date = now.date()
+    dep.time = (now + timedelta(minutes=10)).time()
+    dep.rtDate = now.date()
+    dep.rtTime = (now + timedelta(minutes=15)).time()  # +5 minutes
+    dep.rtTrack = None
+    dep.stopExtId = 42
+    dep.name = "Delay Line"
+    dep.direction = "Center"
+    dep.track = "1"
+    dep.cancelled = False
+    dep.type = "BUS"
+    dep.product = MagicMock()
+    dep.product.operator = "Op"
+
+    attrs = _get_departure_attributes([dep], 0)
+    # 5 minute delay expected
+    assert attrs["delay_minutes"] == 5
+    assert attrs["cancelled"] is False
+
+
+def test_get_departure_attributes_early_and_cancelled_true() -> None:
+    """Test early realtime (negative delay) and cancelled True handling."""
+    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+    now = datetime.now(tz)
+
+    # Realtime earlier than planned -> negative delay (early arrival)
+    dep_early = MagicMock(spec=DepartureType)
+    dep_early.date = now.date()
+    dep_early.time = (now + timedelta(minutes=15)).time()
+    dep_early.rtDate = now.date()
+    dep_early.rtTime = (now + timedelta(minutes=10)).time()  # -5 minutes
+    dep_early.rtTrack = None
+    dep_early.stopExtId = 43
+    dep_early.name = "Early Line"
+    dep_early.direction = "Suburb"
+    dep_early.track = "2"
+    # Omit 'cancelled' attribute to simulate absence
+    dep_early.type = "TRAIN"
+    dep_early.product = MagicMock()
+    dep_early.product.operator = "Rail"
+
+    attrs_early = _get_departure_attributes([dep_early], 0)
+    # Expect a negative value for early arrival (-5)
+    assert attrs_early["delay_minutes"] == -5
+    # As 'cancelled' attribute is absent, cancelled should be False
+    assert attrs_early["cancelled"] is False
+
+    # Now test cancelled True
+    dep_cancel = MagicMock(spec=DepartureType)
+    dep_cancel.date = now.date()
+    dep_cancel.time = (now + timedelta(minutes=10)).time()
+    dep_cancel.rtDate = None
+    dep_cancel.rtTime = None
+    dep_cancel.rtTrack = None
+    dep_cancel.stopExtId = 44
+    dep_cancel.name = "Cancelled Line"
+    dep_cancel.direction = "Nowhere"
+    dep_cancel.track = "3"
+    dep_cancel.cancelled = True
+    dep_cancel.type = "METRO"
+    dep_cancel.product = MagicMock()
+    dep_cancel.product.operator = "Metro"
+
+    attrs_cancel = _get_departure_attributes([dep_cancel], 0)
+    assert attrs_cancel["cancelled"] is True
+
+
+# @pytest.mark.asyncio
+# async def test_sensor_async_setup_entry_calls_add_entities_with_config_subentry_id(
+#     hass: HomeAssistant,
+# ) -> None:
+#     """Directly test sensor.async_setup_entry calls async_add_entities with config_subentry_id."""
+#     # Create a MockConfigEntry (duck-typed is fine)
+#     entry = MockConfigEntry(domain=DOMAIN, data={})
+#     # Make a proper ConfigSubentry for type compatibility
+#     subentry_id = "sub_1"
+#     subentry = ConfigSubentry(
+#         title="Test Stop",
+#         unique_id=subentry_id,
+#         subentry_id=subentry_id,
+#         subentry_type="stop",
+#         data=MappingProxyType({CONF_STOP_ID: "123456", CONF_NAME: "Test Stop"}),
+#     )
+#     entry.subentries = MappingProxyType({subentry_id: subentry})
+
+#     # Provide a minimal runtime_data/coordinator with the things the sensor constructor uses
+#     coordinator = MagicMock()
+#     # coordinator.api.calculate_departure_type_bitflag is used during sensor init
+#     coordinator.api = MagicMock()
+#     coordinator.api.calculate_departure_type_bitflag.return_value = 0
+#     entry.runtime_data = coordinator
+
+#     called = {}
+
+#     # Fake async_add_entities to capture args — match AddConfigEntryEntitiesCallback signature
+#     def fake_add_entities(
+#         new_entities,
+#         update_before_add: bool = False,
+#         *,
+#         config_subentry_id: str | None = None,
+#     ) -> None:
+#         called["entities"] = new_entities
+#         called["update_before_add"] = update_before_add
+#         called["config_subentry_id"] = config_subentry_id
+
+#     # Call the sensor setup directly
+#     await rp_sensor.async_setup_entry(hass, entry, fake_add_entities)
+
+#     assert "entities" in called
+#     assert called["config_subentry_id"] == subentry_id
+#     # one entity per description in SENSORS
+#     assert len(called["entities"]) == len(rp_sensor.SENSORS)
+
+
+@pytest.mark.asyncio
+async def test_schedule_and_cancel_cleanup_and_properties(hass: HomeAssistant) -> None:
+    """Test scheduling/canceling cleanup and basic properties on the sensor."""
+    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+    now = datetime.now(tz).replace(second=0, microsecond=0)
+
+    # Create a future departure so cleanup will be scheduled
+    future_departure = MagicMock(spec=DepartureType)
+    future_departure.date = (now + timedelta(minutes=2)).date()
+    future_departure.time = (now + timedelta(minutes=2)).time()
+    future_departure.rtTime = None
+    future_departure.rtDate = None
+    future_departure.stopExtId = 999
+    future_departure.name = "Sched Line"
+    future_departure.direction = "Center"
+    future_departure.track = "1"
+    future_departure.cancelled = False
+    future_departure.type = "BUS"
+
+    # Coordinator mock
+    coordinator = MagicMock()
+    coordinator.api = MagicMock()
+    coordinator.api.calculate_departure_type_bitflag.return_value = 0
+    coordinator.get_filtered_departures.return_value = [future_departure]
+
+    config = {CONF_STOP_ID: "999", "subentry_id": "sub_sched", "name": "Sched Stop"}
+
+    # Instantiate sensor
+    description = rp_sensor.SENSORS[0]
+    sensor = rp_sensor.RejseplanenTransportSensor(coordinator, config, description)
+    # Attach hass for scheduling
+    sensor.hass = hass
+
+    # Patch async_write_ha_state to avoid side effects
+    sensor.async_write_ha_state = MagicMock()
+
+    # Ensure no unsubscribe yet
+    assert sensor._departure_cleanup_unsubscribe is None
+
+    # Schedule cleanup
+    sensor._schedule_next_cleanup()
+
+    # After scheduling we should have unsubscribe callable and last_cleanup_time set
+    assert sensor._departure_cleanup_unsubscribe is not None
+    assert sensor._last_cleanup_time is not None
+
+    # Cancel it and ensure unsubscribe cleared
+    sensor._cancel_cleanup_trigger()
+    assert sensor._departure_cleanup_unsubscribe is None
+
+    # Test properties: native_value and extra_state_attributes
+    # native_value uses value_fn which will attempt to access current departures
+    coordinator.get_filtered_departures.return_value = [future_departure]
+    val = sensor.native_value
+    # For the 'line' description the value is the name of the departure
+    assert val == "Sched Line"
+
+    attrs = sensor.extra_state_attributes
+    assert attrs["stop_id"] == int(config[CONF_STOP_ID])
+    # The departures list attributes should be present via attr_fn when called
+
+
+def test_list_comprehension_instantiates_all_sensors() -> None:
+    """Ensure the list comprehension that creates entities instantiates all sensor types."""
+    coordinator = MagicMock()
+    coordinator.api = MagicMock()
+    coordinator.api.calculate_departure_type_bitflag.return_value = 0
+
+    config = {CONF_STOP_ID: "555", "subentry_id": "sub_comp", "name": "Comp Stop"}
+
+    entities = [
+        rp_sensor.RejseplanenTransportSensor(coordinator, config, description)
+        for description in rp_sensor.SENSORS
+    ]
+
+    assert len(entities) == len(rp_sensor.SENSORS)
