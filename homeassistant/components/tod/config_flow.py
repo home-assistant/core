@@ -29,15 +29,15 @@ from .const import (
 
 _KIND_SELECTOR = selector.SelectSelector(
     selector.SelectSelectorConfig(
-        options=[KIND_FIXED, KIND_SUNRISE, KIND_SUNSET],
-        mode="dropdown",
-        translation_key="tod_kind",
+        options=[KIND_FIXED, KIND_SUNRISE, KIND_SUNSET], mode="dropdown"
     )
 )
 _TIME_SELECTOR = selector.TimeSelector()
 _OFFSET_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(
-        min=-600, max=600, step=1,
+        min=-600,
+        max=600,
+        step=1,
         unit_of_measurement="min",
         mode=selector.NumberSelectorMode.BOX,
     )
@@ -62,9 +62,11 @@ STEP_AFTER_SUN = vol.Schema(
     }
 )
 
+
 async def _next_after(data: dict[str, Any]) -> str:
     """Decide which after step to show."""
     return "after_fixed" if data.get(CONF_AFTER_KIND) == KIND_FIXED else "after_sun"
+
 
 STEP_BEFORE_FIXED = vol.Schema(
     {
@@ -77,9 +79,11 @@ STEP_BEFORE_SUN = vol.Schema(
     }
 )
 
+
 async def _next_before(data: dict[str, Any]) -> str | None:
     """Decide which before step to show."""
     return "before_fixed" if data.get(CONF_BEFORE_KIND) == KIND_FIXED else "before_sun"
+
 
 OPTIONS_SCHEMA = vol.Schema(
     {

@@ -134,6 +134,7 @@ def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
+
 def _parse_side_from_options(
     opts: dict[str, Any],
     kind_key: str,
@@ -164,6 +165,7 @@ def _parse_side_from_options(
     _LOGGER.warning("Unknown %s_kind %r; defaulting to 00:00 fixed", side_label, kind)
     return time(0, 0), timedelta(0)
 
+
 class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
@@ -175,9 +177,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time | SunEventType,
+        after: time,
         after_offset: timedelta,
-        before: time | SunEventType,
+        before: time,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
