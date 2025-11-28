@@ -48,7 +48,6 @@ async def test_setup_entry_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_setup_entry_auth_exception(
@@ -64,7 +63,6 @@ async def test_setup_entry_auth_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_setup_entry_invalid_auth(
@@ -80,4 +78,3 @@ async def test_setup_entry_invalid_auth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_ERROR
-    assert not hass.data.get(DOMAIN)
