@@ -5,11 +5,11 @@ import logging
 
 from fressnapftracker import ApiClient, Device, Tracker
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import FressnapfTrackerConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +19,10 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
     """Class to manage fetching data from the API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: Device
+        self,
+        hass: HomeAssistant,
+        config_entry: FressnapfTrackerConfigEntry,
+        device: Device,
     ) -> None:
         """Initialize."""
         super().__init__(
