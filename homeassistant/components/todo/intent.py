@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import ClassVar
-
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -24,14 +22,14 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     intent.async_register(hass, ListRemoveItemIntent())
 
 
-class ListBaseItent(intent.IntentHandle):
+class ListBaseItent(intent.IntentHandler):
     """Base class for toto intents."""
 
-    slot_schema: ClassVar[dict] = {
+    slot_schema = {
         vol.Required("item"): intent.non_empty_string,
         vol.Required("name"): intent.non_empty_string,
     }
-    platforms: ClassVar[dict] = {DOMAIN}
+    platforms = {DOMAIN}
 
     def _get_params(self, intent_obj: intent.Intent) -> tuple[str, str]:
         """Validate and return intent params."""
