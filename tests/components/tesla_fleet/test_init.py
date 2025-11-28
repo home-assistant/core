@@ -416,6 +416,9 @@ async def test_energy_history_refresh_ratelimited(
 
     await setup_platform(hass, normal_config_entry)
 
+    # First call happens during setup
+    assert mock_energy_history.call_count == 1
+
     mock_energy_history.side_effect = RateLimited(
         {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
     )
@@ -423,20 +426,20 @@ async def test_energy_history_refresh_ratelimited(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_energy_history.call_count == 1
+    assert mock_energy_history.call_count == 2
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should not call for another 10 seconds
-    assert mock_energy_history.call_count == 1
+    assert mock_energy_history.call_count == 2
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_energy_history.call_count == 2
+    assert mock_energy_history.call_count == 3
 
 
 async def test_init_region_issue(

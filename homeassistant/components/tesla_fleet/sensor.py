@@ -35,9 +35,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslaFleetConfigEntry
-from .const import ENERGY_HISTORY_FIELDS, TeslaFleetState
+from .const import TeslaFleetState
 from .entity import (
-    TeslaFleetEnergyHistoryEntity,
     TeslaFleetEnergyInfoEntity,
     TeslaFleetEnergyLiveEntity,
     TeslaFleetVehicleEntity,
@@ -417,21 +416,6 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
-    SensorEntityDescription(
-        key=key,
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_registry_enabled_default=(
-            key.startswith("total") or key == "grid_energy_imported"
-        ),
-    )
-    for key in ENERGY_HISTORY_FIELDS
-)
-
 ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="vpp_backup_reserve_percent",
@@ -467,13 +451,6 @@ async def async_setup_entry(
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
                 or description.key == "percentage_charged"
-            ),
-            (  # Add energy site history
-                TeslaFleetEnergyHistorySensorEntity(energysite, description)
-                for energysite in entry.runtime_data.energysites
-                for description in ENERGY_HISTORY_DESCRIPTIONS
-                if energysite.info_coordinator.data.get("components_battery")
-                or energysite.info_coordinator.data.get("components_solar")
             ),
             (  # Add wall connectors
                 TeslaFleetWallConnectorSensorEntity(energysite, wc["din"], description)
@@ -566,25 +543,6 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity)
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._value)
-
-
-class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorEntity):
-    """Base class for Tesla Fleet energy site metric sensors."""
-
-    entity_description: SensorEntityDescription
-
-    def __init__(
-        self,
-        data: TeslaFleetEnergyData,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        self.entity_description = description
-        super().__init__(data, description.key)
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the sensor."""
-        self._attr_native_value = self._value
 
 
 class TeslaFleetWallConnectorSensorEntity(TeslaFleetWallConnectorEntity, SensorEntity):
