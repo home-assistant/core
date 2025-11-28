@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_DEVICE_TOKEN, CONF_SERIAL_NUMBER
 from .coordinator import FressnapfTrackerDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
 type FressnapfTrackerConfigEntry = ConfigEntry[
     dict[str, FressnapfTrackerDataUpdateCoordinator]
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
         entry.runtime_data[subentry.subentry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -44,4 +44,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: FressnapfTrackerConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
