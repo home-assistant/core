@@ -10,7 +10,7 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.util.json import json_loads, json_loads_object
 
-from .const import LOGGER, DPCode, DPType
+from .const import LOGGER, DPType
 from .util import parse_dptype, remap_value
 
 # Dictionary to track logged warnings to avoid spamming logs
@@ -218,7 +218,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     DPTYPE: DPType
     type_information: T
 
-    def __init__(self, dpcode: DPCode, type_information: T) -> None:
+    def __init__(self, dpcode: str, type_information: T) -> None:
         """Init DPCodeWrapper."""
         super().__init__(dpcode)
         self.type_information = type_information
@@ -227,7 +227,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def find_dpcode(
         cls,
         device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        dpcodes: str | tuple[str, ...] | None,
         *,
         prefer_function: bool = False,
     ) -> Self | None:
@@ -336,7 +336,7 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
 
     DPTYPE = DPType.INTEGER
 
-    def __init__(self, dpcode: DPCode, type_information: IntegerTypeData) -> None:
+    def __init__(self, dpcode: str, type_information: IntegerTypeData) -> None:
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self.native_unit = type_information.unit
@@ -391,7 +391,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
     def find_dpcode(
         cls,
         device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
+        dpcodes: str | tuple[str, ...],
         *,
         bitmap_key: str,
     ) -> Self | None:
@@ -408,7 +408,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.BITMAP],
@@ -418,7 +418,7 @@ def find_dpcode(
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.ENUM],
@@ -428,7 +428,7 @@ def find_dpcode(
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.INTEGER],
@@ -438,7 +438,7 @@ def find_dpcode(
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.BOOLEAN, DPType.JSON, DPType.RAW],
