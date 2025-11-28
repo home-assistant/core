@@ -46,7 +46,6 @@ SENSORS: tuple[LeilSaunaSensorEntityDescription, ...] = (
     LeilSaunaSensorEntityDescription(
         key="heater_elements_active",
         translation_key="heater_elements_active",
-        icon="mdi:radiator",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.heater_elements_active,
     ),

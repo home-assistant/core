@@ -43,7 +43,7 @@
         "name": "Heater elements active"
       },
       "on_time": {
-        "name": "On time"
+        "name": "Total time turned on"
       }
     }
   },
