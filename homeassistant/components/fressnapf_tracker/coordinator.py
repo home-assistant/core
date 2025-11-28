@@ -3,16 +3,20 @@
 from datetime import timedelta
 import logging
 
-from fressnapftracker import ApiClient, Device, Tracker
+from fressnapftracker import ApiClient, Device, FressnapfTrackerError, Tracker
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import FressnapfTrackerConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type FressnapfTrackerConfigEntry = ConfigEntry[
+    dict[str, FressnapfTrackerDataUpdateCoordinator]
+]
 
 
 class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
@@ -42,7 +46,7 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
     async def _async_update_data(self) -> Tracker:
         try:
             return await self.client.get_tracker()
-        except Exception as exception:
+        except FressnapfTrackerError as exception:
             _LOGGER.debug(
                 "Failed to update fressnapf_tracker data: %s",
                 exception,

@@ -2,18 +2,16 @@
 
 from fressnapftracker import Device
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_DEVICE_TOKEN, CONF_SERIAL_NUMBER
-from .coordinator import FressnapfTrackerDataUpdateCoordinator
+from .coordinator import (
+    FressnapfTrackerConfigEntry,
+    FressnapfTrackerDataUpdateCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
-
-type FressnapfTrackerConfigEntry = ConfigEntry[
-    dict[str, FressnapfTrackerDataUpdateCoordinator]
-]
 
 
 async def async_setup_entry(
