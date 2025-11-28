@@ -27,6 +27,7 @@ class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
     """fressnapf_tracker device tracker."""
 
     _attr_name = None
+    _attr_translation_key = "pet"
 
     def __init__(
         self,
@@ -34,7 +35,6 @@ class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
     ) -> None:
         """Initialize the device tracker."""
         super().__init__(coordinator)
-        self._attr_icon = "mdi:paw"
         self._attr_unique_id = coordinator.device.serialnumber
 
     @property

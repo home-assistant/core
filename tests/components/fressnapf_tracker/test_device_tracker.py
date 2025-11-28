@@ -35,6 +35,7 @@ async def test_device_tracker_entity(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.unique_id == MOCK_SERIAL_NUMBER
+    assert entity_entry.translation_key == "pet"
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
