@@ -42,6 +42,9 @@ def handle_integration_log_info(
         if flow["context"].get("source") in DISCOVERY_SOURCES:
             integrations.add(flow["handler"])
 
+    # Add integrations with custom log settings
+    integrations.update(hass.data[DATA_LOGGER].settings.async_get_integration_domains())
+
     connection.send_result(
         msg["id"],
         [

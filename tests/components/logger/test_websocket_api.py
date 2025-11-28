@@ -104,6 +104,40 @@ async def test_integration_log_info_discovered_flows(
         assert "user_flow_integration" not in domains
 
 
+async def test_integration_log_info_with_settings(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test that log info includes integrations with custom log settings."""
+    assert await async_setup_component(hass, "logger", {})
+
+    # Set up a mock integration that is not loaded
+    mock_integration(hass, MockModule("unloaded_integration"))
+
+    # Set a log level for this unloaded integration
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "logger/integration_log_level",
+            "integration": "unloaded_integration",
+            "level": "DEBUG",
+            "persistence": "none",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+
+    # Now check log_info includes the unloaded integration with settings
+    await websocket_client.send_json({"id": 2, "type": "logger/log_info"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 2
+    assert msg["success"]
+
+    domains = [item["domain"] for item in msg["result"]]
+    assert "unloaded_integration" in domains
+
+
 async def test_integration_log_level_logger_not_loaded(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
