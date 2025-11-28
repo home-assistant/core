@@ -757,6 +757,62 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
     }
 
 
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+async def test_ws_ice_servers(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get WebRTC ICE servers."""
+    await async_setup_component(hass, "camera", {})
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "camera/webrtc/ice_servers"})
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "urls": [
+                "stun:stun.home-assistant.io:80",
+                "stun:stun.home-assistant.io:3478",
+            ]
+        },
+    ]
+
+    @callback
+    def get_ice_server() -> list[RTCIceServer]:
+        return [
+            RTCIceServer(
+                urls=["stun:example2.com", "turn:example2.com"],
+                username="user",
+                credential="pass",
+            )
+        ]
+
+    async_register_ice_servers(hass, get_ice_server)
+
+    await client.send_json_auto_id({"type": "camera/webrtc/ice_servers"})
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "urls": [
+                "stun:stun.home-assistant.io:80",
+                "stun:stun.home-assistant.io:3478",
+            ]
+        },
+        {
+            "urls": ["stun:example2.com", "turn:example2.com"],
+            "username": "user",
+            "credential": "pass",
+        },
+    ]
+
+
 async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     """Test optional interface for WebRTC provider."""
 

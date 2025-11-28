@@ -345,6 +345,26 @@ async def ws_candidate(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/webrtc/ice_servers",
+    }
+)
+@websocket_api.async_response
+async def ws_ice_servers(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get WebRTC ICE servers websocket command."""
+    ice_servers = [
+        server.to_dict()
+        for servers in hass.data.get(DATA_ICE_SERVERS, [])
+        for server in servers()
+    ]
+    connection.send_result(msg["id"], ice_servers)
+
+
 @callback
 def async_register_ws(hass: HomeAssistant) -> None:
     """Register camera webrtc ws endpoints."""
@@ -352,6 +372,7 @@ def async_register_ws(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_webrtc_offer)
     websocket_api.async_register_command(hass, ws_get_client_config)
     websocket_api.async_register_command(hass, ws_candidate)
+    websocket_api.async_register_command(hass, ws_ice_servers)
 
 
 async def async_get_supported_provider(
