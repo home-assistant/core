@@ -49,7 +49,7 @@ def _has_a_valid_dpcode(
     device: CustomerDevice, description: TuyaHumidifierEntityDescription
 ) -> bool:
     """Check if the device has at least one valid DP code."""
-    properties_to_check: list[str | DPCode | tuple[DPCode, ...] | None] = [
+    properties_to_check: list[str | tuple[str, ...] | None] = [
         # Main control switch
         description.dpcode or description.key,
         # Other humidity properties
