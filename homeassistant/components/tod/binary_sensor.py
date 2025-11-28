@@ -141,7 +141,7 @@ def _parse_side_from_options(
     time_key: str,
     offset_min_key: str,
     side_label: str,
-) -> tuple[time | SunEventType, timedelta]:
+) -> tuple[time, timedelta]:
     """Read one side (after/before) from UI options.
 
     Returns:
