@@ -1640,6 +1640,52 @@ class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_ = {"is_on"}
 
+# batch helper functions
+
+
+async def _batch_execute(
+    entities: list[ToggleEntity], method_name: str, **kwargs: Any
+) -> dict[str, Any]:
+    """Run a batch of coroutines for given entities and return results.
+
+    Args:
+        entities: List of ToggleEntity instances.
+        method_name: Name of the instance method to call on each entity (e.g., "async_turn_on").
+        **kwargs: Extra keyword arguments to pass to the method.
+
+    Returns:
+        Dictionary mapping entity_id to result or None if an exception occurred.
+    """
+    coros: list[Coroutine[Any, Any, Any]] = [
+        getattr(entity, method_name)(**kwargs) for entity in entities
+    ]
+    results = await asyncio.gather(*coros, return_exceptions=True)
+
+    batch_result: dict[str, Any] = {}
+    for entity, result in zip(entities, results, strict=True):
+        if isinstance(result, BaseException):
+            batch_result[entity.entity_id] = None
+        else:
+            batch_result[entity.entity_id] = (
+                result if isinstance(result, dict) else None
+            )
+
+    return batch_result
+
+
+async def _run_batch_with_order(
+    entity_groups: tuple[list[ToggleEntity], ...],
+    method_name: str,
+    kwargs: dict[str, Any],
+) -> dict[str, Any]:
+    batch_result: dict[str, Any] = {}
+
+    for group in entity_groups:
+        group_result = await _batch_execute(group, method_name, **kwargs)
+        batch_result.update(group_result)
+
+    return batch_result
+
 
 class ToggleEntity(
     Entity, cached_properties=TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_
@@ -1649,6 +1695,186 @@ class ToggleEntity(
     entity_description: ToggleEntityDescription
     _attr_is_on: bool | None = None
     _attr_state: None = None
+
+    # batching support
+    _BATCH_MAP = {
+        "turn_on": "async_batch_turn_on",
+        "turn_off": "async_batch_turn_off",
+        "toggle": "async_batch_toggle",
+    }
+
+    @classmethod
+    def _split_entities_by_state(
+        cls,
+        entities: list[ToggleEntity],
+    ) -> tuple[list[ToggleEntity], list[ToggleEntity], list[ToggleEntity]]:
+        """Split a list of ToggleEntity objects into those that are currently on and off.
+
+        Args:
+            entities: List of ToggleEntity instances.
+
+        Returns:
+            Tuple of three lists:
+            - on_entities: entities whose `is_on` property is True
+            - off_entities: entities whose `is_on` property is False
+            - unknown_entities: entities whose 'is_on' property is None
+        """
+        on_entities: list[ToggleEntity] = []
+        off_entities: list[ToggleEntity] = []
+        unknown_entities: list[ToggleEntity] = []
+        # we're specifically not using list comprehension to avoid
+        # going through the whole list 3 times
+        for e in entities:
+            if e.is_on is True:
+                on_entities.append(e)
+            elif e.is_on is False:
+                off_entities.append(e)
+            else:
+                unknown_entities.append(e)
+        return on_entities, off_entities, unknown_entities
+
+    @classmethod
+    async def async_batch_turn_on(
+        cls,
+        entities: list[ToggleEntity],
+        config_entry_id: str | None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Batch 'turn_on' for a list of entities concurrently.
+
+        Args:
+        entities: List of ToggleEntity instances to turn on.
+        config_entry_id (Optional): The config entry ID associated all entities in the batch.
+        **kwargs: Arbitrary keyword arguments passed from the service call.
+
+        Returns:
+            A dictionary mapping each entity_id to its result:
+                - True / False / None depending on success, failure, or unknown state.
+                - None is used if the entity could not be updated.
+            If the method cannot determine success or failure, it should return None
+            so that async_batch_query() can be run by the service handler to determine
+            the actual results.
+
+        Notes for Subclasses:
+            - Subclasses can override this method to implement custom batch behavior.
+            - The default implementation gathers all entity.async_turn_on coroutines.
+        """
+        # Split entities into off / unknown / on
+        off_entities, unknown_entities, on_entities = cls._split_entities_by_state(
+            entities
+        )
+
+        # For better perceived response time by deferring turning on entities which are
+        # already on, we'll turn on entities which are off or unknown first
+        return await _run_batch_with_order(
+            (off_entities, unknown_entities, on_entities),
+            "async_turn_on",
+            **kwargs,
+        )
+
+    @classmethod
+    async def async_batch_turn_off(
+        cls,
+        entities: list[ToggleEntity],
+        config_entry_id: str,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Batch 'turn_off' for a list of entities concurrently.
+
+        Args:
+            entities: List of ToggleEntity instances to turn off.
+            config_entry_id (Optional): The config entry ID associated with all of the entities in the batch.
+            **kwargs: Arbitrary keyword arguments passed from the service call.
+
+        Returns:
+            A dictionary mapping each entity_id to its result:
+                - True / False / None depending on success, failure, or unknown state.
+                - None is used if the entity could not be updated.
+            If the method cannot determine success or failure, it should return None
+            so that async_batch_query() can be run by the service handler to determine
+            the actual results.
+
+        Notes for Subclasses:
+            - Subclasses can override this method to implement custom batch behavior.
+            - The default implementation gathers all entity.async_turn_on coroutines.
+        """
+        # Split entities into off / unknown / on
+        off_entities, unknown_entities, on_entities = cls._split_entities_by_state(
+            entities
+        )
+        # For better perceived response time by deferring turning off entities which are
+        # already off, we'll turn on entities which are on or unknown first
+        return await _run_batch_with_order(
+            (on_entities, unknown_entities, off_entities),
+            "async_turn_off",
+            **kwargs,
+        )
+
+    @classmethod
+    async def async_batch_toggle(
+        cls, entities: list[ToggleEntity], context: Context, **kwargs: Any
+    ) -> dict[str, Any]:
+        """Toggle a list of ToggleEntities in parallel.
+
+        Splits entities into currently on/off and calls the batch turn on/off
+        coroutines for each group.
+        """
+        on_entities, off_entities, _ = cls._split_entities_by_state(entities)
+
+        coros: list[Coroutine[Any, Any, dict[str, Any]]] = []
+
+        if on_entities:
+            coros.append(
+                cls.async_batch_turn_off(on_entities, **kwargs, context=context)
+            )
+        if off_entities:
+            coros.append(
+                cls.async_batch_turn_on(off_entities, **kwargs, context=context)
+            )
+
+        if not coros:
+            return {}
+
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        merged: dict[str, Any] = {}
+
+        for res in results:
+            if isinstance(res, BaseException):
+                continue
+            merged.update(res)
+
+        return merged
+
+    @classmethod
+    async def async_batch_query(
+        cls,
+        entities: list[ToggleEntity],
+        config_entry_id: str | None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Dummy batch query method for toggle entities.
+
+        This method is called by the batching machinery in `entity_service_call`
+        for entities whose last batch call returned None. Subclasses can override
+        this to provide actual query logic (e.g., polling a device).
+
+        Args:
+            entities: List of ToggleEntity instances to query.
+            config_entry_id (Optional): The config entry ID these entities belong to.
+            **kwargs: Additional keyword arguments passed from the service call.
+
+        Returns:
+            Dictionary mapping entity_id to state:
+                True if the entity is on,
+                False if the entity is off,
+                None if the state is unknown or an error occurred.
+
+            Returns current states concurrently.
+        """
+        coros = [entity.async_update_ha_state(True) for entity in entities]
+        await asyncio.gather(*coros, return_exceptions=True)
+
+        return {entity.entity_id: entity.is_on for entity in entities}
 
     @property
     @final
