@@ -128,13 +128,13 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {CONF_PHONE_NUMBER: user_input[CONF_PHONE_NUMBER]}
-            )
             errors, success = await self._async_request_sms_code(
                 user_input[CONF_PHONE_NUMBER]
             )
             if success:
+                self._async_abort_entries_match(
+                    {CONF_USER_ID: self._context[CONF_USER_ID]}
+                )
                 return await self.async_step_sms_code()
 
         return self.async_show_form(
