@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -390,7 +391,7 @@ def _get_dpcode_wrapper(
     description: TuyaBinarySensorEntityDescription,
 ) -> DPCodeWrapper | None:
     """Get DPCode wrapper for an entity description."""
-    dpcode = description.dpcode or DPCode(description.key)
+    dpcode = description.dpcode or description.key
     if description.bitmap_key is not None:
         return DPCodeBitmapBitWrapper.find_dpcode(
             device, dpcode, bitmap_key=description.bitmap_key
@@ -403,7 +404,7 @@ def _get_dpcode_wrapper(
     if dpcode not in device.status:
         return None
     return _CustomDPCodeWrapper(
-        dpcode,
+        cast(DPCode, dpcode),
         description.on_value
         if isinstance(description.on_value, set)
         else {description.on_value},
