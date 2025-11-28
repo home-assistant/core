@@ -66,4 +66,4 @@ class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Get sensor state."""
-        return self.coordinator.data[self._sensor.id]
+        return self.coordinator.data[self._sensor.id - 1]
