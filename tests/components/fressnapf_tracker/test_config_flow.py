@@ -195,7 +195,7 @@ async def test_user_flow_duplicate_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test user flow aborts on duplicate phone number."""
+    """Test user flow aborts on duplicate user_id."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

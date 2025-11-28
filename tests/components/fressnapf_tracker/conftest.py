@@ -147,7 +147,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USER_ID: MOCK_USER_ID,
             CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
         },
-        unique_id=str(MOCK_USER_ID),
+        unique_id=MOCK_USER_ID,
     )
 
 
