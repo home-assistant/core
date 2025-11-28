@@ -215,7 +215,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
 
 class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching energy site history and inserting external statistics."""
+    """Class to manage fetching energy site history from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
 
