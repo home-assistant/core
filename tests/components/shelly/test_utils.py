@@ -15,6 +15,7 @@ from aioshelly.const import (
     MODEL_PLUS_2PM_V2,
     MODEL_WALL_DISPLAY,
 )
+from aioshelly.rpc_device import WsServer
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -25,7 +26,6 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.components.shelly.utils import (
     ShellyReceiver,
-    WsServer,
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
@@ -37,7 +37,6 @@ from homeassistant.components.shelly.utils import (
     is_block_momentary_input,
     mac_address_from_name,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 DEVICE_BLOCK_ID = 4
@@ -309,7 +308,7 @@ def test_mac_address_from_name(name: str, result: str | None) -> None:
     assert mac_address_from_name(name) == result
 
 
-async def test_shelly_receiver_get(hass: HomeAssistant) -> None:
+async def test_shelly_receiver_get() -> None:
     """Test ShellyReceiver get method."""
     ws_server = Mock(spec=WsServer)
     ws_server.websocket_handler = AsyncMock(return_value="test_response")
