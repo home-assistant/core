@@ -459,10 +459,10 @@ def find_dpcode(
     if dpcodes is None:
         return None
 
-    if isinstance(dpcodes, str):
-        dpcodes = (DPCode(dpcodes),)
-    elif not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
+    if not isinstance(dpcodes, tuple):
+        # Cast to DPCode for type checking purposes
+        # Custom integration may pass unknown codes here
+        dpcodes = (cast(DPCode, dpcodes),)
 
     lookup_tuple = (
         (device.function, device.status_range)
