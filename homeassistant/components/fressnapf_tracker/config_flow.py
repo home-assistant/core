@@ -294,7 +294,7 @@ class FressnapfTrackerSubentryFlowHandler(ConfigSubentryFlow):
                 unique_id=f"{self._get_entry().unique_id}_{user_input[CONF_SERIAL_NUMBER]}",
             )
         devices = await self.auth_client.get_devices(
-            user_id=self._get_entry().data["user_id"],
+            user_id=self._get_entry().data[CONF_USER_ID],
             user_access_token=self._get_entry().data[CONF_ACCESS_TOKEN],
         )
         self.devices = {device.serialnumber: device for device in devices}
