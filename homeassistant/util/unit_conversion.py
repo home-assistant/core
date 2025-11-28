@@ -69,7 +69,8 @@ _HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
 _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
-_DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
+_DAYS_TO_HRS = 24  # 1 day = 24 hours
+_DAYS_TO_SECS = _DAYS_TO_HRS * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
@@ -852,6 +853,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 1 / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY: _DAYS_TO_HRS / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
         / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
@@ -865,6 +867,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 

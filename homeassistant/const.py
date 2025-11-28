@@ -653,6 +653,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     LITERS_PER_SECOND = "L/s"
     GALLONS_PER_HOUR = "gal/h"
     GALLONS_PER_MINUTE = "gal/min"
+    GALLONS_PER_DAY = "gal/d"
     MILLILITERS_PER_SECOND = "mL/s"
 
 

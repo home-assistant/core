@@ -9,7 +9,6 @@ from aioshelly.const import (
     MODEL_BUTTON1,
     MODEL_BUTTON1_V2,
     MODEL_DIMMER_2,
-    MODEL_EM3,
     MODEL_I3,
     MODEL_MOTION,
     MODEL_PLUS_2PM_V2,
@@ -24,7 +23,6 @@ from homeassistant.components.shelly.const import (
     UPTIME_DEVIATION,
 )
 from homeassistant.components.shelly.utils import (
-    get_block_channel_name,
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
@@ -74,44 +72,6 @@ async def test_block_get_block_number_of_channels(
         )
         == 2
     )
-
-
-async def test_block_get_block_channel_name(
-    mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test block get block channel name."""
-    result = get_block_channel_name(
-        mock_block_device,
-        mock_block_device.blocks[DEVICE_BLOCK_ID],
-    )
-    # when has_entity_name is True the result should be None
-    assert result is None
-
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
-    result = get_block_channel_name(
-        mock_block_device,
-        mock_block_device.blocks[DEVICE_BLOCK_ID],
-    )
-    # when has_entity_name is True the result should be None
-    assert result is None
-
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
-    result = get_block_channel_name(
-        mock_block_device,
-        mock_block_device.blocks[DEVICE_BLOCK_ID],
-    )
-    # when has_entity_name is True the result should be None
-    assert result is None
-
-    monkeypatch.setitem(
-        mock_block_device.settings, "relays", [{"name": "test-channel"}]
-    )
-    result = get_block_channel_name(
-        mock_block_device,
-        mock_block_device.blocks[DEVICE_BLOCK_ID],
-    )
-    # when has_entity_name is True the result should be None
-    assert result is None
 
 
 async def test_is_block_momentary_input(
