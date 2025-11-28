@@ -2167,7 +2167,7 @@ async def test_rpc_rgbcct_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-rgbcct:0-power_rgbcct"
     assert entry.name is None
-    assert entry.translation_key is None  # entity with device class
+    assert entry.translation_key is None  # entity with device class and no channel name
 
     entity_id = "sensor.test_name_energy"
 
@@ -2178,4 +2178,4 @@ async def test_rpc_rgbcct_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
     assert entry.name is None
-    assert entry.translation_key is None  # entity with device class
+    assert entry.translation_key is None  # entity with device class and no channel name
