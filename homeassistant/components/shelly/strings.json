@@ -592,6 +592,11 @@
       "beta_firmware": {
         "name": "Beta firmware"
       }
+    },
+    "valve": {
+      "gas_valve": {
+        "name": "Valve"
+      }
     }
   },
   "exceptions": {
