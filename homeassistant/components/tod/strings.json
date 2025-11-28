@@ -1,16 +1,15 @@
 {
-  "title": "Times of the Day Sensor",
   "config": {
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "after_kind": "On — type",
-          "after_time": "On time",
           "after_offset_min": "On — offset (minutes)",
+          "after_time": "On time",
           "before_kind": "Off — type",
+          "before_offset_min": "Off — offset (minutes)",
           "before_time": "Off time",
-          "before_offset_min": "Off — offset (minutes)"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "Create a binary sensor that turns on or off depending on the time.",
         "title": "Create Times of the Day Sensor"
@@ -22,13 +21,14 @@
       "init": {
         "data": {
           "after_kind": "[%key:component::tod::config::step::user::data::after_kind%]",
-          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
           "after_offset_min": "[%key:component::tod::config::step::user::data::after_offset_min%]",
+          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
           "before_kind": "[%key:component::tod::config::step::user::data::before_kind%]",
-          "before_time": "[%key:component::tod::config::step::user::data::before_time%]",
-          "before_offset_min": "[%key:component::tod::config::step::user::data::before_offset_min%]"
+          "before_offset_min": "[%key:component::tod::config::step::user::data::before_offset_min%]",
+          "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
         }
       }
     }
-  }
+  },
+  "title": "Times of the Day Sensor"
 }
