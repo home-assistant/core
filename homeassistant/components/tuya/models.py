@@ -461,7 +461,8 @@ def find_dpcode(
 
     if not isinstance(dpcodes, tuple):
         # Cast to DPCode for type checking purposes
-        # Custom integration may pass unknown codes here
+        # Custom integration or quirk extensions may pass valid codes
+        # that are part of DPCode enum
         dpcodes = (cast(DPCode, dpcodes),)
 
     lookup_tuple = (
