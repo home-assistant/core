@@ -3181,13 +3181,17 @@ async def test_handle_intents_with_response_errors(
         agent_id=None,
     )
 
-    with patch(
-        "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
-        return_value=default_agent._make_error_result(
-            user_input.language, error_code, "Mock error message"
-        ),
-    ) as mock_process:
-        response = await agent.async_handle_intents(user_input)
+    with (
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
+            return_value=default_agent._make_error_result(
+                user_input.language, error_code, "Mock error message"
+            ),
+        ) as mock_process,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        response = await agent.async_handle_intents(user_input, chat_log)
 
     assert len(mock_process.mock_calls) == 1
 
@@ -3240,9 +3244,11 @@ async def test_handle_intents_filters_results(
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
         ) as mock_process,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(
-            user_input, intent_filter=_filter_intents
+            user_input, chat_log, intent_filter=_filter_intents
         )
 
         assert len(mock_recognize.mock_calls) == 1
@@ -3257,7 +3263,7 @@ async def test_handle_intents_filters_results(
 
         # Second time it is not filtered
         response = await agent.async_handle_intents(
-            user_input, intent_filter=_filter_intents
+            user_input, chat_log, intent_filter=_filter_intents
         )
 
         assert len(mock_recognize.mock_calls) == 2
