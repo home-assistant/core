@@ -31,7 +31,6 @@ from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_block_channel,
-    get_block_channel_name,
     get_block_custom_name,
     get_block_number_of_channels,
     get_device_entry_gen,
@@ -211,7 +210,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
                 else ""
             }
         else:
-            self._attr_name = get_block_channel_name(coordinator.device, block)
+            self._attr_name = get_block_custom_name(coordinator.device, block)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
