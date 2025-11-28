@@ -33,13 +33,17 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_AFTER_KIND,
     CONF_AFTER_OFFSET,
+    CONF_AFTER_OFFSET_MIN,
     CONF_AFTER_TIME,
+    CONF_BEFORE_KIND,
     CONF_BEFORE_OFFSET,
+    CONF_BEFORE_OFFSET_MIN,
     CONF_BEFORE_TIME,
 )
 
-type SunEventType = Literal["sunrise", "sunset"]
+SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,10 +73,33 @@ async def async_setup_entry(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return
 
-    after = cv.time(config_entry.options[CONF_AFTER_TIME])
-    after_offset = timedelta(0)
-    before = cv.time(config_entry.options[CONF_BEFORE_TIME])
-    before_offset = timedelta(0)
+    opts = dict(config_entry.options)
+
+    try:
+        if CONF_AFTER_KIND in opts or CONF_BEFORE_KIND in opts:
+            after, after_offset = _parse_side_from_options(
+                opts,
+                kind_key=CONF_AFTER_KIND,
+                time_key=CONF_AFTER_TIME,
+                offset_min_key=CONF_AFTER_OFFSET_MIN,
+                side_label="after",
+            )
+            before, before_offset = _parse_side_from_options(
+                opts,
+                kind_key=CONF_BEFORE_KIND,
+                time_key=CONF_BEFORE_TIME,
+                offset_min_key=CONF_BEFORE_OFFSET_MIN,
+                side_label="before",
+            )
+        else:
+            after = cv.time(opts[CONF_AFTER_TIME])
+            after_offset = timedelta(0)
+            before = cv.time(opts[CONF_BEFORE_TIME])
+            before_offset = timedelta(0)
+    except KeyError as exc:
+        _LOGGER.error("TOD entry missing required option %s; cannot set up", exc)
+        return
+
     name = config_entry.title
     unique_id = config_entry.entry_id
 
@@ -107,6 +134,35 @@ def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
+def _parse_side_from_options(
+    opts: dict[str, Any],
+    kind_key: str,
+    time_key: str,
+    offset_min_key: str,
+    side_label: str,
+) -> tuple[time | SunEventType, timedelta]:
+    """Read one side (after/before) from UI options.
+
+    Returns:
+        (time | 'sunrise'|'sunset', offset_timedelta)
+    """
+    kind = opts.get(kind_key)
+
+    if not kind or kind == "fixed":
+        return cv.time(opts[time_key]), timedelta(0)
+
+    try:
+        offset_min = int(opts.get(offset_min_key, 0))
+    except (TypeError, ValueError):
+        offset_min = 0
+
+    if kind in (SUN_EVENT_SUNRISE, "sunrise"):
+        return SUN_EVENT_SUNRISE, timedelta(minutes=offset_min)
+    if kind in (SUN_EVENT_SUNSET, "sunset"):
+        return SUN_EVENT_SUNSET, timedelta(minutes=offset_min)
+
+    _LOGGER.warning("Unknown %s_kind %r; defaulting to 00:00 fixed", side_label, kind)
+    return time(0, 0), timedelta(0)
 
 class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
@@ -119,9 +175,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time,
+        after: time | SunEventType,
         after_offset: timedelta,
-        before: time,
+        before: time | SunEventType,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
