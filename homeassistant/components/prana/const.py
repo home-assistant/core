@@ -4,6 +4,7 @@ DOMAIN = "prana"
 
 CONF_CONFIG = "config"
 CONF_MDNS = "mdns"
+CONF_HOST = "host"
 
 
 class PranaFanType:

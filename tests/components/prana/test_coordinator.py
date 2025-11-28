@@ -2,16 +2,16 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from prana_local_api_client.exceptions import (
+    PranaApiCommunicationError,
+    PranaApiUpdateFailed,
+)
 import pytest
 
-from homeassistant.components.prana.const import PranaFanType, PranaSensorType
 from homeassistant.components.prana.coordinator import PranaCoordinator
-from homeassistant.components.prana.switch import PranaSwitchType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant  # added
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-FAKE_CONFIG_HEX = "00" * 62  # unused placeholder
 
 
 @pytest.fixture
@@ -38,50 +38,42 @@ def mock_entry():
 
 
 @pytest.mark.asyncio
-async def test_async_update_data_parses_state_correctly(
+async def test_async_update_data_returns_state(
     hass: HomeAssistant, mock_entry: ConfigEntry
 ) -> None:
-    """Coordinator should normalize fan max_speed and convert temperatures (/10)."""
-    coordinator = PranaCoordinator(hass, mock_entry, FAKE_CONFIG_HEX)
+    """Coordinator should return whatever api_client.get_state() provides."""
+    coordinator = PranaCoordinator(hass, mock_entry)
 
     mock_state = {
-        PranaFanType.EXTRACT: {"max_speed": 100},
-        PranaFanType.BOUNDED: {"max_speed": 0},
-        PranaFanType.SUPPLY: {"max_speed": 0},
-        PranaSwitchType.HEATER: {"state": True},
-        PranaSensorType.HUMIDITY: 55,
-        PranaSensorType.INSIDE_TEMPERATURE: 215,  # will be divided by 10 -> 21.5
-        PranaSensorType.OUTSIDE_TEMPERATURE: 123,  # -> 12.3
+        "fans": {"extract": {"max_speed": 100}},
+        "sensors": {"inside_temperature": 215},
     }
 
     # Attach a mocked api_client.get_state used by the coordinator implementation
     coordinator.api_client = MagicMock()
     coordinator.api_client.get_state = AsyncMock(return_value=mock_state)
+
     result = await coordinator._async_update_data()
-
-    # Fans max_speed should be normalized (100 // 10 == 10)
-    assert result[PranaFanType.EXTRACT]["max_speed"] == 10
-    assert result[PranaFanType.BOUNDED]["max_speed"] == 10
-    assert result[PranaFanType.SUPPLY]["max_speed"] == 10
-
-    # Temperatures converted
-    assert result[PranaSensorType.INSIDE_TEMPERATURE] == 21.5
-    assert result[PranaSensorType.OUTSIDE_TEMPERATURE] == 12.3
-
-    # Other keys remain present
-    assert PranaSwitchType.HEATER in result
-    assert PranaSensorType.HUMIDITY in result
+    assert result == mock_state
 
 
 @pytest.mark.asyncio
-async def test_async_update_data_raises_update_failed(
-    hass: HomeAssistant, mock_entry: ConfigEntry
+@pytest.mark.parametrize(
+    "exc",
+    [
+        PranaApiUpdateFailed("http error"),
+        PranaApiCommunicationError("network error"),
+        Exception("generic"),
+    ],
+)
+async def test_async_update_data_raises_update_failed_on_exceptions(
+    hass: HomeAssistant, mock_entry: ConfigEntry, exc: Exception
 ) -> None:
     """Coordinator should raise UpdateFailed when underlying fetch fails."""
-    coordinator = PranaCoordinator(hass, mock_entry, FAKE_CONFIG_HEX)
+    coordinator = PranaCoordinator(hass, mock_entry)
 
-    # Mock api_client.get_state to raise
     coordinator.api_client = MagicMock()
-    coordinator.api_client.get_state = AsyncMock(side_effect=Exception("boom"))
+    coordinator.api_client.get_state = AsyncMock(side_effect=exc)
+
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()

@@ -1,12 +1,36 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "This device is already configured",
+      "no_devices_found": "No Prana devices were found"
     },
     "step": {
       "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+        "description": "Set up {name} at {host}?",
+        "title": "Confirm Prana device"
+      },
+      "manual": {
+        "description": "Enter the IP address of your Prana device",
+        "title": "Add Prana device by IP"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "auto": {
+        "name": "Auto"
+      },
+      "auto_plus": {
+        "name": "Auto plus"
+      },
+      "bound": {
+        "name": "Bound"
+      },
+      "heater": {
+        "name": "Heater"
+      },
+      "winter": {
+        "name": "Winter"
       }
     }
   }
