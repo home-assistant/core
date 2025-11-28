@@ -82,4 +82,4 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
     @property
     def is_on(self):
         """Get switch state."""
-        return self.coordinator.data[self._switch.id]
+        return self.coordinator.data[self._switch.id - 1]
