@@ -56,6 +56,7 @@ async def test_config_flow_skip_auth(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "SFR Box"
     assert result["data"] == {CONF_HOST: "192.168.0.1"}
+    assert result["context"]["unique_id"] == "e4:5d:51:00:11:22"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -112,6 +113,7 @@ async def test_config_flow_skip_auth_failure(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "SFR Box"
     assert result["data"] == {CONF_HOST: "192.168.0.1"}
+    assert result["context"]["unique_id"] == "e4:5d:51:00:11:22"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -167,6 +169,7 @@ async def test_config_flow_with_auth(
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "valid",
     }
+    assert result["context"]["unique_id"] == "e4:5d:51:00:11:22"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -237,6 +240,7 @@ async def test_config_flow_with_auth_failure(
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "valid",
     }
+    assert result["context"]["unique_id"] == "e4:5d:51:00:11:22"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
