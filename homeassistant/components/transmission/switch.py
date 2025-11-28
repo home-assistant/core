@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import time
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -59,10 +60,19 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
     """Representation of a Transmission switch."""
 
     entity_description: TransmissionSwitchEntityDescription
+    _state_delay = 5  # seconds
+    _last_action = 0.0
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
+        # The Transmission API has a delay in state change after
+        # calling for a change. This state delay will ensure that HA keeps an
+        # optimistic value of state during this period to improve the user
+        # experience and avoid confusion.
+        if self._last_action > (time.time() - self._state_delay):
+            return bool(self._attr_is_on)
+        self._last_action = time.time()
         return bool(self.entity_description.is_on_func(self.coordinator))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -70,11 +80,15 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.on_func, self.coordinator
         )
-        await self.coordinator.async_request_refresh()
+        self._last_action = time.time()
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hass.async_add_executor_job(
             self.entity_description.off_func, self.coordinator
         )
-        await self.coordinator.async_request_refresh()
+        self._last_action = time.time()
+        self._attr_is_on = False
+        self.async_write_ha_state()
