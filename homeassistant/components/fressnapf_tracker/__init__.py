@@ -1,11 +1,12 @@
 """The Fressnapf Tracker integration."""
 
-from fressnapftracker import Device
+from fressnapftracker import AuthClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_DEVICE_TOKEN, CONF_SERIAL_NUMBER
+from .const import CONF_ACCESS_TOKEN, CONF_USER_ID
 from .coordinator import (
     FressnapfTrackerConfigEntry,
     FressnapfTrackerDataUpdateCoordinator,
@@ -18,20 +19,23 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: FressnapfTrackerConfigEntry
 ) -> bool:
     """Set up Fressnapf Tracker from a config entry."""
-    entry.runtime_data = {}
+    auth_client = AuthClient(client=get_async_client(hass))
+    devices = await auth_client.get_devices(
+        user_id=entry.data[CONF_USER_ID],
+        user_access_token=entry.data[CONF_ACCESS_TOKEN],
+    )
 
-    for subentry in entry.subentries.values():
+    coordinators: list[FressnapfTrackerDataUpdateCoordinator] = []
+    for device in devices:
         coordinator = FressnapfTrackerDataUpdateCoordinator(
             hass,
             entry,
-            Device(
-                serialnumber=subentry.data[CONF_SERIAL_NUMBER],
-                token=subentry.data[CONF_DEVICE_TOKEN],
-            ),
+            device,
         )
         await coordinator.async_config_entry_first_refresh()
+        coordinators.append(coordinator)
 
-        entry.runtime_data[subentry.subentry_id] = coordinator
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

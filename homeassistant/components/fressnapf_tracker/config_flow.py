@@ -1,32 +1,21 @@
 """Config flow for the Fressnapf Tracker integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from fressnapftracker import (
     AuthClient,
-    Device,
     FressnapfTrackerInvalidPhoneNumberError,
     FressnapfTrackerInvalidTokenError,
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-    ConfigSubentryFlow,
-    SubentryFlowResult,
-)
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
     CONF_ACCESS_TOKEN,
-    CONF_DEVICE_TOKEN,
     CONF_PHONE_NUMBER,
-    CONF_SERIAL_NUMBER,
     CONF_SMS_CODE,
     CONF_USER_ID,
     DOMAIN,
@@ -44,17 +33,6 @@ STEP_SMS_CODE_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_SMS_CODE): int,
     }
 )
-
-
-def get_serial_number_schema(devices: list[Device]) -> vol.Schema:
-    """Generate serial number schema."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_SERIAL_NUMBER): vol.In(
-                [device.serialnumber for device in devices]
-            ),
-        }
-    )
 
 
 class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,8 +75,8 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_verify_sms_code(
         self, sms_code: int
-    ) -> tuple[dict[str, str], str | None, list[Device] | None]:
-        """Verify SMS code and return errors, access_token, and devices."""
+    ) -> tuple[dict[str, str], str | None]:
+        """Verify SMS code and return errors and access_token."""
         errors: dict[str, str] = {}
         try:
             verification_response = await self.auth_client.verify_phone_number(
@@ -114,13 +92,8 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(
                 "Phone number verification response: %s", verification_response
             )
-            access_token = verification_response.user_token.access_token
-            devices = await self.auth_client.get_devices(
-                user_id=self._context[CONF_USER_ID],
-                user_access_token=access_token,
-            )
-            return errors, access_token, devices
-        return errors, None, None
+            return errors, verification_response.user_token.access_token
+        return errors, None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -147,10 +120,10 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the SMS code step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors, access_token, devices = await self._async_verify_sms_code(
+            errors, access_token = await self._async_verify_sms_code(
                 user_input[CONF_SMS_CODE]
             )
-            if access_token and devices:
+            if access_token:
                 return self.async_create_entry(
                     title=self._context[CONF_PHONE_NUMBER],
                     data={
@@ -158,18 +131,6 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USER_ID: self._context[CONF_USER_ID],
                         CONF_ACCESS_TOKEN: access_token,
                     },
-                    subentries=[
-                        {
-                            "subentry_type": "device",
-                            "data": {
-                                CONF_SERIAL_NUMBER: device.serialnumber,
-                                CONF_DEVICE_TOKEN: device.token,
-                            },
-                            "title": device.serialnumber,
-                            "unique_id": None,
-                        }
-                        for device in devices
-                    ],
                 )
 
         return self.async_show_form(
@@ -210,31 +171,14 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the SMS code step during reconfiguration."""
         errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            errors, access_token, devices = await self._async_verify_sms_code(
+            errors, access_token = await self._async_verify_sms_code(
                 user_input[CONF_SMS_CODE]
             )
-            if access_token and devices:
-                devices_by_serial = {d.serialnumber: d for d in devices}
-
-                # Update existing subentries with new device tokens
-                for subentry in reconfigure_entry.subentries.values():
-                    serial = subentry.data[CONF_SERIAL_NUMBER]
-                    if serial in devices_by_serial:
-                        device = devices_by_serial[serial]
-                        self.hass.config_entries.async_update_subentry(
-                            reconfigure_entry,
-                            subentry,
-                            data={
-                                CONF_SERIAL_NUMBER: device.serialnumber,
-                                CONF_DEVICE_TOKEN: device.token,
-                            },
-                        )
-
+            if access_token:
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry,
+                    self._get_reconfigure_entry(),
                     data={
                         CONF_PHONE_NUMBER: self._context[CONF_PHONE_NUMBER],
                         CONF_USER_ID: self._context[CONF_USER_ID],
@@ -246,59 +190,4 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_sms_code",
             data_schema=STEP_SMS_CODE_DATA_SCHEMA,
             errors=errors,
-        )
-
-    @classmethod
-    @callback
-    def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
-    ) -> dict[str, type[ConfigSubentryFlow]]:
-        """Return subentries supported by this integration."""
-        return {
-            "device": FressnapfTrackerSubentryFlowHandler,
-        }
-
-
-class FressnapfTrackerSubentryFlowHandler(ConfigSubentryFlow):
-    """Flow for managing Fressnapf Tracker subentries."""
-
-    def __init__(self) -> None:
-        """Initialize subentry flow."""
-        super().__init__()
-        self.devices: dict[str, Device] | None = None
-        self._auth_client: AuthClient | None = None
-
-    @property
-    def auth_client(self) -> AuthClient:
-        """Return the auth client, creating it if needed."""
-        if self._auth_client is None:
-            self._auth_client = AuthClient(client=get_async_client(self.hass))
-        return self._auth_client
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Add a subentry."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
-        if user_input is not None:
-            if TYPE_CHECKING:
-                assert self.devices is not None
-            device = self.devices[user_input[CONF_SERIAL_NUMBER]]
-            return self.async_create_entry(
-                title=user_input[CONF_SERIAL_NUMBER],
-                data={
-                    CONF_SERIAL_NUMBER: device.serialnumber,
-                    CONF_DEVICE_TOKEN: device.token,
-                },
-                unique_id=f"{self._get_entry().unique_id}_{user_input[CONF_SERIAL_NUMBER]}",
-            )
-        devices = await self.auth_client.get_devices(
-            user_id=self._get_entry().data[CONF_USER_ID],
-            user_access_token=self._get_entry().data[CONF_ACCESS_TOKEN],
-        )
-        self.devices = {device.serialnumber: device for device in devices}
-        return self.async_show_form(
-            step_id="user",
-            data_schema=get_serial_number_schema(devices),
         )

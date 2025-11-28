@@ -17,9 +17,7 @@ import pytest
 
 from homeassistant.components.fressnapf_tracker.const import (
     CONF_ACCESS_TOKEN,
-    CONF_DEVICE_TOKEN,
     CONF_PHONE_NUMBER,
-    CONF_SERIAL_NUMBER,
     CONF_USER_ID,
     DOMAIN,
 )
@@ -128,6 +126,17 @@ def mock_api_client(mock_tracker: Tracker) -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_init_auth_client(mock_device: Device) -> Generator[MagicMock]:
+    """Mock the AuthClient in __init__.py."""
+    with patch(
+        "homeassistant.components.fressnapf_tracker.AuthClient"
+    ) as mock_auth_client:
+        client = mock_auth_client.return_value
+        client.get_devices = AsyncMock(return_value=[mock_device])
+        yield client
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
@@ -139,17 +148,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
         },
         unique_id=str(MOCK_USER_ID),
-        subentries_data=[
-            {
-                "subentry_type": "device",
-                "data": {
-                    CONF_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
-                    CONF_DEVICE_TOKEN: MOCK_DEVICE_TOKEN,
-                },
-                "title": MOCK_SERIAL_NUMBER,
-                "unique_id": f"{MOCK_USER_ID}_{MOCK_SERIAL_NUMBER}",
-            }
-        ],
     )
 
 
@@ -158,6 +156,7 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: MagicMock,
+    mock_init_auth_client: MagicMock,
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)

@@ -44,28 +44,5 @@
         }
       }
     }
-  },
-  "config_subentries": {
-    "device": {
-      "abort": {
-        "entry_not_loaded": "Cannot add things while the configuration is disabled."
-      },
-      "entry_type": "Device",
-      "error": {},
-      "initiate_flow": {
-        "user": "Add device"
-      },
-      "step": {
-        "user": {
-          "data": {
-            "serial_number": "Serial number"
-          },
-          "data_description": {
-            "serial_number": "Select the serial number of the tracker you want to add."
-          },
-          "title": "Add device"
-        }
-      }
-    }
   }
 }

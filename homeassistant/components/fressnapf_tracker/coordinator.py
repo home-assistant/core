@@ -15,7 +15,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type FressnapfTrackerConfigEntry = ConfigEntry[
-    dict[str, FressnapfTrackerDataUpdateCoordinator]
+    list[FressnapfTrackerDataUpdateCoordinator]
 ]
 
 

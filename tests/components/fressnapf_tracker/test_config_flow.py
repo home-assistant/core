@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from fressnapftracker import (
-    Device,
     FressnapfTrackerInvalidPhoneNumberError,
     FressnapfTrackerInvalidTokenError,
 )
@@ -12,9 +11,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.fressnapf_tracker.const import (
     CONF_ACCESS_TOKEN,
-    CONF_DEVICE_TOKEN,
     CONF_PHONE_NUMBER,
-    CONF_SERIAL_NUMBER,
     CONF_SMS_CODE,
     CONF_USER_ID,
     DOMAIN,
@@ -22,13 +19,7 @@ from homeassistant.components.fressnapf_tracker.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    MOCK_ACCESS_TOKEN,
-    MOCK_DEVICE_TOKEN,
-    MOCK_PHONE_NUMBER,
-    MOCK_SERIAL_NUMBER,
-    MOCK_USER_ID,
-)
+from .conftest import MOCK_ACCESS_TOKEN, MOCK_PHONE_NUMBER, MOCK_USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -67,12 +58,6 @@ async def test_user_flow_success(
         CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER,
         CONF_USER_ID: MOCK_USER_ID,
         CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
-    }
-    assert len(result["result"].subentries) == 1
-    subentry = list(result["result"].subentries.values())[0]
-    assert subentry.data == {
-        CONF_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
-        CONF_DEVICE_TOKEN: MOCK_DEVICE_TOKEN,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -227,6 +212,7 @@ async def test_user_flow_duplicate_entry(
 
 @pytest.mark.usefixtures("mock_api_client")
 @pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -261,6 +247,7 @@ async def test_reconfigure_flow(
 
 
 @pytest.mark.usefixtures("mock_api_client")
+@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_reconfigure_flow_invalid_phone_number(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -288,6 +275,7 @@ async def test_reconfigure_flow_invalid_phone_number(
 
 
 @pytest.mark.usefixtures("mock_api_client")
+@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_reconfigure_flow_invalid_sms_code(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -315,52 +303,3 @@ async def test_reconfigure_flow_invalid_sms_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_sms_code"
     assert result["errors"] == {"base": "invalid_sms_code"}
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_subentry_flow(
-    hass: HomeAssistant,
-    mock_auth_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the subentry flow for adding a device."""
-    # Set up a second device
-    second_device = Device(serialnumber="XYZ789", token="second_token")
-    mock_auth_client.get_devices.return_value = [second_device]
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "device"),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_SERIAL_NUMBER: "XYZ789"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "XYZ789"
-    assert result["data"] == {
-        CONF_SERIAL_NUMBER: "XYZ789",
-        CONF_DEVICE_TOKEN: "second_token",
-    }
-
-
-async def test_subentry_flow_entry_not_loaded(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test subentry flow aborts when entry not loaded."""
-    mock_config_entry.add_to_hass(hass)
-    # Don't set up the entry - leave it NOT_LOADED
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "device"),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_not_loaded"

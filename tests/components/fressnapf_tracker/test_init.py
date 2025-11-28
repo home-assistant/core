@@ -2,12 +2,15 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -25,6 +28,7 @@ async def test_setup_entry(
     assert len(mock_config_entry.runtime_data) == 1
 
 
+@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -44,6 +48,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_setup_entry_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

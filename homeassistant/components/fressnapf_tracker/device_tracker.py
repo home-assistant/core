@@ -15,12 +15,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fressnapf_tracker device_trackers."""
-    for subentry in entry.subentries.values():
-        coordinator = entry.runtime_data[subentry.subentry_id]
-        async_add_entities(
-            new_entities=[FressnapfTrackerDeviceTracker(coordinator)],
-            config_subentry_id=subentry.subentry_id,
-        )
+    async_add_entities(
+        FressnapfTrackerDeviceTracker(coordinator) for coordinator in entry.runtime_data
+    )
 
 
 class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
