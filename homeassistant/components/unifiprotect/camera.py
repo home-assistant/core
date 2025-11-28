@@ -31,6 +31,8 @@ from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import get_camera_base_name
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 

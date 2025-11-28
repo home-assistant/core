@@ -32,6 +32,8 @@ from .entity import (
     async_all_device_entities,
 )
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
