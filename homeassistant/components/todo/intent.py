@@ -49,80 +49,6 @@ ENUM_TO_WEEKDAY = {
 }
 
 
-def _get_absolute_due_date(
-    time_zone: str, day: TodoItemDueDay | None, hour: int | None, minute: int | None
-) -> datetime.date | datetime.datetime:
-    """Gets the due date from the requested day + hour + minute."""
-
-    now = datetime.datetime.now(ZoneInfo(time_zone))
-    due = now
-
-    # apply time
-    if hour is not None:
-        due = due.replace(hour=hour, minute=minute or 0, second=0, microsecond=0)
-
-    # default day is today
-    if day is None:
-        day = TodoItemDueDay.TODAY
-
-    # apply date
-    match day:
-        case TodoItemDueDay.TODAY:
-            # no time provided: return only the date part
-            if hour is None:
-                return due.date()
-            # the time is passed: due is tomorrow
-            if now > due:
-                due += datetime.timedelta(days=1)
-            return due
-
-        case TodoItemDueDay.TOMORROW:
-            due += datetime.timedelta(days=1)
-            # no time provided: return only the date part
-            if hour is None:
-                return due.date()
-            return due
-
-        case _:
-            # add the corresponding number of days
-            due += datetime.timedelta(
-                days=(ENUM_TO_WEEKDAY[day] - due.weekday() + 7) % 7
-            )
-            # no time provided: return only the date part
-            if hour is None:
-                # if same day: due is next week
-                if due.date() == now.date():
-                    due += datetime.timedelta(weeks=1)
-                return due.date()
-            # the time is passed: due is next week
-            if now > due:
-                due += datetime.timedelta(weeks=1)
-            return due
-
-
-def _get_relative_due_date(
-    time_zone: str,
-    day_offset: int | None,
-    hour_offset: int | None,
-    minute_offset: int | None,
-) -> datetime.date | datetime.datetime:
-    now = datetime.datetime.now(ZoneInfo(time_zone))
-    due = now.replace(second=0, microsecond=0)
-
-    # apply offsets
-    if day_offset is not None:
-        due += datetime.timedelta(days=day_offset)
-    if hour_offset is not None:
-        due += datetime.timedelta(hours=hour_offset)
-    if minute_offset is not None:
-        due += datetime.timedelta(minutes=minute_offset)
-
-    # no time provided: return only the date part
-    if day_offset is not None and hour_offset is None and minute_offset is None:
-        return due.date()
-    return due
-
-
 class ListAddItemIntent(intent.IntentHandler):
     """Handle ListAddItem intents."""
 
@@ -192,7 +118,7 @@ class ListAddItemIntent(intent.IntentHandler):
         # Compute due date
         due: datetime.date | datetime.datetime | None = None
         if due_day is not None or due_hour is not None:
-            due = _get_absolute_due_date(
+            due = self.__get_absolute_due_date(
                 hass.config.time_zone, due_day, due_hour, due_minute
             )
         elif (
@@ -200,7 +126,7 @@ class ListAddItemIntent(intent.IntentHandler):
             or due_hour_offset is not None
             or due_minute_offset is not None
         ):
-            due = _get_relative_due_date(
+            due = self.__get_relative_due_date(
                 hass.config.time_zone,
                 due_day_offset,
                 due_hour_offset,
@@ -223,6 +149,83 @@ class ListAddItemIntent(intent.IntentHandler):
             ]
         )
         return response
+
+    def __get_absolute_due_date(
+        self,
+        time_zone: str,
+        day: TodoItemDueDay | None,
+        hour: int | None,
+        minute: int | None,
+    ) -> datetime.date | datetime.datetime:
+        """Gets the due date from the requested day + hour + minute."""
+        now = datetime.datetime.now(ZoneInfo(time_zone))
+        due = now
+
+        # apply time
+        if hour is not None:
+            due = due.replace(hour=hour, minute=minute or 0, second=0, microsecond=0)
+
+        # default day is today
+        if day is None:
+            day = TodoItemDueDay.TODAY
+
+        # apply date
+        match day:
+            case TodoItemDueDay.TODAY:
+                # no time provided: return only the date part
+                if hour is None:
+                    return due.date()
+                # the time is passed: due is tomorrow
+                if now > due:
+                    due += datetime.timedelta(days=1)
+                return due
+
+            case TodoItemDueDay.TOMORROW:
+                due += datetime.timedelta(days=1)
+                # no time provided: return only the date part
+                if hour is None:
+                    return due.date()
+                return due
+
+            case _:
+                # add the corresponding number of days
+                due += datetime.timedelta(
+                    days=(ENUM_TO_WEEKDAY[day] - due.weekday() + 7) % 7
+                )
+                # no time provided: return only the date part
+                if hour is None:
+                    # if same day: due is next week
+                    if due.date() == now.date():
+                        due += datetime.timedelta(weeks=1)
+                    return due.date()
+                # the time is passed: due is next week
+                if now > due:
+                    due += datetime.timedelta(weeks=1)
+                return due
+
+    def __get_relative_due_date(
+        self,
+        time_zone: str,
+        day_offset: int | None,
+        hour_offset: int | None,
+        minute_offset: int | None,
+    ) -> datetime.date | datetime.datetime:
+        """Gets the due date from the requested offsets."""
+        now = datetime.datetime.now(ZoneInfo(time_zone))
+        due = now.replace(second=0, microsecond=0)
+
+        # apply offsets
+        if day_offset is not None:
+            due += datetime.timedelta(days=day_offset)
+        if hour_offset is not None:
+            due += datetime.timedelta(hours=hour_offset)
+        if minute_offset is not None:
+            due += datetime.timedelta(minutes=minute_offset)
+
+        # no time provided: return only the date part
+        if day_offset is not None and hour_offset is None and minute_offset is None:
+            return due.date()
+        return due
 
 
 class ListCompleteItemIntent(intent.IntentHandler):
