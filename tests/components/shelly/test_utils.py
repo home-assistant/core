@@ -1,8 +1,9 @@
 """Tests for Shelly utils."""
 
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
+from aiohttp.web import Request
 from aioshelly.const import (
     MODEL_1,
     MODEL_1L,
@@ -14,6 +15,7 @@ from aioshelly.const import (
     MODEL_PLUS_2PM_V2,
     MODEL_WALL_DISPLAY,
 )
+from aioshelly.rpc_device import WsServer
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -23,6 +25,7 @@ from homeassistant.components.shelly.const import (
     UPTIME_DEVIATION,
 )
 from homeassistant.components.shelly.utils import (
+    ShellyReceiver,
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
@@ -303,3 +306,16 @@ def test_get_host(host: str, expected: str) -> None:
 def test_mac_address_from_name(name: str, result: str | None) -> None:
     """Test mac_address_from_name() function."""
     assert mac_address_from_name(name) == result
+
+
+async def test_shelly_receiver_get() -> None:
+    """Test ShellyReceiver get method."""
+    ws_server = Mock(spec=WsServer)
+    ws_server.websocket_handler = AsyncMock(return_value="test_response")
+    receiver = ShellyReceiver(ws_server)
+    mock_request = Mock(spec=Request)
+
+    response = await receiver.get(mock_request)
+
+    ws_server.websocket_handler.assert_awaited_once_with(mock_request)
+    assert response == "test_response"
