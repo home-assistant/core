@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from random import randint
+from time import time
 from typing import TYPE_CHECKING, Any, cast
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -212,7 +214,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         return data
 
 
-class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[None]):
+class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site history and inserting external statistics."""
 
     config_entry: TeslaFleetConfigEntry
@@ -232,17 +234,24 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[None]):
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
         self.api = api
+        self.data = {}
         self.updated_once = False
         self._statistic_ids: set[str] = set()
 
-        # DataUpdateCoordinator only schedules updates when it has listeners.
-        # Since this coordinator inserts external statistics directly into the
-        # recorder (no entities consume its data), we register a no-op listener
-        # to ensure periodic updates continue running.
-        self.async_add_listener(lambda: None)
         self.config_entry.async_on_unload(self._clear_statistics)
 
-    async def _async_update_data(self) -> None:
+    async def async_config_entry_first_refresh(self) -> None:
+        """Set up the data coordinator."""
+        await super().async_config_entry_first_refresh()
+
+        # Calculate seconds until next 5 minute period plus a random delay
+        delta = randint(310, 330) - (int(time()) % 300)
+        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
+        self.update_interval = timedelta(seconds=delta)
+        self._schedule_refresh()
+        self.update_interval = ENERGY_HISTORY_INTERVAL
+
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
@@ -254,7 +263,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[None]):
             )
             if "after" in e.data:
                 self.update_interval = timedelta(seconds=int(e.data["after"]))
-            return
+            return self.data
         except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
@@ -263,10 +272,23 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[None]):
         if not data or not isinstance(data.get("time_series"), list):
             raise UpdateFailed("Received invalid data")
 
+        time_series = data.get("time_series", [])
+
         # Insert external statistics with historical timestamps
-        await self._insert_statistics(data.get("time_series", []))
+        await self._insert_statistics(time_series)
+
+        # Calculate daily sums for sensor entities
+        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        for period in time_series:
+            for key in ENERGY_HISTORY_FIELDS:
+                if key in period:
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
 
         self.updated_once = True
+        return output
 
     def _clear_statistics(self) -> None:
         """Clear statistics when config entry is unloaded."""
