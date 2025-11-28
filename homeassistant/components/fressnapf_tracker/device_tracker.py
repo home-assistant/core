@@ -27,6 +27,8 @@ async def async_setup_entry(
 class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
     """fressnapf_tracker device tracker."""
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: FressnapfTrackerDataUpdateCoordinator,
@@ -35,7 +37,6 @@ class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
         super().__init__(coordinator)
         self._attr_icon = "mdi:paw"
         self._attr_unique_id = coordinator.device.serialnumber
-        self._attr_name = None
 
     @property
     def available(self) -> bool:
