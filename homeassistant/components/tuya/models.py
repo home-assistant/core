@@ -39,11 +39,11 @@ class TypeInformation:
     As provided by the SDK, from `device.function` / `device.status_range`.
     """
 
-    dpcode: DPCode
+    dpcode: str
     type_data: str | None = None
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
         return cls(dpcode=dpcode, type_data=type_data)
 
@@ -102,7 +102,7 @@ class IntegerTypeData(TypeInformation):
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
@@ -125,7 +125,7 @@ class BitmapTypeInformation(TypeInformation):
     label: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
             return None
@@ -143,7 +143,7 @@ class EnumTypeData(TypeInformation):
     range: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
         if not (parsed := json_loads_object(type_data)):
             return None
@@ -175,7 +175,7 @@ class DPCodeWrapper:
     native_unit: str | None = None
     suggested_unit: str | None = None
 
-    def __init__(self, dpcode: DPCode) -> None:
+    def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
 
@@ -376,7 +376,7 @@ class DPCodeStringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
     """Simple wrapper for a specific bit in bitmap values."""
 
-    def __init__(self, dpcode: DPCode, mask: int) -> None:
+    def __init__(self, dpcode: str, mask: int) -> None:
         """Init DPCodeBitmapWrapper."""
         super().__init__(dpcode)
         self._mask = mask
@@ -447,7 +447,7 @@ def find_dpcode(
 
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: DPType,
@@ -460,10 +460,7 @@ def find_dpcode(
         return None
 
     if not isinstance(dpcodes, tuple):
-        # Cast to DPCode for type checking purposes
-        # Custom integration or quirk extensions may pass valid codes
-        # that are part of DPCode enum
-        dpcodes = (cast(DPCode, dpcodes),)
+        dpcodes = (dpcodes,)
 
     lookup_tuple = (
         (device.function, device.status_range)
