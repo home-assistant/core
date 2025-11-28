@@ -329,7 +329,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 last_stats_time = None
                 running_sum = 0.0
             else:
-                last_stats_time = cast(float, last_stat[statistic_id][0]["start"])
+                last_stats_time = last_stat[statistic_id][0]["start"]
                 # Get the sum at the start time to continue from there
                 stats = await recorder.async_add_executor_job(
                     statistics_during_period,
