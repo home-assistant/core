@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
@@ -28,8 +26,10 @@ def get_dpcode(
     if dpcodes is None:
         return None
 
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (cast(DPCode, dpcodes),)
+    if isinstance(dpcodes, DPCode):
+        dpcodes = (dpcodes,)
+    elif isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
 
     for dpcode in dpcodes:
         if (
