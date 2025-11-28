@@ -168,6 +168,7 @@ INPUTS_EVENTS_SUBTYPES: Final = {
     "button2": 2,
     "button3": 3,
     "button4": 4,
+    "button5": 5,
 }
 
 SHBTN_MODELS: Final = [MODEL_BUTTON1, MODEL_BUTTON1_V2]
