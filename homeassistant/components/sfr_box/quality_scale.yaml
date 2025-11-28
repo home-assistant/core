@@ -3,9 +3,7 @@ rules:
   config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage:
-    status: todo
-    comment: We should test created mac address
+  config-flow-test-coverage: done
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
