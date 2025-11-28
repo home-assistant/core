@@ -19,7 +19,6 @@ async def async_setup_entry(
         coordinator = entry.runtime_data[subentry.subentry_id]
         async_add_entities(
             new_entities=[FressnapfTrackerDeviceTracker(coordinator)],
-            update_before_add=True,
             config_subentry_id=subentry.subentry_id,
         )
 
