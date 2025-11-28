@@ -42,7 +42,9 @@ class ListBaseItent(intent.IntentHandle):
 
         return item, list_name
 
-    def _get_target_list(self, intent_obj: intent.Intent, list_name: str) -> TodoListEntity:
+    def _get_target_list(
+        self, intent_obj: intent.Intent, list_name: str
+    ) -> TodoListEntity:
         """Return the requested todo list."""
         hass = intent_obj.hass
 
@@ -64,11 +66,11 @@ class ListBaseItent(intent.IntentHandle):
             raise intent.IntentHandleError(
                 f"No to-do list: {list_name}", "list_not_found"
             )
-        
+
         return target_list
-    
+
     def _create_response(
-            self, intent_obj: intent.Intent, list_name: str, list_id: str
+        self, intent_obj: intent.Intent, list_name: str, list_id: str
     ) -> intent.IntentResponse:
         """Builds the intent response."""
         response: intent.IntentResponse = intent_obj.create_response()
@@ -82,6 +84,7 @@ class ListBaseItent(intent.IntentHandle):
             ]
         )
         return response
+
 
 class ListAddItemIntent(ListBaseItent):
     """Handle ListAddItem intents."""
@@ -147,7 +150,6 @@ class ListRemoveItemIntent(ListBaseItent):
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        
         item, list_name = self._get_params(intent_obj)
         target_list = self._get_target_list(intent_obj, list_name)
 
