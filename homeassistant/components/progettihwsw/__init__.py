@@ -20,6 +20,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         f"{entry.data['host']}:{entry.data['port']}"
     )
 
+    # Monkey patch for get_states_by_tag_prefix bug
+    from lxml import etree
+    async def get_states_by_tag_prefix_fixed(self, tag: str, is_analog: bool = False):
+        request = await self.api.request("status.xml")
+        if request is False:
+            return False
+        
+        root = etree.XML(bytes(request, encoding='utf-8'))
+        tags = root.xpath(f"//*[starts-with(local-name(), '{tag}')]")
+        
+        if len(tags) <= 0:
+            return False
+
+        states = {}
+        for i in tags:
+            # FIX: use int() instead of str() for base 16 conversion
+            number = int(i.tag[len(tag):], 16)
+            if is_analog:
+                states[number] = i.text
+            else:
+                states[number] = True if i.text in ("up", "1", "on") else False
+        return states
+
+    # Apply patch
+    import types
+    hass.data[DOMAIN][entry.entry_id].get_states_by_tag_prefix = types.MethodType(get_states_by_tag_prefix_fixed, hass.data[DOMAIN][entry.entry_id])
+
     # Check board validation again to load new values to API.
     await hass.data[DOMAIN][entry.entry_id].check_board()
 
