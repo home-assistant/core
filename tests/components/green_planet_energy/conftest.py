@@ -16,12 +16,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={
-            "username": "test@example.com",
-            "password": "test_password",
-            "customer_number": "12345",
-            "postal_code": "12345",
-        },
+        data={},
         unique_id="green_planet_energy",
     )
 
