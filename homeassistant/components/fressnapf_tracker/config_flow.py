@@ -105,7 +105,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PHONE_NUMBER]
             )
             if success:
-                await self.async_set_unique_id(self._context[CONF_USER_ID])
+                await self.async_set_unique_id(str(self._context[CONF_USER_ID]))
                 self._abort_if_unique_id_configured()
                 return await self.async_step_sms_code()
 
