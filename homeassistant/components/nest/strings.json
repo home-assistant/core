@@ -148,7 +148,7 @@
       "message": "Subscriber failed to connect to Google, please see logs for details."
     },
     "subscriber_timeout": {
-      "message": "Subscriber timed out while attempting to connect to Google. Please check your network connection and ipv6 configuration if applicable."
+      "message": "Subscriber timed out while attempting to connect to Google. Please check your network connection and IPv6 configuration if applicable."
     }
   },
   "selector": {
