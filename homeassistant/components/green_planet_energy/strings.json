@@ -1,41 +1,41 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Setup for the Green Planet Energy electricity price integration"
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "Failed to connect to Green Planet Energy API",
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error occurred"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    "step": {
+      "user": {
+        "description": "Setup for the Green Planet Energy electricity price integration"
+      }
     }
   },
   "entity": {
     "sensor": {
+      "current_price": {
+        "name": "Current price"
+      },
       "highest_price_today": {
         "name": "Highest price today"
       },
       "lowest_price_day": {
-        "name": "Lowest price day (06:00-18:00)"
+        "name": "Lowest price day"
       },
       "lowest_price_night": {
-        "name": "Lowest price night (18:00-06:00)"
-      },
-      "current_price": {
-        "name": "Current price"
+        "name": "Lowest price night"
       }
     }
   },
   "exceptions": {
-    "connection_error": {
-      "message": "Connection error: {error}"
-    },
     "api_error": {
       "message": "API error: {error}"
+    },
+    "connection_error": {
+      "message": "Connection error: {error}"
     }
   }
 }

@@ -107,6 +107,21 @@ class GreenPlanetEnergySensor(
         )
 
     @property
+    def name(self) -> str | None:
+        """Return the name of the sensor with time range appended."""
+        base_name = super().name
+        # Convert UndefinedType to None for type safety
+        if base_name is None or str(base_name) == "<undefined>":
+            return None
+
+        base_name_str = str(base_name) if base_name else None
+        if base_name_str and self.entity_description.key == "gpe_lowest_price_day":
+            return f"{base_name_str} (06:00-18:00)"
+        if base_name_str and self.entity_description.key == "gpe_lowest_price_night":
+            return f"{base_name_str} (18:00-06:00)"
+        return base_name_str
+
+    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         # Special handling for current_price to use the current hour
