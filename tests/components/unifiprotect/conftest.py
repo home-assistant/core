@@ -32,6 +32,7 @@ from uiprotect.data import (
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -369,6 +370,24 @@ def chime():
 def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="ufp_reconfigure_entry")
+def mock_ufp_reconfigure_entry():
+    """Mock the unifiprotect config entry for reconfigure tests."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            CONF_API_KEY: "test-api-key",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+        },
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
+    )
 
 
 @pytest.fixture(name="cloud_account")
