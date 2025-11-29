@@ -1,4 +1,4 @@
 from ProgettiHWSW import ProgettiHWSWAPI
 import inspect
 
-print(f"etree in ProgettiHWSWAPI: {ProgettiHWSWAPI.etree}")
+#print(f"etree in ProgettiHWSWAPI: {ProgettiHWSWAPI.etree}")
