@@ -735,7 +735,7 @@ async def websocket_device_cluster_attributes(
     cluster_attributes: list[dict[str, Any]] = []
     zha_device = zha_gateway.get_device(ieee)
     attributes = None
-    if zha_device is not None and cluster_type == CLUSTER_TYPE_IN:
+    if zha_device is not None:
         attributes = zha_device.async_get_cluster_attributes(
             endpoint_id, cluster_id, cluster_type
         )
