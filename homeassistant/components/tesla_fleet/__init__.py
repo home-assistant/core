@@ -29,7 +29,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
@@ -237,3 +237,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Unload TeslaFleet Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    # Clear external statistics for all energy sites
+    from homeassistant.components.recorder import get_instance
+
+    statistic_ids = [
+        f"{DOMAIN}:{energy_site.id}_{key}"
+        for energy_site in entry.runtime_data.energysites
+        for key in ENERGY_HISTORY_FIELDS
+    ]
+
+    if statistic_ids:
+        get_instance(hass).async_clear_statistics(statistic_ids)

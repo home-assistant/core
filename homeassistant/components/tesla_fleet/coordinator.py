@@ -30,7 +30,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -236,9 +236,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.api = api
         self.data = {}
         self.updated_once = False
-        self._statistic_ids: set[str] = set()
-
-        self.config_entry.async_on_unload(self._clear_statistics)
 
     async def async_config_entry_first_refresh(self) -> None:
         """Set up the data coordinator."""
@@ -290,11 +287,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.updated_once = True
         return output
 
-    @callback
-    def _clear_statistics(self) -> None:
-        """Clear statistics when config entry is unloaded."""
-        get_instance(self.hass).async_clear_statistics(list(self._statistic_ids))
-
     async def _insert_statistics(self, time_series: list[dict[str, Any]]) -> None:
         """Insert energy history statistics at their actual historical timestamps."""
         if not time_series:
@@ -305,7 +297,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         for key in ENERGY_HISTORY_FIELDS:
             statistic_id = f"{DOMAIN}:{site_id}_{key}"
-            self._statistic_ids.add(statistic_id)
 
             metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
