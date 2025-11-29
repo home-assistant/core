@@ -16,6 +16,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.recorder import get_instance as get_recorder_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -242,8 +243,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
 async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
     """Handle removal of a config entry."""
     # Clear external statistics for all energy sites
-    from homeassistant.components.recorder import get_instance
-
     statistic_ids = [
         f"{DOMAIN}:{energy_site.id}_{key}"
         for energy_site in entry.runtime_data.energysites
@@ -251,4 +250,4 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     ]
 
     if statistic_ids:
-        get_instance(hass).async_clear_statistics(statistic_ids)
+        get_recorder_instance(hass).async_clear_statistics(statistic_ids)
