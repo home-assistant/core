@@ -38,7 +38,7 @@ async def test_monkey_patch_logic(hass: HomeAssistant) -> None:
             return_value=True,
         ),
         patch(
-            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.request",
+            "ProgettiHWSW.api.API.request",
             return_value=MOCK_STATUS_XML,
         ) as mock_request,
     ):

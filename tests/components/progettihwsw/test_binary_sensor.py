@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -53,7 +54,7 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
 
         # Verify unique_id generation logic indirectly via registry or by checking the entity attribute if accessible
         # But we can check if the entity exists in registry
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(hass)
         entry_entity = entity_registry.async_get(entity_id)
         assert entry_entity
         assert entry_entity.unique_id == f"{entry.entry_id}_192.168.1.10_input_1"
