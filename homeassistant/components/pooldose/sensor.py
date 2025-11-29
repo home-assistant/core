@@ -67,14 +67,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         use_dynamic_unit=True,
     ),
     PooldoseSensorEntityDescription(
-        key="water_meter_total_resettable",
-        translation_key="water_meter_total_resettable",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        use_dynamic_unit=True,
-    ),
-    PooldoseSensorEntityDescription(
         key="ph_type_dosing",
         translation_key="ph_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
