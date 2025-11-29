@@ -1,6 +1,7 @@
 """Tests for Shelly sensor platform."""
 
 from copy import deepcopy
+import time
 from unittest.mock import Mock, PropertyMock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_EM3
@@ -36,6 +37,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
@@ -2218,3 +2220,48 @@ async def test_rpc_rgbcct_sensors(
     assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
     assert entry.name is None
     assert entry.translation_key is None  # entity with device class and no channel name
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_timer_remaining_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test timer remaining sensor for switch component."""
+    # Timer started 10 seconds ago, duration 60, so 50 seconds remaining
+    current_time = time.time()
+    timer_started_at = current_time - 10.0
+    timer_duration = 60
+
+    status = {
+        "sys": {},
+        "switch:0": {
+            "id": 0,
+            "output": True,
+            "timer_started_at": timer_started_at,
+            "timer_duration": timer_duration,
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_timer_remaining"
+
+    assert (state := hass.states.get(entity_id))
+    # Sensor should return integer seconds remaining (approximately 50, allowing for timing)
+    assert int(state.state) in (49, 50)
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DURATION
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.SECONDS
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "switch:0", "timer_started_at", 0
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-timer_remaining"

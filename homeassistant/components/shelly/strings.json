@@ -511,6 +511,9 @@
       "tilt": {
         "name": "Tilt"
       },
+      "timer_remaining": {
+        "name": "Timer remaining"
+      },
       "valve_position": {
         "name": "Valve position"
       },
