@@ -456,7 +456,7 @@ def requirements_output() -> str:
     requirements.update(core_requirements())
     requirements.update(gather_entity_platform_requirements())
 
-    output.append("\n".join(sorted(requirements)))
+    output.append("\n".join(sorted(requirements, key=lambda key: key.lower())))
     output.append("\n")
 
     return "".join(output)
