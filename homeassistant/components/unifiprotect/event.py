@@ -40,6 +40,8 @@ from .data import (
 )
 from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 
+PARALLEL_UPDATES = 0
+
 
 # Select best thumbnail
 # Prefer thumbnails with LPR data, sorted by confidence

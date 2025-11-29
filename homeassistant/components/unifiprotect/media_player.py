@@ -27,6 +27,7 @@ from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 _SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
     key="speaker",

@@ -32,6 +32,7 @@ from .entity import ProtectDeviceEntity
 from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @callback
