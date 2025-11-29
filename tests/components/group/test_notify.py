@@ -167,34 +167,6 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     )
     send_message_mock.reset_mock()
 
-    # Test sending a message to a notify group which does not have title.
-    await hass.services.async_call(
-        "notify",
-        "my_notification_group",
-        {"message": "Hello", "data": {"hello": "world"}},
-        blocking=True,
-    )
-    send_message_mock.assert_has_calls(
-        [
-            call(
-                "Hello",
-                {
-                    "target": [1],
-                    "data": {"hello": "world"},
-                },
-            ),
-            call(
-                "Hello",
-                {
-                    "target": [2],
-                    "data": {"hello": "world", "test": "message", "default": "default"},
-                },
-            ),
-        ],
-        any_order=True,
-    )
-    send_message_mock.reset_mock()
-
     # Test sending a message which overrides service defaults to a notify group
     await hass.services.async_call(
         "notify",
@@ -327,10 +299,11 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 class MockNotifyEntity(MockEntity, NotifyEntity):
     """Mock Email notifier entity to use in tests."""
 
-    def __init__(self, **values: Any) -> None:
+    def __init__(self, is_title_supported: bool, **values: Any) -> None:
         """Initialize the mock entity."""
         super().__init__(**values)
-        self._attr_supported_features = NotifyEntityFeature.TITLE
+        if is_title_supported:
+            self._attr_supported_features = NotifyEntityFeature.TITLE
         self.send_message_mock_calls = MagicMock()
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
@@ -362,8 +335,8 @@ async def mock_notifiers(
     hass: HomeAssistant, config_flow_fixture: None
 ) -> list[NotifyEntity]:
     """Set up the notify entities."""
-    entity = MockNotifyEntity(name="test", entity_id="notify.test")
-    entity2 = MockNotifyEntity(name="test2", entity_id="notify.test2")
+    entity = MockNotifyEntity(True, name="test", entity_id="notify.test")
+    entity2 = MockNotifyEntity(False, name="test2", entity_id="notify.test2")
     entities = [entity, entity2]
     test_entry = MockConfigEntry(domain="test")
     test_entry.add_to_hass(hass)
@@ -389,12 +362,14 @@ async def test_notify_entity_group(
     assert entity.send_message_mock_calls.call_count == 0
     assert entity2.send_message_mock_calls.call_count == 0
 
+    # test with title supported
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         options={
             "group_type": "notify",
             "name": "Test Group",
-            "entities": ["notify.test", "notify.test2"],
+            "entities": ["notify.test"],
             "hide_members": True,
         },
         title="Test Group",
@@ -418,10 +393,36 @@ async def test_notify_entity_group(
     assert entity.send_message_mock_calls.call_args == call(
         "Hello", title="Test notification"
     )
-    assert entity2.send_message_mock_calls.call_count == 1
-    assert entity2.send_message_mock_calls.call_args == call(
-        "Hello", title="Test notification"
+
+    # test without title supported
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.test2"],
+            "hide_members": True,
+        },
+        title="Test Group2",
     )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group2",
+        },
+        blocking=True,
+    )
+
+    assert entity2.send_message_mock_calls.call_count == 1
+    assert entity2.send_message_mock_calls.call_args == call("Hello", title=None)
 
 
 async def test_state_reporting(hass: HomeAssistant) -> None:
