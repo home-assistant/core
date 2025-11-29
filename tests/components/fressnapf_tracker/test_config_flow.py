@@ -10,12 +10,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.fressnapf_tracker.const import (
-    CONF_ACCESS_TOKEN,
     CONF_PHONE_NUMBER,
     CONF_SMS_CODE,
     CONF_USER_ID,
     DOMAIN,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

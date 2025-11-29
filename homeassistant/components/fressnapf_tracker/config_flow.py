@@ -11,15 +11,10 @@ from fressnapftracker import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_PHONE_NUMBER,
-    CONF_SMS_CODE,
-    CONF_USER_ID,
-    DOMAIN,
-)
+from .const import CONF_PHONE_NUMBER, CONF_SMS_CODE, CONF_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

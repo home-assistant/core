@@ -2,11 +2,11 @@
 
 from fressnapftracker import AuthClient
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_ACCESS_TOKEN, CONF_USER_ID
+from .const import CONF_USER_ID
 from .coordinator import (
     FressnapfTrackerConfigEntry,
     FressnapfTrackerDataUpdateCoordinator,
