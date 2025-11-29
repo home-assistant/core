@@ -21,6 +21,16 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import _LOGGER, DOMAIN
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_SSL, default=True): bool,
+        vol.Required(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
+
 
 class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an eGauge config flow."""
@@ -62,16 +72,8 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL, default=True): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=False): bool,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
         )
