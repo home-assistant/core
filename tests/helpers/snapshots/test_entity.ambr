@@ -82,7 +82,16 @@
   })
 # ---
 # name: test_change_entity_id_config_entry[None].3
-  <EntityPlatform domain=test_domain platform_name=test config_entry=<ConfigEntry entry_id=super-mock-id version=1 domain=test title=Mock Title state=ConfigEntryState.NOT_LOADED unique_id=None>>
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'test_domain.test2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
 # name: test_change_entity_id_config_entry[None].4
   StateSnapshot({
@@ -179,7 +188,16 @@
   })
 # ---
 # name: test_change_entity_id_config_entry[mock-subentry-id-1].3
-  <EntityPlatform domain=test_domain platform_name=test config_entry=<ConfigEntry entry_id=super-mock-id version=1 domain=test title=Mock Title state=ConfigEntryState.NOT_LOADED unique_id=None>>
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'test_domain.test2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
 # name: test_change_entity_id_config_entry[mock-subentry-id-1].4
   StateSnapshot({

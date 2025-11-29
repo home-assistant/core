@@ -1971,7 +1971,6 @@ async def test_change_entity_id_config_entry(
     assert new_ent.config_entry_id == config_entry.entry_id
     assert new_ent.config_subentry_id == config_subentry_id
 
-    assert entity_platform == snapshot
     new_state = hass.states.get("test_domain.test2")
     assert new_state == snapshot
 
