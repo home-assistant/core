@@ -15,7 +15,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The thermostat password."
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]"
         },
         "description": "Airobot thermostat {device_id} discovered at {host}. Enter the password to complete setup. Find the password in the thermostat settings menu under Connectivity → Mobile app."
       },
@@ -24,7 +24,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The thermostat password."
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]"
         },
         "description": "The authentication for Airobot thermostat at {host} (Device ID: {username}) has expired. Please enter the password to reauthenticate. Find the password in the thermostat settings menu under Connectivity → Mobile app."
       },
