@@ -47,6 +47,7 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
@@ -69,6 +70,7 @@ from .const import (
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -375,10 +377,22 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
+                    vol.Optional(
+                        CONF_REASONING_SUMMARY,
+                        default=RECOMMENDED_REASONING_SUMMARY,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["off", "auto", "short", "detailed"],
+                            translation_key=CONF_REASONING_SUMMARY,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             )
         elif CONF_VERBOSITY in options:
             options.pop(CONF_VERBOSITY)
+        if CONF_REASONING_SUMMARY in options:
+            options.pop(CONF_REASONING_SUMMARY)
 
         if self._subentry_type == "conversation" and not model.startswith(
             tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
