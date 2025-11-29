@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
@@ -18,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 from .coordinator import AnglianWaterConfigEntry, AnglianWaterUpdateCoordinator
@@ -33,7 +34,10 @@ async def async_setup_entry(
     auth = MSOB2CAuth(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        session=async_get_clientsession(hass),
+        session=async_create_clientsession(
+            hass,
+            cookie_jar=CookieJar(quote_cookie=False),
+        ),
         refresh_token=entry.data[CONF_ACCESS_TOKEN],
         account_number=entry.data[CONF_ACCOUNT_NUMBER],
     )
