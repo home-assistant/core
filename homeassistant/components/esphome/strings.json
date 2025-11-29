@@ -157,7 +157,7 @@
       "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]"
     },
     "ble_firmware_outdated": {
-      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device from ESPHome earlier than 2022.12.0, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme.",
+      "description": "ESPHome {version} introduces ultra-low latency event processing, reducing BLE event delays from 0-16 milliseconds to approximately 12 microseconds. This resolves stability issues when pairing, connecting, or handshaking with devices that require low latency, and makes Bluetooth proxy operations rival or exceed local adapters. We highly recommend updating {name} to take advantage of these improvements.",
       "title": "Update {name} with ESPHome {version} or later"
     },
     "device_conflict": {
