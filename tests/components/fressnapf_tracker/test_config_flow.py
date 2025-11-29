@@ -63,13 +63,18 @@ async def test_user_flow_success(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [FressnapfTrackerInvalidPhoneNumberError, Exception]
+    ("side_effect", "error"),
+    [
+        (FressnapfTrackerInvalidPhoneNumberError, "invalid_phone_number"),
+        (Exception, "unknown"),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_request_sms_code_errors(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
     side_effect: Exception,
+    error: str,
 ) -> None:
     """Test user flow with errors."""
     mock_auth_client.request_sms_code.side_effect = side_effect
@@ -87,7 +92,7 @@ async def test_user_flow_request_sms_code_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_phone_number"}
+    assert result["errors"] == {"base": error}
 
     # Recover from error
     mock_auth_client.request_sms_code.side_effect = None
@@ -106,12 +111,19 @@ async def test_user_flow_request_sms_code_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize("side_effect", [FressnapfTrackerInvalidTokenError, Exception])
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (FressnapfTrackerInvalidTokenError, "invalid_sms_code"),
+        (Exception, "unknown"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_verify_phone_number_errors(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
     side_effect: Exception,
+    error: str,
 ) -> None:
     """Test user flow with invalid SMS code."""
     result = await hass.config_entries.flow.async_init(
@@ -133,7 +145,7 @@ async def test_user_flow_verify_phone_number_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sms_code"
-    assert result["errors"] == {"base": "invalid_sms_code"}
+    assert result["errors"] == {"base": error}
 
     # Recover from error
     mock_auth_client.verify_phone_number.side_effect = None
