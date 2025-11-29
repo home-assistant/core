@@ -348,6 +348,61 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        form_data = {**reconfigure_entry.data}
+
+        if user_input is not None:
+            form_data.update(user_input)
+
+            # validate login data
+            nvr_data, errors = await self._async_get_nvr_data(form_data)
+            if nvr_data and not errors:
+                # Check if the unique_id has changed (different NVR)
+                new_unique_id = nvr_data.mac
+                if reconfigure_entry.unique_id != new_unique_id:
+                    # Different NVR - check if it's already configured
+                    await self.async_set_unique_id(new_unique_id)
+                    self._abort_if_unique_id_configured()
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data=form_data,
+                    unique_id=new_unique_id,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            description_placeholders={
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=form_data.get(CONF_HOST)): str,
+                    vol.Required(
+                        CONF_PORT, default=form_data.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                    vol.Required(
+                        CONF_VERIFY_SSL,
+                        default=form_data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                    ): bool,
+                    vol.Required(
+                        CONF_USERNAME, default=form_data.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
