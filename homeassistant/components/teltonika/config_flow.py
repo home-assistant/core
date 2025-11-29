@@ -220,12 +220,12 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Try to get device info from unauthorized endpoint
                 device_info = await client.get_device_info()
                 device_name = getattr(device_info, "device_name", None)
-                await client.close()
                 break
             except (TeltonikaConnectionError, TeltonikaAuthenticationError, Exception):  # noqa: BLE001
                 # Device might require auth - that's okay, we'll continue anyway
-                await client.close()
                 continue
+            finally:
+                await client.close()
 
         # Store discovery info for the user step
         self.context["title_placeholders"] = {
