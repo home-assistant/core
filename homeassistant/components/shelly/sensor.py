@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from datetime import datetime, timedelta
+import time
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -37,9 +39,10 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
 
 from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
@@ -196,6 +199,132 @@ class RpcBluTrvSensor(RpcSensor):
         self._attr_device_info = get_blu_trv_device_info(
             coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
+
+
+def _format_duration(seconds: int | None) -> str | None:
+    """Format seconds as HH:MM:SS."""
+    if seconds is None:
+        return None
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
+class RpcSwitchTimerSensor(ShellyRpcAttributeEntity, SensorEntity):
+    """Represent a RPC switch timer sensor."""
+
+    entity_description: RpcSensorDescription
+    _update_unsub: CALLBACK_TYPE | None = None
+    _time_offset: float = 0.0
+    _last_timer_started_at: float | None = None
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize timer sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        # Override device_class, state_class, and unit to allow formatted string display
+        self._attr_device_class = None
+        self._attr_state_class = None
+        self._attr_native_unit_of_measurement = None
+
+    def _get_raw_timer_value(self) -> int | None:
+        """Get raw timer remaining value in seconds."""
+        timer_started_at = self.status.get("timer_started_at")
+        timer_duration = self.status.get("timer_duration")
+
+        # Calculate remaining time
+        if timer_started_at is None or timer_started_at == 0 or timer_duration is None:
+            # Timer not active: reset tracking
+            self._time_offset = 0.0
+            self._last_timer_started_at = None
+            return None
+
+        # Handle time offset tracking for clock drift compensation
+        current_time = time.time()
+        if self._last_timer_started_at is None:
+            # First time seeing this timer: assume no offset (device time matches HA time)
+            self._time_offset = 0.0
+            self._last_timer_started_at = timer_started_at
+        elif self._last_timer_started_at != timer_started_at:
+            # Timer restarted: recalculate offset
+            self._time_offset = timer_started_at - current_time
+            self._last_timer_started_at = timer_started_at
+        # If timer_started_at hasn't changed, keep using existing offset
+
+        # Calculate elapsed time using offset-adjusted current time
+        device_current_time = current_time + self._time_offset
+        elapsed = device_current_time - timer_started_at
+        timer_remaining = timer_duration - elapsed
+
+        if timer_remaining <= 0:
+            return None
+
+        return int(timer_remaining)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return timer value as formatted HH:MM:SS string."""
+        raw_value = self._get_raw_timer_value()
+        if raw_value is None:
+            return None
+        # Return formatted string for display
+        return _format_duration(raw_value)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes with raw seconds."""
+        raw_value = self._get_raw_timer_value()
+        if raw_value is None:
+            return {}
+        return {"seconds": raw_value}
+
+    # pylint: disable-next=hass-missing-super-call
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
+        self.async_on_remove(self._cancel_update_interval)
+        self._check_and_schedule_updates()
+
+    @callback
+    def _cancel_update_interval(self) -> None:
+        """Cancel the update interval subscription."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+
+    @callback
+    def _update_timer_state(self, _: datetime) -> None:
+        """Update timer state every second."""
+        self.async_write_ha_state()
+
+    @callback
+    def _check_and_schedule_updates(self) -> None:
+        """Check timer state and schedule/cancel per-second updates."""
+        timer_active = self._get_raw_timer_value() is not None
+
+        if timer_active and self._update_unsub is None:
+            # Timer is active, start per-second updates
+            self._update_unsub = async_track_time_interval(
+                self.hass,
+                self._update_timer_state,
+                timedelta(seconds=1),
+            )
+        elif not timer_active and self._update_unsub is not None:
+            # Timer stopped, cancel updates
+            self._cancel_update_interval()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Handle device update."""
+        self._check_and_schedule_updates()
+        self.async_write_ha_state()
 
 
 SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -1712,6 +1841,20 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
+    ),
+    "timer_remaining": RpcSensorDescription(
+        key="switch",
+        sub_key="timer_remaining",
+        name="Timer remaining",
+        translation_key="timer_remaining",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("timer_started_at") is not None
+        and status.get("timer_duration") is not None,
+        entity_class=RpcSwitchTimerSensor,
     ),
 }
 
