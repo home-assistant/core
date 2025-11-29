@@ -70,7 +70,7 @@ class SurePetcareDeviceTracker(SurePetcareEntity, TrackerEntity):
                 "since": state.since,
                 "where": state.where,
             }
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, ValueError):
             self._attr_extra_state_attributes = {
                 "since": None,
                 "where": None,
