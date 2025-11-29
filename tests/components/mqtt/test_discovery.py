@@ -1584,6 +1584,7 @@ async def test_discovery_with_object_id(
 async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test discovering an MQTT entity with default_entity_id and unique_id."""
 
@@ -1598,6 +1599,7 @@ async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
     )
     initial_entity_id = "sensor.hello_id"
     new_entity_id = "sensor.updated_hello_id"
+    later_entity_id = "sensor.later_hello_id"
     name = "Hello World 11"
     domain = "sensor"
 
@@ -1625,6 +1627,14 @@ async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
     assert state is not None
     assert state.name == name
     assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
+
+    # Assert the entity ID can be changed later
+    entity_registry.async_update_entity(new_entity_id, new_entity_id=later_entity_id)
+    await hass.async_block_till_done()
+    state = hass.states.get(later_entity_id)
+
+    assert state is not None
+    assert state.name == name
 
 
 async def test_discovery_incl_nodeid(
