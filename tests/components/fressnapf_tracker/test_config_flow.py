@@ -24,9 +24,9 @@ from .conftest import MOCK_ACCESS_TOKEN, MOCK_PHONE_NUMBER, MOCK_USER_ID
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_user_flow_success(
     hass: HomeAssistant,
-    mock_auth_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full user flow."""
@@ -62,15 +62,17 @@ async def test_user_flow_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_invalid_phone_number(
+@pytest.mark.parametrize(
+    "side_effect", [FressnapfTrackerInvalidPhoneNumberError, Exception]
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_request_sms_code_errors(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
-    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
 ) -> None:
-    """Test user flow with invalid phone number."""
-    mock_auth_client.request_sms_code.side_effect = (
-        FressnapfTrackerInvalidPhoneNumberError
-    )
+    """Test user flow with errors."""
+    mock_auth_client.request_sms_code.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -104,31 +106,12 @@ async def test_user_flow_invalid_phone_number(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_unknown_error_on_sms_request(
+@pytest.mark.parametrize("side_effect", [FressnapfTrackerInvalidTokenError, Exception])
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_verify_phone_number_errors(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test user flow with unknown error during SMS code request."""
-    mock_auth_client.request_sms_code.side_effect = Exception("Unknown error")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_user_flow_invalid_sms_code(
-    hass: HomeAssistant,
-    mock_auth_client: MagicMock,
-    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
 ) -> None:
     """Test user flow with invalid SMS code."""
     result = await hass.config_entries.flow.async_init(
@@ -141,7 +124,7 @@ async def test_user_flow_invalid_sms_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sms_code"
 
-    mock_auth_client.verify_phone_number.side_effect = FressnapfTrackerInvalidTokenError
+    mock_auth_client.verify_phone_number.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -160,32 +143,6 @@ async def test_user_flow_invalid_sms_code(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_unknown_error_on_sms_verification(
-    hass: HomeAssistant,
-    mock_auth_client: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test user flow with unknown error during SMS verification."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
-    )
-
-    mock_auth_client.verify_phone_number.side_effect = Exception("Unknown error")
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SMS_CODE: 123456},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sms_code"
-    assert result["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.usefixtures("mock_auth_client")
@@ -268,6 +225,23 @@ async def test_reconfigure_flow_invalid_phone_number(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "invalid_phone_number"}
 
+    # Recover from error
+    mock_auth_client.request_sms_code.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_sms_code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SMS_CODE: 123456},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 @pytest.mark.usefixtures("mock_api_client")
 async def test_reconfigure_flow_invalid_sms_code(
@@ -297,3 +271,13 @@ async def test_reconfigure_flow_invalid_sms_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_sms_code"
     assert result["errors"] == {"base": "invalid_sms_code"}
+
+    # Recover from error
+    mock_auth_client.verify_phone_number.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SMS_CODE: 123456},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
