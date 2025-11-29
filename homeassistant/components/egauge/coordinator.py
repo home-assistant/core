@@ -68,21 +68,29 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             self.serial_number = await self.client.get_device_serial_number()
             self.hostname = await self.client.get_hostname()
             self._register_info = await self.client.get_register_info()
-        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
-            # will raise ConfigEntryAuthFailed once reauth is implemented
+        except (
+            EgaugeAuthenticationError,
+            EgaugePermissionError,
+            EgaugeException,
+        ) as err:
+            # EgaugeAuthenticationError and EgaugePermissionError will raise ConfigEntryAuthFailed once reauth is implemented
             raise ConfigEntryError from err
-        except (ConnectError, EgaugeException) as err:
-            raise ConfigEntryError from err
+        except ConnectError as err:
+            raise UpdateFailed(f"Error fetching device info: {err}") from err
 
     async def _async_update_data(self) -> EgaugeData:
         """Fetch data from eGauge device."""
         try:
             measurements = await self.client.get_current_measurements()
             counters = await self.client.get_current_counters()
-        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+        except (
+            EgaugeAuthenticationError,
+            EgaugePermissionError,
+            EgaugeException,
+        ) as err:
             # will raise ConfigEntryAuthFailed once reauth is implemented
-            raise ConfigEntryError from err
-        except (ConnectError, EgaugeException) as err:
+            raise ConfigEntryError("Error fetching device info: {err}") from err
+        except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 
         return EgaugeData(
