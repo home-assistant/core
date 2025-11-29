@@ -92,6 +92,7 @@ async def async_get_config_entry_diagnostics(
 
 
 def _coerce(value: Any) -> Any:
+    """Coerce value to a JSON-serializable type."""
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     if isinstance(value, (datetime, date, time)):
