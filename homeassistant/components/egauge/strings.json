@@ -11,16 +11,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "[%key:component::egauge::config::step::user::data_description::password%]",
-          "username": "[%key:component::egauge::config::step::user::data_description::username%]"
-        }
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
