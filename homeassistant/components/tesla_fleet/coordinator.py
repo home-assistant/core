@@ -73,7 +73,7 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
 
 
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching data from the TeslaFleet API."""
+    """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
 
     config_entry: TeslaFleetConfigEntry
     updated_once: bool
