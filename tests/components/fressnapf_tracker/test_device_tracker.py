@@ -46,7 +46,7 @@ async def test_device_tracker_entity(
     assert device_entry.model == "GPS Tracker 2.0"
 
 
-@pytest.mark.usefixtures("mock_init_auth_client")
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_device_tracker_no_position(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

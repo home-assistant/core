@@ -212,7 +212,6 @@ async def test_user_flow_duplicate_entry(
 
 @pytest.mark.usefixtures("mock_api_client")
 @pytest.mark.usefixtures("mock_auth_client")
-@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -247,7 +246,6 @@ async def test_reconfigure_flow(
 
 
 @pytest.mark.usefixtures("mock_api_client")
-@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_reconfigure_flow_invalid_phone_number(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -275,7 +273,6 @@ async def test_reconfigure_flow_invalid_phone_number(
 
 
 @pytest.mark.usefixtures("mock_api_client")
-@pytest.mark.usefixtures("mock_init_auth_client")
 async def test_reconfigure_flow_invalid_sms_code(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,

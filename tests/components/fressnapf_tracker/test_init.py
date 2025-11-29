@@ -10,11 +10,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_init_auth_client")
+@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_api_client")
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
 ) -> None:
     """Test successful setup of config entry."""
     mock_config_entry.add_to_hass(hass)
@@ -28,7 +28,8 @@ async def test_setup_entry(
     assert len(mock_config_entry.runtime_data) == 1
 
 
-@pytest.mark.usefixtures("mock_init_auth_client")
+@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_api_client")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -48,7 +49,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("mock_init_auth_client")
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_setup_entry_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
