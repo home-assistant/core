@@ -2,12 +2,13 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import time
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .entity import TransmissionEntity
@@ -60,8 +61,16 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
     """Representation of a Transmission switch."""
 
     entity_description: TransmissionSwitchEntityDescription
-    _state_delay = 5  # seconds
-    _last_action = 0.0
+
+    def __init__(
+        self,
+        coordinator: TransmissionDataUpdateCoordinator,
+        description: TransmissionSwitchEntityDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, description)
+        self._optimistic_until = utcnow()
+        self._optimistic_state: bool | None = None
 
     @property
     def is_on(self) -> bool:
@@ -70,9 +79,9 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         # calling for a change. This state delay will ensure that HA keeps an
         # optimistic value of state during this period to improve the user
         # experience and avoid confusion.
-        if self._last_action > (time.time() - self._state_delay):
-            return bool(self._attr_is_on)
-        self._last_action = time.time()
+        now = utcnow()
+        if now < self._optimistic_until and self._optimistic_state is not None:
+            return self._optimistic_state
         return bool(self.entity_description.is_on_func(self.coordinator))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -80,15 +89,17 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.on_func, self.coordinator
         )
-        self._last_action = time.time()
-        self._attr_is_on = True
+        self._optimistic_state = True
+        self._optimistic_until = utcnow() + timedelta(seconds=5)
         self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hass.async_add_executor_job(
             self.entity_description.off_func, self.coordinator
         )
-        self._last_action = time.time()
-        self._attr_is_on = False
+        self._optimistic_state = False
+        self._optimistic_until = utcnow() + timedelta(seconds=5)
         self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
