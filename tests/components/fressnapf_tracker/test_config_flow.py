@@ -50,7 +50,6 @@ async def test_user_flow_success(
         result["flow_id"],
         {CONF_SMS_CODE: 123456},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONE_NUMBER
@@ -100,7 +99,6 @@ async def test_user_flow_invalid_phone_number(
         result["flow_id"],
         {CONF_SMS_CODE: 123456},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -159,7 +157,6 @@ async def test_user_flow_invalid_sms_code(
         result["flow_id"],
         {CONF_SMS_CODE: 123456},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -239,7 +236,6 @@ async def test_reconfigure_flow(
         result["flow_id"],
         {CONF_SMS_CODE: 123456},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
