@@ -30,7 +30,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -290,6 +290,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.updated_once = True
         return output
 
+    @callback
     def _clear_statistics(self) -> None:
         """Clear statistics when config entry is unloaded."""
         get_instance(self.hass).async_clear_statistics(list(self._statistic_ids))
