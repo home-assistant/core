@@ -19,6 +19,7 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     DecodeException,
     SubscriberException,
+    SubscriberTimeoutException,
 )
 from google_nest_sdm.traits import TraitType
 import voluptuous as vol
@@ -203,10 +204,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         await auth.async_get_access_token()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="reauth_required"
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="auth_server_error"
+        ) from err
     except ClientError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="auth_client_error"
+        ) from err
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
@@ -227,19 +234,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         unsub = await subscriber.start_async()
     except AuthException as err:
         raise ConfigEntryAuthFailed(
-            f"Subscriber authentication error: {err!s}"
+            translation_domain=DOMAIN,
+            translation_key="reauth_required",
         ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         return False
+    except SubscriberTimeoutException as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_timeout",
+        ) from err
     except SubscriberException as err:
-        raise ConfigEntryNotReady(f"Subscriber error: {err!s}") from err
+        _LOGGER.error("Subscriber error: %s", err)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_error",
+        ) from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
         unsub()
-        raise ConfigEntryNotReady(f"Device manager error: {err!s}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_api_error",
+        ) from err
 
     @callback
     def on_hass_stop(_: Event) -> None:
