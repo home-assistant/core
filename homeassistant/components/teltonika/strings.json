@@ -1,0 +1,83 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "wrong_account": "The device does not match the existing configuration."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the device. Please check the host address and network connection.",
+      "invalid_auth": "Invalid username or password.",
+      "unknown": "An unexpected error occurred."
+    },
+    "step": {
+      "dhcp_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password to authenticate with the device.",
+          "username": "The username to authenticate with the device."
+        },
+        "description": "A Teltonika device ({name}) was discovered at {host}. Enter the credentials to add it to Home Assistant.",
+        "title": "Discovered Teltonika device"
+      },
+      "reauth_confirm": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Teltonika device.",
+          "password": "The password to authenticate with the device.",
+          "username": "The username to authenticate with the device."
+        },
+        "description": "The connection details for {name} ({host}) need to be updated.",
+        "title": "Re-authenticate Teltonika device"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "username": "Username",
+          "validate_ssl": "Validate SSL certificate"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Teltonika device.",
+          "password": "The password to authenticate with the device.",
+          "username": "The username to authenticate with the device.",
+          "validate_ssl": "Whether to validate the SSL certificate when using HTTPS."
+        },
+        "description": "Enter the connection details for your Teltonika device.",
+        "title": "Set up Teltonika device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "connection_type": {
+        "name": "{modem_name} Connection type"
+      },
+      "operator": {
+        "name": "{modem_name} Operator"
+      },
+      "rsrp": {
+        "name": "{modem_name} RSRP"
+      },
+      "rsrq": {
+        "name": "{modem_name} RSRQ"
+      },
+      "rssi": {
+        "name": "{modem_name} RSSI"
+      },
+      "sinr": {
+        "name": "{modem_name} SINR"
+      },
+      "temperature": {
+        "name": "{modem_name} Temperature"
+      }
+    }
+  }
+}

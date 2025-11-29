@@ -1,0 +1,23 @@
+{
+  "domain": "teltonika",
+  "name": "Teltonika",
+  "codeowners": ["@karlbeecken"],
+  "config_flow": true,
+  "dependencies": [],
+  "dhcp": [
+    {
+      "macaddress": "209727*"
+    },
+    {
+      "macaddress": "001E42*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/teltonika",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["teltasync==0.1.1"],
+  "ssdp": [],
+  "zeroconf": []
+}
