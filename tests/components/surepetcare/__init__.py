@@ -81,7 +81,23 @@ MOCK_PET = {
     "status": {},
 }
 
+MOCK_PET_OUTDOOR = {
+    "id": 24681,
+    "household_id": HOUSEHOLD_ID,
+    "name": "Pet Outdoor",
+    "position": {"since": "2020-08-23T23:15:30", "where": 2},
+    "status": {},
+}
+
+MOCK_PET_UNKNOWN = {
+    "id": 24682,
+    "household_id": HOUSEHOLD_ID,
+    "name": "Pet Unknown",
+    "position": {"since": "2020-08-23T23:20:45", "where": -1},
+    "status": {},
+}
+
 MOCK_API_DATA = {
     "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER, MOCK_FELAQUA],
-    "pets": [MOCK_PET],
+    "pets": [MOCK_PET, MOCK_PET_OUTDOOR, MOCK_PET_UNKNOWN],
 }
