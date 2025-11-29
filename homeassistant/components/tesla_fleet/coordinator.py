@@ -357,7 +357,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 if value is None:
                     continue
 
-                # Convert from Wh (API returns Wh)
                 state = float(value)
                 running_sum += state
 
