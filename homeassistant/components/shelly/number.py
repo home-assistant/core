@@ -34,6 +34,7 @@ from .const import (
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
+    TRV_CHANNEL,
     VIRTUAL_NUMBER_MODE_MAP,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -421,9 +422,11 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value."""
-        LOGGER.debug("Setting thermostat position for entity %s to %s", self.name, value)
+        LOGGER.debug(
+            "Setting thermostat position for entity %s to %s", self.name, value
+        )
         try:
-            await self.coordinator.device.set_thermostat_state(0, pos=value)
+            await self.coordinator.device.set_thermostat_state(TRV_CHANNEL, pos=value)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
