@@ -10,6 +10,9 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
+from lxml import etree
+import types
+
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 
@@ -21,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Monkey patch for get_states_by_tag_prefix bug
-    from lxml import etree
     async def get_states_by_tag_prefix_fixed(self, tag: str, is_analog: bool = False):
         request = await self.api.request("status.xml")
         if request is False:
@@ -40,11 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if is_analog:
                 states[number] = i.text
             else:
-                states[number] = True if i.text in ("up", "1", "on") else False
+                #states[number] = True if i.text in ("up", "1", "on") else False
+                states[number] = i.text in ("up", "1", "on")
         return states
 
     # Apply patch
-    import types
     hass.data[DOMAIN][entry.entry_id].get_states_by_tag_prefix = types.MethodType(get_states_by_tag_prefix_fixed, hass.data[DOMAIN][entry.entry_id])
 
     # Check board validation again to load new values to API.
