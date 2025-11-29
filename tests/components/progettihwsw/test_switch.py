@@ -1,6 +1,6 @@
 """Test the ProgettiHWSW Automation switch."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -38,12 +38,23 @@ async def test_switch_setup_and_control(hass: HomeAssistant) -> None:
             return_value=mock_switches,
         ),
         patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_inputs",
+            return_value=[],
+        ),
+        patch(
+            "ProgettiHWSW.api.API.request",
+            return_value="<response></response>",
+        ),
+        patch(
             "homeassistant.components.progettihwsw.setup_switch"
         ) as mock_setup_switch,
     ):
         # Mock setup_switch to return a Relay object with id 1
         mock_relay_obj = MagicMock()
         mock_relay_obj.id = 1
+        # Make control and toggle async methods
+        mock_relay_obj.control = AsyncMock()
+        mock_relay_obj.toggle = AsyncMock()
         mock_setup_switch.return_value = mock_relay_obj
 
         assert await hass.config_entries.async_setup(entry.entry_id)

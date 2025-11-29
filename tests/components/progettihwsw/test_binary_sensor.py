@@ -36,6 +36,14 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_inputs",
             return_value=mock_inputs,
         ),
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_switches",
+            return_value=[],
+        ),
+        patch(
+            "ProgettiHWSW.api.API.request",
+            return_value="<response></response>",
+        ),
         patch("homeassistant.components.progettihwsw.setup_input") as mock_setup_input,
     ):
         # Mock setup_input to return an Input object with id 1
