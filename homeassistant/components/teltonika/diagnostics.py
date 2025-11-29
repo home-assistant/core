@@ -33,6 +33,7 @@ def _serialize_device_info(entry: TeltonikaConfigEntry) -> dict[str, Any]:
 
 
 def _serialize_modem(modem_id: str, modem: Any) -> dict[str, Any]:
+    """Serialize modem data for diagnostics output."""
     keys = (
         "name",
         "conntype",
