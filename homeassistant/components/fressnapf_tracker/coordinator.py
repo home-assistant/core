@@ -47,10 +47,4 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
         try:
             return await self.client.get_tracker()
         except FressnapfTrackerError as exception:
-            _LOGGER.debug(
-                "Failed to update fressnapf_tracker data: %s",
-                exception,
-                exc_info=True,
-                stack_info=True,
-            )
             raise UpdateFailed(exception) from exception
