@@ -1912,12 +1912,13 @@ async def test_change_entity_id(
 
 
 @pytest.mark.parametrize("config_subentry_id", [None, "mock-subentry-id-1"])
-async def test_change_entity_id_entry_integrity(
+async def test_change_entity_id_config_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     config_subentry_id: str | None,
 ) -> None:
-    """Test changing entity id sets the subentry id correctly."""
+    """Test changing entity id does not effect the config entry."""
 
     class MockEntity(entity.Entity):
         _attr_unique_id = "5678"
@@ -1952,21 +1953,27 @@ async def test_change_entity_id_entry_integrity(
     await hass.async_block_till_done()
 
     ent = entity_registry.async_get(next(iter(hass.states.async_entity_ids())))
-    assert ent is not None
+    assert ent == snapshot
+    # The snapshot check asserts on any (sub)entry ID
+    assert ent.config_entry_id == config_entry.entry_id
+    assert ent.config_subentry_id == config_subentry_id
 
     state = hass.states.async_all()[0]
-    assert state is not None
+    assert state == snapshot
 
     entity_registry.async_update_entity(
         ent.entity_id, new_entity_id="test_domain.test2"
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     new_ent = entity_registry.async_get("test_domain.test2")
-    assert new_ent is not None
-    assert new_ent.unique_id == "5678"
-    assert new_ent.config_entry_id == "super-mock-id"
+    assert new_ent == snapshot
+    # The snapshot check asserts on any (sub)entry ID
+    assert new_ent.config_entry_id == config_entry.entry_id
     assert new_ent.config_subentry_id == config_subentry_id
-    assert entity_platform
+
+    assert entity_platform == snapshot
+    new_state = hass.states.get("test_domain.test2")
+    assert new_state == snapshot
 
 
 def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
