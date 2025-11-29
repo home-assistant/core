@@ -1,6 +1,6 @@
 """Test the ProgettiHWSW Automation init."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
