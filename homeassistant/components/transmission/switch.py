@@ -13,7 +13,7 @@ from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordina
 from .entity import TransmissionEntity
 
 PARALLEL_UPDATES = 0
-AFTER_WRITE_SLEEP = 1
+AFTER_WRITE_SLEEP = 2
 
 
 @dataclass(frozen=True, kw_only=True)
