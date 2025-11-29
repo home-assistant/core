@@ -271,7 +271,6 @@ def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
     data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
-
     return dependencies
 
 
