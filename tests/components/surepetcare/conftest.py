@@ -40,7 +40,7 @@ async def mock_config_entry_setup(hass: HomeAssistant) -> MockConfigEntry:
         CONF_TOKEN: "token",
         "feeders": [12345],
         "flaps": [13579, 13576],
-        "pets": [24680],
+        "pets": [24680, 24681, 24682],
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data)
     entry.add_to_hass(hass)
