@@ -23,4 +23,5 @@ class FressnapfTrackerBaseEntity(
             name=str(self.coordinator.data.name),
             model=str(self.coordinator.data.tracker_settings.generation),
             manufacturer="Fressnapf",
+            serial_number=str(self.id),
         )
