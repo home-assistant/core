@@ -15,7 +15,7 @@ from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 # diagnostics module will not be imported in the executor.
 from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -208,7 +208,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating configuration from version %s", entry.version)
 
