@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if request is False:
             return False
         
-        root = etree.XML(bytes(request, encoding='utf-8'))
+        root = etree.XML(bytes(request, encoding='utf-8')) # pylint: disable=c-extension-no-member
         tags = root.xpath(f"//*[starts-with(local-name(), '{tag}')]")
         
         if len(tags) <= 0:
