@@ -1113,6 +1113,8 @@ async def test_reconfigure_different_nvr(
     bootstrap: Bootstrap,
     nvr: NVR,
     ufp_reconfigure_entry: MockConfigEntry,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
 ) -> None:
     """Test reconfiguration flow aborts when trying to switch to different NVR."""
     ufp_reconfigure_entry.add_to_hass(hass)
@@ -1126,27 +1128,17 @@ async def test_reconfigure_different_nvr(
     different_nvr.mac = "112233445566"  # Different from MAC_ADDR
     bootstrap.nvr = different_nvr
 
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
-            return_value=bootstrap,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=None,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "2.2.2.2",
-                CONF_PORT: 443,
-                CONF_VERIFY_SSL: False,
-                CONF_USERNAME: "different-username",
-                CONF_PASSWORD: "different-password",
-                CONF_API_KEY: "different-api-key",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "2.2.2.2",
+            CONF_PORT: 443,
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: "different-username",
+            CONF_PASSWORD: "different-password",
+            CONF_API_KEY: "different-api-key",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_nvr"
@@ -1156,7 +1148,11 @@ async def test_reconfigure_different_nvr(
 
 
 async def test_reconfigure_wrong_nvr(
-    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
 ) -> None:
     """Test reconfiguration flow aborts when connected to wrong NVR."""
     # Use the NVR's actual MAC address
@@ -1186,27 +1182,17 @@ async def test_reconfigure_wrong_nvr(
     different_nvr.mac = "112233445566"
     bootstrap.nvr = different_nvr
 
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
-            return_value=bootstrap,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=None,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "2.2.2.2",
-                CONF_PORT: 443,
-                CONF_VERIFY_SSL: False,
-                CONF_USERNAME: "different-username",
-                CONF_PASSWORD: "different-password",
-                CONF_API_KEY: "different-api-key",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "2.2.2.2",
+            CONF_PORT: 443,
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: "different-username",
+            CONF_PASSWORD: "different-password",
+            CONF_API_KEY: "different-api-key",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_nvr"
