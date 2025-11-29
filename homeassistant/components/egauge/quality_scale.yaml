@@ -59,7 +59,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Integration only has essential entities
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations:
     status: exempt
