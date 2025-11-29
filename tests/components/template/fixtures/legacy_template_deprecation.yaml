@@ -1,0 +1,11 @@
+sensor:
+  - platform: template
+    sensors:
+      state:
+        value_template: "{{ states.sensor.test_sensor.state }}"
+template:
+  - sensor:
+      - default_entity_id: sensor.state2
+        state: "{{ states.sensor.test_sensor.state }}"
+      - default_entity_id: sensor.state3
+        state: "{{ states.sensor.test_sensor.state }}"

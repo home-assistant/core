@@ -7,7 +7,7 @@ from typing import Any, cast
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import ModelName, PreExtractionMode, WidgetType
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import CoffeeBoiler, PreBrewing
+from pylamarzocco.models import CoffeeBoiler, PreBrewing, SteamBoilerTemperature
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -57,6 +57,26 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             lambda machine: cast(
                 CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
             ).target_temperature
+        ),
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="steam_temp",
+        translation_key="steam_temp",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_step=PRECISION_TENTHS,
+        native_min_value=20,
+        native_max_value=134,
+        set_value_fn=lambda machine, temp: machine.set_steam_target_temperature(temp),
+        native_value_fn=(
+            lambda machine: cast(
+                SteamBoilerTemperature,
+                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
+            ).target_temperature
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.GS3_AV, ModelName.GS3_MP)
         ),
     ),
     LaMarzoccoNumberEntityDescription(
