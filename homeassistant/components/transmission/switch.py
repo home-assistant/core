@@ -1,19 +1,19 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import utcnow
 
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .entity import TransmissionEntity
 
 PARALLEL_UPDATES = 0
+AFTER_WRITE_SLEEP = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,26 +62,9 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
 
     entity_description: TransmissionSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TransmissionDataUpdateCoordinator,
-        description: TransmissionSwitchEntityDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, description)
-        self._optimistic_until = utcnow()
-        self._optimistic_state: bool | None = None
-
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        # The Transmission API has a delay in state change after
-        # calling for a change. This state delay will ensure that HA keeps an
-        # optimistic value of state during this period to improve the user
-        # experience and avoid confusion.
-        now = utcnow()
-        if now < self._optimistic_until and self._optimistic_state is not None:
-            return self._optimistic_state
         return bool(self.entity_description.is_on_func(self.coordinator))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -89,9 +72,8 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.on_func, self.coordinator
         )
-        self._optimistic_state = True
-        self._optimistic_until = utcnow() + timedelta(seconds=5)
         self.async_write_ha_state()
+        await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -99,7 +81,6 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.off_func, self.coordinator
         )
-        self._optimistic_state = False
-        self._optimistic_until = utcnow() + timedelta(seconds=5)
         self.async_write_ha_state()
+        await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
