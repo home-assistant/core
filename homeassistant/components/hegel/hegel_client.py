@@ -99,14 +99,15 @@ class HegelClient:
 
     async def start(self) -> None:
         """Start connection manager (runs forever until stop())."""
-        # Prevent multiple concurrent manager tasks
-        if self._manager_task and not self._manager_task.done():
-            _LOGGER.debug("Connection manager already running — skipping start()")
-            return
+        async with self._reconnect_lock:
+            # Prevent multiple concurrent manager tasks with lock protection
+            if self._manager_task and not self._manager_task.done():
+                _LOGGER.debug("Connection manager already running — skipping start()")
+                return
 
-        self._stopping = False
-        self._manager_task = asyncio.create_task(self._manage_connection())
-        _LOGGER.debug("Connection manager started")
+            self._stopping = False
+            self._manager_task = asyncio.create_task(self._manage_connection())
+            _LOGGER.debug("Connection manager started")
 
     async def stop(self) -> None:
         """Stop everything and close the connection."""
@@ -190,12 +191,11 @@ class HegelClient:
             async with self._reconnect_lock:
                 # double check under lock
                 if not self._connected_event.is_set():
-                    # create background connect task attached to manager
+                    # only start manager if it's not already running
                     if not self._manager_task or self._manager_task.done():
-                        # if manager not running, start it
-                        self._manager_task = asyncio.create_task(
-                            self._manage_connection()
-                        )
+                        # if manager not running, start it through start() method
+                        # which has proper duplicate protection
+                        await self.start()
                     # If manager is already running, just wait for the connection event
                     # The manager will handle connection attempts with proper backoff
         try:

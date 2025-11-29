@@ -42,9 +42,8 @@ async def async_setup_entry(
         for idx, label in enumerate(MODEL_INPUTS[model], start=1):
             source_map[idx] = label
 
-    # Create client and start its connection manager
-    client = HegelClient(host, port)
-    await client.start()
+    # Use the client from the config entry's runtime_data (already connected)
+    client = entry.runtime_data
 
     # initial shared state container (shared between coordinator & entity)
     state: dict[str, Any] = {
@@ -123,9 +122,9 @@ class HegelSlowPollCoordinator(DataUpdateCoordinator):
         self._state = shared_state
 
     async def _async_update_data(self):
-        """Periodically poll the amplifier to keep state in sync as a fallback."""
+        """Periodically poll the amplifier to keep state in sync as a fallback"""
+
         try:
-            await self._client.ensure_connected(timeout=5.0)
             for key, cmd in {
                 "power": COMMANDS["power_query"],
                 "volume": COMMANDS["volume_query"],
@@ -239,11 +238,15 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             _LOGGER.debug("No connected event on client; skipping connected watcher")
             return
 
+        _LOGGER.debug("Connected watcher started")
         try:
             while True:
                 # wait for connection
+                _LOGGER.debug("Watcher: waiting for connection event...")
                 await conn_event.wait()
                 _LOGGER.debug("Hegel client connected — refreshing state")
+                # immediately notify HA that we're available again
+                self.async_write_ha_state()
                 # do an immediate refresh (best-effort)
                 try:
                     await self._refresh_state()
@@ -251,10 +254,15 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     _LOGGER.debug("Reconnect refresh failed: %s", e)
 
                 # wait until disconnected before looping (to avoid spamming refresh)
+                _LOGGER.debug("Watcher: waiting for disconnection...")
                 while conn_event.is_set():
                     await asyncio.sleep(0.5)
+                _LOGGER.debug("Watcher: disconnected, notifying HA")
+                # when disconnected, notify HA that we're unavailable
+                self.async_write_ha_state()
 
         except asyncio.CancelledError:
+            _LOGGER.debug("Connected watcher cancelled")
             pass
         except Exception as err:
             _LOGGER.exception("Connected watcher failed: %s", err)
@@ -262,7 +270,6 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     async def _refresh_state(self) -> None:
         """Query the amplifier for the main values and update state dict."""
         try:
-            await self._client.ensure_connected(timeout=5.0)
             for key, cmd in {
                 "power": COMMANDS["power_query"],
                 "volume": COMMANDS["volume_query"],
@@ -286,7 +293,15 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def available(self) -> bool:
         """Return True if the client is connected."""
         conn_event = getattr(self._client, "_connected_event", None)
-        return bool(isinstance(conn_event, asyncio.Event) and conn_event.is_set())
+        is_available = bool(
+            isinstance(conn_event, asyncio.Event) and conn_event.is_set()
+        )
+        _LOGGER.debug(
+            "Availability check: %s (event set: %s)",
+            is_available,
+            conn_event.is_set() if conn_event else "N/A",
+        )
+        return is_available
 
     @property
     def state(self) -> str | None:
