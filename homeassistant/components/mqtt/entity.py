@@ -1486,6 +1486,7 @@ class MqttEntity(
             entity_registry.async_update_entity(
                 self.entity_id, new_entity_id=self._update_registry_entity_id
             )
+            self._update_registry_entity_id = None
 
         await super().async_added_to_hass()
         self._subscriptions = {}
