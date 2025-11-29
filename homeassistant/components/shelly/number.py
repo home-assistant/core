@@ -421,7 +421,7 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value."""
-        LOGGER.debug("Setting thermostat for entity %s, state: %s", self.name, value)
+        LOGGER.debug("Setting thermostat position for entity %s to %s", self.name, value)
         try:
             await self.coordinator.device.set_thermostat_state(0, pos=value)
         except DeviceConnectionError as err:
