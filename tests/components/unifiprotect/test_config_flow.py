@@ -17,11 +17,11 @@ from homeassistant.components.unifiprotect.const import (
     CONF_OVERRIDE_CHOST,
     DOMAIN,
 )
+from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
@@ -288,7 +288,7 @@ async def test_form_reauth_auth(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -369,7 +369,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "max_media": 1000,
         },
         version=2,
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1037,7 +1037,7 @@ async def test_reconfigure(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) 
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1072,7 +1072,7 @@ async def test_reconfigure(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) 
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Test successful reconfiguration with matching NVR MAC
-    nvr.mac = dr.format_mac(MAC_ADDR).replace(":", "").upper()
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
     with (
         patch(
@@ -1123,7 +1123,7 @@ async def test_reconfigure_different_nvr(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1161,7 +1161,7 @@ async def test_reconfigure_different_nvr(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "wrong_nvr"
     # Verify original config wasn't modified
-    assert mock_config.unique_id == dr.format_mac(MAC_ADDR)
+    assert mock_config.unique_id == _async_unifi_mac_from_hass(MAC_ADDR)
     assert mock_config.data["host"] == "1.1.1.1"
 
 
@@ -1170,7 +1170,7 @@ async def test_reconfigure_wrong_nvr(
 ) -> None:
     """Test reconfiguration flow aborts when connected to wrong NVR."""
     # Use the NVR's actual MAC address
-    nvr_mac = dr.format_mac(nvr.mac)
+    nvr_mac = _async_unifi_mac_from_hass(nvr.mac)
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -1240,7 +1240,7 @@ async def test_reconfigure_auth_error(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1290,7 +1290,7 @@ async def test_reconfigure_api_key_error(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1341,7 +1341,7 @@ async def test_reconfigure_cloud_user(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1401,7 +1401,7 @@ async def test_reconfigure_outdated_version(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1455,7 +1455,7 @@ async def test_reconfigure_form_defaults(
             "port": 8443,
             "verify_ssl": True,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )
     mock_config.add_to_hass(hass)
 
@@ -1465,7 +1465,7 @@ async def test_reconfigure_form_defaults(
     assert result["step_id"] == "reconfigure"
 
     # Use nvr with matching MAC
-    nvr.mac = dr.format_mac(MAC_ADDR).replace(":", "").upper()
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
 
     # Complete the flow to verify it works
@@ -1502,7 +1502,7 @@ async def test_reconfigure_same_nvr_updated_credentials(
 ) -> None:
     """Test reconfiguration flow updating credentials for same NVR."""
     # Use the NVR's actual MAC address
-    nvr_mac = dr.format_mac(nvr.mac)
+    nvr_mac = _async_unifi_mac_from_hass(nvr.mac)
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
