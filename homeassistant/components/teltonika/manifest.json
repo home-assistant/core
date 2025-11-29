@@ -17,7 +17,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["teltasync==0.1.1"],
+  "requirements": ["teltasync==0.1.2"],
   "ssdp": [],
   "zeroconf": []
 }
