@@ -375,6 +375,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
 
     with (
         _patch_discovery(),
+        patch("homeassistant.components.unifiprotect.async_start_discovery"),
         patch(
             "homeassistant.components.unifiprotect.utils.ProtectApiClient"
         ) as mock_api,
