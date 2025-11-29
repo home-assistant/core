@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 
 from egauge_async.exceptions import (
@@ -27,9 +28,17 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, COORDINATOR_UPDATE_INTERVAL_SECONDS, DOMAIN
-from .models import EgaugeData
 
 type EgaugeConfigEntry = ConfigEntry[EgaugeDataCoordinator]
+
+
+@dataclass
+class EgaugeData:
+    """Data from eGauge device."""
+
+    measurements: dict[str, float]  # Instantaneous values (W, V, A, etc.)
+    counters: dict[str, float]  # Cumulative values (Ws)
+    register_info: dict[str, RegisterInfo]  # Metadata for all registers
 
 
 class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
