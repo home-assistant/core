@@ -1054,7 +1054,7 @@
     'state': '25',
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_water_meter_total-entry]
+# name: test_all_sensors[sensor.pool_device_totalizer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1069,7 +1069,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pool_device_water_meter_total',
+    'entity_id': 'sensor.pool_device_totalizer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1084,7 +1084,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
     'original_icon': None,
-    'original_name': 'Water meter total',
+    'original_name': 'Totalizer',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1094,16 +1094,16 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_water_meter_total-state]
+# name: test_all_sensors[sensor.pool_device_totalizer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume',
-      'friendly_name': 'Pool Device Water meter total',
+      'friendly_name': 'Pool Device Totalizer',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pool_device_water_meter_total',
+    'entity_id': 'sensor.pool_device_totalizer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
