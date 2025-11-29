@@ -15,6 +15,7 @@ REDACT_CONFIG = {"password"}
 
 
 def _serialize_device_info(entry: TeltonikaConfigEntry) -> dict[str, Any]:
+    """Serialize device info for diagnostics output."""
     # DeviceInfo is a TypedDict, convert to plain dict for serialization
     device_info_dict: dict[str, Any] = dict(entry.runtime_data.device_info)
 
