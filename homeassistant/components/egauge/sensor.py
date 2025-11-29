@@ -94,13 +94,12 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         description: EgaugeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, register_name)
         self._register_name = register_name
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{register_name}_{description.key}"
         )
-        self._attr_translation_placeholders = {"register_name": register_name}
 
     @property
     def native_value(self) -> float | None:

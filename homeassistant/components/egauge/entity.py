@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import EgaugeDataCoordinator
 
 
@@ -17,15 +17,19 @@ class EgaugeEntity(CoordinatorEntity[EgaugeDataCoordinator]):
     def __init__(
         self,
         coordinator: EgaugeDataCoordinator,
+        register_name: str,
     ) -> None:
         """Initialize the eGauge entity."""
         super().__init__(coordinator)
 
+        register_identifier = f"{coordinator.serial_number}_{register_name}"
+        register_name = f"{coordinator.hostname} {register_name}"
+
         # Device info using coordinator's cached data
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            name=coordinator.hostname,
-            manufacturer="eGauge Systems",
-            model="eGauge Energy Monitor",
-            serial_number=coordinator.serial_number,
+            identifiers={(DOMAIN, register_identifier)},
+            name=register_name,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            via_device=(DOMAIN, coordinator.serial_number),
         )
