@@ -390,6 +390,44 @@ def mock_ufp_reconfigure_entry():
     )
 
 
+@pytest.fixture(name="ufp_reconfigure_entry_alt")
+def mock_ufp_reconfigure_entry_alt():
+    """Mock the unifiprotect config entry with alternate port/SSL for reconfigure tests."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            CONF_API_KEY: "test-api-key",
+            "id": "UnifiProtect",
+            "port": 8443,
+            "verify_ssl": True,
+        },
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
+    )
+
+
+@pytest.fixture(name="mock_api_bootstrap")
+def mock_api_bootstrap_fixture(bootstrap: Bootstrap):
+    """Mock the ProtectApiClient.get_bootstrap method."""
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+        return_value=bootstrap,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(name="mock_api_meta_info")
+def mock_api_meta_info_fixture():
+    """Mock the ProtectApiClient.get_meta_info method."""
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+        return_value=None,
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture(name="cloud_account")
 def cloud_account() -> CloudAccount:
     """Return UI Cloud Account."""

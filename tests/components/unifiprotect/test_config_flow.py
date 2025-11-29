@@ -1391,25 +1391,17 @@ async def test_reconfigure_outdated_version(
 
 
 async def test_reconfigure_form_defaults(
-    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    ufp_reconfigure_entry_alt: MockConfigEntry,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
 ) -> None:
     """Test reconfiguration flow form has correct default values."""
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_API_KEY: "test-api-key",
-            "id": "UnifiProtect",
-            CONF_PORT: 8443,
-            CONF_VERIFY_SSL: True,
-        },
-        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
-    )
-    mock_config.add_to_hass(hass)
+    ufp_reconfigure_entry_alt.add_to_hass(hass)
 
-    result = await mock_config.start_reconfigure_flow(hass)
+    result = await ufp_reconfigure_entry_alt.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -1419,17 +1411,7 @@ async def test_reconfigure_form_defaults(
     bootstrap.nvr = nvr
 
     # Complete the flow to verify it works
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
-            return_value=bootstrap,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=None,
-        ),
-        patch.object(hass.config_entries, "async_reload"),
-    ):
+    with patch.object(hass.config_entries, "async_reload"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -1448,7 +1430,11 @@ async def test_reconfigure_form_defaults(
 
 
 async def test_reconfigure_same_nvr_updated_credentials(
-    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
 ) -> None:
     """Test reconfiguration flow updating credentials for same NVR."""
     # Use the NVR's actual MAC address
@@ -1474,17 +1460,7 @@ async def test_reconfigure_same_nvr_updated_credentials(
     assert result["step_id"] == "reconfigure"
 
     bootstrap.nvr = nvr
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
-            return_value=bootstrap,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=None,
-        ),
-        patch.object(hass.config_entries, "async_reload") as mock_reload,
-    ):
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
