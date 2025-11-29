@@ -1,5 +1,8 @@
 """Automation manager for boards manufactured by ProgettiHWSW Italy."""
 
+import types
+
+from lxml import etree
 from ProgettiHWSW.input import Input
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 from ProgettiHWSW.relay import Relay
@@ -9,9 +12,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-
-from lxml import etree
-import types
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
@@ -28,26 +28,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         request = await self.api.request("status.xml")
         if request is False:
             return False
-        
-        root = etree.XML(bytes(request, encoding='utf-8')) # pylint: disable=c-extension-no-member
+
+        root = etree.XML(bytes(request, encoding="utf-8"))  # pylint: disable=c-extension-no-member
         tags = root.xpath(f"//*[starts-with(local-name(), '{tag}')]")
-        
+
         if len(tags) <= 0:
             return False
 
         states = {}
         for i in tags:
             # FIX: use int() instead of str() for base 16 conversion
-            number = int(i.tag[len(tag):], 16)
+            number = int(i.tag[len(tag) :], 16)
             if is_analog:
                 states[number] = i.text
             else:
-                #states[number] = True if i.text in ("up", "1", "on") else False
+                # states[number] = True if i.text in ("up", "1", "on") else False
                 states[number] = i.text in ("up", "1", "on")
         return states
 
     # Apply patch
-    hass.data[DOMAIN][entry.entry_id].get_states_by_tag_prefix = types.MethodType(get_states_by_tag_prefix_fixed, hass.data[DOMAIN][entry.entry_id])
+    hass.data[DOMAIN][entry.entry_id].get_states_by_tag_prefix = types.MethodType(
+        get_states_by_tag_prefix_fixed, hass.data[DOMAIN][entry.entry_id]
+    )
 
     # Check board validation again to load new values to API.
     await hass.data[DOMAIN][entry.entry_id].check_board()
