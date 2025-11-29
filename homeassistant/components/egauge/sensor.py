@@ -42,12 +42,9 @@ ENERGY_SENSOR = EgaugeSensorEntityDescription(
     translation_key="energy",
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    native_value_fn=lambda data, register: (
-        data.counters[register] / 3_600_000
-        if data.counters.get(register) is not None
-        else None
-    ),
+    native_unit_of_measurement=UnitOfEnergy.JOULE,
+    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    native_value_fn=lambda data, register: data.counters.get(register),
 )
 
 
