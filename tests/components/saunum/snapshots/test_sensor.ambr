@@ -26,6 +26,9 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -36,7 +39,7 @@
     'supported_features': 0,
     'translation_key': 'on_time',
     'unique_id': '01K98T2T85R5GN0ZHYV25VFMMA-on_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_entities[sensor.saunum_leil_duration-state]
@@ -45,14 +48,14 @@
       'device_class': 'duration',
       'friendly_name': 'Saunum Leil Duration',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.saunum_leil_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3600',
+    'state': '1.0',
   })
 # ---
 # name: test_entities[sensor.saunum_leil_none-entry]
@@ -89,7 +92,7 @@
     'supported_features': 0,
     'translation_key': 'heater_elements_active',
     'unique_id': '01K98T2T85R5GN0ZHYV25VFMMA-heater_elements_active',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'heater elements',
   })
 # ---
 # name: test_entities[sensor.saunum_leil_none-state]
@@ -97,6 +100,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Saunum Leil None',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'heater elements',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.saunum_leil_none',

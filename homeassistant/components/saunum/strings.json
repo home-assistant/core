@@ -36,9 +36,6 @@
       }
     },
     "sensor": {
-      "current_temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "heater_elements_active": {
         "name": "Heater elements active"
       },
