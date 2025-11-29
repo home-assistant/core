@@ -58,6 +58,7 @@ async def test_user_flow_success(
         CONF_USER_ID: MOCK_USER_ID,
         CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
     }
+    assert result["context"]["unique_id"] == str(MOCK_USER_ID)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
