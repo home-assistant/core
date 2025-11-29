@@ -30,7 +30,6 @@ from homeassistant.const import (
 DOMAIN = "tuya"
 LOGGER = logging.getLogger(__package__)
 
-CONF_APP_TYPE = "tuya_app_type"
 CONF_ENDPOINT = "endpoint"
 CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
