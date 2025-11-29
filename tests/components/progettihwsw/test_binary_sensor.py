@@ -26,15 +26,17 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
     # Input 1 is "up" (True)
     mock_inputs = [True]
 
-    with patch(
-        "homeassistant.components.progettihwsw.ProgettiHWSWAPI.check_board",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_inputs",
-        return_value=mock_inputs,
-    ), patch(
-        "homeassistant.components.progettihwsw.setup_input"
-    ) as mock_setup_input:
+    with (
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.check_board",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_inputs",
+            return_value=mock_inputs,
+        ),
+        patch("homeassistant.components.progettihwsw.setup_input") as mock_setup_input,
+    ):
         # Mock setup_input to return an Input object with id 1
         mock_input_obj = MagicMock()
         mock_input_obj.id = 1

@@ -32,13 +32,16 @@ async def test_monkey_patch_logic(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.progettihwsw.ProgettiHWSWAPI.check_board",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.progettihwsw.ProgettiHWSWAPI.request",
-        return_value=MOCK_STATUS_XML,
-    ) as mock_request:
+    with (
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.check_board",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.request",
+            return_value=MOCK_STATUS_XML,
+        ) as mock_request,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -48,12 +51,12 @@ async def test_monkey_patch_logic(hass: HomeAssistant) -> None:
         states = await api.get_states_by_tag_prefix("relay")
         assert states
         assert states[1] is False  # off
-        assert states[2] is True   # on
+        assert states[2] is True  # on
 
         # Test input states (digital)
         states = await api.get_states_by_tag_prefix("input")
         assert states
-        assert states[1] is True   # up
+        assert states[1] is True  # up
         assert states[2] is False  # down
 
         # Test analog states

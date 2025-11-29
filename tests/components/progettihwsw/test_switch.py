@@ -27,15 +27,19 @@ async def test_switch_setup_and_control(hass: HomeAssistant) -> None:
     # Relay 1 is "on" (True)
     mock_switches = [True]
 
-    with patch(
-        "homeassistant.components.progettihwsw.ProgettiHWSWAPI.check_board",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_switches",
-        return_value=mock_switches,
-    ), patch(
-        "homeassistant.components.progettihwsw.setup_switch"
-    ) as mock_setup_switch:
+    with (
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.check_board",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.progettihwsw.ProgettiHWSWAPI.get_switches",
+            return_value=mock_switches,
+        ),
+        patch(
+            "homeassistant.components.progettihwsw.setup_switch"
+        ) as mock_setup_switch,
+    ):
         # Mock setup_switch to return a Relay object with id 1
         mock_relay_obj = MagicMock()
         mock_relay_obj.id = 1
