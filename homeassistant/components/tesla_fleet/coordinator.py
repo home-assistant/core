@@ -27,7 +27,6 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
-    statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
@@ -310,7 +309,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
             # Get the last recorded statistic to determine where to start
             last_stat = await recorder.async_add_executor_job(
-                get_last_statistics, self.hass, 1, statistic_id, True, set()
+                get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
             )
 
             if not last_stat:
@@ -322,21 +321,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 running_sum = 0.0
             else:
                 last_stats_time = last_stat[statistic_id][0]["start"]
-                # Get the sum at the start time to continue from there
-                stats = await recorder.async_add_executor_job(
-                    statistics_during_period,
-                    self.hass,
-                    dt_util.utc_from_timestamp(last_stats_time),
-                    dt_util.utc_from_timestamp(last_stats_time + 1),
-                    {statistic_id},
-                    "hour",
-                    None,
-                    {"sum"},
-                )
-                if stats and statistic_id in stats and stats[statistic_id]:
-                    running_sum = cast(float, stats[statistic_id][0]["sum"])
-                else:
-                    running_sum = 0.0
+                running_sum = cast(float, last_stat[statistic_id][0].get("sum", 0.0))
 
             statistics: list[StatisticData] = []
 
