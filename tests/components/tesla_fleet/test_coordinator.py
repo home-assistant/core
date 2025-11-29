@@ -276,7 +276,7 @@ async def test_coordinator_handles_invalid_data(
     mock_energy_site.energy_history.return_value = {
         "response": {
             "period": "day",
-            # Missing time_series
+
         }
     }
 
@@ -402,7 +402,7 @@ async def test_coordinator_handles_missing_timestamp(
             "period": "day",
             "time_series": [
                 {
-                    # Missing timestamp
+
                     "solar_energy_exported": 1000,
                 },
                 {
