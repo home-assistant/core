@@ -280,6 +280,9 @@
       "chime_duration": {
         "name": "Chime duration"
       },
+      "doorbell_ring_volume": {
+        "name": "Doorbell ring volume"
+      },
       "infrared_custom_lux_trigger": {
         "name": "Infrared custom lux trigger"
       },
@@ -288,6 +291,9 @@
       },
       "motion_sensitivity": {
         "name": "Motion sensitivity"
+      },
+      "system_sounds_volume": {
+        "name": "System sounds volume"
       },
       "volume": {
         "name": "[%key:component::sensor::entity_component::volume::name%]"
