@@ -72,7 +72,6 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.on_func, self.coordinator
         )
-        self.async_write_ha_state()
         await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
 
@@ -81,6 +80,5 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.off_func, self.coordinator
         )
-        self.async_write_ha_state()
         await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
