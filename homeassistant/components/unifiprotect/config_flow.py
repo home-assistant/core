@@ -55,7 +55,7 @@ from .const import (
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
 )
-from .data import async_last_update_was_successful
+from .data import UFPConfigEntry, async_last_update_was_successful
 from .discovery import async_start_discovery
 from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 
@@ -80,7 +80,7 @@ def _host_is_direct_connect(host: str) -> bool:
 
 async def _async_console_is_offline(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
 ) -> bool:
     """Check if a console is offline.
 
