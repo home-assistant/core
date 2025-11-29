@@ -2452,7 +2452,7 @@ tailscale==0.6.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.1.2
+teltasync==0.1.3
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
