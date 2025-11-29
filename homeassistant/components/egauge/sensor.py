@@ -25,7 +25,8 @@ from .entity import EgaugeEntity
 class EgaugeSensorEntityDescription(SensorEntityDescription):
     """Extended sensor description for eGauge sensors."""
 
-    native_value_fn: Callable[[EgaugeData, str], float | None]
+    native_value_fn: Callable[[EgaugeData, str], float]
+    available_fn: Callable[[EgaugeData, str], bool]
 
 
 POWER_SENSOR = EgaugeSensorEntityDescription(
@@ -34,7 +35,8 @@ POWER_SENSOR = EgaugeSensorEntityDescription(
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfPower.WATT,
-    native_value_fn=lambda data, register: data.measurements.get(register),
+    native_value_fn=lambda data, register: data.measurements[register],
+    available_fn=lambda data, register: register in data.measurements,
 )
 
 ENERGY_SENSOR = EgaugeSensorEntityDescription(
@@ -44,7 +46,8 @@ ENERGY_SENSOR = EgaugeSensorEntityDescription(
     state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.JOULE,
     suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    native_value_fn=lambda data, register: data.counters.get(register),
+    native_value_fn=lambda data, register: data.counters[register],
+    available_fn=lambda data, register: register in data.counters,
 )
 
 
@@ -101,5 +104,12 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return the sensor value using the description's value function."""
         return self.entity_description.native_value_fn(
+            self.coordinator.data, self._register_name
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return true if the corresponding register is available."""
+        return super().available and self.entity_description.available_fn(
             self.coordinator.data, self._register_name
         )
