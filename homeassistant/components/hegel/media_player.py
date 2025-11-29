@@ -1,4 +1,3 @@
-# media_player.py (revised)
 from __future__ import annotations
 
 import asyncio
@@ -13,13 +12,21 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STAT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import COMMANDS, CONF_MODEL, DOMAIN, MODEL_INPUTS, SLOW_POLL_INTERVAL
+from .const import (
+    COMMANDS,
+    CONF_MODEL,
+    DOMAIN,
+    MODEL_INPUTS,
+    SLOW_POLL_INTERVAL,
+    HEARTBEAT_TIMEOUT_MINUTES,
+)
 from .hegel_client import HegelClient, HegelStateUpdate, parse_reply_message
 
 _LOGGER = logging.getLogger(__name__)
@@ -195,6 +202,30 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
         # start a watcher task to refresh state on reconnect
         self._connected_watcher_task = asyncio.create_task(self._connected_watcher())
+
+    async def async_added_to_hass(self) -> None:
+        # 1. Call parent (important for CoordinatorEntity)
+        await super().async_added_to_hass()
+        # 2. Schedule the heartbeat every 2 minutes while the reset timeout is 3 minutes
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass,
+                self._send_heartbeat,
+                timedelta(minutes=HEARTBEAT_TIMEOUT_MINUTES - 1),
+            )
+        )
+        # 3. Send the first heartbeat immediately
+        self.hass.async_create_task(self._send_heartbeat())
+
+    async def _send_heartbeat(self, now=None) -> None:
+        if not self.available:
+            return
+        try:
+            await self._client.send(
+                f"-r.{HEARTBEAT_TIMEOUT_MINUTES}", expect_reply=False
+            )
+        except Exception as err:
+            _LOGGER.debug("Heartbeat failed: %s", err)
 
     @property
     def unique_id(self) -> str | None:
