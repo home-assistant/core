@@ -1,0 +1,3616 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
+      "reconfigure_successful": "Network interface updated successfully",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Unexpected error while validating the configuration"
+    },
+    "error": {
+      "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
+      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0)."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "interface": "[%key:component::hems::config::step::user::data::interface%]"
+        },
+        "data_description": {
+          "interface": "[%key:component::hems::config::step::user::data_description::interface%]"
+        },
+        "description": "Change the network interface for ECHONET Lite communication.",
+        "title": "Reconfigure HEMS"
+      },
+      "user": {
+        "data": {
+          "interface": "Network interface"
+        },
+        "data_description": {
+          "interface": "Select the network interface to use for ECHONET Lite communication. Select Auto to let Home Assistant automatically detect the appropriate interface."
+        },
+        "description": "Home Assistant automatically binds to the ECHONET Lite multicast channel (224.0.23.0:3610) and begins listening for devices.",
+        "title": "Set up HEMS"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "class_0002_epc_b1": {
+        "name": "Invasion occurrence status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0003_epc_b1": {
+        "name": "Emergency occurrence status",
+        "state": {
+          "off": "NO",
+          "on": "YES"
+        }
+      },
+      "class_0007_epc_b1": {
+        "name": "Human detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0016_epc_b1": {
+        "name": "Bath heating detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_001d_epc_b1": {
+        "name": "VOC detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0130_epc_8f": {
+        "name": "Power-saving operation setting",
+        "state": {
+          "off": "Operating in normal operation mode",
+          "on": "Operating in power-saving mode"
+        }
+      },
+      "class_0130_epc_c1": {
+        "name": "Humidifier function setting",
+        "state": {
+          "off": "Humidifier function OFF",
+          "on": "Humidifier function ON"
+        }
+      },
+      "class_0130_epc_cf": {
+        "name": "Air purification mode setting",
+        "state": {
+          "off": "Air purification OFF",
+          "on": "Air purification ON"
+        }
+      },
+      "class_0133_epc_bf": {
+        "name": "Ventilation Auto setting",
+        "state": {
+          "off": "Non-auto",
+          "on": "Auto"
+        }
+      },
+      "class_0134_epc_b0": {
+        "name": "Ventilation mode automatic setting",
+        "state": {
+          "off": "Non-auto",
+          "on": "Auto"
+        }
+      },
+      "class_0134_epc_b1": {
+        "name": "Ventilation method setting",
+        "state": {
+          "off": "Air conditioning ventilation",
+          "on": "Blowing ventilation"
+        }
+      },
+      "class_0134_epc_bf": {
+        "name": "Ventilation auto setting",
+        "state": {
+          "off": "Non-auto",
+          "on": "Auto"
+        }
+      },
+      "class_0134_epc_c1": {
+        "name": "Smoke (cigarette) detection status",
+        "state": {
+          "off": "Smoke (cigarette) detection status not found.",
+          "on": "Smoke (cigarette) detection status found."
+        }
+      },
+      "class_0134_epc_c2": {
+        "name": "Pollution detection status",
+        "state": {
+          "off": "Pollution non-detected",
+          "on": "Pollution detected"
+        }
+      },
+      "class_0134_epc_e0": {
+        "name": "Heat exchanger operation setting",
+        "state": {
+          "off": "Heat exchanger ON",
+          "on": "Heat exchanger ON"
+        }
+      },
+      "class_0135_epc_c0": {
+        "name": "Air pollution detection status",
+        "state": {
+          "off": "Air pollution non-detected",
+          "on": "Air pollution detected"
+        }
+      },
+      "class_0135_epc_c1": {
+        "name": "Smoke (cigarette) detection status",
+        "state": {
+          "off": "Smoke (cigarette) detection status not found.",
+          "on": "Smoke (cigarette) detection status found."
+        }
+      },
+      "class_0135_epc_c2": {
+        "name": "Optical catalyst operation setting",
+        "state": {
+          "off": "Optical catalyst OFF",
+          "on": "Optical catalyst ON"
+        }
+      },
+      "class_0135_epc_e1": {
+        "name": "Filter change notice",
+        "state": {
+          "off": "Not found",
+          "on": "Found"
+        }
+      },
+      "class_0260_epc_90": {
+        "name": "Timer operation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0260_epc_c2": {
+        "name": "Wind detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0260_epc_c3": {
+        "name": "Sunlight detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0260_epc_d4": {
+        "name": "Automatic operation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0260_epc_e5": {
+        "name": "Electric lock setting",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_0260_epc_e8": {
+        "name": "Remote operation setting status",
+        "state": {
+          "off": "OFF (prohibited)",
+          "on": "ON (permitted)"
+        }
+      },
+      "class_0263_epc_90": {
+        "name": "Timer operation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0263_epc_e5": {
+        "name": "Electric lock setting",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_0263_epc_e8": {
+        "name": "Remote operation setting status",
+        "state": {
+          "off": "OFF (prohibited)",
+          "on": "ON (permitted)"
+        }
+      },
+      "class_026b_epc_90": {
+        "name": "ON timer setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_026b_epc_b1": {
+        "name": "Automatic water temperature control setting",
+        "state": {
+          "off": "Automatic water temperature control function not used",
+          "on": "Automatic water temperature control function used"
+        }
+      },
+      "class_026b_epc_b2": {
+        "name": "Water heater status",
+        "state": {
+          "off": "Not heating",
+          "on": "Heating"
+        }
+      },
+      "class_026b_epc_c0": {
+        "name": "Daytime reheating permission setting",
+        "state": {
+          "off": "Daytime reheating not permitted",
+          "on": "Daytime reheating permitted"
+        }
+      },
+      "class_026b_epc_c3": {
+        "name": "Hot water supply status",
+        "state": {
+          "off": "Not supplying hot water",
+          "on": "Supplying hot water"
+        }
+      },
+      "class_026b_epc_d7": {
+        "name": "Mute setting",
+        "state": {
+          "off": "Mute OFF",
+          "on": "Mute ON"
+        }
+      },
+      "class_026b_epc_e4": {
+        "name": "Manual bath reheating operation setting",
+        "state": {
+          "off": "Bath reheating OFF",
+          "on": "Bath reheating ON"
+        }
+      },
+      "class_026b_epc_e5": {
+        "name": "Addition of hot water function setting",
+        "state": {
+          "off": "Addition of hot water function OFF",
+          "on": "Addition of hot water function ON"
+        }
+      },
+      "class_026b_epc_e6": {
+        "name": "Slight bath water temperature lowering function setting",
+        "state": {
+          "off": "Lukewarm water temperature function OFF",
+          "on": "Lukewarm water temperature function ON"
+        }
+      },
+      "class_026b_epc_e9": {
+        "name": "Bathroom priority setting",
+        "state": {
+          "off": "Priority bath OFF",
+          "on": "Priority bath ON"
+        }
+      },
+      "class_026f_epc_e0": {
+        "name": "Lock setting1",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_026f_epc_e1": {
+        "name": "Lock setting 2",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_026f_epc_e2": {
+        "name": "Lock status of door guard",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_026f_epc_e3": {
+        "name": "Door open/close status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_026f_epc_e4": {
+        "name": "Occupant/ non-occupant status",
+        "state": {
+          "off": "Non-occupant",
+          "on": "Occupant"
+        }
+      },
+      "class_026f_epc_e6": {
+        "name": "Auto lock mode setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0272_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_0272_epc_d0": {
+        "name": "Hot water heating status",
+        "state": {
+          "off": "Hot water heating status not found",
+          "on": "Hot water heating status found"
+        }
+      },
+      "class_0272_epc_d2": {
+        "name": "Hot water warmer setting",
+        "state": {
+          "off": "Hot water warmer operation resetting",
+          "on": "Hot water warmer operation"
+        }
+      },
+      "class_0272_epc_d7": {
+        "name": "Mute setting",
+        "state": {
+          "off": "Mute OFF",
+          "on": "Mute ON"
+        }
+      },
+      "class_0272_epc_e2": {
+        "name": "Bath water heater status",
+        "state": {
+          "off": "Not Heating",
+          "on": "Heating"
+        }
+      },
+      "class_0272_epc_e4": {
+        "name": "Bath additional boil-up operation setting",
+        "state": {
+          "off": "Additional boil-up OFF",
+          "on": "Additional boil-up ON"
+        }
+      },
+      "class_0272_epc_e5": {
+        "name": "Bath hot water adding operation setting",
+        "state": {
+          "off": "Hot water addition OFF",
+          "on": "Hot water addition ON"
+        }
+      },
+      "class_0272_epc_e6": {
+        "name": "Bath water temperature lowering operation setting",
+        "state": {
+          "off": "Hot water temperature lowering OFF",
+          "on": "Hot water temperature lowering ON"
+        }
+      },
+      "class_0272_epc_e9": {
+        "name": "Bathroom priority setting",
+        "state": {
+          "off": "Bathroom priority OFF",
+          "on": "Bathroom priority ON"
+        }
+      },
+      "class_0272_epc_ea": {
+        "name": "Shower hot water supply status",
+        "state": {
+          "off": "Shower hot water supply OFF",
+          "on": "Shower hot water supply ON"
+        }
+      },
+      "class_0272_epc_eb": {
+        "name": "Kitchen hot water supply status",
+        "state": {
+          "off": "Kitchen hot water supply OFF",
+          "on": "Kitchen hot water supply ON"
+        }
+      },
+      "class_0272_epc_ec": {
+        "name": "Hot water warmer ON timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_0273_epc_90": {
+        "name": "On timer reservation setting 1",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_0273_epc_94": {
+        "name": "Off timer reservation setting",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_0273_epc_cf": {
+        "name": "Filter cleaning reminder sign setting",
+        "state": {
+          "off": "Not lit",
+          "on": "Lit"
+        }
+      },
+      "class_0273_epc_e0": {
+        "name": "Human body detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0279_epc_a2": {
+        "name": "Function to control purchase surplus electricity setting",
+        "state": {
+          "off": "Invalid",
+          "on": "Valid"
+        }
+      },
+      "class_0279_epc_b2": {
+        "name": "Function to control the type of surplus electricity purchase",
+        "state": {
+          "off": "Invalid",
+          "on": "Valid"
+        }
+      },
+      "class_027a_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027a_epc_94": {
+        "name": "OFF timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027a_epc_e0": {
+        "name": "Operation mode setting",
+        "state": {
+          "off": "Cooling",
+          "on": "Heating"
+        }
+      },
+      "class_027b_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027b_epc_94": {
+        "name": "OFF timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027c_epc_ca": {
+        "name": "Power generation setting",
+        "state": {
+          "off": "Power generation OFF",
+          "on": "Power generation ON"
+        }
+      },
+      "class_027c_epc_d2": {
+        "name": "Designated power generation status",
+        "state": {
+          "off": "Load following power generation",
+          "on": "Power generation at the maximum rating"
+        }
+      },
+      "class_027d_epc_cc": {
+        "name": "Re-interconnection permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027d_epc_cd": {
+        "name": "Operation permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027d_epc_ce": {
+        "name": "Independent operation permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027e_epc_df": {
+        "name": "Re-interconnection permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027e_epc_e5": {
+        "name": "Maintenance status",
+        "state": {
+          "off": "Occurrence status not found",
+          "on": "Occurrence status found"
+        }
+      },
+      "class_0281_epc_e3": {
+        "name": "Detection of abnormal value in metering data",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0290_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_0290_epc_94": {
+        "name": "OFF timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_02a4_epc_c6": {
+        "name": "Automatic operation controlling setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_02a6_epc_b2": {
+        "name": "Water heating status",
+        "state": {
+          "off": "Water is not heating.",
+          "on": "Water is heating."
+        }
+      },
+      "class_02a6_epc_b3": {
+        "name": "Heater status",
+        "state": {
+          "off": "Water is not heating.",
+          "on": "Water is heating."
+        }
+      },
+      "class_02a6_epc_b6": {
+        "name": "Hot water supply mode setting for auxiliary heat source machine",
+        "state": {
+          "off": "No setting",
+          "on": "Set"
+        }
+      },
+      "class_02a6_epc_b7": {
+        "name": "Heater mode setting for auxiliary heat source machine.",
+        "state": {
+          "off": "No setting",
+          "on": "Set"
+        }
+      },
+      "class_02a6_epc_c3": {
+        "name": "Hot water supply status",
+        "state": {
+          "off": "Not supplying hot water",
+          "on": "Supplying hot water"
+        }
+      },
+      "class_03b7_epc_a5": {
+        "name": "Icemaker operation status",
+        "state": {
+          "off": "Ice-making stopped.",
+          "on": "Ice-making in progress"
+        }
+      },
+      "class_03b7_epc_a6": {
+        "name": "Icemaker tank status",
+        "state": {
+          "off": "There is no water left in the icemaker tank or the icemaker tank has not been positioned correctly in the refrigerator.",
+          "on": "Icemaker tank contains water."
+        }
+      },
+      "class_03b7_epc_a8": {
+        "name": "Refrigerator compartment humidification function setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_03b7_epc_a9": {
+        "name": "Vegetable compartment humidification function setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_03b7_epc_ad": {
+        "name": "Deodorization function setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_03b7_epc_b2": {
+        "name": "Refrigerator compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b3": {
+        "name": "Freezer compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b4": {
+        "name": "Ice compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b5": {
+        "name": "Vegetable compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b6": {
+        "name": "Multi-refrigerating mode compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b9_epc_a1": {
+        "name": "Child lock setting",
+        "state": {
+          "off": "Child lock off",
+          "on": "Child lock on"
+        }
+      },
+      "class_03b9_epc_a2": {
+        "name": "Radiant heater lock setting",
+        "state": {
+          "off": "Radiant heater lock off",
+          "on": "Radiant heater lock on"
+        }
+      },
+      "class_03bb_epc_90": {
+        "name": "Rice cooking reservation setting",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_03bb_epc_b0": {
+        "name": "Cover closure status",
+        "state": {
+          "off": "Cover close",
+          "on": "Cover open"
+        }
+      },
+      "class_03bb_epc_e1": {
+        "name": "Warmer setting",
+        "state": {
+          "off": "Warmer disabled",
+          "on": "Warmer enabled"
+        }
+      },
+      "class_03bb_epc_e5": {
+        "name": "Inner pot removal status",
+        "state": {
+          "off": "Not removed",
+          "on": "Removed"
+        }
+      },
+      "class_03bb_epc_e6": {
+        "name": "Cover removal status",
+        "state": {
+          "off": "Not removed",
+          "on": "Removed"
+        }
+      },
+      "class_03ce_epc_d1": {
+        "name": "This property indicates the type of the showcase door.",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03ce_epc_d2": {
+        "name": "This property indicates refrigerator type, such as built-in or separate.",
+        "state": {
+          "off": "Built-in type",
+          "on": "Separate type"
+        }
+      },
+      "class_03ce_epc_e0": {
+        "name": "Indicates on/off status of lighting installed inside the showcase.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03ce_epc_e1": {
+        "name": "Indicates ON/OFF status of lighting installed outside the showcase.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03ce_epc_e2": {
+        "name": "Indicates on/off status of compressor when showcase and compressor are a single unit.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03ce_epc_e7": {
+        "name": "Indicates on/off status of showcases with heater for hot function.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03d3_epc_90": {
+        "name": "On timer reservation setting",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_03d3_epc_b0": {
+        "name": "Door/cover open/close status",
+        "state": {
+          "off": "Door/cover closed",
+          "on": "Door/cover open"
+        }
+      },
+      "class_03d3_epc_ec": {
+        "name": "Wrinkling minimization setting",
+        "state": {
+          "off": "Wrinkling minimization function off",
+          "on": "Wrinkling minimization function on"
+        }
+      },
+      "class_03d3_epc_ee": {
+        "name": "Door/cover lock setting",
+        "state": {
+          "off": "Unlocked",
+          "on": "Locked"
+        }
+      },
+      "class_03d4_epc_aa": {
+        "name": "Indicates that the showcase freezer is in an exceptional status.",
+        "state": {
+          "off": "Normal status",
+          "on": "Defrosting status"
+        }
+      },
+      "class_03d4_epc_b0": {
+        "name": "Operation mode setting",
+        "state": {
+          "off": "Non-cooling",
+          "on": "Cooling"
+        }
+      },
+      "class_03d4_epc_e2": {
+        "name": "Indicates compressor ON/OFF status.",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_05ff_epc_cd": {
+        "name": "Fault status of device to be controlled",
+        "state": {
+          "off": "NO",
+          "on": "YES"
+        }
+      },
+      "class_0602_epc_b0": {
+        "name": "Display control setting",
+        "state": {
+          "off": "Displaying disabled",
+          "on": "Displaying enabled"
+        }
+      },
+      "class_common_epc_80": {
+        "name": "Operation status",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      }
+    },
+    "climate": {
+      "home_air_conditioner": {
+        "name": "Climate"
+      }
+    },
+    "select": {
+      "class_0002_epc_b0": {
+        "name": "Detection threshold level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0007_epc_b0": {
+        "name": "Detection threshold level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0016_epc_b0": {
+        "name": "Detection threshold level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_001d_epc_b0": {
+        "name": "Detection threshold level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0130_epc_90": {
+        "name": "ON timer-based reservation setting",
+        "state": {
+          "time_off_relative_time_off": "Both reservation functions are OFF.",
+          "time_off_relative_time_on": "Relative time-based reservation function is ON.",
+          "time_on_relative_time_off": "Time-based reservation function is ON.",
+          "time_on_relative_time_on": "Both the time- and relative time-based reservation functions are ON."
+        }
+      },
+      "class_0130_epc_94": {
+        "name": "OFF timer-based reservation setting",
+        "state": {
+          "both_off": "Both reservation functions are OFF.",
+          "relative_time_based_on": "Relative time-based reservation function is ON.",
+          "time_based_and_relative_time_based_on": "Both the time- and relative time-based reservation functions are ON.",
+          "time_based_on": "Time-based reservation function is ON."
+        }
+      },
+      "class_0130_epc_a1": {
+        "name": "Automatic control of air flow direction setting",
+        "state": {
+          "auto": "Automatic",
+          "auto_horizontal": "Automatic (horizontal)",
+          "auto_vertical": "Automatic (vertical)",
+          "non_auto": "Non-automatic"
+        }
+      },
+      "class_0130_epc_a4": {
+        "name": "Air flow direction (vertical) setting",
+        "state": {
+          "central": "Central",
+          "lower_center": "Midpoint between lowermost and central",
+          "lowermost": "Lowermost",
+          "upper_center": "Midpoint between uppermost and central",
+          "uppermost": "Uppermost"
+        }
+      },
+      "class_0130_epc_a5": {
+        "name": "Air flow direction (horizontal) setting",
+        "state": {
+          "c": "Center",
+          "c_r": "Center and right",
+          "c_rc": "Center and Right center",
+          "c_rc_r": "Center, Right center and Right",
+          "l": "Left",
+          "l_c": "Left and Center",
+          "l_c_r": "Left, Center and Right",
+          "l_c_rc": "Left, Center and Right center",
+          "l_c_rc_r": "Left, Center, Right center and Right",
+          "l_lc": "Left and Left center",
+          "l_lc_c": "Left, Left center and center",
+          "l_lc_c_r": "Left, Left center, Center and Right",
+          "l_lc_c_rc": "Left, Left center, Center and Right center",
+          "l_lc_c_rc_r": "Left, Left center, Center, Right center and Right",
+          "l_lc_r": "Left, Left center and Right",
+          "l_lc_rc": "Left, Left center and Right center",
+          "l_lc_rc_r": "Left, Left center, Right center and Right",
+          "l_r": "Left and Right",
+          "l_rc": "Left and Right center",
+          "l_rc_r": "Left, Right center and Right",
+          "lc": "Left center",
+          "lc_c": "Left center and Center",
+          "lc_c_r": "Left center, Center and Right",
+          "lc_c_rc": "Left center, Center and Right center",
+          "lc_c_rc_r": "Left center, Center, Right center and Right",
+          "lc_r": "Left center and Right",
+          "lc_rc": "Left center and Right center",
+          "lc_rc_r": "Left center, Right center and Right",
+          "r": "Right",
+          "rc": "Right center",
+          "rc_r": "Right center and Right"
+        }
+      },
+      "class_0130_epc_b2": {
+        "name": "Normal/highspeed/silent operation setting",
+        "state": {
+          "highspeed": "High-speed operation",
+          "normal": "Normal operation",
+          "silent": "Silent operation"
+        }
+      },
+      "class_0130_epc_c0": {
+        "name": "Ventilation function setting",
+        "state": {
+          "off": "Ventilation function OFF",
+          "on_intake": "Ventilation function ON (intake direction)",
+          "on_outlet": "Ventilation function ON (outlet direction)",
+          "on_outlet_and_intake": "Ventilation function ON (outlet and intake direction)"
+        }
+      },
+      "class_0130_epc_c2": {
+        "name": "Ventilation air flow rate setting",
+        "state": {
+          "auto": "Automatic control of ventilation air flow rate",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0130_epc_c4": {
+        "name": "Degree of humidification setting",
+        "state": {
+          "auto": "Automatic control of the degree of humidification",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0130_epc_cc": {
+        "name": "Special function setting",
+        "state": {
+          "active_defrosting": "Active defrosting function",
+          "clothes_dryer": "Clothes dryer function",
+          "condensation_suppressor": "Condensation suppressor function",
+          "mite_and_mold_control": "Mite and mold control function",
+          "no_setting": "No setting"
+        }
+      },
+      "class_0130_epc_ce": {
+        "name": "Thermostat setting override function",
+        "state": {
+          "normal": "Normal setting",
+          "off": "Thermostat setting override function OFF",
+          "on": "Thermostat setting override function ON"
+        }
+      },
+      "class_0134_epc_b2": {
+        "name": "Ventilation mode setting",
+        "state": {
+          "cooling": "Cooling ventilation",
+          "dehumidifying": "Dehumidifying ventilation",
+          "heat_exchange": "Heat exchange ventilation",
+          "heating": "Heating ventilation",
+          "humidifying": "Humidifying ventilation",
+          "normal": "Normal ventilation",
+          "other": "Other ventilation modes"
+        }
+      },
+      "class_0134_epc_b3": {
+        "name": "Cooling / heating high-low setting",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0135_epc_a0": {
+        "name": "Air flow rate setting",
+        "state": {
+          "auto": "Ventilation air flow rate auto status",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0156_epc_b0": {
+        "name": "Operation mode setting",
+        "state": {
+          "auto": "Automatic",
+          "circulation": "Air circulation",
+          "cooling": "Cooling",
+          "dehumidification": "Dehumidification",
+          "heating": "Heating"
+        }
+      },
+      "class_0260_epc_d0": {
+        "name": "Opening (extension) speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      },
+      "class_0260_epc_d1": {
+        "name": "Closing (retraction) speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      },
+      "class_0260_epc_e0": {
+        "name": "Open/close (extension/retraction) setting",
+        "state": {
+          "close": "Close",
+          "open": "Open",
+          "stop": "Stop"
+        }
+      },
+      "class_0260_epc_e3": {
+        "name": "Open/close (extension/retraction) speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      },
+      "class_0260_epc_e9": {
+        "name": "Selective opening (extension) operation setting",
+        "state": {
+          "degree_of_opening": "Degree-of-opening setting position: Open",
+          "local_setting": "Local setting position",
+          "operation_time_of_closing": "Operation time setting value: Close",
+          "operation_time_of_opening": "Operation time setting value: Open"
+        }
+      },
+      "class_0260_epc_ea": {
+        "name": "Open/closed (extended/retracted) status",
+        "state": {
+          "closing": "Closing",
+          "fully_closed": "Fully closed",
+          "fully_open": "Fully open",
+          "opening": "Opening",
+          "stopped_halfway": "Stopped halfway"
+        }
+      },
+      "class_0260_epc_ee": {
+        "name": "One-time opening (extension) speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "none": "None"
+        }
+      },
+      "class_0260_epc_ef": {
+        "name": "One-time closing (retraction) speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "none": "None"
+        }
+      },
+      "class_0263_epc_d0": {
+        "name": "Opening speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      },
+      "class_0263_epc_d1": {
+        "name": "Closing speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      },
+      "class_0263_epc_e0": {
+        "name": "Open/close operation setting",
+        "state": {
+          "close": "Close",
+          "open": "Open",
+          "stop": "Stop"
+        }
+      },
+      "class_0263_epc_e3": {
+        "name": "Opening/closing speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      },
+      "class_0263_epc_e9": {
+        "name": "Selective degree-of-opening setting",
+        "state": {
+          "degree_of_opening": "Degree-of-opening setting position: Open",
+          "local_setting": "Local setting position",
+          "operation_time_of_closing": "Operation time setting value: Close",
+          "operation_time_of_opening": "Operation time setting value: Open",
+          "slit_degree_of_opening": "Slit degree-of-opening setting"
+        }
+      },
+      "class_0263_epc_ea": {
+        "name": "Open/closed status",
+        "state": {
+          "closing": "Closing",
+          "fully_closed": "Fully closed",
+          "fully_open": "Fully open",
+          "opening": "Opening",
+          "stopped_halfway": "Stopped halfway"
+        }
+      },
+      "class_0263_epc_ee": {
+        "name": "One-time opening speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "none": "None"
+        }
+      },
+      "class_0263_epc_ef": {
+        "name": "One-time closing speed setting",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "none": "None"
+        }
+      },
+      "class_026b_epc_b0": {
+        "name": "Automatic water heating setting",
+        "state": {
+          "auto": "Automatic water heating function used",
+          "manual_heating": "Non-automatic water heating function used",
+          "manual_no_heating": "Non-automatic water heating function stopped"
+        }
+      },
+      "class_026b_epc_b6": {
+        "name": "Tank operation mode setting",
+        "state": {
+          "extra": "Extra",
+          "saving": "Saving",
+          "standard": "Standard"
+        }
+      },
+      "class_026b_epc_e8": {
+        "name": "Bath water volume setting 2",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_026b_epc_ea": {
+        "name": "Bath Operation Status Monitor",
+        "state": {
+          "keeping_temperature": "Keeping temperature",
+          "no_operation": "Stopped",
+          "running_hot_water": "Filling hot water"
+        }
+      },
+      "class_026f_epc_e5": {
+        "name": "Alarm status",
+        "state": {
+          "break_open": "Break open",
+          "door_open": "Door open",
+          "manual_unlocked": "Manual unlocked",
+          "normal": "Normal (no alarm)",
+          "tampered": "Tampered"
+        }
+      },
+      "class_0272_epc_e8": {
+        "name": "Bath hot water volume setting 2",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0272_epc_ef": {
+        "name": "Bath operation status monitor",
+        "state": {
+          "keeping_temperature": "Keeping bath temperature",
+          "no_operation": "Stopped",
+          "running_hot_water": "Supplying hot water"
+        }
+      },
+      "class_0273_epc_b0": {
+        "name": "Operation setting",
+        "state": {
+          "circulation": "Circulation",
+          "drying": "Drying operation",
+          "heating": "Heating operation",
+          "prewarming": "Prewarming operation",
+          "stop": "Stop",
+          "ventilation": "Ventilation"
+        }
+      },
+      "class_0273_epc_b1": {
+        "name": "Ventilation operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_b2": {
+        "name": "Bathroom prewarming operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_b3": {
+        "name": "Bathroom heating operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_b4": {
+        "name": "Bathroom drying operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_b5": {
+        "name": "Cool air circulation operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_b6": {
+        "name": "Mist sauna operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_b7": {
+        "name": "Water mist operation setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "standard": "Standard"
+        }
+      },
+      "class_0273_epc_c2": {
+        "name": "Ventilation air flow rate setting",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8"
+        }
+      },
+      "class_0273_epc_e1": {
+        "name": "On timer reservation setting 2",
+        "state": {
+          "circulation_reservation": "Circulation reservation",
+          "drying_reservation": "Drying operation reservation",
+          "heating_reservation": "Heating operation reservation",
+          "no_reservation": "No reservation",
+          "prewarming_reservation": "Prewarming operation reservation",
+          "ventilation_reservation": "Ventilation reservation"
+        }
+      },
+      "class_0279_epc_c1": {
+        "name": "FIT contract type",
+        "state": {
+          "fit": "FIT",
+          "non_fit": "Non-FIT",
+          "undefined": "No setting"
+        }
+      },
+      "class_0279_epc_c2": {
+        "name": "Self-consumption type",
+        "state": {
+          "unknown": "Unknown",
+          "with_self_consumption": "With self-consumption",
+          "without_self_consumption": "Without self-consumption"
+        }
+      },
+      "class_0279_epc_d0": {
+        "name": "System-interconnected type",
+        "state": {
+          "independent": "Independent type",
+          "reverse_power_flow_acceptable": "System-interconnected type (reverse power flow acceptable)",
+          "reverse_power_flow_not_acceptable": "System-interconnected type (reverse power flow not acceptable)"
+        }
+      },
+      "class_0279_epc_d1": {
+        "name": "Output power restraint status",
+        "state": {
+          "except_control": "Ongoing restraint (except output power control)",
+          "not_power_restraint": "Not restraining",
+          "output_control": "Ongoing restraint (output power control)",
+          "reason_unknown": "Ongoing restraint (reason for restraint is unknown)",
+          "unknown": "Unknown"
+        }
+      },
+      "class_027a_epc_e2": {
+        "name": "Water temperature setting 2",
+        "state": {
+          "auto": "Auto",
+          "level_1": "Level 1",
+          "level_10": "Level 10",
+          "level_11": "Level 11",
+          "level_12": "Level 12",
+          "level_13": "Level 13",
+          "level_14": "Level 14",
+          "level_15": "Level 15",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9"
+        }
+      },
+      "class_027a_epc_e5": {
+        "name": "Special operation setting",
+        "state": {
+          "high_power": "High power operation",
+          "modest": "Modest operation",
+          "normal": "Normal operation"
+        }
+      },
+      "class_027a_epc_e6": {
+        "name": "Daily timer setting",
+        "state": {
+          "timer1": "Timer 1",
+          "timer2": "Timer 2",
+          "timer_off": "Timer OFF"
+        }
+      },
+      "class_027b_epc_e5": {
+        "name": "Special operation setting",
+        "state": {
+          "high_power": "High power",
+          "modest": "Modest",
+          "normal": "Normal"
+        }
+      },
+      "class_027b_epc_e6": {
+        "name": "Daily timer setting",
+        "state": {
+          "off": "OFF",
+          "timer1": "Timer1",
+          "timer2": "Timer2"
+        }
+      },
+      "class_027c_epc_cb": {
+        "name": "Power generation status",
+        "state": {
+          "generating": "Generating",
+          "idling": "Idling",
+          "starting": "Starting",
+          "stopped": "Stopped",
+          "stopping": "Stopping"
+        }
+      },
+      "class_027c_epc_d0": {
+        "name": "System interconnected type",
+        "state": {
+          "independent": "Independent type",
+          "reverse_power_flow_acceptable": "System interconnected type (reverse power flow acceptable)",
+          "reverse_power_flow_not_acceptable": "System interconnected type (reverse power flow not acceptable)"
+        }
+      },
+      "class_027d_epc_cf": {
+        "name": "Working operation status",
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging",
+          "other": "Other",
+          "rapid_charging": "Rapid charging",
+          "standby": "Standby",
+          "test": "Test"
+        }
+      },
+      "class_027d_epc_da": {
+        "name": "Operation mode setting",
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging",
+          "rapid_charging": "Rapid charging",
+          "standby": "Standby",
+          "test": "Test"
+        }
+      },
+      "class_027d_epc_db": {
+        "name": "System-interconnected type",
+        "state": {
+          "independent": "Independent type",
+          "reverse_power_flow_acceptable": "System interconnection (reverse power flow acceptable)",
+          "reverse_power_flow_not_acceptable": "System-interconnected type (reverse power flow not acceptable)"
+        }
+      },
+      "class_027d_epc_e6": {
+        "name": "Battery type",
+        "state": {
+          "alkaline": "Rechargeable alkaline",
+          "lead": "Lead",
+          "lib": "Lithium ion",
+          "ni_cd": "Nickel-cadmium",
+          "ni_mh": "Nickel-metal hydride",
+          "unknown": "Unknown",
+          "zinc": "Zinc"
+        }
+      },
+      "class_027e_epc_c7": {
+        "name": "Vehicle connection and chargeable/dischargeable status",
+        "state": {
+          "chargeable": "Chargeable",
+          "chargeable_dischargeable": "Chargeable and Dischargeable",
+          "connected": "Connected",
+          "dischargeable": "Dischargeable",
+          "not_connected": "Not Connected"
+        }
+      },
+      "class_027e_epc_cc": {
+        "name": "Charger/Discharger type",
+        "state": {
+          "ac_cplt": "AC_CPLT",
+          "ac_hlc_charge": "AC_HLC_Charge",
+          "ac_hlc_chargedischarge": "AC_HLC_ChargeDischarge",
+          "dc_aa_charge": "DC_AA_Charge",
+          "dc_aa_chargedischarge": "DC_AA_ChargeDischarge",
+          "dc_aa_discharge": "DC_AA_Discharge",
+          "dc_bb_charge": "DC_BB_Charge",
+          "dc_bb_chargedischarge": "DC_BB_ChargeDischarge",
+          "dc_bb_discharge": "DC_BB_Discharge",
+          "dc_ee_charge": "DC_EE_Charge",
+          "dc_ee_chargedischarge": "DC_EE_ChargeDischarge",
+          "dc_ee_discharge": "DC_EE_Discharge",
+          "dc_ff_charge": "DC_FF_Charge",
+          "dc_ff_chargedischarge": "DC_FF_ChargeDischarge",
+          "dc_ff_discharge": "DC_FF_Discharge"
+        }
+      },
+      "class_027e_epc_da": {
+        "name": "Operation mode setting",
+        "state": {
+          "charge": "Charge",
+          "discharge": "Discharge",
+          "other": "Other",
+          "rapid_charge": "Rapid charge",
+          "standby": "Standby",
+          "test": "Test"
+        }
+      },
+      "class_027e_epc_db": {
+        "name": "System interconnected type",
+        "state": {
+          "independent": "Independent operation",
+          "reverse_power_flow_acceptable": "Grid connection (reverse flow acceptable)",
+          "reverse_power_flow_not_acceptable": "Grid connection (reverse flow not acceptable)"
+        }
+      },
+      "class_028e_epc_db": {
+        "name": "Time synchronization status",
+        "state": {
+          "fail": "time synchronization failed",
+          "no_sync": "no time synchronization",
+          "not_implemented": "time synchronization function not implemented",
+          "success": "time synchronization successful"
+        }
+      },
+      "class_0290_epc_b1": {
+        "name": "Light color setting",
+        "state": {
+          "daylight_color": "Daylight color",
+          "daylight_white": "Daylight white",
+          "incandescent": "Incandescent lamp color",
+          "white": "White"
+        }
+      },
+      "class_0290_epc_b6": {
+        "name": "Lighting mode setting",
+        "state": {
+          "auto": "Auto",
+          "color": "Color lighting",
+          "night": "Night lighting",
+          "normal": "Main lighting"
+        }
+      },
+      "class_0290_epc_bb": {
+        "name": "Light color setting for main lighting",
+        "state": {
+          "daylight_color": "Daylight color",
+          "daylight_white": "Daylight white",
+          "incandescent": "Incandescent lamp color",
+          "other": "Other",
+          "white": "White"
+        }
+      },
+      "class_0290_epc_bd": {
+        "name": "Light color setting for night lighting",
+        "state": {
+          "daylight_color": "Daylight color",
+          "daylight_white": "Daylight white",
+          "incandescent": "Incandescent lamp color",
+          "other": "Other",
+          "white": "White"
+        }
+      },
+      "class_0290_epc_bf": {
+        "name": "Lighting mode status in auto mode",
+        "state": {
+          "color": "Color lighting",
+          "night": "Night lighting",
+          "normal": "Main lighting",
+          "off": "Off"
+        }
+      },
+      "class_02a1_epc_c7": {
+        "name": "Vehicle connection and chargeable status",
+        "state": {
+          "chargeable": "Chargeable",
+          "not_chargeable": "Not chargeable",
+          "not_connected": "Not connected",
+          "undefined": "Undefined"
+        }
+      },
+      "class_02a1_epc_cc": {
+        "name": "Charger type",
+        "state": {
+          "ac_cplt": "AC_CPLT",
+          "ac_hlc_charge": "AC_HLC_Charge",
+          "dc_aa_charge": "DC_AA_Charge",
+          "dc_bb_charge": "DC_BB_Charge",
+          "dc_ee_charge": "DC_EE_Charge",
+          "dc_ff_charge": "DC_FF_Charge"
+        }
+      },
+      "class_02a1_epc_da": {
+        "name": "Operation mode setting",
+        "state": {
+          "charge": "Charge",
+          "idle": "Idle",
+          "other": "Other",
+          "standby": "Standby"
+        }
+      },
+      "class_02a5_epc_d0": {
+        "name": "System interconnection status",
+        "state": {
+          "independent": "Independent type",
+          "reverse_power_flow_acceptable": "System-interconnected type (reverse power flow acceptable)",
+          "reverse_power_flow_not_acceptable": "System-interconnected type (reverse power flow not acceptable)"
+        }
+      },
+      "class_02a6_epc_b0": {
+        "name": "Automatic water heating setting",
+        "state": {
+          "auto": "Automatic water heating",
+          "manual_heating": "Manual water heating",
+          "manual_not_heating": "Water heating manual stop"
+        }
+      },
+      "class_02a6_epc_b8": {
+        "name": "Linkage mode setting for solar power generation",
+        "state": {
+          "economic_efficiency": "Economic efficiency",
+          "household_consumption": "Household consumption",
+          "mode_off": "Mode off",
+          "prioritizing_electricity_sales": "Prioritizing electricity sales"
+        }
+      },
+      "class_03b7_epc_a0": {
+        "name": "Quick freeze function setting",
+        "state": {
+          "normal": "Normal operation",
+          "quick": "Quick freeze",
+          "standby": "Standby for quick freezing"
+        }
+      },
+      "class_03b7_epc_a1": {
+        "name": "Quick refrigeration function setting",
+        "state": {
+          "normal": "Normal operation",
+          "quick": "Quick refrigeration",
+          "standby": "Standby for quick refrigeration"
+        }
+      },
+      "class_03b7_epc_a4": {
+        "name": "Icemaker setting",
+        "state": {
+          "disable": "Disable icemaker",
+          "enable": "Enable icemaker",
+          "standby": "Temporarily disable icemaker"
+        }
+      },
+      "class_03bb_epc_b1": {
+        "name": "Rice cooking status",
+        "state": {
+          "completion": "Rice cooking completion",
+          "cooking": "Rice cooking",
+          "preheating": "Preheating",
+          "steaming": "Steaming",
+          "stop": "Stop"
+        }
+      },
+      "class_03ce_epc_b0": {
+        "name": "Operation mode setting",
+        "state": {
+          "cooling": "Cooling",
+          "defrosting": "Defrosting",
+          "non_cooling": "Non-cooling",
+          "other": "Others"
+        }
+      },
+      "class_03ce_epc_d0": {
+        "name": "This property indicates the type of the showcase.",
+        "state": {
+          "inverter": "Inverter",
+          "non_fluorocarbon_inverter": "Non-fluorocarbon inverter (CO2)",
+          "other": "Other"
+        }
+      },
+      "class_03ce_epc_eb": {
+        "name": "Indicates type of lighting installed inside the showcase.",
+        "state": {
+          "fluorescent": "Fluorescent light",
+          "led": "LED",
+          "no_lighting": "No lighting",
+          "other": "Other"
+        }
+      },
+      "class_03ce_epc_ec": {
+        "name": "Indicates type of lighting installed outside the showcase.",
+        "state": {
+          "fluorescent": "Fluorescent light",
+          "led": "LED",
+          "no_lighting": "No lighting",
+          "other": "Other"
+        }
+      },
+      "class_03d3_epc_b2": {
+        "name": "Washer and dryer setting",
+        "state": {
+          "pause": "Suspend(ed)",
+          "run": "Start/restart(ed) or in progress",
+          "stop": "Stop(ped)"
+        }
+      },
+      "class_03d3_epc_d0": {
+        "name": "Washer and dryer cycle setting 1",
+        "state": {
+          "dry_blankets": "[Drying course] Blankets",
+          "dry_disinfection": "[Drying course] Disinfection",
+          "dry_drymark": "[Drying course] Dry",
+          "dry_finishing": "[Drying course] Finishing",
+          "dry_hang_drying": "[Drying course] Hang drying",
+          "dry_ironing": "[Drying course] Ironing/business shirts",
+          "dry_shrinkage_minimization": "[Drying course] Shrinkage minimization",
+          "dry_soft": "[Drying course] Soft",
+          "dry_standard": "[Drying course] Standard",
+          "dry_stationary_drying": "[Drying course] Stationary drying",
+          "dry_tank_drying": "[Drying course] Tank cleaning",
+          "dry_thick": "[Drying course] Thick clothes",
+          "dry_user_defined_time": "[Drying course] User definition of drying time",
+          "dry_warming": "[Drying course] Garment warming",
+          "wash_blankets": "[Washing course] Blankets",
+          "wash_clean_rinsing": "[Washing course] Clean rinsing",
+          "wash_detergent_saving": "[Washing course] Detergent saving",
+          "wash_disinfection": "[Washing course] Disinfection",
+          "wash_dry_blankets": "[Washing and drying course] Blankets",
+          "wash_dry_clean_rinsing": "[Washing and drying course] Clean rinsing",
+          "wash_dry_detergent_saving": "[Washing and drying course] Detergent saving",
+          "wash_dry_disinfection": "[Washing and drying course] Disinfection",
+          "wash_dry_drymark": "[Washing and drying course] Dry",
+          "wash_dry_hang_drying": "[Washing and drying course] Hang drying",
+          "wash_dry_hard_to_remove": "[Washing and drying course] Hard-to-remove stains",
+          "wash_dry_heavily_soiled": "[Washing and drying course] Heavily soiled clothes",
+          "wash_dry_ironing": "[Washing and drying course] Ironing/business shirts",
+          "wash_dry_lightly_soiled": "[Washing and drying course] Lightly soiled clothes",
+          "wash_dry_memory": "[Washing and drying course] Memory",
+          "wash_dry_oil_strains": "[Washing and drying course] Oil stains",
+          "wash_dry_presoaking": "[Washing and drying course] Presoaking",
+          "wash_dry_silent": "[Washing and drying course] Silent",
+          "wash_dry_small_amount_quick": "[Washing and drying course] Quick wash of small amount of laundry",
+          "wash_dry_soft": "[Washing and drying course] Soft",
+          "wash_dry_standard": "[Washing and drying course] Standard",
+          "wash_dry_thick": "[Washing and drying course] Thick clothes",
+          "wash_drymark": "[Washing course] Dry",
+          "wash_hard_to_remove": "[Washing course] Hard-to-remove stains",
+          "wash_heavily_soiled": "[Washing course] Heavily soiled clothes",
+          "wash_lightly_soiled": "[Washing course] Lightly soiled clothes",
+          "wash_memory": "[Washing course] Memory",
+          "wash_oil_strains": "[Washing course] Oil stains",
+          "wash_presoaking": "[Washing course] Presoaking",
+          "wash_silent": "[Washing course] Silent",
+          "wash_small_amount_quick": "[Washing course] Quick wash of small amount of laundry",
+          "wash_soft": "[Washing course] Soft",
+          "wash_standard": "[Washing course] Standard",
+          "wash_tank_cleaning": "[Washing course] Tank cleaning"
+        }
+      },
+      "class_03d3_epc_d1": {
+        "name": "Washer and dryer cycle setting 2",
+        "state": {
+          "wash_dry_blankets": "Blankets",
+          "wash_dry_clean_rinsing": "Clean rinsing",
+          "wash_dry_detergent_saving": "Detergent saving",
+          "wash_dry_disinfection": "Disinfection",
+          "wash_dry_drymark": "Dry",
+          "wash_dry_hard_to_remove": "Hard-to-remove stains",
+          "wash_dry_heavily_soiled": "Heavily soiled clothes",
+          "wash_dry_lightly_soiled": "Lightly soiled clothes",
+          "wash_dry_memory": "Memory",
+          "wash_dry_no_wash": "No washing",
+          "wash_dry_oil_strains": "Oil stains",
+          "wash_dry_presoaking": "Presoaking",
+          "wash_dry_silent": "Silent",
+          "wash_dry_small_amount_quick": "Quick wash of small amount of laundry",
+          "wash_dry_soft": "Soft",
+          "wash_dry_standard": "Standard",
+          "wash_dry_tank_cleaning": "Tank cleaning"
+        }
+      },
+      "class_03d3_epc_d2": {
+        "name": "Drying cycle setting",
+        "state": {
+          "dry_blankets": "Blankets",
+          "dry_disinfection": "Disinfection",
+          "dry_drymark": "Dry",
+          "dry_finishing": "Finishing",
+          "dry_hang_drying": "Hang drying",
+          "dry_heater_current_limit": "Heater current limit",
+          "dry_ironing": "Ironing/business shirts",
+          "dry_no_drying": "No drying",
+          "dry_shrinkage_minimization": "Shrinkage minimization",
+          "dry_soft": "Soft",
+          "dry_standard": "Standard",
+          "dry_stationary_drying": "Stationary drying",
+          "dry_tank_drying": "Tank drying",
+          "dry_thick": "Thick clothes",
+          "dry_user_defined_time": "User definition of drying time",
+          "dry_warming": "Garment warming"
+        }
+      },
+      "class_03d3_epc_d6": {
+        "name": "Water flow rate setting",
+        "state": {
+          "auto": "Automatic",
+          "level_1": "Level 1",
+          "level_10": "Level 10",
+          "level_11": "Level 11",
+          "level_12": "Level 12",
+          "level_13": "Level 13",
+          "level_14": "Level 14",
+          "level_15": "Level 15",
+          "level_16": "Level 16",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9"
+        }
+      },
+      "class_03d3_epc_d8": {
+        "name": "Degree of drying setting",
+        "state": {
+          "auto": "Automatic",
+          "level_1": "Level 1",
+          "level_10": "Level 10",
+          "level_11": "Level 11",
+          "level_12": "Level 12",
+          "level_13": "Level 13",
+          "level_14": "Level 14",
+          "level_15": "Level 15",
+          "level_16": "Level 16",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9"
+        }
+      },
+      "class_03d3_epc_e3": {
+        "name": "Water volume setting 1",
+        "state": {
+          "auto": "Automatic",
+          "level_1": "Level 1",
+          "level_10": "Level 10",
+          "level_11": "Level 11",
+          "level_12": "Level 12",
+          "level_13": "Level 13",
+          "level_14": "Level 14",
+          "level_15": "Level 15",
+          "level_16": "Level 16",
+          "level_17": "Level 17",
+          "level_18": "Level 18",
+          "level_19": "Level 19",
+          "level_2": "Level 2",
+          "level_20": "Level 20",
+          "level_21": "Level 21",
+          "level_22": "Level 22",
+          "level_23": "Level 23",
+          "level_24": "Level 24",
+          "level_25": "Level 25",
+          "level_26": "Level 26",
+          "level_27": "Level 27",
+          "level_28": "Level 28",
+          "level_29": "Level 29",
+          "level_3": "Level 3",
+          "level_30": "Level 30",
+          "level_31": "Level 31",
+          "level_32": "Level 32",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9"
+        }
+      },
+      "class_03d3_epc_e4": {
+        "name": "Water volume setting 2",
+        "state": {
+          "auto": "Automatic",
+          "level_1": "Level 1",
+          "level_10": "Level 10",
+          "level_11": "Level 11",
+          "level_12": "Level 12",
+          "level_13": "Level 13",
+          "level_14": "Level 14",
+          "level_15": "Level 15",
+          "level_16": "Level 16",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9"
+        }
+      },
+      "class_03d3_epc_e8": {
+        "name": "Spin drying time setting",
+        "state": {
+          "auto": "Automatic",
+          "level_1": "Level 1",
+          "level_10": "Level 10",
+          "level_11": "Level 11",
+          "level_12": "Level 12",
+          "level_13": "Level 13",
+          "level_14": "Level 14",
+          "level_15": "Level 15",
+          "level_16": "Level 16",
+          "level_17": "Level 17",
+          "level_18": "Level 18",
+          "level_19": "Level 19",
+          "level_2": "Level 2",
+          "level_20": "Level 20",
+          "level_21": "Level 21",
+          "level_22": "Level 22",
+          "level_23": "Level 23",
+          "level_24": "Level 24",
+          "level_25": "Level 25",
+          "level_26": "Level 26",
+          "level_27": "Level 27",
+          "level_28": "Level 28",
+          "level_29": "Level 29",
+          "level_3": "Level 3",
+          "level_30": "Level 30",
+          "level_31": "Level 31",
+          "level_32": "Level 32",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9"
+        }
+      },
+      "class_03d3_epc_eb": {
+        "name": "Bathtub water recycle setting",
+        "state": {
+          "none": "Bathtub water not used",
+          "rinsing": "All rinsing processes",
+          "rinsing_without_final": "Rinsing only (excluding the final rinsing)",
+          "washing": "Washing only",
+          "washing_rinsing": "Washing + all rinsing processes",
+          "washing_rinsing_without_final": "Washing + rinsing (excluding the final rinsing)"
+        }
+      },
+      "class_05ff_epc_c6": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "deleted": "Deleted",
+          "disconnected": "Disconnected",
+          "not_registered": "Not registered"
+        }
+      }
+    },
+    "sensor": {
+      "class_0011_epc_e0": {
+        "name": "Measured temperature value"
+      },
+      "class_0012_epc_e0": {
+        "name": "Measured value of relative humidity"
+      },
+      "class_001b_epc_e0": {
+        "name": "Measured value of CO2 concentration"
+      },
+      "class_001d_epc_e0": {
+        "name": "Measured value of VOC concentration"
+      },
+      "class_0022_epc_e0": {
+        "name": "Cumulative amounts of electric energy"
+      },
+      "class_0022_epc_e1": {
+        "name": "Medium-capacity sensor instantaneous electric energy"
+      },
+      "class_0022_epc_e2": {
+        "name": "Small-capacity sensor instantaneous electric energy"
+      },
+      "class_0022_epc_e3": {
+        "name": "Large-capacity sensor instantaneous electric energy"
+      },
+      "class_0022_epc_e5": {
+        "name": "Effective voltage value"
+      },
+      "class_0023_epc_e1": {
+        "name": "Rated voltage to be measured"
+      },
+      "class_00d0_epc_e0": {
+        "name": "Measured illuminance value 1"
+      },
+      "class_0130_epc_b4": {
+        "name": "Set value of relative humidity in dehumidifying mode"
+      },
+      "class_0130_epc_b5": {
+        "name": "Set temperature value in cooling mode"
+      },
+      "class_0130_epc_b6": {
+        "name": "Set temperature value in heating mode"
+      },
+      "class_0130_epc_b7": {
+        "name": "Set temperature value in dehumidifying mode"
+      },
+      "class_0130_epc_b9": {
+        "name": "Measured value of current consumption"
+      },
+      "class_0130_epc_ba": {
+        "name": "Measured value of room relative humidity"
+      },
+      "class_0130_epc_bb": {
+        "name": "Measured value of room temperature"
+      },
+      "class_0130_epc_bc": {
+        "name": "Set temperature value of user remote control"
+      },
+      "class_0130_epc_bd": {
+        "name": "Measured cooled air temperature"
+      },
+      "class_0130_epc_be": {
+        "name": "Measured outdoor air temperature"
+      },
+      "class_0130_epc_bf": {
+        "name": "Relative temperature setting"
+      },
+      "class_0134_epc_b4": {
+        "name": "Set value of room relative humidity"
+      },
+      "class_0134_epc_b9": {
+        "name": "Measured value of electric current consumption"
+      },
+      "class_0134_epc_ba": {
+        "name": "Measured value of room relative humidity"
+      },
+      "class_0134_epc_be": {
+        "name": "Measured value of outdoor air temperature"
+      },
+      "class_0134_epc_c0": {
+        "name": "Measured value of CO2 concentration"
+      },
+      "class_0134_epc_ca": {
+        "name": "Measured value of outdoor relative humidity"
+      },
+      "class_0134_epc_d2": {
+        "name": "Measured value of charging air temperature"
+      },
+      "class_0134_epc_d3": {
+        "name": "Measured value of charging relative humidity"
+      },
+      "class_0134_epc_d4": {
+        "name": "Measured value of discharging air temperature"
+      },
+      "class_0134_epc_d5": {
+        "name": "Measured value of discharging air relative humidity"
+      },
+      "class_0135_vendor_0005_epc_f1_1": {
+        "name": "Room temperature"
+      },
+      "class_0135_vendor_0005_epc_f1_2": {
+        "name": "Humidity"
+      },
+      "class_0156_epc_b3": {
+        "name": "Temperature setting"
+      },
+      "class_0156_epc_bb": {
+        "name": "Measured indoor unit temperature"
+      },
+      "class_0157_epc_be": {
+        "name": "Measured outdoor unit temperature"
+      },
+      "class_0157_epc_db": {
+        "name": "Measured power consumption of outdoor unit"
+      },
+      "class_0157_epc_dd": {
+        "name": "Possible power savings for outdoor units"
+      },
+      "class_0157_epc_de": {
+        "name": "Settings restricting power consumption of outdoor units"
+      },
+      "class_0157_epc_df": {
+        "name": "Minimum power consumption for restricted outdoor unit"
+      },
+      "class_0260_epc_e1": {
+        "name": "Degree-of-opening level"
+      },
+      "class_0260_epc_e2": {
+        "name": "Shade angle setting"
+      },
+      "class_0263_epc_e1": {
+        "name": "Degree-of-opening setting"
+      },
+      "class_0263_epc_e2": {
+        "name": "Blind angle setting"
+      },
+      "class_026b_epc_b3": {
+        "name": "Water heating temperature setting"
+      },
+      "class_026b_epc_c1": {
+        "name": "Measured temperature of water in water heater"
+      },
+      "class_026b_epc_d1": {
+        "name": "Temperature of supplied water setting"
+      },
+      "class_026b_epc_d3": {
+        "name": "Bath water temperature setting"
+      },
+      "class_026b_epc_d6": {
+        "name": "Volume setting"
+      },
+      "class_026b_epc_d8": {
+        "name": "Remaining hot water volume"
+      },
+      "class_026b_epc_db": {
+        "name": "Rated power consumption of H/P unit in wintertime"
+      },
+      "class_026b_epc_dc": {
+        "name": "Rated power consumption of H/P unit in in-between seasons"
+      },
+      "class_026b_epc_dd": {
+        "name": "Rated power consumption of H/P unit in summertime"
+      },
+      "class_026b_epc_e0": {
+        "name": "Bath water volume setting"
+      },
+      "class_026b_epc_e1": {
+        "name": "Measured amount of water remaining in tank"
+      },
+      "class_026b_epc_e2": {
+        "name": "Tank capacity"
+      },
+      "class_026b_epc_e7": {
+        "name": "Bath water volume setting 1"
+      },
+      "class_026b_epc_ee": {
+        "name": "Bath water volume setting 3"
+      },
+      "class_0272_epc_d1": {
+        "name": "Set value of hot water temperature"
+      },
+      "class_0272_epc_d6": {
+        "name": "Volume setting"
+      },
+      "class_0272_epc_e1": {
+        "name": "Set value of bath temperature"
+      },
+      "class_0272_epc_e7": {
+        "name": "Bath hot water volume setting 1"
+      },
+      "class_0272_epc_ee": {
+        "name": "Bath hot water volume setting 3"
+      },
+      "class_0273_epc_ba": {
+        "name": "Measured value of bathroom relative humidity"
+      },
+      "class_0273_epc_bb": {
+        "name": "Measured value of bathroom temperature"
+      },
+      "class_0279_epc_a0": {
+        "name": "Output power control setting 1"
+      },
+      "class_0279_epc_a1": {
+        "name": "Output power control setting 2"
+      },
+      "class_0279_epc_b4": {
+        "name": "Upper limit clip setting value"
+      },
+      "class_0279_epc_c0": {
+        "name": "Operation power factor setting value"
+      },
+      "class_0279_epc_c3": {
+        "name": "Capacity approved by equipment"
+      },
+      "class_0279_epc_c4": {
+        "name": "Conversion coefficient"
+      },
+      "class_0279_epc_e0": {
+        "name": "Measured instantaneous amount of electricity generated"
+      },
+      "class_0279_epc_e1": {
+        "name": "Measured cumulative amount of electric energy generated"
+      },
+      "class_0279_epc_e3": {
+        "name": "Measured cumulative amount of electric energy sold"
+      },
+      "class_0279_epc_e5": {
+        "name": "Power generation output limit setting 1"
+      },
+      "class_0279_epc_e6": {
+        "name": "Power generation output limit setting 2"
+      },
+      "class_0279_epc_e7": {
+        "name": "Limit setting for the amount of electricity sold"
+      },
+      "class_0279_epc_e8": {
+        "name": "Rated power generation output (System-interconnected)"
+      },
+      "class_0279_epc_e9": {
+        "name": "Rated power generation output (Independent)"
+      },
+      "class_027a_epc_e1": {
+        "name": "Water temperature setting 1"
+      },
+      "class_027a_epc_e3": {
+        "name": "Measured temperature of outward water (Exit water Temperature)"
+      },
+      "class_027a_epc_e4": {
+        "name": "Measured temperature of inward water (Entrance water Temperature)"
+      },
+      "class_027b_epc_e0": {
+        "name": "Set temperature value"
+      },
+      "class_027b_epc_e2": {
+        "name": "Measured room temperature"
+      },
+      "class_027b_epc_e3": {
+        "name": "Measured floor temperature"
+      },
+      "class_027b_epc_e9": {
+        "name": "Rated power consumption"
+      },
+      "class_027c_epc_c1": {
+        "name": "Measured temperature of water in water heater"
+      },
+      "class_027c_epc_c2": {
+        "name": "Rated power generation output"
+      },
+      "class_027c_epc_c4": {
+        "name": "Measured instantaneous power generation output"
+      },
+      "class_027c_epc_c5": {
+        "name": "Measured cumulative power generation output"
+      },
+      "class_027c_epc_c7": {
+        "name": "Measured instantaneous gas consumption"
+      },
+      "class_027c_epc_c8": {
+        "name": "Measured cumulative gas consumption"
+      },
+      "class_027c_epc_cc": {
+        "name": "Measured in-house instantaneous power consumption"
+      },
+      "class_027c_epc_cd": {
+        "name": "Measured in-house cumulative power consumption"
+      },
+      "class_027c_epc_e1": {
+        "name": "Measured remaining hot water amount"
+      },
+      "class_027c_epc_e2": {
+        "name": "Tank capacity"
+      },
+      "class_027d_epc_a0": {
+        "name": "AC effective capacity (charging)"
+      },
+      "class_027d_epc_a1": {
+        "name": "AC effective capacity (discharging)"
+      },
+      "class_027d_epc_a2": {
+        "name": "AC chargeable capacity"
+      },
+      "class_027d_epc_a3": {
+        "name": "AC dischargeable capacity"
+      },
+      "class_027d_epc_a4": {
+        "name": "AC chargeable electric energy"
+      },
+      "class_027d_epc_a5": {
+        "name": "AC dischargeable electric energy"
+      },
+      "class_027d_epc_a6": {
+        "name": "AC charge upper limit setting"
+      },
+      "class_027d_epc_a7": {
+        "name": "AC discharge lower limit setting"
+      },
+      "class_027d_epc_a8": {
+        "name": "AC measured cumulative charging electric energy"
+      },
+      "class_027d_epc_a9": {
+        "name": "AC measured cumulative discharging electric energy"
+      },
+      "class_027d_epc_aa": {
+        "name": "AC charge amount setting value"
+      },
+      "class_027d_epc_ab": {
+        "name": "AC discharge amount setting value"
+      },
+      "class_027d_epc_c7": {
+        "name": "AC rated electric energy"
+      },
+      "class_027d_epc_d0": {
+        "name": "Rated electric energy"
+      },
+      "class_027d_epc_d2": {
+        "name": "Rated voltage"
+      },
+      "class_027d_epc_d3": {
+        "name": "Measured instantaneous charging/discharging electric energy"
+      },
+      "class_027d_epc_d4": {
+        "name": "Measured instantaneous charging/discharging current"
+      },
+      "class_027d_epc_d5": {
+        "name": "Measured instantaneous charging/discharging voltage"
+      },
+      "class_027d_epc_d6": {
+        "name": "Measured cumulative discharging electric energy"
+      },
+      "class_027d_epc_d8": {
+        "name": "Measured cumulative charging electric energy"
+      },
+      "class_027d_epc_e0": {
+        "name": "Charging/discharging amount setting 1"
+      },
+      "class_027d_epc_e2": {
+        "name": "Remaining stored electricity 1"
+      },
+      "class_027d_epc_e4": {
+        "name": "Remaining stored electricity 3"
+      },
+      "class_027d_epc_e5": {
+        "name": "Battery state of health"
+      },
+      "class_027d_epc_e7": {
+        "name": "Charging amount setting 1"
+      },
+      "class_027d_epc_e8": {
+        "name": "Discharging amount setting 1"
+      },
+      "class_027d_epc_eb": {
+        "name": "Charging electric energy setting"
+      },
+      "class_027d_epc_ec": {
+        "name": "Discharging electric energy setting"
+      },
+      "class_027d_epc_ed": {
+        "name": "Charging current setting"
+      },
+      "class_027d_epc_ee": {
+        "name": "Discharging current setting"
+      },
+      "class_027d_epc_ef": {
+        "name": "Rated voltage (Independent)"
+      },
+      "class_027e_epc_c0": {
+        "name": "Dischargeable capacity of vehicle mounted battery 1"
+      },
+      "class_027e_epc_c2": {
+        "name": "Remaining dischargeable capacity of vehicle mounted battery 1"
+      },
+      "class_027e_epc_c4": {
+        "name": "Remaining dischargeable capacity of vehicle mounted battery 3"
+      },
+      "class_027e_epc_c5": {
+        "name": "Rated charge capacity"
+      },
+      "class_027e_epc_c6": {
+        "name": "Rated discharge capacity"
+      },
+      "class_027e_epc_ce": {
+        "name": "Chargeable capacity of vehicle mounted battery"
+      },
+      "class_027e_epc_cf": {
+        "name": "Remaining chargeable capacity of vehicle mounted battery"
+      },
+      "class_027e_epc_d0": {
+        "name": "Used capacity of vehicle mounted battery 1"
+      },
+      "class_027e_epc_d2": {
+        "name": "Rated voltage"
+      },
+      "class_027e_epc_d3": {
+        "name": "Measured instantaneous charging/discharging electric energy"
+      },
+      "class_027e_epc_d4": {
+        "name": "Measured instantaneous charging/discharging current"
+      },
+      "class_027e_epc_d5": {
+        "name": "Measured instantaneous charging/discharging voltage"
+      },
+      "class_027e_epc_d6": {
+        "name": "Measured cumulative amount of discharging electric energy"
+      },
+      "class_027e_epc_d8": {
+        "name": "Measured cumulative amount of charging electric energy"
+      },
+      "class_027e_epc_de": {
+        "name": "Purchasing electric power setting"
+      },
+      "class_027e_epc_e0": {
+        "name": "Charging/Discharging electric power setting"
+      },
+      "class_027e_epc_e2": {
+        "name": "Remaining stored electricity of vehicle mounted battery1"
+      },
+      "class_027e_epc_e4": {
+        "name": "Remaining stored electricity of vehicle mounted battery3"
+      },
+      "class_027e_epc_e7": {
+        "name": "Charging amount setting 1"
+      },
+      "class_027e_epc_ea": {
+        "name": "Discharging electric energy setting"
+      },
+      "class_027e_epc_eb": {
+        "name": "Charging electric energy setting"
+      },
+      "class_027e_epc_ec": {
+        "name": "Discharging electric energy setting"
+      },
+      "class_027e_epc_ed": {
+        "name": "Charging current setting"
+      },
+      "class_027e_epc_ee": {
+        "name": "Discharging current setting"
+      },
+      "class_027e_epc_ef": {
+        "name": "Rated voltage (Independent)"
+      },
+      "class_0280_epc_e0": {
+        "name": "Cumulative amounts of electric energy measurement value"
+      },
+      "class_0281_epc_e0": {
+        "name": "Measured cumulative amount of flowing water"
+      },
+      "class_0282_epc_e0": {
+        "name": "Cumulative amount of gas consumption measurement value"
+      },
+      "class_0287_epc_b0": {
+        "name": "Master rated capacity"
+      },
+      "class_0287_epc_c0": {
+        "name": "Measured cumulative amount of electric energy (normal direction)"
+      },
+      "class_0287_epc_c1": {
+        "name": "Measured cumulative amount of electric energy (reverse direction)"
+      },
+      "class_0287_epc_c6": {
+        "name": "Measured instantaneous amount of electric energy"
+      },
+      "class_0288_epc_e0": {
+        "name": "Measured cumulative amount of electric energy (normal direction)"
+      },
+      "class_0288_epc_e3": {
+        "name": "Measured cumulative amount of electric energy (reverse direction)"
+      },
+      "class_0288_epc_e7": {
+        "name": "Measured instantaneous electric power"
+      },
+      "class_028a_epc_c1": {
+        "name": "Monthly maximum electric power demand"
+      },
+      "class_028a_epc_c2": {
+        "name": "Cumulative maximum electric power demand"
+      },
+      "class_028d_epc_e1": {
+        "name": "Measured cumulative amount of electric energy(normal direction)"
+      },
+      "class_028d_epc_e3": {
+        "name": "Measured cumulative amount of electric energy (reverse direction)"
+      },
+      "class_028d_epc_e7": {
+        "name": "Measured instantaneous electric power"
+      },
+      "class_028e_epc_e0": {
+        "name": "Measured cumulative amounts of electric energy (AC input)"
+      },
+      "class_028e_epc_e2": {
+        "name": "Measured cumulative amounts of electric energy (AC output)"
+      },
+      "class_028e_epc_e4": {
+        "name": "Measured cumulative amounts of electric energy (output during a power outage)"
+      },
+      "class_028e_epc_e9": {
+        "name": "Measured instantaneous electric power (AC input/output)"
+      },
+      "class_028e_epc_ea": {
+        "name": "Measured instantaneous electric power (output during a power outage)"
+      },
+      "class_028f_epc_ea": {
+        "name": "Measured instantaneous electric energy"
+      },
+      "class_0290_epc_b0": {
+        "name": "Light level"
+      },
+      "class_0290_epc_b7": {
+        "name": "Light level setting for main lighting"
+      },
+      "class_0290_epc_b9": {
+        "name": "Light level setting for night lighting"
+      },
+      "class_0291_epc_b0": {
+        "name": "Light level Setting"
+      },
+      "class_02a1_epc_c5": {
+        "name": "Rated charge capacity"
+      },
+      "class_02a1_epc_ce": {
+        "name": "Chargeable capacity of vehicle mounted battery"
+      },
+      "class_02a1_epc_cf": {
+        "name": "Remaining chargeable capacity of vehicle mounted battery"
+      },
+      "class_02a1_epc_d0": {
+        "name": "Used capacity of vehicle mounted battery 1"
+      },
+      "class_02a1_epc_d2": {
+        "name": "Rated voltage"
+      },
+      "class_02a1_epc_d3": {
+        "name": "Measured instantaneous charging electric energy"
+      },
+      "class_02a1_epc_d8": {
+        "name": "Measured cumulative amount of charging electric energy"
+      },
+      "class_02a1_epc_e2": {
+        "name": "Remaining stored electricity of vehicle mounted battery1"
+      },
+      "class_02a1_epc_e4": {
+        "name": "Remaining stored electricity of vehicle mounted battery3"
+      },
+      "class_02a1_epc_e7": {
+        "name": "Charging amount setting"
+      },
+      "class_02a1_epc_eb": {
+        "name": "Charging electric energy setting"
+      },
+      "class_02a1_epc_ed": {
+        "name": "Charging current setting"
+      },
+      "class_02a3_epc_b0": {
+        "name": "Light level setting"
+      },
+      "class_02a4_epc_b0": {
+        "name": "Light level setting"
+      },
+      "class_02a4_epc_c3": {
+        "name": "Power consumption when fully lighted"
+      },
+      "class_02a4_epc_c4": {
+        "name": "Possible power savings"
+      },
+      "class_02a4_epc_c5": {
+        "name": "Power consumption limit setting"
+      },
+      "class_02a5_epc_e0": {
+        "name": "Measured cumulative amount of electric energy (normal direction)"
+      },
+      "class_02a5_epc_e3": {
+        "name": "Measured cumulative amount of electric energy (reverse direction)"
+      },
+      "class_02a5_epc_e7": {
+        "name": "Measured instantaneous electric power"
+      },
+      "class_02a6_epc_e1": {
+        "name": "Measured amount of hot water remaining in tank"
+      },
+      "class_02a6_epc_e2": {
+        "name": "Tank capacity"
+      },
+      "class_02a7_epc_c2": {
+        "name": "EM target power value"
+      },
+      "class_02a7_epc_d3": {
+        "name": "Value of contract power"
+      },
+      "class_03b7_epc_d1": {
+        "name": "Measured refrigerator compartment temperature"
+      },
+      "class_03b7_epc_d2": {
+        "name": "Measured freezer compartment temperature"
+      },
+      "class_03b7_epc_d3": {
+        "name": "Measured subzero-fresh compartment temperature"
+      },
+      "class_03b7_epc_d4": {
+        "name": "Measured vegetable compartment temperature"
+      },
+      "class_03b7_epc_d5": {
+        "name": "Measured multi-refrigerating mode compartment temperature"
+      },
+      "class_03b7_epc_da": {
+        "name": "Measured electric current consumption"
+      },
+      "class_03b7_epc_dc": {
+        "name": "Rated power consumption"
+      },
+      "class_03b7_epc_e2": {
+        "name": "Refrigerator compartment temperature setting"
+      },
+      "class_03b7_epc_e3": {
+        "name": "Freezer compartment temperature setting"
+      },
+      "class_03b7_epc_e4": {
+        "name": "Ice compartment temperature setting"
+      },
+      "class_03b7_epc_e5": {
+        "name": "Vegetable compartment temperature setting"
+      },
+      "class_03b7_epc_e6": {
+        "name": "Multi-refrigerating mode compartment temperature setting"
+      },
+      "class_03ce_epc_bd": {
+        "name": "Used to acquire measurements of discharge temperature."
+      },
+      "class_03ce_epc_e3": {
+        "name": "Used to acquire internal temperature measurements inside the showcase."
+      },
+      "class_03ce_epc_e4": {
+        "name": "Indicates rated power consumption necessary when showcase is cooling."
+      },
+      "class_03ce_epc_e5": {
+        "name": "Indicates rated power consumption when heater is operating during showcase defrosting."
+      },
+      "class_03ce_epc_e6": {
+        "name": "Indicates rated power consumption when showcase is operating fan motor."
+      },
+      "class_03ce_epc_ed": {
+        "name": "Indicates lighting level in % installed inside of the showcase."
+      },
+      "class_03ce_epc_ee": {
+        "name": "Indicates lighting level in % installed outside of the showcase."
+      },
+      "class_03ce_epc_ef": {
+        "name": "Set temperature setting of inside the case and acquire the current setting."
+      },
+      "class_03d3_epc_ea": {
+        "name": "Warm water setting"
+      },
+      "class_03d4_epc_be": {
+        "name": "Used to acquire measurements of outdoor air temperature."
+      },
+      "class_common_epc_84": {
+        "name": "Measured instantaneous power consumption"
+      },
+      "class_common_epc_85": {
+        "name": "Measured cumulative electric energy consumption"
+      }
+    },
+    "switch": {
+      "class_0002_epc_b1": {
+        "name": "Invasion occurrence status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0003_epc_b1": {
+        "name": "Emergency occurrence status",
+        "state": {
+          "off": "NO",
+          "on": "YES"
+        }
+      },
+      "class_0007_epc_b1": {
+        "name": "Human detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0016_epc_b1": {
+        "name": "Bath heating detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_001d_epc_b1": {
+        "name": "VOC detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0130_epc_8f": {
+        "name": "Power-saving operation setting",
+        "state": {
+          "off": "Operating in normal operation mode",
+          "on": "Operating in power-saving mode"
+        }
+      },
+      "class_0130_epc_c1": {
+        "name": "Humidifier function setting",
+        "state": {
+          "off": "Humidifier function OFF",
+          "on": "Humidifier function ON"
+        }
+      },
+      "class_0130_epc_cf": {
+        "name": "Air purification mode setting",
+        "state": {
+          "off": "Air purification OFF",
+          "on": "Air purification ON"
+        }
+      },
+      "class_0133_epc_bf": {
+        "name": "Ventilation Auto setting",
+        "state": {
+          "off": "Non-auto",
+          "on": "Auto"
+        }
+      },
+      "class_0134_epc_b0": {
+        "name": "Ventilation mode automatic setting",
+        "state": {
+          "off": "Non-auto",
+          "on": "Auto"
+        }
+      },
+      "class_0134_epc_b1": {
+        "name": "Ventilation method setting",
+        "state": {
+          "off": "Air conditioning ventilation",
+          "on": "Blowing ventilation"
+        }
+      },
+      "class_0134_epc_bf": {
+        "name": "Ventilation auto setting",
+        "state": {
+          "off": "Non-auto",
+          "on": "Auto"
+        }
+      },
+      "class_0134_epc_c1": {
+        "name": "Smoke (cigarette) detection status",
+        "state": {
+          "off": "Smoke (cigarette) detection status not found.",
+          "on": "Smoke (cigarette) detection status found."
+        }
+      },
+      "class_0134_epc_c2": {
+        "name": "Pollution detection status",
+        "state": {
+          "off": "Pollution non-detected",
+          "on": "Pollution detected"
+        }
+      },
+      "class_0134_epc_e0": {
+        "name": "Heat exchanger operation setting",
+        "state": {
+          "off": "Heat exchanger ON",
+          "on": "Heat exchanger ON"
+        }
+      },
+      "class_0135_epc_c0": {
+        "name": "Air pollution detection status",
+        "state": {
+          "off": "Air pollution non-detected",
+          "on": "Air pollution detected"
+        }
+      },
+      "class_0135_epc_c1": {
+        "name": "Smoke (cigarette) detection status",
+        "state": {
+          "off": "Smoke (cigarette) detection status not found.",
+          "on": "Smoke (cigarette) detection status found."
+        }
+      },
+      "class_0135_epc_c2": {
+        "name": "Optical catalyst operation setting",
+        "state": {
+          "off": "Optical catalyst OFF",
+          "on": "Optical catalyst ON"
+        }
+      },
+      "class_0135_epc_e1": {
+        "name": "Filter change notice",
+        "state": {
+          "off": "Not found",
+          "on": "Found"
+        }
+      },
+      "class_0260_epc_90": {
+        "name": "Timer operation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0260_epc_c2": {
+        "name": "Wind detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0260_epc_c3": {
+        "name": "Sunlight detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0260_epc_d4": {
+        "name": "Automatic operation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0260_epc_e5": {
+        "name": "Electric lock setting",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_0260_epc_e8": {
+        "name": "Remote operation setting status",
+        "state": {
+          "off": "OFF (prohibited)",
+          "on": "ON (permitted)"
+        }
+      },
+      "class_0263_epc_90": {
+        "name": "Timer operation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0263_epc_e5": {
+        "name": "Electric lock setting",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_0263_epc_e8": {
+        "name": "Remote operation setting status",
+        "state": {
+          "off": "OFF (prohibited)",
+          "on": "ON (permitted)"
+        }
+      },
+      "class_026b_epc_90": {
+        "name": "ON timer setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_026b_epc_b1": {
+        "name": "Automatic water temperature control setting",
+        "state": {
+          "off": "Automatic water temperature control function not used",
+          "on": "Automatic water temperature control function used"
+        }
+      },
+      "class_026b_epc_b2": {
+        "name": "Water heater status",
+        "state": {
+          "off": "Not heating",
+          "on": "Heating"
+        }
+      },
+      "class_026b_epc_c0": {
+        "name": "Daytime reheating permission setting",
+        "state": {
+          "off": "Daytime reheating not permitted",
+          "on": "Daytime reheating permitted"
+        }
+      },
+      "class_026b_epc_c3": {
+        "name": "Hot water supply status",
+        "state": {
+          "off": "Not supplying hot water",
+          "on": "Supplying hot water"
+        }
+      },
+      "class_026b_epc_d7": {
+        "name": "Mute setting",
+        "state": {
+          "off": "Mute OFF",
+          "on": "Mute ON"
+        }
+      },
+      "class_026b_epc_e4": {
+        "name": "Manual bath reheating operation setting",
+        "state": {
+          "off": "Bath reheating OFF",
+          "on": "Bath reheating ON"
+        }
+      },
+      "class_026b_epc_e5": {
+        "name": "Addition of hot water function setting",
+        "state": {
+          "off": "Addition of hot water function OFF",
+          "on": "Addition of hot water function ON"
+        }
+      },
+      "class_026b_epc_e6": {
+        "name": "Slight bath water temperature lowering function setting",
+        "state": {
+          "off": "Lukewarm water temperature function OFF",
+          "on": "Lukewarm water temperature function ON"
+        }
+      },
+      "class_026b_epc_e9": {
+        "name": "Bathroom priority setting",
+        "state": {
+          "off": "Priority bath OFF",
+          "on": "Priority bath ON"
+        }
+      },
+      "class_026f_epc_e0": {
+        "name": "Lock setting1",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_026f_epc_e1": {
+        "name": "Lock setting 2",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_026f_epc_e2": {
+        "name": "Lock status of door guard",
+        "state": {
+          "off": "Unlock",
+          "on": "Lock"
+        }
+      },
+      "class_026f_epc_e3": {
+        "name": "Door open/close status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_026f_epc_e4": {
+        "name": "Occupant/ non-occupant status",
+        "state": {
+          "off": "Non-occupant",
+          "on": "Occupant"
+        }
+      },
+      "class_026f_epc_e6": {
+        "name": "Auto lock mode setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0272_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_0272_epc_d0": {
+        "name": "Hot water heating status",
+        "state": {
+          "off": "Hot water heating status not found",
+          "on": "Hot water heating status found"
+        }
+      },
+      "class_0272_epc_d2": {
+        "name": "Hot water warmer setting",
+        "state": {
+          "off": "Hot water warmer operation resetting",
+          "on": "Hot water warmer operation"
+        }
+      },
+      "class_0272_epc_d7": {
+        "name": "Mute setting",
+        "state": {
+          "off": "Mute OFF",
+          "on": "Mute ON"
+        }
+      },
+      "class_0272_epc_e2": {
+        "name": "Bath water heater status",
+        "state": {
+          "off": "Not Heating",
+          "on": "Heating"
+        }
+      },
+      "class_0272_epc_e4": {
+        "name": "Bath additional boil-up operation setting",
+        "state": {
+          "off": "Additional boil-up OFF",
+          "on": "Additional boil-up ON"
+        }
+      },
+      "class_0272_epc_e5": {
+        "name": "Bath hot water adding operation setting",
+        "state": {
+          "off": "Hot water addition OFF",
+          "on": "Hot water addition ON"
+        }
+      },
+      "class_0272_epc_e6": {
+        "name": "Bath water temperature lowering operation setting",
+        "state": {
+          "off": "Hot water temperature lowering OFF",
+          "on": "Hot water temperature lowering ON"
+        }
+      },
+      "class_0272_epc_e9": {
+        "name": "Bathroom priority setting",
+        "state": {
+          "off": "Bathroom priority OFF",
+          "on": "Bathroom priority ON"
+        }
+      },
+      "class_0272_epc_ea": {
+        "name": "Shower hot water supply status",
+        "state": {
+          "off": "Shower hot water supply OFF",
+          "on": "Shower hot water supply ON"
+        }
+      },
+      "class_0272_epc_eb": {
+        "name": "Kitchen hot water supply status",
+        "state": {
+          "off": "Kitchen hot water supply OFF",
+          "on": "Kitchen hot water supply ON"
+        }
+      },
+      "class_0272_epc_ec": {
+        "name": "Hot water warmer ON timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_0273_epc_90": {
+        "name": "On timer reservation setting 1",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_0273_epc_94": {
+        "name": "Off timer reservation setting",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_0273_epc_cf": {
+        "name": "Filter cleaning reminder sign setting",
+        "state": {
+          "off": "Not lit",
+          "on": "Lit"
+        }
+      },
+      "class_0273_epc_e0": {
+        "name": "Human body detection status",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0279_epc_a2": {
+        "name": "Function to control purchase surplus electricity setting",
+        "state": {
+          "off": "Invalid",
+          "on": "Valid"
+        }
+      },
+      "class_0279_epc_b2": {
+        "name": "Function to control the type of surplus electricity purchase",
+        "state": {
+          "off": "Invalid",
+          "on": "Valid"
+        }
+      },
+      "class_027a_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027a_epc_94": {
+        "name": "OFF timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027a_epc_e0": {
+        "name": "Operation mode setting",
+        "state": {
+          "off": "Cooling",
+          "on": "Heating"
+        }
+      },
+      "class_027b_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027b_epc_94": {
+        "name": "OFF timer reservation setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_027c_epc_ca": {
+        "name": "Power generation setting",
+        "state": {
+          "off": "Power generation OFF",
+          "on": "Power generation ON"
+        }
+      },
+      "class_027c_epc_d2": {
+        "name": "Designated power generation status",
+        "state": {
+          "off": "Load following power generation",
+          "on": "Power generation at the maximum rating"
+        }
+      },
+      "class_027d_epc_cc": {
+        "name": "Re-interconnection permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027d_epc_cd": {
+        "name": "Operation permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027d_epc_ce": {
+        "name": "Independent operation permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027e_epc_df": {
+        "name": "Re-interconnection permission setting",
+        "state": {
+          "off": "Prohibited",
+          "on": "Permitted"
+        }
+      },
+      "class_027e_epc_e5": {
+        "name": "Maintenance status",
+        "state": {
+          "off": "Occurrence status not found",
+          "on": "Occurrence status found"
+        }
+      },
+      "class_0281_epc_e3": {
+        "name": "Detection of abnormal value in metering data",
+        "state": {
+          "off": "Not detected",
+          "on": "Detected"
+        }
+      },
+      "class_0290_epc_90": {
+        "name": "ON timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_0290_epc_94": {
+        "name": "OFF timer reservation setting",
+        "state": {
+          "off": "Reservation OFF",
+          "on": "Reservation ON"
+        }
+      },
+      "class_02a4_epc_c6": {
+        "name": "Automatic operation controlling setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_02a6_epc_b2": {
+        "name": "Water heating status",
+        "state": {
+          "off": "Water is not heating.",
+          "on": "Water is heating."
+        }
+      },
+      "class_02a6_epc_b3": {
+        "name": "Heater status",
+        "state": {
+          "off": "Water is not heating.",
+          "on": "Water is heating."
+        }
+      },
+      "class_02a6_epc_b6": {
+        "name": "Hot water supply mode setting for auxiliary heat source machine",
+        "state": {
+          "off": "No setting",
+          "on": "Set"
+        }
+      },
+      "class_02a6_epc_b7": {
+        "name": "Heater mode setting for auxiliary heat source machine.",
+        "state": {
+          "off": "No setting",
+          "on": "Set"
+        }
+      },
+      "class_02a6_epc_c3": {
+        "name": "Hot water supply status",
+        "state": {
+          "off": "Not supplying hot water",
+          "on": "Supplying hot water"
+        }
+      },
+      "class_03b7_epc_a5": {
+        "name": "Icemaker operation status",
+        "state": {
+          "off": "Ice-making stopped.",
+          "on": "Ice-making in progress"
+        }
+      },
+      "class_03b7_epc_a6": {
+        "name": "Icemaker tank status",
+        "state": {
+          "off": "There is no water left in the icemaker tank or the icemaker tank has not been positioned correctly in the refrigerator.",
+          "on": "Icemaker tank contains water."
+        }
+      },
+      "class_03b7_epc_a8": {
+        "name": "Refrigerator compartment humidification function setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_03b7_epc_a9": {
+        "name": "Vegetable compartment humidification function setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_03b7_epc_ad": {
+        "name": "Deodorization function setting",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_03b7_epc_b2": {
+        "name": "Refrigerator compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b3": {
+        "name": "Freezer compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b4": {
+        "name": "Ice compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b5": {
+        "name": "Vegetable compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b7_epc_b6": {
+        "name": "Multi-refrigerating mode compartment door status",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03b9_epc_a1": {
+        "name": "Child lock setting",
+        "state": {
+          "off": "Child lock off",
+          "on": "Child lock on"
+        }
+      },
+      "class_03b9_epc_a2": {
+        "name": "Radiant heater lock setting",
+        "state": {
+          "off": "Radiant heater lock off",
+          "on": "Radiant heater lock on"
+        }
+      },
+      "class_03bb_epc_90": {
+        "name": "Rice cooking reservation setting",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_03bb_epc_b0": {
+        "name": "Cover closure status",
+        "state": {
+          "off": "Cover close",
+          "on": "Cover open"
+        }
+      },
+      "class_03bb_epc_e1": {
+        "name": "Warmer setting",
+        "state": {
+          "off": "Warmer disabled",
+          "on": "Warmer enabled"
+        }
+      },
+      "class_03bb_epc_e5": {
+        "name": "Inner pot removal status",
+        "state": {
+          "off": "Not removed",
+          "on": "Removed"
+        }
+      },
+      "class_03bb_epc_e6": {
+        "name": "Cover removal status",
+        "state": {
+          "off": "Not removed",
+          "on": "Removed"
+        }
+      },
+      "class_03ce_epc_d1": {
+        "name": "This property indicates the type of the showcase door.",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
+      },
+      "class_03ce_epc_d2": {
+        "name": "This property indicates refrigerator type, such as built-in or separate.",
+        "state": {
+          "off": "Built-in type",
+          "on": "Separate type"
+        }
+      },
+      "class_03ce_epc_e0": {
+        "name": "Indicates on/off status of lighting installed inside the showcase.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03ce_epc_e1": {
+        "name": "Indicates ON/OFF status of lighting installed outside the showcase.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03ce_epc_e2": {
+        "name": "Indicates on/off status of compressor when showcase and compressor are a single unit.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03ce_epc_e7": {
+        "name": "Indicates on/off status of showcases with heater for hot function.",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "class_03d3_epc_90": {
+        "name": "On timer reservation setting",
+        "state": {
+          "off": "Reservation off",
+          "on": "Reservation on"
+        }
+      },
+      "class_03d3_epc_b0": {
+        "name": "Door/cover open/close status",
+        "state": {
+          "off": "Door/cover closed",
+          "on": "Door/cover open"
+        }
+      },
+      "class_03d3_epc_ec": {
+        "name": "Wrinkling minimization setting",
+        "state": {
+          "off": "Wrinkling minimization function off",
+          "on": "Wrinkling minimization function on"
+        }
+      },
+      "class_03d3_epc_ee": {
+        "name": "Door/cover lock setting",
+        "state": {
+          "off": "Unlocked",
+          "on": "Locked"
+        }
+      },
+      "class_03d4_epc_aa": {
+        "name": "Indicates that the showcase freezer is in an exceptional status.",
+        "state": {
+          "off": "Normal status",
+          "on": "Defrosting status"
+        }
+      },
+      "class_03d4_epc_b0": {
+        "name": "Operation mode setting",
+        "state": {
+          "off": "Non-cooling",
+          "on": "Cooling"
+        }
+      },
+      "class_03d4_epc_e2": {
+        "name": "Indicates compressor ON/OFF status.",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_05ff_epc_cd": {
+        "name": "Fault status of device to be controlled",
+        "state": {
+          "off": "NO",
+          "on": "YES"
+        }
+      },
+      "class_0602_epc_b0": {
+        "name": "Display control setting",
+        "state": {
+          "off": "Displaying disabled",
+          "on": "Displaying enabled"
+        }
+      },
+      "class_common_epc_80": {
+        "name": "Operation status",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      }
+    }
+  },
+  "issues": {
+    "runtime_client_error": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The HEMS integration encountered an error: {error}. This may be caused by network issues or device disconnection.\n\nPress Submit to restart the HEMS integration and attempt recovery. If the problem persists, check your network configuration.",
+            "title": "Restart HEMS integration"
+          }
+        }
+      },
+      "title": "HEMS runtime error"
+    },
+    "runtime_inactive": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "No frames have been received from ECHONET Lite devices for more than {minutes} minutes. This may indicate that devices are offline or there is a network issue.\n\nPress Submit to restart the HEMS integration. Check that your ECHONET Lite devices are powered on and connected to the network.",
+            "title": "Restart HEMS integration"
+          }
+        }
+      },
+      "title": "HEMS devices not responding"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_experimental": "Enable experimental device classes",
+          "poll_interval": "Polling interval"
+        },
+        "data_description": {
+          "enable_experimental": "When enabled, device classes that have not been verified with real hardware will also be registered. These may not work correctly.",
+          "poll_interval": "How often to poll device properties (in seconds). Lower values provide faster updates but increase network traffic."
+        }
+      }
+    }
+  }
+}

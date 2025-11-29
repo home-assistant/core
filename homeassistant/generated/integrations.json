@@ -2706,6 +2706,13 @@
         "zwave"
       ]
     },
+    "hems": {
+      "name": "HEMS echonet lite",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "single_config_entry": true
+    },
     "here_travel_time": {
       "name": "HERE Travel Time",
       "integration_type": "service",

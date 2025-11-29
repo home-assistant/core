@@ -1,0 +1,69 @@
+# Built-in vendor-specific ECHONET Lite property definitions
+#
+# This file defines manufacturer-specific EPCs (ECHONET Property Codes)
+# that are not part of the standard ECHONET Lite specification (MRA).
+#
+# This file is processed by generate_definitions.py and merged into
+# definitions.json. Vendor entities are mixed with MRA entities in the
+# same device class.
+#
+# Users can create their own definitions in config/hems_custom_definitions.yaml
+# using the same format (processed at runtime, not by the generator).
+#
+# Format:
+#   devices:
+#     <class_code>:  # 2-byte class code as hex (e.g., 0x0135)
+#       vendors:
+#         <manufacturer_code>:  # 3-byte manufacturer code as hex (e.g., 0x000005)
+#           name: "Manufacturer Name"  # Optional, for documentation
+#           entities:
+#             - platform: sensor|binary|select
+#               epc: <epc_code>  # EPC as hex (e.g., 0xF1)
+#               byte_offset: <offset>  # Optional: byte position in EDT (0-indexed)
+#               byte_count: <count>  # Optional: number of bytes to read (default: 1)
+#               decoder: <decoder_name>  # Decoder from definitions.json
+#               device_class: <class>  # Optional: HA device class
+#               unit: <unit>  # Optional: unit of measurement
+#               state_class: <class>  # Optional: HA state class
+#               name_en: <name>  # English name (required for strings.json)
+#               name_ja: <name>  # Optional: Japanese name
+#
+# Translation keys are auto-generated as:
+#   class_{class_code}_vendor_{mfr_code}_epc_{epc}_{index}
+# where index is a sequential number (1, 2, ...) for entities sharing the same EPC.
+#
+# Note: When byte_offset is specified, multiple entities can be created from
+# a single EPC. Each entity reads a slice of the EDT data.
+
+devices:
+  # Air cleaner (空気清浄機)
+  0x0135:
+    vendors:
+      # Sharp Corporation
+      0x000005:
+        name: "Sharp"
+        entities:
+          # EPC 0xF1: Proprietary sensor data
+          # Byte 0-2: Unknown
+          # Byte 3: Room temperature (°C, signed)
+          # Byte 4: Humidity (%, unsigned)
+          - platform: sensor
+            epc: 0xF1
+            byte_offset: 3
+            byte_count: 1
+            decoder: signed_byte_temperature
+            device_class: temperature
+            unit: "°C"
+            state_class: measurement
+            name_en: "Room temperature"
+            name_ja: "室内温度"
+          - platform: sensor
+            epc: 0xF1
+            byte_offset: 4
+            byte_count: 1
+            decoder: unsigned_byte
+            device_class: humidity
+            unit: "%"
+            state_class: measurement
+            name_en: "Humidity"
+            name_ja: "湿度"
