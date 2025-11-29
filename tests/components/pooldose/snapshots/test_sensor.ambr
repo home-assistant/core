@@ -1059,7 +1059,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1097,6 +1099,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'volume',
       'friendly_name': 'Pool Device Water meter resettable',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
@@ -1112,7 +1115,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1150,6 +1155,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'volume',
       'friendly_name': 'Pool Device Water meter total',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,

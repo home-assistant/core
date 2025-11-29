@@ -162,10 +162,10 @@
         }
       },
       "water_meter_total_permanent": {
-        "name": "Water meter total"
+        "name": "Total water meter"
       },
       "water_meter_total_resettable": {
-        "name": "Water meter resettable"
+        "name": "Resettable water meter"
       }
     },
     "switch": {

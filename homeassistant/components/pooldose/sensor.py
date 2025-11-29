@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -62,6 +63,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         key="water_meter_total_permanent",
         translation_key="water_meter_total_permanent",
         device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         use_dynamic_unit=True,
     ),
     PooldoseSensorEntityDescription(
@@ -69,6 +71,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         translation_key="water_meter_total_resettable",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         use_dynamic_unit=True,
     ),
     PooldoseSensorEntityDescription(
