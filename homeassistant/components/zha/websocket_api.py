@@ -735,7 +735,7 @@ async def websocket_device_cluster_attributes(
     cluster_attributes: list[dict[str, Any]] = []
     zha_device = zha_gateway.get_device(ieee)
     attributes = None
-    if zha_device is not None:
+    if zha_device is not None and cluster_type == CLUSTER_TYPE_IN:
         attributes = zha_device.async_get_cluster_attributes(
             endpoint_id, cluster_id, cluster_type
         )
@@ -788,10 +788,17 @@ async def websocket_device_cluster_commands(
         )
 
         if commands is not None:
-            for cmd_id, cmd in commands[CLUSTER_COMMANDS_CLIENT].items():
+            if cluster_type == CLUSTER_TYPE_OUT:
+                command_type = CLIENT
+                command_list = CLUSTER_COMMANDS_CLIENT
+            else:
+                command_type = CLUSTER_COMMAND_SERVER
+                command_list = CLUSTER_COMMANDS_SERVER
+
+            for cmd_id, cmd in commands[command_list].items():
                 cluster_commands.append(
                     {
-                        TYPE: CLIENT,
+                        TYPE: command_type,
                         ID: cmd_id,
                         ATTR_NAME: cmd.name,
                         "schema": voluptuous_serialize.convert(
@@ -800,18 +807,7 @@ async def websocket_device_cluster_commands(
                         ),
                     }
                 )
-            for cmd_id, cmd in commands[CLUSTER_COMMANDS_SERVER].items():
-                cluster_commands.append(
-                    {
-                        TYPE: CLUSTER_COMMAND_SERVER,
-                        ID: cmd_id,
-                        ATTR_NAME: cmd.name,
-                        "schema": voluptuous_serialize.convert(
-                            cluster_command_schema_to_vol_schema(cmd.schema),
-                            custom_serializer=cv.custom_serializer,
-                        ),
-                    }
-                )
+
     _LOGGER.debug(
         "Requested commands for: %s: %s, %s: '%s', %s: %s, %s: %s",
         ATTR_CLUSTER_ID,
