@@ -148,6 +148,7 @@ FLOWS = {
         "directv",
         "discord",
         "discovergy",
+        "diyanet",
         "dlink",
         "dlna_dmr",
         "dlna_dms",
