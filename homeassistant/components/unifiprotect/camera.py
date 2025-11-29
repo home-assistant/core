@@ -33,6 +33,8 @@ from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
+
+
 @callback
 def _create_rtsp_repair(
     hass: HomeAssistant, entry: UFPConfigEntry, data: ProtectData, camera: UFPCamera
