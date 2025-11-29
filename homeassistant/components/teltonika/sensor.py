@@ -82,23 +82,37 @@ async def async_setup_entry(  # pylint: disable=hass-argument-type
 ) -> None:
     """Set up Teltonika sensor platform."""
     data: TeltonikaData = entry.runtime_data
+    coordinator = data.coordinator
 
-    # Create sensors for each online modem
-    coordinator_data = data.coordinator.data
-    if coordinator_data:
-        async_add_entities(
-            [
+    # Track known modems to detect new ones
+    known_modems: set[str] = set()
+
+    @callback
+    def _async_add_new_modems() -> None:
+        """Add sensors for newly discovered modems."""
+        current_modems = set(coordinator.data.keys())
+        new_modems = current_modems - known_modems
+
+        if new_modems:
+            entities = [
                 TeltonikaSensorEntity(
-                    data.coordinator,
+                    coordinator,
                     data.device_info,
                     description,
                     modem_id,
-                    modem,
+                    coordinator.data[modem_id],
                 )
-                for modem_id, modem in coordinator_data.items()
+                for modem_id in new_modems
                 for description in SENSOR_DESCRIPTIONS
             ]
-        )
+            async_add_entities(entities)
+            known_modems.update(new_modems)
+
+    # Add sensors for initial modems
+    _async_add_new_modems()
+
+    # Listen for new modems
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_modems))
 
 
 class TeltonikaSensorEntity(CoordinatorEntity, SensorEntity):
@@ -135,14 +149,37 @@ class TeltonikaSensorEntity(CoordinatorEntity, SensorEntity):
             f"{modem_name} {description.translation_key or description.key}"
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._modem_id in self.coordinator.data
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        # Always set base attributes (all keys must always be present)
+        attrs = {
+            "modem_id": self._modem_id,
+            "modem_name": self._modem_name,
+            "connection_type": None,
+            "operator": None,
+        }
+
+        # Add sensor-specific attributes with None defaults
+        if self.entity_description.key in ("rssi", "rsrp", "rsrq", "sinr"):
+            attrs.update(
+                {
+                    "band": None,
+                    "state": None,
+                }
+            )
+
         if self._modem_id not in self.coordinator.data:
-            self._attr_available = False
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = attrs
+            super()._handle_coordinator_update()
             return
 
-        self._attr_available = True
         modem = self.coordinator.data[self._modem_id]
 
         # Update native value
@@ -157,25 +194,16 @@ class TeltonikaSensorEntity(CoordinatorEntity, SensorEntity):
         else:
             self._attr_native_value = None
 
-        # Update extra state attributes
-        attrs = {
-            "modem_id": self._modem_id,
-            "modem_name": getattr(modem, "name", self._modem_name),
-            "connection_type": getattr(modem, "conntype", "Unknown"),
-            "operator": getattr(modem, "operator", "Unknown"),
-        }
+        # Update attributes with modem data
+        attrs["modem_name"] = getattr(modem, "name", self._modem_name)
+        attrs["connection_type"] = getattr(modem, "conntype", None)
+        attrs["operator"] = getattr(modem, "operator", None)
 
-        # Add sensor-specific attributes
+        # Update sensor-specific attributes
         if self.entity_description.key in ("rssi", "rsrp", "rsrq", "sinr"):
-            band = getattr(modem, "sc_band_av", None) or getattr(
-                modem, "band", "Unknown"
-            )
-            attrs.update(
-                {
-                    "band": band,
-                    "state": getattr(modem, "state", "Unknown"),
-                }
-            )
+            band = getattr(modem, "sc_band_av", None) or getattr(modem, "band", None)
+            attrs["band"] = band
+            attrs["state"] = getattr(modem, "state", None)
 
         self._attr_extra_state_attributes = attrs
         super()._handle_coordinator_update()

@@ -6,6 +6,7 @@ import pytest
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
 
 from homeassistant import config_entries
+from homeassistant.components.teltonika.config_flow import CannotConnect, validate_input
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -595,3 +596,160 @@ async def test_dhcp_confirm_invalid_auth(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
     assert result2["step_id"] == "dhcp_confirm"
+
+
+async def test_validate_credentials_false(
+    hass: HomeAssistant, mock_teltasync_client: MagicMock
+) -> None:
+    """Test config flow when validate_credentials returns False."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    device_info = MagicMock()
+    device_info.device_name = "Test Device"
+    device_info.device_identifier = "TEST123"
+
+    mock_teltasync_client.get_device_info = AsyncMock(return_value=device_info)
+    mock_teltasync_client.validate_credentials = AsyncMock(return_value=False)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            "validate_ssl": False,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_unexpected_exception(
+    hass: HomeAssistant, mock_teltasync_client: MagicMock
+) -> None:
+    """Test unexpected exception during reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "https://192.168.1.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "old_password",
+            "validate_ssl": False,
+        },
+        unique_id="TEST1234567890",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+
+    mock_teltasync_client.get_device_info = AsyncMock(
+        side_effect=ValueError("Unexpected error")
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+    assert result2["step_id"] == "reauth_confirm"
+
+
+async def test_dhcp_confirm_unexpected_exception(
+    hass: HomeAssistant, mock_teltasync_client: MagicMock
+) -> None:
+    """Test unexpected exception during DHCP confirmation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.50",
+            macaddress="209727112233",
+            hostname="teltonika",
+        ),
+    )
+
+    mock_teltasync_client.get_device_info = AsyncMock(
+        side_effect=ValueError("Unexpected error")
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+    assert result2["step_id"] == "dhcp_confirm"
+
+
+async def test_dhcp_confirm_cannot_connect(
+    hass: HomeAssistant, mock_teltasync_client: MagicMock
+) -> None:
+    """Test DHCP confirmation with connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.50",
+            macaddress="209727112233",
+            hostname="teltonika",
+        ),
+    )
+
+    mock_teltasync_client.get_device_info = AsyncMock(
+        side_effect=TeltonikaConnectionError("Connection failed")
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["step_id"] == "dhcp_confirm"
+
+
+async def test_validate_input_no_candidate_urls(
+    hass: HomeAssistant,
+) -> None:
+    """Test validate_input when candidate_base_urls returns empty list."""
+    with (
+        patch(
+            "homeassistant.components.teltonika.config_flow.candidate_base_urls",
+            return_value=[],
+        ),
+        pytest.raises(CannotConnect),
+    ):
+        await validate_input(
+            hass,
+            {
+                CONF_HOST: "192.168.1.1",
+                CONF_USERNAME: "admin",
+                CONF_PASSWORD: "password",
+                "validate_ssl": False,
+            },
+        )
