@@ -1071,7 +1071,8 @@ async def test_reconfigure(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    # Test successful reconfiguration
+    # Test successful reconfiguration with matching NVR MAC
+    nvr.mac = dr.format_mac(MAC_ADDR).replace(":", "").upper()
     bootstrap.nvr = nvr
     with (
         patch(
@@ -1083,9 +1084,8 @@ async def test_reconfigure(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) 
             return_value=None,
         ),
         patch(
-            "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
-        ),
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+        ) as mock_reload,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -1105,12 +1105,13 @@ async def test_reconfigure(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) 
     assert mock_config.data["host"] == "1.1.1.2"
     assert mock_config.data["password"] == "new-password"
     assert mock_config.data["api_key"] == "new-api-key"
+    mock_reload.assert_called_once_with(mock_config.entry_id)
 
 
 async def test_reconfigure_different_nvr(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
 ) -> None:
-    """Test reconfiguration flow with different NVR."""
+    """Test reconfiguration flow aborts when trying to switch to different NVR."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1130,9 +1131,9 @@ async def test_reconfigure_different_nvr(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Create a different NVR with different MAC
+    # Create a different NVR with different MAC (not matching MAC_ADDR)
     different_nvr = nvr.model_copy()
-    different_nvr.mac = "AA:BB:CC:DD:EE:FF"
+    different_nvr.mac = "112233445566"  # Different from MAC_ADDR
     bootstrap.nvr = different_nvr
 
     with (
@@ -1143,10 +1144,6 @@ async def test_reconfigure_different_nvr(
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
             return_value=None,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -1160,20 +1157,21 @@ async def test_reconfigure_different_nvr(
                 "api_key": "different-api-key",
             },
         )
-        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
-    # Verify unique_id was updated
-    assert mock_config.unique_id == dr.format_mac("AA:BB:CC:DD:EE:FF")
-    assert mock_config.data["host"] == "2.2.2.2"
+    assert result2["reason"] == "wrong_nvr"
+    # Verify original config wasn't modified
+    assert mock_config.unique_id == dr.format_mac(MAC_ADDR)
+    assert mock_config.data["host"] == "1.1.1.1"
 
 
-async def test_reconfigure_different_nvr_already_configured(
+async def test_reconfigure_wrong_nvr(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
 ) -> None:
-    """Test reconfiguration flow with different NVR that's already configured."""
-    # First config entry
+    """Test reconfiguration flow aborts when connected to wrong NVR."""
+    # Use the NVR's actual MAC address
+    nvr_mac = dr.format_mac(nvr.mac)
+
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1185,34 +1183,17 @@ async def test_reconfigure_different_nvr_already_configured(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=nvr_mac,
     )
     mock_config.add_to_hass(hass)
-
-    # Second config entry with different NVR
-    different_mac = "AA:BB:CC:DD:EE:FF"
-    mock_config2 = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "2.2.2.2",
-            "username": "other-username",
-            "password": "other-password",
-            "api_key": "other-api-key",
-            "id": "UnifiProtect2",
-            "port": 443,
-            "verify_ssl": False,
-        },
-        unique_id=dr.format_mac(different_mac),
-    )
-    mock_config2.add_to_hass(hass)
 
     result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Try to reconfigure first entry to use the same NVR as second entry
+    # Create a different NVR (user connected to wrong device)
     different_nvr = nvr.model_copy()
-    different_nvr.mac = different_mac
+    different_nvr.mac = "112233445566"
     bootstrap.nvr = different_nvr
 
     with (
@@ -1238,7 +1219,10 @@ async def test_reconfigure_different_nvr_already_configured(
         )
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result2["reason"] == "wrong_nvr"
+    # Verify original config wasn't modified
+    assert mock_config.unique_id == nvr_mac
+    assert mock_config.data["host"] == "1.1.1.1"
 
 
 async def test_reconfigure_auth_error(
@@ -1480,18 +1464,46 @@ async def test_reconfigure_form_defaults(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Check that form has correct default values from existing config
-    schema = result["data_schema"].schema
-    assert schema["host"].default == "1.1.1.1"
-    assert schema["port"].default == 8443
-    assert schema["verify_ssl"].default is True
-    assert schema["username"].default == "test-username"
+    # Use nvr with matching MAC
+    nvr.mac = dr.format_mac(MAC_ADDR).replace(":", "").upper()
+    bootstrap.nvr = nvr
+
+    # Complete the flow to verify it works
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+        patch.object(hass.config_entries, "async_reload"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 8443,
+                "verify_ssl": True,
+                "username": "test-username",
+                "password": "new-password",
+                "api_key": "new-api-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_same_nvr_updated_credentials(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
 ) -> None:
     """Test reconfiguration flow updating credentials for same NVR."""
+    # Use the NVR's actual MAC address
+    nvr_mac = dr.format_mac(nvr.mac)
+
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1503,7 +1515,7 @@ async def test_reconfigure_same_nvr_updated_credentials(
             "port": 443,
             "verify_ssl": False,
         },
-        unique_id=dr.format_mac(MAC_ADDR),
+        unique_id=nvr_mac,
     )
     mock_config.add_to_hass(hass)
 
@@ -1521,17 +1533,14 @@ async def test_reconfigure_same_nvr_updated_credentials(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
             return_value=None,
         ),
-        patch(
-            "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
-        ),
+        patch.object(hass.config_entries, "async_reload") as mock_reload,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 443,
-                "verify_ssl": False,
+                "host": "2.2.2.2",
+                "port": 8443,
+                "verify_ssl": True,
                 "username": "new-username",
                 "password": "new-password",
                 "api_key": "new-api-key",
@@ -1542,8 +1551,13 @@ async def test_reconfigure_same_nvr_updated_credentials(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     # Verify unique_id remains the same
-    assert mock_config.unique_id == dr.format_mac(MAC_ADDR)
+    assert mock_config.unique_id == nvr_mac
     # Verify credentials were updated
+    assert mock_config.data["host"] == "2.2.2.2"
+    assert mock_config.data["port"] == 8443
+    assert mock_config.data["verify_ssl"] is True
     assert mock_config.data["username"] == "new-username"
     assert mock_config.data["password"] == "new-password"
     assert mock_config.data["api_key"] == "new-api-key"
+    # Verify reload was called
+    assert len(mock_reload.mock_calls) == 1

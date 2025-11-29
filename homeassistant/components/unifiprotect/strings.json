@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "discovery_started": "Discovery started",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_nvr": "Connected to a different NVR than expected. If you replaced your hardware, please remove the old integration and add it again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

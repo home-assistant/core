@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
@@ -363,17 +364,12 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             # validate login data
             nvr_data, errors = await self._async_get_nvr_data(form_data)
             if nvr_data and not errors:
-                # Check if the unique_id has changed (different NVR)
-                new_unique_id = nvr_data.mac
-                if reconfigure_entry.unique_id != new_unique_id:
-                    # Different NVR - check if it's already configured
-                    await self.async_set_unique_id(new_unique_id)
-                    self._abort_if_unique_id_configured()
+                await self.async_set_unique_id(dr.format_mac(nvr_data.mac))
+                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
 
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data=form_data,
-                    unique_id=new_unique_id,
                 )
 
         return self.async_show_form(
