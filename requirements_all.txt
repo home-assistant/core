@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.8.0
+aioesphomeapi==42.9.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1087,13 +1087,13 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==9.1.0
+google-nest-sdm==9.1.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==1.1.2
+google_air_quality_api==1.1.3
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -2560,7 +2560,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.8.3
+python-roborock==3.8.4
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -3053,7 +3053,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.29.0
+uiprotect==7.31.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
