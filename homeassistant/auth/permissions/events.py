@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from homeassistant.components.labs import EVENT_LABS_UPDATED
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_LABS_UPDATED,
     EVENT_LOVELACE_UPDATED,
     EVENT_PANELS_UPDATED,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,

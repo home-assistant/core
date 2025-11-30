@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.const import EVENT_LABS_UPDATED  # noqa: F401
 from homeassistant.util.hass_dict import HassKey
 
 from .models import LabsData
@@ -10,7 +11,5 @@ DOMAIN = "labs"
 
 STORAGE_KEY = "core.labs"
 STORAGE_VERSION = 1
-
-EVENT_LABS_UPDATED = "labs_updated"
 
 LABS_DATA: HassKey[LabsData] = HassKey(DOMAIN)
