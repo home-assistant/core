@@ -254,8 +254,6 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
 class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
     """Define a SmartThings FSV setting number."""
 
-    editable = True
-
     def __init__(
         self, client: SmartThings, device: FullDevice, component: str, fsv_setting: dict
     ) -> None:
