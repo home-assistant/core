@@ -167,23 +167,28 @@ async def test_set_temperature(
     assert hass.states.get("climate.l1_100").attributes[ATTR_TEMPERATURE] == 30
 
 
+@pytest.mark.parametrize("target_fan_mode", FAN_MODES)
 async def test_set_fan_mode(
     hass: HomeAssistant,
     load_int: ConfigEntry,
+    target_fan_mode: str,
 ) -> None:
     """Test the Coolmaster climate set fan mode."""
     assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == FAN_LOW
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {
             ATTR_ENTITY_ID: "climate.l1_100",
-            ATTR_FAN_MODE: FAN_HIGH,
+            ATTR_FAN_MODE: target_fan_mode,
         },
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == FAN_HIGH
+    assert (
+        hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == target_fan_mode
+    )
 
 
 async def test_set_swing_mode(
