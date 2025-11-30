@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'active_alarms': list([
+    ]),
+    'client_info': dict({
+      'connected': True,
+    }),
+    'config': dict({
+      'host': '**REDACTED**',
+    }),
+    'coordinator_data': dict({
+      'alarm_door_open': False,
+      'alarm_door_sensor': False,
+      'alarm_internal_temp': False,
+      'alarm_temp_sensor_open': False,
+      'alarm_temp_sensor_short': False,
+      'alarm_thermal_cutoff': False,
+      'current_temperature': 75.0,
+      'door_open': False,
+      'fan_duration': 10,
+      'fan_speed': 2,
+      'heater_elements_active': 0,
+      'light_on': False,
+      'on_time': 3600,
+      'sauna_duration': 120,
+      'sauna_type': 0,
+      'session_active': False,
+      'target_temperature': 80,
+    }),
+    'coordinator_info': dict({
+      'last_exception': None,
+      'last_update_success': True,
+      'update_interval': '0:01:00',
+    }),
+  })
+# ---

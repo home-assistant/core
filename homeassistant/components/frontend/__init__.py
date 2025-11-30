@@ -460,9 +460,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
-    async_register_built_in_panel(hass, "light")
-    async_register_built_in_panel(hass, "security")
-    async_register_built_in_panel(hass, "climate")
+    async_register_built_in_panel(
+        hass,
+        "light",
+        sidebar_icon="mdi:lamps",
+        sidebar_title="light",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "security",
+        sidebar_icon="mdi:security",
+        sidebar_title="security",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "climate",
+        sidebar_icon="mdi:home-thermometer",
+        sidebar_title="climate",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "home",
+        sidebar_icon="mdi:home",
+        sidebar_title="home",
+        sidebar_default_visible=False,
+    )
 
     async_register_built_in_panel(hass, "profile")
 
@@ -752,7 +777,9 @@ class ManifestJSONView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_icons",
-        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Required("category"): vol.In(
+            {"conditions", "entity", "entity_component", "services", "triggers"}
+        ),
         vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
     }
 )
