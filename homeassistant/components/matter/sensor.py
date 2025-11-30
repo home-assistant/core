@@ -1509,7 +1509,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+            # EstimatedEndTime is defined as epoch-s (Matter 2000 epoch) in the spec
+            device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ServiceArea.Attributes.EstimatedEndTime,),
