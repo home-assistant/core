@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             coordinator: DiyanetCoordinator = entry.runtime_data
             _LOGGER.info("Manual refresh requested for config entry %s", entry_id)
-            await coordinator.async_request_refresh()
+            await coordinator.async_force_refresh()
             _LOGGER.debug("Manual refresh completed for config entry %s", entry_id)
             return None
 
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         for entry in loaded_entries:
             coordinator = entry.runtime_data
-            await coordinator.async_request_refresh()
+            await coordinator.async_force_refresh()
         return None
 
     hass.services.async_register(
