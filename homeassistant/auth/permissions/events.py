@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from homeassistant.components.labs.const import EVENT_LABS_UPDATED
+from homeassistant.components.labs import EVENT_LABS_UPDATED
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
