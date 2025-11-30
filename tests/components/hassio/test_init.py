@@ -38,6 +38,7 @@ from homeassistant.components.hassio.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -1520,13 +1521,14 @@ async def test_mount_reload_action_failure(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reload_mount service call failure."""
     device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
-    supervisor_client.mounts.reload_mount = AsyncMock(side_effect=SupervisorError)
-    with pytest.raises(SupervisorError):
+    supervisor_client.mounts.reload_mount = AsyncMock(
+        side_effect=SupervisorError("test failure")
+    )
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             "hassio", "mount_reload", {"device_id": device.id}, blocking=True
         )
-    assert "Failed to reload mount NAS" in caplog.text
+    assert str(exc.value) == "Failed to reload mount NAS: test failure"

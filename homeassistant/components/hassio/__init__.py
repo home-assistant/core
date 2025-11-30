@@ -36,6 +36,7 @@ from homeassistant.core import (
     async_get_hass_or_none,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -471,9 +472,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) and device.name:
             try:
                 await supervisor_client.mounts.reload_mount(device.name)
-            except:
-                _LOGGER.exception("Failed to reload mount %s", device.name)
-                raise
+            except SupervisorError as error:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="mount_reload_error",
+                    translation_placeholders={"name": device.name, "error": str(error)},
+                ) from error
 
     hass.services.async_register(
         DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD

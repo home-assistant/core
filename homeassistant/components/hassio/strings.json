@@ -43,6 +43,11 @@
       }
     }
   },
+  "exceptions": {
+    "mount_reload_error": {
+      "message": "Failed to reload mount {name}: {error}"
+    }
+  },
   "issues": {
     "issue_addon_boot_fail": {
       "fix_flow": {
