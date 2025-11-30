@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DEVICE_UPDATE_INTERVAL
+from . import DEVICE_UPDATE_INTERVAL_MIN, DEVICE_UPDATE_INTERVAL_PER_CAM
 from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -221,7 +221,10 @@ class ReolinkUpdateBaseEntity(
 
     async def _resume_update_coordinator(self, *args: Any) -> None:
         """Resume updating the states using the data update coordinator (after reboots)."""
-        self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
+        self._reolink_data.device_coordinator.update_interval = max(
+            DEVICE_UPDATE_INTERVAL_MIN,
+            DEVICE_UPDATE_INTERVAL_PER_CAM * self._host.api.num_cameras,
+        )
         try:
             await self._reolink_data.device_coordinator.async_refresh()
         finally:

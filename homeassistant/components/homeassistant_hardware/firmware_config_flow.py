@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .const import OTBR_DOMAIN, Z2M_EMBER_DOCS_URL, ZHA_DOMAIN
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -81,6 +81,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
     BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
+    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]] = []
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
@@ -230,7 +231,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         # Installing new firmware is only truly required if the wrong type is
         # installed: upgrading to the latest release of the current firmware type
         # isn't strictly necessary for functionality.
-        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+        self._probed_firmware_info = await probe_silabs_firmware_info(
+            self._device,
+            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+            application_probe_methods=self.APPLICATION_PROBE_METHODS,
+        )
 
         firmware_install_required = self._probed_firmware_info is None or (
             self._probed_firmware_info.firmware_type != expected_installed_firmware_type
@@ -295,6 +300,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             fw_data=fw_data,
             expected_installed_firmware_type=expected_installed_firmware_type,
             bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+            application_probe_methods=self.APPLICATION_PROBE_METHODS,
             progress_callback=lambda offset, total: self.async_update_progress(
                 offset / total
             ),
@@ -450,7 +456,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._hardware_name is not None
 
         if self._zigbee_integration == ZigbeeIntegration.OTHER:
-            return self._async_flow_finished()
+            return await self.async_step_show_z2m_docs_url()
 
         result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
@@ -468,6 +474,21 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
         return self._continue_zha_flow(result)
+
+    async def async_step_show_z2m_docs_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show Zigbee2MQTT documentation link."""
+        if user_input is not None:
+            return self._async_flow_finished()
+
+        return self.async_show_form(
+            step_id="show_z2m_docs_url",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "z2m_docs_url": Z2M_EMBER_DOCS_URL,
+            },
+        )
 
     @callback
     def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:

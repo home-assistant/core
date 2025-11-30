@@ -239,11 +239,12 @@ async def test_pump(
     assert state
     assert state.state == "off"
 
-    # PumpStatus --> DeviceFault bit
+    # Initial state: kRunning bit only (no fault bits) should be off
     state = hass.states.get("binary_sensor.mock_pump_problem")
     assert state
-    assert state.state == "unknown"
+    assert state.state == "off"
 
+    # Set DeviceFault bit
     set_node_attribute(matter_node, 1, 512, 16, 1)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -251,7 +252,14 @@ async def test_pump(
     assert state
     assert state.state == "on"
 
-    # PumpStatus --> SupplyFault bit
+    # Clear all bits - problem sensor should be off
+    set_node_attribute(matter_node, 1, 512, 16, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "off"
+
+    # Set SupplyFault bit
     set_node_attribute(matter_node, 1, 512, 16, 2)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -270,10 +278,27 @@ async def test_dishwasher_alarm(
     state = hass.states.get("binary_sensor.dishwasher_door_alarm")
     assert state
 
+    # set DoorAlarm alarm
     set_node_attribute(matter_node, 1, 93, 2, 4)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.dishwasher_door_alarm")
+    assert state
+    assert state.state == "on"
+
+    # clear DoorAlarm alarm
+    set_node_attribute(matter_node, 1, 93, 2, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_inflow_alarm")
+    assert state
+    assert state.state == "off"
+
+    # set InflowError alarm
+    set_node_attribute(matter_node, 1, 93, 2, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_inflow_alarm")
     assert state
     assert state.state == "on"
 
@@ -298,7 +323,7 @@ async def test_water_valve(
     assert state
     assert state.state == "off"
 
-    # ValveFault general_fault test
+    # ValveFault general_fault test (bit 0)
     set_node_attribute(matter_node, 1, 129, 9, 1)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -314,7 +339,7 @@ async def test_water_valve(
     assert state
     assert state.state == "off"
 
-    # ValveFault valve_blocked test
+    # ValveFault valve_blocked test (bit 1)
     set_node_attribute(matter_node, 1, 129, 9, 2)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -330,7 +355,7 @@ async def test_water_valve(
     assert state
     assert state.state == "off"
 
-    # ValveFault valve_leaking test
+    # ValveFault valve_leaking test (bit 2)
     set_node_attribute(matter_node, 1, 129, 9, 4)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -346,8 +371,24 @@ async def test_water_valve(
     assert state
     assert state.state == "on"
 
+    # ValveFault multiple faults test (bits 0 and 2)
+    set_node_attribute(matter_node, 1, 129, 9, 5)
+    await trigger_subscription_callback(hass, matter_client)
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_occupancy(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -373,3 +414,24 @@ async def test_thermostat_occupancy(
     state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_shutter"])
+async def test_shutter_problem(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test shutter problem."""
+    # Eve Shutter default state (ConfigStatus = 9)
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
+    assert state
+    assert state.state == "off"
+
+    # Eve Shutter ConfigStatus Operational bit not set
+    set_node_attribute(matter_node, 1, 258, 7, 8)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
+    assert state
+    assert state.state == "on"

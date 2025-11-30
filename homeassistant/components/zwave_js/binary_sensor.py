@@ -393,9 +393,7 @@ async def async_setup_entry(
             and is_valid_notification_binary_sensor(info)
         ):
             entities.extend(
-                ZWaveNotificationBinarySensor(
-                    config_entry, driver, info, state_key, info.entity_description
-                )
+                ZWaveNotificationBinarySensor(config_entry, driver, info, state_key)
                 for state_key in info.primary_value.metadata.states
                 if int(state_key) not in info.entity_description.not_states
                 and (

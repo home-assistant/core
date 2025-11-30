@@ -13,11 +13,13 @@ DOMAIN = "home_connect"
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
+    "AirConditioner",
     "CleaningRobot",
     "CoffeeMaker",
     "Dishwasher",
     "Dryer",
     "Hood",
+    "Microwave",
     "Oven",
     "WarmingDrawer",
     "Washer",
@@ -81,6 +83,14 @@ TRANSLATION_KEYS_PROGRAMS_MAP = {
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
+}
+
+FAN_SPEED_MODE_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    )
 }
 
 AVAILABLE_MAPS_ENUM = {
@@ -315,6 +325,10 @@ PROGRAM_ENUM_OPTIONS = {
         options,
     )
     for option_key, options in (
+        (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+            FAN_SPEED_MODE_OPTIONS,
+        ),
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_REFERENCE_MAP_ID,
             AVAILABLE_MAPS_ENUM,

@@ -7,7 +7,12 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Any, Generic, TypeVar
 
-from tplink_omada_client import OmadaSiteClient, SwitchPortOverrides
+from tplink_omada_client import (
+    GatewayPortSettings,
+    OmadaSiteClient,
+    PortProfileOverrides,
+    SwitchPortSettings,
+)
 from tplink_omada_client.definitions import GatewayPortMode, PoEMode, PortType
 from tplink_omada_client.devices import (
     OmadaDevice,
@@ -17,7 +22,6 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.omadasiteclient import GatewayPortSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -184,7 +188,12 @@ SWITCH_PORT_DETAILS_SWITCHES: list[OmadaSwitchPortSwitchEntityDescription] = [
         ),
         set_func=(
             lambda client, device, port, enable: client.update_switch_port(
-                device, port, overrides=SwitchPortOverrides(enable_poe=enable)
+                device,
+                port,
+                settings=SwitchPortSettings(
+                    profile_override_enabled=True,
+                    profile_overrides=PortProfileOverrides(enable_poe=enable),
+                ),
             )
         ),
         update_func=lambda p: p.poe_mode != PoEMode.DISABLED,

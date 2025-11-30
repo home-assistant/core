@@ -1,4 +1,4 @@
-"""Test the Ruuvitag BLE sensors."""
+"""Test the Ruuvi BLE sensors."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     service_info: BluetoothServiceInfo,
 ) -> None:
-    """Test the RuuviTag BLE sensors."""
+    """Test the Ruuvi BLE sensors."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=service_info.address)
     entry.add_to_hass(hass)
 

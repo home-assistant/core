@@ -30,6 +30,32 @@
       "dhw_cm_switch": false
     }
   },
+  "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6": {
+    "available": true,
+    "binary_sensors": {
+      "low_battery": false
+    },
+    "dev_class": "zone_thermostat",
+    "hardware": "1",
+    "location": "f2bf9048bef64cc5b6d5110154e33c81",
+    "model": "Emma Pro",
+    "model_id": "170-01",
+    "name": "Emma",
+    "sensors": {
+      "battery": 100,
+      "humidity": 65.0,
+      "setpoint": 20.0,
+      "temperature": 19.5
+    },
+    "temperature_offset": {
+      "lower_bound": -2.0,
+      "resolution": 0.1,
+      "setpoint": 0.0,
+      "upper_bound": 2.0
+    },
+    "vendor": "Plugwise",
+    "zigbee_mac_address": "60EFABFFFE89CBA0"
+  },
   "1772a4ea304041adb83f357b751341ff": {
     "available": true,
     "binary_sensors": {
@@ -43,11 +69,11 @@
     "model_id": "106-03",
     "name": "Tom Badkamer",
     "sensors": {
-      "battery": 99,
-      "setpoint": 18.0,
+      "battery": 60,
+      "setpoint": 25.0,
       "temperature": 18.6,
-      "temperature_difference": -0.2,
-      "valve_position": 100
+      "temperature_difference": -0.4,
+      "valve_position": 100.0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -56,10 +82,9 @@
       "upper_bound": 2.0
     },
     "vendor": "Plugwise",
-    "zigbee_mac_address": "000D6F000C8FF5EE"
+    "zigbee_mac_address": "000D6F000C8FCBA0"
   },
   "ad4838d7d35c4d6ea796ee12ae5aedf8": {
-    "available": true,
     "dev_class": "thermostat",
     "location": "f2bf9048bef64cc5b6d5110154e33c81",
     "model": "ThermoTouch",
@@ -76,28 +101,49 @@
       "plugwise_notification": false
     },
     "dev_class": "gateway",
-    "firmware": "3.7.8",
+    "firmware": "3.9.0",
     "gateway_modes": ["away", "full", "vacation"],
     "hardware": "AME Smile 2.0 board",
     "location": "bc93488efab249e5bc54fd7e175a6f91",
-    "mac_address": "012345679891",
+    "mac_address": "D40FB201CBA0",
     "model": "Gateway",
     "model_id": "smile_open_therm",
     "name": "Adam",
     "notifications": {},
-    "regulation_modes": ["bleeding_hot", "bleeding_cold", "off", "heating"],
+    "regulation_modes": ["bleeding_cold", "heating", "off", "bleeding_hot"],
     "select_gateway_mode": "full",
     "select_regulation_mode": "heating",
     "sensors": {
       "outdoor_temperature": -1.25
     },
     "vendor": "Plugwise",
-    "zigbee_mac_address": "000D6F000D5A168D"
+    "zigbee_mac_address": "000D6F000D5ACBA0"
+  },
+  "da575e9e09b947e281fb6e3ebce3b174": {
+    "available": true,
+    "binary_sensors": {
+      "low_battery": false
+    },
+    "dev_class": "zone_thermometer",
+    "firmware": "2020-09-01T02:00:00+02:00",
+    "hardware": "1",
+    "location": "f2bf9048bef64cc5b6d5110154e33c81",
+    "model": "Jip",
+    "model_id": "168-01",
+    "name": "Jip",
+    "sensors": {
+      "battery": 100,
+      "humidity": 65.8,
+      "setpoint": 20.0,
+      "temperature": 19.3
+    },
+    "vendor": "Plugwise",
+    "zigbee_mac_address": "70AC08FFFEE1CBA0"
   },
   "e2f4322d57924fa090fbbc48b3a140dc": {
     "available": true,
     "binary_sensors": {
-      "low_battery": true
+      "low_battery": false
     },
     "dev_class": "zone_thermostat",
     "firmware": "2016-10-10T02:00:00+02:00",
@@ -107,7 +153,7 @@
     "model_id": "158-01",
     "name": "Lisa Badkamer",
     "sensors": {
-      "battery": 14,
+      "battery": 71,
       "setpoint": 15.0,
       "temperature": 17.9
     },
@@ -118,7 +164,7 @@
       "upper_bound": 2.0
     },
     "vendor": "Plugwise",
-    "zigbee_mac_address": "000D6F000C869B61"
+    "zigbee_mac_address": "000D6F000C86CBA0"
   },
   "e8ef2a01ed3b4139a53bf749204fe6b4": {
     "dev_class": "switching",
@@ -137,9 +183,9 @@
     "active_preset": "home",
     "available_schedules": [
       "Badkamer",
-      "Test",
       "Vakantie",
       "Weekschema",
+      "Test",
       "off"
     ],
     "climate_mode": "heat",
@@ -147,10 +193,11 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Living room",
-    "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
+    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
     "select_schedule": "off",
+    "select_zone_profile": "active",
     "sensors": {
-      "electricity_consumed": 149.9,
+      "electricity_consumed": 60.8,
       "electricity_produced": 0.0,
       "temperature": 19.1
     },
@@ -161,18 +208,23 @@
       "upper_bound": 35.0
     },
     "thermostats": {
-      "primary": ["ad4838d7d35c4d6ea796ee12ae5aedf8"],
+      "primary": [
+        "ad4838d7d35c4d6ea796ee12ae5aedf8",
+        "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6",
+        "da575e9e09b947e281fb6e3ebce3b174"
+      ],
       "secondary": []
     },
-    "vendor": "Plugwise"
+    "vendor": "Plugwise",
+    "zone_profiles": ["active", "off", "passive"]
   },
   "f871b8c4d63549319221e294e4f88074": {
-    "active_preset": "home",
+    "active_preset": "vacation",
     "available_schedules": [
       "Badkamer",
-      "Test",
       "Vakantie",
       "Weekschema",
+      "Test",
       "off"
     ],
     "climate_mode": "auto",
@@ -180,8 +232,9 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Bathroom",
-    "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
-    "select_schedule": "Badkamer",
+    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "select_schedule": "off",
+    "select_zone_profile": "passive",
     "sensors": {
       "electricity_consumed": 0.0,
       "electricity_produced": 0.0,
@@ -197,6 +250,7 @@
       "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
       "secondary": ["1772a4ea304041adb83f357b751341ff"]
     },
-    "vendor": "Plugwise"
+    "vendor": "Plugwise",
+    "zone_profiles": ["active", "off", "passive"]
   }
 }

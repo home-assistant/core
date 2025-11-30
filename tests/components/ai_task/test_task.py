@@ -4,7 +4,6 @@ from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -128,7 +127,7 @@ async def test_generate_data_unknown_entity(
         )
 
 
-@freeze_time("2025-06-14 22:59:00")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_run_data_task_updates_chat_log(
     hass: HomeAssistant,
     init_components: None,
@@ -279,7 +278,7 @@ async def test_generate_data_mixed_attachments(
     assert media_attachment.path == Path("/media/test.mp4")
 
 
-@freeze_time("2025-06-14 22:59:00")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
     init_components: None,

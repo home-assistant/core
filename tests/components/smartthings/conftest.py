@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pysmartthings import (
@@ -13,14 +14,14 @@ from pysmartthings import (
     SceneResponse,
     Subscription,
 )
-from pysmartthings.models import HealthStatus
+from pysmartthings.models import HealthStatus, InstalledApp
 import pytest
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID
+from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID, OLD_DATA
 from homeassistant.components.smartthings.const import (
     CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
@@ -91,6 +92,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.get_device_health.return_value = DeviceHealth.from_json(
             load_fixture("device_health.json", DOMAIN)
         )
+        client.get_installed_app.return_value = InstalledApp.from_json(
+            load_fixture("installed_app.json", DOMAIN)
+        )
         yield client
 
 
@@ -131,15 +135,18 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_wm_wd_000001_1",
         "da_wm_wm_01011",
         "da_wm_wm_100001",
+        "da_wm_wm_100002",
         "da_wm_wm_000001",
         "da_wm_wm_000001_1",
         "da_wm_sc_000001",
+        "da_wm_dw_01011",
         "da_rvc_normal_000001",
         "da_rvc_map_01011",
         "da_ks_microwave_0101x",
         "da_ks_cooktop_31001",
         "da_ks_range_0101x",
         "da_ks_oven_01061",
+        "da_ks_oven_0107x",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
         "c2c_shade",
@@ -217,6 +224,49 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             },
             CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
             CONF_INSTALLED_APP_ID: "123",
+        },
+        version=3,
+        minor_version=3,
+    )
+
+
+@pytest.fixture
+def old_data() -> dict[str, Any]:
+    """Return old data for config entry."""
+    return {
+        OLD_DATA: {
+            CONF_ACCESS_TOKEN: "mock-access-token",
+            CONF_REFRESH_TOKEN: "mock-refresh-token",
+            CONF_CLIENT_ID: "CLIENT_ID",
+            CONF_CLIENT_SECRET: "CLIENT_SECRET",
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        }
+    }
+
+
+@pytest.fixture
+def mock_migrated_config_entry(
+    expires_at: int, old_data: dict[str, Any]
+) -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="My home",
+        unique_id="397678e5-9995-4a39-9d9f-ae6ba310236c",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(SCOPES),
+                "access_tier": 0,
+                "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+            },
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123",
+            **old_data,
         },
         version=3,
         minor_version=2,

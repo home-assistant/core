@@ -86,6 +86,10 @@ def is_installed(requirement_str: str) -> bool:
                 "Installed version for %s resolved to None", req.name
             )
             return False
+        if req.url:
+            # If requirement is a URL, we cannot verify versions, so let
+            # the package manager handle it
+            return False
         return req.specifier.contains(installed_version, prereleases=True)
     except PackageNotFoundError:
         return False

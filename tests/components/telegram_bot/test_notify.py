@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import freeze_time
+import pytest
 from telegram import Chat, Message
 from telegram.constants import ChatType, ParseMode
 
@@ -19,12 +19,12 @@ from homeassistant.core import Context, HomeAssistant
 from tests.common import async_capture_events
 
 
-@freeze_time("2025-01-09T12:00:00+00:00")
+@pytest.mark.freeze_time("2025-01-09T12:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
-    webhook_platform: None,
+    webhook_bot: None,
 ) -> None:
-    """Test publishing ntfy message."""
+    """Test send message."""
 
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -35,7 +35,7 @@ async def test_send_message(
             return_value=Message(
                 message_id=12345,
                 date=datetime.now(),
-                chat=Chat(id=123456, type=ChatType.PRIVATE),
+                chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
     ) as mock_send_message:
@@ -43,7 +43,7 @@ async def test_send_message(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.testbot_mock_last_name_mock_title_12345678",
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
                 ATTR_MESSAGE: "mock message",
                 ATTR_TITLE: "mock title",
             },
@@ -64,7 +64,7 @@ async def test_send_message(
             message_thread_id=None,
         )
 
-    state = hass.states.get("notify.testbot_mock_last_name_mock_title_12345678")
+    state = hass.states.get("notify.mock_title_mock_chat")
     assert state
     assert state.state == "2025-01-09T12:00:00+00:00"
 

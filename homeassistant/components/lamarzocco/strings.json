@@ -101,6 +101,9 @@
       },
       "smart_standby_time": {
         "name": "Smart standby time"
+      },
+      "steam_temp": {
+        "name": "Steam target temperature"
       }
     },
     "select": {

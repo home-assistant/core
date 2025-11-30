@@ -217,7 +217,7 @@
     "wireless_lowpower": 10,
     "wireless_awake": false,
     "pir_switch": 3,
-    "doorbell_pic": "",
+    "doorbell_pic": "**REDACTED**",
     "basic_device_volume": 51,
     "humanoid_filter": false,
     "alarm_message": "**REDACTED**",

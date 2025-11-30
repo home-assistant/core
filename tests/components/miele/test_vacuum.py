@@ -1,6 +1,6 @@
 """Tests for miele vacuum module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 from pymiele import MieleDevices
@@ -142,7 +142,7 @@ async def test_api_failure(
     service: str,
 ) -> None:
     """Test handling of exception from API."""
-    mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")
+    mock_miele_client.send_action.side_effect = ClientResponseError(Mock(), Mock())
 
     with pytest.raises(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"

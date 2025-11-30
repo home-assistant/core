@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_numbers[number.octoprint_bed_temperature-entry]
+# name: test_numbers[printer0][number.octoprint_bed_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,7 +39,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[number.octoprint_bed_temperature-state]
+# name: test_numbers[printer0][number.octoprint_bed_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -58,7 +58,7 @@
     'state': '60.0',
   })
 # ---
-# name: test_numbers[number.octoprint_extruder_1_temperature-entry]
+# name: test_numbers[printer0][number.octoprint_extruder_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -98,7 +98,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[number.octoprint_extruder_1_temperature-state]
+# name: test_numbers[printer0][number.octoprint_extruder_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -117,7 +117,7 @@
     'state': '31.0',
   })
 # ---
-# name: test_numbers[number.octoprint_extruder_temperature-entry]
+# name: test_numbers[printer0][number.octoprint_extruder_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -157,7 +157,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[number.octoprint_extruder_temperature-state]
+# name: test_numbers[printer0][number.octoprint_extruder_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',

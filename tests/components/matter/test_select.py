@@ -8,6 +8,7 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter.select import DOOR_LOCK_OPERATING_MODE_MAP
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -302,3 +303,58 @@ async def test_aqara_door_window_p2(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.aqara_door_and_window_sensor_p2_sensitivity")
     assert state.state == "20 mm"
+
+
+@pytest.mark.parametrize("node_fixture", ["secuyou_smart_lock"])
+async def test_door_lock_operating_mode_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Door Lock Operating Mode select entity discovery and interaction.
+
+    Verifies:
+    - Options match mapping in DOOR_LOCK_OPERATING_MODE_MAP
+    - Attribute updates reflect current option
+    - Selecting an option writes correct enum value
+    """
+    entity_id = "select.secuyou_smart_lock_operating_mode"
+    state = hass.states.get(entity_id)
+    assert state, "Missing operating mode select entity"
+    assert state.attributes["options"] == list(DOOR_LOCK_OPERATING_MODE_MAP.values())
+    # Initial state should be one of the allowed options
+    assert state.state in state.attributes["options"]
+
+    # Dynamically obtain ids instead of hardcoding
+    door_lock_cluster_id = clusters.DoorLock.Attributes.OperatingMode.cluster_id
+    operating_mode_attr_id = clusters.DoorLock.Attributes.OperatingMode.attribute_id
+
+    # Change OperatingMode attribute on the node to 'privacy'
+    set_node_attribute(
+        matter_node,
+        1,
+        door_lock_cluster_id,
+        operating_mode_attr_id,
+        clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "privacy"
+
+    # Select another option (vacation) via service to validate mapping
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "vacation"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.DoorLock.Attributes.OperatingMode,
+        ),
+        value=clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+    )

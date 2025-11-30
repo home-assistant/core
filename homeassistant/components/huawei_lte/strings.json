@@ -53,10 +53,10 @@
   "entity": {
     "binary_sensor": {
       "5ghz_wifi_status": {
-        "name": "5GHz Wi-Fi status"
+        "name": "Wi-Fi status (5GHz)"
       },
       "24ghz_wifi_status": {
-        "name": "2.4GHz Wi-Fi status"
+        "name": "Wi-Fi status (2.4GHz)"
       },
       "mobile_connection": {
         "name": "Mobile connection"
@@ -66,6 +66,11 @@
       },
       "wifi_status": {
         "name": "Wi-Fi status"
+      }
+    },
+    "button": {
+      "clear_traffic_statistics": {
+        "name": "Clear traffic statistics"
       }
     },
     "select": {
@@ -157,6 +162,12 @@
       },
       "lte_uplink_frequency": {
         "name": "LTE uplink frequency"
+      },
+      "max_download_rate": {
+        "name": "Maximum download rate"
+      },
+      "max_upload_rate": {
+        "name": "Maximum upload rate"
       },
       "mode": {
         "name": "Mode"
@@ -296,6 +307,9 @@
       },
       "sms_messages_sim": {
         "name": "SMS messages (SIM)"
+      },
+      "sms_new": {
+        "name": "SMS new"
       },
       "sms_outbox_device": {
         "name": "SMS outbox (device)"

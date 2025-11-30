@@ -2,9 +2,19 @@
 
 import logging
 
+from aiocomelit.api import (
+    ComelitSerialBridgeObject,
+    ComelitVedoAreaObject,
+    ComelitVedoZoneObject,
+)
 from aiocomelit.const import BRIDGE, VEDO
 
 _LOGGER = logging.getLogger(__package__)
+
+ObjectClassType = (
+    ComelitSerialBridgeObject | ComelitVedoAreaObject | ComelitVedoZoneObject
+)
+
 
 DOMAIN = "comelit"
 DEFAULT_PORT = 80
