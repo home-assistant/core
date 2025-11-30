@@ -190,6 +190,9 @@ SETPOINT_CHANGE_SOURCE_MAP = {
     clusters.Thermostat.Enums.SetpointChangeSourceEnum.kUnknownEnumValue: None,
 }
 
+MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
+    946684800  # Seconds from Matter 2000 epoch to Unix epoch
+)
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
@@ -1516,7 +1519,13 @@ DISCOVERY_SCHEMAS = [
             translation_key="setpoint_change_timestamp",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+            device_to_ha=(
+                lambda x: (
+                    dt_util.utc_from_timestamp(x + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
+                    if x > 0
+                    else None
+                )
+            ),
         ),
         entity_class=MatterSensor,
         required_attributes=(
