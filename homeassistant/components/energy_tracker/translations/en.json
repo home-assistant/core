@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Energy Tracker",
+        "description": "Enter your personal access token to connect to your Energy Tracker account.",
+        "data": {
+          "api_token": "Personal access token"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Energy Tracker",
+        "description": "Update your Energy Tracker account token. Leave the token field empty to keep the existing token.",
+        "data": {
+          "api_token": "Personal access token (leave empty to keep existing)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Personal access token cannot be empty."
+    },
+    "abort": {
+      "already_configured": "This personal access token is already configured. Each token can only be used once.",
+      "entry_not_found": "Configuration entry not found.",
+      "reconfigure_successful": "Configuration updated successfully."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Authentication with Energy Tracker failed",
+      "description": "The configured personal access token is invalid or expired. Please create a new token in your Energy Tracker account and update the token in the integration settings."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Insufficient permissions for Energy Tracker",
+      "description": "The configured personal access token does not have the required permissions. Please create a new token with the necessary permissions in your Energy Tracker account and update the token in the settings of this integration."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Request timed out. Please check network connection and try again."
+    },
+    "network_error": {
+      "message": "Network error during request. Please check internet connection and try again."
+    },
+    "bad_request": {
+      "message": "Invalid input. Please check input data. ({error})"
+    },
+    "auth_failed": {
+      "message": "Authentication failed. Please check your Personal access token in integration settings."
+    },
+    "device_not_found": {
+      "message": "Standard measuring device not found. Please check device ID."
+    },
+    "rate_limit": {
+      "message": "Too many requests. Please try again in {retry_after} seconds."
+    },
+    "rate_limit_no_time": {
+      "message": "Too many requests. Please try again later."
+    },
+    "server_error": {
+      "message": "A server error has occurred. Please try again later. ({error})"
+    },
+    "unknown_error": {
+      "message": "An unexpected error has occurred. Please try again later. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standard measuring device ID is required."
+    },
+    "entity_not_found": {
+      "message": "Entity {entity_id} not found."
+    },
+    "entity_unavailable": {
+      "message": "Entity {entity_id} is {state}."
+    },
+    "invalid_number": {
+      "message": "Entity {entity_id} value '{state}' is not a number."
+    },
+    "missing_timestamp": {
+      "message": "Entity {entity_id} has no timestamp."
+    },
+    "no_api_token": {
+      "message": "No personal access token configured. Check account settings."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Send meter reading",
+      "description": "Sends the current value of a sensor to Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Account",
+          "description": "Your Energy Tracker account"
+        },
+        "device_id": {
+          "name": "Standard measuring device ID",
+          "description": "ID of the standard measuring device in your Energy Tracker account"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor that provides the meter reading"
+        },
+        "allow_rounding": {
+          "name": "Allow rounding",
+          "description": "Round value to match meter precision"
+        }
+      }
+    }
+  }
+}

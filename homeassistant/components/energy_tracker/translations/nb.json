@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Konfigurer Energy Tracker",
+        "description": "Skriv inn din personlige tilgangstoken for å koble til Energy Tracker-kontoen din.",
+        "data": {
+          "api_token": "Personlig tilgangstoken"
+        }
+      },
+      "reconfigure": {
+        "title": "Rekonfigurer Energy Tracker",
+        "description": "Oppdater Energy Tracker-kontotokenet ditt. La token-feltet stå tomt for å beholde eksisterende token.",
+        "data": {
+          "api_token": "Personlig tilgangstoken (la stå tomt for å beholde eksisterende)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Personlig tilgangstoken kan ikke være tom."
+    },
+    "abort": {
+      "already_configured": "Denne personlige tilgangstokenen er allerede konfigurert. Hver token kan bare brukes én gang.",
+      "entry_not_found": "Konfigurasjonsoppføring ikke funnet.",
+      "reconfigure_successful": "Konfigurasjonen ble oppdatert."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Autentisering med Energy Tracker mislyktes",
+      "description": "Den konfigurerte personlige tilgangstokenen er ugyldig eller utløpt. Opprett en ny token i Energy Tracker-kontoen din og oppdater tokenen i integrasjonsinnstillingene."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Utilstrekkelige tillatelser for Energy Tracker",
+      "description": "Den konfigurerte personlige tilgangstokenen har ikke de nødvendige tillatelsene. Opprett en ny token med de nødvendige tillatelsene i Energy Tracker-kontoen din og oppdater tokenen i denne integrasjonens innstillinger."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Tidsavbrudd for forespørsel. Kontroller nettverkstilkoblingen og prøv igjen."
+    },
+    "network_error": {
+      "message": "Nettverksfeil under forespørsel. Kontroller internettforbindelsen og prøv igjen."
+    },
+    "bad_request": {
+      "message": "Ugyldig inndata. Kontroller inndataene. ({error})"
+    },
+    "auth_failed": {
+      "message": "Autentisering mislyktes. Kontroller din personlige tilgangstoken i integrasjonsinnstillingene."
+    },
+    "device_not_found": {
+      "message": "Standard måleenhet ikke funnet. Kontroller enhets-ID."
+    },
+    "rate_limit": {
+      "message": "For mange forespørsler. Prøv igjen om {retry_after} sekunder."
+    },
+    "rate_limit_no_time": {
+      "message": "For mange forespørsler. Prøv igjen senere."
+    },
+    "server_error": {
+      "message": "En serverfeil oppstod. Prøv igjen senere. ({error})"
+    },
+    "unknown_error": {
+      "message": "En uventet feil oppstod. Prøv igjen senere. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standard måleenhets-ID er påkrevd."
+    },
+    "entity_not_found": {
+      "message": "Entitet {entity_id} ikke funnet."
+    },
+    "entity_unavailable": {
+      "message": "Entitet {entity_id} er {state}."
+    },
+    "invalid_number": {
+      "message": "Verdien '{state}' for entitet {entity_id} er ikke et tall."
+    },
+    "missing_timestamp": {
+      "message": "Entitet {entity_id} har ingen tidsstempel."
+    },
+    "no_api_token": {
+      "message": "Ingen personlig tilgangstoken er konfigurert. Kontroller kontoinnstillingene."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Send måleravlesning",
+      "description": "Sender gjeldende verdi fra en sensor til Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Konto",
+          "description": "Din Energy Tracker-konto"
+        },
+        "device_id": {
+          "name": "Standard måleenhets-ID",
+          "description": "ID for standard måleenhet i Energy Tracker-kontoen din"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor som gir måleravlesningen"
+        },
+        "allow_rounding": {
+          "name": "Tillat avrunding",
+          "description": "Avrund verdien for å samsvare med målerpresisjon"
+        }
+      }
+    }
+  }
+}

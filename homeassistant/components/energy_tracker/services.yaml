@@ -1,0 +1,36 @@
+send_meter_reading:
+  name: Send meter reading
+  description: Send the current value of a sensor to Energy Tracker.
+  fields:
+    entry_id:
+      name: Account
+      description: Your Energy Tracker account
+      required: true
+      selector:
+        config_entry:
+          integration: energy_tracker
+    device_id:
+      name: Standard measuring device ID
+      description: ID of the standard measuring device in your Energy Tracker account
+      required: true
+      example: "deadbeef-dead-beef-dead-beefdeadbeef"
+      selector:
+        text:
+          type: text
+    source_entity_id:
+      name: Sensor
+      description: Sensor that provides the meter reading
+      required: true
+      selector:
+        entity:
+          domain:
+            - sensor
+            - input_number
+            - number
+    allow_rounding:
+      name: Allow rounding
+      description: Round value to match meter precision
+      required: false
+      default: true
+      selector:
+        boolean:

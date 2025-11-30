@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nastaviť Energy Tracker",
+        "description": "Zadajte váš osobný prístupový token na pripojenie k vašemu účtu Energy Tracker.",
+        "data": {
+          "api_token": "Osobný prístupový token"
+        }
+      },
+      "reconfigure": {
+        "title": "Prekonfigurovať Energy Tracker",
+        "description": "Aktualizujte token vašho účtu Energy Tracker. Nechajte pole tokenu prázdne, ak chcete ponechať existujúci token.",
+        "data": {
+          "api_token": "Osobný prístupový token (ponechajte prázdne pre zachovanie existujúceho)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Osobný prístupový token nemôže byť prázdny."
+    },
+    "abort": {
+      "already_configured": "Tento osobný prístupový token je už nakonfigurovaný. Každý token možno použiť iba raz.",
+      "entry_not_found": "Konfiguračný záznam nebol nájdený.",
+      "reconfigure_successful": "Konfigurácia bola úspešne aktualizovaná."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Overenie s Energy Tracker zlyhalo",
+      "description": "Nakonfigurovaný osobný prístupový token je neplatný alebo vypršal. Vytvorte nový token vo svojom účte Energy Tracker a aktualizujte token v nastaveniach integrácie."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Nedostatočné oprávnenia pre Energy Tracker",
+      "description": "Nakonfigurovaný osobný prístupový token nemá potrebné oprávnenia. Vytvorte nový token s potrebnými oprávneniami vo svojom účte Energy Tracker a aktualizujte token v nastaveniach tejto integrácie."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Časový limit požiadavky. Skontrolujte sieťové pripojenie a skúste znova."
+    },
+    "network_error": {
+      "message": "Chyba siete počas požiadavky. Skontrolujte pripojenie na internet a skúste znova."
+    },
+    "bad_request": {
+      "message": "Neplatný vstup. Skontrolujte vstupné údaje. ({error})"
+    },
+    "auth_failed": {
+      "message": "Overenie zlyhalo. Skontrolujte svoj osobný prístupový token v nastaveniach integrácie."
+    },
+    "device_not_found": {
+      "message": "Štandardné meracie zariadenie nebolo nájdené. Skontrolujte ID zariadenia."
+    },
+    "rate_limit": {
+      "message": "Príliš veľa požiadaviek. Skúste znova o {retry_after} sekúnd."
+    },
+    "rate_limit_no_time": {
+      "message": "Príliš veľa požiadaviek. Skúste znova neskôr."
+    },
+    "server_error": {
+      "message": "Došlo k chybe servera. Skúste znova neskôr. ({error})"
+    },
+    "unknown_error": {
+      "message": "Došlo k neočakávanej chybe. Skúste znova neskôr. ({error})"
+    },
+    "device_id_empty": {
+      "message": "ID štandardného meracieho zariadenia je požadované."
+    },
+    "entity_not_found": {
+      "message": "Entita {entity_id} nebola nájdená."
+    },
+    "entity_unavailable": {
+      "message": "Entita {entity_id} je v stave {state}."
+    },
+    "invalid_number": {
+      "message": "Hodnota '{state}' entity {entity_id} nie je číslo."
+    },
+    "missing_timestamp": {
+      "message": "Entita {entity_id} nemá časovú značku."
+    },
+    "no_api_token": {
+      "message": "Nie je nakonfigurovaný osobný prístupový token. Skontrolujte nastavenia účtu."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Odoslať stav merača",
+      "description": "Odošle aktuálnu hodnotu senzora do Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Účet",
+          "description": "Váš účet Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID štandardného meracieho zariadenia",
+          "description": "ID štandardného meracieho zariadenia vo vašom účte Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Senzor",
+          "description": "Senzor poskytujúci stav merača"
+        },
+        "allow_rounding": {
+          "name": "Povoliť zaokrúhľovanie",
+          "description": "Zaokrúhliť hodnotu podľa presnosti merača"
+        }
+      }
+    }
+  }
+}

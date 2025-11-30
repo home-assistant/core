@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nastavit Energy Tracker",
+        "description": "Zadejte svůj osobní přístupový token pro připojení ke svému účtu Energy Tracker.",
+        "data": {
+          "api_token": "Osobní přístupový token"
+        }
+      },
+      "reconfigure": {
+        "title": "Překonfigurovat Energy Tracker",
+        "description": "Aktualizujte token svého účtu Energy Tracker. Ponechte pole tokenu prázdné, chcete-li zachovat stávající token.",
+        "data": {
+          "api_token": "Osobní přístupový token (ponechte prázdné pro zachování existujícího)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Osobní přístupový token nesmí být prázdný."
+    },
+    "abort": {
+      "already_configured": "Tento osobní přístupový token je již nakonfigurován. Každý token lze použít pouze jednou.",
+      "entry_not_found": "Konfigurační záznam nebyl nalezen.",
+      "reconfigure_successful": "Konfigurace byla úspěšně aktualizována."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Autentizace s Energy Tracker selhala",
+      "description": "Nakonfigurovaný osobní přístupový token je neplatný nebo vypršel. Vytvořte nový token ve svém účtu Energy Tracker a aktualizujte token v nastavení integrace."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Nedostatečná oprávnění pro Energy Tracker",
+      "description": "Nakonfigurovaný osobní přístupový token nemá potřebná oprávnění. Vytvořte nový token s potřebnými oprávněními ve svém účtu Energy Tracker a aktualizujte token v nastavení této integrace."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Časový limit požadavku. Zkontrolujte síťové připojení a zkuste to znovu."
+    },
+    "network_error": {
+      "message": "Chyba sítě během požadavku. Zkontrolujte připojení k internetu a zkuste to znovu."
+    },
+    "bad_request": {
+      "message": "Neplatný vstup. Zkontrolujte vstupní data. ({error})"
+    },
+    "auth_failed": {
+      "message": "Autentizace selhala. Zkontrolujte svůj osobní přístupový token v nastavení integrace."
+    },
+    "device_not_found": {
+      "message": "Standardní měřicí zařízení nebylo nalezeno. Zkontrolujte ID zařízení."
+    },
+    "rate_limit": {
+      "message": "Příliš mnoho požadavků. Zkuste to znovu za {retry_after} sekund."
+    },
+    "rate_limit_no_time": {
+      "message": "Příliš mnoho požadavků. Zkuste to znovu později."
+    },
+    "server_error": {
+      "message": "Došlo k chybě serveru. Zkuste to znovu později. ({error})"
+    },
+    "unknown_error": {
+      "message": "Došlo k neočekávané chybě. Zkuste to znovu později. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Je vyžadováno ID standardního měřicího zařízení."
+    },
+    "entity_not_found": {
+      "message": "Entita {entity_id} nebyla nalezena."
+    },
+    "entity_unavailable": {
+      "message": "Entita {entity_id} je ve stavu {state}."
+    },
+    "invalid_number": {
+      "message": "Hodnota '{state}' entity {entity_id} není číslo."
+    },
+    "missing_timestamp": {
+      "message": "Entita {entity_id} nemá časové razítko."
+    },
+    "no_api_token": {
+      "message": "Není nakonfigurován osobní přístupový token. Zkontrolujte nastavení účtu."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Odeslat stav měřiče",
+      "description": "Odešle aktuální hodnotu senzoru do Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Účet",
+          "description": "Váš účet Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID standardního měřicího zařízení",
+          "description": "ID standardního měřicího zařízení ve vašem účtu Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Senzor",
+          "description": "Senzor poskytující stav měřiče"
+        },
+        "allow_rounding": {
+          "name": "Povolit zaokrouhlení",
+          "description": "Zaokrouhlit hodnotu podle přesnosti měřiče"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Energy Tracker 설정",
+        "description": "Energy Tracker 계정에 연결하려면 개인 액세스 토큰을 입력하세요.",
+        "data": {
+          "api_token": "개인 액세스 토큰"
+        }
+      },
+      "reconfigure": {
+        "title": "Energy Tracker 재구성",
+        "description": "Energy Tracker 계정 토큰을 업데이트합니다. 기존 토큰을 유지하려면 토큰 필드를 비워 두세요.",
+        "data": {
+          "api_token": "개인 액세스 토큰(기존 토큰을 유지하려면 비워 둠)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "개인 액세스 토큰은 비워 둘 수 없습니다."
+    },
+    "abort": {
+      "already_configured": "이 개인 액세스 토큰은 이미 구성되어 있습니다. 각 토큰은 한 번만 사용할 수 있습니다.",
+      "entry_not_found": "구성 항목을 찾을 수 없습니다.",
+      "reconfigure_successful": "구성이 성공적으로 업데이트되었습니다."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Energy Tracker 인증 실패",
+      "description": "구성된 개인 액세스 토큰이 잘못되었거나 만료되었습니다. Energy Tracker 계정에서 새 토큰을 만들고 통합 설정에서 토큰을 업데이트하십시오."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Energy Tracker에 대한 권한 부족",
+      "description": "구성된 개인 액세스 토큰에 필요한 권한이 없습니다. Energy Tracker 계정에서 필요한 권한이 있는 새 토큰을 만들고 이 통합 설정에서 토큰을 업데이트하십시오."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "요청 시간 초과. 네트워크 연결을 확인하고 다시 시도하십시오."
+    },
+    "network_error": {
+      "message": "요청 중 네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도하십시오."
+    },
+    "bad_request": {
+      "message": "잘못된 입력입니다. 입력 데이터를 확인하십시오. ({error})"
+    },
+    "auth_failed": {
+      "message": "인증에 실패했습니다. 통합 설정에서 개인 액세스 토큰을 확인하십시오."
+    },
+    "device_not_found": {
+      "message": "표준 측정 장치를 찾을 수 없습니다. 장치 ID를 확인하십시오."
+    },
+    "rate_limit": {
+      "message": "요청이 너무 많습니다. {retry_after}초 후에 다시 시도하십시오."
+    },
+    "rate_limit_no_time": {
+      "message": "요청이 너무 많습니다. 나중에 다시 시도하십시오."
+    },
+    "server_error": {
+      "message": "서버 오류가 발생했습니다. 나중에 다시 시도하십시오. ({error})"
+    },
+    "unknown_error": {
+      "message": "예기치 않은 오류가 발생했습니다. 나중에 다시 시도하십시오. ({error})"
+    },
+    "device_id_empty": {
+      "message": "표준 측정 장치 ID가 필요합니다."
+    },
+    "entity_not_found": {
+      "message": "엔티티 {entity_id}를 찾을 수 없습니다."
+    },
+    "entity_unavailable": {
+      "message": "엔티티 {entity_id}가 {state} 상태입니다."
+    },
+    "invalid_number": {
+      "message": "엔티티 {entity_id}의 값 '{state}'은(는) 숫자가 아닙니다."
+    },
+    "missing_timestamp": {
+      "message": "엔티티 {entity_id}에 타임스탬프가 없습니다."
+    },
+    "no_api_token": {
+      "message": "개인 액세스 토큰이 구성되지 않았습니다. 계정 설정을 확인하십시오."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "계량기 판독값 보내기",
+      "description": "센서의 현재 값을 Energy Tracker로 보냅니다.",
+      "fields": {
+        "entry_id": {
+          "name": "계정",
+          "description": "Energy Tracker 계정"
+        },
+        "device_id": {
+          "name": "표준 측정 장치 ID",
+          "description": "Energy Tracker 계정의 표준 측정 장치 ID"
+        },
+        "source_entity_id": {
+          "name": "센서",
+          "description": "계량기 판독값을 제공하는 센서"
+        },
+        "allow_rounding": {
+          "name": "반올림 허용",
+          "description": "계량기 정밀도와 일치하도록 값을 반올림합니다"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Määritä Energy Tracker",
+        "description": "Syötä henkilökohtainen käyttöoikeustunnuksesi yhdistääksesi Energy Tracker -tilillesi.",
+        "data": {
+          "api_token": "Henkilökohtainen käyttöoikeustunnus"
+        }
+      },
+      "reconfigure": {
+        "title": "Määritä Energy Tracker uudelleen",
+        "description": "Päivitä Energy Tracker -tilisi tunnus. Jätä tunnuskenttä tyhjäksi säilyttääksesi nykyisen tunnuksen.",
+        "data": {
+          "api_token": "Henkilökohtainen käyttöoikeustunnus (jätä tyhjäksi säilyttääksesi nykyisen)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Henkilökohtainen käyttöoikeustunnus ei voi olla tyhjä."
+    },
+    "abort": {
+      "already_configured": "Tämä henkilökohtainen käyttöoikeustunnus on jo määritetty. Jokaista tunnusta voidaan käyttää vain kerran.",
+      "entry_not_found": "Kokoonpanomerkintää ei löytynyt.",
+      "reconfigure_successful": "Kokoonpano on päivitetty onnistuneesti."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Todennus Energy Trackeriin epäonnistui",
+      "description": "Määritetty henkilökohtainen käyttöoikeustunnus on virheellinen tai vanhentunut. Luo uusi tunnus Energy Tracker -tililläsi ja päivitä tunnus integrointiasetuksissa."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Riittämättömät oikeudet Energy Trackeriin",
+      "description": "Määritetyllä henkilökohtaisella käyttöoikeustunnuksella ei ole tarvittavia oikeuksia. Luo uusi tunnus tarvittavilla oikeuksilla Energy Tracker -tililläsi ja päivitä tunnus tämän integroinnin asetuksissa."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Pyyntö aikakatkaistiin. Tarkista verkkoyhteys ja yritä uudelleen."
+    },
+    "network_error": {
+      "message": "Verkkovirhe pyynnön aikana. Tarkista internetyhteys ja yritä uudelleen."
+    },
+    "bad_request": {
+      "message": "Virheellinen syöte. Tarkista syötetiedot. ({error})"
+    },
+    "auth_failed": {
+      "message": "Todennus epäonnistui. Tarkista henkilökohtainen käyttöoikeustunnuksesi integrointiasetuksissa."
+    },
+    "device_not_found": {
+      "message": "Vakiomittauslaitetta ei löytynyt. Tarkista laitetunnus."
+    },
+    "rate_limit": {
+      "message": "Liikaa pyyntöjä. Yritä uudelleen {retry_after} sekunnin kuluttua."
+    },
+    "rate_limit_no_time": {
+      "message": "Liikaa pyyntöjä. Yritä myöhemmin uudelleen."
+    },
+    "server_error": {
+      "message": "Palvelinvirhe tapahtui. Yritä myöhemmin uudelleen. ({error})"
+    },
+    "unknown_error": {
+      "message": "Odottamaton virhe tapahtui. Yritä myöhemmin uudelleen. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Vakiomittauslaitteen tunnus vaaditaan."
+    },
+    "entity_not_found": {
+      "message": "Entiteettiä {entity_id} ei löytynyt."
+    },
+    "entity_unavailable": {
+      "message": "Entiteetti {entity_id} on tilassa {state}."
+    },
+    "invalid_number": {
+      "message": "Entiteetin {entity_id} arvo '{state}' ei ole numero."
+    },
+    "missing_timestamp": {
+      "message": "Entiteetillä {entity_id} ei ole aikaleimaa."
+    },
+    "no_api_token": {
+      "message": "Henkilökohtaista käyttöoikeustunnusta ei ole määritetty. Tarkista tiliasetukset."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Lähetä mittarilukema",
+      "description": "Lähettää anturin nykyisen arvon Energy Trackeriin.",
+      "fields": {
+        "entry_id": {
+          "name": "Tili",
+          "description": "Energy Tracker -tilisi"
+        },
+        "device_id": {
+          "name": "Vakiomittauslaitteen tunnus",
+          "description": "Vakiomittauslaitteen tunnus Energy Tracker -tilissäsi"
+        },
+        "source_entity_id": {
+          "name": "Anturi",
+          "description": "Mittarilukeman tarjoava anturi"
+        },
+        "allow_rounding": {
+          "name": "Salli pyöristys",
+          "description": "Pyöristä arvo vastaamaan mittarin tarkkuutta"
+        }
+      }
+    }
+  }
+}

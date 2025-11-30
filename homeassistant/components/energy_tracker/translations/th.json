@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ตั้งค่า Energy Tracker",
+        "description": "ป้อนโทเค็นการเข้าถึงส่วันบุคคลของคุณเพื่อเชื่อมต่อกับบัญชี Energy Tracker ของคุณ",
+        "data": {
+          "api_token": "โทเค็นการเข้าถึงส่วนบุคคล"
+        }
+      },
+      "reconfigure": {
+        "title": "กำหนดค่า Energy Tracker ใหม่",
+        "description": "อัปเดตโทเค็นบัญชี Energy Tracker ของคุณ ปล่อยช่องโทเค็นว่างเพื่อเก็บโทเค็นที่มีอยู่",
+        "data": {
+          "api_token": "โทเค็นการเข้าถึงส่วนตัว (เว้นว่างเพื่อเก็บที่มีอยู่)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "โทเค็นการเข้าถึงส่วนตัวต้องไม่ว่าง"
+    },
+    "abort": {
+      "already_configured": "โทเค็นการเข้าถึงส่วนตัวนี้ถูกกำหนดค่าแล้ว แต่ละโทเค็นสามารถใช้ได้เพียงครั้งเดียว",
+      "entry_not_found": "ไม่พบรายการกำหนดค่า",
+      "reconfigure_successful": "อัปเดตการกำหนดค่าสำเร็จแล้ว"
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "การตรวจสอบสิทธิ์กับ Energy Tracker ล้มเหลว",
+      "description": "โทเค็นการเข้าถึงส่วนตัวที่กำหนดค่าไม่ถูกต้องหรือหมดอายุ สร้างโทเค็นใหม่ในบัญชี Energy Tracker ของคุณและอัปเดตโทเค็นในการตั้งค่าการผสานรวม"
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "สิทธิ์ไม่เพียงพอสำหรับ Energy Tracker",
+      "description": "โทเค็นการเข้าถึงส่วนตัวที่กำหนดค่าไม่มีสิทธิ์ที่จำเป็น สร้างโทเค็นใหม่ที่มีสิทธิ์ที่จำเป็นในบัญชี Energy Tracker ของคุณและอัปเดตโทเค็นในการตั้งค่าการผสานรวมนี้"
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "คำขอหมดเวลา ตรวจสอบการเชื่อมต่อเครือข่ายและลองอีกครั้ง"
+    },
+    "network_error": {
+      "message": "ข้อผิดพลาดเครือข่ายระหว่างคำขอ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตและลองอีกครั้ง"
+    },
+    "bad_request": {
+      "message": "ข้อมูลที่ใส่ไม่ถูกต้อง ตรวจสอบข้อมูลอินพุต ({error})"
+    },
+    "auth_failed": {
+      "message": "การตรวจสอบสิทธิ์ล้มเหลว ตรวจสอบโทเค็นการเข้าถึงส่วนตัวของคุณในการตั้งค่าการผสานรวม"
+    },
+    "device_not_found": {
+      "message": "ไม่พบอุปกรณ์วัดมาตรฐาน ตรวจสอบ ID อุปกรณ์"
+    },
+    "rate_limit": {
+      "message": "คำขอมากเกินไป ลองอีกครั้งใน {retry_after} วินาที"
+    },
+    "rate_limit_no_time": {
+      "message": "คำขอมากเกินไป ลองอีกครั้งในภายหลัง"
+    },
+    "server_error": {
+      "message": "เกิดข้อผิดพลาดของเซิร์ฟเวอร์ ลองอีกครั้งในภายหลัง ({error})"
+    },
+    "unknown_error": {
+      "message": "เกิดข้อผิดพลาดที่ไม่คาดคิด ลองอีกครั้งในภายหลัง ({error})"
+    },
+    "device_id_empty": {
+      "message": "ต้องการ ID อุปกรณ์วัดมาตรฐาน"
+    },
+    "entity_not_found": {
+      "message": "ไม่พบเอนทิตี {entity_id}"
+    },
+    "entity_unavailable": {
+      "message": "เอนทิตี {entity_id} อยู่ในสถานะ {state}"
+    },
+    "invalid_number": {
+      "message": "ค่า '{state}' ของเอนทิตี {entity_id} ไม่ใช่ตัวเลข"
+    },
+    "missing_timestamp": {
+      "message": "เอนทิตี {entity_id} ไม่มีการประทับเวลา"
+    },
+    "no_api_token": {
+      "message": "ไม่ได้กำหนดค่าโทเค็นการเข้าถึงส่วนตัว ตรวจสอบการตั้งค่าบัญชี"
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "ส่งค่ามิเตอร์",
+      "description": "ส่งค่าปัจจุบันของเซ็นเซอร์ไปยัง Energy Tracker",
+      "fields": {
+        "entry_id": {
+          "name": "บัญชี",
+          "description": "บัญชี Energy Tracker ของคุณ"
+        },
+        "device_id": {
+          "name": "ID อุปกรณ์วัดมาตรฐาน",
+          "description": "ID ของอุปกรณ์วัดมาตรฐานในบัญชี Energy Tracker ของคุณ"
+        },
+        "source_entity_id": {
+          "name": "เซ็นเซอร์",
+          "description": "เซ็นเซอร์ที่ให้ค่ามิเตอร์"
+        },
+        "allow_rounding": {
+          "name": "อนุญาตให้ปัดเศษ",
+          "description": "ปัดเศษค่าให้ตรงกับความแม่นยำของมิเตอร์"
+        }
+      }
+    }
+  }
+}

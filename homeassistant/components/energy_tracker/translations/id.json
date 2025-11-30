@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Siapkan Energy Tracker",
+        "description": "Masukkan token akses pribadi Anda untuk terhubung ke akun Energy Tracker Anda.",
+        "data": {
+          "api_token": "Token akses pribadi"
+        }
+      },
+      "reconfigure": {
+        "title": "Konfigurasi Ulang Energy Tracker",
+        "description": "Perbarui token akun Energy Tracker Anda. Biarkan bidang token kosong untuk mempertahankan token yang ada.",
+        "data": {
+          "api_token": "Token akses pribadi (biarkan kosong untuk mempertahankan yang ada)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Token akses pribadi tidak boleh kosong."
+    },
+    "abort": {
+      "already_configured": "Token akses pribadi ini sudah dikonfigurasi. Setiap token hanya dapat digunakan sekali.",
+      "entry_not_found": "Entri konfigurasi tidak ditemukan.",
+      "reconfigure_successful": "Konfigurasi berhasil diperbarui."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Autentikasi dengan Energy Tracker gagal",
+      "description": "Token akses pribadi yang dikonfigurasi tidak valid atau telah kedaluwarsa. Buat token baru di akun Energy Tracker Anda dan perbarui token di pengaturan integrasi."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Izin tidak cukup untuk Energy Tracker",
+      "description": "Token akses pribadi yang dikonfigurasi tidak memiliki izin yang diperlukan. Buat token baru dengan izin yang diperlukan di akun Energy Tracker Anda dan perbarui token di pengaturan integrasi ini."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Waktu permintaan habis. Periksa koneksi jaringan dan coba lagi."
+    },
+    "network_error": {
+      "message": "Kesalahan jaringan selama permintaan. Periksa koneksi internet dan coba lagi."
+    },
+    "bad_request": {
+      "message": "Input tidak valid. Periksa data input. ({error})"
+    },
+    "auth_failed": {
+      "message": "Autentikasi gagal. Periksa token akses pribadi Anda di pengaturan integrasi."
+    },
+    "device_not_found": {
+      "message": "Perangkat pengukur standar tidak ditemukan. Periksa ID perangkat."
+    },
+    "rate_limit": {
+      "message": "Terlalu banyak permintaan. Coba lagi dalam {retry_after} detik."
+    },
+    "rate_limit_no_time": {
+      "message": "Terlalu banyak permintaan. Coba lagi nanti."
+    },
+    "server_error": {
+      "message": "Terjadi kesalahan server. Coba lagi nanti. ({error})"
+    },
+    "unknown_error": {
+      "message": "Terjadi kesalahan yang tidak terduga. Coba lagi nanti. ({error})"
+    },
+    "device_id_empty": {
+      "message": "ID perangkat pengukur standar diperlukan."
+    },
+    "entity_not_found": {
+      "message": "Entitas {entity_id} tidak ditemukan."
+    },
+    "entity_unavailable": {
+      "message": "Entitas {entity_id} dalam keadaan {state}."
+    },
+    "invalid_number": {
+      "message": "Nilai '{state}' dari entitas {entity_id} bukan angka."
+    },
+    "missing_timestamp": {
+      "message": "Entitas {entity_id} tidak memiliki stempel waktu."
+    },
+    "no_api_token": {
+      "message": "Tidak ada token akses pribadi yang dikonfigurasi. Periksa pengaturan akun."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Kirim pembacaan meter",
+      "description": "Mengirimkan nilai saat ini dari sensor ke Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Akun",
+          "description": "Akun Energy Tracker Anda"
+        },
+        "device_id": {
+          "name": "ID perangkat pengukur standar",
+          "description": "ID perangkat pengukur standar di akun Energy Tracker Anda"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor yang menyediakan pembacaan meter"
+        },
+        "allow_rounding": {
+          "name": "Izinkan pembulatan",
+          "description": "Bulatkan nilai agar sesuai dengan presisi meter"
+        }
+      }
+    }
+  }
+}

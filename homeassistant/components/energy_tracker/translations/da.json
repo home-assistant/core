@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Opsæt Energy Tracker",
+        "description": "Indtast dit personlige adgangstoken for at oprette forbindelse til din Energy Tracker-konto.",
+        "data": {
+          "api_token": "Personligt adgangstoken"
+        }
+      },
+      "reconfigure": {
+        "title": "Omkonfigurer Energy Tracker",
+        "description": "Opdater dit Energy Tracker-kontotoken. Lad tokenfeltet stå tomt for at beholde det eksisterende token.",
+        "data": {
+          "api_token": "Personligt adgangstoken (lad stå tomt for at beholde eksisterende)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Personligt adgangstoken må ikke være tomt."
+    },
+    "abort": {
+      "already_configured": "Dette personlige adgangstoken er allerede konfigureret. Hvert token kan kun bruges én gang.",
+      "entry_not_found": "Konfigurationspost ikke fundet.",
+      "reconfigure_successful": "Konfigurationen er blevet opdateret."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Godkendelse med Energy Tracker mislykkedes",
+      "description": "Det konfigurerede personlige adgangstoken er ugyldigt eller udløbet. Opret et nyt token i din Energy Tracker-konto og opdater tokenet i integrationsindstillingerne."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Utilstrækkelige tilladelser til Energy Tracker",
+      "description": "Det konfigurerede personlige adgangstoken har ikke de nødvendige tilladelser. Opret et nyt token med de nødvendige tilladelser i din Energy Tracker-konto og opdater tokenet i denne integrations indstillinger."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Timeout for anmodning. Kontroller netværksforbindelsen og prøv igen."
+    },
+    "network_error": {
+      "message": "Netværksfejl under anmodning. Kontroller internetforbindelsen og prøv igen."
+    },
+    "bad_request": {
+      "message": "Ugyldig input. Kontroller inputdataene. ({error})"
+    },
+    "auth_failed": {
+      "message": "Godkendelse mislykkedes. Kontroller dit personlige adgangstoken i integrationsindstillingerne."
+    },
+    "device_not_found": {
+      "message": "Standard måleenhed ikke fundet. Kontroller enheds-ID."
+    },
+    "rate_limit": {
+      "message": "For mange anmodninger. Prøv igen om {retry_after} sekunder."
+    },
+    "rate_limit_no_time": {
+      "message": "For mange anmodninger. Prøv igen senere."
+    },
+    "server_error": {
+      "message": "Der opstod en serverfejl. Prøv igen senere. ({error})"
+    },
+    "unknown_error": {
+      "message": "Der opstod en uventet fejl. Prøv igen senere. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standard måleenheds-ID er påkrævet."
+    },
+    "entity_not_found": {
+      "message": "Entitet {entity_id} ikke fundet."
+    },
+    "entity_unavailable": {
+      "message": "Entitet {entity_id} er {state}."
+    },
+    "invalid_number": {
+      "message": "Værdien '{state}' for entitet {entity_id} er ikke et tal."
+    },
+    "missing_timestamp": {
+      "message": "Entitet {entity_id} har intet tidsstempel."
+    },
+    "no_api_token": {
+      "message": "Intet personligt adgangstoken er konfigureret. Kontroller kontoindstillinger."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Send målerstand",
+      "description": "Sender den aktuelle værdi fra en sensor til Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Konto",
+          "description": "Din Energy Tracker-konto"
+        },
+        "device_id": {
+          "name": "Standard måleenheds-ID",
+          "description": "ID for standard måleenhed i din Energy Tracker-konto"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor der leverer målerstanden"
+        },
+        "allow_rounding": {
+          "name": "Tillad afrunding",
+          "description": "Afrund værdien for at matche målerpræcision"
+        }
+      }
+    }
+  }
+}

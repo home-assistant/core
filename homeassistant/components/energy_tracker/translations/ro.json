@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurați Energy Tracker",
+        "description": "Introduceți token-ul dvs. de acces personal pentru a vă conecta la contul Energy Tracker.",
+        "data": {
+          "api_token": "Token de acces personal"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurați Energy Tracker",
+        "description": "Actualizați token-ul contului dvs. Energy Tracker. Lăsați câmpul token-ului gol pentru a păstra token-ul existent.",
+        "data": {
+          "api_token": "Token de acces personal (lăsați gol pentru a păstra existentul)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Tokenul de acces personal nu poate fi gol."
+    },
+    "abort": {
+      "already_configured": "Acest token de acces personal este deja configurat. Fiecare token poate fi utilizat o singură dată.",
+      "entry_not_found": "Intrarea de configurație nu a fost găsită.",
+      "reconfigure_successful": "Configurația a fost actualizată cu succes."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Autentificarea cu Energy Tracker a eșuat",
+      "description": "Tokenul de acces personal configurat este invalid sau a expirat. Creați un token nou în contul dvs. Energy Tracker și actualizați tokenul în setările integrării."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Permisiuni insuficiente pentru Energy Tracker",
+      "description": "Tokenul de acces personal configurat nu are permisiunile necesare. Creați un token nou cu permisiunile necesare în contul dvs. Energy Tracker și actualizați tokenul în setările acestei integrări."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Timpul de așteptare pentru cerere a expirat. Verificați conexiunea la rețea și încercați din nou."
+    },
+    "network_error": {
+      "message": "Eroare de rețea în timpul cererii. Verificați conexiunea la internet și încercați din nou."
+    },
+    "bad_request": {
+      "message": "Date de intrare nevalide. Verificați datele de intrare. ({error})"
+    },
+    "auth_failed": {
+      "message": "Autentificarea a eșuat. Verificați tokenul dvs. de acces personal în setările integrării."
+    },
+    "device_not_found": {
+      "message": "Dispozitivul de măsurare standard nu a fost găsit. Verificați ID-ul dispozitivului."
+    },
+    "rate_limit": {
+      "message": "Prea multe cereri. Încercați din nou peste {retry_after} secunde."
+    },
+    "rate_limit_no_time": {
+      "message": "Prea multe cereri. Încercați din nou mai târziu."
+    },
+    "server_error": {
+      "message": "A apărut o eroare de server. Încercați din nou mai târziu. ({error})"
+    },
+    "unknown_error": {
+      "message": "A apărut o eroare neașteptată. Încercați din nou mai târziu. ({error})"
+    },
+    "device_id_empty": {
+      "message": "ID-ul dispozitivului de măsurare standard este necesar."
+    },
+    "entity_not_found": {
+      "message": "Entitatea {entity_id} nu a fost găsită."
+    },
+    "entity_unavailable": {
+      "message": "Entitatea {entity_id} este în starea {state}."
+    },
+    "invalid_number": {
+      "message": "Valoarea '{state}' a entității {entity_id} nu este un număr."
+    },
+    "missing_timestamp": {
+      "message": "Entitatea {entity_id} nu are un timestamp."
+    },
+    "no_api_token": {
+      "message": "Niciun token de acces personal nu este configurat. Verificați setările contului."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Trimite citirea contorului",
+      "description": "Trimite valoarea curentă a unui senzor către Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Cont",
+          "description": "Contul dvs. Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID dispozitiv de măsurare standard",
+          "description": "ID-ul dispozitivului de măsurare standard din contul dvs. Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Senzor",
+          "description": "Senzorul care furnizează citirea contorului"
+        },
+        "allow_rounding": {
+          "name": "Permite rotunjirea",
+          "description": "Rotunjește valoarea pentru a se potrivi cu precizia contorului"
+        }
+      }
+    }
+  }
+}

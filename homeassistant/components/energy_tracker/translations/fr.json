@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer Energy Tracker",
+        "description": "Entrez votre jeton d'accès personnel pour vous connecter à votre compte Energy Tracker.",
+        "data": {
+          "api_token": "Jeton d'accès personnel"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Energy Tracker",
+        "description": "Mettez à jour le jeton de votre compte Energy Tracker. Laissez le champ du jeton vide pour conserver le jeton existant.",
+        "data": {
+          "api_token": "Jeton d'accès personnel (laisser vide pour conserver l'existant)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Le jeton d'accès personnel ne peut pas être vide."
+    },
+    "abort": {
+      "already_configured": "Ce jeton d'accès personnel est déjà configuré. Chaque jeton ne peut être utilisé qu'une seule fois.",
+      "entry_not_found": "Entrée de configuration introuvable.",
+      "reconfigure_successful": "Configuration mise à jour avec succès."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Échec de l'authentification avec Energy Tracker",
+      "description": "Le jeton d'accès personnel configuré n'est pas valide ou a expiré. Veuillez créer un nouveau jeton dans votre compte Energy Tracker et mettre à jour le jeton dans les paramètres de l'intégration."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Autorisations insuffisantes pour Energy Tracker",
+      "description": "Le jeton d'accès personnel configuré ne dispose pas des autorisations nécessaires. Veuillez créer un nouveau jeton avec les autorisations nécessaires dans votre compte Energy Tracker et mettre à jour le jeton dans les paramètres de cette intégration."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Délai d'attente dépassé. Veuillez vérifier la connexion réseau et réessayer."
+    },
+    "network_error": {
+      "message": "Erreur réseau lors de la requête. Veuillez vérifier la connexion Internet et réessayer."
+    },
+    "bad_request": {
+      "message": "Entrée non valide. Veuillez vérifier les données d'entrée. ({error})"
+    },
+    "auth_failed": {
+      "message": "Échec de l'authentification. Veuillez vérifier votre jeton d'accès personnel dans les paramètres de l'intégration."
+    },
+    "device_not_found": {
+      "message": "Dispositif de mesure standard introuvable. Veuillez vérifier l'ID du dispositif."
+    },
+    "rate_limit": {
+      "message": "Trop de requêtes. Veuillez réessayer dans {retry_after} secondes."
+    },
+    "rate_limit_no_time": {
+      "message": "Trop de requêtes. Veuillez réessayer plus tard."
+    },
+    "server_error": {
+      "message": "Une erreur serveur s'est produite. Veuillez réessayer plus tard. ({error})"
+    },
+    "unknown_error": {
+      "message": "Une erreur inattendue s'est produite. Veuillez réessayer plus tard. ({error})"
+    },
+    "device_id_empty": {
+      "message": "L'ID du dispositif de mesure standard est requis."
+    },
+    "entity_not_found": {
+      "message": "Entité {entity_id} introuvable."
+    },
+    "entity_unavailable": {
+      "message": "L'entité {entity_id} est {state}."
+    },
+    "invalid_number": {
+      "message": "La valeur '{state}' de l'entité {entity_id} n'est pas un nombre."
+    },
+    "missing_timestamp": {
+      "message": "L'entité {entity_id} n'a pas d'horodatage."
+    },
+    "no_api_token": {
+      "message": "Aucun jeton d'accès personnel configuré. Vérifiez les paramètres du compte."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Envoyer le relevé de compteur",
+      "description": "Envoie la valeur actuelle d'un capteur à Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Compte",
+          "description": "Votre compte Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID du dispositif de mesure standard",
+          "description": "ID du dispositif de mesure standard dans votre compte Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Capteur",
+          "description": "Capteur qui fournit le relevé de compteur"
+        },
+        "allow_rounding": {
+          "name": "Autoriser l'arrondi",
+          "description": "Arrondir la valeur pour correspondre à la précision du compteur"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Energy Tracker beállítása",
+        "description": "Adja meg a személyes hozzáférési tokenjét az Energy Tracker fiókjához való csatlakozáshoz.",
+        "data": {
+          "api_token": "Személyes hozzáférési token"
+        }
+      },
+      "reconfigure": {
+        "title": "Energy Tracker újrakonfigurálása",
+        "description": "Frissítse az Energy Tracker fiókja tokenjét. Hagyja üresen a token mezőt a meglévő token megtartásához.",
+        "data": {
+          "api_token": "Személyes hozzáférési token (hagyja üresen a meglévő megtartásához)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "A személyes hozzáférési token nem lehet üres."
+    },
+    "abort": {
+      "already_configured": "Ez a személyes hozzáférési token már konfigurálva van. Minden token csak egyszer használható.",
+      "entry_not_found": "A konfigurációs bejegyzés nem található.",
+      "reconfigure_successful": "A konfiguráció sikeresen frissítve."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Az Energy Tracker hitelesítése sikertelen",
+      "description": "A konfigurált személyes hozzáférési token érvénytelen vagy lejárt. Hozzon létre új tokent az Energy Tracker-fiókjában, és frissítse a tokent az integráció beállításaiban."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Elégtelen engedélyek az Energy Trackerhez",
+      "description": "A konfigurált személyes hozzáférési token nem rendelkezik a szükséges engedélyekkel. Hozzon létre új tokent a szükséges engedélyekkel az Energy Tracker-fiókjában, és frissítse a tokent ennek az integrációnak a beállításaiban."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "A kérés időtúllépést okozott. Ellenőrizze a hálózati kapcsolatot, és próbálja újra."
+    },
+    "network_error": {
+      "message": "Hálózati hiba történt a kérés során. Ellenőrizze az internetkapcsolatot, és próbálja újra."
+    },
+    "bad_request": {
+      "message": "Érvénytelen bemenet. Ellenőrizze a bemeneti adatokat. ({error})"
+    },
+    "auth_failed": {
+      "message": "A hitelesítés sikertelen. Ellenőrizze a személyes hozzáférési tokent az integráció beállításaiban."
+    },
+    "device_not_found": {
+      "message": "A szabványos mérőeszköz nem található. Ellenőrizze az eszköz azonosítóját."
+    },
+    "rate_limit": {
+      "message": "Túl sok kérés. Próbálja újra {retry_after} másodperc múlva."
+    },
+    "rate_limit_no_time": {
+      "message": "Túl sok kérés. Próbálja meg később."
+    },
+    "server_error": {
+      "message": "Szerverhiba történt. Próbálja meg később. ({error})"
+    },
+    "unknown_error": {
+      "message": "Váratlan hiba történt. Próbálja meg később. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Szabványos mérőeszköz azonosító szükséges."
+    },
+    "entity_not_found": {
+      "message": "Az {entity_id} entitás nem található."
+    },
+    "entity_unavailable": {
+      "message": "Az {entity_id} entitás {state} állapotban van."
+    },
+    "invalid_number": {
+      "message": "Az {entity_id} entitás '{state}' értéke nem szám."
+    },
+    "missing_timestamp": {
+      "message": "Az {entity_id} entitásnak nincs időbélyege."
+    },
+    "no_api_token": {
+      "message": "Nincs konfigurálva személyes hozzáférési token. Ellenőrizze a fiókbeállításokat."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Mérőállás küldése",
+      "description": "Elküldi egy érzékelő aktuális értékét az Energy Trackernek.",
+      "fields": {
+        "entry_id": {
+          "name": "Fiók",
+          "description": "Az Energy Tracker-fiókja"
+        },
+        "device_id": {
+          "name": "Szabványos mérőeszköz azonosító",
+          "description": "A szabványos mérőeszköz azonosítója az Energy Tracker-fiókjában"
+        },
+        "source_entity_id": {
+          "name": "Érzékelő",
+          "description": "A mérőállást szolgáltató érzékelő"
+        },
+        "allow_rounding": {
+          "name": "Kerekítés engedélyezése",
+          "description": "Érték kerekítése a mérő pontosságához"
+        }
+      }
+    }
+  }
+}
