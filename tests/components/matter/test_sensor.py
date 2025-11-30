@@ -642,7 +642,7 @@ async def test_vacuum_actions(
     assert state
     assert state.state == "2025-08-29T21:00:00+00:00"
 
-    set_node_attribute(matter_node, 1, 336, 4, 1756502000)
+    set_node_attribute(matter_node, 1, 336, 4, 809817200)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
