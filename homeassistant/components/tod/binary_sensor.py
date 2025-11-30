@@ -135,7 +135,7 @@ def _parse_side_from_options(
     time_key: str,
     offset_min_key: str,
     side_label: str,
-) -> tuple[time, timedelta]:
+) -> tuple[time | SunEventType, timedelta]:
     """Parse either a fixed time or a sun event + minutes offset from options."""
     kind = opts.get(kind_key)
 
@@ -167,9 +167,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time,
+        after: time | SunEventType,
         after_offset: timedelta,
-        before: time,
+        before: time | SunEventType,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
