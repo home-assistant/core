@@ -127,7 +127,7 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
         )
 
 
-SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
+BLOCK_SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ("device", "overtemp"): BlockBinarySensorDescription(
         key="device|overtemp",
         translation_key="overheating",
@@ -376,7 +376,7 @@ def _async_setup_block_entry(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockSleepingBinarySensor,
         )
     else:
@@ -384,7 +384,7 @@ def _async_setup_block_entry(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockBinarySensor,
         )
         async_setup_entry_rest(
