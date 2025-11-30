@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.const import EVENT_LABS_UPDATED  # noqa: F401
 from homeassistant.util.hass_dict import HassKey
 
 from .models import LabsData
