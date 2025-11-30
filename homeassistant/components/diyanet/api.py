@@ -16,6 +16,12 @@ API_BASE_URL = "https://awqatsalah.diyanet.gov.tr"
 API_LOGIN_URL = f"{API_BASE_URL}/Auth/Login"
 API_REFRESH_TOKEN_URL = f"{API_BASE_URL}/Auth/RefreshToken"
 API_PRAYER_TIME_URL = f"{API_BASE_URL}/api/PrayerTime/Daily"
+API_COUNTRIES_URL = f"{API_BASE_URL}/api/Place/Countries"
+API_STATES_URL = f"{API_BASE_URL}/api/Place/States"
+API_CITIES_URL = f"{API_BASE_URL}/api/Place/Cities"
+API_STATE_BY_COUNTRY_URL = f"{API_BASE_URL}/api/Place/States/{{country_id}}"
+API_CITY_BY_STATE_URL = f"{API_BASE_URL}/api/Place/Cities/{{state_id}}"
+API_CITY_DETAIL_URL = f"{API_BASE_URL}/api/Place/CityDetail/{{city_id}}"
 
 # Token expiration times as per documentation
 ACCESS_TOKEN_EXPIRY = timedelta(minutes=30)
@@ -164,5 +170,109 @@ class DiyanetApiClient:
 
                 raise DiyanetConnectionError("No prayer time data available")
 
+        except ClientError as err:
+            raise DiyanetConnectionError(f"Connection error: {err}") from err
+
+    async def get_countries(self) -> list[dict[str, Any]]:
+        """Get list of countries."""
+        await self._ensure_authenticated()
+        try:
+            headers = {"Authorization": f"Bearer {self._access_token}"}
+            async with self._session.get(API_COUNTRIES_URL, headers=headers) as resp:
+                if resp.status == 401:
+                    await self._refresh_access_token()
+                    headers = {"Authorization": f"Bearer {self._access_token}"}
+                    async with self._session.get(
+                        API_COUNTRIES_URL, headers=headers
+                    ) as retry:
+                        retry.raise_for_status()
+                        data = await retry.json()
+                else:
+                    resp.raise_for_status()
+                    data = await resp.json()
+
+                if not data.get("success"):
+                    raise DiyanetConnectionError("Failed to get countries")
+                items = data.get("data") or []
+                if not isinstance(items, list):
+                    raise DiyanetConnectionError("Invalid countries payload")
+                return items
+        except ClientError as err:
+            raise DiyanetConnectionError(f"Connection error: {err}") from err
+
+    async def get_states(self, country_id: int) -> list[dict[str, Any]]:
+        """Get list of states for a given country."""
+        await self._ensure_authenticated()
+        try:
+            url = API_STATE_BY_COUNTRY_URL.format(country_id=country_id)
+            headers = {"Authorization": f"Bearer {self._access_token}"}
+            async with self._session.get(url, headers=headers) as resp:
+                if resp.status == 401:
+                    await self._refresh_access_token()
+                    headers = {"Authorization": f"Bearer {self._access_token}"}
+                    async with self._session.get(url, headers=headers) as retry:
+                        retry.raise_for_status()
+                        data = await retry.json()
+                else:
+                    resp.raise_for_status()
+                    data = await resp.json()
+
+                if not data.get("success"):
+                    raise DiyanetConnectionError("Failed to get states")
+                items = data.get("data") or []
+                if not isinstance(items, list):
+                    raise DiyanetConnectionError("Invalid states payload")
+                return items
+        except ClientError as err:
+            raise DiyanetConnectionError(f"Connection error: {err}") from err
+
+    async def get_cities(self, state_id: int) -> list[dict[str, Any]]:
+        """Get list of cities for a given state."""
+        await self._ensure_authenticated()
+        try:
+            url = API_CITY_BY_STATE_URL.format(state_id=state_id)
+            headers = {"Authorization": f"Bearer {self._access_token}"}
+            async with self._session.get(url, headers=headers) as resp:
+                if resp.status == 401:
+                    await self._refresh_access_token()
+                    headers = {"Authorization": f"Bearer {self._access_token}"}
+                    async with self._session.get(url, headers=headers) as retry:
+                        retry.raise_for_status()
+                        data = await retry.json()
+                else:
+                    resp.raise_for_status()
+                    data = await resp.json()
+
+                if not data.get("success"):
+                    raise DiyanetConnectionError("Failed to get cities")
+                items = data.get("data") or []
+                if not isinstance(items, list):
+                    raise DiyanetConnectionError("Invalid cities payload")
+                return items
+        except ClientError as err:
+            raise DiyanetConnectionError(f"Connection error: {err}") from err
+
+    async def get_city_detail(self, city_id: int) -> dict[str, Any] | None:
+        """Get details for a single city, if available."""
+        await self._ensure_authenticated()
+        try:
+            url = API_CITY_DETAIL_URL.format(city_id=city_id)
+            headers = {"Authorization": f"Bearer {self._access_token}"}
+            async with self._session.get(url, headers=headers) as resp:
+                if resp.status == 401:
+                    await self._refresh_access_token()
+                    headers = {"Authorization": f"Bearer {self._access_token}"}
+                    async with self._session.get(url, headers=headers) as retry:
+                        retry.raise_for_status()
+                        data = await retry.json()
+                else:
+                    resp.raise_for_status()
+                    data = await resp.json()
+
+                if not data.get("success"):
+                    return None
+                if not isinstance(data.get("data"), dict):
+                    return None
+                return data["data"]
         except ClientError as err:
             raise DiyanetConnectionError(f"Connection error: {err}") from err
