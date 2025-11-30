@@ -739,15 +739,15 @@ async def test_thermostat_setpoint_change_timestamp(
     # Thermostat Cluster / SetpointChangeSourceTimestamp attribute (1/513/50)
     state = hass.states.get("sensor.mock_thermostat_last_change")
     assert state
-    assert state.state == "2025-10-31T23:00:00+00:00"
+    assert state.state == "2025-01-01T00:00:00+00:00"
 
-    # Update to a new timestamp (2024-11-15 12:00:00 UTC)
-    set_node_attribute(matter_node, 1, 513, 50, 1731672000)
+    # Update to a new timestamp (2024-01-01 00:00:00+00:00 UTC)
+    set_node_attribute(matter_node, 1, 513, 50, 757382400)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_thermostat_last_change")
     assert state
-    assert state.state == "2024-11-15T12:00:00+00:00"
+    assert state.state == "2024-01-01T00:00:00+00:00"
 
     # Test zero value (should be None/unknown)
     set_node_attribute(matter_node, 1, 513, 50, 0)
