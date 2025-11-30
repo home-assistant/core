@@ -237,9 +237,7 @@ def test_save_bad_data() -> None:
     with pytest.raises(SerializationError) as excinfo:
         save_json("test4", {"hello": CannotSerializeMe()})
 
-    assert "Failed to serialize to JSON: test4. Bad data at $.hello=" in str(
-        excinfo.value
-    )
+    assert "Bad data at $.hello=" in str(excinfo.value)
 
 
 def test_custom_encoder(tmp_path: Path) -> None:
@@ -306,7 +304,7 @@ def test_find_unserializable_data() -> None:
     assert find_paths_unserializable_data({("A",): 1}) == {"$<key: ('A',)>": ("A",)}
     assert math.isnan(
         find_paths_unserializable_data(
-            float("nan"), dump=partial(json.dumps, allow_nan=False)
+            math.nan, dump=partial(json.dumps, allow_nan=False)
         )["$"]
     )
 

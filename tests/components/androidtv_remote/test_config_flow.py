@@ -1112,6 +1112,11 @@ async def test_options_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "apps"
+    assert result["description_placeholders"] == {
+        "app_id": "",
+        "example_app_id": "com.plexapp.android",
+        "example_app_play_store_url": "https://play.google.com/store/apps/details?id=com.plexapp.android",
+    }
 
     # test save value for new app
     result = await hass.config_entries.options.async_configure(

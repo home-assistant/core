@@ -12,6 +12,14 @@
       "value": 718,
       "unit": "mV"
     },
+    "cl": {
+      "value": 1.2,
+      "unit": "ppm"
+    },
+    "flow_rate": {
+      "value": 150,
+      "unit": "L/s"
+    },
     "ph_type_dosing": {
       "value": "alcalyne",
       "unit": null
@@ -20,7 +28,7 @@
       "value": "proportional",
       "unit": null
     },
-    "ofa_ph_value": {
+    "ofa_ph_time": {
       "value": 0,
       "unit": "min"
     },
@@ -32,7 +40,15 @@
       "value": "proportional",
       "unit": null
     },
-    "ofa_orp_value": {
+    "cl_type_dosing": {
+      "value": "low",
+      "unit": null
+    },
+    "peristaltic_cl_dosing": {
+      "value": "off",
+      "unit": null
+    },
+    "ofa_orp_time": {
       "value": 0,
       "unit": "min"
     },
@@ -62,25 +78,37 @@
     }
   },
   "binary_sensor": {
-    "pump_running": {
+    "pump_alarm": {
       "value": true
     },
-    "ph_level_ok": {
+    "ph_level_alarm": {
       "value": false
     },
-    "orp_level_ok": {
+    "orp_level_alarm": {
       "value": false
     },
-    "flow_rate_ok": {
+    "flow_rate_alarm": {
       "value": false
     },
-    "alarm_relay": {
+    "relay_alarm": {
       "value": true
     },
-    "relay_aux1_ph": {
+    "relay_aux1": {
       "value": false
     },
-    "relay_aux2_orpcl": {
+    "relay_aux2": {
+      "value": false
+    },
+    "relay_aux3": {
+      "value": false
+    },
+    "alarm_ofa_ph": {
+      "value": false
+    },
+    "alarm_ofa_orp": {
+      "value": false
+    },
+    "alarm_ofa_cl": {
       "value": false
     }
   },
@@ -108,10 +136,10 @@
     }
   },
   "switch": {
-    "stop_pool_dosing": {
+    "pause_dosing": {
       "value": false
     },
-    "pump_detection": {
+    "pump_monitoring": {
       "value": true
     },
     "frequency_input": {

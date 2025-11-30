@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
 
@@ -26,7 +27,7 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -180,6 +181,11 @@ async def async_setup_entry(
     """Set up Matter climate platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescription):
+    """Describe Matter Climate entities."""
 
 
 class MatterClimate(MatterEntity, ClimateEntity):
@@ -423,7 +429,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.CLIMATE,
-        entity_description=ClimateEntityDescription(
+        entity_description=MatterClimateEntityDescription(
             key="MatterThermostat",
             name=None,
         ),

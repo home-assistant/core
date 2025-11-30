@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
+import math
 from typing import ClassVar, Final
 
 import voluptuous as vol
@@ -55,6 +56,7 @@ from .const import (
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     KNX_ADDRESS,
+    ClimateConf,
     ColorTempModes,
     CoverConf,
     FanZeroMode,
@@ -86,7 +88,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
         raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
     # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if if xknx DPTNumeric subclass defines it as limit.
-    if min_config is None and dpt_class.value_min == float("-inf"):
+    if min_config is None and dpt_class.value_min == -math.inf:
         raise vol.Invalid(f"'min' key required for value type '{value_type}'")
     if min_config is not None and min_config < dpt_class.value_min:
         raise vol.Invalid(
@@ -94,7 +96,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             f" of value type '{value_type}': {dpt_class.value_min}"
         )
 
-    if max_config is None and dpt_class.value_max == float("inf"):
+    if max_config is None and dpt_class.value_max == math.inf:
         raise vol.Invalid(f"'max' key required for value type '{value_type}'")
     if max_config is not None and max_config > dpt_class.value_max:
         raise vol.Invalid(
@@ -305,10 +307,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
     CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
     CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
-    CONF_SETPOINT_SHIFT_MAX = "setpoint_shift_max"
-    CONF_SETPOINT_SHIFT_MIN = "setpoint_shift_min"
     CONF_TEMPERATURE_ADDRESS = "temperature_address"
-    CONF_TEMPERATURE_STEP = "temperature_step"
     CONF_TARGET_TEMPERATURE_ADDRESS = "target_temperature_address"
     CONF_TARGET_TEMPERATURE_STATE_ADDRESS = "target_temperature_state_address"
     CONF_OPERATION_MODE_ADDRESS = "operation_mode_address"
@@ -326,19 +325,10 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_OPERATION_MODE_NIGHT_ADDRESS = "operation_mode_night_address"
     CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
     CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
-    CONF_OPERATION_MODES = "operation_modes"
-    CONF_CONTROLLER_MODES = "controller_modes"
-    CONF_DEFAULT_CONTROLLER_MODE = "default_controller_mode"
     CONF_ON_OFF_ADDRESS = "on_off_address"
     CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
-    CONF_ON_OFF_INVERT = "on_off_invert"
-    CONF_MIN_TEMP = "min_temp"
-    CONF_MAX_TEMP = "max_temp"
     CONF_FAN_SPEED_ADDRESS = "fan_speed_address"
     CONF_FAN_SPEED_STATE_ADDRESS = "fan_speed_state_address"
-    CONF_FAN_MAX_STEP = "fan_max_step"
-    CONF_FAN_SPEED_MODE = "fan_speed_mode"
-    CONF_FAN_ZERO_MODE = "fan_zero_mode"
     CONF_HUMIDITY_STATE_ADDRESS = "humidity_state_address"
     CONF_SWING_ADDRESS = "swing_address"
     CONF_SWING_STATE_ADDRESS = "swing_state_address"
@@ -358,13 +348,13 @@ class ClimateSchema(KNXPlatformSchema):
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(
-                    CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
+                    ClimateConf.SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
                 ): vol.All(int, vol.Range(min=0, max=32)),
                 vol.Optional(
-                    CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
+                    ClimateConf.SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN
                 ): vol.All(int, vol.Range(min=-32, max=0)),
                 vol.Optional(
-                    CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
+                    ClimateConf.TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
                 ): vol.All(float, vol.Range(min=0, max=2)),
                 vol.Required(CONF_TEMPERATURE_ADDRESS): ga_list_validator,
                 vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): ga_list_validator,
@@ -407,29 +397,29 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ON_OFF_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ON_OFF_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(
-                    CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
+                    ClimateConf.ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
-                vol.Optional(CONF_OPERATION_MODES): vol.All(
+                vol.Optional(ClimateConf.OPERATION_MODES): vol.All(
                     cv.ensure_list,
                     [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
-                vol.Optional(CONF_CONTROLLER_MODES): vol.All(
+                vol.Optional(ClimateConf.CONTROLLER_MODES): vol.All(
                     cv.ensure_list,
                     [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 vol.Optional(
-                    CONF_DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
+                    ClimateConf.DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
                 ): vol.Coerce(HVACMode),
-                vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-                vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+                vol.Optional(ClimateConf.MIN_TEMP): vol.Coerce(float),
+                vol.Optional(ClimateConf.MAX_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
                 vol.Optional(CONF_FAN_SPEED_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_FAN_SPEED_STATE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_FAN_MAX_STEP, default=3): cv.byte,
+                vol.Optional(ClimateConf.FAN_MAX_STEP, default=3): cv.byte,
                 vol.Optional(
-                    CONF_FAN_SPEED_MODE, default=DEFAULT_FAN_SPEED_MODE
+                    ClimateConf.FAN_SPEED_MODE, default=DEFAULT_FAN_SPEED_MODE
                 ): vol.All(vol.Upper, cv.enum(FanSpeedMode)),
-                vol.Optional(CONF_FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
+                vol.Optional(ClimateConf.FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
                     FanZeroMode
                 ),
                 vol.Optional(CONF_SWING_ADDRESS): ga_list_validator,

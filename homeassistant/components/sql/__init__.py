@@ -39,6 +39,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
+from .services import async_setup_services
 from .util import redact_credentials, validate_sql_select
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,9 @@ QUERY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(
+            cv.template, ValueTemplate.from_template, validate_sql_select
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
             cv.template, ValueTemplate.from_template
@@ -71,6 +74,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up SQL from yaml config."""
+    async_setup_services(hass)
+
     if (conf := config.get(DOMAIN)) is None:
         return True
 

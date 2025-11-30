@@ -117,7 +117,9 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
                 # start listening for restored players
                 self._remove_dispatcher = async_dispatcher_connect(
-                    self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
+                    self.hass,
+                    SIGNAL_PLAYER_REDISCOVERED + self.config_entry.entry_id,
+                    self.rediscovered,
                 )
 
         alarm_dict: dict[str, Alarm] = (

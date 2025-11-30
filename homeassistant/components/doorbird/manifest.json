@@ -10,10 +10,10 @@
   "requirements": ["DoorBirdPy==3.0.8"],
   "zeroconf": [
     {
-      "type": "_axis-video._tcp.local.",
       "properties": {
         "macaddress": "1ccae3*"
-      }
+      },
+      "type": "_axis-video._tcp.local."
     }
   ]
 }

@@ -3,16 +3,16 @@
   "name": "Qingping",
   "bluetooth": [
     {
-      "local_name": "Qingping*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "Qingping*"
     },
     {
-      "local_name": "Lee Guitars*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "Lee Guitars*"
     },
     {
-      "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "connectable": false,
+      "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb"
     }
   ],
   "codeowners": ["@bdraco"],

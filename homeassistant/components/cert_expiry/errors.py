@@ -25,3 +25,7 @@ class ConnectionTimeout(TemporaryFailure):
 
 class ConnectionRefused(TemporaryFailure):
     """Network connection refused."""
+
+
+class ConnectionReset(TemporaryFailure):
+    """Network connection reset."""

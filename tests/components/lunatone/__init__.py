@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 BASE_URL: Final = "http://10.0.0.131"
+PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345
 VERSION: Final = "v1.14.1/1.4.3"
 

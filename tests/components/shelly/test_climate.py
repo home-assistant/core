@@ -665,9 +665,7 @@ async def test_rpc_climate_hvac_mode(
     )
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Thermostat.SetConfig", {"config": {"id": 0, "enable": False}}
-    )
+    mock_rpc_device.climate_set_hvac_mode.assert_called_once_with(0, str(HVACMode.OFF))
     assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.OFF
 
@@ -717,9 +715,7 @@ async def test_rpc_climate_set_temperature(
     )
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Thermostat.SetConfig", {"config": {"id": 0, "target_C": 28}}
-    )
+    mock_rpc_device.climate_set_target_temperature.assert_called_once_with(0, 28)
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_TEMPERATURE] == 28
 

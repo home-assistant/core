@@ -1,0 +1,202 @@
+{
+  "items": [
+    {
+      "deviceId": "7ff318f3-3772-524d-3c9f-72fcd26413ed",
+      "name": "[dishwasher] Samsung",
+      "label": "Dishwasher",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-WM-DW-01011",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "beea82e4-8799-4757-ac70-591d76b2b248",
+      "ownerId": "6feed944-1d03-0a9f-3262-060ec4f9797d",
+      "roomId": "f8a4ac44-7f5d-4a73-a6be-189076ec0307",
+      "deviceTypeName": "Samsung OCF Dishwasher",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "dishwasherOperatingState",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.dishwasherOperatingProgress",
+              "version": 1
+            },
+            {
+              "id": "custom.dishwasherOperatingPercentage",
+              "version": 1
+            },
+            {
+              "id": "custom.dishwasherDelayStartTime",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.supportedOptions",
+              "version": 1
+            },
+            {
+              "id": "custom.waterFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.audioVolumeLevel",
+              "version": 1
+            },
+            {
+              "id": "samsungce.autoOpenDoor",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dishwasherJobState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dishwasherWashingCourse",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dishwasherWashingCourseDetails",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dishwasherOperation",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dishwasherWashingOptions",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.energyPlanner",
+              "version": 1
+            },
+            {
+              "id": "samsungce.operationOrigin",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.waterConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Dishwasher",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2024-11-11T21:50:12.084Z",
+      "profile": {
+        "id": "cdd89bbe-004a-37f9-8100-a211e45688f1"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.dishwasher",
+        "name": "[dishwasher] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "DA_DW_TP1_21_COMMON|30008041|40000200001611004981000000200000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "DA_DW_TP1_21_COMMON_30250513",
+        "vendorId": "DA-WM-DW-01011",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.240801",
+        "lastSignupTime": "2024-11-11T21:50:12.032414997Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false,
+        "modelCode": "DW60BG850B00ET"
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "indoorMap": {
+        "coordinates": [111.0, 0.0, 178.0],
+        "rotation": [0.0, 180.0, 0.0],
+        "visible": true,
+        "data": {
+          "expressionType": "both_2d_3d",
+          "lastHideTime": "0",
+          "lastUpdateTime": "1763171338982",
+          "lightingGroupId": "00000000-0000-0000-0000-000000000000"
+        }
+      },
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

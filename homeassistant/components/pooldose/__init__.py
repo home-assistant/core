@@ -3,19 +3,51 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .coordinator import PooldoseConfigEntry, PooldoseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
+    """Migrate old entry."""
+    # Version 1.1 -> 1.2: Migrate entity unique IDs
+    # - ofa_orp_value -> ofa_orp_time
+    # - ofa_ph_value -> ofa_ph_time
+    if entry.version == 1 and entry.minor_version < 2:
+
+        @callback
+        def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+            """Migrate entity unique IDs for pooldose sensors."""
+            new_unique_id = entity_entry.unique_id
+
+            # Check if this entry needs migration
+            if "_ofa_orp_value" in new_unique_id:
+                new_unique_id = new_unique_id.replace("_ofa_orp_value", "_ofa_orp_time")
+            elif "_ofa_ph_value" in new_unique_id:
+                new_unique_id = new_unique_id.replace("_ofa_ph_value", "_ofa_ph_time")
+            else:
+                # No migration needed
+                return None
+
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
+
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:

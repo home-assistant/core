@@ -48,7 +48,10 @@ async def test_pin_request_succeeds(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "authorize"
-        assert result["description_placeholders"] == {"pin": "test-pin"}
+        assert result["description_placeholders"] == {
+            "pin": "test-pin",
+            "auth_url": "https://www.ecobee.com/consumerportal/index.html",
+        }
 
 
 async def test_pin_request_fails(hass: HomeAssistant) -> None:
@@ -107,4 +110,7 @@ async def test_token_request_fails(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "authorize"
         assert result["errors"]["base"] == "token_request_failed"
-        assert result["description_placeholders"] == {"pin": "test-pin"}
+        assert result["description_placeholders"] == {
+            "pin": "test-pin",
+            "auth_url": "https://www.ecobee.com/consumerportal/index.html",
+        }

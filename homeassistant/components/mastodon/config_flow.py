@@ -134,4 +134,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        return self.show_user_form(user_input, errors)
+        return self.show_user_form(
+            user_input,
+            errors,
+            description_placeholders={"example_url": "https://mastodon.social"},
+        )

@@ -1,32 +1,20 @@
 {
   "config": {
-    "flow_title": "{ip}",
-    "step": {
-      "user": {
-        "title": "Fill in your information",
-        "data": {
-          "ip_address": "Hostname or IP address",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
+    "flow_title": "{ip}",
     "step": {
-      "init": {
-        "title": "Configure RainMachine",
+      "user": {
         "data": {
-          "zone_run_time": "Default zone run time (in seconds)",
-          "use_app_run_times": "Use zone run times from the RainMachine app",
-          "allow_inactive_zones_to_run": "Allow disabled zones to be run manually"
-        }
+          "ip_address": "Hostname or IP address",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "title": "Fill in your information"
       }
     }
   },
@@ -94,170 +82,182 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "allow_inactive_zones_to_run": "Allow disabled zones to be run manually",
+          "use_app_run_times": "Use zone run times from the RainMachine app",
+          "zone_run_time": "Default zone run time (in seconds)"
+        },
+        "title": "Configure RainMachine"
+      }
+    }
+  },
   "services": {
     "pause_watering": {
-      "name": "Pause all watering",
       "description": "Pauses all watering activities for a number of seconds.",
       "fields": {
         "device_id": {
-          "name": "Controller",
-          "description": "The controller whose watering activities should be paused."
+          "description": "The controller whose watering activities should be paused.",
+          "name": "Controller"
         },
         "seconds": {
-          "name": "Duration",
-          "description": "The amount of time (in seconds) to pause watering."
+          "description": "The amount of time (in seconds) to pause watering.",
+          "name": "Duration"
         }
-      }
-    },
-    "restrict_watering": {
-      "name": "Restrict all watering",
-      "description": "Restricts all watering activities from starting for a time period.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
-          "description": "The controller whose watering activities should be restricted."
-        },
-        "duration": {
-          "name": "Duration",
-          "description": "The time period to restrict watering activities from starting."
-        }
-      }
-    },
-    "start_program": {
-      "name": "Start program",
-      "description": "Starts a program."
-    },
-    "start_zone": {
-      "name": "Start zone",
-      "description": "Starts a zone.",
-      "fields": {
-        "zone_run_time": {
-          "name": "Run time",
-          "description": "The amount of time (in seconds) to run the zone."
-        }
-      }
-    },
-    "stop_all": {
-      "name": "Stop all watering",
-      "description": "Stops all watering activities.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
-          "description": "The controller whose watering activities should be stopped."
-        }
-      }
-    },
-    "stop_program": {
-      "name": "Stop program",
-      "description": "Stops a program."
-    },
-    "stop_zone": {
-      "name": "Stop zone",
-      "description": "Stops a zone."
-    },
-    "unpause_watering": {
-      "name": "Unpause all watering",
-      "description": "Resumes all paused watering activities.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
-          "description": "The controller whose watering activities should be unpaused."
-        }
-      }
+      },
+      "name": "Pause all watering"
     },
     "push_flow_meter_data": {
-      "name": "Push flow meter data",
       "description": "Sends flow meter data from Home Assistant to the RainMachine device.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
-          "description": "The controller to send flow meter data to."
-        },
-        "value": {
-          "name": "Value",
-          "description": "The flow meter value to send."
+          "description": "The controller to send flow meter data to.",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]"
         },
         "unit_of_measurement": {
-          "name": "Unit of measurement",
-          "description": "The flow meter units to send."
+          "description": "The flow meter units to send.",
+          "name": "Unit of measurement"
+        },
+        "value": {
+          "description": "The flow meter value to send.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Push flow meter data"
     },
     "push_weather_data": {
-      "name": "Push weather data",
-      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
+      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integration.\nSee details of RainMachine API here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
       "fields": {
-        "device_id": {
-          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
-          "description": "The controller for the weather data to be pushed."
-        },
-        "timestamp": {
-          "name": "Timestamp",
-          "description": "UNIX timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used."
-        },
-        "mintemp": {
-          "name": "Min temperature",
-          "description": "Minimum temperature in current period (°C)."
-        },
-        "maxtemp": {
-          "name": "Max temperature",
-          "description": "Maximum temperature in current period (°C)."
-        },
-        "temperature": {
-          "name": "Temperature",
-          "description": "Current temperature (°C)."
-        },
-        "wind": {
-          "name": "Wind speed",
-          "description": "Current wind speed (m/s)."
-        },
-        "solarrad": {
-          "name": "Solar radiation",
-          "description": "Current solar radiation (MJ/m²/h)."
-        },
-        "et": {
-          "name": "Evapotranspiration",
-          "description": "Evapotranspiration (mm)."
-        },
-        "qpf": {
-          "name": "Quantitative Precipitation Forecast",
-          "description": "Quantitative Precipitation Forecast (mm), or QPF. Note: QPF values shouldn't be send as cumulative values but the measured/forecasted values for each hour or day. The RainMachine Mixer will sum all QPF values in the current day to have the day total QPF."
-        },
-        "rain": {
-          "name": "Measured rainfall",
-          "description": "Measured rainfail (mm). Note: RAIN values shouldn't be send as cumulative values but the measured/forecasted values for each hour or day. The RainMachine Mixer will sum all RAIN values in the current day to have the day total RAIN."
-        },
-        "minrh": {
-          "name": "Min relative humidity",
-          "description": "Minimum relative humidity in current period (%RH)."
-        },
-        "maxrh": {
-          "name": "Max relative humidity",
-          "description": "Maximum relative humidity in current period (%RH)."
-        },
         "condition": {
-          "name": "Weather condition code",
-          "description": "Current weather condition code (WNUM)."
+          "description": "Current weather condition code (WNUM).",
+          "name": "Weather condition code"
         },
-        "pressure": {
-          "name": "Barometric pressure",
-          "description": "Current barometric pressure (kPa)."
+        "device_id": {
+          "description": "The controller for the weather data to be pushed.",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]"
         },
         "dewpoint": {
-          "name": "Dew point",
-          "description": "Current dew point (°C)."
+          "description": "Current dew point (°C).",
+          "name": "Dew point"
+        },
+        "et": {
+          "description": "Evapotranspiration (mm).",
+          "name": "Evapotranspiration"
+        },
+        "maxrh": {
+          "description": "Maximum relative humidity in current period (%RH).",
+          "name": "Max relative humidity"
+        },
+        "maxtemp": {
+          "description": "Maximum temperature in current period (°C).",
+          "name": "Max temperature"
+        },
+        "minrh": {
+          "description": "Minimum relative humidity in current period (%RH).",
+          "name": "Min relative humidity"
+        },
+        "mintemp": {
+          "description": "Minimum temperature in current period (°C).",
+          "name": "Min temperature"
+        },
+        "pressure": {
+          "description": "Current barometric pressure (kPa).",
+          "name": "Barometric pressure"
+        },
+        "qpf": {
+          "description": "Quantitative Precipitation Forecast (mm), or QPF. Note: QPF values shouldn't be send as cumulative values but the measured/forecasted values for each hour or day. The RainMachine Mixer will sum all QPF values in the current day to have the day total QPF.",
+          "name": "Quantitative Precipitation Forecast"
+        },
+        "rain": {
+          "description": "Measured rainfail (mm). Note: RAIN values shouldn't be send as cumulative values but the measured/forecasted values for each hour or day. The RainMachine Mixer will sum all RAIN values in the current day to have the day total RAIN.",
+          "name": "Measured rainfall"
+        },
+        "solarrad": {
+          "description": "Current solar radiation (MJ/m²/h).",
+          "name": "Solar radiation"
+        },
+        "temperature": {
+          "description": "Current temperature (°C).",
+          "name": "Temperature"
+        },
+        "timestamp": {
+          "description": "UNIX timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used.",
+          "name": "Timestamp"
+        },
+        "wind": {
+          "description": "Current wind speed (m/s).",
+          "name": "Wind speed"
         }
-      }
+      },
+      "name": "Push weather data"
+    },
+    "restrict_watering": {
+      "description": "Restricts all watering activities from starting for a time period.",
+      "fields": {
+        "device_id": {
+          "description": "The controller whose watering activities should be restricted.",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]"
+        },
+        "duration": {
+          "description": "The time period to restrict watering activities from starting.",
+          "name": "Duration"
+        }
+      },
+      "name": "Restrict all watering"
+    },
+    "start_program": {
+      "description": "Starts a program.",
+      "name": "Start program"
+    },
+    "start_zone": {
+      "description": "Starts a zone.",
+      "fields": {
+        "zone_run_time": {
+          "description": "The amount of time (in seconds) to run the zone.",
+          "name": "Run time"
+        }
+      },
+      "name": "Start zone"
+    },
+    "stop_all": {
+      "description": "Stops all watering activities.",
+      "fields": {
+        "device_id": {
+          "description": "The controller whose watering activities should be stopped.",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]"
+        }
+      },
+      "name": "Stop all watering"
+    },
+    "stop_program": {
+      "description": "Stops a program.",
+      "name": "Stop program"
+    },
+    "stop_zone": {
+      "description": "Stops a zone.",
+      "name": "Stop zone"
+    },
+    "unpause_watering": {
+      "description": "Resumes all paused watering activities.",
+      "fields": {
+        "device_id": {
+          "description": "The controller whose watering activities should be unpaused.",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]"
+        }
+      },
+      "name": "Unpause all watering"
     },
     "unrestrict_watering": {
-      "name": "Unrestrict all watering",
       "description": "Removes all watering restrictions.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
-          "description": "The controller whose watering activities should be unrestricted."
+          "description": "The controller whose watering activities should be unrestricted.",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]"
         }
-      }
+      },
+      "name": "Unrestrict all watering"
     }
   }
 }

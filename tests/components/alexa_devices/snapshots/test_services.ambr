@@ -17,16 +17,40 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'household_device': False,
+        'notifications': dict({
+          'Alarm': dict({
+            'label': 'Morning Alarm',
+            'next_occurrence': datetime.datetime(2023, 10, 1, 7, 0, tzinfo=datetime.timezone.utc),
+            'status': 'ON',
+            'type': 'Alarm',
+          }),
+          'Reminder': dict({
+            'label': 'Take out the trash',
+            'next_occurrence': None,
+            'status': 'ON',
+            'type': 'Reminder',
+          }),
+          'Timer': dict({
+            'label': '',
+            'next_occurrence': None,
+            'status': 'OFF',
+            'type': 'Timer',
+          }),
+        }),
         'online': True,
         'sensors': dict({
           'dnd': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'dnd',
             'scale': None,
             'value': False,
           }),
           'temperature': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'temperature',
             'scale': 'CELSIUS',
             'value': '22.5',
@@ -59,16 +83,40 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'household_device': False,
+        'notifications': dict({
+          'Alarm': dict({
+            'label': 'Morning Alarm',
+            'next_occurrence': datetime.datetime(2023, 10, 1, 7, 0, tzinfo=datetime.timezone.utc),
+            'status': 'ON',
+            'type': 'Alarm',
+          }),
+          'Reminder': dict({
+            'label': 'Take out the trash',
+            'next_occurrence': None,
+            'status': 'ON',
+            'type': 'Reminder',
+          }),
+          'Timer': dict({
+            'label': '',
+            'next_occurrence': None,
+            'status': 'OFF',
+            'type': 'Timer',
+          }),
+        }),
         'online': True,
         'sensors': dict({
           'dnd': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'dnd',
             'scale': None,
             'value': False,
           }),
           'temperature': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'temperature',
             'scale': 'CELSIUS',
             'value': '22.5',

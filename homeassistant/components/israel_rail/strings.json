@@ -1,10 +1,10 @@
 {
   "config": {
-    "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
@@ -28,14 +28,14 @@
       "departure2": {
         "name": "Departure +2"
       },
-      "trains": {
-        "name": "Trains"
-      },
       "platform": {
         "name": "Platform"
       },
       "train_number": {
         "name": "Train number"
+      },
+      "trains": {
+        "name": "Trains"
       }
     }
   }

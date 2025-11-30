@@ -1,20 +1,20 @@
 {
   "entity": {
     "sensor": {
-      "find_count": {
-        "default": "mdi:notebook-edit-outline"
-      },
-      "hide_count": {
-        "default": "mdi:eye-off-outline"
-      },
-      "favorite_points": {
-        "default": "mdi:heart-outline"
-      },
-      "souvenir_count": {
-        "default": "mdi:license"
-      },
       "awarded_favorite_points": {
         "default": "mdi:heart"
+      },
+      "cache_favorite_points": {
+        "default": "mdi:star-check"
+      },
+      "cache_found": {
+        "default": "mdi:package-variant-closed-check"
+      },
+      "cache_found_date": {
+        "default": "mdi:calendar-search"
+      },
+      "cache_hidden_date": {
+        "default": "mdi:calendar-badge"
       },
       "cache_name": {
         "default": "mdi:label"
@@ -22,17 +22,17 @@
       "cache_owner": {
         "default": "mdi:account"
       },
-      "cache_found_date": {
-        "default": "mdi:calendar-search"
+      "favorite_points": {
+        "default": "mdi:heart-outline"
       },
-      "cache_found": {
-        "default": "mdi:package-variant-closed-check"
+      "find_count": {
+        "default": "mdi:notebook-edit-outline"
       },
-      "cache_favorite_points": {
-        "default": "mdi:star-check"
+      "hide_count": {
+        "default": "mdi:eye-off-outline"
       },
-      "cache_hidden_date": {
-        "default": "mdi:calendar-badge"
+      "souvenir_count": {
+        "default": "mdi:license"
       }
     }
   }

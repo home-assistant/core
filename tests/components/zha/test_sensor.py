@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
@@ -581,6 +582,125 @@ async def test_sensor(
 
     # test sensor associated logic
     await test_func(hass, cluster, entity_id)
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "fallback_name",
+        "device_class",
+        "unit",
+        "entity_id_suffix",
+        "expected_friendly_name_suffix",
+    ),
+    [
+        (
+            "this_translation_key_is_not_translated",
+            "Software build",
+            None,
+            None,
+            "software_build",
+            "Software build",
+        ),
+        (
+            "device_status",
+            "I should not be used",
+            None,
+            None,
+            "device_status",
+            "Device status",
+        ),
+        (
+            "this_translation_key_is_not_translated",
+            "Product url",
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            "product_url",
+            "Product url",
+        ),
+        (
+            "device_temperature",
+            "I should not be used",
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            "device_temperature",
+            "Device temperature",
+        ),
+        (
+            None,
+            "I should not be used",
+            SensorDeviceClass.BATTERY,
+            PERCENTAGE,
+            "battery",
+            "Battery",
+        ),
+    ],
+)
+async def test_sensor_name(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+    translation_key: str | None,
+    fallback_name: str,
+    device_class: SensorDeviceClass | None,
+    unit: str | None,
+    entity_id_suffix: str,
+    expected_friendly_name_suffix: str,
+) -> None:
+    """Test ZHA entity name generation.
+
+    This test sets up a v2 quirks sensor with various combinations of
+    translation key, fallback name, and device class to verify that the
+    entity's friendly name is generated correctly.
+
+    Built-in quirks have translations in HA, so those are used.
+    Custom quirks with new translation keys won't have translations.
+    For them, the fallback name should be used instead.
+    If a device class is set but no translation key,
+    the device class name is used.
+    """
+    (
+        QuirkBuilder("Test Manf", "Test Model")
+        .sensor(
+            attribute_name="product_label",  # doesn't matter for this test
+            cluster_id=general.Basic.cluster_id,
+            translation_key=translation_key,
+            fallback_name=fallback_name,
+            device_class=device_class,
+            unit=unit,
+        )
+        .add_to_registry()
+    )
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        manufacturer="Test Manf",
+        model="Test Model",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = f"sensor.test_manf_test_model_{entity_id_suffix}"
+    hass_state = hass.states.get(entity_id)
+    assert hass_state is not None
+
+    # Check that the friendly name matches the expected name.
+    assert (
+        hass_state.attributes.get("friendly_name")
+        == f"Test Manf Test Model {expected_friendly_name_suffix}"
+    )
 
 
 def assert_state(hass: HomeAssistant, entity_id, state, unit_of_measurement):

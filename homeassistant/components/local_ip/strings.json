@@ -1,11 +1,11 @@
 {
-  "title": "Local IP Address",
   "config": {
     "step": {
       "user": {
-        "title": "[%key:component::local_ip::title%]",
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+        "description": "[%key:common::config_flow::description::confirm_setup%]",
+        "title": "[%key:component::local_ip::title%]"
       }
     }
-  }
+  },
+  "title": "Local IP Address"
 }

@@ -1,0 +1,301 @@
+{
+  "traceId": "1234",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "cidFwInfoList": [
+      {
+        "deviceCid": "200s-humidifier",
+        "deviceName": "Humidifier 200s",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 100,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "600s-humidifier",
+        "deviceName": "Humidifier 600S",
+        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "defaultImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "uuid": "00000000-1111-2222-3333-555555555555",
+        "configModule": "WFON_AHM_LUH-A602S-WUS_US",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 101,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "air-purifier",
+        "deviceName": "Air Purifier 131s",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 102,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+        "deviceName": "Air Purifier 200s",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 103,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "400s-purifier",
+        "deviceName": "Air Purifier 400s",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 104,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "600s-purifier",
+        "deviceName": "Air Purifier 600s",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 105,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "dimmable-bulb",
+        "deviceName": "Dimmable Light",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 106,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "tunable-bulb",
+        "deviceName": "Temperature Light",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 107,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "outlet",
+        "deviceName": "Outlet",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 108,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "switch",
+        "deviceName": "Wall Switch",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 109,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "dimmable-switch",
+        "deviceName": "Dimmer Switch",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 110,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      },
+      {
+        "deviceCid": "smarttowerfan",
+        "deviceName": "SmartTowerFan",
+        "deviceImg": "",
+        "defaultImg": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "connectionType": "wifi",
+        "deviceRegion": "US",
+        "code": 0,
+        "msg": null,
+        "firmUpdateInfos": [
+          {
+            "currentVersion": "1.0.0",
+            "latestVersion": "1.0.1",
+            "latestFirmId": 111,
+            "releaseNotes": "Various bug fixes and performance improvements",
+            "pluginName": "mainFw",
+            "priority": 0,
+            "upgradeTimeoutInSec": 180,
+            "isMainFw": false
+          }
+        ]
+      }
+    ],
+    "macIDFwInfoList": null,
+    "configModelFwInfoList": null
+  }
+}

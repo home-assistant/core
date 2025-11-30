@@ -219,7 +219,6 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
         self._attr_code_format = config[CONF_CODE_FORMAT].value
 
-        self._state: AlarmControlPanelState | None = None
         self._attr_supported_features: AlarmControlPanelEntityFeature = (
             AlarmControlPanelEntityFeature(0)
         )
@@ -244,11 +243,6 @@ class AbstractTemplateAlarmControlPanel(
             if (action_config := config.get(action_id)) is not None:
                 yield (action_id, action_config, supported_feature)
 
-    @property
-    def alarm_state(self) -> AlarmControlPanelState | None:
-        """Return the state of the device."""
-        return self._state
-
     async def _async_handle_restored_state(self) -> None:
         if (
             (last_state := await self.async_get_last_state()) is not None
@@ -256,14 +250,14 @@ class AbstractTemplateAlarmControlPanel(
             and last_state.state in _VALID_STATES
             # The trigger might have fired already while we waited for stored data,
             # then we should not restore state
-            and self._state is None
+            and self._attr_alarm_state is None
         ):
-            self._state = AlarmControlPanelState(last_state.state)
+            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
 
     def _handle_state(self, result: Any) -> None:
         # Validate state
         if result in _VALID_STATES:
-            self._state = result
+            self._attr_alarm_state = result
             _LOGGER.debug("Valid state - %s", result)
             return
 
@@ -273,7 +267,7 @@ class AbstractTemplateAlarmControlPanel(
             self.entity_id,
             ", ".join(_VALID_STATES),
         )
-        self._state = None
+        self._attr_alarm_state = None
 
     async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
         """Arm the panel to specified state with supplied script."""
@@ -284,7 +278,7 @@ class AbstractTemplateAlarmControlPanel(
             )
 
         if self._attr_assumed_state:
-            self._state = state
+            self._attr_alarm_state = state
             self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
@@ -376,7 +370,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
     @callback
     def _update_state(self, result):
         if isinstance(result, TemplateError):
-            self._state = None
+            self._attr_alarm_state = None
             return
 
         self._handle_state(result)
@@ -386,7 +380,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         """Set up templates."""
         if self._template:
             self.add_template_attribute(
-                "_state", self._template, None, self._update_state
+                "_attr_alarm_state", self._template, None, self._update_state
             )
         super()._async_setup_templates()
 

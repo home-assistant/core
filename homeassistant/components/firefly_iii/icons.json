@@ -1,14 +1,17 @@
 {
   "entity": {
     "sensor": {
+      "account_balance": {
+        "default": "mdi:currency-usd"
+      },
+      "account_role": {
+        "default": "mdi:account-circle"
+      },
       "account_type": {
-        "default": "mdi:bank",
-        "state": {
-          "expense": "mdi:cash-minus",
-          "revenue": "mdi:cash-plus",
-          "asset": "mdi:account-cash",
-          "liability": "mdi:hand-coin"
-        }
+        "default": "mdi:bank"
+      },
+      "budget": {
+        "default": "mdi:chart-pie"
       },
       "category": {
         "default": "mdi:label"

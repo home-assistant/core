@@ -2735,7 +2735,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-entry]
+# name: test_switch[switch.fake_profile_block_xbox_network-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2748,7 +2748,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2760,7 +2760,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Block Xbox Live',
+    'original_name': 'Block Xbox Network',
     'platform': 'nextdns',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2770,13 +2770,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-state]
+# name: test_switch[switch.fake_profile_block_xbox_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Xbox Live',
+      'friendly_name': 'Fake Profile Block Xbox Network',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

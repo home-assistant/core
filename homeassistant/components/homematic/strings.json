@@ -1,126 +1,126 @@
 {
   "services": {
-    "virtualkey": {
-      "name": "Virtual key",
-      "description": "Simulates a keypress (or other valid action) on CCU/Homegear with virtual or device keys.",
+    "put_paramset": {
+      "description": "Manually changes a device’s paramset. Equivalent to putParamset-method from XML-RPC.",
       "fields": {
         "address": {
-          "name": "Address",
-          "description": "Address of Homematic device or BidCoS-RF for virtual remote."
-        },
-        "channel": {
-          "name": "Channel",
-          "description": "Channel for calling a keypress."
-        },
-        "param": {
-          "name": "Param",
-          "description": "Event to send i.e. PRESS_LONG, PRESS_SHORT."
+          "description": "Address of Homematic device.",
+          "name": "Address"
         },
         "interface": {
-          "name": "Interface",
-          "description": "Set an interface value."
+          "description": "The interface's name from the config.",
+          "name": "Interface"
+        },
+        "paramset": {
+          "description": "A paramset dictionary.",
+          "name": "Paramset"
+        },
+        "paramset_key": {
+          "description": "The paramset_key argument to putParamset.",
+          "name": "Paramset key"
+        },
+        "rx_mode": {
+          "description": "The receive mode used.",
+          "name": "RX mode"
         }
-      }
+      },
+      "name": "Put paramset"
     },
-    "set_variable_value": {
-      "name": "Set variable value",
-      "description": "Sets the value of a system variable.",
-      "fields": {
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name(s) of Homematic central to set value."
-        },
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Name of the variable to set."
-        },
-        "value": {
-          "name": "Value",
-          "description": "New value."
-        }
-      }
+    "reconnect": {
+      "description": "Reconnects to all Homematic hubs.",
+      "name": "Reconnect"
     },
     "set_device_value": {
-      "name": "Set device value",
       "description": "Controls a device manually. Equivalent to setValue-method from XML-RPC.",
       "fields": {
         "address": {
-          "name": "Address",
-          "description": "[%key:component::homematic::services::virtualkey::fields::address::description%]"
+          "description": "[%key:component::homematic::services::virtualkey::fields::address::description%]",
+          "name": "Address"
         },
         "channel": {
-          "name": "Channel",
-          "description": "[%key:component::homematic::services::virtualkey::fields::channel::description%]"
+          "description": "[%key:component::homematic::services::virtualkey::fields::channel::description%]",
+          "name": "Channel"
+        },
+        "interface": {
+          "description": "[%key:component::homematic::services::virtualkey::fields::interface::description%]",
+          "name": "Interface"
         },
         "param": {
-          "name": "[%key:component::homematic::services::virtualkey::fields::param::name%]",
-          "description": "[%key:component::homematic::services::virtualkey::fields::param::description%]"
-        },
-        "interface": {
-          "name": "Interface",
-          "description": "[%key:component::homematic::services::virtualkey::fields::interface::description%]"
+          "description": "[%key:component::homematic::services::virtualkey::fields::param::description%]",
+          "name": "[%key:component::homematic::services::virtualkey::fields::param::name%]"
         },
         "value": {
-          "name": "Value",
-          "description": "[%key:component::homematic::services::set_variable_value::fields::value::description%]"
+          "description": "[%key:component::homematic::services::set_variable_value::fields::value::description%]",
+          "name": "Value"
         },
         "value_type": {
-          "name": "Value type",
-          "description": "Type for new value."
+          "description": "Type for new value.",
+          "name": "Value type"
         }
-      }
-    },
-    "reconnect": {
-      "name": "Reconnect",
-      "description": "Reconnects to all Homematic hubs."
+      },
+      "name": "Set device value"
     },
     "set_install_mode": {
-      "name": "Set install mode",
       "description": "Sets a RPC XML interface into installation mode.",
       "fields": {
+        "address": {
+          "description": "Address of Homematic device or BidCoS-RF to learn.",
+          "name": "Address"
+        },
         "interface": {
-          "name": "Interface",
-          "description": "The interface to set into install mode."
+          "description": "The interface to set into install mode.",
+          "name": "Interface"
         },
         "mode": {
-          "name": "[%key:common::config_flow::data::mode%]",
-          "description": "1= Normal mode / 2= Remove existing old links."
+          "description": "1= Normal mode / 2= Remove existing old links.",
+          "name": "[%key:common::config_flow::data::mode%]"
         },
         "time": {
-          "name": "Time",
-          "description": "Time to run in install mode."
-        },
-        "address": {
-          "name": "Address",
-          "description": "Address of Homematic device or BidCoS-RF to learn."
+          "description": "Time to run in install mode.",
+          "name": "Time"
         }
-      }
+      },
+      "name": "Set install mode"
     },
-    "put_paramset": {
-      "name": "Put paramset",
-      "description": "Manually changes a device’s paramset. Equivalent to putParamset-method from XML-RPC.",
+    "set_variable_value": {
+      "description": "Sets the value of a system variable.",
       "fields": {
-        "interface": {
-          "name": "Interface",
-          "description": "The interface's name from the config."
+        "entity_id": {
+          "description": "Name(s) of Homematic central to set value.",
+          "name": "Entity"
         },
-        "address": {
-          "name": "Address",
-          "description": "Address of Homematic device."
+        "name": {
+          "description": "Name of the variable to set.",
+          "name": "[%key:common::config_flow::data::name%]"
         },
-        "paramset_key": {
-          "name": "Paramset key",
-          "description": "The paramset_key argument to putParamset."
-        },
-        "paramset": {
-          "name": "Paramset",
-          "description": "A paramset dictionary."
-        },
-        "rx_mode": {
-          "name": "RX mode",
-          "description": "The receive mode used."
+        "value": {
+          "description": "New value.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Set variable value"
+    },
+    "virtualkey": {
+      "description": "Simulates a keypress (or other valid action) on CCU/Homegear with virtual or device keys.",
+      "fields": {
+        "address": {
+          "description": "Address of Homematic device or BidCoS-RF for virtual remote.",
+          "name": "Address"
+        },
+        "channel": {
+          "description": "Channel for calling a keypress.",
+          "name": "Channel"
+        },
+        "interface": {
+          "description": "Set an interface value.",
+          "name": "Interface"
+        },
+        "param": {
+          "description": "Event to send i.e. PRESS_LONG, PRESS_SHORT.",
+          "name": "Param"
+        }
+      },
+      "name": "Virtual key"
     }
   }
 }

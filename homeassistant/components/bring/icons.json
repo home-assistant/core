@@ -6,24 +6,24 @@
       }
     },
     "sensor": {
-      "urgent": {
-        "default": "mdi:run-fast"
+      "convenient": {
+        "default": "mdi:fridge-outline"
       },
       "discounted": {
         "default": "mdi:brightness-percent"
       },
-      "convenient": {
-        "default": "mdi:fridge-outline"
+      "list_access": {
+        "default": "mdi:account-lock",
+        "state": {
+          "invitation": "mdi:account-multiple-plus",
+          "shared": "mdi:account-group"
+        }
       },
       "list_language": {
         "default": "mdi:earth"
       },
-      "list_access": {
-        "default": "mdi:account-lock",
-        "state": {
-          "shared": "mdi:account-group",
-          "invitation": "mdi:account-multiple-plus"
-        }
+      "urgent": {
+        "default": "mdi:run-fast"
       }
     },
     "todo": {

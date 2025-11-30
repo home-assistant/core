@@ -1,1 +1,1 @@
-"""Test package for RuuviTag BLE sensor integration."""
+"""Test package for Ruuvi BLE sensor integration."""

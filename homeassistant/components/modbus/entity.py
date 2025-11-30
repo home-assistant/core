@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_NAME,
-    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -50,7 +49,6 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
     CONF_PRECISION,
-    CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -62,6 +60,8 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -163,8 +163,6 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._scale = config[CONF_SCALE]
-        self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
@@ -181,8 +179,6 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             self._precision = config.get(CONF_PRECISION, 2)
         else:
             self._precision = config.get(CONF_PRECISION, 0)
-            if self._precision > 0 or self._scale != int(self._scale):
-                self._value_is_int = False
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
@@ -206,7 +202,12 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | str | bytes) -> str | None:
+    def __process_raw_value(
+        self,
+        entry: float | bytes,
+        scale: float = DEFAULT_SCALE,
+        offset: float = DEFAULT_OFFSET,
+    ) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value is not None and entry in (self._nan_value, -self._nan_value):
             return None
@@ -215,7 +216,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         if entry != entry:  # noqa: PLR0124
             # NaN float detection replace with None
             return None
-        val: float | int = self._scale * entry + self._offset
+        val: float | int = scale * entry + offset
         if self._min_value is not None and val < self._min_value:
             val = self._min_value
         if self._max_value is not None and val > self._max_value:
@@ -226,7 +227,12 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             return str(round(val))
         return f"{float(val):.{self._precision}f}"
 
-    def unpack_structure_result(self, registers: list[int]) -> str | None:
+    def unpack_structure_result(
+        self,
+        registers: list[int],
+        scale: float = DEFAULT_SCALE,
+        offset: float = DEFAULT_OFFSET,
+    ) -> str | None:
         """Convert registers to proper result."""
 
         if self._swap:
@@ -250,7 +256,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
-                v_temp = self.__process_raw_value(entry)
+                v_temp = self.__process_raw_value(entry, scale, offset)
                 if self._data_type != DataType.CUSTOM:
                     v_result.append(str(v_temp))
                 else:
@@ -258,7 +264,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints
-        return self.__process_raw_value(val[0])
+        return self.__process_raw_value(val[0], scale, offset)
 
 
 class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):

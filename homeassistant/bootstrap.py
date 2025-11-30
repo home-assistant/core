@@ -176,6 +176,8 @@ FRONTEND_INTEGRATIONS = {
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup labs for preview features
+    ("labs", {"labs"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
@@ -212,6 +214,7 @@ DEFAULT_INTEGRATIONS = {
     "backup",
     "frontend",
     "hardware",
+    "labs",
     "logger",
     "network",
     "system_health",
@@ -997,7 +1000,7 @@ class _WatchPendingSetups:
             # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
             # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
+                "Waiting for integrations to complete setup: %s",
                 self._setup_started,
             )
 

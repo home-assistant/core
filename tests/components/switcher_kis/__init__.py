@@ -17,7 +17,12 @@ async def init_integration(
     if token is not None:
         data[CONF_TOKEN] = token
 
-    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=DOMAIN)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        entry_id="01K8K1GVZQW5RF1SMCEF1D55NE",
+        unique_id=DOMAIN,
+    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

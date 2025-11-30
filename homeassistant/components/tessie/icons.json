@@ -22,14 +22,14 @@
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
       },
+      "grid_services_power": {
+        "default": "mdi:transmission-tower"
+      },
       "storm_mode_active": {
         "default": "mdi:weather-sunny",
         "state": {
           "on": "mdi:weather-lightning-rainy"
         }
-      },
-      "grid_services_power": {
-        "default": "mdi:transmission-tower"
       },
       "vehicle_state_dashcam_state": {
         "default": "mdi:camera-off",
@@ -69,8 +69,11 @@
       }
     },
     "button": {
-      "wake": {
-        "default": "mdi:sleep-off"
+      "boombox": {
+        "default": "mdi:volume-high"
+      },
+      "enable_keyless_driving": {
+        "default": "mdi:car-key"
       },
       "flash_lights": {
         "default": "mdi:flashlight"
@@ -81,11 +84,8 @@
       "trigger_homelink": {
         "default": "mdi:garage"
       },
-      "enable_keyless_driving": {
-        "default": "mdi:car-key"
-      },
-      "boombox": {
-        "default": "mdi:volume-high"
+      "wake": {
+        "default": "mdi:sleep-off"
       }
     },
     "climate": {
@@ -93,10 +93,10 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "mdi:fan",
-              "on": "mdi:thermometer-auto",
+              "camp": "mdi:tent",
               "dog": "mdi:paw",
-              "camp": "mdi:tent"
+              "off": "mdi:fan",
+              "on": "mdi:thermometer-auto"
             }
           }
         }
@@ -120,75 +120,72 @@
       "climate_state_seat_heater_left": {
         "default": "mdi:car-seat",
         "state": {
+          "high": "mdi:car-seat-heater",
           "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
-        }
-      },
-      "climate_state_seat_heater_right": {
-        "default": "mdi:car-seat",
-        "state": {
-          "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
-        }
-      },
-      "climate_state_seat_heater_rear_left": {
-        "default": "mdi:car-seat",
-        "state": {
-          "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
+          "medium": "mdi:car-seat-heater"
         }
       },
       "climate_state_seat_heater_rear_center": {
         "default": "mdi:car-seat",
         "state": {
+          "high": "mdi:car-seat-heater",
           "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
+          "medium": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "high": "mdi:car-seat-heater",
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater"
         }
       },
       "climate_state_seat_heater_rear_right": {
         "default": "mdi:car-seat",
         "state": {
+          "high": "mdi:car-seat-heater",
           "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
+          "medium": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "high": "mdi:car-seat-heater",
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater"
         }
       },
       "climate_state_seat_heater_third_row_left": {
         "default": "mdi:car-seat",
         "state": {
+          "high": "mdi:car-seat-heater",
           "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
+          "medium": "mdi:car-seat-heater"
         }
       },
       "climate_state_seat_heater_third_row_right": {
         "default": "mdi:car-seat",
         "state": {
+          "high": "mdi:car-seat-heater",
           "low": "mdi:car-seat-heater",
-          "medium": "mdi:car-seat-heater",
-          "high": "mdi:car-seat-heater"
+          "medium": "mdi:car-seat-heater"
         }
       }
     },
     "sensor": {
+      "battery_power": {
+        "default": "mdi:home-battery"
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
       },
       "charge_state_minutes_to_full_charge": {
         "default": "mdi:clock-end"
       },
-      "drive_state_shift_state": {
-        "default": "mdi:car-shift-pattern"
-      },
-      "vehicle_state_odometer": {
-        "default": "mdi:counter"
-      },
-      "drive_state_active_route_traffic_minutes_delay": {
-        "default": "mdi:clock-alert-outline"
+      "drive_state_active_route_destination": {
+        "default": "mdi:map-marker"
       },
       "drive_state_active_route_miles_to_arrival": {
         "default": "mdi:map-marker-distance"
@@ -196,11 +193,11 @@
       "drive_state_active_route_minutes_to_arrival": {
         "default": "mdi:timer-marker-outline"
       },
-      "drive_state_active_route_destination": {
-        "default": "mdi:map-marker"
+      "drive_state_active_route_traffic_minutes_delay": {
+        "default": "mdi:clock-alert-outline"
       },
-      "battery_power": {
-        "default": "mdi:home-battery"
+      "drive_state_shift_state": {
+        "default": "mdi:car-shift-pattern"
       },
       "energy_left": {
         "default": "mdi:battery"
@@ -223,6 +220,9 @@
       "total_pack_energy": {
         "default": "mdi:battery-high"
       },
+      "vehicle_state_odometer": {
+        "default": "mdi:counter"
+      },
       "vin": {
         "default": "mdi:car-electric"
       },
@@ -237,26 +237,26 @@
       }
     },
     "switch": {
+      "charge_state_charge_enable_request": {
+        "default": "mdi:ev-plug-ccs2"
+      },
       "climate_state_defrost_mode": {
         "default": "mdi:car-defrost-front"
       },
-      "vehicle_state_sentry_mode": {
-        "default": "mdi:radiobox-marked"
-      },
       "climate_state_steering_wheel_heater": {
         "default": "mdi:steering"
-      },
-      "vehicle_state_valet_mode": {
-        "default": "mdi:bow-tie"
-      },
-      "charge_state_charge_enable_request": {
-        "default": "mdi:ev-plug-ccs2"
       },
       "components_disallow_charge_from_grid_with_solar_installed": {
         "state": {
           "false": "mdi:transmission-tower",
           "true": "mdi:solar-power"
         }
+      },
+      "vehicle_state_sentry_mode": {
+        "default": "mdi:radiobox-marked"
+      },
+      "vehicle_state_valet_mode": {
+        "default": "mdi:bow-tie"
       }
     }
   }

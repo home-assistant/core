@@ -1,6 +1,6 @@
 """Support for services."""
 
-from aioamazondevices.sounds import SOUNDS_LIST
+from aioamazondevices.const.sounds import SOUNDS_LIST
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState

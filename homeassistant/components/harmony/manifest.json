@@ -10,8 +10,8 @@
   "requirements": ["aioharmony==0.5.3"],
   "ssdp": [
     {
-      "manufacturer": "Logitech",
-      "deviceType": "urn:myharmony-com:device:harmony:1"
+      "deviceType": "urn:myharmony-com:device:harmony:1",
+      "manufacturer": "Logitech"
     }
   ]
 }

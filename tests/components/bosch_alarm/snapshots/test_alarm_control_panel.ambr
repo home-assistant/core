@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_alarm_control_panel[None-amax_3000][alarm_control_panel.area1-entry]
+# name: test_alarm_control_panel[amax_3000-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[None-amax_3000][alarm_control_panel.area1-state]
+# name: test_alarm_control_panel[amax_3000-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
@@ -51,7 +51,7 @@
     'state': 'disarmed',
   })
 # ---
-# name: test_alarm_control_panel[None-b5512][alarm_control_panel.area1-entry]
+# name: test_alarm_control_panel[b5512-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -86,7 +86,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[None-b5512][alarm_control_panel.area1-state]
+# name: test_alarm_control_panel[b5512-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
@@ -103,7 +103,7 @@
     'state': 'disarmed',
   })
 # ---
-# name: test_alarm_control_panel[None-solution_3000][alarm_control_panel.area1-entry]
+# name: test_alarm_control_panel[solution_3000-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -138,7 +138,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[None-solution_3000][alarm_control_panel.area1-state]
+# name: test_alarm_control_panel[solution_3000-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,

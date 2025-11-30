@@ -1,0 +1,147 @@
+{
+  "endpoint": "https://openapi.tuyaus.com",
+  "auth_type": 0,
+  "country_code": "1",
+  "app_type": "tuyaSmart",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "White Noise Machine",
+  "model": "",
+  "category": "bzyd",
+  "product_id": "tkqgkrutewrmbn9c",
+  "product_name": "White Noise Machine",
+  "online": true,
+  "sub": false,
+  "time_zone": "-05:00",
+  "active_time": "2023-02-06T23:04:09+00:00",
+  "create_time": "2023-02-06T23:04:09+00:00",
+  "update_time": "2023-02-06T23:04:11+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["scene", "customize_scene", "colour"]
+      }
+    },
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "switch_music": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "volume_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "stop": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 1440,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["scene", "customize_scene", "colour"]
+      }
+    },
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_music": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "volume_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "stop": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "manual",
+          "wake_up_1",
+          "wake_up_2",
+          "wake_up_3",
+          "wake_up_4",
+          "sleep_1",
+          "sleep_2",
+          "sleep_3",
+          "sleep_4"
+        ]
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 1440,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "work_mode": "scene",
+    "switch_led": false,
+    "colour_data": {
+      "h": 210,
+      "s": 1000,
+      "v": 1000
+    },
+    "switch_music": false,
+    "volume_set": 40,
+    "stop": false,
+    "status": "manual",
+    "countdown": 0
+  }
+}

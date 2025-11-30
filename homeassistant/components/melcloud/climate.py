@@ -408,5 +408,5 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
-            kwargs.get("temperature", self.target_temperature)
+            kwargs.get(ATTR_TEMPERATURE, self.target_temperature)
         )

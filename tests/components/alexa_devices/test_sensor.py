@@ -136,7 +136,12 @@ async def test_unit_of_measurement(
         TEST_DEVICE_1_SN
     ].sensors = {
         sensor: AmazonDeviceSensor(
-            name=sensor, value=api_value, error=False, scale=scale
+            name=sensor,
+            value=api_value,
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=scale,
         )
     }
 
@@ -161,7 +166,12 @@ async def test_sensor_unavailable(
         TEST_DEVICE_1_SN
     ].sensors = {
         "illuminance": AmazonDeviceSensor(
-            name="illuminance", value="800", error=True, scale=None
+            name="illuminance",
+            value="800",
+            error=True,
+            error_msg=None,
+            error_type=None,
+            scale=None,
         )
     }
 

@@ -375,10 +375,6 @@ async def test_api_get_services(
             "homeassistant.helpers.service._load_services_file",
             side_effect=_load_services_file,
         ),
-        patch(
-            "homeassistant.helpers.service.translation.async_get_translations",
-            return_value={},
-        ),
     ):
         resp = await mock_api_client.get(const.URL_API_SERVICES)
 

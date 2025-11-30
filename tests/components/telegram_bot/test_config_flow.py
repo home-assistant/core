@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from telegram import ChatFullInfo, User
+from telegram import AcceptedGiftTypes, ChatFullInfo, User
 from telegram.constants import AccentColor
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
@@ -390,6 +390,7 @@ async def test_subentry_flow(
             type="PRIVATE",
             max_reaction_count=100,
             accent_color_id=AccentColor.COLOR_000,
+            accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
         ),
     ):
         result = await hass.config_entries.subentries.async_configure(
@@ -458,6 +459,7 @@ async def test_subentry_flow_chat_error(
             type="PRIVATE",
             max_reaction_count=100,
             accent_color_id=AccentColor.COLOR_000,
+            accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
         ),
     ):
         result = await hass.config_entries.subentries.async_configure(
@@ -534,6 +536,7 @@ async def test_import_multiple(
                 type="PRIVATE",
                 max_reaction_count=100,
                 accent_color_id=AccentColor.COLOR_000,
+                accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
             ),
         ),
     ):

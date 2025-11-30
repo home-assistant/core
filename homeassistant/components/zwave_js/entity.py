@@ -71,8 +71,6 @@ class ZWaveBaseEntity(Entity):
             )
 
         # Entity class attributes
-        self._attr_name = self.generate_name()
-        self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
         if isinstance(info, NewZwaveDiscoveryInfo):
             self.entity_description = info.entity_description
         else:
@@ -80,6 +78,8 @@ class ZWaveBaseEntity(Entity):
                 self._attr_entity_registry_enabled_default = enabled_default
             if (entity_category := info.entity_category) is not None:
                 self._attr_entity_category = entity_category
+        self._attr_name = self.generate_name()
+        self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
         self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(

@@ -23,10 +23,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 _SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
     key="speaker",
@@ -122,7 +124,10 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
         if media_type != MediaType.MUSIC:
-            raise HomeAssistantError("Only music media type is supported")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="only_music_supported",
+            )
 
         _LOGGER.debug(
             "Playing Media %s for %s Speaker", media_id, self.device.display_name
@@ -131,7 +136,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            raise HomeAssistantError(err) from err
+            _LOGGER.debug("Error playing audio: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_error",
+            ) from err
 
         # update state after starting player
         self._async_updated_event(self.device)

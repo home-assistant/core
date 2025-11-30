@@ -99,6 +99,13 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
+    EcovacsSwitchEntityDescription(
+        capability_fn=lambda c: c.settings.border_spin,
+        key="border_spin",
+        translation_key="border_spin",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 

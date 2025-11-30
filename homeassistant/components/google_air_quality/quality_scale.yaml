@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  config-flow: done
+  brands: done
+  dependency-transparency: done
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: exempt
+    comment: Integration does not have actions
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not have actions
+  runtime-data: done
+
+  # Silver
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: todo
+  action-exceptions:
+    status: exempt
+    comment: Integration does not have actions
+  docs-installation-parameters: todo
+  integration-owner: done
+  parallel-updates: done
+  test-coverage: todo
+  docs-configuration-parameters: todo
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: todo
+  entity-device-class: done
+  entity-translations: done
+  docs-data-update: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Nothing to disable at the moment
+  discovery:
+    status: exempt
+    comment: There is no physical device to discover.
+  exception-translations: done
+  devices: done
+  docs-supported-devices:
+    status: todo
+    comment: There is no physical device which can be supported. We can add a link to the supported countries.
+  icon-translations: done
+  docs-known-limitations: done
+  stale-devices:
+    status: exempt
+    comment: There are no device which can get stale.
+  docs-supported-functions: done
+  repair-issues:
+    status: exempt
+    comment: There is nothing to repair right now.
+  reconfiguration-flow: todo
+  entity-category: done
+  dynamic-devices:
+    status: exempt
+    comment: There are no device which can be added.
+  docs-troubleshooting: done
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: done
+  strict-typing: todo
+  inject-websession: done

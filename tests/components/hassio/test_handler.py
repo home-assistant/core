@@ -7,7 +7,6 @@ from typing import Any, Literal
 from aiohttp import hdrs, web
 import pytest
 
-from homeassistant.components.hassio import handler
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -209,7 +208,6 @@ async def test_api_ingress_panels(
     ("api_call", "method", "payload"),
     [
         ("get_network_info", "GET", None),
-        ("update_diagnostics", "POST", True),
     ],
 )
 @pytest.mark.usefixtures("socket_enabled")
@@ -255,90 +253,6 @@ async def test_api_headers(
         assert received_request.headers[hdrs.CONTENT_TYPE] == "application/json"
     else:
         assert received_request.headers[hdrs.CONTENT_TYPE] == "application/octet-stream"
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_api_get_green_settings(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.get(
-        "http://127.0.0.1/os/boards/green",
-        json={
-            "result": "ok",
-            "data": {
-                "activity_led": True,
-                "power_led": True,
-                "system_health_led": True,
-            },
-        },
-    )
-
-    assert await handler.async_get_green_settings(hass) == {
-        "activity_led": True,
-        "power_led": True,
-        "system_health_led": True,
-    }
-    assert aioclient_mock.call_count == 1
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_api_set_green_settings(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.post(
-        "http://127.0.0.1/os/boards/green",
-        json={"result": "ok", "data": {}},
-    )
-
-    assert (
-        await handler.async_set_green_settings(
-            hass, {"activity_led": True, "power_led": True, "system_health_led": True}
-        )
-        == {}
-    )
-    assert aioclient_mock.call_count == 1
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_api_get_yellow_settings(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.get(
-        "http://127.0.0.1/os/boards/yellow",
-        json={
-            "result": "ok",
-            "data": {"disk_led": True, "heartbeat_led": True, "power_led": True},
-        },
-    )
-
-    assert await handler.async_get_yellow_settings(hass) == {
-        "disk_led": True,
-        "heartbeat_led": True,
-        "power_led": True,
-    }
-    assert aioclient_mock.call_count == 1
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_api_set_yellow_settings(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.post(
-        "http://127.0.0.1/os/boards/yellow",
-        json={"result": "ok", "data": {}},
-    )
-
-    assert (
-        await handler.async_set_yellow_settings(
-            hass, {"disk_led": True, "heartbeat_led": True, "power_led": True}
-        )
-        == {}
-    )
-    assert aioclient_mock.call_count == 1
 
 
 @pytest.mark.usefixtures("hassio_stubs")

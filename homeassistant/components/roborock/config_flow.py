@@ -7,7 +7,7 @@ from copy import deepcopy
 import logging
 from typing import Any
 
-from roborock.containers import UserData
+from roborock.data import UserData
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
     RoborockException,

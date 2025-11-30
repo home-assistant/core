@@ -13,5 +13,5 @@
     "momonga.sk_wrapper_logger"
   ],
   "quality_scale": "bronze",
-  "requirements": ["pyserial==3.5", "momonga==0.1.5"]
+  "requirements": ["pyserial==3.5", "momonga==0.2.0"]
 }

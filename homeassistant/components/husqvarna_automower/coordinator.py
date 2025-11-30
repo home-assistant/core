@@ -182,14 +182,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 "Failed to listen to websocket. Trying to reconnect: %s",
                 err,
             )
-        if not hass.is_stopping:
-            await asyncio.sleep(self.reconnect_time)
-            self.reconnect_time = min(self.reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-            entry.async_create_background_task(
-                hass,
-                self.client_listen(hass, entry, automower_client),
-                "reconnect_task",
-            )
 
     def _should_poll(self) -> bool:
         """Return True if at least one mower is connected and at least one is not OFF."""

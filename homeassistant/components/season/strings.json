@@ -1,24 +1,23 @@
 {
-  "title": "Season",
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "step": {
       "user": {
         "data": {
           "type": "Type of season definition"
         }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "entity": {
     "sensor": {
       "season": {
         "state": {
+          "autumn": "Autumn",
           "spring": "Spring",
           "summer": "Summer",
-          "autumn": "Autumn",
           "winter": "Winter"
         }
       }
@@ -31,5 +30,6 @@
         "meteorological": "Meteorological"
       }
     }
-  }
+  },
+  "title": "Season"
 }

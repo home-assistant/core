@@ -1,0 +1,85 @@
+"""Utils functions."""
+
+from enum import Enum
+
+
+class DeviceType(Enum):
+    """Device types enum."""
+
+    GENERIC = "mdi:lan-connect"
+    MOBILE = PHONE = "mdi:cellphone"
+    TABLET = IPOD = EREADER = "mdi:tablet"
+    WATCH = WEARABLE = "mdi:watch"
+    CAR = AUTOMOTIVE = "mdi:car-back"
+    MEDIA_PLAYER = "mdi:volume-high"
+    TELEVISION = "mdi:television"
+    GAME_CONSOLE = "mdi:nintendo-game-boy"
+    STREAMING_DONGLE = "mdi:cast"
+    LOUDSPEAKER = SOUND_SYSTEM = STB = SATELLITE = MUSIC = "mdi:speaker"
+    DISC_PLAYER = "mdi:disk-player"
+    REMOTE_CONTROL = "mdi:remote-tv"
+    RADIO = "mdi:radio"
+    PHOTO_CAMERA = PHOTOS = "mdi:camera"
+    MICROPHONE = VOICE_CONTROL = "mdi:microphone"
+    PROJECTOR = "mdi:projector"
+    COMPUTER = DESKTOP = "mdi:desktop-tower"
+    LAPTOP = "mdi:laptop"
+    PRINTER = "mdi:printer"
+    SCANNER = "mdi:scanner"
+    POS = "mdi:printer-pos"
+    CLOCK = "mdi:clock"
+    BARCODE = "mdi:barcode"
+    SURVEILLANCE_CAMERA = BABY_MONITOR = PET_MONITOR = "mdi:cctv"
+    POE_PLUG = HEALTH_MONITOR = SMART_HOME = SMART_METER = APPLIANCE = SLEEP = (
+        "mdi:home-automation"
+    )
+    SMART_PLUG = "mdi:power-plug"
+    LIGHT = "mdi:lightbulb"
+    THERMOSTAT = HEATING = "mdi:home-thermometer"
+    POWER_SYSTEM = ENERGY = "mdi:lightning-bolt"
+    SOLAR_PANEL = "mdi:solar-power"
+    WASHER = "mdi:washing-machine"
+    FRIDGE = "mdi:fridge"
+    CLEANER = "mdi:vacuum"
+    GARAGE = "mdi:garage"
+    SPRINKLER = "mdi:sprinkler"
+    BELL = "mdi:doorbell"
+    KEY_LOCK = "mdi:lock-smart"
+    CONTROL_PANEL = SMART_CONTROLLER = "mdi:alarm-panel"
+    SCALE = "mdi:scale-bathroom"
+    TOY = "mdi:teddy-bear"
+    ROBOT = "mdi:robot"
+    WEATHER = "mdi:weather-cloudy"
+    ALARM = "mdi:alarm-light"
+    MOTION_DETECTOR = "mdi:motion-sensor"
+    SMOKE = HUMIDITY = SENSOR = DOMOTZ_BOX = FINGBOX = "mdi:smoke-detector"
+    ROUTER = MODEM = GATEWAY = FIREWALL = VPN = SMALL_CELL = "mdi:router-network"
+    WIFI = WIFI_EXTENDER = "mdi:wifi"
+    NAS_STORAGE = "mdi:nas"
+    SWITCH = "mdi:switch"
+    USB = "mdi:usb"
+    CLOUD = "mdi:cloud"
+    BATTERY = "mdi:battery"
+    NETWORK_APPLIANCE = "mdi:network"
+    VIRTUAL_MACHINE = MAIL_SERVER = FILE_SERVER = PROXY_SERVER = WEB_SERVER = (
+        DOMAIN_SERVER
+    ) = COMMUNICATION = "mdi:monitor"
+    SERVER = "mdi:server"
+    TERMINAL = "mdi:console"
+    DATABASE = "mdi:database"
+    RASPBERRY = ARDUINO = "mdi:raspberry-pi"
+    PROCESSOR = CIRCUIT_CARD = RFID = "mdi:chip"
+    INDUSTRIAL = "mdi:factory"
+    MEDICAL = "mdi:medical-bag"
+    VOIP = CONFERENCING = "mdi:phone-voip"
+    FITNESS = "mdi:dumbbell"
+    POOL = "mdi:pool"
+    SECURITY_SYSTEM = "mdi:security"
+
+
+def get_icon_from_type(type: str) -> str:
+    """Return the right icon based on the type."""
+    try:
+        return DeviceType[type].value
+    except (ValueError, KeyError):
+        return "mdi:lan-connect"

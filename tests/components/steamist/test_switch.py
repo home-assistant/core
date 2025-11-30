@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -19,6 +21,7 @@ from . import (
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("mock_aio_discovery")
 async def test_steam_active(hass: HomeAssistant) -> None:
     """Test that the switches are setup with the expected values when steam is active."""
     client, _ = await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
@@ -38,6 +41,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.steam_active").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("mock_aio_discovery")
 async def test_steam_inactive(hass: HomeAssistant) -> None:
     """Test that the switches are setup with the expected values when steam is not active."""
     client, _ = await _async_setup_entry_with_status(

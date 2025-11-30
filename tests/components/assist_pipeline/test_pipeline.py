@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -12,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components import (
     assist_pipeline,
     conversation,
+    media_player,
     media_source,
     stt,
     tts,
@@ -675,6 +677,17 @@ def test_fallback_intent_filter() -> None:
         _async_local_fallback_intent_filter(
             RecognizeResult(
                 intent=Intent(intent.INTENT_GET_STATE),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is True
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(media_player.INTENT_MEDIA_SEARCH_AND_PLAY),
                 intent_data=IntentData([]),
                 entities={},
                 entities_list=[],
@@ -1625,6 +1638,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
         ),
     ],
 )
+@freeze_time("2025-10-31 12:00:00")
 async def test_chat_log_tts_streaming(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

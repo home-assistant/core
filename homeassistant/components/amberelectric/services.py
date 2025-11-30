@@ -10,6 +10,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.selector import ConfigEntrySelector
@@ -102,7 +103,8 @@ def get_forecasts(channel_type: str, data: dict) -> list[JsonValueType]:
     return results
 
 
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amber integration."""
 
     async def handle_get_forecasts(call: ServiceCall) -> ServiceResponse:

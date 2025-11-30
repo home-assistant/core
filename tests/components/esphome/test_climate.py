@@ -7,6 +7,7 @@ from aioesphomeapi import (
     APIClient,
     ClimateAction,
     ClimateFanMode,
+    ClimateFeature,
     ClimateInfo,
     ClimateMode,
     ClimatePreset,
@@ -107,11 +108,10 @@ async def test_climate_entity_with_step_and_two_point(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_current_temperature=True,
-            supports_two_point_target_temperature=True,
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE,
             visual_target_temperature_step=2,
             visual_current_temperature_step=2,
-            supports_action=False,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
             supported_modes=[ClimateMode.COOL, ClimateMode.HEAT, ClimateMode.AUTO],
@@ -346,13 +346,13 @@ async def test_climate_entity_with_humidity(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_current_temperature=True,
-            supports_two_point_target_temperature=True,
-            supports_action=True,
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
+            | ClimateFeature.SUPPORTS_CURRENT_HUMIDITY
+            | ClimateFeature.SUPPORTS_TARGET_HUMIDITY
+            | ClimateFeature.SUPPORTS_ACTION,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
-            supports_current_humidity=True,
-            supports_target_humidity=True,
             visual_min_humidity=10.1,
             visual_max_humidity=29.7,
         )
@@ -407,9 +407,9 @@ async def test_climate_entity_with_heat(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_current_temperature=True,
-            supports_two_point_target_temperature=True,
-            supports_action=True,
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
+            | ClimateFeature.SUPPORTS_ACTION,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
             supported_modes=[ClimateMode.COOL, ClimateMode.HEAT, ClimateMode.AUTO],
@@ -456,9 +456,9 @@ async def test_climate_entity_with_heat_cool(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_current_temperature=True,
-            supports_two_point_target_temperature=True,
-            supports_action=True,
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
+            | ClimateFeature.SUPPORTS_ACTION,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
             supported_modes=[ClimateMode.COOL, ClimateMode.HEAT, ClimateMode.HEAT_COOL],
@@ -516,7 +516,7 @@ async def test_climate_set_temperature_unsupported_mode(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_two_point_target_temperature=True,
+            feature_flags=ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE,
             supported_modes=[ClimateMode.HEAT, ClimateMode.COOL, ClimateMode.AUTO],
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
@@ -563,13 +563,13 @@ async def test_climate_entity_with_inf_value(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_current_temperature=True,
-            supports_two_point_target_temperature=True,
-            supports_action=True,
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
+            | ClimateFeature.SUPPORTS_CURRENT_HUMIDITY
+            | ClimateFeature.SUPPORTS_TARGET_HUMIDITY
+            | ClimateFeature.SUPPORTS_ACTION,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
-            supports_current_humidity=True,
-            supports_target_humidity=True,
             visual_min_humidity=10.1,
             visual_max_humidity=29.7,
         )
@@ -616,10 +616,10 @@ async def test_climate_entity_attributes(
             object_id="myclimate",
             key=1,
             name="my climate",
-            supports_current_temperature=True,
+            feature_flags=ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
+            | ClimateFeature.SUPPORTS_ACTION,
             visual_target_temperature_step=2,
             visual_current_temperature_step=2,
-            supports_action=True,
             visual_min_temperature=10.0,
             visual_max_temperature=30.0,
             supported_fan_modes=[ClimateFanMode.LOW, ClimateFanMode.HIGH],

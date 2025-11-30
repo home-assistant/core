@@ -5,10 +5,10 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
+              "building_protection": "mdi:sun-snowflake-variant",
               "comfort": "mdi:sofa",
-              "standby": "mdi:home-export-outline",
               "economy": "mdi:leaf",
-              "building_protection": "mdi:sun-snowflake-variant"
+              "standby": "mdi:home-export-outline"
             }
           }
         }
@@ -17,6 +17,9 @@
     "sensor": {
       "individual_address": {
         "default": "mdi:router-network"
+      },
+      "telegram_count": {
+        "default": "mdi:plus-network"
       },
       "telegrams_incoming": {
         "default": "mdi:upload-network"
@@ -29,27 +32,24 @@
       },
       "telegrams_outgoing_error": {
         "default": "mdi:close-network"
-      },
-      "telegram_count": {
-        "default": "mdi:plus-network"
       }
     }
   },
   "services": {
-    "send": {
-      "service": "mdi:email-arrow-right"
-    },
-    "read": {
-      "service": "mdi:email-search"
-    },
     "event_register": {
       "service": "mdi:home-import-outline"
     },
     "exposure_register": {
       "service": "mdi:home-export-outline"
     },
+    "read": {
+      "service": "mdi:email-search"
+    },
     "reload": {
       "service": "mdi:reload"
+    },
+    "send": {
+      "service": "mdi:email-arrow-right"
     }
   }
 }

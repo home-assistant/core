@@ -864,7 +864,7 @@ async def test_translated_unit(
     """Test translated unit."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
         },
@@ -896,7 +896,7 @@ async def test_translated_unit_with_native_unit_raises(
     """Test that translated unit."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
         },

@@ -3,9 +3,9 @@
   "name": "Gardena Bluetooth",
   "bluetooth": [
     {
+      "connectable": true,
       "manufacturer_id": 1062,
-      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-      "connectable": true
+      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
     }
   ],
   "codeowners": ["@elupus"],

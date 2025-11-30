@@ -78,6 +78,7 @@ CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SOUND_PRESSURE = "is_sound_pressure"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
+CONF_IS_TEMPERATURE_DELTA = "is_temperature_delta"
 CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "is_volatile_organic_compounds_parts"
@@ -140,6 +141,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_IS_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
+    SensorDeviceClass.TEMPERATURE_DELTA: [{CONF_TYPE: CONF_IS_TEMPERATURE_DELTA}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS}
     ],
@@ -208,6 +210,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_SPEED,
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
+                    CONF_IS_TEMPERATURE_DELTA,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_IS_VOLTAGE,

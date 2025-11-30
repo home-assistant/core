@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
+from homeassistant.components.hardware import BoardInfo, HardwareInfo
 from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
