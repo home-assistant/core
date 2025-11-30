@@ -190,6 +190,16 @@ HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
 
+def matter_epoch_seconds_to_utc(x: int | None) -> datetime | None:
+    """Convert Matter epoch seconds (since 2000-01-01) to UTC datetime.
+
+    Returns None for non-positive or None values (represents unknown/absent).
+    """
+    if not x or x <= 0:
+        return None
+    return dt_util.utc_from_timestamp(x + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -1471,7 +1481,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="auto_close_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+            device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,
         featuremap_contains=clusters.ValveConfigurationAndControl.Bitmaps.Feature.kTimeSync,
