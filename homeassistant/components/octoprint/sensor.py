@@ -168,6 +168,9 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         else:
             value = api_state.lower().replace(" ", "_")
 
+        _LOGGER.warning(
+            "Unexpected Octoprint state string %r normalized to %r", api_state, value
+        )
         _API_STATE_VALUE[api_state] = value
         self._attr_options.append(value)
         return value
