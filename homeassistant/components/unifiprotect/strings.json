@@ -20,7 +20,9 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "api_key": "API key for your local user account."
+          "api_key": "[%key:component::unifiprotect::config::step::user::data_description::api_key%]",
+          "password": "[%key:component::unifiprotect::config::step::user::data_description::password%]",
+          "username": "[%key:component::unifiprotect::config::step::user::data_description::username%]"
         },
         "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
         "title": "UniFi Protect discovered"
@@ -34,8 +36,11 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "api_key": "API key for your local user account.",
-          "username": "Username for your local (not cloud) user account."
+          "api_key": "[%key:component::unifiprotect::config::step::user::data_description::api_key%]",
+          "host": "[%key:component::unifiprotect::config::step::user::data_description::host%]",
+          "password": "[%key:component::unifiprotect::config::step::user::data_description::password%]",
+          "port": "[%key:component::unifiprotect::config::step::user::data_description::port%]",
+          "username": "[%key:component::unifiprotect::config::step::user::data_description::username%]"
         },
         "description": "Your credentials or API key seem to be missing or invalid. For instructions on how to create a local user or generate a new API key, please refer to the documentation: {local_user_documentation_url}",
         "title": "UniFi Protect reauth"
@@ -51,7 +56,11 @@
         },
         "data_description": {
           "api_key": "API key for your local user account.",
-          "host": "Hostname or IP address of your UniFi Protect device."
+          "host": "Hostname or IP address of your UniFi Protect device.",
+          "password": "Password for your local user account.",
+          "port": "Port of your UniFi Protect device.",
+          "username": "Username for your local (not cloud) user account.",
+          "verify_ssl": "Verify SSL certificate of the UniFi Protect device."
         },
         "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
         "title": "UniFi Protect setup"
@@ -567,8 +576,26 @@
     "api_key_required": {
       "message": "API key is required. Please reauthenticate this integration to provide an API key."
     },
+    "device_not_found": {
+      "message": "No device found for device id: {device_id}"
+    },
+    "no_users_found": {
+      "message": "No users found, please check Protect permissions"
+    },
+    "only_music_supported": {
+      "message": "Only music media type is supported"
+    },
+    "privacy_zone_not_found": {
+      "message": "Could not find privacy zone with name {zone_name} on camera {camera_name}"
+    },
     "protect_version": {
-      "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}."
+      "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}"
+    },
+    "service_error": {
+      "message": "Error calling UniFi Protect service, check the logs for more details"
+    },
+    "stream_error": {
+      "message": "Error playing audio, check the logs for more details"
     }
   },
   "issues": {
@@ -626,6 +653,12 @@
           "disable_rtsp": "Disable the RTSP stream",
           "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
           "override_connection_host": "Override connection host"
+        },
+        "data_description": {
+          "all_updates": "Enable realtime metrics updates. Only use if you have enabled diagnostic sensors and want them updated in realtime.",
+          "disable_rtsp": "Disable the RTSP stream for all cameras. Use this if you don't need live video feeds.",
+          "max_media": "Maximum number of events to load in the Media Browser. Higher values use more RAM.",
+          "override_connection_host": "Override the connection host for the UniFi Protect device."
         },
         "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
         "title": "UniFi Protect options"
