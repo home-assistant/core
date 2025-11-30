@@ -5,6 +5,3 @@ refresh:
       required: false
       selector:
         text:
-  target:
-    entity:
-      domain: sensor

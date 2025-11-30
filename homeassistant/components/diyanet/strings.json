@@ -15,6 +15,11 @@
           "location_id": "Location ID",
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "location_id": "Numeric city/location ID used by Diyanet",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
         "description": "Enter your Diyanet credentials and location ID. Default location ID is for Istanbul (13975)."
       }
     }

@@ -3,9 +3,12 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.diyanet.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.diyanet.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.diyanet.api import (
+    DiyanetAuthError,
+    DiyanetConnectionError,
+)
+from homeassistant.components.diyanet.const import CONF_LOCATION_ID, DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,26 +21,32 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.diyanet.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.diyanet.api.DiyanetApiClient.get_prayer_times",
+            return_value={"gregorianDateLong": "01 January 2025"},
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_EMAIL: "user@example.com",
+                CONF_PASSWORD: "secret",
+                CONF_LOCATION_ID: 13975,
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
+    assert result["title"] == "Diyanet (user@example.com)"
     assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        CONF_EMAIL: "user@example.com",
+        CONF_PASSWORD: "secret",
+        CONF_LOCATION_ID: 13975,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,15 +60,15 @@ async def test_form_invalid_auth(
     )
 
     with patch(
-        "homeassistant.components.diyanet.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+        side_effect=DiyanetAuthError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_EMAIL: "user@example.com",
+                CONF_PASSWORD: "secret",
+                CONF_LOCATION_ID: 13975,
             },
         )
 
@@ -69,26 +78,32 @@ async def test_form_invalid_auth(
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.diyanet.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.diyanet.api.DiyanetApiClient.get_prayer_times",
+            return_value={"gregorianDateLong": "01 January 2025"},
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_EMAIL: "user@example.com",
+                CONF_PASSWORD: "secret",
+                CONF_LOCATION_ID: 13975,
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
+    assert result["title"] == "Diyanet (user@example.com)"
     assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        CONF_EMAIL: "user@example.com",
+        CONF_PASSWORD: "secret",
+        CONF_LOCATION_ID: 13975,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -102,15 +117,15 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "homeassistant.components.diyanet.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+        side_effect=DiyanetConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_EMAIL: "user@example.com",
+                CONF_PASSWORD: "secret",
+                CONF_LOCATION_ID: 13975,
             },
         )
 
@@ -121,25 +136,31 @@ async def test_form_cannot_connect(
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
 
-    with patch(
-        "homeassistant.components.diyanet.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.diyanet.api.DiyanetApiClient.get_prayer_times",
+            return_value={"gregorianDateLong": "01 January 2025"},
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_EMAIL: "user@example.com",
+                CONF_PASSWORD: "secret",
+                CONF_LOCATION_ID: 13975,
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
+    assert result["title"] == "Diyanet (user@example.com)"
     assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        CONF_EMAIL: "user@example.com",
+        CONF_PASSWORD: "secret",
+        CONF_LOCATION_ID: 13975,
     }
     assert len(mock_setup_entry.mock_calls) == 1
