@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any, Literal, TypeGuard
+from typing import Any, Literal, TypeGuard, cast
 
 import voluptuous as vol
 
@@ -224,7 +224,7 @@ class TodSensor(BinarySensorEntity):
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
-            after_event_date = self._naive_time_to_utc_datetime(self._after)
+            after_event_date = self._naive_time_to_utc_datetime(cast(time, self._after))
 
         self._time_after = after_event_date
 
@@ -243,7 +243,9 @@ class TodSensor(BinarySensorEntity):
                 )
         else:
             # Convert local time provided to UTC today, see above
-            before_event_date = self._naive_time_to_utc_datetime(self._before)
+            before_event_date = self._naive_time_to_utc_datetime(
+                cast(time, self._before)
+            )
 
             # It is safe to add timedelta days=1 to UTC as there is no DST
             if before_event_date < after_event_date + self._after_offset:
@@ -296,7 +298,7 @@ class TodSensor(BinarySensorEntity):
         else:
             # Offset is already there
             self._time_after = self._add_one_dst_aware_day(
-                self._time_after, self._after
+                self._time_after, cast(time, self._after)
             )
 
         if _is_sun_event(self._before):
@@ -307,7 +309,7 @@ class TodSensor(BinarySensorEntity):
         else:
             # Offset is already there
             self._time_before = self._add_one_dst_aware_day(
-                self._time_before, self._before
+                self._time_before, cast(time, self._before)
             )
 
     async def async_added_to_hass(self) -> None:
