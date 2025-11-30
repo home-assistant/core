@@ -11,11 +11,7 @@ from random import random
 
 import voluptuous as vol
 
-from homeassistant.components.labs import (
-    EVENT_LABS_UPDATED,
-    EventLabsUpdatedData,
-    async_is_preview_feature_enabled,
-)
+from homeassistant.components.labs import async_is_preview_feature_enabled, async_listen
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -35,7 +31,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.issue_registry import (
@@ -85,11 +81,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     @callback
-    def service_handler(call: ServiceCall | None = None) -> None:
+    def service_handler(call: ServiceCall | None = None) -> ServiceResponse:
         """Do nothing."""
+        return None
 
     hass.services.async_register(
-        DOMAIN, "test_service_1", service_handler, SCHEMA_SERVICE_TEST_SERVICE_1
+        DOMAIN,
+        "test_service_1",
+        service_handler,
+        SCHEMA_SERVICE_TEST_SERVICE_1,
+        description_placeholders={
+            "meep_1": "foo",
+            "meep_2": "bar",
+            "meep_3": "beer",
+            "meep_4": "milk",
+            "meep_5": "https://example.com",
+        },
     )
 
     return True
@@ -120,17 +127,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
     # Subscribe to labs feature updates for kitchen_sink preview repair
-    @callback
-    def _async_labs_updated(event: Event[EventLabsUpdatedData]) -> None:
-        """Handle labs feature update event."""
-        if (
-            event.data["domain"] == "kitchen_sink"
-            and event.data["preview_feature"] == "special_repair"
-        ):
-            _async_update_special_repair(hass)
-
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_LABS_UPDATED, _async_labs_updated)
+        async_listen(
+            hass,
+            domain=DOMAIN,
+            preview_feature="special_repair",
+            listener=lambda: _async_update_special_repair(hass),
+        )
     )
 
     # Check if lab feature is currently enabled and create repair if so
