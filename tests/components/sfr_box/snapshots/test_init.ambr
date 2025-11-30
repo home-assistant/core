@@ -1,0 +1,5 @@
+# serializer version: 1
+# name: test_device_registry
+  list([
+  ])
+# ---

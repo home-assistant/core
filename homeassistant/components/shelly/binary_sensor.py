@@ -30,7 +30,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     ShellySleepingRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
@@ -372,7 +372,7 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
@@ -380,7 +380,7 @@ def _async_setup_block_entry(
             BlockSleepingBinarySensor,
         )
     else:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
