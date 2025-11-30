@@ -42,7 +42,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
     rpc_call,
 )
@@ -107,9 +107,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             self._attr_native_step = description.step_fn(coordinator.device.config[key])
         if description.mode_fn is not None:
             self._attr_mode = description.mode_fn(coordinator.device.config[key])
-
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
 
     @property
     def native_value(self) -> float | None:
@@ -356,7 +353,7 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
@@ -410,9 +407,6 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         """Initialize the sleeping sensor."""
         self.restored_data: NumberExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

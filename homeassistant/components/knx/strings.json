@@ -674,7 +674,7 @@
           "name": "Remove event registration"
         },
         "type": {
-          "description": "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types).",
+          "description": "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see {sensor_value_types_url}).",
           "name": "Value type"
         }
       },
@@ -704,7 +704,7 @@
           "name": "Remove exposure"
         },
         "type": {
-          "description": "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types).",
+          "description": "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see {sensor_value_types_url}).",
           "name": "Value type"
         }
       },
@@ -740,7 +740,7 @@
           "name": "Send as Response"
         },
         "type": {
-          "description": "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types).",
+          "description": "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see {sensor_value_types_url}).",
           "name": "Value type"
         }
       },
