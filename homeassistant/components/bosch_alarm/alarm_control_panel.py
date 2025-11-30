@@ -36,17 +36,6 @@ async def async_setup_entry(
 
 PARALLEL_UPDATES = 0
 
-BG_PANELS = {
-    "D7412GV4",
-    "D9412GV4",
-    "B3512 (US1B)",
-    "B4512 (US1B)",
-    "B5512 (US1B)",
-    "B6512 (US1B)",
-    "B8512G (US1A)",
-    "B9512G (US1A)",
-}
-
 
 class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
     """An alarm control panel entity for a bosch alarm panel."""
@@ -65,8 +54,7 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
         super().__init__(panel, area_id, unique_id, True, False, True)
         self._attr_unique_id = self._area_unique_id
 
-        # Enable ARM_NIGHT for B/G Panels
-        if self.panel.model in BG_PANELS:
+        if self.panel.is_part_arm_instant_supported():
             self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
 
     @property
@@ -80,12 +68,10 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMING
         if self._area.is_pending():
             return AlarmControlPanelState.PENDING
-        if self._area.is_part_armed():
-            # For B/G Panels, distinguish between Arm Home (Part On Delay)
-            # and Arm Night (Part On Instant)
-            if self._area.status == 0x02:  # Part On Instant
-                return AlarmControlPanelState.ARMED_NIGHT
+        if self._area.is_part_armed_delay():
             return AlarmControlPanelState.ARMED_HOME
+        if self._area.is_part_armed_instant():
+            return AlarmControlPanelState.ARMED_NIGHT
         if self._area.is_all_armed():
             return AlarmControlPanelState.ARMED_AWAY
 
@@ -100,7 +86,7 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
         await self.panel.area_arm_part(self._area_id, delay=True)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm night command for B/G Panels."""
+        """Send arm night command."""
         await self.panel.area_arm_part(self._area_id, delay=False)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
