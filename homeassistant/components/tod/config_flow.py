@@ -52,15 +52,14 @@ STEP_USER = vol.Schema(
     }
 )
 
-STEP_AFTER_FIXED = vol.Schema(
-    {
-        vol.Required(CONF_AFTER_TIME): _TIME_SELECTOR,
-    }
-)
+STEP_AFTER_FIXED = vol.Schema({vol.Required(CONF_AFTER_TIME): _TIME_SELECTOR})
 STEP_AFTER_SUN = vol.Schema(
-    {
-        vol.Required(CONF_AFTER_OFFSET_MIN, default=0): _OFFSET_SELECTOR,
-    }
+    {vol.Required(CONF_AFTER_OFFSET_MIN, default=0): _OFFSET_SELECTOR}
+)
+
+STEP_BEFORE_FIXED = vol.Schema({vol.Required(CONF_BEFORE_TIME): _TIME_SELECTOR})
+STEP_BEFORE_SUN = vol.Schema(
+    {vol.Required(CONF_BEFORE_OFFSET_MIN, default=0): _OFFSET_SELECTOR}
 )
 
 
@@ -69,39 +68,10 @@ async def _next_after(data: dict[str, Any]) -> str:
     return "after_fixed" if data.get(CONF_AFTER_KIND) == KIND_FIXED else "after_sun"
 
 
-STEP_BEFORE_FIXED = vol.Schema(
-    {
-        vol.Required(CONF_BEFORE_TIME): _TIME_SELECTOR,
-    }
-)
-STEP_BEFORE_SUN = vol.Schema(
-    {
-        vol.Required(CONF_BEFORE_OFFSET_MIN, default=0): _OFFSET_SELECTOR,
-    }
-)
-
-
 async def _next_before(data: dict[str, Any]) -> str | None:
     """Decide which before step to show."""
     return "before_fixed" if data.get(CONF_BEFORE_KIND) == KIND_FIXED else "before_sun"
 
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_AFTER_KIND, default=KIND_FIXED): _KIND_SELECTOR,
-        vol.Required(CONF_AFTER_TIME): selector.TimeSelector(),
-        vol.Required(CONF_AFTER_OFFSET_MIN, default=0): _OFFSET_SELECTOR,
-        vol.Required(CONF_BEFORE_KIND, default=KIND_FIXED): _KIND_SELECTOR,
-        vol.Required(CONF_BEFORE_TIME): selector.TimeSelector(),
-        vol.Required(CONF_BEFORE_OFFSET_MIN, default=0): _OFFSET_SELECTOR,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-    }
-).extend(OPTIONS_SCHEMA.schema)
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(STEP_USER, next_step=_next_after),
@@ -112,7 +82,11 @@ CONFIG_FLOW = {
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+    "init": SchemaFlowFormStep(STEP_USER, next_step=_next_after),
+    "after_fixed": SchemaFlowFormStep(STEP_AFTER_FIXED, next_step=_next_before),
+    "after_sun": SchemaFlowFormStep(STEP_AFTER_SUN, next_step=_next_before),
+    "before_fixed": SchemaFlowFormStep(STEP_BEFORE_FIXED),
+    "before_sun": SchemaFlowFormStep(STEP_BEFORE_SUN),
 }
 
 
