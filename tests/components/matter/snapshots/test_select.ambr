@@ -233,7 +233,7 @@
     'state': 'Celsius',
   })
 # ---
-# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_none-entry]
+# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -254,7 +254,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aqara_smart_lock_u200_none',
+    'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -266,7 +266,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -276,10 +276,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_none-state]
+# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Smart Lock U200 None',
+      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -289,7 +289,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aqara_smart_lock_u200_none',
+    'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -676,7 +676,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[door_lock][select.mock_door_lock_none-entry]
+# name: test_selects[door_lock][select.mock_door_lock_operating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -697,7 +697,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_door_lock_none',
+    'entity_id': 'select.mock_door_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -709,7 +709,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -719,10 +719,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[door_lock][select.mock_door_lock_none-state]
+# name: test_selects[door_lock][select.mock_door_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock None',
+      'friendly_name': 'Mock Door Lock Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -732,7 +732,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_door_lock_none',
+    'entity_id': 'select.mock_door_lock_operating_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -861,7 +861,7 @@
     'state': 'silent',
   })
 # ---
-# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_none-entry]
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -882,7 +882,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_door_lock_with_unbolt_none',
+    'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -894,7 +894,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -904,10 +904,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_none-state]
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt None',
+      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -917,7 +917,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_door_lock_with_unbolt_none',
+    'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2515,7 +2515,7 @@
     'state': '1000',
   })
 # ---
-# name: test_selects[mock_lock][select.mock_lock_none-entry]
+# name: test_selects[mock_lock][select.mock_lock_operating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2536,7 +2536,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_lock_none',
+    'entity_id': 'select.mock_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2548,7 +2548,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2558,10 +2558,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[mock_lock][select.mock_lock_none-state]
+# name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock None',
+      'friendly_name': 'Mock Lock Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -2571,7 +2571,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_lock_none',
+    'entity_id': 'select.mock_lock_operating_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3718,7 +3718,7 @@
     'state': 'normal',
   })
 # ---
-# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_none-entry]
+# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3739,7 +3739,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.secuyou_smart_lock_none',
+    'entity_id': 'select.secuyou_smart_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3751,7 +3751,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3761,10 +3761,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_none-state]
+# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Secuyou Smart Lock None',
+      'friendly_name': 'Secuyou Smart Lock Operating mode',
       'options': list([
         'normal',
         'vacation',
@@ -3774,7 +3774,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.secuyou_smart_lock_none',
+    'entity_id': 'select.secuyou_smart_lock_operating_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
