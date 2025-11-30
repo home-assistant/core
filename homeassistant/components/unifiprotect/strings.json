@@ -580,16 +580,16 @@
       "message": "No device found for device id: {device_id}"
     },
     "no_users_found": {
-      "message": "No users found, please check Protect permissions."
+      "message": "No users found, please check Protect permissions"
     },
     "only_music_supported": {
-      "message": "Only music media type is supported."
+      "message": "Only music media type is supported"
     },
     "privacy_zone_not_found": {
-      "message": "Could not find privacy zone with name {zone_name} on camera {camera_name}."
+      "message": "Could not find privacy zone with name {zone_name} on camera {camera_name}"
     },
     "protect_version": {
-      "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}."
+      "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}"
     },
     "service_error": {
       "message": "Error calling UniFi Protect service: {error}"
