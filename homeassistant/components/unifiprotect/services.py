@@ -149,11 +149,7 @@ async def _async_service_call_nvr(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
     except (ClientError, ValidationError) as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="service_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+        raise HomeAssistantError(str(err)) from err
 
 
 async def add_doorbell_text(call: ServiceCall) -> None:
