@@ -223,9 +223,6 @@
       "pump_setpoint": {
         "name": "Setpoint"
       },
-      "setpoint_change_source_timestamp": {
-        "name": "Last change"
-      },
       "temperature_offset": {
         "name": "Temperature offset"
       },
