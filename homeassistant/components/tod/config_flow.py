@@ -29,7 +29,8 @@ from .const import (
 
 _KIND_SELECTOR = selector.SelectSelector(
     selector.SelectSelectorConfig(
-        options=[KIND_FIXED, KIND_SUNRISE, KIND_SUNSET], mode=selector.SelectSelectorMode.DROPDOWN
+        options=[KIND_FIXED, KIND_SUNRISE, KIND_SUNSET],
+        mode=selector.SelectSelectorMode.DROPDOWN,
     )
 )
 _TIME_SELECTOR = selector.TimeSelector()

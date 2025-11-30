@@ -76,26 +76,20 @@ async def async_setup_entry(
     opts = dict(config_entry.options)
 
     try:
-        if CONF_AFTER_KIND in opts or CONF_BEFORE_KIND in opts:
-            after, after_offset = _parse_side_from_options(
-                opts,
-                kind_key=CONF_AFTER_KIND,
-                time_key=CONF_AFTER_TIME,
-                offset_min_key=CONF_AFTER_OFFSET_MIN,
-                side_label="after",
-            )
-            before, before_offset = _parse_side_from_options(
-                opts,
-                kind_key=CONF_BEFORE_KIND,
-                time_key=CONF_BEFORE_TIME,
-                offset_min_key=CONF_BEFORE_OFFSET_MIN,
-                side_label="before",
-            )
-        else:
-            after = cv.time(opts[CONF_AFTER_TIME])
-            after_offset = timedelta(0)
-            before = cv.time(opts[CONF_BEFORE_TIME])
-            before_offset = timedelta(0)
+        after, after_offset = _parse_side_from_options(
+            opts,
+            kind_key=CONF_AFTER_KIND,
+            time_key=CONF_AFTER_TIME,
+            offset_min_key=CONF_AFTER_OFFSET_MIN,
+            side_label=ATTR_AFTER,
+        )
+        before, before_offset = _parse_side_from_options(
+            opts,
+            kind_key=CONF_BEFORE_KIND,
+            time_key=CONF_BEFORE_TIME,
+            offset_min_key=CONF_BEFORE_OFFSET_MIN,
+            side_label=ATTR_BEFORE,
+        )
     except KeyError as exc:
         _LOGGER.error("TOD entry missing required option %s; cannot set up", exc)
         return
@@ -141,12 +135,8 @@ def _parse_side_from_options(
     time_key: str,
     offset_min_key: str,
     side_label: str,
-) -> tuple[time, timedelta]:
-    """Read one side (after/before) from UI options.
-
-    Returns:
-        (time | 'sunrise'|'sunset', offset_timedelta)
-    """
+) -> tuple[time | SunEventType, timedelta]:
+    """Parse either a fixed time or a sun event + minutes offset from options."""
     kind = opts.get(kind_key)
 
     if not kind or kind == "fixed":
@@ -177,9 +167,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time,
+        after: time | SunEventType,
         after_offset: timedelta,
-        before: time,
+        before: time | SunEventType,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
