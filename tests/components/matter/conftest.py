@@ -91,6 +91,7 @@ async def integration_fixture(
         "door_lock_with_unbolt",
         "eberle_ute3000",
         "ecovacs_deebot",
+        "eufy_vacuum_omni_e28",
         "eve_contact_sensor",
         "eve_energy_20ecn4101",
         "eve_energy_plug",
