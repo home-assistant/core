@@ -10818,7 +10818,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
