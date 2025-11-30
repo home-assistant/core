@@ -49,6 +49,9 @@
       }
     },
     "sensor": {
+      "file_name": {
+        "name": "Current File"
+      },
       "status": {
         "name": "Current State",
         "state": {
