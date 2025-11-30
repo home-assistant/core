@@ -13,18 +13,22 @@ from uuid import UUID
 from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import HABITICA_KEY
-from .const import ASSETS_URL
-from .coordinator import HabiticaConfigEntry
+from .const import ASSETS_URL, DATA_HABIT_SENSORS, DOMAIN
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase, HabiticaPartyBase, HabiticaPartyMemberBase
 from .util import (
     collected_quest_items,
@@ -49,6 +53,57 @@ SVG_CLASS = {
 
 
 PARALLEL_UPDATES = 1
+
+
+def get_daily_motivational_prompt(user: UserData, content: ContentData) -> str:
+    """Generate a daily motivational prompt based on user data."""
+    import random
+    from datetime import datetime
+    
+    # Seed random with current date to ensure same prompt per day
+    today = datetime.now().date()
+    random.seed(hash(f"{user.id}_{today}"))
+    
+    # Base motivational prompts
+    base_prompts = [
+        "🌟 Ready to tackle your habits today? You've got this!",
+        "💪 Every small step counts towards building better habits!",
+        "🎯 Focus on progress, not perfection!",
+        "🚀 Your future self will thank you for what you do today!",
+        "⭐ Consistency is the key to lasting change!",
+        "🌈 Make today amazing by completing your habits!",
+        "🔥 You're building unstoppable momentum!",
+        "💎 Turn your habits into your superpowers!",
+        "🏆 Champions are made through daily discipline!",
+        "✨ Small habits, big transformations!"
+    ]
+    
+    # Personalized prompts based on user stats
+    level = user.stats.lvl or 1
+    if level >= 50:
+        base_prompts.extend([
+            f"🎖️ Level {level} warrior, show those habits who's boss!",
+            "🗡️ Your high level shows your dedication - keep it up!"
+        ])
+    elif level >= 20:
+        base_prompts.extend([
+            f"⚔️ Level {level} adventurer, ready for today's quest?",
+            "🛡️ You're growing stronger with every habit!"
+        ])
+    
+    # Class-based prompts
+    if user.stats.Class:
+        class_name = user.stats.Class.value
+        class_prompts = {
+            "warrior": "⚔️ Channel your warrior spirit into your habits!",
+            "mage": "🔮 Use your magical focus to master your routines!",
+            "rogue": "🗡️ Strike swiftly and efficiently at your goals!",
+            "healer": "💚 Nurture yourself with positive habits today!"
+        }
+        if class_name.lower() in class_prompts:
+            base_prompts.append(class_prompts[class_name.lower()])
+    
+    return random.choice(base_prompts)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -117,6 +172,10 @@ class HabiticaSensorEntity(StrEnum):
     BOSS_RAGE = "boss_rage"
     BOSS_RAGE_LIMIT = "boss_rage_limit"
     LAST_CHECKIN = "last_checkin"
+    HABITS_DAILY = "habits_daily"
+    HABITS_WEEKLY = "habits_weekly"
+    HABITS_MONTHLY = "habits_monthly"
+    MOTIVATIONAL_PROMPT = "motivational_prompt"
 
 
 SENSOR_DESCRIPTIONS_COMMON: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -300,6 +359,23 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
         value_fn=pending_quest_items,
     ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HABITS,
+        translation_key=HabiticaSensorEntity.HABITS,
+        value_fn=lambda user, _: len([h for h in user.tasksOrder.habits if h]),
+    ),
+
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
+        translation_key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
+        value_fn=get_daily_motivational_prompt,
+        attributes_fn=lambda user, _: {
+            "level": user.stats.lvl,
+            "class": user.stats.Class.value if user.stats.Class else None,
+            "total_habits": len([h for h in user.tasksOrder.habits if h]),
+            "updated_daily": "Updates once per day with personalized content",
+        },
+    ),
 )
 
 
@@ -392,10 +468,56 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
+    # Initialize habit sensor registry in hass.data
+    config_entry_id = config_entry.entry_id
+    if DATA_HABIT_SENSORS not in hass.data:
+        hass.data[DATA_HABIT_SENSORS] = {}
+    if config_entry_id not in hass.data[DATA_HABIT_SENSORS]:
+        hass.data[DATA_HABIT_SENSORS][config_entry_id] = {}
+
     async_add_entities(
         HabiticaSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS + SENSOR_DESCRIPTIONS_COMMON
     )
+
+    # Add individual habit sensors with dynamic management
+    habits_added: set[str] = set()
+
+    @callback
+    def add_habit_sensors() -> None:
+        """Add or remove habit sensors based on coordinator data."""
+        nonlocal habits_added
+        sensors = []
+        entity_registry = er.async_get(hass)
+
+        current_habits = set()
+        if coordinator.data and coordinator.data.habits:
+            for habit in coordinator.data.habits:
+                if habit and habit.id:
+                    habit_id = str(habit.id)
+                    current_habits.add(habit_id)
+
+                    # Add new habit sensor if not already added
+                    if habit_id not in habits_added:
+                        sensors.append(HabiticaHabitSensor(coordinator, habit))
+                        habits_added.add(habit_id)
+
+        # Remove sensors for habits that no longer exist
+        for habit_id in habits_added.copy():
+            if habit_id not in current_habits:
+                if entity_id := entity_registry.async_get_entity_id(
+                    SENSOR_DOMAIN,
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_habit_{habit_id}",
+                ):
+                    entity_registry.async_remove(entity_id)
+                habits_added.remove(habit_id)
+
+        if sensors:
+            async_add_entities(sensors)
+
+    coordinator.async_add_listener(add_habit_sensors)
+    add_habit_sensors()
 
     if party := coordinator.data.user.party.id:
         party_coordinator = hass.data[HABITICA_KEY][party]
@@ -425,6 +547,15 @@ async def async_setup_entry(
                     ],
                     config_subentry_id=subentry_id,
                 )
+
+    # Add frequency sensors
+    async_add_entities(
+        HabiticaFrequencySensor(coordinator, frequency_type)
+        for frequency_type in ["daily", "weekly", "monthly"]
+    )
+    
+    # Add motivational prompt sensor
+    async_add_entities([HabiticaMotivationalSensor(coordinator)])
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -476,6 +607,138 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         return None
 
 
+class HabiticaHabitSensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
+    """Sensor for individual Habitica habits."""
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+        habit: TaskData,
+    ) -> None:
+        """Initialize the habit sensor."""
+        super().__init__(coordinator)
+        self.habit = habit
+        self.habit_id = str(habit.id)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_habit_{habit.id}"
+        self._attr_name = habit.text
+        self._optimistic_value: float | None = None
+        self._optimistic_counter_up: int | None = None
+        self._optimistic_counter_down: int | None = None
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    def _get_current_habit(self) -> TaskData | None:
+        """Get current habit data from coordinator."""
+        if self.coordinator.data and self.coordinator.data.habits:
+            for habit in self.coordinator.data.habits:
+                if habit and habit.id == self.habit.id:
+                    return habit
+        return None
+
+    def set_optimistic_update(self, value_delta: float, direction: str) -> None:
+        """Set optimistic value for immediate UI feedback."""
+        current_habit = self._get_current_habit()
+        if current_habit:
+            # Set optimistic value
+            current_value = current_habit.value if current_habit.value else 0
+            self._optimistic_value = round(current_value + value_delta, 2)
+
+            # Set optimistic counters
+            if direction == "up":
+                self._optimistic_counter_up = (current_habit.counterUp or 0) + 1
+                self._optimistic_counter_down = current_habit.counterDown or 0
+            else:
+                self._optimistic_counter_up = current_habit.counterUp or 0
+                self._optimistic_counter_down = (current_habit.counterDown or 0) + 1
+
+            # Trigger state update
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Register this sensor in hass.data for button lookup
+        config_entry_id = self.coordinator.config_entry.entry_id
+        if DATA_HABIT_SENSORS in self.hass.data:
+            if config_entry_id in self.hass.data[DATA_HABIT_SENSORS]:
+                self.hass.data[DATA_HABIT_SENSORS][config_entry_id][self.habit_id] = (
+                    self
+                )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        # Unregister this sensor
+        config_entry_id = self.coordinator.config_entry.entry_id
+        if (
+            DATA_HABIT_SENSORS in self.hass.data
+            and config_entry_id in self.hass.data[DATA_HABIT_SENSORS]
+            and self.habit_id in self.hass.data[DATA_HABIT_SENSORS][config_entry_id]
+        ):
+            del self.hass.data[DATA_HABIT_SENSORS][config_entry_id][self.habit_id]
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Clear optimistic values when real data arrives
+        self._optimistic_value = None
+        self._optimistic_counter_up = None
+        self._optimistic_counter_down = None
+        super()._handle_coordinator_update()
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the habit value."""
+        # Return optimistic value if set (for immediate UI feedback)
+        if self._optimistic_value is not None:
+            return self._optimistic_value
+
+        # Find the current habit data from coordinator
+        current_habit = self._get_current_habit()
+        if current_habit:
+            return round(current_habit.value, 2) if current_habit.value else 0
+        return 0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return habit specific attributes."""
+        current_habit = self._get_current_habit()
+        if current_habit:
+            # Use optimistic counters if available for immediate UI feedback
+            counter_up = (
+                self._optimistic_counter_up
+                if self._optimistic_counter_up is not None
+                else (current_habit.counterUp or 0)
+            )
+            counter_down = (
+                self._optimistic_counter_down
+                if self._optimistic_counter_down is not None
+                else (current_habit.counterDown or 0)
+            )
+
+            return {
+                "habit_id": str(current_habit.id),
+                "text": current_habit.text,
+                "notes": current_habit.notes or "",
+                "counter_up": counter_up,
+                "counter_down": counter_down,
+                "frequency": current_habit.frequency.value
+                if current_habit.frequency
+                else "daily",
+                "up": current_habit.up if hasattr(current_habit, "up") else True,
+                "down": current_habit.down if hasattr(current_habit, "down") else True,
+            }
+        return {}
+
+
 class HabiticaPartyMemberSensor(HabiticaSensor, HabiticaPartyMemberBase):
     """Habitica party member sensor."""
 
@@ -518,3 +781,124 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         if func := self.entity_description.attributes_fn:
             return func(self.coordinator.data.party, self.content)
         return None
+
+
+class HabiticaFrequencySensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
+    """Sensor for habit frequency analysis."""
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+        frequency_type: str,
+    ) -> None:
+        """Initialize the frequency sensor."""
+        super().__init__(coordinator)
+        self.frequency_type = frequency_type
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_habits_{frequency_type}"
+        self._attr_name = f"Habits {frequency_type.title()}"
+        self._attr_translation_key = f"habits_{frequency_type}"
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the habit count for this frequency."""
+        if not self.coordinator.data or not self.coordinator.data.habits:
+            return 0
+
+        count = 0
+        for habit in self.coordinator.data.habits:
+            if habit and habit.frequency:
+                habit_frequency = habit.frequency.value.lower()
+                if habit_frequency == self.frequency_type:
+                    count += 1
+            elif self.frequency_type == "daily":
+                # Default frequency is daily if not specified
+                count += 1
+
+        return count
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return frequency specific attributes."""
+        if not self.coordinator.data or not self.coordinator.data.habits:
+            return {"habits": [], "total_habits": 0}
+
+        habits_list = []
+        total_habits = len(self.coordinator.data.habits)
+        
+        for habit in self.coordinator.data.habits:
+            if habit and habit.frequency:
+                habit_frequency = habit.frequency.value.lower()
+                if habit_frequency == self.frequency_type:
+                    habits_list.append({
+                        "id": str(habit.id),
+                        "text": habit.text,
+                        "value": round(habit.value, 2) if habit.value else 0,
+                    })
+            elif self.frequency_type == "daily" and habit:
+                # Default frequency is daily if not specified
+                habits_list.append({
+                    "id": str(habit.id),
+                    "text": habit.text,
+                    "value": round(habit.value, 2) if habit.value else 0,
+                })
+
+        return {
+            "habits": habits_list,
+            "total_habits": total_habits,
+            "frequency": self.frequency_type,
+        }
+
+
+class HabiticaMotivationalSensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
+    """Sensor for daily motivational messages."""
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the motivational sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_daily_motivation"
+        self._attr_name = "Habitica Daily Motivation"
+        self._attr_translation_key = "motivational_prompt"
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the motivational message."""
+        if not self.coordinator.data or not self.coordinator.data.user:
+            return "Ready to build great habits today!"
+        
+        return get_daily_motivational_prompt(
+            self.coordinator.data.user,
+            self.coordinator.content
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return user stats for context."""
+        if not self.coordinator.data or not self.coordinator.data.user:
+            return {}
+        
+        user = self.coordinator.data.user
+        return {
+            "level": user.stats.lvl,
+            "class": user.stats.Class.value if user.stats.Class else None,
+        }

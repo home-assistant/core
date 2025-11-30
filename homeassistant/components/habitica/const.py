@@ -13,6 +13,10 @@ SIGN_UP_URL = "https://habitica.com/register"
 HABITICANS_URL = "https://cdn.habitica.com/assets/home-main@3x-Dwnue45Z.png"
 
 DOMAIN = "habitica"
+DATA_HABIT_SENSORS = "habitica_habit_sensors"
+
+# Optimistic updates
+OPTIMISTIC_HABIT_SCORE_DELTA = 1.0
 
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
@@ -82,3 +86,6 @@ SECTION_REAUTH_API_KEY = "reauth_api_key"
 SECTION_DANGER_ZONE = "danger_zone"
 
 WEEK_DAYS = ["m", "t", "w", "th", "f", "s", "su"]
+
+# We'll use this attribute to link entities to their Habitica task ID
+ATTR_TASK_ID = "task_id"
