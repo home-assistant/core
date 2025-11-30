@@ -136,7 +136,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            raise HomeAssistantError(err) from err
+            _LOGGER.debug("Error playing audio: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_error",
+            ) from err
 
         # update state after starting player
         self._async_updated_event(self.device)

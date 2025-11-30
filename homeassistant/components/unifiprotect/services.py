@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any, cast
 
 from pydantic import ValidationError
@@ -44,6 +45,8 @@ from .const import (
     KEYRINGS_USER_STATUS,
 )
 from .data import async_ufp_instance_for_config_entry_ids
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -149,7 +152,11 @@ async def _async_service_call_nvr(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
     except (ClientError, ValidationError) as err:
-        raise HomeAssistantError(str(err)) from err
+        _LOGGER.debug("Error calling UniFi Protect service: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
 
 
 async def add_doorbell_text(call: ServiceCall) -> None:

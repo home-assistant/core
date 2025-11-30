@@ -590,6 +590,12 @@
     },
     "protect_version": {
       "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}"
+    },
+    "service_error": {
+      "message": "Error calling UniFi Protect service, check the logs for more details"
+    },
+    "stream_error": {
+      "message": "Error playing audio, check the logs for more details"
     }
   },
   "issues": {
