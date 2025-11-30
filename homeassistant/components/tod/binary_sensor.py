@@ -167,9 +167,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time | SunEventType,
+        after: time,
         after_offset: timedelta,
-        before: time | SunEventType,
+        before: time,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
