@@ -1,6 +1,7 @@
 """Tests for Shelly sensor platform."""
 
 from copy import deepcopy
+import time
 from unittest.mock import Mock, PropertyMock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_EM3
@@ -2136,3 +2137,50 @@ async def test_shelly_irrigation_weather_sensors(
     for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
         assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_timer_remaining_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test timer remaining sensor for switch component."""
+    freezer.move_to("2024-01-01 12:00:00")
+    # Use frozen time for timer_started_at
+    current_time = time.time()
+    timer_started_at = current_time - 10.0
+    timer_duration = 60
+
+    status = {
+        "sys": {},
+        "switch:0": {
+            "id": 0,
+            "output": True,
+            "timer_started_at": timer_started_at,
+            "timer_duration": timer_duration,
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_timer_remaining"
+
+    assert (state := hass.states.get(entity_id))
+    # Timer started 10 seconds ago, duration 60, so remaining is 50
+    assert state.state == "00:00:50"
+    assert state.attributes["seconds"] == 50
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "switch:0", "timer_started_at", 0
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-timer_remaining"
