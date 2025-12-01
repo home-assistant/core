@@ -49,9 +49,9 @@ def _has_a_valid_dpcode(
     device: CustomerDevice, description: TuyaHumidifierEntityDescription
 ) -> bool:
     """Check if the device has at least one valid DP code."""
-    properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
+    properties_to_check: list[str | tuple[str, ...] | None] = [
         # Main control switch
-        description.dpcode or DPCode(description.key),
+        description.dpcode or description.key,
         # Other humidity properties
         description.current_humidity,
         description.humidity,
@@ -107,7 +107,7 @@ async def async_setup_entry(
                         ),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device,
-                            description.dpcode or DPCode(description.key),
+                            description.dpcode or description.key,
                             prefer_function=True,
                         ),
                         target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
