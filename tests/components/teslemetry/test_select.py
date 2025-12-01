@@ -1,5 +1,6 @@
 """Test the Teslemetry select platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_OK, VEHICLE_DATA_ALT
+from .const import COMMAND_OK, SITE_INFO, VEHICLE_DATA_ALT
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -164,3 +165,49 @@ async def test_select_streaming(
     ):
         state = hass.states.get(entity_id)
         assert state.state == snapshot(name=entity_id)
+
+
+async def test_export_rule_vpp_missing_value(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test export rule entity when value is missing due to VPP enrollment."""
+    # Mock energy site with missing export rule (VPP scenario)
+    vpp_site_info = deepcopy(SITE_INFO)
+    # Remove the customer_preferred_export_rule to simulate VPP enrollment
+    del vpp_site_info["response"]["components"]["customer_preferred_export_rule"]
+    mock_site_info.side_effect = lambda: vpp_site_info
+
+    # Set up platform
+    entry = await setup_platform(hass, [Platform.SELECT])
+
+    # Entity should exist but have no current option initially
+    entity_id = "select.energy_site_allow_export"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Test service call works even when value is missing (VPP enrolled)
+    with patch(
+        "tesla_fleet_api.teslemetry.EnergySite.grid_import_export",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_OPTION: EnergyExportMode.BATTERY_OK.value,
+            },
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == EnergyExportMode.BATTERY_OK.value
+        call.assert_called_once()
+
+    # Reload the platform to test state restoration
+    await reload_platform(hass, entry, [Platform.SELECT])
+
+    # The entity should restore the previous state since API value is still missing
+    state = hass.states.get(entity_id)
+    assert state.state == EnergyExportMode.BATTERY_OK.value
