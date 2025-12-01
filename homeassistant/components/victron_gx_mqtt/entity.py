@@ -33,7 +33,7 @@ class VictronBaseEntity(Entity):
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
         device_info: DeviceInfo,
-        type: str,
+        entity_platform: str,
         simple_naming: bool,
         installation_id: str,
     ) -> None:
@@ -42,9 +42,9 @@ class VictronBaseEntity(Entity):
         self._metric = metric
         self._device_info = device_info
         if simple_naming:
-            entity_id = f"{type}.{ENTITY_PREFIX}_{metric.unique_id}"
+            entity_id = f"{entity_platform}.{ENTITY_PREFIX}_{metric.unique_id}"
         else:
-            entity_id = f"{type}.{ENTITY_PREFIX}_{installation_id}_{metric.unique_id}"
+            entity_id = f"{entity_platform}.{ENTITY_PREFIX}_{installation_id}_{metric.unique_id}"
         self._attr_unique_id = entity_id
         self.entity_id = entity_id
         self._attr_native_unit_of_measurement = self._map_metric_to_unit_of_measurement(

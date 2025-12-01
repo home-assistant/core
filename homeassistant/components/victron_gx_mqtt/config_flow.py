@@ -133,8 +133,8 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hostname: str | None = None
         self.serial: str | None = None
         self.installation_id: str | None = None
-        self.friendlyName: str | None = None
-        self.modelName: str | None = None
+        self.friendly_name: str | None = None
+        self.model_name: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -143,7 +143,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             _LOGGER.info("User input received: %s", user_input)
-            data = {**user_input, CONF_SERIAL: self.serial, CONF_MODEL: self.modelName}
+            data = {**user_input, CONF_SERIAL: self.serial, CONF_MODEL: self.model_name}
             data = {
                 k: v for k, v in data.items() if v is not None
             }  # remove None values.
@@ -166,7 +166,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self._abort_if_unique_id_configured()
 
-                title = self.friendlyName or f"Victron OS {unique_id}"
+                title = self.friendly_name or f"Victron OS {unique_id}"
                 return self.async_create_entry(title=title, data=data)
 
         if len(errors) > 0:
@@ -192,15 +192,15 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
         self.serial = discovery_info.upnp["serialNumber"]
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
-        self.modelName = discovery_info.upnp["modelName"]
-        self.friendlyName = discovery_info.upnp["friendlyName"]
+        self.model_name = discovery_info.upnp["model_name"]
+        self.friendly_name = discovery_info.upnp["friendly_name"]
         _LOGGER.info(
-            "SSDP: hostname=%s, serial=%s, installation_id=%s, modelName=%s, friendlyName=%s",
+            "SSDP: hostname=%s, serial=%s, installation_id=%s, model_name=%s, friendly_name=%s",
             self.hostname,
             self.serial,
             self.installation_id,
-            self.modelName,
-            self.friendlyName,
+            self.model_name,
+            self.friendly_name,
         )
 
         await self.async_set_unique_id(self.installation_id)
@@ -219,12 +219,12 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         return self.async_create_entry(
-            title=str(self.friendlyName),
+            title=str(self.friendly_name),
             data={
                 CONF_HOST: self.hostname,
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
-                CONF_MODEL: self.modelName,
+                CONF_MODEL: self.model_name,
             },
         )
 

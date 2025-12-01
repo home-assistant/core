@@ -83,7 +83,7 @@ class Hub:
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the Victron MQTT hub."""
         _LOGGER.info("Starting hub")
         try:
@@ -93,7 +93,7 @@ class Hub:
                 f"Cannot connect to the hub: {connect_error}"
             ) from connect_error
 
-    async def stop(self, event: Event | None = None):
+    async def stop(self, event: Event | None = None) -> None:
         """Stop the Victron MQTT hub."""
         _LOGGER.info("Stopping hub")
         await self._hub.disconnect()
@@ -103,7 +103,7 @@ class Hub:
         hub: VictronVenusHub,
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
-    ):
+    ) -> None:
         _LOGGER.info("New metric received. Device: %s, Metric: %s", device, metric)
         assert hub.installation_id is not None
         device_info = Hub._map_device_info(device, hub.installation_id)
@@ -133,7 +133,7 @@ class Hub:
 
     def register_add_entities_callback(
         self, async_add_entities: AddEntitiesCallback, kind: MetricKind
-    ):
+    ) -> None:
         """Register a callback to add entities for a specific metric kind."""
         _LOGGER.info(
             "Registering AddEntitiesCallback. kind: %s, AddEntitiesCallback: %s",
