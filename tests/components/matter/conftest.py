@@ -114,6 +114,7 @@ async def integration_fixture(
         "light_sensor",
         "microwave_oven",
         "mock_lock",
+        "mock_thermostat",
         "mounted_dimmable_load_control_fixture",
         "multi_endpoint_light",
         "occupancy_sensor",
