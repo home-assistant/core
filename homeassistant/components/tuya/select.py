@@ -409,4 +409,4 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, option)
+        await self._async_send_wrapper_update(self._dpcode_wrapper, option)

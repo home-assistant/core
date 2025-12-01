@@ -209,19 +209,19 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        await self._async_send_dpcode_update(self._mode_wrapper, preset_mode)
+        await self._async_send_wrapper_update(self._mode_wrapper, preset_mode)
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        await self._async_send_dpcode_update(self._direction_wrapper, direction)
+        await self._async_send_wrapper_update(self._direction_wrapper, direction)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        await self._async_send_dpcode_update(self._speed_wrapper, percentage)
+        await self._async_send_wrapper_update(self._speed_wrapper, percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_update(self._switch_wrapper, False)
 
     async def async_turn_on(
         self,
@@ -250,7 +250,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        await self._async_send_dpcode_update(self._oscillate_wrapper, oscillating)
+        await self._async_send_wrapper_update(self._oscillate_wrapper, oscillating)
 
     @property
     def is_on(self) -> bool | None:

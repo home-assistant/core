@@ -439,7 +439,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_send_dpcode_update(self._set_position, kwargs[ATTR_POSITION])
+        await self._async_send_wrapper_update(self._set_position, kwargs[ATTR_POSITION])
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -450,6 +450,6 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self._async_send_dpcode_update(
+        await self._async_send_wrapper_update(
             self._tilt_position, kwargs[ATTR_TILT_POSITION]
         )

@@ -192,7 +192,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.dpcode or self.entity_description.key,
             )
-        await self._async_send_dpcode_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_update(self._switch_wrapper, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -201,7 +201,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.dpcode or self.entity_description.key,
             )
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_update(self._switch_wrapper, False)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -210,8 +210,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.humidity,
             )
-        await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
+        await self._async_send_wrapper_update(self._target_humidity_wrapper, humidity)
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
-        await self._async_send_dpcode_update(self._mode_wrapper, mode)
+        await self._async_send_wrapper_update(self._mode_wrapper, mode)
