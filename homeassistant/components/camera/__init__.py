@@ -37,7 +37,7 @@ from homeassistant.components.stream import (
     Stream,
     create_stream,
 )
-from homeassistant.components.webrtc import async_get_ice_servers
+from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

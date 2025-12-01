@@ -48,8 +48,8 @@
   stt | Speech-to-text (STT)
   system_health | System Health
   tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
   webhook | Webhook
-  webrtc | WebRTC
   
   </details>
   
@@ -150,8 +150,8 @@
   stt | Speech-to-text (STT)
   system_health | System Health
   tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
   webhook | Webhook
-  webrtc | WebRTC
   
   </details>
   

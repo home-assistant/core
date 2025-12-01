@@ -20,7 +20,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.components.webrtc import async_register_ice_servers
+from homeassistant.components.web_rtc import async_register_ice_servers
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE

@@ -19,7 +19,7 @@ from homeassistant.components.camera import (
     async_register_webrtc_provider,
     get_camera_from_entity_id,
 )
-from homeassistant.components.webrtc import async_register_ice_servers
+from homeassistant.components.web_rtc import async_register_ice_servers
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config

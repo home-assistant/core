@@ -13,12 +13,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-DOMAIN = "webrtc"
+DOMAIN = "web_rtc"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
-    "webrtc_ice_servers"
+    "web_rtc_ice_servers"
 )
 
 
@@ -63,7 +63,7 @@ def async_get_ice_servers(hass: HomeAssistant) -> list[RTCIceServer]:
 
 @websocket_api.websocket_command(
     {
-        "type": "webrtc/ice_servers",
+        "type": "web_rtc/ice_servers",
     }
 )
 @callback

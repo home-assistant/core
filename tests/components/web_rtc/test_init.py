@@ -2,7 +2,7 @@
 
 from webrtc_models import RTCIceServer
 
-from homeassistant.components.webrtc import (
+from homeassistant.components.web_rtc import (
     async_get_ice_servers,
     async_register_ice_servers,
 )
@@ -14,8 +14,8 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
-    """Test setting up the webrtc integration."""
-    assert await async_setup_component(hass, "webrtc", {})
+    """Test setting up the web_rtc integration."""
+    assert await async_setup_component(hass, "web_rtc", {})
     await hass.async_block_till_done()
 
     # Verify default ICE servers are registered
@@ -28,13 +28,13 @@ async def test_async_setup(hass: HomeAssistant) -> None:
 
 
 async def test_async_setup_custom_ice_servers(hass: HomeAssistant) -> None:
-    """Test setting up webrtc with custom ICE servers in config."""
+    """Test setting up web_rtc with custom ICE servers in config."""
     await async_process_ha_core_config(
         hass,
         {"webrtc": {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]}},
     )
 
-    assert await async_setup_component(hass, "webrtc", {})
+    assert await async_setup_component(hass, "web_rtc", {})
     await hass.async_block_till_done()
 
     ice_servers = async_get_ice_servers(hass)
@@ -44,7 +44,7 @@ async def test_async_setup_custom_ice_servers(hass: HomeAssistant) -> None:
 
 async def test_async_register_ice_servers(hass: HomeAssistant) -> None:
     """Test registering ICE servers."""
-    assert await async_setup_component(hass, "webrtc", {})
+    assert await async_setup_component(hass, "web_rtc", {})
     await hass.async_block_till_done()
     default_servers = async_get_ice_servers(hass)
 
@@ -79,7 +79,7 @@ async def test_async_register_ice_servers(hass: HomeAssistant) -> None:
 
 async def test_multiple_ice_server_registrations(hass: HomeAssistant) -> None:
     """Test registering multiple ICE server providers."""
-    assert await async_setup_component(hass, "webrtc", {})
+    assert await async_setup_component(hass, "web_rtc", {})
     await hass.async_block_till_done()
     default_servers = async_get_ice_servers(hass)
 
@@ -133,7 +133,7 @@ async def test_ws_ice_servers_with_registered_servers(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test WebSocket ICE servers endpoint with registered servers."""
-    assert await async_setup_component(hass, "webrtc", {})
+    assert await async_setup_component(hass, "web_rtc", {})
     await hass.async_block_till_done()
 
     @callback
@@ -149,7 +149,7 @@ async def test_ws_ice_servers_with_registered_servers(
     async_register_ice_servers(hass, get_ice_server)
 
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "webrtc/ice_servers"})
+    await client.send_json_auto_id({"type": "web_rtc/ice_servers"})
     msg = await client.receive_json()
 
     # Assert WebSocket response includes registered ICE servers
