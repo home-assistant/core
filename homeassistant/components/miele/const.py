@@ -174,14 +174,14 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     not_running = 0, 256, 65535
     pre_wash = 257, 259
     soak = 258
-    main_wash = 260
-    rinse = 261
+    main_wash = 260, 11004
+    rinse = 261, 11005
     rinse_hold = 262
     cleaning = 263
     cooling_down = 264
     drain = 265
-    spin = 266
-    anti_crease = 267
+    spin = 266, 11010
+    anti_crease = 267, 11029
     finished = 268
     venting = 269
     starch_stop = 270
@@ -483,6 +483,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     cottons_eco = 133
     quick_power_wash = 146
     eco_40_60 = 190
+    normal = 10001
 
 
 class DishWasherProgramId(MieleEnum, missing_to_none=True):
