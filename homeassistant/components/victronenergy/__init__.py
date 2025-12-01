@@ -278,6 +278,14 @@ class VictronMqttManager:
         new_entity_configs = []  # List of (component_cfg, unique_id, platform) tuples for new entities
 
         for unique_id, component_cfg in components.items():
+            # Validate component has unique_id attribute and it's not empty
+            component_unique_id = component_cfg.get("unique_id")
+            if not component_unique_id or not str(component_unique_id).strip():
+                _LOGGER.warning(
+                    "Component missing or has empty unique_id attribute, skipping: %s", component_cfg
+                )
+                continue
+
             # Attach device info to each component config
             component_cfg = dict(component_cfg)  # shallow copy
             component_cfg["device"] = device_info
