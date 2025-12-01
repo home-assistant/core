@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
 from .const import (
+    DEFAULT_AREA_ICONS,
     DEFAULT_AREAS,
     DOMAIN,
     STEP_ANALYTICS,
@@ -212,7 +213,10 @@ class UserOnboardingView(_BaseOnboardingStepView):
                 # Guard because area might have been created by an automatically
                 # set up integration.
                 if not area_registry.async_get_area_by_name(name):
-                    area_registry.async_create(name)
+                    area_registry.async_create(
+                        name,
+                        icon=DEFAULT_AREA_ICONS.get(area),
+                    )
 
             await self._async_mark_done(hass)
 
