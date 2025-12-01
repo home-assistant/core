@@ -16,7 +16,7 @@ from homeassistant.helpers import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
-DATA_STORAGE: HassKey[dict[str, UserStore | asyncio.Event]] = HassKey(
+DATA_STORAGE: HassKey[dict[str, asyncio.Future[UserStore]]] = HassKey(
     "frontend_storage"
 )
 DATA_SYSTEM_STORAGE: HassKey[SystemStore] = HassKey("frontend_system_storage")
@@ -37,19 +37,13 @@ async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
 async def async_user_store(hass: HomeAssistant, user_id: str) -> UserStore:
     """Access a user store."""
     stores = hass.data.setdefault(DATA_STORAGE, {})
-    if (store_or_event := stores.get(user_id)) is None:
-        evt = stores[user_id] = asyncio.Event()
+    if (future := stores.get(user_id)) is None:
+        future = stores[user_id] = hass.loop.create_future()
         store = UserStore(hass, user_id)
         await store.async_load()
-        stores[user_id] = store
-        evt.set()
-        return store
+        future.set_result(store)
 
-    if isinstance(store_or_event, asyncio.Event):
-        await store_or_event.wait()
-        return stores[user_id]  # type: ignore[return-value]
-
-    return store_or_event
+    return await future
 
 
 class UserStore:

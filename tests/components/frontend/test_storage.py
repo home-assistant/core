@@ -611,5 +611,5 @@ async def test_user_store_concurrent_access(
     # All results should be the same store instance with loaded data
     assert results[0] is results[1] is results[2]
     assert results[0].data == {"test-key": "test-value"}
-    # Store should only be loaded once due to Event synchronization
+    # Store should only be loaded once due to Future synchronization
     assert load_count == 1
