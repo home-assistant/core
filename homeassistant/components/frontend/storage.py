@@ -39,12 +39,12 @@ async def async_user_store(hass: HomeAssistant, user_id: str) -> UserStore:
     stores = hass.data.setdefault(DATA_STORAGE, {})
     if (future := stores.get(user_id)) is None:
         future = stores[user_id] = hass.loop.create_future()
+        store = UserStore(hass, user_id)
         try:
-            store = UserStore(hass, user_id)
             await store.async_load()
-        except BaseException:
+        except BaseException as ex:
             del stores[user_id]
-            future.cancel()
+            future.set_exception(ex)
             raise
         future.set_result(store)
 

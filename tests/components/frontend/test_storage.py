@@ -635,3 +635,33 @@ async def test_user_store_load_error(
     # This time without the patch, it should work (empty store)
     store = await async_user_store(hass, hass_admin_user.id)
     assert store.data == {}
+
+
+async def test_user_store_concurrent_load_error(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that concurrent callers all receive the same error."""
+
+    async def failing_async_load(self: Store) -> Any:
+        """Simulate a slow load failure."""
+        await asyncio.sleep(0)  # Yield to allow other coroutines to run
+        raise OSError("Storage read error")
+
+    with patch.object(Store, "async_load", failing_async_load):
+        results = await asyncio.gather(
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+            return_exceptions=True,
+        )
+
+    # All callers should receive the same OSError
+    assert len(results) == 3
+    for result in results:
+        assert isinstance(result, OSError)
+        assert str(result) == "Storage read error"
+
+    # After error, retry should work
+    store = await async_user_store(hass, hass_admin_user.id)
+    assert store.data == {}
