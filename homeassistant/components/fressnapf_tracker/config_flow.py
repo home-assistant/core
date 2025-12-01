@@ -148,7 +148,10 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PHONE_NUMBER]
             )
             if success:
-                return await self.async_step_reconfigure_sms_code()
+                if reconfigure_entry.data[CONF_USER_ID] != self._context[CONF_USER_ID]:
+                    errors["base"] = "account_change_not_allowed"
+                else:
+                    return await self.async_step_reconfigure_sms_code()
 
         return self.async_show_form(
             step_id="reconfigure",

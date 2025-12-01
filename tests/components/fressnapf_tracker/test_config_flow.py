@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from fressnapftracker import (
     FressnapfTrackerInvalidPhoneNumberError,
     FressnapfTrackerInvalidTokenError,
+    SmsCodeResponse,
 )
 import pytest
 
@@ -306,6 +307,52 @@ async def test_reconfigure_flow_invalid_sms_code(
 
     # Recover from error
     mock_auth_client.verify_phone_number.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SMS_CODE: 123456},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_api_client")
+async def test_reconfigure_flow_invalid_user_id(
+    hass: HomeAssistant,
+    mock_auth_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow does not allow to reconfigure to another account."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_auth_client.request_sms_code = AsyncMock(
+        return_value=SmsCodeResponse(id=MOCK_USER_ID + 1)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PHONE_NUMBER: f"{MOCK_PHONE_NUMBER}123"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "account_change_not_allowed"}
+
+    # Recover from error
+    mock_auth_client.request_sms_code = AsyncMock(
+        return_value=SmsCodeResponse(id=MOCK_USER_ID)
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_sms_code"
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_SMS_CODE: 123456},

@@ -5,6 +5,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "account_change_not_allowed": "Reconfiguring to a different account is not allowed. Please create a new entry instead.",
       "invalid_phone_number": "Please enter a valid phone number.",
       "invalid_sms_code": "The SMS code you entered is invalid.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
