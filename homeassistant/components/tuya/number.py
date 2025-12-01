@@ -555,4 +555,4 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, value)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, value)
