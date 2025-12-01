@@ -300,7 +300,6 @@
   "triggers": {
     "started_cooling": {
       "description": "Triggers when a climate started cooling.",
-      "description_configured": "[%key:component::climate::triggers::started_cooling::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -311,7 +310,6 @@
     },
     "started_drying": {
       "description": "Triggers when a climate started drying.",
-      "description_configured": "[%key:component::climate::triggers::started_drying::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -322,7 +320,6 @@
     },
     "started_heating": {
       "description": "Triggers when a climate starts to heat.",
-      "description_configured": "[%key:component::climate::triggers::started_heating::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -333,7 +330,6 @@
     },
     "turned_off": {
       "description": "Triggers when a climate is turned off.",
-      "description_configured": "[%key:component::climate::triggers::turned_off::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -344,7 +340,6 @@
     },
     "turned_on": {
       "description": "Triggers when a climate is turned on.",
-      "description_configured": "[%key:component::climate::triggers::turned_on::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",

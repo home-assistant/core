@@ -119,6 +119,9 @@
       },
       "ph_type_dosing": {
         "default": "mdi:beaker"
+      },
+      "water_meter_total_permanent": {
+        "default": "mdi:counter"
       }
     },
     "switch": {
