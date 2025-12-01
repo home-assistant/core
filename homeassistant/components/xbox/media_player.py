@@ -25,6 +25,8 @@ from .browse_media import build_item_response
 from .coordinator import XboxConfigEntry
 from .entity import XboxConsoleBaseEntity
 
+PARALLEL_UPDATES = 1
+
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
@@ -56,7 +58,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox media_player from a config entry."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     async_add_entities(
         [
@@ -98,6 +100,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         if app_details and app_details.product_family == "Games":
             return MediaType.GAME
         return MediaType.APP
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        return self.data.app_details.product_id if self.data.app_details else None
 
     @property
     def media_title(self) -> str | None:
@@ -171,10 +178,9 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         return await build_item_response(
             self.client,
             self._console.id,
-            self.data.status.is_tv_configured,
-            media_content_type or "",
-            media_content_id or "",
-        )  # type: ignore[return-value]
+            media_content_type,
+            media_content_id,
+        )
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -182,10 +188,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         """Launch an app on the Xbox."""
         if media_id == "Home":
             await self.client.smartglass.go_home(self._console.id)
-        elif media_id == "TV":
-            await self.client.smartglass.show_tv_guide(self._console.id)
-        else:
-            await self.client.smartglass.launch_app(self._console.id, media_id)
+
+        await self.client.smartglass.launch_app(self._console.id, media_id)
 
 
 def _find_media_image(images: list[Image]) -> Image | None:

@@ -11,7 +11,6 @@ import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1271,7 +1270,7 @@ async def test_saving_and_loading(
     assert hass_storage["core.config_entries"] == expected_stored_data | {}
 
 
-@freeze_time("2024-02-14 12:00:00")
+@pytest.mark.freeze_time("2024-02-14 12:00:00")
 async def test_as_dict(snapshot: SnapshotAssertion) -> None:
     """Test ConfigEntry.as_dict."""
 
@@ -9728,3 +9727,31 @@ async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> N
     assert result["next_flow"][0] == config_entries.FlowType.CONFIG_FLOW
     # Verify the target flow exists
     hass.config_entries.flow.async_get(result["next_flow"][1])
+
+
+async def test_canceled_exceptions_are_propagated(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Tests that base exceptions like cancellations are not swallowed."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    start = asyncio.Event()
+    abort = asyncio.Event()
+
+    async def _setup(_: HomeAssistant, __: ConfigEntry) -> bool:
+        start.set()
+        await abort.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=_setup))
+    mock_platform(hass, "test.config_flow", None)
+
+    entry.add_to_hass(hass)
+
+    task = hass.async_create_task(manager.async_setup(entry.entry_id))
+    await start.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    abort.set()
