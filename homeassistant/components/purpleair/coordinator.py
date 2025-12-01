@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING, Final
 
-from aiopurpleair import API
+from aiopurpleair.api import API
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 from aiopurpleair.models.sensors import GetSensorsResponse
 
@@ -20,7 +20,7 @@ from .const import CONF_SENSOR_INDEX, CONF_SENSOR_READ_KEY, LOGGER, SENSOR_FIELD
 
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
 
-UPDATE_INTERVAL: Final[int] = 5
+UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
 
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
@@ -35,7 +35,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=timedelta(minutes=UPDATE_INTERVAL),
+            update_interval=UPDATE_INTERVAL,
             always_update=True,
         )
         self._api = API(

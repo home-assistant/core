@@ -4,7 +4,7 @@ import logging
 from typing import Final
 
 DOMAIN: Final[str] = "purpleair"
-LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
+LOGGER: Final[logging.Logger] = logging.getLogger(DOMAIN)
 TITLE: Final[str] = "PurpleAir"
 SCHEMA_VERSION: Final[int] = 2
 

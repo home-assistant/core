@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Final
 
-from aiopurpleair import API
+from aiopurpleair.api import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import (
     InvalidApiKeyError,
@@ -192,6 +192,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=self._errors,
             )
 
+        # Set the API key as the unique ID and abort if already configured
         await self.async_set_unique_id(self._flow_data[CONF_API_KEY])
         self._abort_if_unique_id_configured()
 
@@ -378,7 +379,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
 
         read_key: str | None = self._flow_data[CONF_SENSOR_READ_KEY]
         read_key_list: list[str] | None = None
-        if read_key is not None and isinstance(read_key, str) and len(read_key) > 0:
+        if read_key is not None and len(read_key) > 0:
             read_key_list = [read_key]
 
         api = API(
@@ -418,6 +419,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             self._errors[CONF_SENSOR_INDEX] = CONF_NO_SENSOR_FOUND
             return False
 
+        # No duplicate sensor indices allowed across all config entries and subentries
         if sensor_index in (
             int(subentry.data[CONF_SENSOR_INDEX])
             for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
@@ -597,7 +599,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
 
         data: dict[str, Any] = {CONF_SENSOR_INDEX: sensor.sensor_index}
         read_key: str | None = self._flow_data[CONF_SENSOR_READ_KEY]
-        if read_key is not None and isinstance(read_key, str) and len(read_key) > 0:
+        if read_key is not None and len(read_key) > 0:
             data[CONF_SENSOR_READ_KEY] = read_key
 
         return self.async_create_entry(
