@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from functools import partial
 import logging
 from typing import Any
 
@@ -133,6 +134,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
     )
+
+    async_labs_listen(
+        hass,
+        AUTOMATION_DOMAIN,
+        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        partial(hass.config_entries.async_schedule_reload, entry.entry_id),
+    )
+
     return True
 
 
