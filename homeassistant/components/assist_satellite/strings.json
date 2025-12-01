@@ -142,7 +142,7 @@
       "name": "Satellite started processing"
     },
     "responding": {
-      "description": "Triggers after one or more voice assistant satellites start responding to a command after having processed it, or starts to announce something.",
+      "description": "Triggers after one or more voice assistant satellites start responding to a command after having processed it, or start to announce something.",
       "fields": {
         "behavior": {
           "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
