@@ -108,34 +108,5 @@
     "toggle_cover_tilt": {
       "service": "mdi:arrow-top-right-bottom-left"
     }
-  },
-  "triggers": {
-    "awning_opened": {
-      "trigger": "mdi:awning-outline"
-    },
-    "blind_opened": {
-      "trigger": "mdi:blinds-horizontal"
-    },
-    "curtain_opened": {
-      "trigger": "mdi:curtains"
-    },
-    "door_opened": {
-      "trigger": "mdi:door-open"
-    },
-    "garage_opened": {
-      "trigger": "mdi:garage-open"
-    },
-    "gate_opened": {
-      "trigger": "mdi:gate-open"
-    },
-    "shade_opened": {
-      "trigger": "mdi:roller-shade"
-    },
-    "shutter_opened": {
-      "trigger": "mdi:window-shutter-open"
-    },
-    "window_opened": {
-      "trigger": "mdi:window-open"
-    }
   }
 }
