@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description_presence": "The behavior of the targeted presence sensors to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
@@ -317,5 +321,36 @@
       }
     }
   },
-  "title": "Binary sensor"
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Binary sensor",
+  "triggers": {
+    "started_detecting_presence": {
+      "description": "Triggers when one or several presence sensors started detecting presence.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_presence%]",
+          "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Started detecting presence"
+    },
+    "stopped_detecting_presence": {
+      "description": "Triggers when one or several presence sensors stopped detecting presence.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_presence%]",
+          "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Stopped detecting presence"
+    }
+  }
 }

@@ -1,0 +1,25 @@
+.trigger_common_fields: &trigger_common_fields
+  behavior:
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+started_detecting_presence:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: binary_sensor
+      device_class: presence
+
+stopped_detecting_presence:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: binary_sensor
+      device_class: presence
