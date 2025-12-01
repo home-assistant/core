@@ -121,7 +121,7 @@
           'readonly': 0,
           'readwrite': 0,
           'unit': '',
-          'value': 'heat',
+          'value': 3,
         }),
         'hvac_mode_changeover': None,
         'room1_temp_setpoint_boost': dict({
