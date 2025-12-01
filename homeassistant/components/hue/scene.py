@@ -155,14 +155,10 @@ class HueSceneEntity(HueSceneEntityBase):
         """
         # Only record activation if last_recall timestamp has changed
         if (
-            (
-                current_last_recall := (
-                    self.resource.status.last_recall if self.resource.status else None
-                )
+            current_last_recall := (
+                self.resource.status.last_recall if self.resource.status else None
             )
-            is not None
-            and current_last_recall != self._previous_last_recall
-        ):
+        ) is not None and current_last_recall != self._previous_last_recall:
             self._async_record_activation()
 
         # Update tracked timestamp
