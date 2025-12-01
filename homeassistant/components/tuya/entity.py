@@ -81,5 +81,5 @@ class TuyaEntity(Entity):
         if dpcode_wrapper is None:
             return
         await self._async_send_commands(
-            dpcode_wrapper.get_update_commands(self.device, value),
+            [dpcode_wrapper.get_update_command(self.device, value)]
         )
