@@ -135,11 +135,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, (entry.options["template_type"],)
     )
 
-    async_labs_listen(
-        hass,
-        AUTOMATION_DOMAIN,
-        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        partial(hass.config_entries.async_schedule_reload, entry.entry_id),
+    entry.async_on_unload(
+        async_labs_listen(
+            hass,
+            AUTOMATION_DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+            partial(hass.config_entries.async_schedule_reload, entry.entry_id),
+        )
     )
 
     return True
