@@ -1,4 +1,4 @@
-"""Provides triggers for lights."""
+"""Provides triggers for binary sensors."""
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -21,10 +21,20 @@ def get_device_class_or_undefined(
 
 
 class BinarySensorOnOffTrigger(EntityStateTriggerBase):
-    """Class for cover opened and closed triggers."""
+    """Class for binary sensor on/off triggers."""
 
     _device_class: BinarySensorDeviceClass | None
     _domain: str = DOMAIN
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities of this domain."""
+        entities = super().entity_filter(entities)
+        return {
+            entity_id
+            for entity_id in entities
+            if get_device_class_or_undefined(self._hass, entity_id)
+            == self._device_class
+        }
 
 
 def make_binary_sensor_trigger(
@@ -53,5 +63,5 @@ TRIGGERS: dict[str, type[Trigger]] = {
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the triggers for lights."""
+    """Return the triggers for binary sensors."""
     return TRIGGERS
