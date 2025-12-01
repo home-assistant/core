@@ -53,7 +53,9 @@ rules:
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: No entities to translate
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: done
