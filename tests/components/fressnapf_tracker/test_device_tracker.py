@@ -6,18 +6,15 @@ from fressnapftracker import Tracker
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fressnapf_tracker.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from .conftest import MOCK_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_device_tracker_entity(
+async def test_state_entity_device_snapshots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -25,22 +22,16 @@ async def test_device_tracker_entity(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker entity is created correctly."""
-    entity_id = "device_tracker.fluffy"
-
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.unique_id == MOCK_SERIAL_NUMBER
-    assert entity_entry.translation_key == "pet"
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
-    assert device_entry is not None
-    assert device_entry.name == "Fluffy"
-    assert device_entry.manufacturer == "Fressnapf"
-    assert device_entry.model == "GPS Tracker 2.0"
+    assert device_entries
+    for device_entry in device_entries:
+        assert device_entry == snapshot(name=f"{device_entry.name}-entry"), (
+            f"device entry snapshot failed for {device_entry.name}"
+        )
 
 
 @pytest.mark.usefixtures("mock_auth_client")
