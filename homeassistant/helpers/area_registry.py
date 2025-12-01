@@ -516,9 +516,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
-            floor_id = event.data.get("floor_id")
-            if floor_id is None:
-                return
+            if TYPE_CHECKING:
+                assert event.data["action"] == "remove"
+            floor_id = event.data["floor_id"]
             for area in self.areas.get_areas_for_floor(floor_id):
                 self.async_update(area.id, floor_id=None)
 
