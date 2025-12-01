@@ -1563,7 +1563,6 @@
   "triggers": {
     "_": {
       "description": "When a specific message is received on a given MQTT topic.",
-      "description_configured": "When an MQTT message has been received",
       "fields": {
         "payload": {
           "description": "The payload to trigger on.",
