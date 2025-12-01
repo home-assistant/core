@@ -38,15 +38,26 @@ def mock_gtfs_realtime_feed() -> Generator[MagicMock]:
         mock_feed_class.return_value = mock_feed_instance
         mock_feed_class.get_feed_id_for_route.return_value = "1"
 
-        # Fixed arrival time: 5 minutes after test frozen time (2023-10-21 00:00:00 UTC)
-        arrival_time = datetime(2023, 10, 21, 0, 5, 0, tzinfo=UTC)
+        # Fixed arrival times: 5, 10, and 15 minutes after test frozen time (2023-10-21 00:00:00 UTC)
         mock_arrivals = [
             Arrival(
-                arrival_time=arrival_time,
+                arrival_time=datetime(2023, 10, 21, 0, 5, 0, tzinfo=UTC),
                 route_id="1",
                 stop_id="127N",
                 destination="Van Cortlandt Park - 242 St",
-            )
+            ),
+            Arrival(
+                arrival_time=datetime(2023, 10, 21, 0, 10, 0, tzinfo=UTC),
+                route_id="1",
+                stop_id="127N",
+                destination="Van Cortlandt Park - 242 St",
+            ),
+            Arrival(
+                arrival_time=datetime(2023, 10, 21, 0, 15, 0, tzinfo=UTC),
+                route_id="1",
+                stop_id="127N",
+                destination="Van Cortlandt Park - 242 St",
+            ),
         ]
 
         mock_feed_instance.get_arrivals = AsyncMock(return_value=mock_arrivals)
