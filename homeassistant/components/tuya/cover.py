@@ -421,7 +421,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if self._set_position is not None:
             await self._async_send_commands(
-                [self._set_position.get_update_command(self.device, 100)]
+                self._set_position.get_update_commands(self.device, 100)
             )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -434,7 +434,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if self._set_position is not None:
             await self._async_send_commands(
-                [self._set_position.get_update_command(self.device, 0)]
+                self._set_position.get_update_commands(self.device, 0)
             )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
