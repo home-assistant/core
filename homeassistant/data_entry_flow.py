@@ -6,6 +6,7 @@ import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Container, Coroutine, Hashable, Iterable, Mapping
+from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
@@ -536,7 +537,9 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
                     # Notify frontend to refresh before aborting
                     flow.async_notify_flow_changed()
-                    self.async_abort(flow.flow_id)
+
+                    with suppress(UnknownFlow):
+                        self.async_abort(flow.flow_id)
 
             def schedule_configure(_: asyncio.Task) -> None:
                 self.hass.async_create_task(call_configure())
