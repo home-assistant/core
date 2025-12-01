@@ -20,6 +20,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
+from .binary_sensor import MQTTDiscoveredBinarySensor
 from .number import MQTTDiscoveredNumber
 from .sensor import MQTTDiscoveredSensor
 from .switch import MQTTDiscoveredSwitch
@@ -40,6 +41,10 @@ _PLATFORM_CONFIG = {
     "sensor": {
         "factory": lambda config, unique_id, manager: MQTTDiscoveredSensor(config, unique_id, manager),
         "platform": Platform.SENSOR
+    },
+    "binary_sensor": {
+        "factory": lambda config, unique_id, manager: MQTTDiscoveredBinarySensor(config, unique_id, manager),
+        "platform": Platform.BINARY_SENSOR
     },
     "switch": {
         "factory": lambda config, unique_id, manager: MQTTDiscoveredSwitch(config, unique_id, manager),
@@ -112,6 +117,9 @@ class VictronMqttManager:
     # Legacy methods for backward compatibility
     def set_sensor_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
         self.set_platform_add_entities("sensor", add_entities)
+
+    def set_binary_sensor_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
+        self.set_platform_add_entities("binary_sensor", add_entities)
 
     def set_switch_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
         self.set_platform_add_entities("switch", add_entities)
