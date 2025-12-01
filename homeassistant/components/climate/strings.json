@@ -306,7 +306,7 @@
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate control device started cooling"
+      "name": "Climate-control device started cooling"
     },
     "started_drying": {
       "description": "Triggers after one or more climate-control devices start drying.",
@@ -316,7 +316,7 @@
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate control device started drying"
+      "name": "Climate-control device started drying"
     },
     "started_heating": {
       "description": "Triggers after one or more climate-control devices start heating.",
@@ -326,7 +326,7 @@
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate control device started heating"
+      "name": "Climate-control device started heating"
     },
     "turned_off": {
       "description": "Triggers after one or more climate-control devices turn off.",
@@ -336,7 +336,7 @@
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate control device turned off"
+      "name": "Climate-control device turned off"
     },
     "turned_on": {
       "description": "Triggers after one or more climate-control devices turn on, regardless of the mode.",
@@ -346,7 +346,7 @@
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate control device turned on"
+      "name": "Climate-control device turned on"
     }
   }
 }
