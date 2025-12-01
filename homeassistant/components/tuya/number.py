@@ -551,7 +551,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""

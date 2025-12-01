@@ -105,7 +105,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""

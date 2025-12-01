@@ -184,7 +184,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Last change triggered by."""
         if self._changed_by_wrapper is None:
             return None
-        return self._changed_by_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._changed_by_wrapper)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""

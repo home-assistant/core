@@ -133,7 +133,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the valve is closed."""
-        if (is_open := self._dpcode_wrapper.read_device_status(self.device)) is None:
+        if (is_open := self._read_wrapper(self._dpcode_wrapper)) is None:
             return None
         return not is_open
 
