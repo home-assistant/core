@@ -281,7 +281,7 @@ async def test_fan_mode_service_call(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_temperature_error_handling(
+async def test_fan_mode_service_call(
     hass: HomeAssistant,
     mock_saunum_client,
 ) -> None:
