@@ -1114,7 +1114,7 @@ async def load_data(
                         data.name = log_url
                         return data
                     _LOGGER.warning(
-                        "Empty data (retry #%s) in %s)", retry_num + 1, log_url
+                        "Empty data (retry #%s) in %s", retry_num + 1, log_url
                     )
                 retry_num += 1
                 if retry_num < num_retries:
