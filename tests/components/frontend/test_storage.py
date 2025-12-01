@@ -613,3 +613,25 @@ async def test_user_store_concurrent_access(
     assert results[0].data == {"test-key": "test-value"}
     # Store should only be loaded once due to Future synchronization
     assert load_count == 1
+
+
+async def test_user_store_load_error(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that load errors are propagated and allow retry."""
+
+    async def failing_async_load(self: Store) -> Any:
+        """Simulate a load failure."""
+        raise OSError("Storage read error")
+
+    with (
+        patch.object(Store, "async_load", failing_async_load),
+        pytest.raises(OSError, match="Storage read error"),
+    ):
+        await async_user_store(hass, hass_admin_user.id)
+
+    # After error, the future should be removed, allowing retry
+    # This time without the patch, it should work (empty store)
+    store = await async_user_store(hass, hass_admin_user.id)
+    assert store.data == {}

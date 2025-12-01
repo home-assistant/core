@@ -42,9 +42,9 @@ async def async_user_store(hass: HomeAssistant, user_id: str) -> UserStore:
         try:
             store = UserStore(hass, user_id)
             await store.async_load()
-        except BaseException as ex:
+        except BaseException:
             del stores[user_id]
-            future.set_exception(ex)
+            future.cancel()
             raise
         future.set_result(store)
 
