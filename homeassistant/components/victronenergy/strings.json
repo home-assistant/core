@@ -2,8 +2,50 @@
   "config": {
     "step": {
       "user": {
+        "title": "Connect to Victron Energy device",
+        "description": "Enter the IP address or hostname of your Victron Energy device.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "broker": "Host"
+        }
+      },
+      "password": {
+        "title": "Remote Console Authentication",
+        "description": "Basic MQTT connection failed. Please enter the remote console password for device {host}.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "ssdp_confirm": {
+        "title": "Add Victron Energy device",
+        "description": "Do you want to add {name} @ {host} to Home Assistant?",
+        "data": {}
+      },
+      "ssdp_password": {
+        "title": "Remote Console Authentication",
+        "description": "Basic MQTT connection failed for {name} @ {host}. Please enter the remote console password.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "ssdp_password_menu": {
+        "title": "Authentication Failed",
+        "description": "Authentication failed for {name} @ {host}. What would you like to do?",
+        "data": {
+          "next_step": "Action"
+        }
+      },
+      "validate": {
+        "data": {
+          "broker": "Host",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "confirm": {
+        "data": {
+          "broker": "Host",
+          "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -12,10 +54,14 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "Invalid hostname or IP address",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "missing_unique_id": "Device does not have a unique identifier",
+      "no_discovery_support": "Device does not support Home Assistant discovery",
+      "user_cancelled": "Setup cancelled by user"
     }
   }
 }

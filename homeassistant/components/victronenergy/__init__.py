@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_BROKER, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, DOMAIN
+from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, CONF_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
@@ -77,13 +77,31 @@ class VictronMqttManager:
         broker = self.entry.data[CONF_BROKER]
         port = self.entry.data[CONF_PORT]
         username = self.entry.data.get(CONF_USERNAME)
-        password = self.entry.data.get(CONF_PASSWORD)
+        token = self.entry.data.get("token")  # Use token instead of password
         unique_id = self.entry.unique_id
-        _LOGGER.debug("unique_id resolved to: %s", unique_id)
+
+        _LOGGER.info("Starting MQTT connection to %s:%s", broker, port)
+        _LOGGER.info("Username: %s, Token available: %s", username, bool(token))
+        _LOGGER.info("Unique ID: %s", unique_id)
 
         client = mqtt.Client()
-        if username and password:
-            client.username_pw_set(username, password)
+
+        # Set up authentication
+        if username and token:
+            client.username_pw_set(username, token)
+            _LOGGER.info("MQTT authentication configured with token")
+        else:
+            _LOGGER.info("No authentication configured (anonymous MQTT)")
+
+        # Configure TLS for secure MQTT (port 8883)
+        if port == 8883:
+            import ssl
+            client.tls_set(ca_certs=None, certfile=None, keyfile=None,
+                          cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLS,
+                          ciphers=None)
+            client.tls_insecure_set(True)  # Allow self-signed certificates
+            _LOGGER.info("TLS configured for secure MQTT")
+
         client.on_connect = self._on_connect
         client.on_message = self._on_message
 
@@ -103,14 +121,17 @@ class VictronMqttManager:
 
     def _on_connect(self, client, userdata, flags, rc) -> None:
         """Handle MQTT connection."""
+        _LOGGER.info("MQTT connection callback - result code: %s", rc)
         if rc == 0:
             _LOGGER.info(
-                "Connected to MQTT broker at %s:%d",
+                "Successfully connected to MQTT broker at %s:%d",
                 self.entry.data[CONF_BROKER],
                 self.entry.data[CONF_PORT],
             )
             # Subscribe to all discovery topics
-            client.subscribe("homeassistant/#")
+            result = client.subscribe("homeassistant/#")
+            _LOGGER.info("Subscribed to homeassistant/# discovery topics, result: %s", result)
+
             # Re-subscribe to all state topics
             for topic in self._subscribed_topics:
                 client.subscribe(topic)
@@ -135,8 +156,18 @@ class VictronMqttManager:
                 )
         else:
             _LOGGER.error(
-                "Failed to connect to MQTT broker: %s", mqtt.connack_string(rc)
+                "Failed to connect to MQTT broker - result code %s: %s", rc, mqtt.connack_string(rc)
             )
+            if rc == 5:
+                _LOGGER.error("Connection refused: Not authorized. Check username/token configuration.")
+            elif rc == 4:
+                _LOGGER.error("Connection refused: Bad username or password.")
+            elif rc == 3:
+                _LOGGER.error("Connection refused: Server unavailable.")
+            elif rc == 2:
+                _LOGGER.error("Connection refused: Bad client identifier.")
+            elif rc == 1:
+                _LOGGER.error("Connection refused: Wrong protocol version.")
 
     async def _publish_keepalive_task(self) -> None:
         """Publish keepalive JSON payload every 30 seconds."""

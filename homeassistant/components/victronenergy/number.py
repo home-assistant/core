@@ -125,7 +125,7 @@ class MQTTDiscoveredNumber(NumberEntity):
         """Subscribe to MQTT topic and set entity_id when the entity is added to Home Assistant."""
         manager = self.hass.data[DOMAIN]["manager"]
         _LOGGER.debug(
-            "Registering number entity for topic %s (id: %s)", self._state_topic, id(self)
+            "Registering entity for topic %s (id: %s)", self._state_topic, id(self)
         )
         if self._state_topic is not None:
             manager.register_entity_for_topic(str(self._state_topic), self)
