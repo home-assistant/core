@@ -307,6 +307,7 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains", ["test_firmware_domain"]
 )
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_index_download_fails_and_required(
     hass: HomeAssistant,
 ) -> None:
@@ -349,6 +350,7 @@ async def test_config_flow_firmware_index_download_fails_and_required(
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains", ["test_firmware_domain"]
 )
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_download_fails_and_required(
     hass: HomeAssistant,
 ) -> None:

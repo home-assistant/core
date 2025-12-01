@@ -362,6 +362,7 @@ async def consume_progress_flow(
     return result
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_recommended(hass: HomeAssistant) -> None:
     """Test flow with recommended Zigbee installation type."""
     init_result = await hass.config_entries.flow.async_init(
@@ -436,6 +437,7 @@ async def test_config_flow_zigbee_recommended(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_custom_zha(hass: HomeAssistant) -> None:
     """Test flow with custom Zigbee installation type and ZHA selected."""
     init_result = await hass.config_entries.flow.async_init(
@@ -528,6 +530,7 @@ async def test_config_flow_zigbee_custom_zha(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
     """Test flow with custom Zigbee installation type and Other selected."""
     init_result = await hass.config_entries.flow.async_init(
@@ -600,6 +603,7 @@ async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
     assert flows == []
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_index_download_fails_but_not_required(
     hass: HomeAssistant,
 ) -> None:
@@ -636,6 +640,7 @@ async def test_config_flow_firmware_index_download_fails_but_not_required(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_download_fails_but_not_required(
     hass: HomeAssistant,
 ) -> None:
@@ -671,6 +676,7 @@ async def test_config_flow_firmware_download_fails_but_not_required(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_doesnt_downgrade(
     hass: HomeAssistant,
 ) -> None:
@@ -709,6 +715,7 @@ async def test_config_flow_doesnt_downgrade(
         assert len(mock_async_flash_silabs_firmware.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) -> None:
     """Test skip installing the firmware if not needed."""
     result = await hass.config_entries.flow.async_init(
