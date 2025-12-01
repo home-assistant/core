@@ -3202,6 +3202,54 @@ async def test_execute_service_failure_response(
     assert "invalid argument" in str(exc_info.value)
 
 
+async def test_execute_service_invalid_json_response(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test execute_service with invalid JSON in response data."""
+    service = UserService(
+        name="bad_json_service",
+        key=1,
+        args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+        supports_response=SupportsResponseType.ONLY,
+    )
+
+    # Set up mock response with invalid JSON
+    response = ExecuteServiceResponse(
+        call_id=1,
+        success=True,
+        error_message="",
+        response_data=b"not valid json {{{",
+    )
+
+    def mock_execute_service(
+        svc, data, *, call_id=0, on_response=None, return_response=None
+    ):
+        if on_response:
+            on_response(response)
+
+    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        user_service=[service],
+        device_info={"name": "test"},
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "test_bad_json_service",
+            {"arg1": True},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert "Invalid JSON response" in str(exc_info.value)
+
+
 async def test_service_registration_response_types(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -3248,23 +3296,24 @@ async def test_service_registration_response_types(
     assert hass.services.has_service(DOMAIN, "test_only_service")
     assert hass.services.has_service(DOMAIN, "test_status_service")
 
-    # Verify response types are correctly mapped
+    # Verify response types are correctly mapped using public API
     # NONE -> SupportsResponse.NONE
     # OPTIONAL -> SupportsResponse.OPTIONAL
     # ONLY -> SupportsResponse.ONLY
     # STATUS -> SupportsResponse.NONE (no data returned to HA)
-    service_handlers = hass.services._services.get(DOMAIN, {})
     assert (
-        service_handlers["test_none_service"].supports_response == SupportsResponse.NONE
+        hass.services.supports_response(DOMAIN, "test_none_service")
+        == SupportsResponse.NONE
     )
     assert (
-        service_handlers["test_optional_service"].supports_response
+        hass.services.supports_response(DOMAIN, "test_optional_service")
         == SupportsResponse.OPTIONAL
     )
     assert (
-        service_handlers["test_only_service"].supports_response == SupportsResponse.ONLY
+        hass.services.supports_response(DOMAIN, "test_only_service")
+        == SupportsResponse.ONLY
     )
     assert (
-        service_handlers["test_status_service"].supports_response
+        hass.services.supports_response(DOMAIN, "test_status_service")
         == SupportsResponse.NONE
     )

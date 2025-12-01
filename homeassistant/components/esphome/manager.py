@@ -89,6 +89,7 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     PROJECT_URLS,
+    SERVICE_EXECUTE_TIMEOUT,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
 )
@@ -1227,7 +1228,7 @@ async def execute_service(
         ) from err
 
     try:
-        response = await asyncio.wait_for(future, timeout=30.0)
+        response = await asyncio.wait_for(future, timeout=SERVICE_EXECUTE_TIMEOUT)
     except TimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -1251,7 +1252,18 @@ async def execute_service(
 
     # Parse and return response data as JSON if we requested it
     if need_response_data and response.response_data:
-        return json_loads_object(response.response_data)
+        try:
+            return json_loads_object(response.response_data)
+        except ValueError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_call_failed",
+                translation_placeholders={
+                    "call_name": service.name,
+                    "device_name": entry_data.name,
+                    "error": f"Invalid JSON response: {err}",
+                },
+            ) from err
     return None
 
 

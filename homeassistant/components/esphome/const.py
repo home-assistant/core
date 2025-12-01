@@ -15,6 +15,9 @@ CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
+# Timeout for waiting for a response from an ESPHome device action
+SERVICE_EXECUTE_TIMEOUT: Final = 30.0
+
 DEFAULT_PORT: Final = 6053
 
 STABLE_BLE_VERSION_STR = "2025.8.0"
