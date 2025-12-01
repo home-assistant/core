@@ -252,6 +252,7 @@
           "cooking_oven_program_microwave_1000_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_1000_watt%]",
           "cooking_oven_program_microwave_180_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_180_watt%]",
           "cooking_oven_program_microwave_360_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_360_watt%]",
+          "cooking_oven_program_microwave_450_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_450_watt%]",
           "cooking_oven_program_microwave_600_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_600_watt%]",
           "cooking_oven_program_microwave_900_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_900_watt%]",
           "cooking_oven_program_microwave_90_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_90_watt%]",
@@ -281,6 +282,12 @@
           "dishcare_dishwasher_program_quick_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_quick_65%]",
           "dishcare_dishwasher_program_steam_fresh": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_steam_fresh%]",
           "dishcare_dishwasher_program_super_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_super_60%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_active_clean": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_active_clean%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_auto": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_auto%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_cool": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_cool%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_dry": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_dry%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_fan": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_fan%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_heat": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_heat%]",
           "laundry_care_dryer_program_anti_shrink": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_anti_shrink%]",
           "laundry_care_dryer_program_blankets": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_blankets%]",
           "laundry_care_dryer_program_business_shirts": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_business_shirts%]",
@@ -443,6 +450,13 @@
           "laundry_care_dryer_enum_type_drying_target_iron_dry": "[%key:component::home_connect::selector::drying_target::options::laundry_care_dryer_enum_type_drying_target_iron_dry%]"
         }
       },
+      "fan_speed_mode": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_mode::name%]",
+        "state": {
+          "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:component::home_connect::selector::fan_speed_mode::options::heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic%]",
+          "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:component::home_connect::selector::fan_speed_mode::options::heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual%]"
+        }
+      },
       "flow_rate": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_flow_rate::name%]",
         "state": {
@@ -575,6 +589,7 @@
           "cooking_oven_program_microwave_1000_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_1000_watt%]",
           "cooking_oven_program_microwave_180_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_180_watt%]",
           "cooking_oven_program_microwave_360_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_360_watt%]",
+          "cooking_oven_program_microwave_450_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_450_watt%]",
           "cooking_oven_program_microwave_600_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_600_watt%]",
           "cooking_oven_program_microwave_900_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_900_watt%]",
           "cooking_oven_program_microwave_90_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_90_watt%]",
@@ -604,6 +619,12 @@
           "dishcare_dishwasher_program_quick_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_quick_65%]",
           "dishcare_dishwasher_program_steam_fresh": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_steam_fresh%]",
           "dishcare_dishwasher_program_super_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_super_60%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_active_clean": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_active_clean%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_auto": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_auto%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_cool": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_cool%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_dry": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_dry%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_fan": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_fan%]",
+          "heating_ventilation_air_conditioning_air_conditioner_program_heat": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_heat%]",
           "laundry_care_dryer_program_anti_shrink": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_anti_shrink%]",
           "laundry_care_dryer_program_blankets": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_blankets%]",
           "laundry_care_dryer_program_business_shirts": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_business_shirts%]",
@@ -1236,6 +1257,9 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "pause_program": {
       "message": "Error pausing program: {error}"
     },
@@ -1415,6 +1439,12 @@
         "laundry_care_dryer_enum_type_drying_target_iron_dry": "Iron dry"
       }
     },
+    "fan_speed_mode": {
+      "options": {
+        "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "Auto",
+        "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "Manual"
+      }
+    },
     "flow_rate": {
       "options": {
         "consumer_products_coffee_maker_enum_type_flow_rate_intense": "Intense",
@@ -1523,6 +1553,7 @@
         "cooking_oven_program_microwave_1000_watt": "1000 Watt",
         "cooking_oven_program_microwave_180_watt": "180 Watt",
         "cooking_oven_program_microwave_360_watt": "360 Watt",
+        "cooking_oven_program_microwave_450_watt": "450 Watt",
         "cooking_oven_program_microwave_600_watt": "600 Watt",
         "cooking_oven_program_microwave_900_watt": "900 Watt",
         "cooking_oven_program_microwave_90_watt": "90 Watt",
@@ -1552,6 +1583,12 @@
         "dishcare_dishwasher_program_quick_65": "Quick 65ºC",
         "dishcare_dishwasher_program_steam_fresh": "Steam fresh",
         "dishcare_dishwasher_program_super_60": "Super 60ºC",
+        "heating_ventilation_air_conditioning_air_conditioner_program_active_clean": "Active clean",
+        "heating_ventilation_air_conditioning_air_conditioner_program_auto": "Auto",
+        "heating_ventilation_air_conditioning_air_conditioner_program_cool": "Cool",
+        "heating_ventilation_air_conditioning_air_conditioner_program_dry": "Dry",
+        "heating_ventilation_air_conditioning_air_conditioner_program_fan": "Fan",
+        "heating_ventilation_air_conditioning_air_conditioner_program_heat": "Heat",
         "laundry_care_dryer_program_anti_shrink": "Anti shrink",
         "laundry_care_dryer_program_blankets": "Blankets",
         "laundry_care_dryer_program_business_shirts": "Business shirts",
@@ -1820,6 +1857,14 @@
           "description": "Defines if the program sequence is optimized with special drying cycle ensures improved drying for glasses, plates and plasticware.",
           "name": "Zeolite dry"
         },
+        "heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_mode": {
+          "description": "Setting to adjust the fan speed mode to Manual or Auto.",
+          "name": "Fan speed mode"
+        },
+        "heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage": {
+          "description": "Setting to adjust the venting level of the air conditioner as a percentage.",
+          "name": "Fan speed percentage"
+        },
         "laundry_care_dryer_option_drying_target": {
           "description": "Describes the drying target for a dryer program.",
           "name": "Drying target"
@@ -1851,6 +1896,10 @@
       },
       "name": "Set program and options",
       "sections": {
+        "air_conditioner_options": {
+          "description": "Specific settings for air conditioners.",
+          "name": "Air conditioner options"
+        },
         "cleaning_robot_options": {
           "description": "Options for cleaning robots.",
           "name": "Cleaning robot options"

@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted Assist satellites to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "Assist satellite",
@@ -15,6 +19,13 @@
       "fields": {
         "id": "Answer ID",
         "sentences": "Sentences"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -98,5 +109,47 @@
       "name": "Start conversation"
     }
   },
-  "title": "Assist satellite"
+  "title": "Assist satellite",
+  "triggers": {
+    "idle": {
+      "description": "Triggers when an Assist satellite becomes idle.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When an Assist satellite becomes idle"
+    },
+    "listening": {
+      "description": "Triggers when an Assist satellite starts listening.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When an Assist satellite starts listening"
+    },
+    "processing": {
+      "description": "Triggers when an Assist satellite is processing.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When an Assist satellite is processing"
+    },
+    "responding": {
+      "description": "Triggers when an Assist satellite is responding.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When an Assist satellite is responding"
+    }
+  }
 }
