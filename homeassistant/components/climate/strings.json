@@ -299,7 +299,7 @@
   "title": "Climate",
   "triggers": {
     "started_cooling": {
-      "description": "Triggers when one or several climate control devices started cooling.",
+      "description": "Triggers after one or several climate control devices started cooling.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -309,7 +309,7 @@
       "name": "Climate control device started cooling"
     },
     "started_drying": {
-      "description": "Triggers when one or several climate control devices started drying.",
+      "description": "Triggers after one or several climate control devices started drying.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -319,7 +319,7 @@
       "name": "Climate control device started drying"
     },
     "started_heating": {
-      "description": "Triggers when one or several climate control devices started heating.",
+      "description": "Triggers after one or several climate control devices started heating.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -329,7 +329,7 @@
       "name": "Climate control device started heating"
     },
     "turned_off": {
-      "description": "Triggers when one or several climate control devices turned off.",
+      "description": "Triggers after one or several climate control devices turned off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -339,7 +339,7 @@
       "name": "Climate control device turned off"
     },
     "turned_on": {
-      "description": "Triggers when one or several climate control devices turned on, regardless of the mode.",
+      "description": "Triggers after one or several climate control devices turned on, regardless of the mode.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
