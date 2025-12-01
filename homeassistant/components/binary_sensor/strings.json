@@ -333,7 +333,7 @@
   "title": "Binary sensor",
   "triggers": {
     "started_detecting_presence": {
-      "description": "Triggers when one or several presence sensors started detecting presence.",
+      "description": "Triggers after one ore more presence sensors start detecting presence.",
       "fields": {
         "behavior": {
           "description": "[%key:component::binary_sensor::common::trigger_behavior_description_presence%]",
@@ -343,7 +343,7 @@
       "name": "Started detecting presence"
     },
     "stopped_detecting_presence": {
-      "description": "Triggers when one or several presence sensors stopped detecting presence.",
+      "description": "Triggers after one or more presence sensors stop detecting presence.",
       "fields": {
         "behavior": {
           "description": "[%key:component::binary_sensor::common::trigger_behavior_description_presence%]",
