@@ -47,7 +47,6 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
 
     async def _async_update_data(self) -> PranaState:
         """Fetch and normalize device state for all platforms."""
-        _LOGGER.warning("Fetching data from Prana device")
         try:
             state = await self.api_client.get_state()
         except PranaApiUpdateFailed as err:
@@ -56,7 +55,4 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
             raise UpdateFailed(
                 f"Network error communicating with device: {err}"
             ) from err
-        except Exception as err:
-            raise UpdateFailed(f"Unexpected error updating device: {err}") from err
-        _LOGGER.warning("Fetched data from Prana device: %s", state)
         return state
