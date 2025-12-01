@@ -2588,7 +2588,8 @@ async def test_reconfigure_no_changed_password(
         "expected_minor_version",
     ),
     [
-        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
+        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}, 1, 2),
+        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
         (2, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
     ],
 )
@@ -2632,7 +2633,7 @@ async def test_migrate_config_entry(
         "options",
     ),
     [
-        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}),
+        (2, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
         (3, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
     ],
 )
