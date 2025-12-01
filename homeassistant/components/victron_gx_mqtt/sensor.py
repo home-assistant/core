@@ -54,7 +54,7 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
 
     def __repr__(self) -> str:
         """Return a string representation of the sensor."""
-        return f"VictronSensor({super().__repr__()}), native_value={self._attr_native_value})"
+        return f"VictronSensor({super().__repr__()}, native_value={self._attr_native_value})"
 
     def _on_update_task(self, value: Any) -> None:
         if self._attr_native_value == value:
