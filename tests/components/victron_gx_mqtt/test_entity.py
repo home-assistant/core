@@ -13,6 +13,7 @@ from victron_mqtt import (
 )
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.victron_gx_mqtt.binary_sensor import VictronBinarySensor
 from homeassistant.components.victron_gx_mqtt.sensor import VictronSensor
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -92,6 +93,29 @@ async def test_sensor_update_task_triggers_state_update(
     with patch.object(sensor, "schedule_update_ha_state") as mock_sched2:
         # Same value -> no schedule
         sensor._on_update_task(56.78)
+        mock_sched2.assert_not_called()
+
+
+async def test_binary_sensor_update_task_transitions(
+    hass: HomeAssistant, mock_device, base_metric
+) -> None:
+    """Binary sensor should toggle based on On/Off strings and schedule when changed."""
+    # Start with empty value to result in is_on False
+    base_metric.value = ""
+    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    bin_entity = VictronBinarySensor(
+        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
+    )
+
+    assert bin_entity.is_on is False
+
+    with patch.object(bin_entity, "schedule_update_ha_state") as mock_sched:
+        bin_entity._on_update_task("On")
+        assert bin_entity.is_on is True
+        mock_sched.assert_called_once()
+
+    with patch.object(bin_entity, "schedule_update_ha_state") as mock_sched2:
+        bin_entity._on_update_task("On")
         mock_sched2.assert_not_called()
 
 
