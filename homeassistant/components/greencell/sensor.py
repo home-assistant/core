@@ -39,10 +39,9 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
 from .const import (
-    DOMAIN,
     GREENCELL_ACCESS_KEY,
     GREENCELL_CURRENT_DATA_KEY,
     GREENCELL_HABU_DEN,
@@ -60,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 class GreencellSensorDescription(SensorEntityDescription):
     """Describe a Greencell sensor."""
 
-    value_fn: Callable[[Any], str]
+    value_fn: Callable[[Any], StateType]
 
 
 SENSOR_DESCRIPTIONS = (
@@ -70,7 +69,8 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda data: f"{data / 1000:.3f}" if data is not None else "0.000",
+        suggested_display_precision=3,
+        value_fn=lambda data: data / 1000 if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="current_l2",
@@ -78,7 +78,8 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda data: f"{data / 1000:.3f}" if data is not None else "0.000",
+        suggested_display_precision=3,
+        value_fn=lambda data: data / 1000 if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="current_l3",
@@ -86,7 +87,8 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda data: f"{data / 1000:.3f}" if data is not None else "0.000",
+        suggested_display_precision=3,
+        value_fn=lambda data: data / 1000 if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="voltage_l1",
@@ -94,7 +96,8 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda data: f"{data:.2f}" if data is not None else "0.00",
+        suggested_display_precision=2,
+        value_fn=lambda data: data if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="voltage_l2",
@@ -102,7 +105,8 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda data: f"{data:.2f}" if data is not None else "0.00",
+        suggested_display_precision=2,
+        value_fn=lambda data: data if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="voltage_l3",
@@ -110,7 +114,8 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda data: f"{data:.2f}" if data is not None else "0.00",
+        suggested_display_precision=2,
+        value_fn=lambda data: data if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="power",
@@ -118,25 +123,41 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda data: f"{data:.1f}" if data is not None else "0.0",
+        suggested_display_precision=1,
+        value_fn=lambda data: data if data is not None else 0.0,
     ),
     GreencellSensorDescription(
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "IDLE",
-            "CONNECTED",
-            "WAITING_FOR_CAR",
-            "CHARGING",
-            "FINISHED",
-            "ERROR_CAR",
-            "ERROR_EVSE",
-            "UNKNOWN",
+            "idle",
+            "connected",
+            "waiting_for_car",
+            "charging",
+            "finished",
+            "error_car",
+            "error_evse",
+            "unknown",
         ],
-        value_fn=lambda data: str(data).upper() if isinstance(data, str) else "UNKNOWN",
+        value_fn=lambda data: str(data).lower() if isinstance(data, str) else None,
     ),
 )
+
+
+# --- Config Flow Setup ---
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Greencell EVSE sensors from a config entry."""
+    serial_number = entry.data.get("serial_number") if entry and entry.data else None
+    if not serial_number:
+        _LOGGER.error("Serial number not provided in ConfigEntry")
+        return
+    await setup_sensors(hass, serial_number, async_add_entities, entry)
 
 
 class HabuSensor(SensorEntity, ABC):
@@ -319,10 +340,9 @@ async def setup_sensors(
     mqtt_topic_device_state = f"/greencell/evse/{serial_number}/device_state"
 
     status_desc = next(desc for desc in SENSOR_DESCRIPTIONS if desc.key == "status")
-
     power_desc = next(desc for desc in SENSOR_DESCRIPTIONS if desc.key == "power")
 
-    runtime = hass.data[DOMAIN][entry.entry_id]
+    runtime = entry.runtime_data
     access = runtime[GREENCELL_ACCESS_KEY]
     current_data_obj = runtime[GREENCELL_CURRENT_DATA_KEY]
     voltage_data_obj = runtime[GREENCELL_VOLTAGE_DATA_KEY]
@@ -375,50 +395,29 @@ async def setup_sensors(
     def current_message_received(msg) -> None:
         """Handle the current message."""
         MqttParser.parse_3phase_msg(msg.payload, current_data_obj)
-        for sensor in current_sensors:
-            try:
-                sensor.async_schedule_update_ha_state(True)
-            except AttributeError as ex:
-                _LOGGER.error("Error scheduling update for sensor: %s", ex)
 
     @callback
     def voltage_message_received(msg) -> None:
         """Handle the voltage message."""
         MqttParser.parse_3phase_msg(msg.payload, voltage_data_obj)
-        for sensor in voltage_sensors:
-            try:
-                sensor.async_schedule_update_ha_state(True)
-            except AttributeError as ex:
-                _LOGGER.error("Error scheduling update for sensor: %s", ex)
 
     @callback
     def power_message_received(msg) -> None:
         """Handle the power message."""
         MqttParser.parse_single_phase_msg(msg.payload, "momentary", power_data_obj)
-        try:
-            power_sensor.async_schedule_update_ha_state(True)
-        except AttributeError as ex:
-            _LOGGER.error("Error scheduling update for power sensor: %s", ex)
 
     @callback
     def status_message_received(msg) -> None:
         """Handle the status message. If the device is unavailable, disable the entity."""
-
         try:
             str_payload = msg.payload.decode("utf-8", errors="ignore")
         except (AttributeError, TypeError):
             str_payload = str(msg.payload)
-        if (
-            "UNAVAILABLE" in str_payload or "OFFLINE" in str_payload
-        ):  # Handle OFFLINE value, which could by send by Habu Den with 1.8.3 FW version.
+
+        if "UNAVAILABLE" in str_payload or "OFFLINE" in str_payload:
             access.update("UNAVAILABLE")
         else:
             MqttParser.parse_single_phase_msg(msg.payload, "state", state_data_obj)
-
-        try:
-            state_sensor.async_schedule_update_ha_state(True)
-        except AttributeError as ex:
-            _LOGGER.error("Error scheduling update for state sensor: %s", ex)
 
     @callback
     def device_state_message_received(msg) -> None:
@@ -435,33 +434,3 @@ async def setup_sensors(
         current_sensors + voltage_sensors + [state_sensor, power_sensor],
         update_before_add=True,
     )
-
-
-# --- YAML Setup ---
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Greencell EVSE sensors from YAML configuration."""
-    serial_number = config.get("serial_number") if config else None
-    if not serial_number:
-        _LOGGER.error("Serial number not provided in YAML config")
-        return
-    await setup_sensors(hass, serial_number, async_add_entities, config.get("entry"))
-
-
-# --- Config Flow Setup ---
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Greencell EVSE sensors from a config entry."""
-    serial_number = entry.data.get("serial_number") if entry and entry.data else None
-    if not serial_number:
-        _LOGGER.error("Serial number not provided in ConfigEntry")
-        return
-    await setup_sensors(hass, serial_number, async_add_entities, entry)

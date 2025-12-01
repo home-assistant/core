@@ -99,10 +99,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("MQTT integration is not available")
 
     serial = entry.data.get(CONF_SERIAL_NUMBER)
-    if not serial:
-        raise ConfigEntryNotReady("Missing serial_number in config entry")
-
-    unsub_ready, ready_event = wait_for_device_ready(hass, serial, DISCOVERY_TIMEOUT)
+    unsub_ready, ready_event = wait_for_device_ready(
+        hass, str(serial), DISCOVERY_TIMEOUT
+    )
 
     try:
         await asyncio.wait_for(ready_event.wait(), timeout=DISCOVERY_TIMEOUT)
@@ -123,7 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     entry.runtime_data = runtime
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

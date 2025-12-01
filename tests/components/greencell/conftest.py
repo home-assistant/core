@@ -1,287 +1,103 @@
-"""Pytest fixtures and shared setup for the Greencell integration."""
+"""Shared test fixtures and constants for Greencell integration tests."""
 
-import asyncio
-from collections.abc import Callable, Coroutine
-import json
-from types import SimpleNamespace
-from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components import mqtt
-from homeassistant.components.greencell.const import (
-    CONF_SERIAL_NUMBER,
-    DOMAIN,
-    GREENCELL_ACCESS_KEY,
-    GREENCELL_CURRENT_DATA_KEY,
-    GREENCELL_DISC_TOPIC,
-    GREENCELL_POWER_DATA_KEY,
-    GREENCELL_STATE_DATA_KEY,
-    GREENCELL_VOLTAGE_DATA_KEY,
-)
-from homeassistant.components.mqtt import DATA_MQTT
+from homeassistant.components.greencell.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.mqtt import MqttData
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
+# Test constants
 TEST_SERIAL_NUMBER = "EVGC021A2275XXXXXXXXXX"
+TEST_SERIAL_NUMBER_2 = "EVGC021A2275YYYYYYYYYY"
+
+# MQTT topics
+TEST_CURRENT_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/current"
+TEST_VOLTAGE_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/voltage"
+TEST_POWER_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/power"
+TEST_STATUS_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/status"
+TEST_DEVICE_STATE_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/device_state"
+TEST_DISCOVERY_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/discovery"
+
+# MQTT message payloads - Current (in mA)
+TEST_CURRENT_PAYLOAD_IDLE = b'{"l1": 0, "l2": 0, "l3": 0}'
+TEST_CURRENT_PAYLOAD_3PHASE = b'{"l1": 2000, "l2": 2500, "l3": 3000}'
+TEST_CURRENT_PAYLOAD_SINGLE = b'{"l1": 16500, "l2": 0, "l3": 0}'
+
+# MQTT message payloads - Voltage (in V)
+TEST_VOLTAGE_PAYLOAD_RESET = b'{"l1": 0, "l2": 0, "l3": 0}'
+TEST_VOLTAGE_PAYLOAD_NORMAL = b'{"l1": 230.0, "l2": 229.7, "l3": 232.5}'
+TEST_VOLTAGE_PAYLOAD_LOW = b'{"l1": 210.0, "l2": 209.7, "l3": 212.5}'
+TEST_VOLTAGE_PAYLOAD_HIGH = b'{"l1": 245.0, "l2": 244.7, "l3": 247.5}'
+
+# MQTT message payloads - Power (in W)
+TEST_POWER_PAYLOAD_IDLE = b'{"momentary": 0.0}'
+TEST_POWER_PAYLOAD_CHARGING = b'{"momentary": 1500.5}'
+TEST_POWER_PAYLOAD_HIGH = b'{"momentary": 11000.0}'
+
+# MQTT message payloads - Status
+TEST_STATUS_PAYLOAD_IDLE = b'{"state": "IDLE"}'
+TEST_STATUS_PAYLOAD_CONNECTED = b'{"state": "CONNECTED"}'
+TEST_STATUS_PAYLOAD_CHARGING = b'{"state": "CHARGING"}'
+TEST_STATUS_PAYLOAD_FINISHED = b'{"state": "FINISHED"}'
+TEST_STATUS_PAYLOAD_ERROR = b'{"state": "ERROR_EVSE"}'
+TEST_STATUS_PAYLOAD_UNAVAILABLE = b"UNAVAILABLE"
+TEST_STATUS_PAYLOAD_OFFLINE = b"OFFLINE"
+
+# MQTT message payloads - Device state
+TEST_DEVICE_STATE_ONLINE = b'{"connected": true}'
+TEST_DEVICE_STATE_OFFLINE = b'{"connected": false}'
+
+# MQTT message payloads - Discovery
+TEST_DISCOVERY_PAYLOAD = b'{"id": "EVGC021A2275XXXXXXXXXX"}'
 
 
-# --- Stub data/access classes for sensors/tests ---
-class DummyAccess:
-    """Simulates GreencellAccess with minimal functionality for tests."""
-
-    def __init__(self) -> None:
-        """Initialize with default state."""
-        self._disabled: bool = False
-        self._listeners: list[Callable[[], None]] = []
-
-    def is_disabled(self) -> bool:
-        """Return whether the access is disabled."""
-        return self._disabled
-
-    def update(self, state: str) -> None:
-        """Simulate state update; notify listeners if state changes."""
-        self._disabled = state == "OFFLINE"
-
-    def on_msg(self, payload: bytes) -> None:
-        """Simulate receiving a message; notify listeners."""
-        self._disabled = False
-
-    def register_listener(self, callback_fn: Callable[[], None]) -> None:
-        """Register a listener callback."""
-        self._listeners.append(callback_fn)
-
-
-class Dummy3PhaseData:
-    """Simulates 3-phase data with get_value method."""
-
-    def __init__(self, values: dict[str, float]) -> None:
-        """Initialize with a dictionary of phase values."""
-        self._values: dict[str, float] = values
-
-    def get_value(self, phase: str) -> float | None:
-        """Return the value for the specified phase, or None if not available."""
-        return self._values.get(phase)
-
-
-class DummySingleData:
-    """Simulates single-phase data with a data attribute."""
-
-    def __init__(self, data: float | str | None = None) -> None:
-        """Initialize with optional data value."""
-        self.data: float | str | None = data
-
-
-# --- Fake infrastructure for tests ---
-class DummyMessage:
-    """Simulates an MQTT message with a payload attribute."""
-
-    def __init__(self, payload: str) -> None:
-        """Initialize the dummy message with a JSON payload."""
-        self.payload: str = payload
-
-
-class DummyServices:
-    """Simulates Home Assistant services for testing."""
-
-    def __init__(self) -> None:
-        """Initialize the dummy services."""
-        self.calls: list[tuple[str, str, dict[str, Any]]] = []
-
-    def async_call(
-        self, domain: str, service: str, service_data: dict[str, Any]
-    ) -> None:
-        """Simulate a service call by appending to calls list."""
-        self.calls.append((domain, service, service_data))
-
-
-class DummyConfigEntry:
-    """Simulates a ConfigEntry holding a serial_number."""
-
-    def __init__(
-        self, serial_number: str = TEST_SERIAL_NUMBER, entry_id: str = "test_entry"
-    ) -> None:
-        """Initialize the dummy ConfigEntry."""
-        self.data: dict[str, str] = {CONF_SERIAL_NUMBER: serial_number}
-        self.entry_id: str = entry_id
-
-
-class DummyHass:
-    """Minimal HomeAssistant stub: config_entries, services, task creation."""
-
-    def __init__(self, entries: list[Any] | None = None) -> None:
-        """Initialize the dummy HomeAssistant instance."""
-
-        # stubbing config_entries.async_entries(...)
-        self.config_entries = SimpleNamespace(
-            async_entries=lambda domain: entries or [],
-            async_forward_entry_setups=lambda entry, platforms: None,
-            async_unload_platforms=lambda entry, platforms: True,
-            flow=SimpleNamespace(
-                async_progress_by_handler=lambda handler,
-                *,
-                include_uninitialized,
-                match_context: []
-            ),
-        )
-        self.data: dict[str, Any] = {}
-        self.services: DummyServices = DummyServices()
-        self.published: list[Any] = []
-        self.subscriptions: dict[str, Callable[[Any], None]] = {}
-
-    def async_create_task(self, task: Coroutine[Any, Any, Any] | Any) -> None:
-        """Stub for async_create_task to capture tasks."""
-        if asyncio.iscoroutine(task):
-            asyncio.get_event_loop().create_task(task)
-
-    def subscribed_topics(self) -> list[str]:
-        """Return a list of all subscribed topics."""
-        return list(self.subscriptions.keys())
-
-
-@pytest.fixture(autouse=True)
-def stub_async_create_task(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
-    """Stub DummyHass.async_create_task to capture tasks for verification."""
-
-    scheduled_tasks: list[Any] = []
-
-    def fake_create_task(self: DummyHass, task: Coroutine[Any, Any, Any] | Any) -> None:
-        scheduled_tasks.append(task)
-        if asyncio.iscoroutine(task):
-            asyncio.get_event_loop().create_task(task)
-
-    monkeypatch.setattr(DummyHass, "async_create_task", fake_create_task)
-    return scheduled_tasks
-
-
-# --- MQTT subscribe stub fixture ---
-@pytest.fixture(autouse=True)
-def stub_subscribe(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, Callable]]:
-    """Automatically stub async_subscribe to capture subscriptions."""
-    subs: list[tuple[str, Callable]] = []
-
-    async def fake_subscribe(
-        hass: HomeAssistant, topic: str, callback: Callable
-    ) -> Callable[[], None]:
-        subs.append((topic, callback))
-        return lambda: subs.remove((topic, callback))
-
-    async def fake_wait_for_client(hass_: HomeAssistant) -> bool:
-        """Simulate async_wait_for_mqtt_client by returning True. Tests don't need real MQTT client."""
-        return True
-
-    async def fake_publish(
-        hass: HomeAssistant, topic: str, payload: Any, qos: int, retain: bool
-    ) -> None:
-        """Simulate async_publish by storing the call."""
-        if not hasattr(hass, "published"):
-            hass.published = []
-        hass.published.append((topic, payload, qos, retain))
-
-    monkeypatch.setattr(
-        "homeassistant.components.greencell.async_subscribe",
-        fake_subscribe,
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.mqtt.async_wait_for_mqtt_client", fake_wait_for_client
-    )
-    monkeypatch.setattr("homeassistant.components.mqtt.async_publish", fake_publish)
-    return subs
-
-
-# --- stomp publish stub for config_flow tests ---
-@pytest.fixture(autouse=True)
-def stub_mqtt_and_publish(monkeypatch: pytest.MonkeyPatch) -> dict[str, Callable]:
-    """Stub both async_subscribe and async_publish for config_flow tests."""
-    callbacks: dict[str, Callable] = {}
-
-    async def fake_subscribe(
-        hass: HomeAssistant, topic: str, callback: Callable[[Any], None]
-    ) -> Callable[[], None]:
-        """Simulate async_subscribe by storing the callback."""
-        callbacks[topic] = callback
-
-        if topic == GREENCELL_DISC_TOPIC:
-            asyncio.get_event_loop().call_soon(
-                callback, DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER}))
-            )
-        return lambda: callbacks.pop(topic, None)
-
-    async def fake_publish(
-        hass: HomeAssistant, topic: str, payload: Any, qos: int, retain: bool
-    ) -> None:
-        """Simulate async_publish by storing the call."""
-        if not hasattr(hass, "published"):
-            hass.published = []
-        hass.published.append((topic, payload, qos, retain))
-
-    monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
-    monkeypatch.setattr(mqtt, "async_publish", fake_publish)
-
-    return callbacks
-
-
-# --- Hass fixture ---
 @pytest.fixture
-def entry() -> SimpleNamespace:
-    """Provides a dummy config entry with a serial number."""
-    return SimpleNamespace(
-        entry_id="test_entry", data={"serial_number": TEST_SERIAL_NUMBER}
+def mock_mqtt_data():
+    """Mock MQTT data for async_fire_mqtt_message."""
+    mqtt_data = MagicMock(spec=MqttData)
+    mqtt_data.async_fire_internal_message = AsyncMock()
+
+    # Mock the client and its connected status
+    mqtt_data.client = MagicMock()
+    mqtt_data.client.connected = True
+
+    return mqtt_data
+
+
+@pytest.fixture
+async def setup_mqtt(hass: HomeAssistant, mock_mqtt_data):
+    """Set up MQTT integration for testing."""
+    # Mock the MQTT data in hass so async_fire_mqtt_message can find it
+    hass.data["mqtt"] = mock_mqtt_data
+
+    yield
+
+    # Cleanup
+    if "mqtt" in hass.data:
+        del hass.data["mqtt"]
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Return a mock config entry for testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="test_entry",
+        data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER},
+        title=f"Greencell {TEST_SERIAL_NUMBER}",
     )
 
 
 @pytest.fixture
-def runtime(entry: SimpleNamespace) -> dict[str, Any]:
-    """Provides a runtime dictionary with dummy data for Greencell sensors."""
-    access = DummyAccess()
-    current = Dummy3PhaseData({"l1": 1000, "l2": None, "l3": 3000})
-    voltage = Dummy3PhaseData({"l1": 230.0, "l2": None, "l3": 232.5})
-    power = DummySingleData(data=1500.5)
-    state = DummySingleData(data="charging")
-
-    return {
-        GREENCELL_ACCESS_KEY: access,
-        GREENCELL_CURRENT_DATA_KEY: current,
-        GREENCELL_VOLTAGE_DATA_KEY: voltage,
-        GREENCELL_POWER_DATA_KEY: power,
-        GREENCELL_STATE_DATA_KEY: state,
-    }
-
-
-@pytest.fixture
-async def hass(entry: SimpleNamespace, runtime: dict[str, Any]) -> DummyHass:
-    """Provides a FakeHass instance for tests."""
-    return DummyHass(entries=[])
-
-
-@pytest.fixture
-async def hass_with_runtime(
-    monkeypatch: pytest.MonkeyPatch, entry: SimpleNamespace, runtime: dict[str, Any]
-) -> DummyHass:
-    """Provides a FakeHass instance for tests."""
-
-    class DummyMqttData:
-        """Simulates MQTT data with a client and async_subscribe method."""
-
-        def __init__(self, hass: HomeAssistant) -> None:
-            """Initialize the dummy MQTT data."""
-
-            def async_subscribe(
-                topic: str,
-                callback: Callable[[Any], None],
-                qos: int | None = None,
-                encoding: str | None = None,
-                job_type: str | None = None,
-            ) -> Callable[[], None]:
-                """Simulate async_subscribe by storing the callback."""
-                hass.subscriptions[topic] = callback
-                return lambda: hass.subscriptions.pop(topic, None)
-
-            self.client = SimpleNamespace(
-                connected=True, async_subscribe=async_subscribe
-            )
-
-    hass = DummyHass(entries=[DummyConfigEntry(entry_id=entry.entry_id)])
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime
-    hass.data[DATA_MQTT] = DummyMqttData(hass)
-
-    return hass
+def mock_config_entry_2():
+    """Return a second mock config entry for testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="test_entry_2",
+        data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER_2},
+        title=f"Greencell {TEST_SERIAL_NUMBER_2}",
+    )

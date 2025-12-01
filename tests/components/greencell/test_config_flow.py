@@ -1,217 +1,282 @@
-"""Test cases for the Greencell EVSE config flow in Home Assistant."""
+"""Tests for Greencell EVSE config flow."""
+
+from __future__ import annotations
 
 import asyncio
-import json
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt
-from homeassistant.components.greencell import config_flow
-from homeassistant.components.greencell.config_flow import EVSEConfigFlow
-from homeassistant.components.greencell.const import GREENCELL_BROADCAST_TOPIC
+from homeassistant import config_entries
+from homeassistant.components.greencell.const import (
+    DOMAIN,
+    GREENCELL_BROADCAST_TOPIC,
+    GREENCELL_DISC_TOPIC,
+    GREENCELL_HABU_DEN,
+    GREENCELL_OTHER_DEVICE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_SERIAL_NUMBER, DummyMessage
+from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClient
+
+# Valid Habu Den serial: EVGC021[A-Z][0-9]{8}ZM[0-9]{4}
+HABU_DEN_SERIAL = "EVGC021A12345678ZM0001"
+HABU_DEN_SERIAL_2 = "EVGC021B87654321ZM0002"
+# Invalid serial (not matching Habu Den pattern)
+OTHER_DEVICE_SERIAL = "OTHER12345678"
+
+# Short timeout for fast tests
+FAST_DISCOVERY_TIMEOUT = 0.1
+
+# Patch target - where the constant is used, not where it's defined
+DISCOVERY_TIMEOUT_PATCH = (
+    "homeassistant.components.greencell.config_flow.DISCOVERY_TIMEOUT"
+)
 
 
-async def fake_wait_for(coro, timeout):
-    """Fake asyncio.wait_for that raises TimeoutError."""
-    raise TimeoutError
+@pytest.fixture(autouse=True)
+def fast_discovery():
+    """Patch discovery timeout for all tests."""
+    with patch(DISCOVERY_TIMEOUT_PATCH, FAST_DISCOVERY_TIMEOUT):
+        yield
 
 
-@pytest.fixture
-def fast_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Make discovery timeout instant by mocking the DISCOVERY_TIMEOUT constant."""
-
-    # Set DISCOVERY_TIMEOUT to 0 for instant tests
-    monkeypatch.setattr(config_flow, "DISCOVERY_TIMEOUT", 0)
-
-
-@pytest.mark.asyncio
-async def test_config_flow_happy_path(
-    monkeypatch: pytest.MonkeyPatch,
-    stub_mqtt_and_publish,
+async def _init_flow_and_fire_discovery(
     hass: HomeAssistant,
-    fast_discovery,
-) -> None:
-    """Happy path: user step creates a valid config entry."""
+    payloads: list[str],
+    delay: float = 0.02,
+) -> config_entries.ConfigFlowResult:
+    """Initialize flow and fire discovery messages concurrently."""
 
-    flow = EVSEConfigFlow()
-    flow.hass = hass
+    async def fire_messages() -> None:
+        """Fire MQTT messages after a short delay."""
+        await asyncio.sleep(delay)
+        for payload in payloads:
+            async_fire_mqtt_message(hass, GREENCELL_DISC_TOPIC, payload)
 
-    # Mock MQTT is_connected to return True
-    monkeypatch.setattr(mqtt, "is_connected", lambda h: True)
+    fire_task = hass.async_create_task(fire_messages())
 
-    # Mock mqtt.async_subscribe to simulate a successful discovery
-    async def fake_subscribe(h, topic, cb):
-        """Fake async_subscribe that simulates a discovery message."""
-        asyncio.get_event_loop().call_soon(
-            lambda: cb(DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER})))
-        )
-        return lambda: None
-
-    # Mock mqtt.async_publish
-    async def fake_publish(h, topic, payload, qos, retain):
-        """Fake async_publish that records published messages."""
-        if not hasattr(h, "published"):
-            h.published = []
-        h.published.append((topic, payload, qos, retain))
-
-    monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
-    monkeypatch.setattr(mqtt, "async_publish", fake_publish)
-
-    # Mock async_set_unique_id and _abort_if_unique_id_configured
-    async def fake_async_set_unique_id(self, unique_id=None, **kwargs):
-        """Fake async_set_unique_id that does nothing."""
-        return
-
-    monkeypatch.setattr(
-        EVSEConfigFlow,
-        "async_set_unique_id",
-        fake_async_set_unique_id,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    monkeypatch.setattr(
-        EVSEConfigFlow, "_abort_if_unique_id_configured", lambda self: None
-    )
+    await fire_task
+    await hass.async_block_till_done()
 
-    result = await flow.async_step_user(user_input=None)
-
-    assert TEST_SERIAL_NUMBER in result["title"]
-    assert result["data"] == {"serial_number": TEST_SERIAL_NUMBER}
-
-    publishes = getattr(hass, "published", [])
-    assert any(
-        topic == GREENCELL_BROADCAST_TOPIC
-        and json.loads(payload) == {"name": "BROADCAST"}
-        for topic, payload, qos, retain in publishes
-    ), "Expected a broadcast to GREENCELL_BROADCAST_TOPIC"
+    return result
 
 
-@pytest.mark.asyncio
-async def test_config_flow_duplicate_device(
-    stub_mqtt_and_publish,
+async def test_user_setup_single_device(
     hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    fast_discovery,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """If device already configured, flow aborts with AbortFlow."""
-
-    flow = EVSEConfigFlow()
-    flow.hass = hass
-
-    # Mock MQTT is_connected to return True
-    monkeypatch.setattr(mqtt, "is_connected", lambda h: True)
-
-    # Mock mqtt.async_subscribe to simulate a successful discovery
-    async def fake_subscribe(h, topic, cb):
-        """Fake async_subscribe that simulates a discovery message."""
-        asyncio.get_event_loop().call_soon(
-            lambda: cb(DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER})))
-        )
-        return lambda: None
-
-    # Mock mqtt.async_publish
-    async def fake_publish(h, topic, payload, qos, retain):
-        """Fake async_publish that does nothing."""
-        return
-
-    monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
-    monkeypatch.setattr(mqtt, "async_publish", fake_publish)
-
-    # Mock async_set_unique_id
-    async def fake_set_unique(self, unique_id=None, **kwargs):
-        """Fake async_set_unique_id that does nothing."""
-        return
-
-    monkeypatch.setattr(EVSEConfigFlow, "async_set_unique_id", fake_set_unique)
-
-    # Mock _abort_if_unique_id_configured to raise AbortFlow
-    def abort_configured(self):
-        raise AbortFlow("already_configured")
-
-    monkeypatch.setattr(
-        EVSEConfigFlow,
-        "_abort_if_unique_id_configured",
-        abort_configured,
+    """Test user setup with single device discovery."""
+    result = await _init_flow_and_fire_discovery(
+        hass,
+        [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
     )
 
-    with pytest.raises(AbortFlow):
-        await flow.async_step_user(user_input=None)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{GREENCELL_HABU_DEN} {HABU_DEN_SERIAL}"
+    assert result["data"] == {"serial_number": HABU_DEN_SERIAL}
 
 
-@pytest.mark.asyncio
-async def test_config_flow_subscription_failure(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant, fast_discovery
+async def test_user_setup_multiple_devices(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """If MQTT subscribe fails, flow aborts with mqtt_subscription_failed."""
-    flow = EVSEConfigFlow()
-    flow.hass = hass
+    """Test user setup with multiple devices triggers selection."""
+    result = await _init_flow_and_fire_discovery(
+        hass,
+        [
+            f'{{"id": "{HABU_DEN_SERIAL}"}}',
+            f'{{"id": "{HABU_DEN_SERIAL_2}"}}',
+            f'{{"id": "{OTHER_DEVICE_SERIAL}"}}',
+        ],
+    )
 
-    # Mock MQTT is_connected to return True
-    monkeypatch.setattr(mqtt, "is_connected", lambda h: True)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select"
 
-    async def fake_subscribe(h, topic, cb):
-        """Fake async_subscribe that raises HomeAssistantError."""
-        raise HomeAssistantError("fail subscribe")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"serial_number": HABU_DEN_SERIAL_2}
+    )
+    await hass.async_block_till_done()
 
-    monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
-    result = await flow.async_step_user(user_input=None)
-    assert result["reason"] == "mqtt_subscription_failed"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{GREENCELL_HABU_DEN} {HABU_DEN_SERIAL_2}"
+    assert result["data"] == {"serial_number": HABU_DEN_SERIAL_2}
 
 
-@pytest.mark.asyncio
-async def test_config_flow_discovery_timeout(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant, fast_discovery
+async def test_user_setup_no_devices(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """If no discovery message arrives, flow aborts with discovery_timeout."""
-    flow = EVSEConfigFlow()
-    flow.hass = hass
+    """Test user setup aborts when no devices respond."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
 
-    # Mock MQTT is_connected to return True
-    monkeypatch.setattr(mqtt, "is_connected", lambda h: True)
-
-    unsub_funcs = []
-
-    async def fake_subscribe(h, topic, cb):
-        """Fake async_subscribe that doesn't trigger any callbacks."""
-        unsub_funcs.append(lambda: None)
-        return unsub_funcs[-1]
-
-    async def fake_publish(h, topic, payload, qos, retain):
-        pass
-
-    monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
-    monkeypatch.setattr(mqtt, "async_publish", fake_publish)
-
-    res = await flow.async_step_user(user_input=None)
-    assert res["reason"] == "no_discovery_data"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_discovery_data"
 
 
-@pytest.mark.asyncio
-async def test_config_flow_invalid_discovery_payload(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant, fast_discovery
+async def test_user_setup_mqtt_not_configured(hass: HomeAssistant) -> None:
+    """Test user setup aborts when MQTT is not configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_not_configured"
+
+
+async def test_user_setup_mqtt_not_connected(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """If discovery payload missing id, flow aborts with invalid_discovery_data."""
-    flow = EVSEConfigFlow()
-    flow.hass = hass
-
-    # Mock MQTT is_connected to return True
-    monkeypatch.setattr(mqtt, "is_connected", lambda h: True)
-
-    async def fake_publish(h, topic, payload, qos, retain):
-        """Fake async_publish that does nothing."""
-
-    async def fake_subscribe(h, topic, cb):
-        """Fake async_subscribe that simulates a message with invalid payload."""
-        asyncio.get_event_loop().call_soon(
-            lambda: cb(DummyMessage(payload=json.dumps({"foo": "bar"})))
+    """Test user setup aborts when MQTT is not connected."""
+    with patch(
+        "homeassistant.components.greencell.config_flow.mqtt.is_connected",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        return lambda: None
 
-    monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
-    monkeypatch.setattr(mqtt, "async_publish", fake_publish)
-    res = await flow.async_step_user(user_input=None)
-    assert res["reason"] == "no_discovery_data"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_not_connected"
+
+
+async def test_duplicate_device(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test that configuring same device twice aborts."""
+    # First configuration
+    result = await _init_flow_and_fire_discovery(
+        hass,
+        [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Second configuration attempt
+    result = await _init_flow_and_fire_discovery(
+        hass,
+        [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "",
+        "{BAD JSON}",
+        '{"name": "device"}',
+        '{"id": ""}',
+        '{"id": "   "}',
+        '{"id": 12345}',
+    ],
+    ids=[
+        "empty_payload",
+        "bad_json",
+        "missing_id",
+        "empty_id",
+        "whitespace_id",
+        "non_string_id",
+    ],
+)
+async def test_invalid_discovery_payload(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    payload: str,
+) -> None:
+    """Test that invalid discovery payloads are ignored."""
+    result = await _init_flow_and_fire_discovery(hass, [payload])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_discovery_data"
+
+
+@pytest.mark.parametrize(
+    ("serial", "expected_name"),
+    [
+        # Valid Habu Den serials (pattern: EVGC021[A-Z][0-9]{8}ZM[0-9]{4})
+        ("EVGC021A12345678ZM0001", GREENCELL_HABU_DEN),
+        ("EVGC021Z99999999ZM9999", GREENCELL_HABU_DEN),
+        # Invalid serials - should be classified as other device
+        ("OTHER12345678", GREENCELL_OTHER_DEVICE),
+        ("EVGC021a12345678ZM0001", GREENCELL_OTHER_DEVICE),  # lowercase letter
+        ("EVGC021A1234567ZM0001", GREENCELL_OTHER_DEVICE),  # too few digits
+        ("EVGC022A12345678ZM0001", GREENCELL_OTHER_DEVICE),  # wrong prefix
+    ],
+    ids=[
+        "habu_den_valid_1",
+        "habu_den_valid_2",
+        "other_device",
+        "habu_den_lowercase_invalid",
+        "habu_den_short_digits",
+        "habu_den_wrong_prefix",
+    ],
+)
+async def test_device_naming(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    serial: str,
+    expected_name: str,
+) -> None:
+    """Test device name is determined correctly from serial prefix."""
+    result = await _init_flow_and_fire_discovery(
+        hass,
+        [f'{{"id": "{serial}"}}'],
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{expected_name} {serial}"
+
+
+async def test_broadcast_message_published(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test that discovery broadcast is published on flow init."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_with(
+        GREENCELL_BROADCAST_TOPIC,
+        '{"name": "BROADCAST"}',
+        0,
+        True,
+    )
+
+
+async def test_select_step_shows_all_discovered_devices(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test select step displays all discovered devices."""
+    result = await _init_flow_and_fire_discovery(
+        hass,
+        [
+            f'{{"id": "{HABU_DEN_SERIAL}"}}',
+            f'{{"id": "{HABU_DEN_SERIAL_2}"}}',
+        ],
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select"
+
+    schema = result["data_schema"].schema
+    serial_field = schema["serial_number"]
+    assert HABU_DEN_SERIAL in serial_field.container
+    assert HABU_DEN_SERIAL_2 in serial_field.container
