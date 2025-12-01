@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import UnitOfTime
+from datetime import datetime
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,28 +22,45 @@ async def async_setup_entry(
     """Set up MTA sensor based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities([MTAArrivalSensor(coordinator, entry)])
+    async_add_entities(
+        [
+            MTAArrivalSensor(coordinator, entry, 0, "next_arrival"),
+            MTAArrivalSensor(coordinator, entry, 1, "second_arrival"),
+            MTAArrivalSensor(coordinator, entry, 2, "third_arrival"),
+        ]
+    )
 
 
 class MTAArrivalSensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
-    """Sensor that displays next MTA train arrival time."""
+    """Sensor that displays MTA train arrival time."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "next_arrival"
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:subway-variant"
 
     def __init__(
-        self, coordinator: MTADataUpdateCoordinator, entry: MTAConfigEntry
+        self,
+        coordinator: MTADataUpdateCoordinator,
+        entry: MTAConfigEntry,
+        arrival_index: int,
+        translation_key: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
+        self._arrival_index = arrival_index
         line = entry.data[CONF_LINE]
         stop_id = entry.data[CONF_STOP_ID]
         stop_name = entry.data.get(CONF_STOP_NAME, stop_id)
         self._stop_id = stop_id
-        self._attr_unique_id = f"{entry.entry_id}_next_arrival"
+
+        # Use entry unique_id with dash separator
+        if entry.unique_id:
+            self._attr_unique_id = f"{entry.unique_id}-{translation_key}"
+        else:
+            self._attr_unique_id = f"{entry.entry_id}-{translation_key}"
+
+        self._attr_translation_key = translation_key
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -53,29 +71,24 @@ class MTAArrivalSensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity
         )
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
-        if not self.coordinator.data.arrivals:
+        arrivals = self.coordinator.data.arrivals
+        if len(arrivals) <= self._arrival_index:
             return None
 
-        # Minutes until next arrival
-        return self.coordinator.data.arrivals[0].minutes_until
+        return arrivals[self._arrival_index].arrival_time
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | list]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return additional attributes."""
         arrivals = self.coordinator.data.arrivals
-        attrs: dict[str, str | list] = {}
-        attrs["stop_id"] = self._stop_id
+        if len(arrivals) <= self._arrival_index:
+            return {"stop_id": self._stop_id}
 
-        attrs["arrivals"] = [
-            {
-                "route": arrival.route_id,
-                "destination": arrival.destination,
-                "minutes_until": arrival.minutes_until,
-                "arrival_time": arrival.arrival_time.isoformat(),
-            }
-            for arrival in arrivals
-        ]
-
-        return attrs
+        arrival = arrivals[self._arrival_index]
+        return {
+            "stop_id": self._stop_id,
+            "route": arrival.route_id,
+            "destination": arrival.destination,
+        }

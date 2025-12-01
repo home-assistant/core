@@ -1,11 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
-    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_stops": "No stops found for this line. The line may not be currently running."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "stop": {
@@ -34,6 +35,12 @@
     "sensor": {
       "next_arrival": {
         "name": "Next arrival"
+      },
+      "second_arrival": {
+        "name": "Second arrival"
+      },
+      "third_arrival": {
+        "name": "Third arrival"
       }
     }
   }
