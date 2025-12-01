@@ -208,7 +208,7 @@ def matter_epoch_microseconds_to_utc(x: int | None) -> datetime | None:
     """
     if not x or x <= 0:
         return None
-    seconds = x / 1_000_000
+    seconds = x // 1_000_000
     return dt_util.utc_from_timestamp(seconds + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
 
 
