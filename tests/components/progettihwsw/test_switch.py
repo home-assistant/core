@@ -46,7 +46,7 @@ async def test_switch_setup_and_control(hass: HomeAssistant) -> None:
             return_value="<response></response>",
         ),
         patch(
-            "homeassistant.components.progettihwsw.setup_switch"
+            "homeassistant.components.progettihwsw.switch.setup_switch"
         ) as mock_setup_switch,
     ):
         # Mock setup_switch to return a Relay object with id 1
