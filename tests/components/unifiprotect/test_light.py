@@ -98,7 +98,7 @@ async def test_light_turn_on(
     """Test light entity turn on."""
 
     light._api = ufp.api
-    light.api.set_light_is_led_force_on = AsyncMock()
+    light.api.update_light_public = AsyncMock()
 
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
@@ -108,8 +108,36 @@ async def test_light_turn_on(
         "light", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    assert light.api.set_light_is_led_force_on.called
-    assert light.api.set_light_is_led_force_on.call_args == ((light.id, True),)
+    assert light.api.update_light_public.called
+    light.api.update_light_public.assert_called_once_with(
+        light.id, is_light_force_enabled=True, light_device_settings=None
+    )
+
+
+async def test_light_turn_on_with_brightness(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+) -> None:
+    """Test light entity turn on with brightness."""
+
+    light._api = ufp.api
+    light.api.update_light_public = AsyncMock()
+
+    await init_entry(hass, ufp, [light, unadopted_light])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    entity_id = "light.test_light"
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+
+    assert light.api.update_light_public.called
+    call_kwargs = light.api.update_light_public.call_args[1]
+    assert call_kwargs["is_light_force_enabled"] is True
+    assert call_kwargs["light_device_settings"] is not None
+    assert call_kwargs["light_device_settings"].led_level == 3  # 128/255 * 6 ≈ 3
 
 
 async def test_light_turn_off(
@@ -118,7 +146,7 @@ async def test_light_turn_off(
     """Test light entity turn off."""
 
     light._api = ufp.api
-    light.api.set_light_is_led_force_on = AsyncMock()
+    light.api.update_light_public = AsyncMock()
 
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
@@ -128,5 +156,7 @@ async def test_light_turn_off(
         "light", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    assert light.api.set_light_is_led_force_on.called
-    assert light.api.set_light_is_led_force_on.call_args == ((light.id, False),)
+    assert light.api.update_light_public.called
+    light.api.update_light_public.assert_called_once_with(
+        light.id, is_light_force_enabled=False
+    )
