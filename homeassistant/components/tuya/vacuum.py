@@ -196,7 +196,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Set fan speed."""
         await self._async_send_dpcode_update(self._fan_speed_wrapper, fan_speed)
 
-    def send_command(
+    async def async_send_command(
         self,
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
@@ -207,4 +207,4 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             raise ValueError("Params cannot be omitted for Tuya vacuum commands")
         if not isinstance(params, list):
             raise TypeError("Params must be a list for Tuya vacuum commands")
-        self._send_command([{"code": command, "value": params[0]}])
+        await self._async_send_commands([{"code": command, "value": params[0]}])
