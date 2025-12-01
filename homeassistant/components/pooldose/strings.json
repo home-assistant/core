@@ -160,6 +160,9 @@
           "acid": "pH-",
           "alcalyne": "pH+"
         }
+      },
+      "water_meter_total_permanent": {
+        "name": "Totalizer"
       }
     },
     "switch": {
