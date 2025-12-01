@@ -34,7 +34,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import TadoDataUpdateCoordinator
-from .models import TadoData
 from .services import async_setup_services
 
 PLATFORMS = [
@@ -60,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-type TadoConfigEntry = ConfigEntry[TadoData]
+type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -100,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = TadoData(coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
