@@ -1510,7 +1510,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.SetpointChangeSource,),
-        device_type=(device_types.Thermostat,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1531,7 +1531,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
         ),
-        device_type=(device_types.Thermostat,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1546,6 +1546,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.SetpointChangeAmount,),
-        device_type=(device_types.Thermostat,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
 ]
