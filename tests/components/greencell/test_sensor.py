@@ -58,9 +58,6 @@ async def test_current_sensor_receives_mqtt_update(
     async_fire_mqtt_message(hass, TEST_CURRENT_TOPIC, TEST_CURRENT_PAYLOAD_3PHASE)
     await hass.async_block_till_done()
 
-    # Message was processed (no exception means success)
-    assert True
-
 
 async def test_voltage_sensor_receives_mqtt_update(
     hass: HomeAssistant,
@@ -78,9 +75,6 @@ async def test_voltage_sensor_receives_mqtt_update(
     async_fire_mqtt_message(hass, TEST_VOLTAGE_TOPIC, TEST_VOLTAGE_PAYLOAD_NORMAL)
     await hass.async_block_till_done()
 
-    # Message was processed (no exception means success)
-    assert True
-
 
 async def test_low_voltage_mqtt_update(
     hass: HomeAssistant, mock_config_entry, setup_mqtt
@@ -95,9 +89,6 @@ async def test_low_voltage_mqtt_update(
     # Values: L1: 210.0V, L2: 209.7V, L3: 212.5V
     async_fire_mqtt_message(hass, TEST_VOLTAGE_TOPIC, TEST_VOLTAGE_PAYLOAD_LOW)
     await hass.async_block_till_done()
-
-    # Message was processed successfully
-    assert True
 
 
 async def test_power_sensor_charging_mqtt_update(
@@ -115,9 +106,6 @@ async def test_power_sensor_charging_mqtt_update(
     async_fire_mqtt_message(hass, TEST_POWER_TOPIC, TEST_POWER_PAYLOAD_CHARGING)
     await hass.async_block_till_done()
 
-    # Message was processed successfully
-    assert True
-
 
 async def test_power_sensor_idle_mqtt_update(
     hass: HomeAssistant,
@@ -133,9 +121,6 @@ async def test_power_sensor_idle_mqtt_update(
     # Fire MQTT message with idle power data (0.0W)
     async_fire_mqtt_message(hass, TEST_POWER_TOPIC, TEST_POWER_PAYLOAD_IDLE)
     await hass.async_block_till_done()
-
-    # Message was processed successfully
-    assert True
 
 
 async def test_status_sensor_charging_state(
@@ -172,9 +157,6 @@ async def test_status_sensor_idle_state(
     async_fire_mqtt_message(hass, TEST_STATUS_TOPIC, TEST_STATUS_PAYLOAD_IDLE)
     await hass.async_block_till_done()
 
-    # Message was processed successfully
-    assert True
-
 
 async def test_device_unavailable_status(
     hass: HomeAssistant,
@@ -190,9 +172,6 @@ async def test_device_unavailable_status(
     # Fire MQTT message indicating device is unavailable
     async_fire_mqtt_message(hass, TEST_STATUS_TOPIC, TEST_STATUS_PAYLOAD_UNAVAILABLE)
     await hass.async_block_till_done()
-
-    # Message was processed successfully
-    assert True
 
 
 async def test_device_online_state(
@@ -210,9 +189,6 @@ async def test_device_online_state(
     async_fire_mqtt_message(hass, TEST_DEVICE_STATE_TOPIC, TEST_DEVICE_STATE_ONLINE)
     await hass.async_block_till_done()
 
-    # Message was processed successfully
-    assert True
-
 
 async def test_device_offline_state(
     hass: HomeAssistant,
@@ -228,9 +204,6 @@ async def test_device_offline_state(
     # Fire MQTT message indicating device is offline
     async_fire_mqtt_message(hass, TEST_DEVICE_STATE_TOPIC, TEST_DEVICE_STATE_OFFLINE)
     await hass.async_block_till_done()
-
-    # Message was processed successfully
-    assert True
 
 
 async def test_sequential_current_updates(
@@ -255,9 +228,6 @@ async def test_sequential_current_updates(
     # Send idle current again
     async_fire_mqtt_message(hass, TEST_CURRENT_TOPIC, TEST_CURRENT_PAYLOAD_IDLE)
     await hass.async_block_till_done()
-
-    # All messages processed successfully
-    assert True
 
 
 async def test_all_sensor_types_in_sequence(
@@ -291,9 +261,6 @@ async def test_all_sensor_types_in_sequence(
     async_fire_mqtt_message(hass, TEST_DEVICE_STATE_TOPIC, TEST_DEVICE_STATE_ONLINE)
     await hass.async_block_till_done()
 
-    # All messages processed successfully
-    assert True
-
 
 async def test_rapid_mqtt_messages(
     hass: HomeAssistant,
@@ -314,6 +281,3 @@ async def test_rapid_mqtt_messages(
         async_fire_mqtt_message(hass, TEST_STATUS_TOPIC, TEST_STATUS_PAYLOAD_CHARGING)
 
     await hass.async_block_till_done()
-
-    # All messages processed without errors
-    assert True
