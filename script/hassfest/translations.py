@@ -475,7 +475,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
-                    vol.Required("description_configured"): translation_value_validator,
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
@@ -491,7 +490,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
-                    vol.Required("description_configured"): translation_value_validator,
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,

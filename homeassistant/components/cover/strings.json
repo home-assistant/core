@@ -161,7 +161,6 @@
   "triggers": {
     "awning_opened": {
       "description": "Triggers when an awning opens.",
-      "description_configured": "[%key:component::cover::triggers::awning_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_awning%]",
@@ -176,7 +175,6 @@
     },
     "blind_opened": {
       "description": "Triggers when a blind opens.",
-      "description_configured": "[%key:component::cover::triggers::blind_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_blind%]",
@@ -191,7 +189,6 @@
     },
     "curtain_opened": {
       "description": "Triggers when a curtain opens.",
-      "description_configured": "[%key:component::cover::triggers::curtain_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_curtain%]",
@@ -206,7 +203,6 @@
     },
     "door_opened": {
       "description": "Triggers when a door opens.",
-      "description_configured": "[%key:component::cover::triggers::door_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_door%]",
@@ -221,7 +217,6 @@
     },
     "garage_opened": {
       "description": "Triggers when a garage door opens.",
-      "description_configured": "[%key:component::cover::triggers::garage_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_garage%]",
@@ -236,7 +231,6 @@
     },
     "gate_opened": {
       "description": "Triggers when a gate opens.",
-      "description_configured": "[%key:component::cover::triggers::gate_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_gate%]",
@@ -251,7 +245,6 @@
     },
     "shade_opened": {
       "description": "Triggers when a shade opens.",
-      "description_configured": "[%key:component::cover::triggers::shade_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_shade%]",
@@ -266,7 +259,6 @@
     },
     "shutter_opened": {
       "description": "Triggers when a shutter opens.",
-      "description_configured": "[%key:component::cover::triggers::shutter_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_shutter%]",
@@ -281,7 +273,6 @@
     },
     "window_opened": {
       "description": "Triggers when a window opens.",
-      "description_configured": "[%key:component::cover::triggers::window_opened::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::cover::common::trigger_behavior_description_window%]",
