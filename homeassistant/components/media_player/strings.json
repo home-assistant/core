@@ -381,7 +381,7 @@
   "title": "Media player",
   "triggers": {
     "stopped_playing": {
-      "description": "Triggers after one or several media players stopped playing media.",
+      "description": "Triggers after one or more media players stop playing media.",
       "fields": {
         "behavior": {
           "description": "[%key:component::media_player::common::trigger_behavior_description%]",
