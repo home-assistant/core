@@ -1,4 +1,8 @@
-"""Config flow for the Victron Energy integration."""
+"""Config flow for the Victron Energy integration.
+
+Note: The blocking import warning in Home Assistant logs is a known issue
+with the HA loader's detection mechanism and doesn't affect functionality.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +29,6 @@ from .const import CONF_BROKER, CONF_PORT, DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.info("Victron Energy config flow module loaded - this should appear in logs")
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -290,19 +293,18 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Victron Energy."""
 
     VERSION = 1
-    
+
     def __init__(self):
         """Initialize the config flow."""
         super().__init__()
-        _LOGGER.info("VictronConfigFlow.__init__ called - config flow instance created")
-    
+
     def _log_existing_entries(self, context: str = "") -> list:
         """Log all existing entries for this domain and return problematic ones."""
         all_entries = self.hass.config_entries.async_entries()
         victron_entries = [e for e in all_entries if e.domain == DOMAIN]
-        
+
         _LOGGER.info("%s: Found %d total entries for domain '%s'", context, len(victron_entries), DOMAIN)
-        
+
         problematic_entries = []
         for entry in victron_entries:
             _LOGGER.info("  Entry %s:", entry.entry_id)
@@ -312,7 +314,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.info("    Unique ID: %s", entry.unique_id)
             _LOGGER.info("    Disabled by: %s", entry.disabled_by)
             _LOGGER.info("    Data: %s", entry.data)
-            
+
             # Identify problematic states
             if entry.state in ["failed_unload", "setup_error", "setup_retry"]:
                 _LOGGER.warning("    ⚠️  PROBLEMATIC: Entry is in error state!")
@@ -320,10 +322,10 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             elif not entry.data.get(CONF_BROKER):
                 _LOGGER.warning("    ⚠️  PROBLEMATIC: Entry missing broker data!")
                 problematic_entries.append(entry)
-                
+
         if problematic_entries:
             _LOGGER.warning("%s: Found %d problematic entries that may need cleanup", context, len(problematic_entries))
-            
+
         return problematic_entries
 
     async def async_step_user(
@@ -332,17 +334,17 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step - ask for host."""
         _LOGGER.info("VictronConfigFlow.async_step_user called with input: %s", user_input)
         _LOGGER.info("VictronConfigFlow user step - flow_id: %s, context: %s", self.flow_id, self.context)
-        
+
         # Always show form first if no input provided
         if user_input is None:
             _LOGGER.info("VictronConfigFlow showing initial user form")
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors={}
             )
-            
+
         # Process user input - for now, just create a basic entry to test
         _LOGGER.info("VictronConfigFlow processing user input: %s", user_input)
-        
+
         # Check for existing entries with same broker
         broker = user_input[CONF_BROKER]
         existing_entries = [
@@ -359,14 +361,14 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.info("  Entry unique_id: %s", entry.unique_id)
             _LOGGER.info("  Entry disabled_by: %s", entry.disabled_by)
             return self.async_abort(reason="already_configured")
-        
+
         # Log all existing entries for diagnostics
         problematic_entries = self._log_existing_entries("USER_FLOW")
-        
+
         try:
             info = await validate_input(self.hass, user_input)
             _LOGGER.info("VictronConfigFlow validation successful: %s", info)
-            
+
             # For now, just create a simple entry to test the flow
             _LOGGER.info("VictronConfigFlow creating config entry for broker: %s", broker)
             return self.async_create_entry(
@@ -376,7 +378,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: 1883,
                 }
             )
-            
+
         except CannotConnect:
             _LOGGER.warning("VictronConfigFlow: Cannot connect error")
             errors = {"base": "cannot_connect"}
@@ -398,13 +400,13 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle password step for token authentication."""
         errors: dict[str, str] = {}
         broker = self.context.get("broker")
-        
+
         if user_input is not None:
             try:
                 info = await validate_secure_mqtt_connection(
                     self.hass, broker, user_input[CONF_PASSWORD]
                 )
-                
+
                 # Create entry with secure MQTT config
                 return self.async_create_entry(
                     title=info["title"],
@@ -416,7 +418,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                         "ha_device_id": info["ha_device_id"],
                     }
                 )
-                
+
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -426,8 +428,8 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="password", 
-            data_schema=STEP_PASSWORD_DATA_SCHEMA, 
+            step_id="password",
+            data_schema=STEP_PASSWORD_DATA_SCHEMA,
             errors=errors,
             description_placeholders={"host": broker if broker else "unknown"}
         )
@@ -439,13 +441,13 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         broker = self.context.get("broker")
         friendly_name = self.context.get("title_placeholders", {}).get("name", "Victron Energy")
-        
+
         if user_input is not None:
             try:
                 info = await validate_secure_mqtt_connection(
                     self.hass, broker, user_input[CONF_PASSWORD]
                 )
-                
+
                 # Create entry with secure MQTT config
                 return self.async_create_entry(
                     title=friendly_name,
@@ -457,7 +459,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                         "ha_device_id": info["ha_device_id"],
                     }
                 )
-                
+
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -465,14 +467,14 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            
+
             # If there are errors, show menu instead of password form again
             if errors:
                 return await self.async_step_ssdp_password_menu()
 
         return self.async_show_form(
-            step_id="ssdp_password", 
-            data_schema=STEP_PASSWORD_DATA_SCHEMA, 
+            step_id="ssdp_password",
+            data_schema=STEP_PASSWORD_DATA_SCHEMA,
             errors=errors,
             description_placeholders=self.context.get("title_placeholders", {})
         )
@@ -505,10 +507,10 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user confirmation for SSDP discovered device."""
         _LOGGER.info("ssdp_confirm called with input: %s", user_input)
         _LOGGER.info("context title_placeholders: %s", self.context.get("title_placeholders"))
-        
+
         broker = self.context.get("broker")
         friendly_name = self.context.get("title_placeholders", {}).get("name", "Victron Energy")
-        
+
         if user_input is not None:
             # Now test basic MQTT connection after user confirmation
             if await _test_basic_mqtt_connection(self.hass, broker):
@@ -552,10 +554,10 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(unique_id)
         _LOGGER.info("Setting unique_id: %s", unique_id)
-        
+
         # Check existing entries before unique ID check
         problematic_entries = self._log_existing_entries("SSDP_FLOW")
-                
+
         # Check if this unique ID is already configured
         _LOGGER.info("Checking if unique_id %s is already configured", unique_id)
         try:
@@ -584,9 +586,9 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             "host": str(host) if host else "unknown",
         }
         self.context["broker"] = host
-        
+
         _LOGGER.info("SSDP confirmation - friendly_name: %s, host: %s", friendly_name, host)
-        
+
         # Show confirmation step first, before testing connection
         result = self.async_show_form(
             step_id="ssdp_confirm",

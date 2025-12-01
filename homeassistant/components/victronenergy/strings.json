@@ -10,7 +10,7 @@
       },
       "password": {
         "title": "Remote Console Authentication",
-        "description": "Basic MQTT connection failed. Please enter the remote console password for device {host}.",
+        "description": "Basic MQTT connection failed. Please enter the secure profile password for device {host}.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -22,7 +22,7 @@
       },
       "ssdp_password": {
         "title": "Remote Console Authentication",
-        "description": "Basic MQTT connection failed for {name} @ {host}. Please enter the remote console password.",
+        "description": "Basic MQTT connection failed for {name} @ {host}. Please enter the secure profile password.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
