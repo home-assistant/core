@@ -158,11 +158,31 @@ async def test_user_flow_verify_phone_number_errors(
 
 
 @pytest.mark.usefixtures("mock_auth_client")
-async def test_user_flow_duplicate_entry(
+async def test_user_flow_duplicate_user_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user flow aborts on duplicate user_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PHONE_NUMBER: f"{MOCK_PHONE_NUMBER}123"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_auth_client")
+async def test_user_flow_duplicate_phone_number(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test user flow aborts on duplicate phone number."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
