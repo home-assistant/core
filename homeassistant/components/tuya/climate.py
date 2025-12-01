@@ -63,7 +63,7 @@ class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
 
 @dataclass(kw_only=True)
 class _SwingModeWrapper(DeviceWrapper):
-    """An integer that always rounds its value."""
+    """Wrapper for managing climate swing mode operations across multiple DPCodes."""
 
     on_off: DPCodeBooleanWrapper | None = None
     horizontal: DPCodeBooleanWrapper | None = None
@@ -72,7 +72,7 @@ class _SwingModeWrapper(DeviceWrapper):
 
     @classmethod
     def find_dpcode(cls, device: CustomerDevice) -> Self | None:
-        """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
+        """Find and return a _SwingModeWrapper for the given DP codes."""
         on_off = DPCodeBooleanWrapper.find_dpcode(
             device, (DPCode.SWING, DPCode.SHAKE), prefer_function=True
         )
@@ -99,7 +99,7 @@ class _SwingModeWrapper(DeviceWrapper):
         return None
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
-        """Read and round the device status."""
+        """Read the device swing mode."""
         if self.on_off and self.on_off.read_device_status(device):
             return SWING_ON
 
