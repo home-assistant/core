@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Sequence
+from datetime import timedelta
 import io
 import logging
 from ssl import SSLContext
@@ -33,7 +34,9 @@ from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
+from yarl import URL as YarlURL
 
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -45,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.network import is_hass_url
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -1062,6 +1066,13 @@ async def load_data(
 ) -> io.BytesIO:
     """Load data into ByteIO/File container from a source."""
     if url is not None:
+        # Store original URL for logging (signed URLs contain auth tokens)
+        log_url = url
+
+        # Check if URL is internal (relative path or points to this HA instance)
+        if url.startswith("/") or is_hass_url(hass, url):
+            url, verify_ssl = _prepare_internal_url(hass, url)
+
         # Load data from URL
         params: dict[str, Any] = {}
         headers: dict[str, str] = {}
@@ -1094,15 +1105,17 @@ async def load_data(
                         "Status code %s (retry #%s) loading %s",
                         req.status_code,
                         retry_num + 1,
-                        url,
+                        log_url,
                     )
                 else:
                     data = io.BytesIO(req.content)
                     if data.read():
                         data.seek(0)
-                        data.name = url
+                        data.name = log_url
                         return data
-                    _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
+                    _LOGGER.warning(
+                        "Empty data (retry #%s) in %s)", retry_num + 1, log_url
+                    )
                 retry_num += 1
                 if retry_num < num_retries:
                     await asyncio.sleep(
@@ -1130,6 +1143,37 @@ async def load_data(
             translation_key="missing_input",
             translation_placeholders={"field": "URL or File"},
         )
+
+
+def _prepare_internal_url(hass: HomeAssistant, url: str) -> tuple[str, SSLContext]:
+    """Prepare internal Home Assistant URL with signed path.
+
+    Converts internal URLs (relative paths or HA instance URLs) to internal
+    URLs with signed authentication paths.
+    """
+    if hass.config.api is None:
+        raise HomeAssistantError(
+            "Home Assistant API not available",
+            translation_domain=DOMAIN,
+            translation_key="failed_to_load_url",
+            translation_placeholders={"error": "Home Assistant API not available"},
+        )
+
+    # Extract path from full URL or use directly if relative
+    path = str(YarlURL(url).relative()) if not url.startswith("/") else url
+
+    # Sign the path for authentication (5 minute expiry)
+    signed_path = async_sign_path(
+        hass, path, timedelta(minutes=5), use_content_user=True
+    )
+
+    # Build internal URL using local_ip (works in Docker containers)
+    scheme = "https" if hass.config.api.use_ssl else "http"
+    host = hass.config.api.local_ip
+    internal_url = f"{scheme}://{host}:{hass.config.api.port}{signed_path}"
+
+    # Disable SSL verification (cert may not match the IP address)
+    return internal_url, get_default_no_verify_context()
 
 
 def _validate_credentials_input(
