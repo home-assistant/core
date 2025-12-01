@@ -113,44 +113,44 @@
   "title": "Vacuum",
   "triggers": {
     "docked": {
-      "description": "Triggers when a vacuum cleaner has docked.",
+      "description": "Triggers when one or several vacuums returned to dock.",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a vacuum cleaner has docked"
+      "name": "Vacuum returned to dock"
     },
     "errored": {
-      "description": "Triggers when a vacuum cleaner has errored.",
+      "description": "Triggers when one or several vacuums encountered an error.",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a vacuum cleaner has errored"
+      "name": "Vacuum encountered an error"
     },
     "paused_cleaning": {
-      "description": "Triggers when a vacuum cleaner has paused cleaning.",
+      "description": "Triggers when one or several vacuums paused cleaning.",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a vacuum cleaner has paused cleaning"
+      "name": "Vacuum cleaner paused cleaning"
     },
     "started_cleaning": {
-      "description": "Triggers when a vacuum cleaner has started cleaning.",
+      "description": "Triggers when one or several vacuums started cleaning.",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a vacuum cleaner has started cleaning"
+      "name": "Vacuum cleaner started cleaning"
     }
   }
 }

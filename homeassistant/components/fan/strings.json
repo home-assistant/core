@@ -166,24 +166,24 @@
   "title": "Fan",
   "triggers": {
     "turned_off": {
-      "description": "Triggers when a fan is turned off.",
+      "description": "Triggers when one or several fans turned off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a fan is turned off"
+      "name": "Fan turned off"
     },
     "turned_on": {
-      "description": "Triggers when a fan is turned on.",
+      "description": "Triggers when one or several fans turned on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a fan is turned on"
+      "name": "Fan turned on"
     }
   }
 }
