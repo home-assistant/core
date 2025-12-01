@@ -94,3 +94,13 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[MagicMock]:
+    """Mock Saunum setup entry."""
+    with patch(
+        "homeassistant.components.saunum.async_setup_entry", autospec=True
+    ) as mock_setup_entry:
+        mock_setup_entry.return_value = True
+        yield mock_setup_entry
