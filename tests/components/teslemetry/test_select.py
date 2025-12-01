@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
@@ -13,6 +14,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.teslemetry.coordinator import ENERGY_INFO_INTERVAL
 from homeassistant.components.teslemetry.select import LOW
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -20,6 +22,8 @@ from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_OK, SITE_INFO, VEHICLE_DATA_ALT
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -167,7 +171,7 @@ async def test_select_streaming(
         assert state.state == snapshot(name=entity_id)
 
 
-async def test_export_rule_vpp_missing_value(
+async def test_export_rule_restore(
     hass: HomeAssistant,
     mock_site_info: AsyncMock,
 ) -> None:
@@ -211,3 +215,91 @@ async def test_export_rule_vpp_missing_value(
     # The entity should restore the previous state since API value is still missing
     state = hass.states.get(entity_id)
     assert state.state == EnergyExportMode.BATTERY_OK.value
+
+
+@pytest.mark.parametrize(
+    ("site_data", "current_option", "expected_state"),
+    [
+        # Path 1: Customer selected export option (has value)
+        (
+            {
+                "customer_preferred_export_rule": "pv_only",
+                "non_export_configured": None,
+            },
+            None,
+            "pv_only",
+        ),
+        # Path 2: In VPP, Export is disabled (non_export_configured is True)
+        (
+            {
+                "customer_preferred_export_rule": None,
+                "non_export_configured": True,
+            },
+            None,
+            EnergyExportMode.NEVER.value,
+        ),
+        # Path 3: In VPP, Export enabled but state shows disabled (current_option is NEVER)
+        (
+            {
+                "customer_preferred_export_rule": None,
+                "non_export_configured": None,
+            },
+            EnergyExportMode.NEVER.value,
+            STATE_UNKNOWN,
+        ),
+        # Path 4: In VPP Mode, Export isn't disabled, use last known state
+        (
+            {
+                "customer_preferred_export_rule": None,
+                "non_export_configured": None,
+            },
+            EnergyExportMode.BATTERY_OK.value,
+            EnergyExportMode.BATTERY_OK.value,
+        ),
+    ],
+)
+async def test_export_rule_update_attrs_logic(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_site_info: AsyncMock,
+    site_data: dict,
+    current_option: str | None,
+    expected_state: str,
+) -> None:
+    """Test all logic paths in TeslemetryExportRuleSelectEntity._async_update_attrs."""
+    # Create site info with the test data
+    test_site_info = deepcopy(SITE_INFO)
+    test_site_info["response"]["components"].update(site_data)
+
+    mock_site_info.side_effect = lambda: test_site_info
+
+    # Set up platform
+    await setup_platform(hass, [Platform.SELECT])
+
+    entity_id = "select.energy_site_allow_export"
+
+    # If we need to set a current option first, do it via service call
+    if current_option is not None:
+        with patch(
+            "tesla_fleet_api.teslemetry.EnergySite.grid_import_export",
+            return_value=COMMAND_OK,
+        ):
+            await hass.services.async_call(
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_OPTION: current_option,
+                },
+                blocking=True,
+            )
+
+    # Coordinator refresh
+    freezer.tick(ENERGY_INFO_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check the final state matches expected
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
