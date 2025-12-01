@@ -6,7 +6,6 @@ import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Container, Coroutine, Hashable, Iterable, Mapping
-from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
@@ -527,8 +526,12 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ):
             # The flow's progress task was changed, register a callback on it
             async def call_configure() -> None:
-                with suppress(UnknownFlow):
+                try:
                     await self._async_configure(flow.flow_id)
+                except UnknownFlow:
+                    pass
+                except Exception:
+                    _LOGGER.exception("Error processing progress task for %s", flow)
 
             def schedule_configure(_: asyncio.Task) -> None:
                 self.hass.async_create_task(call_configure())
