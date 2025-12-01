@@ -23,7 +23,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -182,9 +181,6 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         )
         self._in_progress_old_version: str | None = None
 
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
@@ -277,9 +273,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self._attr_release_url = get_release_url(
             coordinator.device.gen, coordinator.model, description.beta
         )
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -375,20 +368,6 @@ class RpcSleepingUpdateEntity(
     """Represent a RPC sleeping update entity."""
 
     entity_description: RpcUpdateDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcUpdateDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
