@@ -148,7 +148,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             content.extend(
                 await async_prepare_files_for_prompt(
-                    hass, [Path(filename) for filename in filenames]
+                    hass, [(Path(filename), None) for filename in filenames]
                 )
             )
 

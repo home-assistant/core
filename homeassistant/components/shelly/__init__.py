@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Final
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
@@ -58,10 +59,13 @@ from .coordinator import (
 )
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
+    async_manage_deprecated_firmware_issue,
+    async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
@@ -95,6 +99,7 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 ]
 RPC_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.UPDATE,
 ]
@@ -165,9 +170,6 @@ async def _async_setup_block_entry(
         device_entry = dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -278,9 +280,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         device_entry = dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -322,12 +321,19 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 translation_placeholders={"device": entry.title},
             ) from err
 
+        await er.async_migrate_entries(
+            hass,
+            entry.entry_id,
+            partial(async_migrate_rpc_virtual_components_unique_ids, device.config),
+        )
+
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup()
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+        async_manage_deprecated_firmware_issue(hass, entry)
         async_manage_ble_scanner_firmware_unsupported_issue(
             hass,
             entry,
@@ -336,6 +342,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             hass,
             entry,
         )
+        async_manage_open_wifi_ap_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

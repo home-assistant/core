@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,10 +27,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("whiteled_brightness", "expected_brightness"),
+    ("whiteled_brightness", "expected_brightness", "color_temp"),
     [
-        (100, 255),
-        (None, None),
+        (100, 255, 3000),
+        (None, None, None),
     ],
 )
 async def test_light_state(
@@ -35,10 +39,19 @@ async def test_light_state(
     reolink_host: MagicMock,
     whiteled_brightness: int | None,
     expected_brightness: int | None,
+    color_temp: int | None,
 ) -> None:
     """Test light entity state with floodlight."""
+
+    def mock_supported(ch, capability):
+        if capability == "color_temp":
+            return color_temp is not None
+        return True
+
+    reolink_host.supported = mock_supported
     reolink_host.whiteled_state.return_value = True
     reolink_host.whiteled_brightness.return_value = whiteled_brightness
+    reolink_host.whiteled_color_temperature.return_value = color_temp
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -50,6 +63,8 @@ async def test_light_state(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == expected_brightness
+    if color_temp is not None:
+        assert state.attributes["color_temp_kelvin"] == color_temp
 
 
 async def test_light_turn_off(
@@ -58,6 +73,8 @@ async def test_light_turn_off(
     reolink_host: MagicMock,
 ) -> None:
     """Test light turn off service."""
+    reolink_host.whiteled_color_temperature.return_value = 3000
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -89,6 +106,8 @@ async def test_light_turn_on(
     reolink_host: MagicMock,
 ) -> None:
     """Test light turn on service."""
+    reolink_host.whiteled_color_temperature.return_value = 3000
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -99,12 +118,13 @@ async def test_light_turn_on(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 51},
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 51, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
     reolink_host.set_whiteled.assert_has_calls(
         [call(0, brightness=20), call(0, state=True)]
     )
+    reolink_host.baichuan.set_floodlight.assert_called_with(0, color_temp=4000)
 
 
 @pytest.mark.parametrize(

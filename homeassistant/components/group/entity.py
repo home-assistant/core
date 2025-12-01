@@ -116,6 +116,17 @@ class GroupEntity(Entity):
         """Abstract method to update the entity."""
 
     @callback
+    def _update_assumed_state_from_members(self) -> None:
+        """Update assumed_state based on member entities."""
+        self._attr_assumed_state = False
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            if state.attributes.get(ATTR_ASSUMED_STATE):
+                self._attr_assumed_state = True
+                return
+
+    @callback
     def async_update_supported_features(
         self,
         entity_id: str,

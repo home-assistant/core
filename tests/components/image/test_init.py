@@ -348,6 +348,51 @@ async def test_fetch_image_url_wrong_content_type(
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+@respx.mock
+@pytest.mark.parametrize(
+    ("content", "content_type"),
+    [
+        (b"\x89PNG", "image/png"),
+        (b"\xff\xd8\xff\xdb", "image/jpeg"),
+        (b"\xff\xd8\xff\xe0", "image/jpeg"),
+        (b"\xff\xd8\xff\xed", "image/jpeg"),
+        (b"\xff\xd8\xff\xee", "image/jpeg"),
+        (b"\xff\xd8\xff\xe1", "image/jpeg"),
+        (b"\xff\xd8\xff\xe2", "image/jpeg"),
+        (b"GIF89a", "image/gif"),
+        (b"GIF87a", "image/gif"),
+        (b"RIFF", "image/webp"),
+        (b"\x49\x49\x2a\x00", "image/tiff"),
+        (b"\x4d\x4d\x00\x2a", "image/tiff"),
+    ],
+)
+async def test_fetch_image_url_infer_content_type_from_magic_number(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    content: bytes,
+    content_type: str,
+) -> None:
+    """Test fetching an image and inferring content-type from magic number."""
+    respx.get("https://example.com/myimage.jpg").respond(
+        status_code=HTTPStatus.OK, content=content
+    )
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == content
+    assert resp.content_type == content_type
+
+
 async def test_image_stream(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -405,6 +450,15 @@ async def test_image_stream(
             await hass.async_block_till_done()
 
     await close_future
+
+
+async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) -> None:
+    """Test get_image action."""
+    image_data = await image.async_get_image(hass, "image.test")
+    assert image_data == image.Image(content_type="image/jpeg", content=b"Test")
+
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await image.async_get_image(hass, "image.unknown")
 
 
 async def test_snapshot_service(hass: HomeAssistant) -> None:

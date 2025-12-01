@@ -3,9 +3,13 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from pysmhi import SMHIForecast, SmhiForecastException, SMHIPointForecast
+from pysmhi import (
+    SMHIFirePointForecast,
+    SMHIForecast,
+    SmhiForecastException,
+    SMHIPointForecast,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -61,10 +65,11 @@ async def test_setup_hass(
     "to_load",
     [1],
 )
-@freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
+@pytest.mark.freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
 async def test_clear_night(
     hass: HomeAssistant,
     mock_client: SMHIPointForecast,
+    mock_fire_client: SMHIFirePointForecast,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the smhi integration."""
@@ -102,6 +107,7 @@ async def test_properties_no_data(
     hass: HomeAssistant,
     load_int: MockConfigEntry,
     mock_client: MagicMock,
+    mock_fire_client: SMHIFirePointForecast,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test properties when no API data available."""
@@ -135,7 +141,8 @@ async def test_properties_no_data(
 
 async def test_properties_unknown_symbol(
     hass: HomeAssistant,
-    mock_client: MagicMock,
+    mock_client: SMHIPointForecast,
+    mock_fire_client: SMHIFirePointForecast,
 ) -> None:
     """Test behaviour when unknown symbol from API."""
     data = SMHIForecast(
@@ -244,7 +251,8 @@ async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant,
     error: Exception,
     load_int: MockConfigEntry,
-    mock_client: MagicMock,
+    mock_client: SMHIPointForecast,
+    mock_fire_client: SMHIFirePointForecast,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the refresh weather forecast function."""

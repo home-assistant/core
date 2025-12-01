@@ -16,6 +16,7 @@ MOCK_STATUS: Final = {
     "DRIVER": "USB UPS Driver",
     "UPSMODE": "Stand Alone",
     "UPSNAME": "MyUPS",
+    "APCMODEL": "Back-UPS ES 600",
     "MODEL": "Back-UPS ES 600",
     "STATUS": "ONLINE",
     "LINEV": "124.0 Volts",

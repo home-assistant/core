@@ -162,6 +162,7 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
@@ -210,7 +211,7 @@ async def ws_start_preview(
 
     @callback
     def async_preview_updated(
-        last_exception: Exception | None, state: str, attributes: Mapping[str, Any]
+        last_exception: BaseException | None, state: str, attributes: Mapping[str, Any]
     ) -> None:
         """Forward config entry state events to websocket."""
         if last_exception:

@@ -40,6 +40,7 @@ from homeassistant.util.async_ import create_eager_task
 from . import debug_info, discovery
 from .client import (
     MQTT,
+    async_on_subscribe_done,
     async_publish,
     async_subscribe,
     async_subscribe_internal,
@@ -163,15 +164,13 @@ __all__ = [
     "async_create_certificate_temp_files",
     "async_forward_entry_setup_and_setup_discovery",
     "async_migrate_entry",
+    "async_on_subscribe_done",
     "async_prepare_subscribe_topics",
     "async_publish",
     "async_remove_config_entry_device",
-    "async_setup",
-    "async_setup_entry",
     "async_subscribe",
     "async_subscribe_connection_status",
     "async_subscribe_topics",
-    "async_unload_entry",
     "async_unsubscribe_topics",
     "async_wait_for_mqtt_client",
     "convert_outgoing_mqtt_payload",
@@ -251,7 +250,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
     Causes for this is config entry options changing.
     """
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 @callback

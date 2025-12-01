@@ -143,7 +143,7 @@ async def build_main_listing(hass: HomeAssistant) -> BrowseMedia:
             children.extend(item.children)
         else:
             children.append(item)
-    except media_source.BrowseError:
+    except BrowseError:
         pass
 
     return BrowseMedia(

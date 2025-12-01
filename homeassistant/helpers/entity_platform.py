@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
@@ -1068,7 +1068,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities.values(), service_call, expand_group
+            self.entities.values(), service_call, expand_group
         )
 
     @callback
@@ -1079,6 +1079,9 @@ class EntityPlatform:
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        entity_device_classes: Iterable[str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service.
 
@@ -1091,12 +1094,14 @@ class EntityPlatform:
             self.hass,
             self.platform_name,
             name,
+            entity_device_classes=entity_device_classes,
             entities=self.domain_platform_entities,
             func=func,
             job_type=None,
             required_features=required_features,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders=description_placeholders,
         )
 
     async def _async_update_entity_states(self) -> None:
