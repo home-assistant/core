@@ -8,7 +8,6 @@ import pytest
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
-    DATA_ICE_SERVERS,
     Camera,
     CameraWebRTCProvider,
     StreamType,
@@ -17,10 +16,10 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
-    async_register_ice_servers,
     async_register_webrtc_provider,
     get_camera_from_entity_id,
 )
+from homeassistant.components.webrtc import DATA_ICE_SERVERS, async_register_ice_servers
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config

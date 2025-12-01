@@ -2197,6 +2197,7 @@ NO_QUALITY_SCALE = [
     "trace",
     "usage_prediction",
     "webhook",
+    "webrtc",
     "websocket_api",
     "zone",
 ]

@@ -1811,6 +1811,8 @@ build.json @home-assistant/supervisor
 /tests/components/webmin/ @autinerd
 /homeassistant/components/webostv/ @thecode
 /tests/components/webostv/ @thecode
+/homeassistant/components/webrtc/ @home-assistant/core
+/tests/components/webrtc/ @home-assistant/core
 /homeassistant/components/websocket_api/ @home-assistant/core
 /tests/components/websocket_api/ @home-assistant/core
 /homeassistant/components/weheat/ @jesperraemaekers

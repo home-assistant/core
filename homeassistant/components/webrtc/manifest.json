@@ -1,0 +1,10 @@
+{
+  "domain": "webrtc",
+  "name": "WebRTC",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/webrtc",
+  "integration_type": "system",
+  "quality_scale": "internal",
+  "requirements": []
+}
