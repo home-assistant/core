@@ -1,95 +1,85 @@
 {
   "config": {
-    "step": {
-      "api_key": {
-        "title": "[%key:common::config_flow::data::api_key%]",
-        "description": "Enter PurpleAir API read key",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Re-authenticate",
-        "description": "Change PurpleAir API read key",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure",
-        "description": "Change PurpleAir API read key",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      }
-    },
-    "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Enter PurpleAir API read key",
+        "title": "[%key:common::config_flow::data::api_key%]"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Change PurpleAir API read key",
+        "title": "Re-authenticate"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Change PurpleAir API read key",
+        "title": "Reconfigure"
+      }
     }
   },
   "config_subentries": {
     "sensor": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      },
+      "error": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+        "no_sensor_found": "Sensors not found",
+        "no_sensors_found": "No sensors found in search area",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
       "initiate_flow": {
         "user": "Add PurpleAir sensor"
       },
       "step": {
-        "add_options": {
-          "title": "Add sensor",
-          "menu_options": {
-            "add_map_location": "Add sensor from map location",
-            "add_sensor_index": "Add sensor by index and optional read key"
-          }
-        },
         "add_map_location": {
-          "title": "Add sensor from map",
-          "description": "Search for sensors in the circle on the map",
           "data": {
             "latitude": "[%key:common::config_flow::data::latitude%]",
             "longitude": "[%key:common::config_flow::data::longitude%]",
             "radius": "Radius (m)"
-          }
+          },
+          "description": "Search for sensors in the circle on the map",
+          "title": "Add sensor from map"
         },
-        "select_sensor": {
-          "title": "Select sensor",
-          "description": "Select sensor to add",
-          "data": {
-            "sensor_index": "Sensor"
-          }
+        "add_options": {
+          "menu_options": {
+            "add_map_location": "Add sensor from map location",
+            "add_sensor_index": "Add sensor by index and optional read key"
+          },
+          "title": "Add sensor"
         },
         "add_sensor_index": {
-          "title": "Sensor details",
-          "description": "Enter sensor identification details",
           "data": {
             "sensor_index": "Sensor index",
             "sensor_read_key": "Sensor read key"
-          }
-        }
-      },
-      "error": {
-        "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-        "no_sensors_found": "No sensors found in search area",
-        "no_sensor_found": "Sensors not found",
-        "unknown": "[%key:common::config_flow::error::unknown%]",
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-      },
-      "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "settings": {
-        "title": "Settings",
-        "data": {
-          "show_on_map": "Show sensor location on map"
+          },
+          "description": "Enter sensor identification details",
+          "title": "Sensor details"
+        },
+        "select_sensor": {
+          "data": {
+            "sensor_index": "Sensor"
+          },
+          "description": "Select sensor to add",
+          "title": "Select sensor"
         }
       }
     }
@@ -122,6 +112,16 @@
       },
       "voc_aqi": {
         "name": "Volatile organic compounds air quality index"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "settings": {
+        "data": {
+          "show_on_map": "Show sensor location on map"
+        },
+        "title": "Settings"
       }
     }
   }

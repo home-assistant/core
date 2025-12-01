@@ -13,10 +13,10 @@
       "pm10_0_count_concentration": {
         "default": "mdi:blur"
       },
-      "pm5_0_count_concentration": {
+      "pm2_5_count_concentration": {
         "default": "mdi:blur"
       },
-      "pm2_5_count_concentration": {
+      "pm5_0_count_concentration": {
         "default": "mdi:blur"
       }
     }
