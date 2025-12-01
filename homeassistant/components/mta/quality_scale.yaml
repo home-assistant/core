@@ -17,7 +17,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: No events subscribed.
+    comment: Integration does not subscribe to events in async_added_to_hass.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -67,7 +67,7 @@ rules:
     status: exempt
     comment: N/A
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: N/A

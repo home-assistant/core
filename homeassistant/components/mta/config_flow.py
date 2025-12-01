@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pymta import LINE_TO_FEED, SubwayFeed
+from pymta import LINE_TO_FEED, MTAFeedError, SubwayFeed
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,7 +15,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 
 from .const import CONF_LINE, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
@@ -91,24 +90,13 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self.stops = await self._async_get_stops(self.data[CONF_LINE])
-        except Exception:
-            _LOGGER.exception("Error fetching stops")
-            errors["base"] = "cannot_connect"
+        except MTAFeedError:
+            _LOGGER.exception("Error fetching stops for line %s", self.data[CONF_LINE])
+            return self.async_abort(reason="cannot_connect")
 
         if not self.stops:
-            errors["base"] = "no_stops"
-
-        if errors:
-            return self.async_show_form(
-                step_id="stop",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_STOP_ID): TextSelector(),
-                    }
-                ),
-                errors=errors,
-                description_placeholders={"line": self.data[CONF_LINE]},
-            )
+            _LOGGER.error("No stops found for line %s", self.data[CONF_LINE])
+            return self.async_abort(reason="no_stops")
 
         stop_options = [
             SelectOptionDict(value=stop_id, label=stop_name)

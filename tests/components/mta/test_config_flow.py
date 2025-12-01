@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from pymta import MTAFeedError
+
 from homeassistant import config_entries
 from homeassistant.components.mta.const import (
     CONF_LINE,
@@ -128,3 +130,43 @@ async def test_form_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_get_stops(
+    hass: HomeAssistant, mock_nyct_feed_config_flow: MagicMock
+) -> None:
+    """Test we abort when we cannot get stops."""
+    mock_instance = mock_nyct_feed_config_flow.return_value
+    mock_instance.get_stops.side_effect = MTAFeedError("Feed error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_LINE: "1"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_form_no_stops_found(
+    hass: HomeAssistant, mock_nyct_feed_config_flow: MagicMock
+) -> None:
+    """Test we abort when no stops are found."""
+    mock_instance = mock_nyct_feed_config_flow.return_value
+    mock_instance.get_stops.return_value = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_LINE: "1"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_stops"
