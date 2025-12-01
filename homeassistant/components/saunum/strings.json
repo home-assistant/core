@@ -37,7 +37,8 @@
     },
     "sensor": {
       "heater_elements_active": {
-        "name": "Heater elements active"
+        "name": "Heater elements active",
+        "unit_of_measurement": "heater elements"
       },
       "on_time": {
         "name": "Total time turned on"
