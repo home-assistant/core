@@ -330,7 +330,9 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryExportRuleSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
+class TeslemetryExportRuleSelectEntity(
+    TeslemetryEnergyInfoEntity, SelectEntity, RestoreEntity
+):
     """Select entity for export rules select entities."""
 
     _attr_options: list[str] = [
@@ -348,9 +350,24 @@ class TeslemetryExportRuleSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity)
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "components_customer_preferred_export_rule")
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if self._value:
+            # We have a current value, no need to restore state
+            return
+
+        # Restore state
+        if (state := await self.async_get_last_state()) is not None:
+            if state.state in self._attr_options:
+                self._attr_current_option = state.state
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
-        self._attr_current_option = self.get(self.key, EnergyExportMode.NEVER.value)
+        # Value is missing when enrolled to VPP
+        if value := self._value:
+            self._attr_current_option = value
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
