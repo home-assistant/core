@@ -354,20 +354,24 @@ class TeslemetryExportRuleSelectEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._value:
-            # We have a current value, no need to restore state
-            return
-
-        # Restore state
-        if (state := await self.async_get_last_state()) is not None:
-            if state.state in self._attr_options:
-                self._attr_current_option = state.state
+        # Restore state if it's not known
+        if self._attr_current_option is None:
+            if (state := await self.async_get_last_state()) is not None:
+                if state.state in self._attr_options:
+                    self._attr_current_option = state.state
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
-        # Value is missing when enrolled to VPP
         if value := self._value:
+            # Customer selected export option
             self._attr_current_option = value
+        elif self.get("components_non_export_configured") is True:
+            # In VPP, Export is disabled
+            self._attr_current_option = EnergyExportMode.NEVER
+        elif self._attr_current_option == EnergyExportMode.NEVER:
+            # In VPP, Export is enabled, but our state shows it is disabled
+            self._attr_current_option = None  # Unknown
+        # In VPP Mode, Export isn't disabled, so use last known state
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
