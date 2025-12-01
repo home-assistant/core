@@ -2,12 +2,14 @@
 
 import asyncio
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.frontend import DOMAIN
 from homeassistant.components.frontend.storage import async_user_store
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser
@@ -588,13 +590,26 @@ async def test_user_store_concurrent_access(
         "data": {"test-key": "test-value"},
     }
 
-    # Request the same user store concurrently
-    results = await asyncio.gather(
-        async_user_store(hass, hass_admin_user.id),
-        async_user_store(hass, hass_admin_user.id),
-        async_user_store(hass, hass_admin_user.id),
-    )
+    load_count = 0
+    original_async_load = Store.async_load
+
+    async def slow_async_load(self: Store) -> Any:
+        """Simulate slow loading to trigger race condition."""
+        nonlocal load_count
+        load_count += 1
+        await asyncio.sleep(0)  # Yield to allow other coroutines to run
+        return await original_async_load(self)
+
+    with patch.object(Store, "async_load", slow_async_load):
+        # Request the same user store concurrently
+        results = await asyncio.gather(
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+        )
 
     # All results should be the same store instance with loaded data
     assert results[0] is results[1] is results[2]
     assert results[0].data == {"test-key": "test-value"}
+    # Store should only be loaded once due to Event synchronization
+    assert load_count == 1
