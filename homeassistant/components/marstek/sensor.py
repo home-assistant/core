@@ -14,6 +14,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,14 +41,14 @@ class MarstekSensor(CoordinatorEntity[MarstekDataUpdateCoordinator], SensorEntit
         super().__init__(coordinator)
         self._device_info = device_info
         self._sensor_type = sensor_type
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_info["ip"])},
-            "name": f"Marstek {device_info['device_type']} v{device_info['version']}",
-            "manufacturer": "Marstek",
-            "model": device_info["device_type"],
-            "sw_version": str(device_info["version"]),
-            "hw_version": device_info.get("wifi_mac", ""),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_info["ip"])},
+            name=f"Marstek {device_info['device_type']} v{device_info['version']}",
+            manufacturer="Marstek",
+            model=device_info["device_type"],
+            sw_version=str(device_info["version"]),
+            hw_version=device_info.get("wifi_mac", ""),
+        )
 
     @property
     def unique_id(self) -> str:
@@ -79,6 +80,9 @@ class MarstekBatterySensor(MarstekSensor):
     """Representation of a Marstek battery sensor."""
 
     _attr_translation_key = "battery_level"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:battery"
 
     def __init__(
         self,
@@ -87,9 +91,6 @@ class MarstekBatterySensor(MarstekSensor):
     ) -> None:
         """Initialize the battery sensor."""
         super().__init__(coordinator, device_info, "battery_soc")
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_icon = "mdi:battery"
 
     @property
     def native_value(self) -> StateType:
