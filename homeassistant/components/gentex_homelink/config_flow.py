@@ -86,7 +86,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
                 ),
             )
-        return await self.async_step_user()
+        return await self.async_step_user(user_input)
 
     async def async_oauth_create_entry(
         self, data: dict
