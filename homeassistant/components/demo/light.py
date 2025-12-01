@@ -125,7 +125,7 @@ class DemoLight(LightEntity):
     ) -> None:
         """Initialize the light."""
         self._attr_translation_key = translation_key
-        self._available = True
+        self._attr_available = True
         self._attr_brightness = brightness
         self._attr_color_temp_kelvin = ct or random.choice(LIGHT_TEMPS)
         self._attr_effect = effect
@@ -155,13 +155,6 @@ class DemoLight(LightEntity):
             },
             name=device_name,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return availability."""
-        # This demo light is always available, but well-behaving components
-        # should implement this to inform Home Assistant accordingly.
-        return self._available
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
