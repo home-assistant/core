@@ -16,14 +16,14 @@ INTENT_LIST_REMOVE_ITEM = "HassListRemoveItem"
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
-    """Set up the todo intents."""
-    intent.async_register(hass, ListAddItemIntent())
-    intent.async_register(hass, ListCompleteItemIntent())
-    intent.async_register(hass, ListRemoveItemIntent())
+    """Set up the todo intent handlers."""
+    intent.async_register(hass, ListAddItemIntentHandler())
+    intent.async_register(hass, ListCompleteItemIntentHandler())
+    intent.async_register(hass, ListRemoveItemIntentHandler())
 
 
 class ListBaseIntentHandler(intent.IntentHandler):
-    """Base class for toto intents."""
+    """Base class for toto intent handlers."""
 
     slot_schema = {
         vol.Required("item"): intent.non_empty_string,
@@ -31,10 +31,8 @@ class ListBaseIntentHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
-    async def async_handle_toto_intent(
-        self, target_list: TodoListEntity, item: str
-    ) -> None:
-        """Execute action specific to this intent."""
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
         raise NotImplementedError
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -66,7 +64,7 @@ class ListBaseIntentHandler(intent.IntentHandler):
             )
 
         # Execute specific action
-        await self.async_handle_toto_intent(target_list, item)
+        await self._async_do_handle(target_list, item)
 
         # Build intent response
         response: intent.IntentResponse = intent_obj.create_response()
@@ -82,16 +80,14 @@ class ListBaseIntentHandler(intent.IntentHandler):
         return response
 
 
-class ListAddItemIntent(ListBaseIntentHandler):
+class ListAddItemIntentHandler(ListBaseIntentHandler):
     """Handle ListAddItem intents."""
 
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
 
-    async def async_handle_toto_intent(
-        self, target_list: TodoListEntity, item: str
-    ) -> None:
-        """Execute action specific to this intent."""
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
 
         # Add to list
         await target_list.async_create_todo_item(
@@ -99,16 +95,14 @@ class ListAddItemIntent(ListBaseIntentHandler):
         )
 
 
-class ListCompleteItemIntent(ListBaseIntentHandler):
+class ListCompleteItemIntentHandler(ListBaseIntentHandler):
     """Handle ListCompleteItem intents."""
 
     intent_type = INTENT_LIST_COMPLETE_ITEM
     description = "Complete item on a todo list"
 
-    async def async_handle_toto_intent(
-        self, target_list: TodoListEntity, item: str
-    ) -> None:
-        """Execute action specific to this intent."""
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
 
         # Find item in list
         matching_item = None
@@ -134,16 +128,14 @@ class ListCompleteItemIntent(ListBaseIntentHandler):
         )
 
 
-class ListRemoveItemIntent(ListBaseIntentHandler):
+class ListRemoveItemIntentHandler(ListBaseIntentHandler):
     """Handle LisRemoveItemIntent intents."""
 
     intent_type = INTENT_LIST_REMOVE_ITEM
     description = "Remove one or more items from a todo list"
 
-    async def async_handle_toto_intent(
-        self, target_list: TodoListEntity, item: str
-    ) -> None:
-        """Execute action specific to this intent."""
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
 
         # Find items in list
         matching_item_uids = [
