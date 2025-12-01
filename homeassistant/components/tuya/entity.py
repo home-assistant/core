@@ -84,5 +84,5 @@ class TuyaEntity(Entity):
             return
         await self.hass.async_add_executor_job(
             self._send_command,
-            [dpcode_wrapper.get_update_command(self.device, value)],
+            dpcode_wrapper.get_update_commands(self.device, value),
         )
