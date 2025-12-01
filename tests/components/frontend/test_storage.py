@@ -1,11 +1,15 @@
 """The tests for frontend storage."""
 
+import asyncio
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.frontend import DOMAIN
+from homeassistant.components.frontend.storage import async_user_store
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser
@@ -572,3 +576,92 @@ async def test_set_system_data_requires_admin(
     assert not res["success"], res
     assert res["error"]["code"] == "unauthorized"
     assert res["error"]["message"] == "Unauthorized"
+
+
+async def test_user_store_concurrent_access(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that concurrent access to user store returns loaded data."""
+    storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "data": {"test-key": "test-value"},
+    }
+
+    load_count = 0
+    original_async_load = Store.async_load
+
+    async def slow_async_load(self: Store) -> Any:
+        """Simulate slow loading to trigger race condition."""
+        nonlocal load_count
+        load_count += 1
+        await asyncio.sleep(0)  # Yield to allow other coroutines to run
+        return await original_async_load(self)
+
+    with patch.object(Store, "async_load", slow_async_load):
+        # Request the same user store concurrently
+        results = await asyncio.gather(
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+        )
+
+    # All results should be the same store instance with loaded data
+    assert results[0] is results[1] is results[2]
+    assert results[0].data == {"test-key": "test-value"}
+    # Store should only be loaded once due to Future synchronization
+    assert load_count == 1
+
+
+async def test_user_store_load_error(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that load errors are propagated and allow retry."""
+
+    async def failing_async_load(self: Store) -> Any:
+        """Simulate a load failure."""
+        raise OSError("Storage read error")
+
+    with (
+        patch.object(Store, "async_load", failing_async_load),
+        pytest.raises(OSError, match="Storage read error"),
+    ):
+        await async_user_store(hass, hass_admin_user.id)
+
+    # After error, the future should be removed, allowing retry
+    # This time without the patch, it should work (empty store)
+    store = await async_user_store(hass, hass_admin_user.id)
+    assert store.data == {}
+
+
+async def test_user_store_concurrent_load_error(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that concurrent callers all receive the same error."""
+
+    async def failing_async_load(self: Store) -> Any:
+        """Simulate a slow load failure."""
+        await asyncio.sleep(0)  # Yield to allow other coroutines to run
+        raise OSError("Storage read error")
+
+    with patch.object(Store, "async_load", failing_async_load):
+        results = await asyncio.gather(
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+            async_user_store(hass, hass_admin_user.id),
+            return_exceptions=True,
+        )
+
+    # All callers should receive the same OSError
+    assert len(results) == 3
+    for result in results:
+        assert isinstance(result, OSError)
+        assert str(result) == "Storage read error"
+
+    # After error, retry should work
+    store = await async_user_store(hass, hass_admin_user.id)
+    assert store.data == {}
