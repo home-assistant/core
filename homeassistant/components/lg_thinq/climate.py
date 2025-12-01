@@ -24,7 +24,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThinqConfigEntry
@@ -222,9 +221,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         _LOGGER.debug(
             "[%s:%s] async_turn_on", self.coordinator.device_name, self.property_id
         )
-        # Compare with current to prevent exception
-        if self.hvac_mode != HVACMode.OFF:
-            return
         await self.async_call_api(self.coordinator.api.async_turn_on(self.property_id))
 
     async def async_turn_off(self) -> None:
@@ -232,20 +228,12 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         _LOGGER.debug(
             "[%s:%s] async_turn_off", self.coordinator.device_name, self.property_id
         )
-        # Compare with current to prevent exception
-        if self.hvac_mode == HVACMode.OFF:
-            return
         await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF and self.hvac_mode != HVACMode.OFF:
-            try:
-                await self.async_call_api(
-                    self.coordinator.api.async_turn_off(self.property_id)
-                )
-            except ServiceValidationError as exc:
-                _LOGGER.debug("%s", exc)
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
             return
 
         if hvac_mode == HVACMode.HEAT_COOL:
@@ -253,18 +241,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # If device is off, turn on first.
         if not self.data.is_on:
-            try:
-                await self.async_call_api(
-                    self.coordinator.api.async_turn_on(self.property_id)
-                )
-            except ServiceValidationError as exc:
-                _LOGGER.debug("%s", exc)
-            else:
-                await asyncio.sleep(2)
+            await self.async_turn_on()
+            await asyncio.sleep(2)
 
-        # Compare with current hvac_mode to prevent exception
-        if hvac_mode == self.hvac_mode:
-            return
         _LOGGER.debug(
             "[%s:%s] async_set_hvac_mode: %s",
             self.coordinator.device_name,
@@ -279,9 +258,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        # Compare with current preset_mode to prevent exception
-        if preset_mode == self.preset_mode:
-            return
         _LOGGER.debug(
             "[%s:%s] async_set_preset_mode: %s",
             self.coordinator.device_name,
@@ -296,9 +272,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        # Compare with current fan_mode to prevent exception
-        if fan_mode == self.fan_mode:
-            return
         _LOGGER.debug(
             "[%s:%s] async_set_fan_mode: %s",
             self.coordinator.device_name,
@@ -314,9 +287,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
-        # Compare with current swing_mode to prevent exception
-        if swing_mode == self.swing_mode:
-            return
         _LOGGER.debug(
             "[%s:%s] async_set_swing_mode: %s",
             self.coordinator.device_name,
@@ -331,9 +301,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new swing horizontal mode."""
-        # Compare with current swing_horizontal_mode to prevent exception
-        if swing_horizontal_mode == self.swing_horizontal_mode:
-            return
         _LOGGER.debug(
             "[%s:%s] async_set_swing_horizontal_mode: %s",
             self.coordinator.device_name,
@@ -349,13 +316,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
-            if hvac_mode == HVACMode.OFF and self.hvac_mode != HVACMode.OFF:
-                try:
-                    await self.async_call_api(
-                        self.coordinator.api.async_turn_off(self.property_id)
-                    )
-                except ServiceValidationError as exc:
-                    _LOGGER.debug("%s", exc)
+            if hvac_mode == HVACMode.OFF:
+                await self.async_turn_off()
                 return
 
             if hvac_mode == HVACMode.HEAT_COOL:
@@ -363,27 +325,12 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # If device is off, turn on first.
         if not self.data.is_on:
-            try:
-                await self.async_call_api(
-                    self.coordinator.api.async_turn_on(self.property_id)
-                )
-            except ServiceValidationError as exc:
-                _LOGGER.debug("%s", exc)
-            else:
-                await asyncio.sleep(2)
+            await self.async_turn_on()
+            await asyncio.sleep(2)
 
         if hvac_mode and hvac_mode != self.hvac_mode:
-            try:
-                await self.async_call_api(
-                    self.coordinator.api.async_set_hvac_mode(
-                        self.property_id, HVAC_TO_STR.get(hvac_mode)
-                    )
-                )
-            except ServiceValidationError as exc:
-                _LOGGER.debug("%s", exc)
-            else:
-                await asyncio.sleep(2)
-
+            await self.async_set_hvac_mode(HVACMode(hvac_mode))
+            await asyncio.sleep(2)
         _LOGGER.debug(
             "[%s:%s] async_set_temperature: %s",
             self.coordinator.device_name,
