@@ -233,16 +233,18 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._switch_wrapper is None:
             return
 
-        commands = self._switch_wrapper.get_update_commands(self.device, True)
+        commands: list[dict[str, str | bool | int]] = [
+            self._switch_wrapper.get_update_command(self.device, True)
+        ]
 
         if percentage is not None and self._speed_wrapper is not None:
-            commands.extend(
-                self._speed_wrapper.get_update_commands(self.device, percentage)
+            commands.append(
+                self._speed_wrapper.get_update_command(self.device, percentage)
             )
 
         if preset_mode is not None and self._mode_wrapper:
-            commands.extend(
-                self._mode_wrapper.get_update_commands(self.device, preset_mode)
+            commands.append(
+                self._mode_wrapper.get_update_command(self.device, preset_mode)
             )
         await self._async_send_commands(commands)
 

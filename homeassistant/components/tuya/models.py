@@ -196,24 +196,20 @@ class DPCodeWrapper:
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
 
-        This is called by `get_update_commands` to prepare the value for sending
+        This is called by `get_update_command` to prepare the value for sending
         back to the device, and should be implemented in concrete classes if needed.
         """
         raise NotImplementedError
 
-    def get_update_commands(
-        self, device: CustomerDevice, value: Any
-    ) -> list[dict[str, Any]]:
-        """Get the update commands for the dpcode.
+    def get_update_command(self, device: CustomerDevice, value: Any) -> dict[str, Any]:
+        """Get the update command for the dpcode.
 
         The Home Assistant value is converted back to a raw device value.
         """
-        return [
-            {
-                "code": self.dpcode,
-                "value": self._convert_value_to_raw_value(device, value),
-            }
-        ]
+        return {
+            "code": self.dpcode,
+            "value": self._convert_value_to_raw_value(device, value),
+        }
 
 
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
