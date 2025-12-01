@@ -25,7 +25,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .binary_sensor import VictronBinarySensor
 from .const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -156,9 +155,8 @@ class Hub:
                 device, metric, info, self.simple_naming, installation_id
             )
         if metric.metric_kind == MetricKind.BINARY_SENSOR:
-            return VictronBinarySensor(
-                device, metric, info, self.simple_naming, installation_id
-            )
+            # More platforms can be added here in the future
+            pass
         raise ValueError(f"Unsupported metric kind: {metric.metric_kind}")
 
     def publish(
