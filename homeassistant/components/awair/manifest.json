@@ -1,7 +1,7 @@
 {
   "domain": "awair",
   "name": "Awair",
-  "codeowners": ["@ahayworth", "@danielsjf"],
+  "codeowners": ["@ahayworth", "@ricohageman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/awair",
   "iot_class": "local_polling",
