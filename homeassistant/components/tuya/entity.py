@@ -76,7 +76,7 @@ class TuyaEntity(Entity):
             return None
         return dpcode_wrapper.read_device_status(self.device)
 
-    async def _async_send_dpcode_update(
+    async def _async_send_wrapper_updates(
         self, dpcode_wrapper: DPCodeWrapper | None, value: Any
     ) -> None:
         """Send command to the device."""
