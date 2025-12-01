@@ -692,7 +692,7 @@ async def test_yaml_reload_when_labs_flag_changes(
         last_state = set_state
 
 
-async def test_confg_entry_reload_when_labs_flag_changes(
+async def test_config_entry_reload_when_labs_flag_changes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
