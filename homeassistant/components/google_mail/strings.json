@@ -47,6 +47,11 @@
       }
     }
   },
+  "exceptions": {
+    "missing_from_for_alias": {
+      "message": "Missing 'from' email when setting an alias to show. You have to provide a 'from' email"
+    }
+  },
   "services": {
     "set_vacation": {
       "description": "Sets vacation responder settings for Google Mail.",
