@@ -438,6 +438,32 @@
             }
           }
         },
+        "date": {
+          "description": "The KNX date platform is used as an interface to date providers.",
+          "knx": {
+            "ga_date": {
+              "description": "The group address of the date provider.",
+              "label": "Date"
+            },
+            "respond_to_read": {
+              "description": "Respond to GroupValueRead telegrams received to the configured send address.",
+              "label": "Respond to read"
+            }
+          }
+        },
+        "datetime": {
+          "description": "The KNX datetime platform is used as an interface to date and time providers.",
+          "knx": {
+            "ga_datetime": {
+              "description": "The group address of the date and time provider.",
+              "label": "Date and time"
+            },
+            "respond_to_read": {
+              "description": "Respond to GroupValueRead telegrams received to the configured send address.",
+              "label": "Respond to read"
+            }
+          }
+        },
         "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
@@ -546,6 +572,19 @@
             "invert": {
               "description": "Invert payloads before processing or sending.",
               "label": "Invert"
+            },
+            "respond_to_read": {
+              "description": "Respond to GroupValueRead telegrams received to the configured send address.",
+              "label": "Respond to read"
+            }
+          }
+        },
+        "time": {
+          "description": "The KNX datetime platform is used as an interface to time providers.",
+          "knx": {
+            "ga_datetime": {
+              "description": "The group address of the time provider.",
+              "label": "Time"
             },
             "respond_to_read": {
               "description": "Respond to GroupValueRead telegrams received to the configured send address.",
