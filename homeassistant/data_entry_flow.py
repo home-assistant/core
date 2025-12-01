@@ -526,10 +526,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ):
             # The flow's progress task was changed, register a callback on it
             async def call_configure() -> None:
+                if self._progress.get(flow.flow_id) is None:
+                    return
+
                 try:
                     await self._async_configure(flow.flow_id)
-                except UnknownFlow:
-                    pass
                 except Exception:
                     _LOGGER.exception("Error processing progress task for %s", flow)
 
