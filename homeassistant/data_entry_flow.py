@@ -534,6 +534,10 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 except Exception:
                     _LOGGER.exception("Error processing progress task for %s", flow)
 
+                    # Notify frontend to refresh before aborting
+                    flow.async_notify_flow_changed()
+                    self.async_abort(flow.flow_id)
+
             def schedule_configure(_: asyncio.Task) -> None:
                 self.hass.async_create_task(call_configure())
 

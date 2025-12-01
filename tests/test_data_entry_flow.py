@@ -697,6 +697,9 @@ async def test_show_progress_task_callback_exception_logging(
     """Test that exceptions in progress task callback are caught and logged."""
     manager.hass = hass
     task_evt = asyncio.Event()
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED
+    )
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -749,6 +752,18 @@ async def test_show_progress_task_callback_exception_logging(
     # We log a traceback
     assert "Internal error from task" in caplog.text
     assert "Error processing progress task for" in caplog.text
+
+    # Frontend is notified to refresh
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # The flow should be aborted after the error
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_configure(result["flow_id"])
 
 
 async def test_show_progress_hidden_from_frontend(
