@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HABITICA_KEY
 from .const import DOMAIN
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
+from .coordinators import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 
 PARALLEL_UPDATES = 10

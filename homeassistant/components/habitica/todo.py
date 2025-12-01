@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
+from .coordinators import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import next_due_date
 

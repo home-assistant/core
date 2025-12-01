@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, NAME
-from .coordinator import (
+from .coordinators import (
     HabiticaConfigEntry,
     HabiticaDataUpdateCoordinator,
     HabiticaPartyCoordinator,

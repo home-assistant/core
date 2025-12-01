@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_API_USER, DOMAIN, X_CLIENT
-from .coordinator import (
+from .coordinators import (
     HabiticaConfigEntry,
     HabiticaDataUpdateCoordinator,
     HabiticaPartyCoordinator,

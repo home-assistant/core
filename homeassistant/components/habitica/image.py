@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from . import HABITICA_KEY
 from .const import ASSETS_URL
-from .coordinator import (
+from .coordinators import (
     HabiticaConfigEntry,
     HabiticaDataUpdateCoordinator,
     HabiticaPartyCoordinator,

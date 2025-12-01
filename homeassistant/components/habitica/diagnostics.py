@@ -8,7 +8,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_API_USER
-from .coordinator import HabiticaConfigEntry
+from .coordinators import HabiticaConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

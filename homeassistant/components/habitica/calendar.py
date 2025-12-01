@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
+from .coordinators import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import build_rrule, get_recurrence_rule
 

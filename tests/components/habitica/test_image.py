@@ -46,7 +46,7 @@ async def test_image_platform(
     """Test image platform."""
     freezer.move_to("2024-09-20T22:00:00.000")
     with patch(
-        "homeassistant.components.habitica.coordinator.BytesIO",
+        "homeassistant.components.habitica.coordinators.user.BytesIO",
     ) as avatar:
         avatar.side_effect = [
             BytesIO(b"\x89PNGTestImage1"),

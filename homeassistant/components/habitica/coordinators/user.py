@@ -1,22 +1,17 @@
-"""DataUpdateCoordinator for the Habitica integration."""
+"""User data coordinator for the Habitica integration."""
+
 from __future__ import annotations
 
-import logging
-from abc import abstractmethod
 from collections.abc import Callable
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from typing import Any
-
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from uuid import UUID
 
 from aiohttp import ClientError
 from habiticalib import (
     Avatar,
     ContentData,
-    GroupData,
     Habitica,
     HabiticaException,
     NotAuthorizedError,
@@ -27,23 +22,15 @@ from habiticalib import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-# FR-5: 48-hour threshold for unscored task alerts
-UNSCORED_TASK_ALERT_HOURS = 48
+from ..const import DOMAIN, UNSCORED_TASK_ALERT_HOURS
+from .base import _LOGGER, HabiticaBaseCoordinator
 
 
 @dataclass
@@ -55,80 +42,10 @@ class HabiticaData:
     habits: list[TaskData]  # Add habits specifically for sensor platform
 
 
-@dataclass
-class HabiticaPartyData:
-    """Habitica party data."""
-
-    party: GroupData
-    members: dict[UUID, UserData]
-
-
 type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
 
 
-class HabiticaBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
-    """Habitica coordinator base class."""
-
-    config_entry: HabiticaConfigEntry
-    _update_interval: timedelta
-
-    def __init__(
-        self, hass: HomeAssistant, config_entry: HabiticaConfigEntry, habitica: Habitica
-    ) -> None:
-        """Initialize the Habitica data coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=self._update_interval,
-            request_refresh_debouncer=Debouncer(
-                hass,
-                _LOGGER,
-                cooldown=5,
-                immediate=False,
-            ),
-        )
-
-        self.habitica = habitica
-
-    @abstractmethod
-    async def _update_data(self) -> _DataT:
-        """Fetch data."""
-
-    async def _async_update_data(self) -> _DataT:
-        """Fetch the latest party data."""
-
-        try:
-            result = await self._update_data()
-            # NFR-3: Reset rate limit counter on successful update
-            if hasattr(self, '_rate_limited_count'):
-                self._rate_limited_count = 0
-            return result
-        except TooManyRequestsError:
-            _LOGGER.debug("Rate limit exceeded, will try again later")
-            # NFR-3: Adaptive polling - slow down when rate limited
-            if hasattr(self, '_rate_limited_count'):
-                self._rate_limited_count += 1
-                new_interval = min(300, self._update_interval.total_seconds() * (1.5 ** self._rate_limited_count))
-                self._update_interval = timedelta(seconds=new_interval)
-                _LOGGER.info("Adjusted update interval to %s seconds due to rate limiting", new_interval)
-            return self.data
-        except HabiticaException as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="service_call_exception",
-                translation_placeholders={"reason": str(e.error.message)},
-            ) from e
-        except ClientError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="service_call_exception",
-                translation_placeholders={"reason": str(e)},
-            ) from e
-
-
-class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
+class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):  # pylint: disable=hass-enforce-class-module
     """Habitica Data Update Coordinator."""
 
     _update_interval = timedelta(seconds=30)  # Base interval
@@ -176,7 +93,7 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
         completed_todos = (
             await self.habitica.get_tasks(TaskFilter.COMPLETED_TODOS)
         ).data
-        
+
         # Fetch habit tasks specifically (fulfills ADR2)
         habits = (await self.habitica.get_tasks(TaskFilter.HABITS)).data
 
@@ -187,28 +104,26 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
 
     async def _check_unscored_tasks(self, tasks: list[TaskData]) -> None:
         """Check for unscored tasks and fire automation events (FR-5)."""
-        from datetime import datetime, timezone
-        
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         threshold_hours = UNSCORED_TASK_ALERT_HOURS
-        
+
         for task in tasks:
             # Skip completed tasks
-            if getattr(task, 'completed', False):
+            if getattr(task, "completed", False):
                 continue
-                
+
             # Check if task has updatedAt timestamp
-            if not hasattr(task, 'updatedAt') or not task.updatedAt:
+            if not hasattr(task, "updatedAt") or not task.updatedAt:
                 continue
-                
+
             # Calculate hours since last update
             try:
                 last_updated = task.updatedAt
                 if not last_updated.tzinfo:
-                    last_updated = last_updated.replace(tzinfo=timezone.utc)
-                    
+                    last_updated = last_updated.replace(tzinfo=UTC)
+
                 hours_since_update = (now - last_updated).total_seconds() / 3600
-                
+
                 # Fire event if task hasn't been updated in 48+ hours
                 if hours_since_update >= threshold_hours:
                     self.hass.bus.async_fire(
@@ -225,7 +140,7 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
                     _LOGGER.info(
                         "Fired unscored task alert for '%s' (%.1f hours overdue)",
                         task.text,
-                        hours_since_update
+                        hours_since_update,
                     )
             except (AttributeError, TypeError, ValueError) as e:
                 _LOGGER.debug("Error checking task %s update time: %s", task.text, e)
@@ -233,19 +148,17 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
 
     def _adjust_polling_for_activity(self) -> None:
         """Adjust polling interval based on user activity (NFR-3)."""
-        from datetime import timezone
-        
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         base_interval = 30  # Base 30 seconds
-        
+
         # If we have recent activity, poll more frequently
         if self._last_activity_time:
             time_since_activity = (now - self._last_activity_time).total_seconds()
-            
+
             if time_since_activity < 300:  # 5 minutes
                 # Recent activity - poll every 15 seconds
                 new_interval = 15
-            elif time_since_activity < 1800:  # 30 minutes  
+            elif time_since_activity < 1800:  # 30 minutes
                 # Moderate activity - poll every 30 seconds (default)
                 new_interval = base_interval
             elif time_since_activity < 3600:  # 1 hour
@@ -254,17 +167,15 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
             else:
                 # No recent activity - poll every 120 seconds
                 new_interval = 120
-                
+
             # Don't override if we're rate limited
             if self._rate_limited_count == 0:
                 self._update_interval = timedelta(seconds=new_interval)
 
     async def execute(self, func: Callable[[Habitica], Any]) -> None:
         """Execute an API call."""
-        from datetime import timezone
-        
         # Track user activity for adaptive polling (NFR-3)
-        self._last_activity_time = datetime.now(timezone.utc)
+        self._last_activity_time = datetime.now(UTC)
 
         try:
             await func(self.habitica)
@@ -303,23 +214,3 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
         await self.habitica.generate_avatar(fp=png, avatar=avatar, fmt="PNG")
 
         return png.getvalue()
-
-
-class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaPartyData]):
-    """Habitica Party Coordinator."""
-
-    _update_interval = timedelta(minutes=15)
-
-    async def _update_data(self) -> HabiticaPartyData:
-        """Fetch the latest party data."""
-
-        return HabiticaPartyData(
-            party=(await self.habitica.get_group()).data,
-            members={
-                member.id: member
-                for member in (
-                    await self.habitica.get_group_members(public_fields=True)
-                ).data
-                if member.id
-            },
-        )

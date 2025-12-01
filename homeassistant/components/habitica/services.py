@@ -97,7 +97,7 @@ from .const import (
     SERVICE_UPDATE_TODO,
     WEEK_DAYS,
 )
-from .coordinator import HabiticaConfigEntry
+from .coordinators import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

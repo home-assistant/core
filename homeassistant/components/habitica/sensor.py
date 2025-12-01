@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 import logging
+import random
 from typing import Any
 from uuid import UUID
 
@@ -28,7 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from . import HABITICA_KEY
 from .const import ASSETS_URL, DATA_HABIT_SENSORS, DOMAIN
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
+from .coordinators import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase, HabiticaPartyBase, HabiticaPartyMemberBase
 from .util import (
     collected_quest_items,
@@ -57,13 +58,10 @@ PARALLEL_UPDATES = 1
 
 def get_daily_motivational_prompt(user: UserData, content: ContentData) -> str:
     """Generate a daily motivational prompt based on user data."""
-    import random
-    from datetime import datetime
-    
     # Seed random with current date to ensure same prompt per day
     today = datetime.now().date()
     random.seed(hash(f"{user.id}_{today}"))
-    
+
     # Base motivational prompts
     base_prompts = [
         "🌟 Ready to tackle your habits today? You've got this!",
@@ -75,22 +73,26 @@ def get_daily_motivational_prompt(user: UserData, content: ContentData) -> str:
         "🔥 You're building unstoppable momentum!",
         "💎 Turn your habits into your superpowers!",
         "🏆 Champions are made through daily discipline!",
-        "✨ Small habits, big transformations!"
+        "✨ Small habits, big transformations!",
     ]
-    
+
     # Personalized prompts based on user stats
     level = user.stats.lvl or 1
     if level >= 50:
-        base_prompts.extend([
-            f"🎖️ Level {level} warrior, show those habits who's boss!",
-            "🗡️ Your high level shows your dedication - keep it up!"
-        ])
+        base_prompts.extend(
+            [
+                f"🎖️ Level {level} warrior, show those habits who's boss!",
+                "🗡️ Your high level shows your dedication - keep it up!",
+            ]
+        )
     elif level >= 20:
-        base_prompts.extend([
-            f"⚔️ Level {level} adventurer, ready for today's quest?",
-            "🛡️ You're growing stronger with every habit!"
-        ])
-    
+        base_prompts.extend(
+            [
+                f"⚔️ Level {level} adventurer, ready for today's quest?",
+                "🛡️ You're growing stronger with every habit!",
+            ]
+        )
+
     # Class-based prompts
     if user.stats.Class:
         class_name = user.stats.Class.value
@@ -98,11 +100,11 @@ def get_daily_motivational_prompt(user: UserData, content: ContentData) -> str:
             "warrior": "⚔️ Channel your warrior spirit into your habits!",
             "mage": "🔮 Use your magical focus to master your routines!",
             "rogue": "🗡️ Strike swiftly and efficiently at your goals!",
-            "healer": "💚 Nurture yourself with positive habits today!"
+            "healer": "💚 Nurture yourself with positive habits today!",
         }
         if class_name.lower() in class_prompts:
             base_prompts.append(class_prompts[class_name.lower()])
-    
+
     return random.choice(base_prompts)
 
 
@@ -364,7 +366,6 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.HABITS,
         value_fn=lambda user, _: len([h for h in user.tasksOrder.habits if h]),
     ),
-
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
         translation_key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
@@ -536,7 +537,7 @@ async def async_setup_entry(
                 and UUID(subentry.unique_id) in party_coordinator.data.members
             ):
                 async_add_entities(
-                    [
+                    (
                         HabiticaPartyMemberSensor(
                             coordinator,
                             party_coordinator,
@@ -544,18 +545,20 @@ async def async_setup_entry(
                             subentry,
                         )
                         for description in SENSOR_DESCRIPTIONS_COMMON
-                    ],
+                    ),
                     config_subentry_id=subentry_id,
                 )
 
     # Add frequency sensors
     async_add_entities(
-        HabiticaFrequencySensor(coordinator, frequency_type)
-        for frequency_type in ["daily", "weekly", "monthly"]
+        tuple(
+            HabiticaFrequencySensor(coordinator, frequency_type)
+            for frequency_type in ("daily", "weekly", "monthly")
+        )
     )
-    
+
     # Add motivational prompt sensor
-    async_add_entities([HabiticaMotivationalSensor(coordinator)])
+    async_add_entities((HabiticaMotivationalSensor(coordinator),))
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -630,6 +633,7 @@ class HabiticaHabitSensor(
         self._optimistic_counter_down: int | None = None
 
         # Set device info to link to the main Habitica device
+        assert coordinator.config_entry.unique_id is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
         )
@@ -798,11 +802,14 @@ class HabiticaFrequencySensor(
         """Initialize the frequency sensor."""
         super().__init__(coordinator)
         self.frequency_type = frequency_type
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_habits_{frequency_type}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_habits_{frequency_type}"
+        )
         self._attr_name = f"Habits {frequency_type.title()}"
         self._attr_translation_key = f"habits_{frequency_type}"
 
         # Set device info to link to the main Habitica device
+        assert coordinator.config_entry.unique_id is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
         )
@@ -833,23 +840,27 @@ class HabiticaFrequencySensor(
 
         habits_list = []
         total_habits = len(self.coordinator.data.habits)
-        
+
         for habit in self.coordinator.data.habits:
             if habit and habit.frequency:
                 habit_frequency = habit.frequency.value.lower()
                 if habit_frequency == self.frequency_type:
-                    habits_list.append({
+                    habits_list.append(
+                        {
+                            "id": str(habit.id),
+                            "text": habit.text,
+                            "value": round(habit.value, 2) if habit.value else 0,
+                        }
+                    )
+            elif self.frequency_type == "daily" and habit:
+                # Default frequency is daily if not specified
+                habits_list.append(
+                    {
                         "id": str(habit.id),
                         "text": habit.text,
                         "value": round(habit.value, 2) if habit.value else 0,
-                    })
-            elif self.frequency_type == "daily" and habit:
-                # Default frequency is daily if not specified
-                habits_list.append({
-                    "id": str(habit.id),
-                    "text": habit.text,
-                    "value": round(habit.value, 2) if habit.value else 0,
-                })
+                    }
+                )
 
         return {
             "habits": habits_list,
@@ -876,6 +887,7 @@ class HabiticaMotivationalSensor(
         self._attr_translation_key = "motivational_prompt"
 
         # Set device info to link to the main Habitica device
+        assert coordinator.config_entry.unique_id is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
         )
@@ -885,10 +897,9 @@ class HabiticaMotivationalSensor(
         """Return the motivational message."""
         if not self.coordinator.data or not self.coordinator.data.user:
             return "Ready to build great habits today!"
-        
+
         return get_daily_motivational_prompt(
-            self.coordinator.data.user,
-            self.coordinator.content
+            self.coordinator.data.user, self.coordinator.content
         )
 
     @property
@@ -896,7 +907,7 @@ class HabiticaMotivationalSensor(
         """Return user stats for context."""
         if not self.coordinator.data or not self.coordinator.data.user:
             return {}
-        
+
         user = self.coordinator.data.user
         return {
             "level": user.stats.lvl,

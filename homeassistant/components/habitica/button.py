@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ASSETS_URL, DATA_HABIT_SENSORS, DOMAIN, OPTIMISTIC_HABIT_SCORE_DELTA
-from .coordinator import (
+from .coordinators import (
     HabiticaConfigEntry,
     HabiticaData,
     HabiticaDataUpdateCoordinator,
@@ -395,6 +395,7 @@ class HabiticaHabitButton(
         self._attr_icon = "mdi:plus" if direction == "up" else "mdi:minus"
 
         # Set device info to link to the main Habitica device
+        assert coordinator.config_entry.unique_id is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
         )

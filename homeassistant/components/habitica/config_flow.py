@@ -60,7 +60,7 @@ from .const import (
     SITE_DATA_URL,
     X_CLIENT,
 )
-from .coordinator import HabiticaConfigEntry
+from .coordinators import HabiticaConfigEntry
 
 STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
     {
