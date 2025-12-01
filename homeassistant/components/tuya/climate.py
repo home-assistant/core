@@ -360,15 +360,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        await self._async_send_wrapper_update(self._hvac_mode_wrapper, preset_mode)
+        await self._async_send_wrapper_updates(self._hvac_mode_wrapper, preset_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._async_send_wrapper_update(self._fan_mode_wrapper, fan_mode)
+        await self._async_send_wrapper_updates(self._fan_mode_wrapper, fan_mode)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._async_send_wrapper_update(self._target_humidity_wrapper, humidity)
+        await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
@@ -396,7 +396,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._async_send_wrapper_update(
+        await self._async_send_wrapper_updates(
             self._set_temperature, kwargs[ATTR_TEMPERATURE]
         )
 
@@ -475,8 +475,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        await self._async_send_wrapper_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
     async def async_turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        await self._async_send_wrapper_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)

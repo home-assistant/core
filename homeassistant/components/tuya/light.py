@@ -784,7 +784,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._async_send_wrapper_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     @property
     def brightness(self) -> int | None:

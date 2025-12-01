@@ -1042,8 +1042,8 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._async_send_wrapper_update(self._dpcode_wrapper, True)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._async_send_wrapper_update(self._dpcode_wrapper, False)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)
