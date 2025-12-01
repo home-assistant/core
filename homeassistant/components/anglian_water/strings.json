@@ -19,7 +19,7 @@
         "data_description": {
           "account_number": "Your account number found on your latest bill.",
           "password": "Your password",
-          "username": "Username or email used to login to the Anglian Water website."
+          "username": "Username or email used to log in to the Anglian Water website."
         },
         "description": "Enter your Anglian Water account credentials to connect to Home Assistant."
       }
