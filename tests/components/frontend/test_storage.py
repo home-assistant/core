@@ -1,10 +1,12 @@
 """The tests for frontend storage."""
 
+import asyncio
 from typing import Any
 
 import pytest
 
 from homeassistant.components.frontend import DOMAIN
+from homeassistant.components.frontend.storage import async_user_store
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -572,3 +574,27 @@ async def test_set_system_data_requires_admin(
     assert not res["success"], res
     assert res["error"]["code"] == "unauthorized"
     assert res["error"]["message"] == "Unauthorized"
+
+
+async def test_user_store_concurrent_access(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that concurrent access to user store returns loaded data."""
+    storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "data": {"test-key": "test-value"},
+    }
+
+    # Request the same user store concurrently
+    results = await asyncio.gather(
+        async_user_store(hass, hass_admin_user.id),
+        async_user_store(hass, hass_admin_user.id),
+        async_user_store(hass, hass_admin_user.id),
+    )
+
+    # All results should be the same store instance with loaded data
+    assert results[0] is results[1] is results[2]
+    assert results[0].data == {"test-key": "test-value"}
