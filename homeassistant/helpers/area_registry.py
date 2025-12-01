@@ -40,7 +40,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 8
+STORAGE_VERSION_MINOR = 9
 
 
 class _AreaStoreData(TypedDict):
@@ -156,6 +156,13 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 for area in old_data["areas"]:
                     area["humidity_entity_id"] = None
                     area["temperature_entity_id"] = None
+
+            if old_minor_version < 9:
+                # Version 1.9 sorts the areas by name
+                old_data["areas"] = sorted(
+                    old_data["areas"],
+                    key=lambda area: area["name"].casefold(),
+                )
 
         if old_major_version > 1:
             raise NotImplementedError
