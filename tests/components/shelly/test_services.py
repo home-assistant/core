@@ -18,6 +18,8 @@ from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
+from tests.common import MockConfigEntry
+
 
 async def test_service_get_kvs_value(
     hass: HomeAssistant,
@@ -248,3 +250,44 @@ async def test_service_get_kvs_value_device_not_initialized(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "device_not_initialized"
     assert exc_info.value.translation_placeholders == {"device": entry.title}
+
+
+async def test_service_get_kvs_value_wrong_domain(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test get_kvs_value when device has config entries from different domains."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    # Create a config entry with different domain and add it to the device
+    other_entry = MockConfigEntry(
+        domain="other_domain",
+        data={},
+    )
+    other_entry.add_to_hass(hass)
+
+    # Add the other domain's config entry to the device
+    device_registry.async_update_device(
+        device.id, add_config_entry_id=other_entry.entry_id
+    )
+
+    # Remove the original Shelly config entry
+    device_registry.async_update_device(
+        device.id, remove_config_entry_id=entry.entry_id
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_KVS_VALUE,
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "config_entry_not_found"
+    assert exc_info.value.translation_placeholders == {"device_id": device.id}
