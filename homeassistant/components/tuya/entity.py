@@ -78,8 +78,8 @@ class TuyaEntity(Entity):
         self, wrapper: DPCodeWrapper | None, value: Any
     ) -> None:
         """Send command to the device."""
-        if wrapper is None or not (
-            commands := wrapper.get_update_commands(self.device, value)
-        ):
+        if wrapper is None:
             return
-        await self._async_send_commands(commands)
+        await self._async_send_commands(
+            wrapper.get_update_commands(self.device, value),
+        )
