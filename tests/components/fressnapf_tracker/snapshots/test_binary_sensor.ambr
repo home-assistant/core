@@ -73,7 +73,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Deep Sleep',
+    'original_name': 'Deep sleep',
     'platform': 'fressnapf_tracker',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,7 +87,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Fluffy Deep Sleep',
+      'friendly_name': 'Fluffy Deep sleep',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fluffy_deep_sleep',
