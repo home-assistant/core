@@ -31,7 +31,6 @@ class EgaugeSensorEntityDescription(SensorEntityDescription):
 
 POWER_SENSOR = EgaugeSensorEntityDescription(
     key="power",
-    translation_key="power",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfPower.WATT,
@@ -41,7 +40,6 @@ POWER_SENSOR = EgaugeSensorEntityDescription(
 
 ENERGY_SENSOR = EgaugeSensorEntityDescription(
     key="energy",
-    translation_key="energy",
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.JOULE,
