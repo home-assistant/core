@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import pyatmo
-from pyatmo.modules import PublicWeatherArea
+from pyatmo.modules import Module, PublicWeatherArea
+from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -42,15 +43,24 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ATTR_EVENT_TYPE,
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
+    CONF_URL_SECURITY,
+    CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
+    DATA_DEVICE_IDS,
     DATA_HANDLER,
     DOMAIN,
+    DOORTAG_STATUS_UNDEFINED,
+    EVENT_TYPE_CAMERA_DISCONNECTION,
+    EVENT_TYPE_MODULE_CONNECT,
+    EVENT_TYPE_MODULE_DISCONNECT,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
+    NETATMO_NAME_OPENING_STATUS,
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
@@ -114,11 +124,69 @@ def process_wifi(strength: StateType) -> str | None:
     return "Full"
 
 
+def process_rf_strength_string(rf_strength: StateType) -> str | None:
+    """Process RF strength and return string for display."""
+    _LOGGER.debug(
+        "Translated RF strength: %s",
+        rf_strength,
+    )
+
+    if not isinstance(rf_strength, int):
+        return None
+    if rf_strength >= 90:
+        return "Low"
+    if rf_strength >= 76:
+        return "Medium"
+    if rf_strength >= 60:
+        return "High"
+    return "Full"
+
+
+def process_battery_state_string(battery_state: StateType) -> int | None:
+    """Process battery state string and return percent (int) for display."""
+    _LOGGER.debug(
+        "Translated battery state: %s",
+        battery_state,
+    )
+
+    if not isinstance(battery_state, str):
+        return None
+    mapping = {
+        "max": 100,
+        "full": 90,
+        "high": 75,
+        "medium": 50,
+        "low": 25,
+        "very_low": 10,
+    }
+    if battery_state not in mapping:
+        return None
+    return mapping[battery_state]
+
+
+# Note: Cannot use this function till full refactoring of sensor is done
+def process_battery_state(module: Module, netatmo_name: str) -> int | None:
+    """Process Module battery status for display."""
+    status = getattr(module, netatmo_name)
+    value = process_battery_state_string(status)
+
+    _LOGGER.debug(
+        "Battery state (%s) translated from '%s' to '%s' for module '%s'",
+        netatmo_name,
+        status,
+        value,
+        module.name,
+    )
+
+    return value
+
+
 @dataclass(frozen=True, kw_only=True)
 class NetatmoSensorEntityDescription(SensorEntityDescription):
     """Describes Netatmo sensor entity."""
 
     netatmo_name: str
+    feature_name: str | None = None
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
@@ -387,6 +455,305 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
 )
 
+NETATMO_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
+    NetatmoSensorEntityDescription(
+        key="battery",
+        netatmo_name="battery_state",
+        feature_name="battery",
+        translation_key="Battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=process_battery_state_string,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    NetatmoSensorEntityDescription(
+        key="rf_status",
+        netatmo_name="rf_strength",
+        feature_name="rf_strength",
+        translation_key="RF strength",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=process_rf_strength_string,
+        icon="mdi:signal",
+    ),
+]
+
+OPENING_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = []
+
+DEVICE_CATEGORY_SENSORS: Final[dict[NetatmoDeviceCategory, list]] = {
+    NetatmoDeviceCategory.opening: OPENING_SENSOR_DESCRIPTIONS,
+}
+
+DEVICE_CATEGORY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
+    NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
+    NetatmoDeviceCategory.weather: CONF_URL_WEATHER,
+    NetatmoDeviceCategory.climate: CONF_URL_ENERGY,
+}
+
+
+class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
+    """Implementation of new Netatmo common sensor."""
+
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self, netatmo_device: NetatmoDevice, description: NetatmoSensorEntityDescription
+    ) -> None:
+        """Initialize the sensor."""
+
+        name_suffix = (
+            description.translation_key
+            if description.translation_key
+            else description.key.replace("_", " ").title()
+        )
+
+        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
+        self._attr_name = name_suffix
+        if netatmo_device.device.device_category:
+            self._attr_configuration_url = DEVICE_CATEGORY_URLS.get(
+                netatmo_device.device.device_category, None
+            )
+        else:
+            self._attr_configuration_url = None
+
+        super().__init__(netatmo_device)
+        self.entity_description = description
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: netatmo_device.signal_name,
+                },
+            ]
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        if self.device.device_type == "NACamDoorTag":
+            for event_type in (
+                EVENT_TYPE_CAMERA_DISCONNECTION,
+                EVENT_TYPE_MODULE_CONNECT,
+                EVENT_TYPE_MODULE_DISCONNECT,
+            ):
+                _LOGGER.debug(
+                    "Subscribing to event %s for module %s",
+                    event_type,
+                    self.device.name,
+                )
+                self.async_on_remove(
+                    async_dispatcher_connect(
+                        self.hass,
+                        f"signal-{DOMAIN}-webhook-{event_type}",
+                        self.handle_event,
+                    )
+                )
+
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = (
+            self.device.name
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (self.device.reachable is True) and (
+            getattr(self.device, self.entity_description.netatmo_name) is not None
+        )
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        value = None
+        module = self.device
+
+        if not module:
+            return
+
+        # Try to set value regardless of reachability, set availability later
+        # (treat sensor values as stale if module not reachable)
+
+        raw_value = getattr(module, self.entity_description.netatmo_name, None)
+        value = None
+
+        if raw_value is not None:
+            _LOGGER.debug(
+                "%s (%s) has been found as '%s' for module '%s'",
+                self.entity_description.translation_key,
+                self.entity_description.netatmo_name,
+                raw_value,
+                module.name,
+            )
+
+            value = self.entity_description.value_fn(raw_value)
+        else:
+            _LOGGER.warning(
+                "No value can be found for %s (%s) for module '%s'",
+                self.entity_description.translation_key,
+                self.entity_description.netatmo_name,
+                module.name,
+            )
+
+        _LOGGER.debug(
+            "Updating sensor '%s' for module '%s' with status: %s",
+            self.entity_description.key,
+            self.device.name,
+            value,
+        )
+
+        if value is not None:
+            if not module.reachable:
+                _LOGGER.debug(
+                    "Module %s is not reachable (%s), set sensor %s unavailable",
+                    module.name,
+                    module.reachable,
+                    self.entity_description.key,
+                )
+                self._attr_available = False
+            else:
+                self._attr_available = True
+            self._attr_native_value = value
+        else:
+            self._attr_available = False
+            self._attr_native_value = None
+
+        self._async_write_ha_state()
+        return
+
+    def handle_event(self, event: dict) -> None:
+        """Handle webhook events."""
+        data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
+
+        if not event_type:
+            _LOGGER.warning("Event has no type, returning")
+            return
+
+        if not data.get("device_id"):
+            _LOGGER.warning("Event %s has no device ID, returning", event_type)
+            return
+        device_id = data["device_id"]
+        module_id = device_id  # For safety, in case of direct module event
+
+        if not data.get("home_id"):
+            _LOGGER.warning(
+                "Event %s for device %s has no home ID, returning",
+                event_type,
+                data["device_id"],
+            )
+            return
+        home_id = data["home_id"]
+
+        # Door tag related direct events (where we need module_id)
+        if event_type in [
+            EVENT_TYPE_MODULE_CONNECT,
+            EVENT_TYPE_MODULE_DISCONNECT,
+        ]:
+            if not data.get("module_id"):
+                _LOGGER.warning("Event %s has no module ID, returning", event_type)
+                return
+            module_id = data["module_id"]
+
+        if self.device.device_type == "NACamDoorTag":
+            # Bridge related events (where we need device_id)
+            if (
+                home_id == self.home.entity_id
+                and device_id == self.device.bridge
+                and event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]
+            ):
+                # Event for the bridge of this module
+                if event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]:
+                    _LOGGER.debug(
+                        "Bridge (camera) %s has disconnect event",
+                        device_id,
+                    )
+
+                    self._attr_available = False
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = False
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to unavailable",
+                        self.device.entity_id,
+                    )
+                    self.schedule_update_ha_state(True)
+                else:
+                    _LOGGER.warning(
+                        "Sensor's bridge %s has received unexpected event as type %s",
+                        device_id,
+                        event_type,
+                    )
+            # Module related events (where we need module_id)
+            elif home_id == self.home.entity_id and module_id == self.device.entity_id:
+                # Event for this module
+                if event_type in [EVENT_TYPE_MODULE_DISCONNECT]:
+                    # Disconnection of module
+                    _LOGGER.debug(
+                        "Module %s has detected disconnect event",
+                        module_id,
+                    )
+
+                    self._attr_available = False
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = False
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to unavailable",
+                        self.device.entity_id,
+                    )
+                    self.schedule_update_ha_state(True)
+                elif event_type in [EVENT_TYPE_MODULE_CONNECT]:
+                    # Connection of module
+                    _LOGGER.debug(
+                        "Module %s has detected connect event",
+                        module_id,
+                    )
+
+                    self._attr_available = True
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = True
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to available (%s = %s)",
+                        self.device.entity_id,
+                        self.entity_description.key,
+                        self._attr_native_value,
+                    )
+                    self.schedule_update_ha_state(True)
+                else:
+                    _LOGGER.warning(
+                        "Sensor %s has received unexpected event as type %s",
+                        module_id,
+                        event_type,
+                    )
+            else:
+                _LOGGER.warning(
+                    "Sensor %s of type %s has unexpectedly received event as type %s",
+                    self.device.entity_id,
+                    self.device.device_type,
+                    event_type,
+                )
+        else:
+            _LOGGER.warning(
+                "Sensor %s of type %s has unexpectedly received any event as type %s",
+                self.device.entity_id,
+                self.device.device_type,
+                event_type,
+            )
+        return
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -395,9 +762,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Netatmo sensor platform."""
 
+    data_handler: NetatmoDataHandler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+
     @callback
     def _create_battery_entity(netatmo_device: NetatmoDevice) -> None:
-        if not hasattr(netatmo_device.device, "battery"):
+        if not isinstance(netatmo_device.device, Module) or not hasattr(
+            netatmo_device.device, "battery"
+        ):
             return
         entity = NetatmoClimateBatterySensor(netatmo_device)
         async_add_entities([entity])
@@ -422,6 +793,17 @@ async def async_setup_entry(
 
     @callback
     def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        if netatmo_device.device.device_category is None:
+            _LOGGER.warning(
+                "Device %s is missing a device_category, cannot create sensors",
+                netatmo_device.device.name,
+            )
+            return
+
+        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if is - means refactored device)
+        if netatmo_device.device.device_category in DEVICE_CATEGORY_SENSORS:
+            return
+
         _LOGGER.debug(
             "Adding %s sensor %s",
             netatmo_device.device.device_category,
@@ -512,6 +894,80 @@ async def async_setup_entry(
 
     await add_public_entities(False)
 
+    @callback
+    def _create_common_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        """Create new sensor entities."""
+
+        if netatmo_device.device.device_category is None:
+            _LOGGER.warning(
+                "Device %s is missing a device_category, cannot create sensors",
+                netatmo_device.device.name,
+            )
+            return
+
+        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if not - means legacy device)
+        if netatmo_device.device.device_category not in DEVICE_CATEGORY_SENSORS:
+            return
+
+        # We add specific sensors for the device category (new definitions)
+        descriptions_to_add = DEVICE_CATEGORY_SENSORS.get(
+            netatmo_device.device.device_category, []
+        )
+
+        # Only add the generic descriptions if the specific list is not empty
+        if descriptions_to_add:
+            descriptions_to_add += NETATMO_SENSOR_DESCRIPTIONS
+        else:
+            descriptions_to_add = NETATMO_SENSOR_DESCRIPTIONS
+
+        entities: list[NetatmoCommonSensor] = []
+
+        # Create sensors for module
+        for description in descriptions_to_add:
+            if description.feature_name is None:
+                feature_check = description.key
+            else:
+                feature_check = description.feature_name
+
+            if feature_check in netatmo_device.device.features:
+                _LOGGER.debug(
+                    "Adding %s sensor for device %s",
+                    feature_check,
+                    netatmo_device.device.name,
+                )
+                entities.append(
+                    NetatmoCommonSensor(
+                        netatmo_device,
+                        description,
+                    )
+                )
+            else:
+                _LOGGER.warning(
+                    "Failed to add %s (%s) sensor for device %s",
+                    feature_check,
+                    description.netatmo_name,
+                    netatmo_device.device.name,
+                )
+
+        if entities:
+            _LOGGER.debug(
+                "Adding %s entities for device %s",
+                len(entities),
+                netatmo_device.device.name,
+            )
+            async_add_entities(entities)
+        else:
+            _LOGGER.debug(
+                "No sensor entities created for device %s",
+                netatmo_device.device.name,
+            )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_SENSOR, _create_common_sensor_entity
+        )
+    )
+
 
 class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
@@ -532,10 +988,9 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            self.device.reachable
-            or getattr(self.device, self.entity_description.netatmo_name) is not None
-        )
+        return (self.device.reachable is True) or getattr(
+            self.device, self.entity_description.netatmo_name
+        ) is not None
 
     @callback
     def async_update_callback(self) -> None:
@@ -561,15 +1016,7 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = BATTERY_SENSOR_DESCRIPTION
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": netatmo_device.device.home.entity_id,
-                    SIGNAL_NAME: netatmo_device.signal_name,
-                },
-            ]
-        )
+        self._publishers.extend([])
 
         self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
@@ -666,7 +1113,6 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
             f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
         )
 
-    @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if (state := getattr(self.device, self.entity_description.key)) is None:

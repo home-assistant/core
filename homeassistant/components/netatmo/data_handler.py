@@ -18,6 +18,7 @@ from pyatmo.modules.device_types import (
 )
 
 from homeassistant.components import cloud
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -33,6 +34,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
+    NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
@@ -47,8 +49,10 @@ from .const import (
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
     WEBHOOK_ACTIVATION,
+    WEBHOOK_DBCAMERA_CONNECTION,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_NOCAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
 )
 
@@ -60,6 +64,7 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
+BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
 PUBLISHERS = {
@@ -87,14 +92,31 @@ DEFAULT_INTERVALS = {
 SCAN_INTERVAL = 60
 
 
-@dataclass
 class NetatmoDevice:
-    """Netatmo device class."""
+    """Netatmo device."""
 
-    data_handler: NetatmoDataHandler
-    device: pyatmo.modules.Module
-    parent_id: str
-    signal_name: str
+    def __init__(
+        self,
+        data_handler: NetatmoDataHandler,
+        device: pyatmo.Module,
+        parent_id: str,
+        signal_name: str,
+    ) -> None:
+        """Initialize the Netatmo device."""
+        self.data_handler = data_handler
+        self.device = device
+        self.parent_id = parent_id
+        self.signal_name = signal_name
+
+    @property
+    def station_id(self) -> str:
+        """Return the Netatmo station id."""
+        return self.device.entity_id
+
+    @property
+    def home_id(self) -> str:
+        """Return the Netatmo home id."""
+        return self.device.home.entity_id
 
 
 @dataclass
@@ -167,6 +189,9 @@ class NetatmoDataHandler:
                 self.handle_event,
             )
         )
+        _LOGGER.debug(
+            "Subscribed to webhook events: %s", f"signal-{DOMAIN}-webhook-None"
+        )
 
         self.account = pyatmo.AsyncAccount(self._auth)
 
@@ -223,9 +248,17 @@ class NetatmoDataHandler:
             _LOGGER.debug("%s webhook unregistered", MANUFACTURER)
             self._webhook = False
 
-        elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
+        elif event["data"][WEBHOOK_PUSH_TYPE] in [
+            WEBHOOK_DBCAMERA_CONNECTION,
+            WEBHOOK_NACAMERA_CONNECTION,
+            WEBHOOK_NOCAMERA_CONNECTION,
+        ]:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(ACCOUNT)
+        else:
+            _LOGGER.debug(
+                "Received webhook event without unexpected push_type: %s", event
+            )
 
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
@@ -349,6 +382,10 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.camera: [
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
+            ],
+            NetatmoDeviceCategory.opening: [
+                NETATMO_CREATE_BINARY_SENSOR,
+                NETATMO_CREATE_SENSOR,
             ],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [

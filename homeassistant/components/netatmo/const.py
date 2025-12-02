@@ -46,6 +46,7 @@ NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
+NETATMO_CREATE_BINARY_SENSOR = "netatmo_create_binary_sensor"
 NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
@@ -115,13 +116,19 @@ EVENT_TYPE_SET_POINT = "set_point"
 EVENT_TYPE_THERM_MODE = "therm_mode"
 # Camera events
 EVENT_TYPE_CAMERA_ANIMAL = "animal"
+EVENT_TYPE_CAMERA_CONNECTION = "connection"
+EVENT_TYPE_CAMERA_DISCONNECTION = "disconnection"
 EVENT_TYPE_CAMERA_HUMAN = "human"
 EVENT_TYPE_CAMERA_MOVEMENT = "movement"
+EVENT_TYPE_CAMERA_OFF = "off"
+EVENT_TYPE_CAMERA_ON = "on"
 EVENT_TYPE_CAMERA_OUTDOOR = "outdoor"
 EVENT_TYPE_CAMERA_PERSON = "person"
 EVENT_TYPE_CAMERA_PERSON_AWAY = "person_away"
 EVENT_TYPE_CAMERA_VEHICLE = "vehicle"
 EVENT_TYPE_LIGHT_MODE = "light_mode"
+EVENT_TYPE_MODULE_CONNECT = "module_connect"
+EVENT_TYPE_MODULE_DISCONNECT = "module_disconnect"
 # Door tags
 EVENT_TYPE_ALARM_STARTED = "alarm_started"
 EVENT_TYPE_DOOR_TAG_BIG_MOVE = "tag_big_move"
@@ -129,6 +136,21 @@ EVENT_TYPE_DOOR_TAG_OPEN = "tag_open"
 EVENT_TYPE_DOOR_TAG_SMALL_MOVE = "tag_small_move"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
+DOORTAG_CATEGORY_DOOR = "door"
+DOORTAG_CATEGORY_FURNITURE = "furniture"
+DOORTAG_CATEGORY_GARAGE = "garage"
+DOORTAG_CATEGORY_GATE = "gate"
+DOORTAG_CATEGORY_OTHER = "other"
+DOORTAG_CATEGORY_WINDOW = "window"
+DOORTAG_STATUS_CALIBRATING = "calibrating"
+DOORTAG_STATUS_CALIBRATION_FAILED = "calibration_failed"
+DOORTAG_STATUS_CLOSED = "closed"
+DOORTAG_STATUS_MAINTENANCE = "maintenance"
+DOORTAG_STATUS_NO_NEWS = "no_news"
+DOORTAG_STATUS_OPEN = "open"
+DOORTAG_STATUS_UNDEFINED = "undefined"
+DOORTAG_STATUS_WEAK_SIGNAL = "weak_signal"
+NETATMO_NAME_OPENING_STATUS = "status"
 
 OUTDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_CAMERA_ANIMAL,
@@ -155,6 +177,8 @@ CLIMATE_TRIGGERS = [
 EVENT_ID_MAP = {
     EVENT_TYPE_ALARM_STARTED: "device_id",
     EVENT_TYPE_CAMERA_ANIMAL: "device_id",
+    EVENT_TYPE_CAMERA_CONNECTION: "device_id",
+    EVENT_TYPE_CAMERA_DISCONNECTION: "device_id",
     EVENT_TYPE_CAMERA_HUMAN: "device_id",
     EVENT_TYPE_CAMERA_MOVEMENT: "device_id",
     EVENT_TYPE_CAMERA_OUTDOOR: "device_id",
@@ -166,6 +190,8 @@ EVENT_ID_MAP = {
     EVENT_TYPE_DOOR_TAG_OPEN: "device_id",
     EVENT_TYPE_DOOR_TAG_SMALL_MOVE: "device_id",
     EVENT_TYPE_LIGHT_MODE: "device_id",
+    EVENT_TYPE_MODULE_CONNECT: "module_id",
+    EVENT_TYPE_MODULE_DISCONNECT: "module_id",
     EVENT_TYPE_SET_POINT: "room_id",
     EVENT_TYPE_THERM_MODE: "home_id",
 }
@@ -178,5 +204,14 @@ CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]
 WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
 WEBHOOK_LIGHT_MODE = "NOC-light_mode"
+
+# Camera push type events
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
+WEBHOOK_NOCAMERA_CONNECTION = "NOC-connection"
+WEBHOOK_DBCAMERA_CONNECTION = "NDB-connection"
+WEBHOOK_NACAMERA_DISCONNECTION = "NACamera-disconnection"
+WEBHOOK_NACAMERA_ON = "NACamera-on"
+WEBHOOK_NACAMERA_OFF = "NACamera-off"
+
+# Generic push type events
 WEBHOOK_PUSH_TYPE = "push_type"
