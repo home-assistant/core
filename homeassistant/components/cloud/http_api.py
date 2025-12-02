@@ -1143,6 +1143,7 @@ def tts_info(
         vol.Required("type"): "cloud/webrtc/ice_servers",
     }
 )
+@_require_cloud_login
 @callback
 def websocket_webrtc_ice_servers(
     hass: HomeAssistant,

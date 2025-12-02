@@ -2216,3 +2216,10 @@ async def test_websocket_ice_servers(
             "credential": "pass",
         },
     ]
+
+    cloud.id_token = None
+
+    await client.send_json_auto_id({"type": "cloud/webrtc/ice_servers"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_logged_in"
