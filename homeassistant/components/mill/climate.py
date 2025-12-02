@@ -160,7 +160,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
     """Representation of a Mill Thermostat device."""
 
     _attr_has_entity_name = True
-    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
     _attr_name = None
@@ -205,6 +205,9 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.set_operation_mode_off()
             await self.coordinator.async_request_refresh()
+        elif hvac_mode == HVACMode.AUTO:
+            await self.coordinator.mill_data_connection.set_operation_mode_weekly_program()
+            await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -218,12 +221,19 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         self._attr_target_temperature = data["set_temperature"]
         self._attr_current_temperature = data["ambient_temperature"]
 
-        if data["operation_mode"] == OperationMode.OFF.value:
+        operation_mode = data["operation_mode"]
+        is_heating = data["current_power"] > 0
+
+        if operation_mode == OperationMode.OFF.value:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
+        elif operation_mode == OperationMode.WEEKLY_PROGRAM.value:
+            self._attr_hvac_mode = HVACMode.AUTO
+            self._attr_hvac_action = (
+                HVACAction.HEATING if is_heating else HVACAction.IDLE
+            )
         else:
             self._attr_hvac_mode = HVACMode.HEAT
-            if data["current_power"] > 0:
-                self._attr_hvac_action = HVACAction.HEATING
-            else:
-                self._attr_hvac_action = HVACAction.IDLE
+            self._attr_hvac_action = (
+                HVACAction.HEATING if is_heating else HVACAction.IDLE
+            )
