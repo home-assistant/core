@@ -11,6 +11,7 @@ from wled import (
     WLEDConnectionClosedError,
     WLEDConnectionError,
     WLEDError,
+    WLEDUnsupportedVersionError,
 )
 
 from homeassistant.components.wled.const import SCAN_INTERVAL
@@ -218,3 +219,29 @@ async def test_fail_when_other_device(
     assert (
         "MAC address does not match the configured device." in mock_config_entry.reason
     )
+
+
+async def test_fail_when_unsupported_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Ensure entry fails to setup when unsupported version."""
+    mock_wled.update.side_effect = WLEDUnsupportedVersionError(
+        "Unsupported firmware version 0.14.0-b1. Minimum required version is 0.14.0. "
+        "Please update your WLED device."
+    )
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason
+    assert (
+        "The WLED device's firmware version is not supported:"
+        in mock_config_entry.reason
+    )
+    assert "0.14.0-b1" in mock_config_entry.reason
