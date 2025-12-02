@@ -160,8 +160,8 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                     )
                     return
 
-            # Schedule state update on the main event loop
-            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+            # Schedule state update
+            self.schedule_update_ha_state()
             _LOGGER.debug(
                 "Binary sensor %s updated to: %s (from payload: %s)",
                 self.unique_id, self._attr_is_on, payload

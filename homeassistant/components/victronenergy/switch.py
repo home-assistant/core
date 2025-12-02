@@ -223,7 +223,7 @@ class MQTTDiscoveredSwitch(SwitchEntity):
             self._attr_is_on,
             value,
         )
-        self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self) -> bool | None:

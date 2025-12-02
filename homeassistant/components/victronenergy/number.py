@@ -247,7 +247,7 @@ class MQTTDiscoveredNumber(NumberEntity):
             type(value),
         )
         self._attr_native_value = value
-        self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+        self.schedule_update_ha_state()
 
     @property
     def native_value(self) -> float | None:
