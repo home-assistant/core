@@ -6,3 +6,5 @@ DEFAULT_NAME = "OctoPrint"
 
 SERVICE_CONNECT = "printer_connect"
 CONF_BAUDRATE = "baudrate"
+
+GET_IMAGE_TIMEOUT = 10
