@@ -1036,8 +1036,10 @@ hanna-cloud==0.0.6
 hass-nabucasa==1.6.2
 
 # homeassistant.components.assist_satellite
-# homeassistant.components.conversation
 hassil==3.4.0
+
+# homeassistant.components.conversation
+hassil==3.5.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
