@@ -485,4 +485,18 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.RefrigeratorAlarm.Attributes.State,),
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WindowCoveringConfigStatusOperational",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # unset Operational bit from ConfigStatus bitmap means problem
+            device_to_ha=lambda x: not bool(
+                x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.WindowCovering.Attributes.ConfigStatus,),
+    ),
 ]

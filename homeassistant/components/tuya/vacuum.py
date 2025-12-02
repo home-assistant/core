@@ -169,11 +169,11 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
-        await self._async_send_dpcode_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the device."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause the device."""
@@ -182,21 +182,21 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         if self._charge_wrapper:
-            await self._async_send_dpcode_update(self._charge_wrapper, True)
+            await self._async_send_wrapper_updates(self._charge_wrapper, True)
         else:
-            await self._async_send_dpcode_update(
+            await self._async_send_wrapper_updates(
                 self._mode_wrapper, TUYA_MODE_RETURN_HOME
             )
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
-        await self._async_send_dpcode_update(self._locate_wrapper, True)
+        await self._async_send_wrapper_updates(self._locate_wrapper, True)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        await self._async_send_dpcode_update(self._fan_speed_wrapper, fan_speed)
+        await self._async_send_wrapper_updates(self._fan_speed_wrapper, fan_speed)
 
-    def send_command(
+    async def async_send_command(
         self,
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
@@ -207,4 +207,4 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             raise ValueError("Params cannot be omitted for Tuya vacuum commands")
         if not isinstance(params, list):
             raise TypeError("Params must be a list for Tuya vacuum commands")
-        self._send_command([{"code": command, "value": params[0]}])
+        await self._async_send_commands([{"code": command, "value": params[0]}])

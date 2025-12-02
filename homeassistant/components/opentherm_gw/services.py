@@ -237,7 +237,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await gw_hub.gateway.set_gpio_mode(gpio_id, gpio_mode)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_GPIO_MODE, set_gpio_mode, service_set_gpio_mode_schema
+        DOMAIN,
+        SERVICE_SET_GPIO_MODE,
+        set_gpio_mode,
+        service_set_gpio_mode_schema,
+        description_placeholders={
+            "gpio_modes_documentation_url": "https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes"
+        },
     )
 
     async def set_led_mode(call: ServiceCall) -> None:
@@ -248,7 +254,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await gw_hub.gateway.set_led_mode(led_id, led_mode)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_LED_MODE, set_led_mode, service_set_led_mode_schema
+        DOMAIN,
+        SERVICE_SET_LED_MODE,
+        set_led_mode,
+        service_set_led_mode_schema,
+        description_placeholders={
+            "led_modes_documentation_url": "https://www.home-assistant.io/integrations/opentherm_gw/#led-modes"
+        },
     )
 
     async def set_max_mod(call: ServiceCall) -> None:
@@ -294,4 +306,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SEND_TRANSP_CMD,
         send_transparent_cmd,
         service_send_transp_cmd_schema,
+        description_placeholders={
+            "opentherm_gateway_firmware_url": "https://otgw.tclcode.com/firmware.html"
+        },
     )

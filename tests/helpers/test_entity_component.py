@@ -26,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -511,7 +512,7 @@ async def test_register_entity_service(
     schema: dict | None,
     service_data: dict,
 ) -> None:
-    """Test registering an enttiy service and calling it."""
+    """Test registering an entity service and calling it."""
     entity = MockEntity(entity_id=f"{DOMAIN}.entity")
     calls = []
 
@@ -525,7 +526,16 @@ async def test_register_entity_service(
     await component.async_setup({})
     await component.async_add_entities([entity])
 
-    component.async_register_entity_service("hello", schema, "async_called_by_service")
+    component.async_register_entity_service(
+        "hello",
+        schema,
+        "async_called_by_service",
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions["test_domain"]["hello"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(

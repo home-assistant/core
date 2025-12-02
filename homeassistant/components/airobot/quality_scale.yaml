@@ -34,7 +34,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -59,7 +59,9 @@ rules:
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: exempt
     comment: Single device integration, no stale device handling needed.

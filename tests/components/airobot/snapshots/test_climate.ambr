@@ -48,6 +48,7 @@
 # name: test_climate_entities[climate.test_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'current_humidity': 45.0,
       'current_temperature': 22.0,
       'friendly_name': 'Test Thermostat',
       'hvac_action': <HVACAction.IDLE: 'idle'>,

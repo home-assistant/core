@@ -1,5 +1,7 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted lights.",
+    "condition_behavior_name": "Behavior",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
     "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
@@ -34,7 +36,31 @@
     "field_white_name": "White",
     "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
     "field_xy_color_name": "XY-color",
-    "section_advanced_fields_name": "Advanced options"
+    "section_advanced_fields_name": "Advanced options",
+    "trigger_behavior_description": "The behavior of the targeted lights to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Test if a light is off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        }
+      },
+      "name": "If a light is off"
+    },
+    "is_on": {
+      "description": "Test if a light is on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        }
+      },
+      "name": "If a light is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -284,10 +310,29 @@
         "yellowgreen": "Yellow green"
       }
     },
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "flash": {
       "options": {
         "long": "Long",
         "short": "Short"
+      }
+    },
+    "state": {
+      "options": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -462,5 +507,27 @@
       }
     }
   },
-  "title": "Light"
+  "title": "Light",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more lights turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Light turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more lights turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Light turned on"
+    }
+  }
 }

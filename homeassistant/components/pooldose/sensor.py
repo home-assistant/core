@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -56,6 +57,13 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         key="flow_rate",
         translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        use_dynamic_unit=True,
+    ),
+    PooldoseSensorEntityDescription(
+        key="water_meter_total_permanent",
+        translation_key="water_meter_total_permanent",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         use_dynamic_unit=True,
     ),
     PooldoseSensorEntityDescription(
@@ -223,8 +231,8 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             and (data := self.get_data()) is not None
             and (device_unit := data.get("unit"))
         ):
-            # Map device unit to Home Assistant unit, return None if unknown
-            return UNIT_MAPPING.get(device_unit)
+            # Map device unit (upper case) to Home Assistant unit, return None if unknown
+            return UNIT_MAPPING.get(device_unit.upper())
 
         # Fall back to static unit from entity description
         return super().native_unit_of_measurement

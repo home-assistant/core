@@ -999,7 +999,7 @@ class _ScriptRun:
             if supports_response == SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
-                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
+                    f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}' which does not support response data."
                 )
 
         running_script = (

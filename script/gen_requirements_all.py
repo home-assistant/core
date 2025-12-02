@@ -25,7 +25,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
-    "pybluez",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when

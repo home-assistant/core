@@ -26,7 +26,7 @@ async def test_setup_entry_success(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (AirobotAuthError("Authentication failed"), ConfigEntryState.SETUP_RETRY),
+        (AirobotAuthError("Authentication failed"), ConfigEntryState.SETUP_ERROR),
         (AirobotConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -46,6 +46,26 @@ async def test_setup_entry_exceptions(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_setup_entry_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup with auth error triggers reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_airobot_client.get_statuses.side_effect = AirobotAuthError(
+        "Authentication failed"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 @pytest.mark.usefixtures("init_integration")

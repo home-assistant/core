@@ -14,6 +14,8 @@ from homeassistant.components.labs import (
 )
 from homeassistant.core import HomeAssistant
 
+from . import assert_stored_labs_data
+
 from tests.common import MockUser
 from tests.typing import WebSocketGenerator
 
@@ -61,7 +63,9 @@ async def test_websocket_list_preview_features(
 
 
 async def test_websocket_update_preview_feature_enable(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test enabling a preview feature via WebSocket."""
     # Load kitchen_sink integration
@@ -70,6 +74,8 @@ async def test_websocket_update_preview_feature_enable(
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
+
+    assert "core.labs" not in hass_storage
 
     # Track events
     events = []
@@ -102,6 +108,11 @@ async def test_websocket_update_preview_feature_enable(
 
     # Verify feature is now enabled
     assert async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
+
+    assert_stored_labs_data(
+        hass_storage,
+        [{"domain": "kitchen_sink", "preview_feature": "special_repair"}],
+    )
 
 
 async def test_websocket_update_preview_feature_disable(
@@ -143,10 +154,16 @@ async def test_websocket_update_preview_feature_disable(
 
     # Verify feature is disabled
     assert not async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
+    assert_stored_labs_data(
+        hass_storage,
+        [],
+    )
 
 
 async def test_websocket_update_nonexistent_feature(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test updating a preview feature that doesn't exist."""
     assert await async_setup(hass, {})
@@ -168,9 +185,13 @@ async def test_websocket_update_nonexistent_feature(
     assert msg["error"]["code"] == "not_found"
     assert "not found" in msg["error"]["message"].lower()
 
+    assert "core.labs" not in hass_storage
+
 
 async def test_websocket_update_unavailable_preview_feature(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test updating a preview feature whose integration is not loaded still works."""
     # Don't load kitchen_sink integration
@@ -193,6 +214,11 @@ async def test_websocket_update_unavailable_preview_feature(
     assert msg["success"]
     assert msg["result"] is None
 
+    assert_stored_labs_data(
+        hass_storage,
+        [{"domain": "kitchen_sink", "preview_feature": "special_repair"}],
+    )
+
 
 @pytest.mark.parametrize(
     "command_type",
@@ -202,6 +228,7 @@ async def test_websocket_requires_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
     command_type: str,
 ) -> None:
     """Test that websocket commands require admin privileges."""
@@ -230,6 +257,8 @@ async def test_websocket_requires_admin(
     assert not msg["success"]
     assert msg["error"]["code"] == "unauthorized"
 
+    assert "core.labs" not in hass_storage
+
 
 async def test_websocket_update_validates_enabled_parameter(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -257,7 +286,9 @@ async def test_websocket_update_validates_enabled_parameter(
 
 
 async def test_storage_persists_preview_feature_across_calls(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test that storage persists preview feature state across multiple calls."""
     hass.config.components.add("kitchen_sink")
@@ -265,6 +296,8 @@ async def test_storage_persists_preview_feature_across_calls(
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
+
+    assert "core.labs" not in hass_storage
 
     # Enable the preview feature
     await client.send_json_auto_id(
@@ -277,6 +310,11 @@ async def test_storage_persists_preview_feature_across_calls(
     )
     msg = await client.receive_json()
     assert msg["success"]
+
+    assert_stored_labs_data(
+        hass_storage,
+        [{"domain": "kitchen_sink", "preview_feature": "special_repair"}],
+    )
 
     # List preview features - should show enabled
     await client.send_json_auto_id({"type": "labs/list"})
@@ -295,6 +333,11 @@ async def test_storage_persists_preview_feature_across_calls(
     )
     msg = await client.receive_json()
     assert msg["success"]
+
+    assert_stored_labs_data(
+        hass_storage,
+        [],
+    )
 
     # List preview features - should show disabled
     await client.send_json_auto_id({"type": "labs/list"})
@@ -374,7 +417,7 @@ async def test_websocket_update_preview_feature_backup_scenarios(
         mock_backup_manager.async_create_automatic_backup = AsyncMock()
 
     with patch(
-        "homeassistant.components.labs.async_get_manager",
+        "homeassistant.components.labs.websocket_api.async_get_manager",
         return_value=mock_backup_manager,
     ):
         await client.send_json_auto_id(
@@ -636,7 +679,7 @@ async def test_websocket_backup_timeout_handling(
     )
 
     with patch(
-        "homeassistant.components.labs.async_get_manager",
+        "homeassistant.components.labs.websocket_api.async_get_manager",
         return_value=mock_backup_manager,
     ):
         await client.send_json_auto_id(

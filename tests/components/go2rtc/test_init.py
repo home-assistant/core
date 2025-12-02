@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import logging
+from pathlib import Path
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -39,9 +40,9 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
-    HA_MANAGED_UNIX_SOCKET,
     RECOMMENDED_VERSION,
 )
+from homeassistant.components.go2rtc.util import get_go2rtc_unix_socket_path
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -239,6 +240,7 @@ async def test_setup_go_binary(
     server_stop: Mock,
     init_test_integration: MockCamera,
     has_go2rtc_entry: bool,
+    server_dir: Path,
     config: ConfigType,
     ui_enabled: bool,
     expected_username: str,
@@ -255,6 +257,7 @@ async def test_setup_go_binary(
             enable_ui=ui_enabled,
             username=expected_username,
             password=expected_password,
+            working_dir=str(server_dir),
         )
         call_kwargs = server.call_args[1]
         assert call_kwargs["username"] == expected_username
@@ -1034,7 +1037,7 @@ async def test_stream_orientation_with_generic_camera(
     "rest_client",
     "server",
 )
-async def test_unix_socket_connection(hass: HomeAssistant) -> None:
+async def test_unix_socket_connection(hass: HomeAssistant, server_dir: Path) -> None:
     """Test Unix socket is used for HA-managed go2rtc instances."""
     config = {DOMAIN: {}}
 
@@ -1056,7 +1059,7 @@ async def test_unix_socket_connection(hass: HomeAssistant) -> None:
         assert "connector" in call_kwargs
         connector = call_kwargs["connector"]
         assert isinstance(connector, UnixConnector)
-        assert connector.path == HA_MANAGED_UNIX_SOCKET
+        assert connector.path == get_go2rtc_unix_socket_path(server_dir)
         # Auth should be auto-generated when credentials are not explicitly configured
         assert "auth" in call_kwargs
         auth = call_kwargs["auth"]
@@ -1120,7 +1123,7 @@ async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("rest_client")
-async def test_basic_auth_with_debug_ui(hass: HomeAssistant) -> None:
+async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -> None:
     """Test BasicAuth session is created when username and password are provided with debug_ui."""
     config = {
         DOMAIN: {
@@ -1158,7 +1161,7 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant) -> None:
         assert "connector" in call_kwargs
         connector = call_kwargs["connector"]
         assert isinstance(connector, UnixConnector)
-        assert connector.path == HA_MANAGED_UNIX_SOCKET
+        assert connector.path == get_go2rtc_unix_socket_path(server_dir)
         assert "auth" in call_kwargs
         auth = call_kwargs["auth"]
         assert isinstance(auth, BasicAuth)

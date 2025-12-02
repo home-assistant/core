@@ -99,7 +99,7 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -138,7 +138,7 @@ async def test_template_variables(
         create_content_block(0, ["Okay, let", " me take care of that for you", "."])
     ]
     with (
-        patch("anthropic.resources.models.AsyncModels.retrieve"),
+        patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock),
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -516,6 +516,7 @@ async def test_extended_thinking(
     assert chat_log.content[2].content == "Hello, how can I help you today?"
 
 
+@freeze_time("2024-05-24 12:00:00")
 async def test_redacted_thinking(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
@@ -618,6 +619,7 @@ async def test_extended_thinking_tool_call(
     assert mock_create_stream.mock_calls[1][2]["messages"] == snapshot
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry_with_web_search: MockConfigEntry,
