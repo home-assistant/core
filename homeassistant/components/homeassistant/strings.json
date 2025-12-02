@@ -67,14 +67,6 @@
       "description": "Reauthentication is needed",
       "title": "[%key:common::config_flow::title::reauth%]"
     },
-    "config_entry_unique_id_collision": {
-      "description": "There are multiple {domain} config entries with the same unique ID.\nThe config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
-      "title": "Multiple {domain} config entries with same unique ID"
-    },
-    "config_entry_unique_id_collision_many": {
-      "description": "There are multiple ({number_of_entries}) {domain} config entries with the same unique ID.\nThe first {title_limit} config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
-      "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]"
-    },
     "country_not_configured": {
       "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below.",
       "title": "The country has not been configured"
