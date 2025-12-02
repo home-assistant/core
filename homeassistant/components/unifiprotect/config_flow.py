@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
@@ -64,6 +65,43 @@ _LOGGER = logging.getLogger(__name__)
 ENTRY_FAILURE_STATES = (
     ConfigEntryState.SETUP_ERROR,
     ConfigEntryState.SETUP_RETRY,
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): selector.TextSelector(),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, min=1, max=65535
+            )
+        ),
+        vol.Required(
+            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+        ): selector.BooleanSelector(),
+        vol.Required(CONF_USERNAME): selector.TextSelector(),
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_API_KEY): selector.TextSelector(),
+    }
+)
+
+# For flows where host/port/verify_ssl are pre-filled (reauth, discovery)
+PARTIAL_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_HOST): selector.TextSelector(),
+        vol.Optional(CONF_PORT): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, min=1, max=65535
+            )
+        ),
+        vol.Optional(CONF_VERIFY_SSL): selector.BooleanSelector(),
+        vol.Required(CONF_USERNAME): selector.TextSelector(),
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_API_KEY): selector.TextSelector(),
+    }
 )
 
 
@@ -179,19 +217,42 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         discovery_info = self._discovered_device
+
+        form_data = {
+            CONF_HOST: discovery_info["direct_connect_domain"]
+            or discovery_info["source_ip"],
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: bool(discovery_info["direct_connect_domain"]),
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+        }
+
         if user_input is not None:
-            user_input[CONF_PORT] = DEFAULT_PORT
+            # Merge user input with discovery info
+            merged_input = {**form_data, **user_input}
+            # Discovery always uses default port, override host/ssl based on discovery
+            merged_input[CONF_PORT] = DEFAULT_PORT
             nvr_data = None
             if discovery_info["direct_connect_domain"]:
-                user_input[CONF_HOST] = discovery_info["direct_connect_domain"]
-                user_input[CONF_VERIFY_SSL] = True
-                nvr_data, errors = await self._async_get_nvr_data(user_input)
+                merged_input[CONF_HOST] = discovery_info["direct_connect_domain"]
+                merged_input[CONF_VERIFY_SSL] = True
+                nvr_data, errors = await self._async_get_nvr_data(merged_input)
             if not nvr_data or errors:
-                user_input[CONF_HOST] = discovery_info["source_ip"]
-                user_input[CONF_VERIFY_SSL] = False
-                nvr_data, errors = await self._async_get_nvr_data(user_input)
+                merged_input[CONF_HOST] = discovery_info["source_ip"]
+                merged_input[CONF_VERIFY_SSL] = False
+                nvr_data, errors = await self._async_get_nvr_data(merged_input)
             if nvr_data and not errors:
-                return self._async_create_entry(nvr_data.display_name, user_input)
+                return self._async_create_entry(nvr_data.display_name, merged_input)
+            # Preserve user input for form re-display, but keep discovery info
+            form_data = {
+                CONF_HOST: merged_input[CONF_HOST],
+                CONF_PORT: merged_input[CONF_PORT],
+                CONF_VERIFY_SSL: merged_input[CONF_VERIFY_SSL],
+                CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+            }
+            if CONF_API_KEY in user_input:
+                form_data[CONF_API_KEY] = user_input[CONF_API_KEY]
 
         placeholders = {
             "name": discovery_info["hostname"]
@@ -200,7 +261,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             "ip_address": discovery_info["source_ip"],
         }
         self.context["title_placeholders"] = placeholders
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
@@ -209,15 +269,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(PARTIAL_SCHEMA, form_data),
             errors=errors,
         )
 
@@ -228,6 +280,16 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
+
+    @staticmethod
+    def _get_form_data_from_entry(entry_data: Mapping[str, Any]) -> dict[str, Any]:
+        """Extract non-sensitive form data from config entry for pre-filling forms."""
+        return {
+            CONF_HOST: entry_data[CONF_HOST],
+            CONF_PORT: entry_data[CONF_PORT],
+            CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
+            CONF_USERNAME: entry_data[CONF_USERNAME],
+        }
 
     @callback
     def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
@@ -252,7 +314,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         public_api_session = async_get_clientsession(self.hass)
 
         host = user_input[CONF_HOST]
-        port = user_input.get(CONF_PORT, DEFAULT_PORT)
+        port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
         verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
         protect = ProtectApiClient(
@@ -262,7 +324,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             port=port,
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
-            api_key=user_input[CONF_API_KEY],
+            api_key=user_input.get(CONF_API_KEY, ""),
             verify_ssl=verify_ssl,
             cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
             config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
@@ -316,14 +378,18 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # prepopulate fields
         reauth_entry = self._get_reauth_entry()
-        form_data = {**reauth_entry.data}
+        form_data = self._get_form_data_from_entry(reauth_entry.data)
+
         if user_input is not None:
-            form_data.update(user_input)
+            # Merge with existing config
+            merged_input = {**reauth_entry.data, **user_input}
 
             # validate login data
-            _, errors = await self._async_get_nvr_data(form_data)
+            _, errors = await self._async_get_nvr_data(merged_input)
             if not errors:
-                return self.async_update_reload_and_abort(reauth_entry, data=form_data)
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data=merged_input
+                )
 
         self.context["title_placeholders"] = {
             "name": reauth_entry.title,
@@ -336,15 +402,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=form_data.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(PARTIAL_SCHEMA, form_data),
             errors=errors,
         )
 
@@ -355,13 +413,14 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         reconfigure_entry = self._get_reconfigure_entry()
-        form_data = {**reconfigure_entry.data}
+        form_data = self._get_form_data_from_entry(reconfigure_entry.data)
 
         if user_input is not None:
-            form_data.update(user_input)
+            # Merge with existing config
+            merged_input = {**reconfigure_entry.data, **user_input}
 
             # validate login data
-            nvr_data, errors = await self._async_get_nvr_data(form_data)
+            nvr_data, errors = await self._async_get_nvr_data(merged_input)
             if nvr_data and not errors:
                 new_unique_id = _async_unifi_mac_from_hass(nvr_data.mac)
                 _LOGGER.debug(
@@ -375,7 +434,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data=form_data,
+                    data=merged_input,
                 )
 
         return self.async_show_form(
@@ -385,23 +444,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=form_data.get(CONF_HOST)): str,
-                    vol.Required(
-                        CONF_PORT, default=form_data.get(CONF_PORT, DEFAULT_PORT)
-                    ): int,
-                    vol.Required(
-                        CONF_VERIFY_SSL,
-                        default=form_data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                    ): bool,
-                    vol.Required(
-                        CONF_USERNAME, default=form_data.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, form_data),
             errors=errors,
         )
 
@@ -420,7 +463,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self._async_create_entry(nvr_data.display_name, user_input)
 
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             description_placeholders={
@@ -428,22 +470,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 )
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                    vol.Required(
-                        CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
-                    ): int,
-                    vol.Required(
-                        CONF_VERIFY_SSL,
-                        default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                    ): bool,
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, user_input or {}
             ),
             errors=errors,
         )

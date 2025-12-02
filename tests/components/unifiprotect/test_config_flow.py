@@ -308,6 +308,11 @@ async def test_form_reauth_auth(
         "name": "Mock Title",
     }
 
+    # Verify that non-sensitive fields are pre-filled and sensitive fields are not
+    # The data_schema will have been created with add_suggested_values_to_schema
+    # We can't easily verify the suggested values, but we can verify the flow works
+    # and that when only providing new credentials, the old non-sensitive data is kept
+
     with (
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
@@ -359,6 +364,14 @@ async def test_form_reauth_auth(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert len(mock_setup.mock_calls) == 1
+
+    # Verify that non-sensitive data was preserved when only credentials were updated
+    assert mock_config.data[CONF_HOST] == "1.1.1.1"
+    assert mock_config.data[CONF_PORT] == 443
+    assert mock_config.data[CONF_VERIFY_SSL] is False
+    assert mock_config.data[CONF_USERNAME] == "test-username"
+    assert mock_config.data[CONF_PASSWORD] == "new-password"
+    assert mock_config.data[CONF_API_KEY] == "test-api-key"
 
 
 async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -> None:
@@ -1392,6 +1405,11 @@ async def test_reconfigure_form_defaults(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
+    # Verify that non-sensitive fields are pre-filled and sensitive fields are not
+    # The data_schema will have been created with add_suggested_values_to_schema
+    # We can't easily verify the suggested values, but we can verify the flow works
+    # and that when only providing new credentials, the old non-sensitive data is kept
+
     # Use nvr with matching MAC
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -1413,6 +1431,15 @@ async def test_reconfigure_form_defaults(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    # Verify that all data was updated
+    entry = hass.config_entries.async_get_entry(ufp_reconfigure_entry_alt.entry_id)
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.data[CONF_PORT] == 8443
+    assert entry.data[CONF_VERIFY_SSL] is True
+    assert entry.data[CONF_USERNAME] == "test-username"
+    assert entry.data[CONF_PASSWORD] == "new-password"
+    assert entry.data[CONF_API_KEY] == "new-api-key"
 
 
 async def test_reconfigure_same_nvr_updated_credentials(
