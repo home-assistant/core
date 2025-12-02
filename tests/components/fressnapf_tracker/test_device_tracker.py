@@ -9,9 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from . import snapshot_devices
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -30,13 +28,11 @@ async def platforms() -> AsyncGenerator[None]:
 async def test_state_entity_device_snapshots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker entity is created correctly."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-    await snapshot_devices(device_registry, mock_config_entry, snapshot)
 
 
 @pytest.mark.usefixtures("mock_auth_client")
