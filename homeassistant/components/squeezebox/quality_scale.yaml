@@ -1,0 +1,69 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration only has entity_actions, which are setup in the entity async_setup_entry.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow:
+    status: done
+    comment: Future enhancements, 1) separate manual and discovery flows, 2) allow for discovery of multiple LMS and selection of one. PR 153958
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration doesn't have an auth flow.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: todo
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: There aren't any entities that should be disabled by default.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: todo
