@@ -27,7 +27,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, COORDINATOR_UPDATE_INTERVAL_SECONDS, DOMAIN
+from .const import COORDINATOR_UPDATE_INTERVAL_SECONDS, DOMAIN, LOGGER
 
 type EgaugeConfigEntry = ConfigEntry[EgaugeDataCoordinator]
 
@@ -51,7 +51,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            logger=_LOGGER,
+            logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=COORDINATOR_UPDATE_INTERVAL_SECONDS),
             config_entry=config_entry,
