@@ -1463,6 +1463,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "greenwave",
     "group",
     "gtfs",
+    "growatt_server",
     "guardian",
     "harman_kardon_avr",
     "harmony",
