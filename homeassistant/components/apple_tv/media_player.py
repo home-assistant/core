@@ -115,6 +115,7 @@ class AppleTvMediaPlayer(
     """Representation of an Apple TV media player."""
 
     _attr_supported_features = SUPPORT_APPLE_TV
+    _attr_name = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
         """Initialize the Apple TV media player."""
