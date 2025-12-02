@@ -7,6 +7,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cover, template
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -29,13 +31,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
 from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_cover"
@@ -74,21 +76,25 @@ CLOSE_COVER = {
     },
 }
 
-SET_COVER_POSITION = {
-    "service": "test.automation",
-    "data_template": {
-        "action": "set_cover_position",
-        "caller": "{{ this.entity_id }}",
-        "position": "{{ position }}",
-    },
+COVER_SET_POSITION_ACTION = {
+    "set_cover_position": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "set_cover_position",
+            "caller": "{{ this.entity_id }}",
+            "position": "{{ position }}",
+        },
+    }
 }
 
-SET_COVER_TILT_POSITION = {
-    "service": "test.automation",
-    "data_template": {
-        "action": "set_cover_tilt_position",
-        "caller": "{{ this.entity_id }}",
-        "tilt_position": "{{ tilt }}",
+COVER_SET_TILT_POSITION_ACTION = {
+    "set_cover_tilt_position": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "set_cover_tilt_position",
+            "caller": "{{ this.entity_id }}",
+            "tilt_position": "{{ tilt }}",
+        },
     },
 }
 
@@ -185,13 +191,13 @@ async def setup_cover(
     await async_setup_cover_config(hass, count, style, cover_config)
 
 
-@pytest.fixture
-async def setup_state_cover(
+async def setup_state_cover_config(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
     state_template: str,
-):
+    extra_config: dict,
+) -> None:
     """Do setup of cover integration using a state template."""
     if style == ConfigurationStyle.LEGACY:
         await async_setup_legacy_format(
@@ -201,6 +207,7 @@ async def setup_state_cover(
                 TEST_OBJECT_ID: {
                     **COVER_ACTIONS,
                     "value_template": state_template,
+                    **extra_config,
                 }
             },
         )
@@ -211,6 +218,7 @@ async def setup_state_cover(
             {
                 **NAMED_COVER_ACTIONS,
                 "state": state_template,
+                **extra_config,
             },
         )
     elif style == ConfigurationStyle.TRIGGER:
@@ -220,8 +228,20 @@ async def setup_state_cover(
             {
                 **NAMED_COVER_ACTIONS,
                 "state": state_template,
+                **extra_config,
             },
         )
+
+
+@pytest.fixture
+async def setup_state_cover(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str,
+) -> None:
+    """Do setup of cover integration using a state template."""
+    await setup_state_cover_config(hass, count, style, state_template, {})
 
 
 @pytest.fixture
@@ -239,7 +259,7 @@ async def setup_position_cover(
             {
                 TEST_OBJECT_ID: {
                     **COVER_ACTIONS,
-                    "set_cover_position": SET_COVER_POSITION,
+                    **COVER_SET_POSITION_ACTION,
                     "position_template": position_template,
                 }
             },
@@ -250,7 +270,7 @@ async def setup_position_cover(
             count,
             {
                 **NAMED_COVER_ACTIONS,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
                 "position": position_template,
             },
         )
@@ -260,7 +280,7 @@ async def setup_position_cover(
             count,
             {
                 **NAMED_COVER_ACTIONS,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
                 "position": position_template,
             },
         )
@@ -936,7 +956,7 @@ async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) 
             ConfigurationStyle.LEGACY,
             {
                 "test_template_cover": {
-                    "set_cover_position": SET_COVER_POSITION,
+                    **COVER_SET_POSITION_ACTION,
                 }
             },
         ),
@@ -944,14 +964,14 @@ async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) 
             ConfigurationStyle.MODERN,
             {
                 "name": TEST_OBJECT_ID,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
                 "name": TEST_OBJECT_ID,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
             },
         ),
     ],
@@ -1036,7 +1056,7 @@ async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> No
             {
                 "test_template_cover": {
                     **COVER_ACTIONS,
-                    "set_cover_tilt_position": SET_COVER_TILT_POSITION,
+                    **COVER_SET_TILT_POSITION_ACTION,
                 }
             },
         ),
@@ -1044,14 +1064,14 @@ async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> No
             ConfigurationStyle.MODERN,
             {
                 **NAMED_COVER_ACTIONS,
-                "set_cover_tilt_position": SET_COVER_TILT_POSITION,
+                **COVER_SET_TILT_POSITION_ACTION,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
                 **NAMED_COVER_ACTIONS,
-                "set_cover_tilt_position": SET_COVER_TILT_POSITION,
+                **COVER_SET_TILT_POSITION_ACTION,
             },
         ),
     ],
@@ -1097,24 +1117,20 @@ async def test_set_tilt_position(
     [
         (
             ConfigurationStyle.LEGACY,
-            {
-                "test_template_cover": {
-                    "set_cover_position": SET_COVER_POSITION,
-                }
-            },
+            {"test_template_cover": COVER_SET_POSITION_ACTION},
         ),
         (
             ConfigurationStyle.MODERN,
             {
                 "name": TEST_OBJECT_ID,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
                 "name": TEST_OBJECT_ID,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
             },
         ),
     ],
@@ -1159,7 +1175,7 @@ async def test_set_position_optimistic(
             ConfigurationStyle.TRIGGER,
             {
                 "name": TEST_OBJECT_ID,
-                "set_cover_position": SET_COVER_POSITION,
+                **COVER_SET_POSITION_ACTION,
                 "picture": "{{ 'foo.png' if is_state('cover.test_state', 'open') else 'bar.png' }}",
             },
         ),
@@ -1204,8 +1220,8 @@ async def test_non_optimistic_template_with_optimistic_state(
             {
                 "test_template_cover": {
                     "position_template": "{{ 100 }}",
-                    "set_cover_position": SET_COVER_POSITION,
-                    "set_cover_tilt_position": SET_COVER_TILT_POSITION,
+                    **COVER_SET_POSITION_ACTION,
+                    **COVER_SET_TILT_POSITION_ACTION,
                 }
             },
         ),
@@ -1214,8 +1230,8 @@ async def test_non_optimistic_template_with_optimistic_state(
             {
                 "name": TEST_OBJECT_ID,
                 "position": "{{ 100 }}",
-                "set_cover_position": SET_COVER_POSITION,
-                "set_cover_tilt_position": SET_COVER_TILT_POSITION,
+                **COVER_SET_POSITION_ACTION,
+                **COVER_SET_TILT_POSITION_ACTION,
             },
         ),
         (
@@ -1223,8 +1239,8 @@ async def test_non_optimistic_template_with_optimistic_state(
             {
                 "name": TEST_OBJECT_ID,
                 "position": "{{ 100 }}",
-                "set_cover_position": SET_COVER_POSITION,
-                "set_cover_tilt_position": SET_COVER_TILT_POSITION,
+                **COVER_SET_POSITION_ACTION,
+                **COVER_SET_TILT_POSITION_ACTION,
             },
         ),
     ],
@@ -1699,3 +1715,207 @@ async def test_flow_preview(
     )
 
     assert state["state"] == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("restored_state", "initial_state"),
+    [
+        (
+            CoverState.OPEN,
+            CoverState.OPEN,
+        ),
+        (
+            CoverState.OPENING,
+            CoverState.OPENING,
+        ),
+        (
+            CoverState.CLOSED,
+            CoverState.CLOSED,
+        ),
+        (
+            CoverState.CLOSING,
+            CoverState.CLOSING,
+        ),
+        (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ),
+        (
+            STATE_UNKNOWN,
+            STATE_UNKNOWN,
+        ),
+        (
+            "faulty_state",
+            STATE_UNKNOWN,
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    restored_state: str,
+    initial_state: str,
+) -> None:
+    """Test restoring template cover."""
+
+    fake_state = State(
+        TEST_ENTITY_ID,
+        restored_state,
+        {},
+    )
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_state_cover_config(
+        hass,
+        1,
+        style,
+        "{{ states('cover.test_state') }}",
+        {},
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == initial_state
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("restored_state", "restored_position", "initial_state", "initial_position"),
+    [
+        (
+            CoverState.OPEN,
+            100,
+            CoverState.OPEN,
+            100,
+        ),
+        (
+            CoverState.OPENING,
+            50,
+            CoverState.OPENING,
+            50,
+        ),
+        (
+            CoverState.CLOSED,
+            0,
+            CoverState.CLOSED,
+            0,
+        ),
+        (
+            CoverState.CLOSING,
+            50,
+            CoverState.CLOSING,
+            50,
+        ),
+        (
+            STATE_UNAVAILABLE,
+            None,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            STATE_UNKNOWN,
+            None,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            "faulty_state",
+            None,
+            STATE_UNKNOWN,
+            None,
+        ),
+    ],
+)
+async def test_restore_position_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    restored_state: str,
+    restored_position: int,
+    initial_state: str,
+    initial_position: int,
+) -> None:
+    """Test restoring template covers position."""
+
+    fake_state = State(
+        TEST_ENTITY_ID,
+        restored_state,
+        {ATTR_CURRENT_POSITION: restored_position},
+    )
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_state_cover_config(
+        hass,
+        1,
+        style,
+        "{{ states('cover.test_state') }}",
+        {
+            "position": "{{ states('sensor.test_position') }}",
+            **COVER_SET_POSITION_ACTION,
+        },
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == initial_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == initial_position
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("restored_tilt", "initial_tilt"),
+    [
+        (
+            0,
+            0,
+        ),
+        (
+            50,
+            50,
+        ),
+        (
+            100,
+            100,
+        ),
+        (
+            None,
+            None,
+        ),
+    ],
+)
+async def test_restore_tilt_position_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    restored_tilt: str,
+    initial_tilt: str,
+) -> None:
+    """Test restoring template covers tilt position."""
+
+    fake_state = State(
+        TEST_ENTITY_ID,
+        CoverState.OPEN,
+        {ATTR_CURRENT_TILT_POSITION: restored_tilt},
+    )
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_state_cover_config(
+        hass,
+        1,
+        style,
+        "{{ states('cover.test_state') }}",
+        {
+            "tilt": "{{ states('sensor.test') }}",
+            **COVER_SET_TILT_POSITION_ACTION,
+        },
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == CoverState.OPEN
+    assert state.attributes.get(ATTR_CURRENT_TILT_POSITION) == initial_tilt
