@@ -31,17 +31,20 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="ph_target",
         translation_key="ph_target",
+        entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.PH,
     ),
     NumberEntityDescription(
         key="orp_target",
         translation_key="orp_target",
+        entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     NumberEntityDescription(
         key="cl_target",
         translation_key="cl_target",
+        entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     NumberEntityDescription(

@@ -1,8 +1,10 @@
 """Tests for the Seko PoolDose number platform."""
 
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pooldose.request_status import RequestStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -12,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -37,6 +39,7 @@ async def test_number_entity_unavailable_no_coordinator_data(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_pooldose_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test number entity becomes unavailable when coordinator has no data."""
     # Verify entity has a state initially
@@ -45,8 +48,8 @@ async def test_number_entity_unavailable_no_coordinator_data(
 
     # Update coordinator data to None
     mock_pooldose_client.instant_values_structured.return_value = (None, None)
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Check entity becomes unavailable
@@ -59,6 +62,7 @@ async def test_number_state_changes(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_pooldose_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test number state changes when coordinator updates."""
     # Initial state
@@ -75,8 +79,8 @@ async def test_number_state_changes(
         updated_data,
     )
 
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Check state changed
@@ -108,27 +112,3 @@ async def test_set_number_value(
     # Verify state updated immediately (optimistic update)
     ph_target_state = hass.states.get("number.pool_device_ph_target")
     assert ph_target_state.state == "7.0"
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_number_attributes(
-    hass: HomeAssistant,
-) -> None:
-    """Test number entity attributes (min, max, step)."""
-    # Test pH target attributes
-    ph_target_state = hass.states.get("number.pool_device_ph_target")
-    assert ph_target_state.attributes["min"] == 6
-    assert ph_target_state.attributes["max"] == 8
-    assert ph_target_state.attributes["step"] == 0.1
-
-    # Test ORP target attributes
-    orp_target_state = hass.states.get("number.pool_device_orp_target")
-    assert orp_target_state.attributes["min"] == 400
-    assert orp_target_state.attributes["max"] == 850
-    assert orp_target_state.attributes["step"] == 1
-
-    # Test Chlorine target attributes
-    cl_target_state = hass.states.get("number.pool_device_chlorine_target")
-    assert cl_target_state.attributes["min"] == 0
-    assert cl_target_state.attributes["max"] == 65535
-    assert cl_target_state.attributes["step"] == 0.01
