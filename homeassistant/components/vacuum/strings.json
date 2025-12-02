@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted vacuum cleaners to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "clean": "Let {entity_name} clean",
@@ -28,6 +32,15 @@
         "on": "[%key:common::state::on%]",
         "paused": "[%key:common::state::paused%]",
         "returning": "Returning to dock"
+      }
+    }
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -97,5 +110,47 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Vacuum"
+  "title": "Vacuum",
+  "triggers": {
+    "docked": {
+      "description": "Triggers when a vacuum cleaner has docked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a vacuum cleaner has docked"
+    },
+    "errored": {
+      "description": "Triggers when a vacuum cleaner has errored.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a vacuum cleaner has errored"
+    },
+    "paused_cleaning": {
+      "description": "Triggers when a vacuum cleaner has paused cleaning.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a vacuum cleaner has paused cleaning"
+    },
+    "started_cleaning": {
+      "description": "Triggers when a vacuum cleaner has started cleaning.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a vacuum cleaner has started cleaning"
+    }
+  }
 }
