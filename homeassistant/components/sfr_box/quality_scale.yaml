@@ -34,9 +34,7 @@ rules:
   parallel-updates: done
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters:
-    status: todo
-    comment: not yet documented
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
