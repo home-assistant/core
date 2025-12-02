@@ -1027,9 +1027,9 @@ async def test_subscribe_triggers_experimental_triggers(
     expected_events: list[set[str]],
 ) -> None:
     """Test trigger.async_subscribe_platform_events doesn't send events for disabled triggers."""
-    light_trigger_descriptions = """
-        _: {}
-        """
+    # Return empty triggers.yaml for light integration, the actual trigger descriptions
+    # are irrelevant for this test
+    light_trigger_descriptions = ""
 
     def _load_yaml(fname, secrets=None):
         if fname.endswith("light/triggers.yaml"):
@@ -1084,9 +1084,9 @@ async def test_subscribe_triggers_no_triggers(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test trigger.async_subscribe_platform_events doesn't send events for platforms without triggers."""
-    light_trigger_descriptions = """
-        _: {}
-        """
+    # Return empty triggers.yaml for light integration, the actual trigger descriptions
+    # are irrelevant for this test
+    light_trigger_descriptions = ""
 
     def _load_yaml(fname, secrets=None):
         if fname.endswith("light/triggers.yaml"):
