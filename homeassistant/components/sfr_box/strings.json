@@ -57,10 +57,12 @@
         "name": "DSL attenuation up"
       },
       "dsl_connect_count": {
-        "name": "DSL connect count"
+        "name": "DSL connect count",
+        "unit_of_measurement": "connects"
       },
       "dsl_crc_error_count": {
-        "name": "DSL CRC error count"
+        "name": "DSL CRC error count",
+        "unit_of_measurement": "errors"
       },
       "dsl_line_status": {
         "name": "DSL line status",
