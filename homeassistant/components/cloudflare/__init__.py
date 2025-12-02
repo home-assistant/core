@@ -17,6 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
     def _callback() -> None:
         """Records updated callback."""
 
+    # Since we are not using coordinator for data reads, we need to add dummy listener
     entry.async_on_unload(entry.runtime_data.async_add_listener(_callback, None))
 
     async def update_records_service(_: ServiceCall) -> None:
