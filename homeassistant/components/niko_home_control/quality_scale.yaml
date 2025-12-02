@@ -11,18 +11,15 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      Be more specific in the config flow with catching exceptions.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description: todo
+  docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -46,7 +43,10 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates:
+    status: exempt
+    comment: |
+      This is set automatically to 0 because this uses `async_update`.
   reauthentication-flow:
     status: exempt
     comment: |
