@@ -52,9 +52,7 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
         await super().async_added_to_hass()
 
         # Subscribe to device events if available
-        if self.coordinator.has_connection and hasattr(
-            self.coordinator.client, "subscribe_to_events"
-        ):
+        if hasattr(self.coordinator.client, "subscribe_to_events"):
             await self._subscribe_to_events()
 
     async def _subscribe_to_events(self) -> None:
