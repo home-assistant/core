@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
@@ -14,15 +14,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import TraccarServerCoordinator
 from .entity import TraccarServerEntity
+
+if TYPE_CHECKING:
+    from . import TraccarServerConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,18 +83,18 @@ TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS: tuple[
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TraccarServerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator: TraccarServerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         TraccarServerSensor(
             coordinator=coordinator,
-            device=entry["device"],
+            device=device_entry["device"],
             description=description,
         )
-        for entry in coordinator.data.values()
+        for device_entry in coordinator.data.values()
         for description in TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS
     )
 
