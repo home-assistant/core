@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.9.0
+aioesphomeapi==42.10.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -393,7 +393,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.21.0
+aioshelly==13.22.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1001,6 +1001,9 @@ freebox-api==1.2.2
 # homeassistant.components.free_mobile
 freesms==0.2.0
 
+# homeassistant.components.fressnapf_tracker
+fressnapftracker==0.1.2
+
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.0
@@ -1201,7 +1204,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251127.0
+home-assistant-frontend==20251201.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.11.24
@@ -2630,7 +2633,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.3.2
+pyvesync==3.3.3
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3231,7 +3234,7 @@ youless-api==2.2.0
 youtubeaio==2.1.1
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.10.22
+yt-dlp[default]==2025.11.12
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.3
