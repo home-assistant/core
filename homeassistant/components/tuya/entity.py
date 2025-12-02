@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
-from .models import DPCodeWrapper
+from .models import DeviceWrapper
 
 
 class TuyaEntity(Entity):
@@ -64,18 +64,20 @@ class TuyaEntity(Entity):
     async def _async_send_commands(self, commands: list[dict[str, Any]]) -> None:
         """Send a list of commands to the device."""
         LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
+        if not commands:
+            return
         await self.hass.async_add_executor_job(
             self.device_manager.send_commands, self.device.id, commands
         )
 
-    def _read_wrapper(self, wrapper: DPCodeWrapper | None) -> Any | None:
+    def _read_wrapper(self, wrapper: DeviceWrapper | None) -> Any | None:
         """Read the wrapper device status."""
         if wrapper is None:
             return None
         return wrapper.read_device_status(self.device)
 
     async def _async_send_wrapper_updates(
-        self, wrapper: DPCodeWrapper | None, value: Any
+        self, wrapper: DeviceWrapper | None, value: Any
     ) -> None:
         """Send command to the device."""
         if wrapper is None:

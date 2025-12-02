@@ -165,8 +165,22 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
 }
 
 
-class DPCodeWrapper:
-    """Base DPCode wrapper.
+class DeviceWrapper:
+    """Base device wrapper."""
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read device status and convert to a Home Assistant value."""
+        raise NotImplementedError
+
+    def get_update_commands(
+        self, device: CustomerDevice, value: Any
+    ) -> list[dict[str, Any]]:
+        """Generate update commands for a Home Assistant action."""
+        raise NotImplementedError
+
+
+class DPCodeWrapper(DeviceWrapper):
+    """Base device wrapper for a single DPCode.
 
     Used as a common interface for referring to a DPCode, and
     access read conversion routines.
@@ -185,13 +199,6 @@ class DPCodeWrapper:
         Private helper method for `read_device_status`.
         """
         return device.status.get(self.dpcode)
-
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode.
-
-        The raw device status is converted to a Home Assistant value.
-        """
-        raise NotImplementedError
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
