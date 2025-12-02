@@ -49,7 +49,7 @@
   "entity": {
     "binary_sensor": {
       "deep_sleep": {
-        "name": "Deep Sleep"
+        "name": "Deep sleep"
       }
     }
   }
