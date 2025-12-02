@@ -154,11 +154,11 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._state: LockState | None = None
         self._code_format_template = config.get(CONF_CODE_FORMAT)
-        self._code_format: str | None = None
         self._code_format_template_error: TemplateError | None = None
+
+        # Legacy behavior, create all locks as Unlocked.
+        self._set_state(LockState.UNLOCKED)
 
     def _iterate_scripts(
         self, config: dict[str, Any]
@@ -171,44 +171,17 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             if (action_config := config.get(action_id)) is not None:
                 yield (action_id, action_config, supported_feature)
 
-    @property
-    def is_locked(self) -> bool:
-        """Return true if lock is locked."""
-        return self._state == LockState.LOCKED
-
-    @property
-    def is_jammed(self) -> bool:
-        """Return true if lock is jammed."""
-        return self._state == LockState.JAMMED
-
-    @property
-    def is_unlocking(self) -> bool:
-        """Return true if lock is unlocking."""
-        return self._state == LockState.UNLOCKING
-
-    @property
-    def is_locking(self) -> bool:
-        """Return true if lock is locking."""
-        return self._state == LockState.LOCKING
-
-    @property
-    def is_open(self) -> bool:
-        """Return true if lock is open."""
-        return self._state == LockState.OPEN
-
-    @property
-    def is_opening(self) -> bool:
-        """Return true if lock is opening."""
-        return self._state == LockState.OPENING
-
-    @property
-    def code_format(self) -> str | None:
-        """Regex for code format or None if no code is required."""
-        return self._code_format
+    def _set_state(self, state: LockState | None) -> None:
+        self._attr_is_jammed = state == LockState.JAMMED
+        self._attr_is_opening = state == LockState.OPENING
+        self._attr_is_locking = state == LockState.LOCKING
+        self._attr_is_open = state == LockState.OPEN
+        self._attr_is_unlocking = state == LockState.UNLOCKING
+        self._attr_is_locked = state == LockState.LOCKED
 
     def _handle_state(self, result: Any) -> None:
         if isinstance(result, bool):
-            self._state = LockState.LOCKED if result else LockState.UNLOCKED
+            self._set_state(LockState.LOCKED if result else LockState.UNLOCKED)
             return
 
         if isinstance(result, str):
@@ -217,33 +190,33 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
                 "on",
                 "locked",
             ):
-                self._state = LockState.LOCKED
+                self._set_state(LockState.LOCKED)
             elif result.lower() in (
                 "false",
                 "off",
                 "unlocked",
             ):
-                self._state = LockState.UNLOCKED
+                self._set_state(LockState.UNLOCKED)
             else:
                 try:
-                    self._state = LockState(result.lower())
+                    self._set_state(LockState(result.lower()))
                 except ValueError:
-                    self._state = None
+                    self._set_state(None)
             return
 
-        self._state = None
+        self._set_state(None)
 
     @callback
     def _update_code_format(self, render: str | TemplateError | None):
         """Update code format from the template."""
         if isinstance(render, TemplateError):
-            self._code_format = None
+            self._attr_code_format = None
             self._code_format_template_error = render
         elif render in (None, "None", ""):
-            self._code_format = None
+            self._attr_code_format = None
             self._code_format_template_error = None
         else:
-            self._code_format = render
+            self._attr_code_format = render
             self._code_format_template_error = None
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -253,7 +226,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._attr_assumed_state:
-            self._state = LockState.LOCKED
+            self._set_state(LockState.LOCKED)
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
@@ -271,7 +244,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._attr_assumed_state:
-            self._state = LockState.UNLOCKED
+            self._set_state(LockState.UNLOCKED)
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
@@ -289,7 +262,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._attr_assumed_state:
-            self._state = LockState.OPEN
+            self._set_state(LockState.OPEN)
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
@@ -343,7 +316,7 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
         """Update the state from the template."""
         super()._update_state(result)
         if isinstance(result, TemplateError):
-            self._state = None
+            self._attr_is_locked = None
             return
 
         self._handle_state(result)
@@ -353,14 +326,14 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
         """Set up templates."""
         if self._template is not None:
             self.add_template_attribute(
-                "_state",
+                "_attr_is_locked",
                 self._template,
                 None,
                 self._update_state,
             )
         if self._code_format_template:
             self.add_template_attribute(
-                "_code_format_template",
+                "_attr_code_format",
                 self._code_format_template,
                 None,
                 self._update_code_format,

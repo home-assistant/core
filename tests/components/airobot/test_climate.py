@@ -81,7 +81,9 @@ async def test_climate_set_temperature_error(
     """Test error handling when setting temperature fails."""
     mock_airobot_client.set_home_temperature.side_effect = AirobotError("Device error")
 
-    with pytest.raises(ServiceValidationError, match="Failed to set temperature"):
+    with pytest.raises(
+        ServiceValidationError, match="Failed to set temperature"
+    ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -91,6 +93,10 @@ async def test_climate_set_temperature_error(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == "airobot"
+    assert exc_info.value.translation_key == "set_temperature_failed"
+    assert exc_info.value.translation_placeholders == {"temperature": "24.0"}
 
 
 @pytest.mark.parametrize(
@@ -160,7 +166,9 @@ async def test_climate_set_preset_mode_error(
     """Test error handling when setting preset mode fails."""
     mock_airobot_client.set_boost_mode.side_effect = AirobotError("Device error")
 
-    with pytest.raises(ServiceValidationError, match="Failed to set preset mode"):
+    with pytest.raises(
+        ServiceValidationError, match="Failed to set preset mode"
+    ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -170,6 +178,10 @@ async def test_climate_set_preset_mode_error(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == "airobot"
+    assert exc_info.value.translation_key == "set_preset_mode_failed"
+    assert exc_info.value.translation_placeholders == {"preset_mode": "boost"}
 
 
 async def test_climate_heating_state(
@@ -219,3 +231,32 @@ async def test_climate_unavailable_on_update_failure(
     state = hass.states.get("climate.test_thermostat")
     assert state
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("temp_floor", "temp_air", "expected_temp"),
+    [
+        (25.0, 22.0, 25.0),  # Floor sensor available - should use floor temp
+        (None, 22.0, 22.0),  # Floor sensor not available - should use air temp
+    ],
+)
+async def test_climate_current_temperature(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_status: ThermostatStatus,
+    mock_config_entry: MockConfigEntry,
+    temp_floor: float | None,
+    temp_air: float,
+    expected_temp: float,
+) -> None:
+    """Test current temperature prioritizes floor sensor when available."""
+    mock_status.temp_floor = temp_floor
+    mock_status.temp_air = temp_air
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test_thermostat")
+    assert state
+    assert state.attributes.get("current_temperature") == expected_temp
