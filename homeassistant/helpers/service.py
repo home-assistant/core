@@ -749,7 +749,7 @@ async def _run_entity_coros(
             )
 
             if isinstance(res, BaseException):
-                _LOGGER.exception("Service call failed for %s", ents_list)
+                _LOGGER.error("Service call failed for %s", ents_list, exc_info=res)
                 for e in ents_list:
                     batch_results[e.entity_id] = None
                 continue
@@ -775,6 +775,7 @@ async def _run_entity_coros(
 async def _handle_batchable_entities(
     hass: HomeAssistant,
     entities: list[Entity],
+    func: str,
     call: ServiceCall,
     return_response: bool = True,
 ) -> dict[str, Any] | None:
@@ -794,13 +795,17 @@ async def _handle_batchable_entities(
             cls = type(ents_for_batch[0])
             batch_method_name = getattr(cls, "_BATCH_MAP", {}).get(call.service)
             if batch_method_name:
+                # Set context on each entity before invoking the batch method so
+                # state updates carry the correct context
+                for e in ents_for_batch:
+                    e.async_set_context(call.context)
                 batch_method = getattr(cls, batch_method_name)
+                filtered = remove_entity_service_fields(call)
                 coros.append(
                     batch_method(
                         ents_for_batch,
                         config_entry_id,
-                        **call.data,
-                        context=call.context,
+                        **filtered,
                     )
                 )
                 entity_lists.append(ents_for_batch)
@@ -810,7 +815,11 @@ async def _handle_batchable_entities(
             coros.append(
                 entity.async_request_call(
                     _handle_entity_call(
-                        call.hass, entity, call.service, call.data, call.context
+                        call.hass,
+                        entity,
+                        func,
+                        remove_entity_service_fields(call),
+                        call.context,
                     )
                 )
             )
@@ -832,12 +841,12 @@ async def _handle_batchable_entities(
                 cls = type(ents_for_batch[0])
                 batch_query_method = getattr(cls, "async_batch_query", None)
                 if batch_query_method:
+                    filtered = remove_entity_service_fields(call)
                     query_coros.append(
                         batch_query_method(
                             ents_for_batch,
                             config_entry_id,
-                            **call.data,
-                            context=call.context,
+                            **filtered,
                         )
                     )
                     query_entity_lists.append(ents_for_batch)
@@ -1011,22 +1020,56 @@ async def entity_service_call(
             )
         return None
 
+    # Single-entity fast path with origin/dev semantics
     if len(entities) == 1:
         entity = entities[0]
+        single_response = await _handle_entity_call(
+            hass, entity, func, data, call.context
+        )
+        if entity.should_poll:
+            # Ensure context is set for follow-up state update
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(True)
+        return {entity.entity_id: single_response} if return_response else None
 
-        # Wrap the single entity call in a coroutine list
-        coros = [
+    # Use batching only when calling an entity method (string) and any targeted class declares a batch method
+    if isinstance(func, str) and any(
+        getattr(type(e), "_BATCH_MAP", {}).get(call.service) for e in entities
+    ):
+        return await _handle_batchable_entities(
+            hass, entities, func, call, return_response
+        )
+
+    # Legacy multi-entity behavior: fail-fast on exceptions, preserve order
+    results = await asyncio.gather(
+        *[
             entity.async_request_call(
                 _handle_entity_call(hass, entity, func, data, call.context)
             )
-        ]
+            for entity in entities
+        ],
+        return_exceptions=True,
+    )
 
-        # _run_entity_coros expects a list of entities (or list of lists)
-        result = await _run_entity_coros([entity], coros, call.context)
+    # Raise the first exception encountered to match previous behavior
+    for res in results:
+        if isinstance(res, BaseException):
+            raise res from None
 
-        return result if return_response else None
+    response_data: EntityServiceResponse = {}
+    for entity, res in zip(entities, results, strict=True):
+        response_data[entity.entity_id] = cast(ServiceResponse, res)
 
-    return await _handle_batchable_entities(hass, entities, call, return_response)
+    # Update pollable entities after service call
+    pollable_entities = [e for e in entities if e.should_poll]
+    if pollable_entities:
+        for e in pollable_entities:
+            e.async_set_context(call.context)
+        await asyncio.gather(
+            *(e.async_update_ha_state(True) for e in pollable_entities)
+        )
+
+    return response_data if return_response and response_data else None
 
 
 async def _handle_entity_call(

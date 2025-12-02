@@ -1656,8 +1656,10 @@ async def _batch_execute(
     Returns:
         Dictionary mapping entity_id to result or None if an exception occurred.
     """
+    # Honor per-entity parallel_updates semaphore using async_request_call
     coros: list[Coroutine[Any, Any, Any]] = [
-        getattr(entity, method_name)(**kwargs) for entity in entities
+        entity.async_request_call(getattr(entity, method_name)(**kwargs))
+        for entity in entities
     ]
     results = await asyncio.gather(*coros, return_exceptions=True)
 
@@ -1759,8 +1761,8 @@ class ToggleEntity(
             - Subclasses can override this method to implement custom batch behavior.
             - The default implementation gathers all entity.async_turn_on coroutines.
         """
-        # Split entities into off / unknown / on
-        off_entities, unknown_entities, on_entities = cls._split_entities_by_state(
+        # Split entities into on / off / unknown
+        on_entities, off_entities, unknown_entities = cls._split_entities_by_state(
             entities
         )
 
@@ -1769,14 +1771,14 @@ class ToggleEntity(
         return await _run_batch_with_order(
             (off_entities, unknown_entities, on_entities),
             "async_turn_on",
-            **kwargs,
+            kwargs,
         )
 
     @classmethod
     async def async_batch_turn_off(
         cls,
         entities: list[ToggleEntity],
-        config_entry_id: str,
+        config_entry_id: str | None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Batch 'turn_off' for a list of entities concurrently.
@@ -1798,21 +1800,21 @@ class ToggleEntity(
             - Subclasses can override this method to implement custom batch behavior.
             - The default implementation gathers all entity.async_turn_on coroutines.
         """
-        # Split entities into off / unknown / on
-        off_entities, unknown_entities, on_entities = cls._split_entities_by_state(
+        # Split entities into on / off / unknown
+        on_entities, off_entities, unknown_entities = cls._split_entities_by_state(
             entities
         )
         # For better perceived response time by deferring turning off entities which are
-        # already off, we'll turn on entities which are on or unknown first
+        # already off, we'll turn off entities which are on or unknown first
         return await _run_batch_with_order(
             (on_entities, unknown_entities, off_entities),
             "async_turn_off",
-            **kwargs,
+            kwargs,
         )
 
     @classmethod
     async def async_batch_toggle(
-        cls, entities: list[ToggleEntity], context: Context, **kwargs: Any
+        cls, entities: list[ToggleEntity], config_entry_id: str | None, **kwargs: Any
     ) -> dict[str, Any]:
         """Toggle a list of ToggleEntities in parallel.
 
@@ -1825,11 +1827,11 @@ class ToggleEntity(
 
         if on_entities:
             coros.append(
-                cls.async_batch_turn_off(on_entities, **kwargs, context=context)
+                cls.async_batch_turn_off(on_entities, config_entry_id, **kwargs)
             )
         if off_entities:
             coros.append(
-                cls.async_batch_turn_on(off_entities, **kwargs, context=context)
+                cls.async_batch_turn_on(off_entities, config_entry_id, **kwargs)
             )
 
         if not coros:
