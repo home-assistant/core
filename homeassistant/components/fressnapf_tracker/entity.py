@@ -39,4 +39,4 @@ class FressnapfTrackerEntity(FressnapfTrackerBaseEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self.id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{self.id}_{entity_description.key}"

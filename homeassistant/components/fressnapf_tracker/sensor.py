@@ -25,7 +25,7 @@ from .entity import FressnapfTrackerEntity
 class FressnapfTrackerSensorDescription(SensorEntityDescription):
     """Class describing Fressnapf Tracker sensor entities."""
 
-    value_fn: Callable[[Tracker], StateType | datetime]
+    value_fn: Callable[[Tracker], int]
 
 
 SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
@@ -47,13 +47,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fressnapf Tracker sensors."""
 
-    sensors = [
+    async_add_entities(
         FressnapfTrackerSensor(coordinator, sensor_description)
         for sensor_description in SENSOR_ENTITY_DESCRIPTIONS
         for coordinator in entry.runtime_data
-    ]
-
-    async_add_entities(sensors)
+    )
 
 
 class FressnapfTrackerSensor(FressnapfTrackerEntity, SensorEntity):
