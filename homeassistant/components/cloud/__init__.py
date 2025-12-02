@@ -442,6 +442,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             platforms += LLM_PLATFORMS
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    entry.runtime_data = {"platforms": platforms}
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
@@ -451,7 +452,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(
-        entry, PLATFORMS + LLM_PLATFORMS
+        entry, entry.runtime_data["platforms"]
     )
 
 
