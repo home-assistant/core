@@ -1115,6 +1115,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.SAMSUNG_CE_HOOD_FILTER: {
+        Attribute.HOOD_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.HOOD_FILTER_USAGE,
+                translation_key="hood_filter_usage",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=PERCENTAGE,
+            )
+        ]
+    },
 }
 
 
