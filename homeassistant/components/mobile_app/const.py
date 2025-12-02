@@ -22,12 +22,6 @@ DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
 DATA_PENDING_UPDATES = "pending_updates"
 
-# CarPlay configuration keys
-CONF_CARPLAY = "carplay"
-CONF_CARPLAY_ENABLED = "enabled"
-CONF_CARPLAY_QUICK_ACCESS = "quick_access"
-DATA_CARPLAY_CONFIG = "carplay_config"
-
 ATTR_APP_DATA = "app_data"
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
