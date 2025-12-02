@@ -203,7 +203,7 @@ WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
 
 def _value_to_option(value: str | None) -> str | None:
     if value is None or value == "Unknown":
-        return value
+        return None
     return value.lower().replace(" ", "_").replace(".", "_").replace("/", "_")
 
 
