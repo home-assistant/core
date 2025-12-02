@@ -58,9 +58,7 @@ rules:
     status: todo
     comment: not yet documented
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: Need to be able to manually change the IP address
+  reconfiguration-flow: done
   dynamic-devices: done
   discovery-update-info:
     status: todo
