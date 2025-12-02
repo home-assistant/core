@@ -61,6 +61,19 @@ from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _build_data_without_credentials_from_existing(
+    entry_data: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Build form data from existing config entry, excluding sensitive credentials."""
+    return {
+        CONF_HOST: entry_data[CONF_HOST],
+        CONF_PORT: entry_data[CONF_PORT],
+        CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
+        CONF_USERNAME: entry_data[CONF_USERNAME],
+    }
+
+
 ENTRY_FAILURE_STATES = (
     ConfigEntryState.SETUP_ERROR,
     ConfigEntryState.SETUP_RETRY,
@@ -278,16 +291,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
-    @staticmethod
-    def _get_form_data_from_entry(entry_data: Mapping[str, Any]) -> dict[str, Any]:
-        """Extract non-sensitive form data from config entry for pre-filling forms."""
-        return {
-            CONF_HOST: entry_data[CONF_HOST],
-            CONF_PORT: entry_data[CONF_PORT],
-            CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
-            CONF_USERNAME: entry_data[CONF_USERNAME],
-        }
-
     @callback
     def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
         return self.async_create_entry(
@@ -375,7 +378,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # prepopulate fields
         reauth_entry = self._get_reauth_entry()
-        form_data = self._get_form_data_from_entry(reauth_entry.data)
+        form_data = _build_data_without_credentials_from_existing(reauth_entry.data)
 
         if user_input is not None:
             # Merge with existing config
@@ -410,7 +413,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         reconfigure_entry = self._get_reconfigure_entry()
-        form_data = self._get_form_data_from_entry(reconfigure_entry.data)
+        form_data = _build_data_without_credentials_from_existing(
+            reconfigure_entry.data
+        )
 
         if user_input is not None:
             # Merge with existing config
