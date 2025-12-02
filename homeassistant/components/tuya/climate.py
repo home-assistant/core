@@ -24,14 +24,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
-from .entity import TuyaEntity
-from .models import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    find_dpcode,
+from .const import (
+    CELSIUS_ALIASES,
+    FAHRENHEIT_ALIASES,
+    TUYA_DISCOVERY_NEW,
+    DeviceCategory,
+    DPCode,
 )
+from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -90,80 +91,82 @@ CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
 }
 
 
+def _get_temperature_wrapper(
+    wrappers: list[DPCodeIntegerWrapper | None], aliases: set[str]
+) -> DPCodeIntegerWrapper | None:
+    """Return first wrapper with matching unit."""
+    return next(
+        (
+            wrapper
+            for wrapper in wrappers
+            if wrapper is not None
+            and (unit := wrapper.type_information.unit)
+            and unit.lower() in aliases
+        ),
+        None,
+    )
+
+
 def _get_temperature_wrappers(
     device: CustomerDevice, system_temperature_unit: UnitOfTemperature
 ) -> tuple[DPCodeIntegerWrapper | None, DPCodeIntegerWrapper | None, UnitOfTemperature]:
     """Get temperature wrappers for current and set temperatures."""
-    current_temperature_wrapper: DPCodeIntegerWrapper | None = None
-    set_temperature_wrapper: DPCodeIntegerWrapper | None = None
+    # Get all possible temperature dpcodes
+    temp_current = DPCodeIntegerWrapper.find_dpcode(
+        device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP)
+    )
+    temp_current_f = DPCodeIntegerWrapper.find_dpcode(
+        device, (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F)
+    )
+    temp_set = DPCodeIntegerWrapper.find_dpcode(
+        device, DPCode.TEMP_SET, prefer_function=True
+    )
+    temp_set_f = DPCodeIntegerWrapper.find_dpcode(
+        device, DPCode.TEMP_SET_F, prefer_function=True
+    )
 
-    # Default to System Temperature Unit
-    temperature_unit = system_temperature_unit
+    # Get wrappers for celsius and fahrenheit
+    # We need to check the unit of measurement
+    current_celsius = _get_temperature_wrapper(
+        [temp_current, temp_current_f], CELSIUS_ALIASES
+    )
+    current_fahrenheit = _get_temperature_wrapper(
+        [temp_current_f, temp_current], FAHRENHEIT_ALIASES
+    )
+    set_celsius = _get_temperature_wrapper([temp_set, temp_set_f], CELSIUS_ALIASES)
+    set_fahrenheit = _get_temperature_wrapper(
+        [temp_set_f, temp_set], FAHRENHEIT_ALIASES
+    )
 
-    # If both temperature values for celsius and fahrenheit are present,
-    # use whatever the device is set to, with a fallback to celsius.
-    preferred_temperature_unit = None
-    if all(
-        dpcode in device.status
-        for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_CURRENT_F)
-    ) or all(
-        dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
-    ):
-        preferred_temperature_unit = UnitOfTemperature.CELSIUS
-        if any(
-            "f" in device.status[dpcode].lower()
-            for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
-            if isinstance(device.status.get(dpcode), str)
+    # Return early if we have the right wrappers for the system unit
+    if system_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if (
+            (current_fahrenheit and set_fahrenheit)
+            or (current_fahrenheit and not set_celsius)
+            or (set_fahrenheit and not current_celsius)
         ):
-            preferred_temperature_unit = UnitOfTemperature.FAHRENHEIT
-
-    # Figure out current temperature, use preferred unit or what is available
-    celsius_type = find_dpcode(
-        device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
-    )
-    fahrenheit_type = find_dpcode(
-        device,
-        (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F),
-        dptype=DPType.INTEGER,
-    )
-    if fahrenheit_type and (
-        preferred_temperature_unit == UnitOfTemperature.FAHRENHEIT
-        or (
-            preferred_temperature_unit == UnitOfTemperature.CELSIUS and not celsius_type
-        )
+            return current_fahrenheit, set_fahrenheit, UnitOfTemperature.FAHRENHEIT
+    if (
+        (current_celsius and set_celsius)
+        or (current_celsius and not set_fahrenheit)
+        or (set_celsius and not current_fahrenheit)
     ):
-        temperature_unit = UnitOfTemperature.FAHRENHEIT
-        current_temperature_wrapper = DPCodeIntegerWrapper(
-            fahrenheit_type.dpcode, fahrenheit_type
-        )
-    elif celsius_type:
-        temperature_unit = UnitOfTemperature.CELSIUS
-        current_temperature_wrapper = DPCodeIntegerWrapper(
-            celsius_type.dpcode, celsius_type
+        return current_celsius, set_celsius, UnitOfTemperature.CELSIUS
+
+    # If we don't have the right wrappers, return whatever is available
+    # and assume system unit
+    if system_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        return (
+            temp_current_f or temp_current,
+            temp_set_f or temp_set,
+            UnitOfTemperature.FAHRENHEIT,
         )
 
-    # Figure out setting temperature, use preferred unit or what is available
-    celsius_type = find_dpcode(
-        device, DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
+    return (
+        temp_current or temp_current_f,
+        temp_set or temp_set_f,
+        UnitOfTemperature.CELSIUS,
     )
-    fahrenheit_type = find_dpcode(
-        device, DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
-    )
-    if fahrenheit_type and (
-        preferred_temperature_unit == UnitOfTemperature.FAHRENHEIT
-        or (
-            preferred_temperature_unit == UnitOfTemperature.CELSIUS and not celsius_type
-        )
-    ):
-        set_temperature_wrapper = DPCodeIntegerWrapper(
-            fahrenheit_type.dpcode, fahrenheit_type
-        )
-    elif celsius_type:
-        set_temperature_wrapper = DPCodeIntegerWrapper(
-            celsius_type.dpcode, celsius_type
-        )
-
-    return current_temperature_wrapper, set_temperature_wrapper, temperature_unit
 
 
 async def async_setup_entry(
@@ -342,14 +345,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Set new target hvac mode."""
         commands = []
         if self._switch_wrapper:
-            commands.append(
-                self._switch_wrapper.get_update_command(
+            commands.extend(
+                self._switch_wrapper.get_update_commands(
                     self.device, hvac_mode != HVACMode.OFF
                 )
             )
         if self._hvac_mode_wrapper and hvac_mode in self._hvac_to_tuya:
-            commands.append(
-                self._hvac_mode_wrapper.get_update_command(
+            commands.extend(
+                self._hvac_mode_wrapper.get_update_commands(
                     self.device, self._hvac_to_tuya[hvac_mode]
                 )
             )
@@ -357,34 +360,34 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        await self._async_send_dpcode_update(self._hvac_mode_wrapper, preset_mode)
+        await self._async_send_wrapper_updates(self._hvac_mode_wrapper, preset_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._async_send_dpcode_update(self._fan_mode_wrapper, fan_mode)
+        await self._async_send_wrapper_updates(self._fan_mode_wrapper, fan_mode)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
+        await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         commands = []
         if self._swing_wrapper:
-            commands.append(
-                self._swing_wrapper.get_update_command(
+            commands.extend(
+                self._swing_wrapper.get_update_commands(
                     self.device, swing_mode == SWING_ON
                 )
             )
         if self._swing_v_wrapper:
-            commands.append(
-                self._swing_v_wrapper.get_update_command(
+            commands.extend(
+                self._swing_v_wrapper.get_update_commands(
                     self.device, swing_mode in (SWING_BOTH, SWING_VERTICAL)
                 )
             )
         if self._swing_h_wrapper:
-            commands.append(
-                self._swing_h_wrapper.get_update_command(
+            commands.extend(
+                self._swing_h_wrapper.get_update_commands(
                     self.device, swing_mode in (SWING_BOTH, SWING_HORIZONTAL)
                 )
             )
@@ -393,7 +396,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._async_send_dpcode_update(
+        await self._async_send_wrapper_updates(
             self._set_temperature, kwargs[ATTR_TEMPERATURE]
         )
 
@@ -472,8 +475,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        await self._async_send_dpcode_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
     async def async_turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)

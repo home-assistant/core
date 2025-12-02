@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted climates to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "set_hvac_mode": "Change HVAC mode on {entity_name}",
@@ -187,6 +191,13 @@
         "heat_cool": "Heat/cool",
         "off": "[%key:common::state::off%]"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -285,5 +296,57 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Climate"
+  "title": "Climate",
+  "triggers": {
+    "started_cooling": {
+      "description": "Triggers when a climate started cooling.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate started cooling"
+    },
+    "started_drying": {
+      "description": "Triggers when a climate started drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate started drying"
+    },
+    "started_heating": {
+      "description": "Triggers when a climate starts to heat.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate starts to heat"
+    },
+    "turned_off": {
+      "description": "Triggers when a climate is turned off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate is turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when a climate is turned on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "When a climate is turned on"
+    }
+  }
 }
