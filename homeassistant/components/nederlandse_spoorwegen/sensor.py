@@ -309,6 +309,8 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         if self.entity_description.key != "actual_departure":
             return None
 
+        # Deprecated: Remove in 2026.6.0
+
         first_trip = self.coordinator.data.first_trip
         next_trip = self.coordinator.data.next_trip
 
