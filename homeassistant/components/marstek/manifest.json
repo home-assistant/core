@@ -4,6 +4,12 @@
   "codeowners": ["@MarstekEnergy"],
   "config_flow": true,
   "dependencies": ["network"],
+  "dhcp": [
+    {
+      "hostname": "marstek*",
+      "macaddress": "*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/marstek",
   "integration_type": "device",
   "iot_class": "local_polling",

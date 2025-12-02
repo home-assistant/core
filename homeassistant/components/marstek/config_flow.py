@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -36,10 +37,14 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if device is already configured using host/mac
             self._async_abort_entries_match({CONF_HOST: device["ip"]})
-            if device.get("mac"):
-                self._async_abort_entries_match({CONF_MAC: device["mac"]})
-                # Use MAC address as unique_id if available
-                await self.async_set_unique_id(format_mac(device["mac"]))
+            # Use BLE-MAC as unique_id for stability (beardhatcode & mik-laj feedback)
+            # BLE-MAC is more stable than WiFi MAC and ensures device history continuity
+            unique_id_mac = (
+                device.get("ble_mac") or device.get("mac") or device.get("wifi_mac")
+            )
+            if unique_id_mac:
+                self._async_abort_entries_match({CONF_MAC: unique_id_mac})
+                await self.async_set_unique_id(format_mac(unique_id_mac))
                 self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
@@ -148,3 +153,52 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise
 
         return []
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle DHCP discovery to update IP address when it changes (mik-laj feedback)."""
+        mac = format_mac(discovery_info.macaddress)
+        _LOGGER.info(
+            "DHCP discovery triggered: MAC=%s, IP=%s, Hostname=%s",
+            mac,
+            discovery_info.ip,
+            discovery_info.hostname,
+        )
+
+        # Use BLE-MAC or MAC as unique_id (beardhatcode & mik-laj feedback)
+        # Try to find existing entry by MAC address
+        for entry in self._async_current_entries(include_ignore=False):
+            entry_mac = (
+                entry.data.get("ble_mac")
+                or entry.data.get("mac")
+                or entry.data.get("wifi_mac")
+            )
+            if entry_mac and format_mac(entry_mac) == mac:
+                # Found existing entry, update IP if it changed
+                if entry.data.get(CONF_HOST) != discovery_info.ip:
+                    _LOGGER.info(
+                        "DHCP discovery: Device %s IP changed from %s to %s, updating config entry",
+                        mac,
+                        entry.data.get(CONF_HOST),
+                        discovery_info.ip,
+                    )
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={**entry.data, CONF_HOST: discovery_info.ip},
+                    )
+                    # Reload the entry to use new IP
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                else:
+                    _LOGGER.debug(
+                        "DHCP discovery: Device %s IP unchanged (%s)",
+                        mac,
+                        discovery_info.ip,
+                    )
+                return self.async_abort(reason="already_configured")
+
+        # No existing entry found, continue with user flow
+        _LOGGER.debug("DHCP discovery: No existing entry found for MAC %s", mac)
+        return await self.async_step_user()

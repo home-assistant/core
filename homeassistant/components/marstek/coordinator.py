@@ -9,10 +9,13 @@ from typing import Any
 from pymarstek import MarstekUDPClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_UDP_PORT
+from .const import DEFAULT_UDP_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +34,12 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize the coordinator."""
         self.udp_client = udp_client
-        self.device_ip = device_ip
+        self.config_entry = config_entry
+        # Use initial IP, but will read from config_entry.data dynamically
+        self._initial_device_ip = device_ip
+        # Track consecutive failures to trigger rediscovery
+        self._consecutive_failures = 0
+        self._last_successful_ip: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -45,36 +53,256 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             SCAN_INTERVAL.total_seconds(),
         )
 
+        # Register listener to update entity names when config entry changes
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(self._async_config_entry_updated)
+        )
+
+    @property
+    def device_ip(self) -> str:
+        """Get current device IP from config entry (supports dynamic IP updates)."""
+        if self.config_entry:
+            return self.config_entry.data.get(CONF_HOST, self._initial_device_ip)
+        return self._initial_device_ip
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch all data using library's get_device_status method."""
-        _LOGGER.debug("Start polling device: %s", self.device_ip)
+        current_ip = self.device_ip
+        _LOGGER.debug("Start polling device: %s", current_ip)
 
-        if self.udp_client.is_polling_paused(self.device_ip):
-            _LOGGER.debug(
-                "Polling paused for device: %s, skipping update", self.device_ip
-            )
+        if self.udp_client.is_polling_paused(current_ip):
+            _LOGGER.debug("Polling paused for device: %s, skipping update", current_ip)
             return self.data or {}
 
         try:
             # Use library method to get complete device status
+            # Note: get_device_status catches exceptions internally and returns default values
+            # So we need to check the returned data to detect failures
             device_status = await self.udp_client.get_device_status(
-                self.device_ip,
+                current_ip,
                 port=DEFAULT_UDP_PORT,
                 timeout=2.5,
                 include_pv=True,
                 delay_between_requests=2.0,
             )
+
+            # Check if we actually got valid data
+            # get_device_status doesn't throw exceptions, it returns default values on failure
+            # Default values when both requests fail: device_mode="Unknown", battery_soc=0, battery_power=0
+            # We check device_mode because it's the most reliable indicator:
+            # - If ES.GetMode succeeds, device_mode will be a real value (not "Unknown")
+            # - If ES.GetMode fails, device_mode will be "Unknown" (default)
+            device_mode = device_status.get("device_mode", "Unknown")
+            battery_soc = device_status.get("battery_soc", 0)
+            battery_power = device_status.get("battery_power", 0)
+
+            # If device_mode is "Unknown", ES.GetMode definitely failed
+            # This means we got no valid data from the device
+            has_valid_data = device_mode != "Unknown"
+
+            if not has_valid_data:
+                # ES.GetMode failed (device_mode is default "Unknown")
+                # This indicates connection failure - treat as exception
+                _LOGGER.warning(
+                    "No valid data received from device at %s (device_mode=Unknown, soc=%s, power=%s) - connection failed",
+                    current_ip,
+                    battery_soc,
+                    battery_power,
+                )
+                # Abstract raise to satisfy ruff TRY301
+                error_msg = f"No valid data received from device at {current_ip}"
+                raise TimeoutError(error_msg) from None
+            else:
+                # Connection successful, reset failure counter
+                self._consecutive_failures = 0
+                self._last_successful_ip = current_ip
+                _LOGGER.debug(
+                    "Device %s poll done: SOC %s%%, Power %sW, Mode %s, Status %s",
+                    current_ip,
+                    device_status.get("battery_soc"),
+                    device_status.get("battery_power"),
+                    device_status.get("device_mode"),
+                    device_status.get("battery_status"),
+                )
+                return device_status
         except (TimeoutError, OSError, ValueError) as err:
-            _LOGGER.error("Device %s status request failed: %s", self.device_ip, err)
+            self._consecutive_failures += 1
+            _LOGGER.warning(
+                "Device %s status request failed (failure #%d): %s",
+                current_ip,
+                self._consecutive_failures,
+                err,
+            )
+
+            # If connection fails multiple times, IP might have changed
+            # Try to rediscover device and update IP if found
+            if not self.config_entry:
+                return self.data or {}
+            
+            stored_mac = (
+                self.config_entry.data.get("ble_mac")
+                or self.config_entry.data.get("mac")
+                or self.config_entry.data.get("wifi_mac")
+            )
+
+            # Trigger rediscovery if:
+            # 1. We have a MAC address to match
+            # 2. We've failed multiple times (avoid rediscovery on temporary network issues)
+            # Strategy:
+            #   - After 2 consecutive failures: first rediscovery attempt (IP might have changed)
+            #   - After 5 consecutive failures: second rediscovery attempt (device might be back online)
+            #   - Then every 5 failures: periodic rediscovery (in case IP changed while device was offline)
+            should_rediscover = stored_mac and (
+                self._consecutive_failures in (2, 5)
+                or (
+                    self._consecutive_failures > 5
+                    and self._consecutive_failures % 5 == 0
+                )
+            )
+
+            if not should_rediscover:
+                return self.data or {}
+
+            _LOGGER.info(
+                "Connection failed %d time(s), attempting to rediscover device %s via broadcast",
+                self._consecutive_failures,
+                stored_mac,
+            )
+            try:
+                devices = await self.udp_client.discover_devices(use_cache=False)
+
+                found_device = False
+                for device in devices:
+                    device_mac = (
+                        device.get("ble_mac")
+                        or device.get("mac")
+                        or device.get("wifi_mac")
+                    )
+                    if device_mac and format_mac(device_mac) == format_mac(stored_mac):
+                        found_device = True
+                        new_ip = device.get("ip")
+                        if new_ip and new_ip != current_ip:
+                            _LOGGER.info(
+                                "Device IP changed from %s to %s, updating config entry",
+                                current_ip,
+                                new_ip,
+                            )
+                            self.hass.config_entries.async_update_entry(
+                                self.config_entry,
+                                data={
+                                    **self.config_entry.data,
+                                    CONF_HOST: new_ip,
+                                },
+                            )
+                            # Entity names will be updated automatically via config entry update listener
+                            # Retry with new IP immediately
+                            try:
+                                device_status = await self.udp_client.get_device_status(
+                                    new_ip,
+                                    port=DEFAULT_UDP_PORT,
+                                    timeout=2.5,
+                                    include_pv=True,
+                                    delay_between_requests=2.0,
+                                )
+                                _LOGGER.info(
+                                    "Successfully connected to device at new IP: %s",
+                                    new_ip,
+                                )
+                                self._consecutive_failures = 0
+                                self._last_successful_ip = new_ip
+                                return device_status
+                            except (
+                                TimeoutError,
+                                OSError,
+                                ValueError,
+                            ) as retry_err:
+                                _LOGGER.error(
+                                    "Still failed with new IP %s: %s",
+                                    new_ip,
+                                    retry_err,
+                                )
+                        break
+
+                if not found_device:
+                    _LOGGER.warning(
+                        "Device with MAC %s not found during rediscovery",
+                        stored_mac,
+                    )
+            except (TimeoutError, OSError, ValueError) as discover_err:
+                _LOGGER.debug("Rediscovery failed: %s", discover_err)
+
             # Return previous data on error
             return self.data or {}
-        else:
-            _LOGGER.debug(
-                "Device %s poll done: SOC %s%%, Power %sW, Mode %s, Status %s",
-                self.device_ip,
-                device_status.get("battery_soc"),
-                device_status.get("battery_power"),
-                device_status.get("device_mode"),
-                device_status.get("battery_status"),
+
+    async def _async_config_entry_updated(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle config entry update - update entity names if IP changed."""
+        if not self.config_entry:
+            return
+        # Get old IP from coordinator's initial IP
+        old_ip = self._initial_device_ip
+        new_ip = entry.data.get(CONF_HOST, old_ip)
+
+        if new_ip != old_ip:
+            _LOGGER.info(
+                "Config entry updated, IP changed from %s to %s, updating entity names",
+                old_ip,
+                new_ip,
             )
-            return device_status
+            await self._update_entity_names(new_ip, old_ip)
+            # Update initial IP for future comparisons
+            self._initial_device_ip = new_ip
+
+    async def _update_entity_names(self, new_ip: str, old_ip: str) -> None:
+        """Update device and entity names in registry when IP changes."""
+        if not self.config_entry:
+            return
+        # Update device name in device registry
+        device_registry = dr.async_get(self.hass)
+        device_identifier = (
+            self.config_entry.data.get("ble_mac")
+            or self.config_entry.data.get("mac")
+            or self.config_entry.data.get("wifi_mac")
+        )
+        if device_identifier:
+            device = device_registry.async_get_device(
+                identifiers={(DOMAIN, device_identifier)}
+            )
+            if device and device.name and old_ip in device.name:
+                new_device_name = device.name.replace(old_ip, new_ip)
+                _LOGGER.info(
+                    "Updating device name from %s to %s",
+                    device.name,
+                    new_device_name,
+                )
+                device_registry.async_update_device(device.id, name=new_device_name)
+
+        # Update entity names in entity registry (if any entities have IP in name)
+        entity_registry = er.async_get(self.hass)
+        entities = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+
+        updated_count = 0
+        for entity_entry in entities:
+            if entity_entry.name and old_ip in entity_entry.name:
+                new_name = entity_entry.name.replace(old_ip, new_ip)
+                _LOGGER.debug(
+                    "Updating entity %s name from %s to %s",
+                    entity_entry.entity_id,
+                    entity_entry.name,
+                    new_name,
+                )
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, name=new_name
+                )
+                updated_count += 1
+
+        if updated_count > 0:
+            _LOGGER.info(
+                "Updated %d entity name(s) to reflect new IP: %s -> %s",
+                updated_count,
+                old_ip,
+                new_ip,
+            )
