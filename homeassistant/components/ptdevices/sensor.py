@@ -1,0 +1,232 @@
+"""Sensors for PTDevices device."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+import logging
+from string import ascii_letters
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfVolume,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class PTDevicesSensors(StrEnum):
+    """Store keys for PTDevices sensors."""
+
+    LEVEL_PERCENT = "percent_level"
+    LEVEL_VOLUME = "volume_level"
+    LEVEL_DEPTH = "inch_level"
+    PROBE_TEMPERATURE = "probe_temperature"
+    DEVICE_STATUS = "status"
+    DEVICE_LAST_REPORT = "reported"
+    DEVICE_WIFI_STRENGTH = "wifi_signal"
+    DEVICE_BATTERY_VOLTAGE = "battery_voltage"
+    DEVICE_BATTERY_STATUS = "battery_status"
+    TX_LAST_REPORT = "tx_reported"
+    TX_SIGNAL_STRENGTH = "tx_signal"
+
+
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=PTDevicesSensors.LEVEL_PERCENT,
+        translation_key=PTDevicesSensors.LEVEL_PERCENT,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.LEVEL_VOLUME,
+        translation_key=PTDevicesSensors.LEVEL_VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.LEVEL_DEPTH,
+        translation_key=PTDevicesSensors.LEVEL_DEPTH,
+        native_unit_of_measurement=UnitOfLength.INCHES,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.PROBE_TEMPERATURE,
+        translation_key=PTDevicesSensors.PROBE_TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.DEVICE_STATUS,
+        translation_key=PTDevicesSensors.DEVICE_STATUS,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.DEVICE_LAST_REPORT,
+        translation_key=PTDevicesSensors.DEVICE_LAST_REPORT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.TX_LAST_REPORT,
+        translation_key=PTDevicesSensors.TX_LAST_REPORT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.DEVICE_WIFI_STRENGTH,
+        translation_key=PTDevicesSensors.DEVICE_WIFI_STRENGTH,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.TX_SIGNAL_STRENGTH,
+        translation_key=PTDevicesSensors.TX_SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.DEVICE_BATTERY_STATUS,
+        translation_key=PTDevicesSensors.DEVICE_BATTERY_STATUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=PTDevicesSensors.DEVICE_BATTERY_VOLTAGE,
+        translation_key=PTDevicesSensors.DEVICE_BATTERY_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+    ),
+)
+
+
+def _format_dict(input: dict[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+
+    # Recurse through key value pairs and convert from nested to flat
+    def recurse(sub_dict: dict[str, Any]) -> None:
+        for key, value in sub_dict.items():
+            if isinstance(value, dict):
+                recurse(value)
+            else:
+                result[key] = value
+
+    recurse(input)
+
+    return result
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: PTDevicesConfigEntry,
+    async_add_entity: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up PTDevices sensors from config entries."""
+    body: dict[str, Any] = _format_dict(config_entry.runtime_data.data["body"])
+
+    # Add the entities
+    async_add_entity(
+        PTDevicesSensorEntity(config_entry.runtime_data, sensor)
+        for sensor in SENSOR_DESCRIPTIONS
+        if sensor.key in body
+    )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
+class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator]):
+    """Sensor entity for PTDevices Integration."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, coordinator: PTDevicesCoordinator, description: SensorEntityDescription
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator=coordinator, context=description.key.upper())
+
+        # Get the mac address for use in the device id
+        mac: str = self.coordinator.data.get("body", {}).get("device_id", "")
+
+        self.entity_description = description
+        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{mac}_{description.key}"
+
+        # Initial Update
+        self._update_attrs()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.entity_description.key in _format_dict(
+            self.coordinator.data.get("body", {})
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attrs()
+        self.async_write_ha_state()
+
+    def _update_attrs(self) -> None:
+        """Update sensor attributes based on coordinator data."""
+        data = _format_dict(self.coordinator.data.get("body", {}))
+        key = self.entity_description.key
+
+        # If the key is not in the data received from the server, set the entity to unavailable and exit
+        if key not in data:
+            self._attr_available = False
+            return
+
+        self._attr_available = True
+
+        value = data.get(key)
+
+        # Dynamically update the units of the device based on its device class
+        if self.device_class is SensorDeviceClass.VOLUME:
+            if data.get("units") == "Metric":
+                self._attr_native_unit_of_measurement = UnitOfVolume.LITERS
+            elif (
+                data.get("units") == "British Imperial"
+                or data.get("units") == "US Imperial"
+            ):
+                self._attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+        elif self.device_class is SensorDeviceClass.TEMPERATURE:
+            if data.get("temperature_units") == "C":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+            elif data.get("temperature_units") == "F":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+
+        if self.native_unit_of_measurement is not None and isinstance(value, str):
+            self._attr_native_value = float(value.strip(ascii_letters + "%"))
+        else:
+            self._attr_native_value = value
