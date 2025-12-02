@@ -80,7 +80,7 @@ from .const import (
 _SCHEME_RE = re.compile(r"^\s*https?://", re.IGNORECASE)
 
 # Add more platforms as you implement them (sensor/update/etc.)
-PLATFORMS = ["switch", "button"]
+PLATFORMS = ["button"]
 
 _LOGGER = logging.getLogger(__name__)
 
