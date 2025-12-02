@@ -43,7 +43,6 @@
   "conditions": {
     "is_off": {
       "description": "Test if a light is off.",
-      "description_configured": "[%key:component::light::conditions::is_off::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::condition_behavior_description%]",
@@ -54,7 +53,6 @@
     },
     "is_on": {
       "description": "Test if a light is on.",
-      "description_configured": "[%key:component::light::conditions::is_on::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::condition_behavior_description%]",
@@ -512,26 +510,24 @@
   "title": "Light",
   "triggers": {
     "turned_off": {
-      "description": "Triggers when a light is turned off.",
-      "description_configured": "[%key:component::light::triggers::turned_off::description%]",
+      "description": "Triggers after one or more lights turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a light is turned off"
+      "name": "Light turned off"
     },
     "turned_on": {
-      "description": "Triggers when a light is turned on.",
-      "description_configured": "[%key:component::light::triggers::turned_on::description%]",
+      "description": "Triggers after one or more lights turn on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a light is turned on"
+      "name": "Light turned on"
     }
   }
 }

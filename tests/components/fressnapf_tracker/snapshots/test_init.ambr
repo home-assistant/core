@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_state_entity_device_snapshots[Fluffy-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'fressnapf_tracker',
+        'ABC123456',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Fressnapf',
+    'model': 'GPS Tracker 2.0',
+    'model_id': None,
+    'name': 'Fluffy',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'ABC123456',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
