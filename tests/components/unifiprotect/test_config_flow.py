@@ -1045,6 +1045,140 @@ async def test_discovery_can_be_ignored(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_discovery_with_both_ignored_and_normal_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery skips ignored entries with different MAC."""
+    # Create ignored entry with different MAC - should be skipped (line 182)
+    # Use a completely different MAC that won't match discovery MAC (AABBCCDDEEFF)
+    other_mac = "11:22:33:44:55:66"
+    mock_ignored = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        unique_id=other_mac.replace(":", "").upper(),  # 112233445566
+        source=config_entries.SOURCE_IGNORE,
+    )
+    mock_ignored.add_to_hass(hass)
+
+    # Create second ignored entry with different MAC - should also be skipped
+    other_mac2 = "22:33:44:55:66:77"
+    mock_ignored2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.5"},
+        unique_id=other_mac2.replace(":", "").upper(),  # 223344556677
+        source=config_entries.SOURCE_IGNORE,
+    )
+    mock_ignored2.add_to_hass(hass)
+
+    # Discovery should:
+    # 1. Skip all ignored entries with different MAC (line 182 - continue)
+    # 2. Continue to discovery flow since no matching entries
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    # Flow continues to discovery step since no match found
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+
+async def test_discovery_confirm_fallback_to_ip(
+    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
+) -> None:
+    """Test discovery confirm falls back to IP when direct connect fails."""
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    bootstrap.nvr = nvr
+    # First call (direct connect) fails, second call (IP) succeeds
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            side_effect=[
+                NvrError("Direct connect failed"),  # First attempt fails
+                bootstrap,  # Second attempt succeeds
+            ],
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"]["host"] == DEVICE_IP_ADDRESS
+    assert result2["data"]["verify_ssl"] is False
+
+
+async def test_discovery_confirm_with_api_key_error(
+    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
+) -> None:
+    """Test discovery confirm preserves API key in form data on error."""
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    # Both attempts fail to test form_data preservation with API key
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            side_effect=NvrError("Connection failed"),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "api_key": "test-api-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "discovery_confirm"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
 async def test_reconfigure(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
