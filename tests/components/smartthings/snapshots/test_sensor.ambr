@@ -1501,6 +1501,138 @@
     'state': '31',
   })
 # ---
+# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM10 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm10_health_concern',
+    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustHealthConcern_dustHealthConcern_dustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '에어모니터 플러스 PM10 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'moderate',
+  })
+# ---
+# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM1 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm1_health_concern',
+    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_veryFineDustHealthConcern_veryFineDustHealthConcern_veryFineDustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '에어모니터 플러스 PM1 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1552,6 +1684,72 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7',
+  })
+# ---
+# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM2.5 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm25_health_concern',
+    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_fineDustHealthConcern_fineDustHealthConcern_fineDustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '에어모니터 플러스 PM2.5 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_temperature-entry]
@@ -4684,6 +4882,138 @@
     'state': '16',
   })
 # ---
+# name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm10_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.range_hood_pm10_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM10 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm10_health_concern',
+    'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_dustHealthConcern_dustHealthConcern_dustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm10_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Range hood PM10 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.range_hood_pm10_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm1_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.range_hood_pm1_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM1 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm1_health_concern',
+    'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_veryFineDustHealthConcern_veryFineDustHealthConcern_veryFineDustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm1_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Range hood PM1 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.range_hood_pm1_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4735,6 +5065,72 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13',
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm2_5_health_concern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.range_hood_pm2_5_health_concern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'PM2.5 health concern',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm25_health_concern',
+    'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_fineDustHealthConcern_fineDustHealthConcern_fineDustHealthConcern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm2_5_health_concern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Range hood PM2.5 health concern',
+      'options': list([
+        'good',
+        'moderate',
+        'slightly_unhealthy',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.range_hood_pm2_5_health_concern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
   })
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_power-entry]
