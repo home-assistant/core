@@ -97,6 +97,7 @@ from .util.async_ import (
     cancelling,
     create_eager_task,
     get_scheduled_timer_handles,
+    maybe_call_unawaited_task_exception_handler,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -773,6 +774,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
         eager_start: bool = True,
+        unawaited: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -785,7 +787,7 @@ class HomeAssistant:
             from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.async_create_task")
-        return self.async_create_task_internal(target, name, eager_start)
+        return self.async_create_task_internal(target, name, eager_start, unawaited)
 
     @callback
     def async_create_task_internal[_R](
@@ -793,6 +795,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
         eager_start: bool = True,
+        unawaited: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop, internal use only.
 
@@ -808,7 +811,7 @@ class HomeAssistant:
         """
         if eager_start:
             task = create_eager_task(target, name=name, loop=self.loop)
-            if task.done():
+            if task.done() and not unawaited:
                 return task
         else:
             # Use loop.create_task
@@ -816,6 +819,10 @@ class HomeAssistant:
             task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
+
+        if unawaited:
+            task.add_done_callback(maybe_call_unawaited_task_exception_handler)
+
         return task
 
     @callback
