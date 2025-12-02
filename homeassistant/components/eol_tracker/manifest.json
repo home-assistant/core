@@ -1,0 +1,11 @@
+{
+  "domain": "eol_tracker",
+  "name": "End of Life Tracker",
+  "codeowners": ["joshsh02"],
+  "dependencies": [],
+  "documentation": "https://github.com/joshsh02/End-of-Life-Monitoring-in-Home-Assistant",
+  "iot_class": "cloud_polling",
+  "requirements": ["endoflife-lib==0.1.2"],
+  "version": "0.1.0",
+  "config_flow": true
+}
