@@ -68,7 +68,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy',
+    'translation_key': None,
     'unique_id': 'ABC123456_Grid_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -124,7 +124,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
+    'translation_key': None,
     'unique_id': 'ABC123456_Grid_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -183,7 +183,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy',
+    'translation_key': None,
     'unique_id': 'ABC123456_Solar_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -239,7 +239,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
+    'translation_key': None,
     'unique_id': 'ABC123456_Solar_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
