@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
+from sqlalchemy.orm import Session, scoped_session
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import CONF_STATE_CLASS
@@ -211,7 +212,7 @@ class SQLSensor(ManualTriggerSensorEntity):
     def __init__(
         self,
         trigger_entity_config: ConfigType,
-        sessmaker: scoped_session,
+        sessmaker: async_scoped_session[AsyncSession] | scoped_session[Session],
         query: ValueTemplate,
         column: str,
         value_template: ValueTemplate | None,
@@ -253,45 +254,15 @@ class SQLSensor(ManualTriggerSensorEntity):
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)
 
-    async def async_update(self) -> None:
-        """Retrieve sensor data from the query using the right executor."""
-        if self._use_database_executor:
-            await get_instance(self.hass).async_add_executor_job(self._update)
-        else:
-            await self.hass.async_add_executor_job(self._update)
-
-    def _update(self) -> None:
-        """Retrieve sensor data from the query."""
+    def _process(self, result: Result, rendered_query: str) -> None:
+        """Process the SQL result."""
         data = None
-        self._attr_extra_state_attributes = {}
-        sess: scoped_session = self.sessionmaker()
-        try:
-            rendered_query = check_and_render_sql_query(self.hass, self._query)
-            _lambda_stmt = generate_lambda_stmt(rendered_query)
-            result: Result = sess.execute(_lambda_stmt)
-        except (TemplateError, InvalidSqlQuery) as err:
-            _LOGGER.error(
-                "Error rendering query %s: %s",
-                redact_credentials(self._query.template),
-                redact_credentials(str(err)),
-            )
-            sess.rollback()
-            sess.close()
-            return
-        except SQLAlchemyError as err:
-            _LOGGER.error(
-                "Error executing query %s: %s",
-                rendered_query,
-                redact_credentials(str(err)),
-            )
-            sess.rollback()
-            sess.close()
-            return
 
-        for res in result.mappings():
-            _LOGGER.debug("Query %s result in %s", rendered_query, res.items())
-            data = res[self._column_name]
-            for key, value in res.items():
+        for row in result.mappings():
+            row_items = row.items()
+            _LOGGER.debug("Query %s result in %s", rendered_query, row_items)
+            data = row[self._column_name]
+            for key, value in row_items:
                 self._attr_extra_state_attributes[key] = convert_value(value)
 
         if data is not None and isinstance(data, (bytes, bytearray)):
@@ -311,4 +282,61 @@ class SQLSensor(ManualTriggerSensorEntity):
         if data is None:
             _LOGGER.warning("%s returned no results", rendered_query)
 
-        sess.close()
+    def _update(self) -> None:
+        """Retrieve sensor data from the query.
+
+        This does I/O and should be run in the executor.
+        """
+        if TYPE_CHECKING:
+            assert isinstance(self.sessionmaker, scoped_session)
+        with self.sessionmaker() as session:
+            try:
+                rendered_query = check_and_render_sql_query(self.hass, self._query)
+                self._process(
+                    session.execute(generate_lambda_stmt(rendered_query)),
+                    rendered_query,
+                )
+            except (TemplateError, InvalidSqlQuery) as err:
+                _LOGGER.error(
+                    "Error rendering query %s: %s",
+                    redact_credentials(self._query.template),
+                    redact_credentials(str(err)),
+                )
+                session.rollback()
+            except SQLAlchemyError as err:
+                _LOGGER.error(
+                    "Error executing query %s: %s",
+                    self._query,
+                    redact_credentials(str(err)),
+                )
+                session.rollback()
+
+    async def async_update(self) -> None:
+        """Retrieve sensor data from the query using the right executor."""
+        self._attr_extra_state_attributes = {}
+        if isinstance(self.sessionmaker, async_scoped_session):
+            async with self.sessionmaker() as session:
+                try:
+                    rendered_query = check_and_render_sql_query(self.hass, self._query)
+                    self._process(
+                        await session.execute(generate_lambda_stmt(rendered_query)),
+                        rendered_query,
+                    )
+                except (TemplateError, InvalidSqlQuery) as err:
+                    _LOGGER.error(
+                        "Error rendering query %s: %s",
+                        redact_credentials(self._query.template),
+                        redact_credentials(str(err)),
+                    )
+                    await session.rollback()
+                except SQLAlchemyError as err:
+                    _LOGGER.error(
+                        "Error executing query %s: %s",
+                        self._query,
+                        redact_credentials(str(err)),
+                    )
+                    await session.rollback()
+        elif self._use_database_executor:
+            await get_instance(self.hass).async_add_executor_job(self._update)
+        else:
+            await self.hass.async_add_executor_job(self._update)
