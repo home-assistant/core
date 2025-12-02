@@ -12,7 +12,7 @@ from .coordinator import (
     FressnapfTrackerDataUpdateCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 
 async def async_setup_entry(
