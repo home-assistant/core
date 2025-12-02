@@ -21,6 +21,8 @@ from homeassistant.helpers.entity import Entity
 from . import FullDevice
 from .const import DOMAIN, MAIN
 
+type CommandArgument = int | str | list[Any] | dict[str, Any] | None
+
 
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
@@ -100,7 +102,7 @@ class SmartThingsEntity(Entity):
         self,
         capability: Capability,
         command: Command,
-        argument: int | str | list[Any] | dict[str, Any] | None = None,
+        argument: CommandArgument = None,
     ) -> None:
         """Execute a command on the device."""
         kwargs = {}

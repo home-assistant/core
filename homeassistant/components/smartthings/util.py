@@ -1,5 +1,7 @@
 """Utility functions for SmartThings integration."""
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
@@ -10,6 +12,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from . import FullDevice
 from .const import DOMAIN
 
 
@@ -82,3 +85,21 @@ def get_automations_and_scripts_using_entity(
         for entity_id in entities
         if (item := entity_reg.async_get(entity_id))
     ]
+
+
+def get_range_options_count(
+    device: FullDevice, component: str, capability: Capability, attribute: Attribute
+) -> int:
+    """Get the number of options in a range attribute."""
+    value = device.status[component][capability][attribute].value
+    assert isinstance(value, dict)
+    minimum = value.get("minimum", None)
+    maximum = value.get("maximum", None)
+    step = value.get("step", None)
+    if minimum is None or maximum is None or step is None:
+        raise ValueError("Missing range options")
+    assert isinstance(minimum, int)
+    assert isinstance(maximum, int)
+    assert isinstance(step, int)
+
+    return len(range(minimum, maximum + 1, step))
