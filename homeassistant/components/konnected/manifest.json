@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/konnected",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["konnected"],
   "requirements": ["konnected==1.2.0"],
