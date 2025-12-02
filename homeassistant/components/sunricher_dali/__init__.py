@@ -87,6 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             "Unable to discover devices from the gateway"
         ) from exc
 
+    _LOGGER.debug("Discovered %d devices on gateway %s", len(devices), gw_sn)
+
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
