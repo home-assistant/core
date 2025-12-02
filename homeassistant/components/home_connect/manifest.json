@@ -19,6 +19,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
   "quality_scale": "platinum",
