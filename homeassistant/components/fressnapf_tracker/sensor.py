@@ -60,6 +60,6 @@ class FressnapfTrackerSensor(FressnapfTrackerEntity, SensorEntity):
     entity_description: FressnapfTrackerSensorDescription
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> int:
         """Return the state of the resources if it has been received yet."""
         return self.entity_description.value_fn(self.coordinator.data)
