@@ -43,12 +43,7 @@ rules:
 
   ## Gold
   entity-translations: done
-  entity-device-class:
-    status: todo
-    comment: |
-      What does DSL counter count?
-      What is the state of CRC?
-      line_status and training and net_infra and mode -> unknown shouldn't be an option and the entity should return None instead
+  entity-device-class: done
   devices:
     status: todo
     comment: MAC address can be set to the connections
