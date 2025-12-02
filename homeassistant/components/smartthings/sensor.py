@@ -1122,6 +1122,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="hood_filter_usage",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=PERCENTAGE,
+                entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
     },
