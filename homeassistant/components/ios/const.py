@@ -36,3 +36,9 @@ CONF_ACTIONS = "actions"
 CONF_ACTION_SHOW_IN_CARPLAY = "show_in_carplay"
 CONF_ACTION_SHOW_IN_WATCH = "show_in_watch"
 CONF_ACTION_USE_CUSTOM_COLORS = "use_custom_colors"
+
+# CarPlay configuration keys
+CONF_CARPLAY = "carplay"
+CONF_CARPLAY_ENABLED = "enabled"
+CONF_CARPLAY_QUICK_ACCESS = "quick_access"
+DATA_CARPLAY_CONFIG = "carplay_config"

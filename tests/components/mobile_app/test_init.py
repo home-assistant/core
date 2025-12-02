@@ -11,7 +11,6 @@ from homeassistant.components.mobile_app.const import (
     ATTR_DEVICE_NAME,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
-    DATA_CARPLAY_CONFIG,
     DATA_DELETED_IDS,
     DOMAIN,
 )
@@ -19,7 +18,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, REGISTER_CLEARTEXT
 
@@ -539,126 +537,3 @@ async def test_cloudhook_change_listener_update(
 
         # URL should remain the same
         assert config_entry.data[CONF_CLOUDHOOK_URL] == new_url
-
-
-async def test_carplay_config_setup(hass: HomeAssistant) -> None:
-    """Test that carplay configuration is properly stored during setup."""
-    config = {
-        DOMAIN: {
-            "carplay": {
-                "enabled": True,
-                "quick_access": [
-                    {
-                        "entity_id": "light.living_room",
-                        "display_name": "Living Room Light",
-                    },
-                    {"entity_id": "switch.garage_door", "display_name": "Garage Door"},
-                ],
-            }
-        }
-    }
-
-    # Setup the component with carplay config
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    # Verify carplay config is stored correctly
-    carplay_config = hass.data[DOMAIN][DATA_CARPLAY_CONFIG]
-    assert carplay_config["enabled"] is True
-    assert carplay_config["quick_access"] == [
-        {"entity_id": "light.living_room", "display_name": "Living Room Light"},
-        {"entity_id": "switch.garage_door", "display_name": "Garage Door"},
-    ]
-
-
-async def test_carplay_config_defaults(hass: HomeAssistant) -> None:
-    """Test that carplay configuration uses defaults when not specified."""
-    config = {DOMAIN: {}}
-
-    # Setup the component without carplay config
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    # Verify default carplay config is applied
-    carplay_config = hass.data[DOMAIN][DATA_CARPLAY_CONFIG]
-    assert carplay_config == {"enabled": True, "quick_access": []}
-
-
-async def test_carplay_config_partial(hass: HomeAssistant) -> None:
-    """Test that carplay configuration works with partial config."""
-    config = {
-        DOMAIN: {
-            "carplay": {
-                "enabled": False,
-                # quick_access not specified, should use default
-            }
-        }
-    }
-
-    # Setup the component with partial carplay config
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    # Verify partial carplay config is applied with defaults
-    carplay_config = hass.data[DOMAIN][DATA_CARPLAY_CONFIG]
-    assert carplay_config["enabled"] is False
-    assert carplay_config["quick_access"] == []
-
-
-async def test_carplay_config_validation_missing_fields(hass: HomeAssistant) -> None:
-    """Test that carplay configuration validation fails with missing required fields."""
-    config = {
-        DOMAIN: {
-            "carplay": {
-                "quick_access": [
-                    {"display_name": "Test"},  # Missing entity_id
-                ],
-            }
-        }
-    }
-
-    # Setup should fail due to validation error
-    assert not await async_setup_component(hass, DOMAIN, config)
-
-
-async def test_carplay_config_validation_invalid_entity_id(hass: HomeAssistant) -> None:
-    """Test that carplay configuration validation fails with invalid entity_id."""
-    config = {
-        DOMAIN: {
-            "carplay": {
-                "quick_access": [
-                    {
-                        "entity_id": "invalid_entity_id",  # Invalid entity ID format
-                        "display_name": "Test",
-                    },
-                ],
-            }
-        }
-    }
-
-    # Setup should fail due to validation error
-    assert not await async_setup_component(hass, DOMAIN, config)
-
-
-async def test_carplay_config_optional_display_name(hass: HomeAssistant) -> None:
-    """Test that carplay configuration works with optional display_name."""
-    config = {
-        DOMAIN: {
-            "carplay": {
-                "quick_access": [
-                    {"entity_id": "light.living_room"},  # No display_name provided
-                    {
-                        "entity_id": "switch.garage_door",
-                        "display_name": "Garage Door",
-                    },  # With display_name
-                ],
-            }
-        }
-    }
-
-    # Setup should succeed
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    # Verify carplay config is stored correctly
-    carplay_config = hass.data[DOMAIN][DATA_CARPLAY_CONFIG]
-    assert carplay_config["quick_access"] == [
-        {"entity_id": "light.living_room"},
-        {"entity_id": "switch.garage_door", "display_name": "Garage Door"},
-    ]
