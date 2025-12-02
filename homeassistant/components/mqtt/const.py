@@ -172,6 +172,7 @@ CONF_PRESET_MODES_LIST = "preset_modes"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_RED_TEMPLATE = "red_template"
+CONF_REPORTS_POSITION = "reports_position"
 CONF_RGB_COMMAND_TEMPLATE = "rgb_command_template"
 CONF_RGB_COMMAND_TOPIC = "rgb_command_topic"
 CONF_RGB_STATE_TOPIC = "rgb_state_topic"
@@ -375,17 +376,18 @@ DOMAIN = "mqtt"
 LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"
+MQTT_PROCESSED_SUBSCRIPTIONS = "mqtt_processed_subscriptions"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-CONFIG_ENTRY_VERSION = 1
-CONFIG_ENTRY_MINOR_VERSION = 2
+CONFIG_ENTRY_VERSION = 2
+CONFIG_ENTRY_MINOR_VERSION = 1
 
 # Split mqtt entry data and options
 # Can be removed when config entry is bumped to version 2.1
-# with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
-# From 2026.1 we will write version 2.1
+# with HA Core 2026.7.0. Read support for version 2.1 is expected from 2026.1
+# From 2026.7 we will write version 2.1
 ENTRY_OPTION_FIELDS = (
     CONF_DISCOVERY,
     CONF_DISCOVERY_PREFIX,

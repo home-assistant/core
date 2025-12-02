@@ -39,8 +39,6 @@ from .const import (
     NABU_CASA_FIRMWARE_RELEASES_URL,
     PID,
     PRODUCT,
-    RADIO_TX_POWER_DBM_BY_COUNTRY,
-    RADIO_TX_POWER_DBM_DEFAULT,
     SERIAL_NUMBER,
     VID,
 )
@@ -113,21 +111,6 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             step_id="install_thread_firmware",
             next_step_id="finish_thread_installation",
         )
-
-    def _extra_zha_hardware_options(self) -> dict[str, Any]:
-        """Return extra ZHA hardware options."""
-        country = self.hass.config.country
-
-        if country is None:
-            tx_power = RADIO_TX_POWER_DBM_DEFAULT
-        else:
-            tx_power = RADIO_TX_POWER_DBM_BY_COUNTRY.get(
-                country, RADIO_TX_POWER_DBM_DEFAULT
-            )
-
-        return {
-            "tx_power": tx_power,
-        }
 
 
 class HomeAssistantConnectZBT2ConfigFlow(

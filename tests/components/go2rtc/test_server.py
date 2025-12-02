@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 import logging
+from pathlib import Path
 import subprocess
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -23,15 +24,46 @@ def enable_ui() -> bool:
 
 
 @pytest.fixture
+def username() -> str:
+    """Fixture to provide a username."""
+    return "user"
+
+
+@pytest.fixture
+def password() -> str:
+    """Fixture to provide a password."""
+    return "pass"
+
+
+@pytest.fixture
 def mock_session() -> AsyncMock:
     """Fixture to provide a mock ClientSession."""
     return AsyncMock()
 
 
 @pytest.fixture
-def server(hass: HomeAssistant, mock_session: AsyncMock, enable_ui: bool) -> Server:
+def server(
+    hass: HomeAssistant,
+    mock_session: AsyncMock,
+    enable_ui: bool,
+    username: str,
+    password: str,
+    server_dir: Path,
+) -> Generator[Server]:
     """Fixture to initialize the Server."""
-    return Server(hass, binary=TEST_BINARY, session=mock_session, enable_ui=enable_ui)
+    with patch(
+        "homeassistant.components.go2rtc.server.get_go2rtc_unix_socket_path",
+        return_value="/test/path/go2rtc.sock",
+    ):
+        yield Server(
+            hass,
+            binary=TEST_BINARY,
+            session=mock_session,
+            enable_ui=enable_ui,
+            username=username,
+            password=password,
+            working_dir=str(server_dir),
+        )
 
 
 @pytest.fixture
@@ -82,8 +114,15 @@ def assert_server_output_not_logged(
 
 
 @pytest.mark.parametrize(
-    "enable_ui",
-    [True, False],
+    ("enable_ui", "username", "password"),
+    [
+        (True, "user", "pass"),
+        (
+            False,
+            "d2a0b844f4cdbe773702176c47c9a675eb0c56a0779b8f880cdb3b492ed3b1c1",
+            "bc495d266a32e66ba69b9c72546e00101e04fb573f1bd08863fe4ad1aac02949",
+        ),
+    ],
 )
 @pytest.mark.usefixtures("rest_client")
 async def test_server_run_success(
