@@ -16,6 +16,15 @@
       "domestic_hot_water_pump": {
         "default": "mdi:pump"
       },
+      "filter_hours": {
+        "default": "mdi:counter"
+      },
+      "filter_overdue_hours": {
+        "default": "mdi:counter"
+      },
+      "filter_remaining_hours": {
+        "default": "mdi:counter"
+      },
       "frost_protection": {
         "default": "mdi:snowflake"
       },
@@ -28,6 +37,12 @@
       "solar_pump": {
         "default": "mdi:pump"
       },
+      "supply_fan_hours": {
+        "default": "mdi:counter"
+      },
+      "supply_fan_speed": {
+        "default": "mdi:rotate-right"
+      },
       "valve": {
         "default": "mdi:pipe-valve"
       }
@@ -35,6 +50,25 @@
     "button": {
       "activate_onetimecharge": {
         "default": "mdi:shower-head"
+      },
+      "deactivate_onetimecharge": {
+        "default": "mdi:shower-head"
+      }
+    },
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent": "mdi:fan",
+              "sensor_driven": "mdi:refresh-auto",
+              "sensor_override": "mdi:refresh-auto",
+              "standard": "mdi:snail",
+              "standby": "mdi:power-standby",
+              "ventilation": "mdi:clock-outline"
+            }
+          }
+        }
       }
     },
     "number": {
@@ -82,6 +116,12 @@
       "ess_state_of_charge": {
         "default": "mdi:home-battery"
       },
+      "heating_rod_hours": {
+        "default": "mdi:counter"
+      },
+      "heating_rod_starts": {
+        "default": "mdi:counter"
+      },
       "pcc_energy_consumption": {
         "default": "mdi:transmission-tower-export"
       },
@@ -97,8 +137,14 @@
       "valve_position": {
         "default": "mdi:pipe-valve"
       },
+      "ventilation_input_volumeflow": {
+        "default": "mdi:air-filter"
+      },
       "ventilation_level": {
         "default": "mdi:fan"
+      },
+      "ventilation_output_volumeflow": {
+        "default": "mdi:air-filter"
       },
       "volumetric_flow": {
         "default": "mdi:gauge"

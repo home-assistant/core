@@ -97,7 +97,8 @@ SENSOR_DESCRIPTIONS = [
         key="duration",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
     )
 ]
 
@@ -174,7 +175,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         if self._route is None:
             return None
 
-        return round(self._route.duration.seconds / 60)
+        return self._route.duration.seconds
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

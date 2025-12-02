@@ -100,7 +100,7 @@ async def test_sensors_are_updated(
 
     updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
     updated_data["amdcpu-0-temperature-3"] = replace(
-        updated_data["amdcpu-0-temperature-3"], value="42,1"
+        updated_data["amdcpu-0-temperature-3"], value="42.1"
     )
     mock_lhm_client.get_data.return_value = replace(
         mock_lhm_client.get_data.return_value,

@@ -1,6 +1,14 @@
 {
   "domain": "shelly",
   "name": "Shelly",
+  "bluetooth": [
+    {
+      "local_name": "Shelly*"
+    },
+    {
+      "manufacturer_id": 2985
+    }
+  ],
   "codeowners": ["@bieniu", "@thecode", "@chemelli74", "@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth", "http", "network"],
@@ -8,8 +16,8 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
-  "quality_scale": "silver",
-  "requirements": ["aioshelly==13.15.0"],
+  "quality_scale": "platinum",
+  "requirements": ["aioshelly==13.22.0"],
   "zeroconf": [
     {
       "name": "shelly*",
