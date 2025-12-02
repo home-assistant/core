@@ -1124,7 +1124,7 @@ async def test_discovery_confirm_fallback_to_ip(
             return_value=True,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "test-username",
@@ -1133,9 +1133,9 @@ async def test_discovery_confirm_fallback_to_ip(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"]["host"] == DEVICE_IP_ADDRESS
-    assert result2["data"]["verify_ssl"] is False
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == DEVICE_IP_ADDRESS
+    assert result["data"]["verify_ssl"] is False
 
 
 async def test_discovery_confirm_with_api_key_error(
@@ -1164,7 +1164,7 @@ async def test_discovery_confirm_with_api_key_error(
             return_value=None,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "test-username",
@@ -1174,9 +1174,9 @@ async def test_discovery_confirm_with_api_key_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "discovery_confirm"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reconfigure(

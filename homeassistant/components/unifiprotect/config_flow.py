@@ -229,8 +229,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Merge user input with discovery info
             merged_input = {**form_data, **user_input}
-            # Discovery always uses default port, override host/ssl based on discovery
-            merged_input[CONF_PORT] = DEFAULT_PORT
             nvr_data = None
             if discovery_info["direct_connect_domain"]:
                 merged_input[CONF_HOST] = discovery_info["direct_connect_domain"]
@@ -469,9 +467,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 )
             },
-            data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, user_input or {}
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
         )
 
