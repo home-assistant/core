@@ -6,8 +6,10 @@
   "dependencies": ["network"],
   "dhcp": [
     {
-      "hostname": "marstek*",
-      "macaddress": "*"
+      "hostname": "marstek*"
+    },
+    {
+      "registered_devices": true
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/marstek",

@@ -415,7 +415,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "marstek",
         "hostname": "marstek*",
-        "macaddress": "*",
+    },
+    {
+        "domain": "marstek",
+        "registered_devices": True,
     },
     {
         "domain": "motion_blinds",

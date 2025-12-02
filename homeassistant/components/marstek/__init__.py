@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -55,11 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
             DEFAULT_UDP_PORT,
             timeout=2.0,
         )
-        # Connection successful, but verify IP hasn't changed
-        # Always do a fresh discovery to ensure we have the latest IP
-        _LOGGER.debug("Connection successful, verifying device IP via discovery")
-        devices = await udp_client.discover_devices(use_cache=False)
-        _LOGGER.debug("Discovery found %d device(s)", len(devices))
+        # Connection successful, use cached discovery first to avoid blocking startup
+        # Only do fresh discovery if we suspect IP might have changed
+        _LOGGER.debug("Connection successful, checking device info from cache")
+        devices = await udp_client.discover_devices(use_cache=True)
+        _LOGGER.debug("Discovery found %d device(s) (from cache)", len(devices))
 
         # Find device by MAC address (most reliable)
         if stored_mac:
@@ -103,14 +104,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
                 "ble_mac": entry.data.get("ble_mac", ""),
             }
     except (TimeoutError, OSError, ValueError):
-        # Connection failed, try to rediscover device (mik-laj feedback)
-        # This is the only case where we need to broadcast
+        # Connection failed, try cached discovery first to avoid blocking startup
+        # Only do broadcast if cache is empty or device not found in cache
         _LOGGER.info(
-            "Connection to device at %s failed, attempting to rediscover via UDP broadcast",
+            "Connection to device at %s failed, checking cached discovery first",
             stored_ip,
         )
-        devices = await udp_client.discover_devices(use_cache=False)
-        _LOGGER.info("UDP broadcast discovery found %d device(s)", len(devices))
+        devices = await udp_client.discover_devices(use_cache=True)
+
+        # If device not found in cache, try broadcast (but with timeout protection)
+        if not devices or not any(
+            (d.get("ble_mac") or d.get("mac") or d.get("wifi_mac"))
+            and format_mac(d.get("ble_mac") or d.get("mac") or d.get("wifi_mac"))
+            == format_mac(stored_mac)
+            for d in devices
+            if stored_mac
+        ):
+            _LOGGER.info("Device not in cache, attempting UDP broadcast discovery")
+            try:
+                devices = await asyncio.wait_for(
+                    udp_client.discover_devices(use_cache=False),
+                    timeout=5.0,  # Add timeout to prevent hanging
+                )
+                _LOGGER.info("UDP broadcast discovery found %d device(s)", len(devices))
+            except TimeoutError:
+                _LOGGER.warning(
+                    "UDP broadcast discovery timed out, using cached data if available"
+                )
+                devices = await udp_client.discover_devices(use_cache=True)
 
         # Find device by MAC address
         if stored_mac:
