@@ -144,7 +144,7 @@ def maybe_call_unawaited_task_exception_handler(task: Task[Any]) -> None:
     if exception := task.exception():
         task.get_loop().call_exception_handler(
             {
-                "message": "unhandled exception in unawaited task",
+                "message": "unhandled exception in background task",
                 "exception": exception,
                 "task": task,
             }
