@@ -255,16 +255,14 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task_internal(
-        coroutine, name=None, eager_start=True, unawaited=False
-    ):
+    def async_create_task_internal(coroutine, name=None, eager_start=True):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task_internal(coroutine, name, eager_start, unawaited)
+        return orig_async_create_task_internal(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
