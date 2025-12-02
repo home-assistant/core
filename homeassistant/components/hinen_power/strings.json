@@ -1,0 +1,93 @@
+{
+  "config": {
+    "abort": {
+      "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_device": "Please create a Hinen Device to be able to use the integration",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "Wrong account: please authenticate with the right account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "devices": {
+        "data": {
+          "devices": "Hinen devices"
+        },
+        "data_description": {
+          "devices": ""
+        },
+        "description": "Select the device you want to add."
+      },
+      "reauth_confirm": {
+        "description": "The Hinen integration needs to re-authenticate your account",
+        "title": "Authentication expired for {name}"
+      },
+      "user": {
+        "data": {
+          "client_id": "OAuth Client ID",
+          "client_secret": "OAuth Client Secret",
+          "page_language": "Certification page language",
+          "region_code": "Region"
+        },
+        "data_description": {
+          "client_id": "",
+          "client_secret": "",
+          "page_language": "",
+          "region_code": ""
+        },
+        "description": "",
+        "title": "Add Hinen Power integration settings"
+      }
+    }
+  },
+
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert Status"
+      },
+      "cumulative_consumption": {
+        "name": "Cumulative Consumption"
+      },
+      "cumulative_grid_feed_in": {
+        "name": "Cumulative Grid Feedin"
+      },
+      "cumulative_production_active": {
+        "name": "Cumulative Production Active"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "total_charging_energy": {
+        "name": "Total Charging Energy"
+      },
+      "total_discharging_energy": {
+        "name": "Total Discharging Energy"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "no_device": "Please create a Hinen Device to be able to use the integration"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "devices": "[%key:component::hinen_power::config::step::devices::data::devices%]"
+        },
+        "data_description": {
+          "devices": ""
+        },
+        "description": "[%key:component::hinen_power::config::step::devices::description%]"
+      }
+    }
+  }
+}
