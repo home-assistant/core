@@ -824,6 +824,7 @@ class EntityRegistry(BaseRegistry):
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            serialize_in_event_loop=False,
         )
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED,
@@ -1630,13 +1631,17 @@ class EntityRegistry(BaseRegistry):
         self.entities = entities
         self._entities_data = entities.data
 
-    @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
+        # Create intermediate lists to allow this method to be called from a thread
+        # other than the event loop.
         return {
-            "entities": [entry.as_storage_fragment for entry in self.entities.values()],
+            "entities": [
+                entry.as_storage_fragment for entry in list(self.entities.values())
+            ],
             "deleted_entities": [
-                entry.as_storage_fragment for entry in self.deleted_entities.values()
+                entry.as_storage_fragment
+                for entry in list(self.deleted_entities.values())
             ],
         }
 

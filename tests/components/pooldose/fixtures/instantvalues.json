@@ -18,7 +18,7 @@
     },
     "flow_rate": {
       "value": 150,
-      "unit": "L/s"
+      "unit": "l/s"
     },
     "ph_type_dosing": {
       "value": "alcalyne",
@@ -75,6 +75,14 @@
     "orp_calibration_slope": {
       "value": 0.96,
       "unit": "mV"
+    },
+    "water_meter_total_permanent": {
+      "value": 12345.67,
+      "unit": "m3"
+    },
+    "water_meter_total_resettable": {
+      "value": 123.45,
+      "unit": "m3"
     }
   },
   "binary_sensor": {
@@ -90,13 +98,25 @@
     "flow_rate_alarm": {
       "value": false
     },
-    "alarm_relay": {
+    "relay_alarm": {
       "value": true
     },
     "relay_aux1": {
       "value": false
     },
     "relay_aux2": {
+      "value": false
+    },
+    "relay_aux3": {
+      "value": false
+    },
+    "alarm_ofa_ph": {
+      "value": false
+    },
+    "alarm_ofa_orp": {
+      "value": false
+    },
+    "alarm_ofa_cl": {
       "value": false
     }
   },
