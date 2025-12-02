@@ -12,6 +12,7 @@ from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.diagnostics import (
     async_get_config_entry_diagnostics,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -99,7 +100,7 @@ async def test_data_api_diagnostics_success(
 
     session = MagicMock()
     session.async_ensure_token_valid = AsyncMock()
-    session.token = "test-token"
+    session.token = {CONF_ACCESS_TOKEN: "test-token"}
 
     client = MagicMock()
     client.get_all_devices = AsyncMock(
@@ -172,7 +173,7 @@ async def test_data_api_diagnostics_exceptions(
 
     session = MagicMock()
     session.async_ensure_token_valid = AsyncMock()
-    session.token = "test-token"
+    session.token = {CONF_ACCESS_TOKEN: "test-token"}
 
     client = MagicMock()
     client.get_all_devices = AsyncMock(side_effect=exception)
