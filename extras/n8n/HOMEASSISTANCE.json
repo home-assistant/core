@@ -1,0 +1,210 @@
+{
+  "name": "HOME ASSISTANCE",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant. Based on the user's query, provide a concise and informative response.\n\nAvailable Tools\n\nread_homeassistant_state: Retrieves current device and sensor data from the smart home system\n\ncall_homeassistant_service: Executes actions like turning devices on/off, adjusting brightness, temperature, scenes, etc.\n\nget_scheduled_slot: Retrieves availability for scheduled smart-home actions\n\ncreate_scheduled_slot: If the user requests scheduling, create a new slot with the specified details\n\nGuidelines\n\nAlways read the smart-home data first before answering any query\n\nIf the message is unclear, ask for clarification\n\nProvide a brief summary of what you updated after making changes\n\nResponse Format\n\nRead the current smart-home data\n\nStay focused, efficient, and accurate in your updates.\n\nIf the user asks for something and that data is not available in the smart-home system, tell them you couldn't provide the information because of privacy reasons.\n\nNever mention “Home Assistant” or entity IDs to the user — instead say “in the database.”\n\nKeep all responses as concise as possible — not more than three lines or three sentences.\n\nIf the user asks for slot availability on a certain date or time, use the scheduling tool to check availability.\n\nWhen the user asks for booking confirmation, always ask for their full name and email address, and then create a slot with the details.\n\nIf you are booking or checking schedule availability, never say “event” — always say “slot.”\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "377e6bc1-47b0-4cae-8b84-63c20707b592",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "a835c197-4c3c-43af-9a16-b9ca9ba715e8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4xnASAGyKlNsRF72",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1dp5OgtkajA9JRdz7hvZ_Kvf2iv8sMov8stBwY4RRcmo",
+          "mode": "list",
+          "cachedResultName": "GIT-knowledgebase",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dp5OgtkajA9JRdz7hvZ_Kvf2iv8sMov8stBwY4RRcmo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1098168495,
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dp5OgtkajA9JRdz7hvZ_Kvf2iv8sMov8stBwY4RRcmo/edit#gid=1098168495"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        224
+      ],
+      "id": "270bdaf5-0636-4726-bda8-6dc848b61dfb",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ha6MNWP90izsHO0o",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "laksha2125@gmail.com",
+          "mode": "list",
+          "cachedResultName": "laksha2125@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        192
+      ],
+      "id": "a3126d76-76f0-4b21-a83a-f74595ec3b1d",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "0UXMzy0F84q7Qysz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "homeassistance",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "edb57e26-8f46-445b-92e2-9be8a68ba481",
+      "name": "Webhook",
+      "webhookId": "0b9b7876-99e0-4660-b99b-23a4b7968449",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        592,
+        0
+      ],
+      "id": "aa69b947-7317-4817-92de-402800391d3b",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f5f1cbf2-a6df-4825-94cc-308d36b6b575",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4752e7b5658515be6767fbd68d10d312287ed3e0ad8d0ef43010fa5274202c02"
+  },
+  "id": "TBRWpR5QO0hMgfBG",
+  "tags": []
+}
+
+
+//ELEVENLABS LINK: https://elevenlabs.io/app/talk-to?agent_id=agent_7801k2vvgpxref5bq95sqwcj8f2q
