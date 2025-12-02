@@ -198,7 +198,11 @@ def async_subscribe_platform_events(
 async def _register_condition_platform(
     hass: HomeAssistant, integration_domain: str, platform: ConditionProtocol
 ) -> None:
-    """Register a condition platform."""
+    """Register a condition platform and notify listeners.
+
+    If the condition platform does not provide any conditions, or it is disabled,
+    listeners will not be notified.
+    """
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
