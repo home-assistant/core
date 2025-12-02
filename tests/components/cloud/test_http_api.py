@@ -22,6 +22,7 @@ from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
@@ -1775,6 +1776,89 @@ async def test_tts_info(
     )
     for lang in response["result"]["languages"]:
         assert validate_language_voice(lang[:2])
+
+
+async def test_websocket_cloud_ice_servers(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test fetching cloud ICE servers."""
+    mock_ice_servers = [
+        RTCIceServer(urls="stun:stun.example.com:19302"),
+        RTCIceServer(
+            urls="turn:turn.example.com:3478",
+            username="user",
+            credential="pass",
+        ),
+    ]
+    cloud.ice_servers.async_get_ice_servers.return_value = mock_ice_servers
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "cloud/ice_servers"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert "ice_servers" in response["result"]
+    ice_servers = response["result"]["ice_servers"]
+    assert len(ice_servers) == 2
+    assert ice_servers[0]["urls"] == "stun:stun.example.com:19302"
+    assert ice_servers[1]["urls"] == "turn:turn.example.com:3478"
+    assert ice_servers[1]["username"] == "user"
+    assert ice_servers[1]["credential"] == "pass"
+
+
+async def test_websocket_cloud_ice_servers_not_logged_in(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test fetching cloud ICE servers when not logged in."""
+    cloud.id_token = None
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "cloud/ice_servers"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_logged_in"
+
+
+async def test_websocket_cloud_ice_servers_disabled(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test fetching cloud ICE servers when disabled in preferences."""
+    await cloud.client.prefs.async_update(cloud_ice_servers_enabled=False)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "cloud/ice_servers"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "ice_servers_disabled"
+
+
+async def test_websocket_cloud_ice_servers_subscription_expired(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test fetching cloud ICE servers when subscription has expired."""
+    cloud.subscription_expired = True
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "cloud/ice_servers"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "subscription_expired"
 
 
 @pytest.mark.parametrize(

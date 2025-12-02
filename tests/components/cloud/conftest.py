@@ -84,6 +84,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             async_register_ice_servers_listener=AsyncMock(
                 return_value=lambda: "mock-unregister"
             ),
+            async_get_ice_servers=AsyncMock(return_value=[]),
         )
         mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
 

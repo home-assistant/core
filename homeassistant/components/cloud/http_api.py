@@ -108,6 +108,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, alexa_list)
     websocket_api.async_register_command(hass, alexa_sync)
 
+    websocket_api.async_register_command(hass, websocket_cloud_ice_servers)
     websocket_api.async_register_command(hass, tts_info)
 
     hass.http.register_view(GoogleActionsSyncView)
@@ -1104,6 +1105,38 @@ async def alexa_sync(
         connection.send_error(
             msg["id"], websocket_api.ERR_UNKNOWN_ERROR, "Unknown error"
         )
+
+
+@_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/ice_servers"})
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_ice_servers(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request for cloud ICE servers."""
+    cloud = hass.data[DATA_CLOUD]
+
+    if not cloud.client.prefs.cloud_ice_servers_enabled:
+        connection.send_error(
+            msg["id"], "ice_servers_disabled", "Cloud ICE servers are disabled."
+        )
+        return
+
+    if cloud.subscription_expired:
+        connection.send_error(
+            msg["id"], "subscription_expired", "Cloud subscription has expired."
+        )
+        return
+
+    ice_servers = await cloud.ice_servers.async_get_ice_servers()
+
+    connection.send_result(
+        msg["id"],
+        {"ice_servers": [server.to_dict() for server in ice_servers]},
+    )
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
