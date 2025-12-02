@@ -79,12 +79,14 @@ async def test_binary_sensor_triggers_gated_by_labs_flag(
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger="binary_sensor.stopped_detecting_presence",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            trigger_from_none=False,
         ),
     ],
 )
@@ -139,12 +141,14 @@ async def test_binary_sensor_state_attribute_trigger_behavior_any(
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger="binary_sensor.stopped_detecting_presence",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            trigger_from_none=False,
         ),
     ],
 )
@@ -198,12 +202,14 @@ async def test_binary_sensor_state_attribute_trigger_behavior_first(
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            trigger_from_none=False,
         ),
         *parametrize_trigger_states(
             trigger="binary_sensor.stopped_detecting_presence",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            trigger_from_none=False,
         ),
     ],
 )
