@@ -1,5 +1,6 @@
 """Config storage for Mammotion integration."""
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -14,7 +15,7 @@ class MammotionConfigStore(Store):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         version: int = _STORAGE_VERSION,
         minor_version: int = _STORAGE_MINOR_VERSION,
         key: str = _STORAGE_KEY,

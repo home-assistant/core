@@ -18,12 +18,13 @@ from homeassistant.components.mammotion.const import (
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
 
 # Helpers
-def _get_mock_device(name="Luba-ABC123", address="aa:bb:cc:dd:ee:ff"):
+def _get_mock_device(name="Luba-ABC123", address="AA:BB:CC:DD:EE:FF"):
     device = MagicMock(spec=BLEDevice)
     device.name = name
     device.address = address
@@ -363,3 +364,163 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_STAY_CONNECTED_BLUETOOTH] is True
+
+
+async def test_bluetooth_discovery_update_existing_entry(hass: HomeAssistant) -> None:
+    """Test bluetooth discovery updates existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCOUNT_ID: "user123"},
+        unique_id="user123",
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "Luba-ABC123")},
+        connections=set(),
+    )
+
+    discovery_info = _get_discovery_info()
+    device = _get_mock_device()
+
+    with patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        return_value=device,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=discovery_info,
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify device registry was updated
+    device_entry = device_registry.async_get(device_entry.id)
+    assert (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff") in device_entry.connections
+
+
+async def test_bluetooth_step_no_discovery_info(hass: HomeAssistant) -> None:
+    """Test bluetooth step with no discovery info."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=None,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_user_step_filtering(hass: HomeAssistant) -> None:
+    """Test user step filters discovered devices."""
+    # 1. Device already configured
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AA:BB:CC:DD:EE:FF",
+    )
+
+    entry.add_to_hass(hass)
+
+    discovery_info_configured = _get_discovery_info(
+        name="existing entry", address="AA:BB:CC:DD:EE:FF"
+    )
+    discovery_info_unsupported = _get_discovery_info(
+        name="Unsupported", address="11:22:33:44:55:66"
+    )
+    discovery_info_valid = _get_discovery_info(
+        name="Luba-NEW", address="99:88:77:66:55:44"
+    )
+
+    device_valid = _get_mock_device(name="Luba-NEW", address="99:88:77:66:55:44")
+
+    with (
+        patch(
+            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
+            return_value=[
+                discovery_info_configured,
+                discovery_info_unsupported,
+                discovery_info_valid,
+            ],
+        ),
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=device_valid,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_bluetooth_confirm_race_condition(hass: HomeAssistant) -> None:
+    """Test bluetooth confirm step race condition where device is configured during flow."""
+    discovery_info = _get_discovery_info()
+    device = _get_mock_device()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCOUNT_ID: "user123", CONF_BLE_DEVICES: {}},
+        unique_id="user123",
+    )
+    entry.add_to_hass(hass)
+
+    # Create a device entry that matches
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "Luba-ABC123")},
+        connections={(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=device,
+        ),
+        patch(
+            "homeassistant.helpers.device_registry.async_entries_for_config_entry",
+            side_effect=[[], [device_entry]],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=discovery_info,
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_bluetooth_discovery_skip_no_account_id(hass: HomeAssistant) -> None:
+    """Test bluetooth discovery skips entries without account ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},  # No account ID
+        unique_id="user123",
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = _get_discovery_info()
+    device = _get_mock_device()
+
+    with patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        return_value=device,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=discovery_info,
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
