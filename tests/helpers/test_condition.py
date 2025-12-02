@@ -2878,3 +2878,122 @@ async def test_subscribe_conditions(
 
     assert condition_events == [{"sun"}]
     assert "Error while notifying condition platform listener" in caplog.text
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+@pytest.mark.parametrize(
+    ("new_triggers_conditions_enabled", "expected_events"),
+    [
+        (True, [{"light.is_off", "light.is_on"}]),
+        (False, []),
+    ],
+)
+async def test_subscribe_conditions_experimental_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    new_triggers_conditions_enabled: bool,
+    expected_events: list[set[str]],
+) -> None:
+    """Test condition.async_subscribe_platform_events doesn't send events for disabled conditions."""
+    light_condition_descriptions = """
+        _: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/conditions.yaml"):
+            condition_descriptions = light_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a working subscriber."""
+        condition_events.append(new_conditions)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": new_triggers_conditions_enabled,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert condition_events == expected_events
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+@patch(
+    "homeassistant.components.light.condition.async_get_conditions",
+    new=AsyncMock(return_value={}),
+)
+async def test_subscribe_conditions_no_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test condition.async_subscribe_platform_events doesn't send events for platforms without conditions."""
+    light_condition_descriptions = """
+        _: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/conditions.yaml"):
+            condition_descriptions = light_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a working subscriber."""
+        condition_events.append(new_conditions)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert condition_events == []

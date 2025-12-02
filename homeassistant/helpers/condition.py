@@ -199,6 +199,7 @@ async def _register_condition_platform(
     hass: HomeAssistant, integration_domain: str, platform: ConditionProtocol
 ) -> None:
     """Register a condition platform."""
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
 
@@ -209,11 +210,21 @@ async def _register_condition_platform(
             )
             hass.data[CONDITIONS][condition_key] = integration_domain
             new_conditions.add(condition_key)
+        if not new_conditions:
+            _LOGGER.debug(
+                "Integration %s returned no conditions in async_get_conditions",
+                integration_domain,
+            )
+            return
     else:
         _LOGGER.debug(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_condition(hass, integration_domain):
+        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
