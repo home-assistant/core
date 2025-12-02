@@ -17,15 +17,19 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
+    migrate_notify_issue,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +42,22 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.04.01",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="prowl_yaml_deprecated",
+    )
+
     return ProwlNotificationService(hass, config[CONF_API_KEY], get_async_client(hass))
 
 
@@ -68,6 +88,8 @@ class ProwlNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
+        migrate_notify_issue(self._hass, DOMAIN, DOMAIN, "2026.04.01", DOMAIN)
+
         data = kwargs.get(ATTR_DATA, {})
         if data is None:
             data = {}
@@ -84,15 +106,15 @@ class ProwlNotificationService(BaseNotificationService):
         except TimeoutError as ex:
             _LOGGER.error("Timeout accessing Prowl API")
             raise HomeAssistantError("Timeout accessing Prowl API") from ex
+        except prowlpy.InvalidAPIKeyError as ex:
+            _LOGGER.error("Invalid API key for Prowl service")
+            raise HomeAssistantError("Invalid API key for Prowl service") from ex
+        except prowlpy.RateLimitExceededError as ex:
+            _LOGGER.error("Prowl returned: exceeded rate limit")
+            raise HomeAssistantError(
+                "Prowl service reported: exceeded rate limit"
+            ) from ex
         except prowlpy.APIError as ex:
-            if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
-                raise HomeAssistantError("Invalid API key for Prowl service") from ex
-            if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
-                raise HomeAssistantError(
-                    "Prowl service reported: exceeded rate limit"
-                ) from ex
             _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
             raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
 
@@ -131,14 +153,14 @@ class ProwlNotificationEntity(NotifyEntity):
         except TimeoutError as ex:
             _LOGGER.error("Timeout accessing Prowl API")
             raise HomeAssistantError("Timeout accessing Prowl API") from ex
+        except prowlpy.InvalidAPIKeyError as ex:
+            _LOGGER.error("Invalid API key for Prowl service")
+            raise HomeAssistantError("Invalid API key for Prowl service") from ex
+        except prowlpy.RateLimitExceededError as ex:
+            _LOGGER.error("Prowl returned: exceeded rate limit")
+            raise HomeAssistantError(
+                "Prowl service reported: exceeded rate limit"
+            ) from ex
         except prowlpy.APIError as ex:
-            if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
-                raise HomeAssistantError("Invalid API key for Prowl service") from ex
-            if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
-                raise HomeAssistantError(
-                    "Prowl service reported: exceeded rate limit"
-                ) from ex
             _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
             raise HomeAssistantError("Unexpected error when calling Prowl API") from ex

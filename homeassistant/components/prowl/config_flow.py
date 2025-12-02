@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 from .helpers import async_verify_key
@@ -54,6 +55,30 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from legacy YAML."""
+        api_key = config[CONF_API_KEY]
+        self._async_abort_entries_match({CONF_API_KEY: api_key})
+
+        errors = await self._validate_api_key(api_key)
+        if not errors:
+            return self.async_create_entry(
+                title=config[CONF_NAME],
+                data={
+                    CONF_API_KEY: api_key,
+                },
+            )
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_fail_prowl",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="prowl_yaml_migration_fail",
+        )
+        return self.async_abort(reason="invalid_api_key")
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the provided API key."""

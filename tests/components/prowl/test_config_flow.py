@@ -56,7 +56,7 @@ async def test_flow_duplicate_api_key(
 
 async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: AsyncMock) -> None:
     """Test user submitting a bad API key."""
-    mock_prowlpy.verify_key.side_effect = prowlpy.APIError("Invalid API key")
+    mock_prowlpy.verify_key.side_effect = prowlpy.InvalidAPIKeyError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -94,7 +94,7 @@ async def test_flow_user_prowl_timeout(
 
 async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) -> None:
     """Test Prowl API failure."""
-    mock_prowlpy.verify_key.side_effect = prowlpy.APIError(BAD_API_RESPONSE)
+    mock_prowlpy.verify_key.side_effect = prowlpy.BadRequestError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
