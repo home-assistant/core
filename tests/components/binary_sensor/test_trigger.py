@@ -49,8 +49,8 @@ async def target_binary_sensors(hass: HomeAssistant) -> tuple[list[str], list[st
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "binary_sensor.started_detecting_presence",
-        "binary_sensor.stopped_detecting_presence",
+        "binary_sensor.occupancy_detected",
+        "binary_sensor.occupancy_cleared",
     ],
 )
 async def test_binary_sensor_triggers_gated_by_labs_flag(
@@ -75,17 +75,17 @@ async def test_binary_sensor_triggers_gated_by_labs_flag(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="binary_sensor.started_detecting_presence",
+            trigger="binary_sensor.occupancy_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="binary_sensor.stopped_detecting_presence",
+            trigger="binary_sensor.occupancy_cleared",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
             trigger_from_none=False,
         ),
     ],
@@ -146,17 +146,17 @@ async def test_binary_sensor_state_attribute_trigger_behavior_any(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="binary_sensor.started_detecting_presence",
+            trigger="binary_sensor.occupancy_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="binary_sensor.stopped_detecting_presence",
+            trigger="binary_sensor.occupancy_cleared",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
             trigger_from_none=False,
         ),
     ],
@@ -216,17 +216,17 @@ async def test_binary_sensor_state_attribute_trigger_behavior_first(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="binary_sensor.started_detecting_presence",
+            trigger="binary_sensor.occupancy_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="binary_sensor.stopped_detecting_presence",
+            trigger="binary_sensor.occupancy_cleared",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "presence"},
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
             trigger_from_none=False,
         ),
     ],

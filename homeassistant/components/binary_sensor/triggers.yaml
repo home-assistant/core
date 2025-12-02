@@ -10,14 +10,14 @@
           - last
           - any
 
-started_detecting_presence:
+occupancy_detected:
   fields: *trigger_common_fields
   target:
     entity:
       domain: binary_sensor
       device_class: presence
 
-stopped_detecting_presence:
+occupancy_cleared:
   fields: *trigger_common_fields
   target:
     entity:

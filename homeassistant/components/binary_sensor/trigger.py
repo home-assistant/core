@@ -53,11 +53,11 @@ def make_binary_sensor_trigger(
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "started_detecting_presence": make_binary_sensor_trigger(
-        BinarySensorDeviceClass.PRESENCE, STATE_ON
+    "occupancy_detected": make_binary_sensor_trigger(
+        BinarySensorDeviceClass.OCCUPANCY, STATE_ON
     ),
-    "stopped_detecting_presence": make_binary_sensor_trigger(
-        BinarySensorDeviceClass.PRESENCE, STATE_OFF
+    "occupancy_cleared": make_binary_sensor_trigger(
+        BinarySensorDeviceClass.OCCUPANCY, STATE_OFF
     ),
 }
 

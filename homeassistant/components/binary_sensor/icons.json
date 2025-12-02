@@ -176,10 +176,10 @@
     }
   },
   "triggers": {
-    "started_detecting_presence": {
+    "occupancy_cleared": {
       "trigger": "mdi:home-outline"
     },
-    "stopped_detecting_presence": {
+    "occupancy_detected": {
       "trigger": "mdi:home"
     }
   }
