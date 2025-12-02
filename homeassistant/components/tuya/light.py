@@ -718,7 +718,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return true if light is on."""
         return self._read_wrapper(self._switch_wrapper)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
         commands = self._switch_wrapper.get_update_commands(self.device, True)
 
@@ -778,7 +778,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 self._brightness_wrapper.get_update_commands(self.device, brightness),
             )
 
-        self._send_command(commands)
+        await self._async_send_commands(commands)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
