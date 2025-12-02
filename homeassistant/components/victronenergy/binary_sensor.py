@@ -148,13 +148,13 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                     elif isinstance(json_value, (int, float)):
                         self._attr_is_on = bool(json_value)
                     else:
-                        _LOGGER.warning(
+                        _LOGGER.debug(
                             "Binary sensor %s received unexpected payload: %s",
                             self.unique_id, processed_value
                         )
                         return
                 except json.JSONDecodeError:
-                    _LOGGER.warning(
+                    _LOGGER.debug(
                         "Binary sensor %s received unexpected payload: %s",
                         self.unique_id, processed_value
                     )

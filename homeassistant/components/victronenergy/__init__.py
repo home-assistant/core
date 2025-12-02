@@ -289,7 +289,7 @@ class VictronMqttManager:
             # Validate component has unique_id attribute and it's not empty
             component_unique_id = component_cfg.get("unique_id")
             if not component_unique_id or not str(component_unique_id).strip():
-                _LOGGER.warning(
+                _LOGGER.info(
                     "Component missing or has empty unique_id attribute, skipping: %s", component_cfg
                 )
                 continue
@@ -333,7 +333,7 @@ class VictronMqttManager:
             # All entities depend on via_device that doesn't exist yet, defer entity creation entirely
             for component_cfg, unique_id, platform in new_entity_configs:
                 self._pending_via_device_entities.append((component_cfg, unique_id, platform))
-            _LOGGER.warning(
+            _LOGGER.info(
                 "DEFERRING %d entity configs: waiting for via_device '%s' to become available. Current pending count: %d",
                 len(new_entity_configs), via_device, len(self._pending_via_device_entities)
             )
@@ -493,14 +493,14 @@ class VictronMqttManager:
                         new_entities_by_platform[platform].append(entity)
                         self._entity_registry[entity.unique_id] = entity
                         created_count += 1
-                        _LOGGER.warning(
+                        _LOGGER.info(
                             "✅ CREATED and ADDING deferred entity %s (%s) to platform: via_device '%s' is now available",
                             unique_id, platform, via_device_tuple
                         )
                 else:
                     # Via device still not available, keep waiting
                     remaining_pending.append((component_cfg, unique_id, platform))
-                    _LOGGER.warning(
+                    _LOGGER.debug(
                         "⏳ STILL WAITING for entity %s (%s): via_device '%s' not yet available",
                         unique_id, platform, via_device_tuple
                     )
@@ -518,7 +518,7 @@ class VictronMqttManager:
 
         self._pending_via_device_entities = remaining_pending
 
-        _LOGGER.warning(
+        _LOGGER.info(
             "Pending entity processing complete: %d created and added to platforms, %d configs still waiting. Remaining configs: %s",
             created_count, len(remaining_pending),
             [(unique_id, p) for cfg, unique_id, p in remaining_pending]
