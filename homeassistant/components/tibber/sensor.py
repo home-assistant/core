@@ -39,15 +39,25 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MANUFACTURER
+from .const import (
+    DEFAULT_PRICE_INTERVAL,
+    DOMAIN,
+    MANUFACTURER,
+    PRICE_INTERVAL_15MIN,
+    PRICE_INTERVAL_HOURLY,
+    UPDATE_INTERVAL_HOURLY,
+    UPDATE_INTERVAL_MAPPING,
+)
 from .coordinator import TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
+
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
 TWENTY_MINUTES = 20 * 60
@@ -384,6 +394,9 @@ class TibberSensorElPrice(TibberSensor):
             "peak": None,
             "off_peak_2": None,
             "intraday_price_ranking": None,
+            "price_interval": DEFAULT_PRICE_INTERVAL,
+            "prices_15min": [],
+            "prices_1h": [],
         }
         self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
@@ -391,51 +404,237 @@ class TibberSensorElPrice(TibberSensor):
 
         self._device_name = self._home_name
 
+    def _get_update_interval_minutes(self, interval: str) -> int:
+        """Get update interval in minutes based on price interval.
+
+        Args:
+            interval: Price interval (15min or hourly)
+
+        Returns:
+            Update interval in minutes
+        """
+        return UPDATE_INTERVAL_MAPPING.get(interval, UPDATE_INTERVAL_HOURLY)
+
+    def _should_skip_update(
+        self, now: datetime.datetime, update_interval_minutes: int
+    ) -> bool:
+        """Check if update should be skipped based on timing conditions.
+
+        Args:
+            now: Current datetime
+            update_interval_minutes: Update interval in minutes
+
+        Returns:
+            True if update should be skipped, False otherwise
+        """
+        if not all(
+            [
+                self._tibber_home.price_total,
+                self._last_updated,
+                self._tibber_home.last_data_timestamp,
+            ]
+        ):
+            return False
+
+        time_since_last_update = now - self._last_updated
+        # If last_updated is in the future, don't skip
+        if time_since_last_update.total_seconds() < 0:
+            return False
+        return time_since_last_update < timedelta(minutes=update_interval_minutes)
+
+    def _get_price_data_by_interval(self, interval: str) -> list[dict[str, Any]]:
+        """Get price data based on the specified interval.
+
+        Args:
+            interval: Price interval type
+
+        Returns:
+            List of price data points
+        """
+        if interval == PRICE_INTERVAL_15MIN:
+            return self._get_15min_price_data()
+        return self._get_hourly_price_data()
+
+    def _get_hourly_price_data(self) -> list[dict[str, Any]]:
+        """Get hourly price data from Tibber."""
+        # Get hourly price data
+        hourly_data = getattr(self._tibber_home, "price_info_today", None)
+        if hourly_data and isinstance(hourly_data, list):
+            return hourly_data
+
+        # Fallback to current price if no historical data available
+        try:
+            if hasattr(self._tibber_home, "current_price_data"):
+                current_price, timestamp, level = self._tibber_home.current_price_data()
+                if current_price is not None:
+                    return [
+                        {
+                            "startsAt": dt_util.now().isoformat(),
+                            "total": current_price,
+                            "level": level or "NORMAL",
+                        }
+                    ]
+        except Exception as exc:
+            _LOGGER.debug("Failed to get current price data: %s", exc)
+
+        return []
+
+    def _get_15min_price_data(self) -> list[dict[str, Any]]:
+        """Generate 15-minute price data from hourly data."""
+        try:
+            # Get hourly data directly to avoid circular dependency
+            hourly_prices = self._get_hourly_price_data()
+            if not hourly_prices:
+                return []
+
+            fifteen_min_data = []
+            for hour_data in hourly_prices:
+                start_time = dt_util.parse_datetime(hour_data["startsAt"])
+                if start_time is None:
+                    continue
+
+                # Create 4 x 15-minute intervals for each hour
+                for i in range(4):
+                    interval_start = start_time + timedelta(minutes=i * 15)
+                    fifteen_min_data.append(
+                        {
+                            "startsAt": interval_start.isoformat(),
+                            "total": hour_data["total"],
+                            "level": hour_data.get("level", "NORMAL"),
+                        }
+                    )
+
+            return fifteen_min_data
+        except Exception as err:
+            _LOGGER.warning("Error generating 15-minute price data: %s", err)
+            return []
+
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
+        # Get the selected interval from input_select (if exists)
+        interval = DEFAULT_PRICE_INTERVAL
+        hass = getattr(self, "hass", None)
+        if hass:
+            state = hass.states.get("input_select.tibber_price_interval")
+            if state and state.state in [PRICE_INTERVAL_HOURLY, PRICE_INTERVAL_15MIN]:
+                interval = state.state
+
+        self._attr_extra_state_attributes["price_interval"] = interval
+
         now = dt_util.now()
+        # Fix the timestamp comparison logic
         if (
             not self._tibber_home.last_data_timestamp
-            or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 10 * 3600 - self._spread_load_constant
-            or not self.available
+            or (now - self._tibber_home.last_data_timestamp).total_seconds()
+            > 10 * 3600 - self._spread_load_constant
+            or self._tibber_home is None
         ):
             _LOGGER.debug("Asking for new data")
             await self._fetch_data()
 
-        elif (
-            self._tibber_home.price_total
-            and self._last_updated
-            and self._last_updated.hour == now.hour
-            and now - self._last_updated < timedelta(minutes=15)
-            and self._tibber_home.last_data_timestamp
-        ):
-            return
+        # Adjust update frequency based on interval
+        try:
+            update_interval_minutes = self._get_update_interval_minutes(interval)
 
-        res = self._tibber_home.current_price_data()
-        self._attr_native_value, self._last_updated, price_rank = res
-        self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
+            if self._should_skip_update(now, update_interval_minutes):
+                _LOGGER.debug(
+                    "Skipping update: last updated %s ago, interval is %d minutes",
+                    now - self._last_updated if self._last_updated else "never",
+                    update_interval_minutes,
+                )
+                return
+
+        except Exception as exc:
+            _LOGGER.warning("Error determining update interval, using default: %s", exc)
+            update_interval_minutes = UPDATE_INTERVAL_HOURLY
+
+        # Get current price based on selected interval
+        price_data = self._get_price_data_by_interval(interval)
+
+        # Store both price arrays in attributes
+        hourly_data = self._get_hourly_price_data()
+        fifteen_min_data = self._get_15min_price_data()
+
+        self._attr_extra_state_attributes["prices_1h"] = hourly_data
+        self._attr_extra_state_attributes["prices_15min"] = fifteen_min_data
+
+        # Find current price based on interval
+        current_price = self._find_current_price(price_data, now, interval)
+
+        if current_price:
+            self._attr_native_value = current_price.get("total")
+            self._last_updated = now
+            self._attr_extra_state_attributes["intraday_price_ranking"] = (
+                current_price.get("level")
+            )
+        else:
+            # Fallback to original method if no specific price found
+            res = self._tibber_home.current_price_data()
+            self._attr_native_value, self._last_updated, price_rank = res
+            self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
 
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)
         self._attr_available = self._attr_native_value is not None
         self._attr_native_unit_of_measurement = self._tibber_home.price_unit
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def _fetch_data(self) -> None:
+    def _find_current_price(
+        self, price_data: list[dict[str, Any]], now: datetime.datetime, interval: str
+    ) -> dict[str, Any] | None:
+        """Find the current price from price data based on interval."""
+        if not price_data:
+            return None
+
+        interval_minutes = 15 if interval == PRICE_INTERVAL_15MIN else 60
+
+        for price in price_data:
+            try:
+                start_time = dt_util.parse_datetime(price["startsAt"])
+                if start_time is None:
+                    continue
+
+                end_time = start_time + timedelta(minutes=interval_minutes)
+
+                if start_time <= now < end_time:
+                    return price
+            except (KeyError, TypeError, ValueError) as err:
+                _LOGGER.warning("Error parsing price data: %s", err)
+                continue
+
+        return None
+
+    async def _fetch_data(self) -> bool:
+        """Fetch data from Tibber API.
+
+        Returns:
+            True if data was successfully fetched, False otherwise
+        """
         _LOGGER.debug("Fetching data")
         try:
             await self._tibber_home.update_info_and_price_info()
-        except (TimeoutError, aiohttp.ClientError):
-            return
-        data = self._tibber_home.info["viewer"]["home"]
-        self._attr_extra_state_attributes["app_nickname"] = data["appNickname"]
-        self._attr_extra_state_attributes["grid_company"] = data["meteringPointData"][
-            "gridCompany"
-        ]
-        self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
-            "meteringPointData"
-        ]["estimatedAnnualConsumption"]
+
+            # Update additional attributes
+            if self._tibber_home.info:
+                try:
+                    data = self._tibber_home.info["viewer"]["home"]
+                    self._attr_extra_state_attributes["app_nickname"] = data[
+                        "appNickname"
+                    ]
+                    self._attr_extra_state_attributes["grid_company"] = data[
+                        "meteringPointData"
+                    ]["gridCompany"]
+                    self._attr_extra_state_attributes[
+                        "estimated_annual_consumption"
+                    ] = data["meteringPointData"]["estimatedAnnualConsumption"]
+                except (KeyError, TypeError):
+                    _LOGGER.debug(
+                        "Could not extract additional attributes from Tibber data"
+                    )
+
+            return True
+        except Exception as exc:
+            _LOGGER.error("Failed to fetch Tibber data: %s", exc)
+            return False
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
