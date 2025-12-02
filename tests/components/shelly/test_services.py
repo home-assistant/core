@@ -196,3 +196,28 @@ async def test_service_set_kvs_value(
     )
 
     mock_rpc_device.kvs_set.assert_called_once_with("test_key", "test_value")
+
+
+async def test_service_get_kvs_value_config_entry_not_found(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test device with no config entries."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    # Remove all config entries from device
+    device_registry.devices[device.id].config_entries.clear()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_KVS_VALUE,
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "config_entry_not_found"
+    assert exc_info.value.translation_placeholders == {"device_id": device.id}
