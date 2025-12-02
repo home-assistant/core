@@ -169,7 +169,12 @@ def async_subscribe_platform_events(
 async def _register_trigger_platform(
     hass: HomeAssistant, integration_domain: str, platform: TriggerProtocol
 ) -> None:
-    """Register a trigger platform."""
+    """Register a trigger platform and notify listeners.
+
+    If the trigger platform does not provide any triggers, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
 
@@ -178,6 +183,12 @@ async def _register_trigger_platform(
             trigger_key = get_absolute_description_key(integration_domain, trigger_key)
             hass.data[TRIGGERS][trigger_key] = integration_domain
             new_triggers.add(trigger_key)
+        if not new_triggers:
+            _LOGGER.debug(
+                "Integration %s returned no triggers in async_get_triggers",
+                integration_domain,
+            )
+            return
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
         platform, "TRIGGER_SCHEMA"
     ):
@@ -188,6 +199,10 @@ async def _register_trigger_platform(
             "Integration %s does not provide trigger support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_trigger(hass, integration_domain):
+        _LOGGER.debug("Triggers for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
