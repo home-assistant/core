@@ -1,0 +1,7 @@
+{
+  "services": {
+    "send_test_notification": {
+      "service": "mdi:bell-badge-outline"
+    }
+  }
+}

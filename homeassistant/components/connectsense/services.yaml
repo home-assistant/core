@@ -1,0 +1,19 @@
+send_test_notification:
+  fields:
+    entry_id:
+      selector:
+        text:
+    title:
+      example: Rebooter Pro Test
+      selector:
+        text:
+    message:
+      example: This is a test notification from Rebooter Pro.
+      selector:
+        text:
+    code:
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: box

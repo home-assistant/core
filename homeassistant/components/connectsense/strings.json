@@ -1,0 +1,106 @@
+{
+  "config": {
+    "flow_title": "Rebooter Pro {serial}",
+    "step": {
+      "zeroconf_confirm": {
+        "title": "Discovered Rebooter Pro",
+        "description": "Do you want to set up {model} with serial {serial}?",
+        "data": {}
+      },
+      "user": {
+        "title": "Add Rebooter Pro",
+        "description": "Enter the device hostname (e.g., `rebooter-pro.local`) or IP address.",
+        "data": {
+          "host": "Host or IP"
+        },
+        "data_description": {
+          "host": "Use the device hostname (e.g., rebooter-pro.local) or IP address."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This Rebooter Pro is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the host and try again.",
+      "unknown": "Unexpected error."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Rebooter Pro Options",
+        "description": "Configure automatic reboot behavior and optional push notifications.",
+        "data": {
+          "ar_off_duration_seconds": "Power Cycle Time",
+          "ar_power_fail": "Auto-Reboot after Power Outage",
+          "ar_ping_fail": "Intelligent Reboot",
+          "ar_trigger_minutes": "Outage Time",
+          "ar_post_reboot_delay_minutes": "Redetection Delay",
+          "ar_any_fail": "Outage Condition",
+          "ar_max_reboots": "Maximum Reboot Attempts",
+          "ar_target_1": "1st Address (Domain or IP)",
+          "ar_target_2": "2nd Address (Domain or IP)",
+          "ar_target_3": "3rd Address (Domain or IP)",
+          "ar_target_4": "4th Address (Domain or IP)",
+          "ar_target_5": "5th Address (Domain or IP)",
+          "notify_enabled": "Send push notifications",
+          "notify_service": "Notify service",
+          "notify_on_off": "Notify when outlet turns OFF",
+          "notify_on_on": "Notify when outlet turns ON",
+          "notify_on_reboot": "Notify when device is REBOOTING"
+        },
+        "data_description": {
+          "ar_off_duration_seconds": "When rebooting, keep the power off for this many seconds (10\u201365535).",
+          "ar_power_fail": "If enabled, the equipment will reboot after power is restored.",
+          "ar_ping_fail": "If enabled, the equipment will reboot on Internet/Ping failures.",
+          "ar_trigger_minutes": "Reboot after unsuccessfully reaching the monitored addresses for this long in minutes (2\u201310).",
+          "ar_post_reboot_delay_minutes": "After restoring power, wait this long, in minutes, before resuming Internet/Ping monitoring (0\u201310).",
+          "ar_any_fail": "Choose whether to reboot if ANY of the addresses are unreachable or if ALL addresses are unreachable.",
+          "ar_max_reboots": "If Internet/Ping monitoring never detects a recovery, reboot at most this many times.",
+          "ar_target_1": "",
+          "ar_target_2": "",
+          "ar_target_3": "",
+          "ar_target_4": "",
+          "ar_target_5": "Address or hostname to ping to determine if your device is offline.",
+          "notify_enabled": "Home Assistant will send a notification when state changes.",
+          "notify_service": "Example: `notify.notify` or `notify.mobile_app_my_phone`.",
+          "notify_on_off": "",
+          "notify_on_on": "",
+          "notify_on_reboot": ""
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "reboot_started_any": "Reboot started",
+      "reboot_started_power_fail": "Reboot started \u2014 after power failure",
+      "reboot_started_ping_fail": "Reboot started \u2014 after Internet/Ping failure"
+    }
+  },
+  "services": {
+    "send_test_notification": {
+      "name": "Send test notification",
+      "description": "Send a test push using the integration's selected notify service (defaults to notify.notify).",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Target Rebooter Pro config entry ID. If omitted and only one device exists, that one is used."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Notification title."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Notification body. If omitted, a default message is generated."
+        },
+        "code": {
+          "name": "Code",
+          "description": "Optional device code to auto-generate a default message (1=OFF, 2=ON, 3=REBOOTING)."
+        }
+      }
+    }
+  }
+}
