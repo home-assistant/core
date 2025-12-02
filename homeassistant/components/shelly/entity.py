@@ -25,7 +25,6 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
-    get_entity_translation_attributes,
     get_rpc_channel_name,
     get_rpc_device_info,
     get_rpc_key,
@@ -35,14 +34,14 @@ from .utils import (
 
 
 @callback
-def async_setup_entry_attribute_entities(
+def async_setup_entry_block(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Set up entities for attributes."""
+    """Set up block entities."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
     if coordinator.device.initialized:
@@ -151,7 +150,7 @@ def async_setup_entry_rpc(
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Set up entities for RPC sensors."""
+    """Set up RPC entities."""
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
 
@@ -598,17 +597,14 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 
     def configure_translation_attributes(self) -> None:
         """Configure translation attributes."""
-        translation_placeholders, translation_key = get_entity_translation_attributes(
-            get_rpc_channel_name(self.coordinator.device, self.key),
-            self.entity_description.translation_key,
-            self.entity_description.device_class,
-            self._default_to_device_class_name(),
-        )
-
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
-            if translation_key:
-                self._attr_translation_key = translation_key
+        if (
+            channel_name := get_rpc_channel_name(self.coordinator.device, self.key)
+        ) and (
+            translation_key := self.entity_description.translation_key
+            or (self.device_class if self._default_to_device_class_name() else None)
+        ):
+            self._attr_translation_placeholders = {"channel_name": channel_name}
+            self._attr_translation_key = f"{translation_key}_with_channel_name"
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):

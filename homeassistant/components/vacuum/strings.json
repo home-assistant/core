@@ -114,7 +114,6 @@
   "triggers": {
     "docked": {
       "description": "Triggers when a vacuum cleaner has docked.",
-      "description_configured": "[%key:component::vacuum::triggers::docked::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
@@ -125,7 +124,6 @@
     },
     "errored": {
       "description": "Triggers when a vacuum cleaner has errored.",
-      "description_configured": "[%key:component::vacuum::triggers::errored::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
@@ -136,7 +134,6 @@
     },
     "paused_cleaning": {
       "description": "Triggers when a vacuum cleaner has paused cleaning.",
-      "description_configured": "[%key:component::vacuum::triggers::paused_cleaning::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
@@ -147,7 +144,6 @@
     },
     "started_cleaning": {
       "description": "Triggers when a vacuum cleaner has started cleaning.",
-      "description_configured": "[%key:component::vacuum::triggers::started_cleaning::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",

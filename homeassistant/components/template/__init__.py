@@ -4,10 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from functools import partial
 import logging
 from typing import Any
 
 from homeassistant import config as conf_util
+from homeassistant.components.automation import (
+    DOMAIN as AUTOMATION_DOMAIN,
+    NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+)
+from homeassistant.components.labs import async_listen as async_labs_listen
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -16,9 +22,9 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, issue_registry as ir
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
@@ -30,10 +36,19 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import async_get_blueprints
+from .helpers import DATA_DEPRECATION, async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
+
+
+def _clean_up_legacy_template_deprecations(hass: HomeAssistant) -> None:
+    if (found_issues := hass.data.pop(DATA_DEPRECATION, None)) is not None:
+        issue_registry = ir.async_get(hass)
+        for domain, issue_id in set(issue_registry.issues):
+            if domain != DOMAIN or issue_id in found_issues:
+                continue
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -54,6 +69,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
+        hass.data.pop(DATA_DEPRECATION, None)
+
         await async_get_blueprints(hass).async_reset_cache()
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
@@ -74,9 +91,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if DOMAIN in conf:
             await _process_config(hass, conf)
 
+        _clean_up_legacy_template_deprecations(hass)
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        hass.async_create_task(
+            _reload_config(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
+        )
+
+    async_labs_listen(
+        hass,
+        AUTOMATION_DOMAIN,
+        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
+    )
 
     return True
 
@@ -102,6 +134,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
     )
+
+    entry.async_on_unload(
+        async_labs_listen(
+            hass,
+            AUTOMATION_DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+            partial(hass.config_entries.async_schedule_reload, entry.entry_id),
+        )
+    )
+
     return True
 
 

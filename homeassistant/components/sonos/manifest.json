@@ -6,6 +6,7 @@
   "config_flow": true,
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/sonos",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["soco", "sonos_websocket"],
   "quality_scale": "bronze",
