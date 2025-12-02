@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 19
+  Built-in integrations: 21
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -32,7 +32,9 @@
   auth | Auth
   binary_sensor | Binary Sensor
   cloud | Home Assistant Cloud
+  cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
+  cloud.conversation | Unknown
   cloud.stt | Unknown
   cloud.tts | Unknown
   conversation | Conversation
@@ -120,7 +122,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 19
+  Built-in integrations: 21
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -131,7 +133,9 @@
   auth | Auth
   binary_sensor | Binary Sensor
   cloud | Home Assistant Cloud
+  cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
+  cloud.conversation | Unknown
   cloud.stt | Unknown
   cloud.tts | Unknown
   conversation | Conversation
