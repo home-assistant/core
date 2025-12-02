@@ -185,6 +185,12 @@ class MQTTDiscoveredSwitch(SwitchEntity):
             payload,
         )
 
+        # Handle empty payload immediately - set entity to unknown
+        if not payload.strip():
+            self._attr_is_on = None
+            self.schedule_update_ha_state()
+            return
+
         value = None
         try:
             json_payload = json.loads(payload)
@@ -204,8 +210,15 @@ class MQTTDiscoveredSwitch(SwitchEntity):
         else:
             value = payload
 
+        # Handle disconnected/invalid states first (including template result of None)
+        if value is None:
+            self._attr_is_on = None
+        elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
+            self._attr_is_on = None
+        elif isinstance(value, str) and value.lower() in ("none", "null", "n/a", "na", "unavailable"):
+            self._attr_is_on = None
         # Determine switch state based on payload
-        if value == self._state_on:
+        elif value == self._state_on:
             self._attr_is_on = True
         elif value == self._state_off:
             self._attr_is_on = False

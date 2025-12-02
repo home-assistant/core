@@ -183,6 +183,12 @@ class MQTTDiscoveredSensor(SensorEntity):
             payload,
         )
 
+        # Handle empty payload immediately - set entity to unknown
+        if not payload.strip():
+            self._attr_native_value = None
+            self.schedule_update_ha_state()
+            return
+
         value = None
         try:
             json_payload = json.loads(payload)
@@ -202,7 +208,12 @@ class MQTTDiscoveredSensor(SensorEntity):
         else:
             value = payload
 
-        if value == "unknown":
+        # Handle disconnected/invalid states (including template result of None)
+        if value is None:
+            value = None
+        elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
+            value = None
+        elif isinstance(value, str) and value.lower() in ("none", "null", "n/a", "na", "unavailable"):
             value = None
 
         # Try to cast to float if the unit is set (for measurements)
@@ -210,6 +221,7 @@ class MQTTDiscoveredSensor(SensorEntity):
             try:
                 value = float(value)
             except (ValueError, TypeError):
+                _LOGGER.debug("Failed to convert sensor value to float: %s, setting to None", value)
                 value = None
 
         _LOGGER.debug(

@@ -123,6 +123,12 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
         try:
             payload = msg.payload.decode()
 
+            # Handle empty payload immediately - set entity to unknown
+            if not payload.strip():
+                self._attr_is_on = None
+                self.schedule_update_ha_state()
+                return
+
             if self._template:
                 # Use template to process the payload
                 try:
@@ -134,8 +140,15 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                 # No template, use payload directly
                 processed_value = payload
 
+            # Handle disconnected/invalid states first (including template result of None)
+            if processed_value is None:
+                self._attr_is_on = None
+            elif processed_value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
+                self._attr_is_on = None
+            elif isinstance(processed_value, str) and processed_value.lower() in ("none", "null", "n/a", "na", "unavailable"):
+                self._attr_is_on = None
             # Convert to boolean based on payload_on/payload_off
-            if processed_value == self._payload_on:
+            elif processed_value == self._payload_on:
                 self._attr_is_on = True
             elif processed_value == self._payload_off:
                 self._attr_is_on = False

@@ -196,7 +196,7 @@ class MQTTDiscoveredNumber(NumberEntity):
         _LOGGER.debug("Updated number config for %s: %s", self._attr_name, config)
 
     def handle_mqtt_message(self, msg) -> None:
-        """Handle incoming MQTT message for this number."""
+        """Handle incoming MQTT message for this number entity."""
         payload = msg.payload.decode()
         _LOGGER.debug(
             "Received MQTT message for number %s (id: %s): %s",
@@ -204,6 +204,12 @@ class MQTTDiscoveredNumber(NumberEntity):
             id(self),
             payload,
         )
+
+        # Handle empty payload immediately - set entity to unknown
+        if not payload.strip():
+            self._attr_native_value = None
+            self.schedule_update_ha_state()
+            return
 
         value = None
         try:
@@ -224,7 +230,12 @@ class MQTTDiscoveredNumber(NumberEntity):
         else:
             value = payload
 
-        if value == "unknown":
+        # Handle disconnected/invalid states (including template result of None)
+        if value is None:
+            value = None
+        elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
+            value = None
+        elif isinstance(value, str) and value.lower() in ("none", "null", "n/a", "na", "unavailable"):
             value = None
 
         # Try to cast to float
@@ -237,7 +248,7 @@ class MQTTDiscoveredNumber(NumberEntity):
                 elif value > self._attr_native_max_value:
                     value = self._attr_native_max_value
             except (ValueError, TypeError):
-                _LOGGER.debug("Failed to convert number value to float: %s", value)
+                _LOGGER.debug("Failed to convert number value to float: %s, setting to None", value)
                 value = None
 
         _LOGGER.debug(
