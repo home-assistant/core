@@ -80,6 +80,7 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    ACTION_RESPONSE_TIMEOUT,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
@@ -89,7 +90,6 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     PROJECT_URLS,
-    SERVICE_EXECUTE_TIMEOUT,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
 )
@@ -1228,7 +1228,7 @@ async def execute_service(
         ) from err
 
     try:
-        response = await asyncio.wait_for(future, timeout=SERVICE_EXECUTE_TIMEOUT)
+        response = await asyncio.wait_for(future, timeout=ACTION_RESPONSE_TIMEOUT)
     except TimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

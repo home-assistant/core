@@ -16,7 +16,7 @@ DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
 # Timeout for waiting for a response from an ESPHome custom action
-SERVICE_EXECUTE_TIMEOUT: Final = 30.0
+ACTION_RESPONSE_TIMEOUT: Final = 30.0
 
 DEFAULT_PORT: Final = 6053
 
