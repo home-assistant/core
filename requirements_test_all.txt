@@ -1027,7 +1027,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.7.0
+habluetooth==5.8.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.6
@@ -1037,7 +1037,7 @@ hass-nabucasa==1.6.2
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.4.0
+hassil==3.5.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1201,10 +1201,13 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.6.3
+letpot==0.6.4
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
+
+# homeassistant.components.vivotek
+libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.5.0
