@@ -37,7 +37,6 @@ def get_device_list_classic(
         login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
         # DEBUG: Log the actual response structure
     except Exception as ex:
-        _LOGGER.error("DEBUG - Login response: %s", login_response)
         raise ConfigEntryError(
             f"Error communicating with Growatt API during login: {ex}"
         ) from ex

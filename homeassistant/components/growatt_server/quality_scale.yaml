@@ -32,9 +32,7 @@ rules:
     status: todo
     comment: Replace bare Exception catches in __init__.py with specific growattServer exceptions.
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: Remove _LOGGER.error calls in coordinator.py when raising UpdateFailed (choose one, not both).
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
