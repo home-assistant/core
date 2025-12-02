@@ -137,13 +137,14 @@
     'supported_features': 0,
     'translation_key': 'dsl_connect_count',
     'unique_id': 'e4:5d:51:00:11:22_dsl_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'connects',
   })
 # ---
 # name: test_sensors[sensor.sfr_box_dsl_connect_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SFR Box DSL connect count',
+      'unit_of_measurement': 'connects',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sfr_box_dsl_connect_count',
@@ -185,13 +186,14 @@
     'supported_features': 0,
     'translation_key': 'dsl_crc_error_count',
     'unique_id': 'e4:5d:51:00:11:22_dsl_crc',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'errors',
   })
 # ---
 # name: test_sensors[sensor.sfr_box_dsl_crc_error_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SFR Box DSL CRC error count',
+      'unit_of_measurement': 'errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sfr_box_dsl_crc_error_count',
