@@ -1,1 +1,1 @@
-"""Tests for the transport_nsw component."""
+"""Tests for the Transport NSW integration."""
