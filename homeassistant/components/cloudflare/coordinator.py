@@ -6,13 +6,12 @@ import asyncio
 from datetime import timedelta
 from logging import getLogger
 import socket
-from typing import Self
 
 import pycfdns
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -115,15 +114,3 @@ class CloudflareCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 f"Error updating zone {self.config_entry.data[CONF_ZONE]}"
             ) from e
-
-    async def init(self) -> Self:
-        """Asynchronously initialize an coordinator."""
-        await super().async_config_entry_first_refresh()
-
-        @callback
-        def _callback() -> None:
-            """Records updated callback."""
-
-        self.config_entry.async_on_unload(self.async_add_listener(_callback, None))
-
-        return self
