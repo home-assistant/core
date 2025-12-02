@@ -1198,7 +1198,7 @@ async def execute_service(
 
     def on_response(response: ExecuteServiceResponse) -> None:
         if not future.done():
-            loop.call_soon_threadsafe(future.set_result, response)
+            future.set_result(response)
 
     # Determine if we need response_data from ESPHome
     # ONLY: always need response_data
