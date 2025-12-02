@@ -199,7 +199,7 @@ async def test_service_set_kvs_value(
 
 
 async def test_service_get_kvs_value_config_entry_not_found(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, mock_rpc_device: Mock, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test device with no config entries."""
     entry = await init_integration(hass, 2)
@@ -221,3 +221,30 @@ async def test_service_get_kvs_value_config_entry_not_found(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "config_entry_not_found"
     assert exc_info.value.translation_placeholders == {"device_id": device.id}
+
+
+async def test_service_get_kvs_value_device_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test get_kvs_value if runtime_data.rpc is None."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    monkeypatch.delattr(entry.runtime_data, "rpc")
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_KVS_VALUE,
+            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "device_not_initialized"
+    assert exc_info.value.translation_placeholders == {"device": entry.title}
