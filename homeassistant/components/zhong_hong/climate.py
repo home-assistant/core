@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 import voluptuous as vol
-from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
@@ -20,41 +20,30 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-CONF_GATEWAY_ADDRRESS = "gateway_address"
+CONF_GATEWAY_ADDRESS = "gateway_address"
 
 DEFAULT_PORT = 9999
-DEFAULT_GATEWAY_ADDRRESS = 1
+DEFAULT_GATEWAY_ADDRESS = 1
 
-SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
-SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
 
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(
-            CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS
-        ): cv.positive_int,
-    }
-)
+_LOGGER = logging.getLogger(__name__)
 
 ZHONG_HONG_MODE_COOL = "cool"
 ZHONG_HONG_MODE_HEAT = "heat"
@@ -69,7 +58,6 @@ MODE_TO_STATE = {
     ZHONG_HONG_MODE_FAN_ONLY: HVACMode.FAN_ONLY,
 }
 
-# HA → zhong_hong
 FAN_MODE_MAP = {
     FAN_LOW: "LOW",
     FAN_MEDIUM: "MID",
@@ -81,55 +69,57 @@ FAN_MODE_MAP = {
 FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
 
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(
+            CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
+        ): cv.positive_int,
+    }
+)
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the ZhongHong HVAC platform."""
+    """Set up the ZhongHong HVAC platform from legacy YAML."""
+    _LOGGER.warning(
+        "Configuration of the ZhongHong HVAC platform in YAML is deprecated "
+        "and will be removed in a future release. Your configuration has been "
+        "imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
-    hub = ZhongHongGateway(host, port, gw_addr)
+    coro = hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    asyncio.run_coroutine_threadsafe(coro, hass.loop)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the ZhongHong HVAC platform from a config entry."""
+
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    hub = entry_data["hub"]
+    devices_discovered = entry_data["devices"]
+
     devices = [
         ZhongHongClimate(hub, addr_out, addr_in)
-        for (addr_out, addr_in) in hub.discovery_ac()
+        for (addr_out, addr_in) in devices_discovered
     ]
 
-    _LOGGER.debug("We got %s zhong_hong climate devices", len(devices))
-
-    hub_is_initialized = False
-
-    def _start_hub():
-        """Start the hub socket and query status of all devices."""
-        hub.start_listen()
-        hub.query_all_status()
-
-    async def startup():
-        """Start hub socket after all climate entity is set up."""
-        nonlocal hub_is_initialized
-        if not all(device.is_initialized for device in devices):
-            return
-
-        if hub_is_initialized:
-            return
-
-        _LOGGER.debug("zhong_hong hub start listen event")
-        await hass.async_add_executor_job(_start_hub)
-        hub_is_initialized = True
-
-    async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
-
-    # add devices after SIGNAL_DEVICE_SETTED_UP event is listened
-    add_entities(devices)
-
-    def stop_listen(event):
-        """Stop ZhongHongHub socket."""
-        hub.stop_listen()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
+    _LOGGER.debug("Adding %s zhong_hong climate devices", len(devices))
+    async_add_entities(devices)
 
 
 class ZhongHongClimate(ClimateEntity):
@@ -150,27 +140,34 @@ class ZhongHongClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True  # Good practice for new integrations
 
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
-
         self._device = ZhongHongHVAC(hub, addr_out, addr_in)
         self._hub = hub
         self._current_operation = None
         self._current_temperature = None
         self._target_temperature = None
         self._current_fan_mode = None
-        self.is_initialized = False
+
+        self._attr_unique_id = (
+            f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
+        )
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": f"AC {self._device.addr_out}-{self._device.addr_in}",
+            "manufacturer": "ZhongHong",
+            "model": "HVAC Unit",
+        }
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
-        self.is_initialized = True
-        async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
 
     def _after_update(self, climate):
         """Handle state update."""
-        _LOGGER.debug("async update ha state")
+        _LOGGER.debug("Async update for %s", self.entity_id)
         if self._device.current_operation:
             self._current_operation = MODE_TO_STATE[
                 self._device.current_operation.lower()
@@ -182,16 +179,6 @@ class ZhongHongClimate(ClimateEntity):
         if self._device.target_temperature:
             self._target_temperature = self._device.target_temperature
         self.schedule_update_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.unique_id
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the HVAC."""
-        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
 
     @property
     def hvac_mode(self) -> HVACMode:
