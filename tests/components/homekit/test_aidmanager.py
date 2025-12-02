@@ -114,7 +114,7 @@ async def test_no_aid_collision(
 
     for unique_id in range(202):
         ent = entity_registry.async_get_or_create(
-            "light", "device", unique_id, device_id=device_entry.id
+            "light", "device", str(unique_id), device_id=device_entry.id
         )
         hass.states.async_set(ent.entity_id, "on")
         aid = aid_storage.get_or_allocate_aid_for_entity_id(ent.entity_id)

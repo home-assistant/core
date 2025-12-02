@@ -104,33 +104,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bo
         _LOGGER.debug(
             "Migrating from version %s.%s", entry_version, entry_minor_version
         )
-        # Migrate non-str unique ids
-        # This step used to run unconditionally from async_setup_entry
-        entity_registry = er.async_get(hass)
-
-        @callback
-        def _async_str_unique_id_migrator(
-            entity_entry: er.RegistryEntry,
-        ) -> dict[str, str] | None:
-            # Old format for camera and light was int
-            unique_id = cast(str | int, entity_entry.unique_id)
-            if isinstance(unique_id, int):
-                new_unique_id = str(unique_id)
-                if existing_entity_id := entity_registry.async_get_entity_id(
-                    entity_entry.domain, entity_entry.platform, new_unique_id
-                ):
-                    _LOGGER.error(
-                        "Cannot migrate to unique_id '%s', already exists for '%s', "
-                        "You may have to delete unavailable ring entities",
-                        new_unique_id,
-                        existing_entity_id,
-                    )
-                    return None
-                _LOGGER.debug("Fixing non string unique id %s", entity_entry.unique_id)
-                return {"new_unique_id": new_unique_id}
-            return None
-
-        await er.async_migrate_entries(hass, entry_id, _async_str_unique_id_migrator)
 
         # Migrate the hardware id
         hardware_id = str(uuid.uuid4())

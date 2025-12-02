@@ -69,7 +69,7 @@ class NukiDeviceEntity[_NukiDeviceT: NukiDevice](NukiEntity[_NukiDeviceT], LockE
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return self._nuki_device.nuki_id
+        return str(self._nuki_device.nuki_id)
 
     @property
     def available(self) -> bool:
