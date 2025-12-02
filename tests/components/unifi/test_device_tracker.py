@@ -20,7 +20,9 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_WIRED_DETECTION_TIME,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_WIRED_DETECTION_TIME,
     DOMAIN,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
@@ -161,6 +163,135 @@ async def test_client_state_update(
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+
+
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {CONF_WIRED_DETECTION_TIME: 10}
+    ],  # 10 seconds for wired (overriding 5 second default)
+)
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_separate_wired_wireless_detection_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    config_entry_factory: ConfigEntryFactoryType,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Test that wired and wireless clients use different detection times."""
+    await config_entry_factory()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+
+    # Set both clients as currently connected
+    current_time = dt_util.utcnow()
+    ws_client_updated = client_payload[0] | {
+        "last_seen": dt_util.as_timestamp(current_time)
+    }
+    wd_client_updated = client_payload[1] | {
+        "last_seen": dt_util.as_timestamp(current_time)
+    }
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT, data=[ws_client_updated, wd_client_updated]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+    assert hass.states.get("device_tracker.wd_client_1").state == STATE_HOME
+
+    # Move time forward by configured wired detection time (10 seconds)
+    # Wired client should go away, wireless client should stay (needs 5 minutes)
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+    )  # Still connected
+    assert (
+        hass.states.get("device_tracker.wd_client_1").state == STATE_NOT_HOME
+    )  # Disconnected
+
+    # Move time forward to reach wireless detection time (default 300 seconds = 5 minutes)
+    freezer.tick(timedelta(seconds=DEFAULT_DETECTION_TIME - 10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Now both clients should be away
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.wd_client_1").state == STATE_NOT_HOME
+
+    # Reconnect both clients
+    current_time = dt_util.utcnow()
+    ws_client_updated["last_seen"] = dt_util.as_timestamp(current_time)
+    wd_client_updated["last_seen"] = dt_util.as_timestamp(current_time)
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT, data=[ws_client_updated, wd_client_updated]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+    assert hass.states.get("device_tracker.wd_client_1").state == STATE_HOME
+
+
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_default_wired_detection_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    config_entry_factory: ConfigEntryFactoryType,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Test that wired clients use the default 5 second detection time when not configured."""
+    await config_entry_factory()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+
+    # Set both clients as currently connected
+    current_time = dt_util.utcnow()
+    ws_client_updated = client_payload[0] | {
+        "last_seen": dt_util.as_timestamp(current_time)
+    }
+    wd_client_updated = client_payload[1] | {
+        "last_seen": dt_util.as_timestamp(current_time)
+    }
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT, data=[ws_client_updated, wd_client_updated]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+    assert hass.states.get("device_tracker.wd_client_1").state == STATE_HOME
+
+    # Move time forward by default wired detection time (5 seconds)
+    # Wired client should go away, wireless client should stay (needs 5 minutes)
+    freezer.tick(timedelta(seconds=DEFAULT_WIRED_DETECTION_TIME + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+    )  # Still connected
+    assert (
+        hass.states.get("device_tracker.wd_client_1").state == STATE_NOT_HOME
+    )  # Disconnected after 5 seconds
+
+    # Move time forward to reach wireless detection time (default 300 seconds = 5 minutes)
+    freezer.tick(
+        timedelta(seconds=DEFAULT_DETECTION_TIME - DEFAULT_WIRED_DETECTION_TIME)
+    )
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Now both clients should be away
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.wd_client_1").state == STATE_NOT_HOME
 
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])

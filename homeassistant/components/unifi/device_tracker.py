@@ -120,13 +120,32 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     ):
         return False
 
+    # Use different detection times for wired vs wireless clients
+    detection_time = (
+        hub.config.option_wired_detection_time
+        if client.is_wired
+        else hub.config.option_detection_time
+    )
+
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
-        > hub.config.option_detection_time
+        > detection_time
     ):
         return False
 
     return True
+
+
+@callback
+def async_client_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta:
+    """Get heartbeat timedelta for client based on wired/wireless status."""
+    client = hub.api.clients[obj_id]
+
+    return (
+        hub.config.option_wired_detection_time
+        if client.is_wired
+        else hub.config.option_detection_time
+    )
 
 
 @callback
@@ -161,7 +180,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
             + WIRELESS_CONNECTION
             + WIRELESS_DISCONNECTION
         ),
-        heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
+        heartbeat_timedelta_fn=async_client_heartbeat_timedelta_fn,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],

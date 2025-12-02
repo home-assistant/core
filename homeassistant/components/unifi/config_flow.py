@@ -55,6 +55,7 @@ from .const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_WIRED_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
 )
@@ -387,6 +388,12 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                         CONF_DETECTION_TIME,
                         default=int(
                             self.hub.config.option_detection_time.total_seconds()
+                        ),
+                    ): int,
+                    vol.Optional(
+                        CONF_WIRED_DETECTION_TIME,
+                        default=int(
+                            self.hub.config.option_wired_detection_time.total_seconds()
                         ),
                     ): int,
                     vol.Optional(
