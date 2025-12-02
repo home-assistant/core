@@ -400,13 +400,13 @@
       "name": "Apple",
       "integrations": {
         "apple_tv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Apple TV"
         },
         "homekit_controller": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push"
         },
@@ -1380,7 +1380,7 @@
           "name": "DLNA Digital Media Renderer"
         },
         "dlna_dms": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "DLNA Digital Media Server"
@@ -1563,7 +1563,7 @@
     },
     "ecowitt": {
       "name": "Ecowitt",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2169,6 +2169,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "fressnapf_tracker": {
+      "name": "Fressnapf Tracker",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "frient": {
       "name": "Frient",
       "iot_standards": [
@@ -2465,7 +2471,7 @@
           "name": "Google Tasks"
         },
         "google_translate": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Translate text-to-speech"
@@ -2796,7 +2802,7 @@
     },
     "homewizard": {
       "name": "HomeWizard Energy",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3519,7 +3525,7 @@
           "name": "LG ThinQ"
         },
         "webostv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "LG webOS TV"
@@ -3897,7 +3903,7 @@
     },
     "met": {
       "name": "Meteorologisk institutt (Met.no)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5049,7 +5055,7 @@
     },
     "ping": {
       "name": "Ping (ICMP)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5542,7 +5548,7 @@
     },
     "rest": {
       "name": "RESTful",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -6348,7 +6354,7 @@
     },
     "speedtestdotnet": {
       "name": "Speedtest.net",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6517,7 +6523,7 @@
       "name": "SwitchBot",
       "integrations": {
         "switchbot": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "SwitchBot Bluetooth"
