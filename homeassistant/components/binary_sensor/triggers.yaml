@@ -10,14 +10,14 @@
           - last
           - any
 
-occupancy_detected:
+occupancy_cleared:
   fields: *trigger_common_fields
   target:
     entity:
       domain: binary_sensor
       device_class: presence
 
-occupancy_cleared:
+occupancy_detected:
   fields: *trigger_common_fields
   target:
     entity:
