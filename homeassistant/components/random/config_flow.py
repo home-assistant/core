@@ -17,7 +17,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -60,8 +59,8 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
     if domain == Platform.SENSOR:
         schema.update(
             {
-                vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
-                vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
+                vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): vol.Coerce(int),
+                vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): vol.Coerce(int),
                 vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
                     SelectSelectorConfig(
                         options=[
