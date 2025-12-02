@@ -4,6 +4,8 @@ from contextlib import suppress
 from functools import partial
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import cloud, intent, notify as hass_notify
 from homeassistant.components.webhook import (
@@ -13,7 +15,11 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,6 +40,7 @@ from .const import (
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
+    DATA_CARPLAY_CONFIG,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -53,6 +60,35 @@ from .webhook import handle_webhook
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
+# Configuration schema for carplay settings
+CARPLAY_SCHEMA = vol.Schema(
+    {
+        vol.Optional("enabled", default=True): cv.boolean,
+        vol.Optional("quick_access", default=[]): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required("entity_id"): cv.entity_id,
+                        vol.Optional("display_name"): cv.string,
+                    }
+                )
+            ],
+        ),
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional("carplay", default={}): CARPLAY_SCHEMA,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
@@ -65,6 +101,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DATA_DELETED_IDS: [],
         }
 
+    # Get the carplay configuration from config.yaml
+    carplay_config = config.get(DOMAIN, {}).get("carplay", {})
+
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
@@ -72,6 +111,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
+        DATA_CARPLAY_CONFIG: carplay_config,
     }
 
     hass.http.register_view(RegistrationsView())
