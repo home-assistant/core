@@ -50,9 +50,7 @@ rules:
     comment: Should be possible
   stale-devices: done
   diagnostics: done
-  exception-translations:
-    status: todo
-    comment: not yet documented
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   dynamic-devices: done

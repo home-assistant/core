@@ -123,5 +123,16 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "The provided credentials are invalid."
+    },
+    "no_data": {
+      "message": "No data received from the SFR box."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the SFR box: {error}"
+    }
   }
 }
