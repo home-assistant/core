@@ -40,13 +40,13 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> list[str]:
     """Create multiple light entities associated with different targets."""
-    return await target_entities(hass, "light")
+    return (await target_entities(hass, "light"))[0]
 
 
 @pytest.fixture
 async def target_switches(hass: HomeAssistant) -> list[str]:
     """Create multiple switch entities associated with different targets."""
-    return await target_entities(hass, "switch")
+    return (await target_entities(hass, "switch"))[0]
 
 
 async def setup_automation_with_light_condition(

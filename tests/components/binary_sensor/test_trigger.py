@@ -41,7 +41,7 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 
 
 @pytest.fixture
-async def target_binary_sensors(hass: HomeAssistant) -> list[str]:
+async def target_binary_sensors(hass: HomeAssistant) -> tuple[list[str], list[str]]:
     """Create multiple binary sensor entities associated with different targets."""
     return await target_entities(hass, "binary_sensor")
 
@@ -93,7 +93,7 @@ async def test_binary_sensor_triggers_gated_by_labs_flag(
 async def test_binary_sensor_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_binary_sensors: list[str],
+    target_binary_sensors: dict[list[str], list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -103,17 +103,23 @@ async def test_binary_sensor_state_attribute_trigger_behavior_any(
     """Test that the binary sensor state trigger fires when any binary sensor state changes to a specific state."""
     await async_setup_component(hass, "binary_sensor", {})
 
-    other_entity_ids = set(target_binary_sensors) - {entity_id}
+    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
+    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
     # Set all binary sensors, including the tested binary sensor, to the initial state
-    for eid in target_binary_sensors:
-        set_or_remove_state(hass, eid, states[0])
+    for eid in target_binary_sensors["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        excluded_state = state["excluded"]
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -122,7 +128,10 @@ async def test_binary_sensor_state_attribute_trigger_behavior_any(
 
         # Check if changing other binary sensors also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -165,17 +174,23 @@ async def test_binary_sensor_state_attribute_trigger_behavior_first(
     """Test that the binary sensor state trigger fires when the first binary sensor state changes to a specific state."""
     await async_setup_component(hass, "binary_sensor", {})
 
-    other_entity_ids = set(target_binary_sensors) - {entity_id}
+    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
+    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
     # Set all binary sensors, including the tested binary sensor, to the initial state
-    for eid in target_binary_sensors:
-        set_or_remove_state(hass, eid, states[0])
+    for eid in target_binary_sensors["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        excluded_state = state["excluded"]
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -184,7 +199,10 @@ async def test_binary_sensor_state_attribute_trigger_behavior_first(
 
         # Triggering other binary sensors should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -226,24 +244,35 @@ async def test_binary_sensor_state_attribute_trigger_behavior_last(
     """Test that the binary sensor state trigger fires when the last binary sensor state changes to a specific state."""
     await async_setup_component(hass, "binary_sensor", {})
 
-    other_entity_ids = set(target_binary_sensors) - {entity_id}
+    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
+    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
     # Set all binary sensors, including the tested binary sensor, to the initial state
-    for eid in target_binary_sensors:
-        set_or_remove_state(hass, eid, states[0])
+    for eid in target_binary_sensors["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
+        excluded_state = state["excluded"]
+        included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state)
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
+
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
