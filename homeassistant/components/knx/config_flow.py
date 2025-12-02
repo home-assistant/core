@@ -461,7 +461,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         route_back=user_input[CONF_KNX_ROUTE_BACK],
                     )
                 except CommunicationError:
-                    errors["base"] = "cannot_connect"
+                    # If we cannot get the gateway capabilities, just go on with
+                    # what the user asked, since this request_description might
+                    # not be possible because of some network configuration.
+                    pass
                 else:
                     if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
                         selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE
