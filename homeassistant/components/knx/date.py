@@ -5,10 +5,8 @@ from __future__ import annotations
 from datetime import date as dt_date
 from typing import Any
 
-from xknx import XKNX
 from xknx.devices import DateDevice as XknxDateDevice
 from xknx.dpt.dpt_11 import KNXDate as XKNXDate
-from xknx.remote_value import GroupAddressesType
 
 from homeassistant import config_entries
 from homeassistant.components.date import DateEntity
@@ -54,46 +52,26 @@ async def async_setup_entry(
         controller=KnxUiEntityPlatformController(
             knx_module=knx_module,
             entity_platform=platform,
-            entity_class=KnxUiDateEntity,
+            entity_class=KnxUiDate,
         ),
     )
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
     if yaml_platform_config := knx_module.config_yaml.get(Platform.DATE):
         entities.extend(
-            KnxYamlDateEntity(knx_module, entity_config)
+            KnxYamlDate(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
     if ui_config := knx_module.config_store.data["entities"].get(Platform.DATE):
         entities.extend(
-            KnxUiDateEntity(knx_module, unique_id, config)
+            KnxUiDate(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
         )
     if entities:
         async_add_entities(entities)
 
 
-def _create_xknx_device(
-    xknx: XKNX,
-    name: str,
-    group_address: GroupAddressesType,
-    group_address_state: GroupAddressesType,
-    respond_to_read: bool,
-    sync_state: bool | float | str,
-) -> XknxDateDevice:
-    """Return a XKNX DateTime object to be used within XKNX."""
-    return XknxDateDevice(
-        xknx,
-        name=name,
-        localtime=False,
-        group_address=group_address,
-        group_address_state=group_address_state,
-        respond_to_read=respond_to_read,
-        sync_state=sync_state,
-    )
-
-
-class _KNXDateEntity(DateEntity, RestoreEntity):
+class _KNXDate(DateEntity, RestoreEntity):
     """Representation of a KNX date."""
 
     _device: XknxDateDevice
@@ -120,7 +98,7 @@ class _KNXDateEntity(DateEntity, RestoreEntity):
         await self._device.set(value)
 
 
-class KnxYamlDateEntity(_KNXDateEntity, KnxYamlEntity):
+class KnxYamlDate(_KNXDate, KnxYamlEntity):
     """Representation of a KNX date configured from YAML."""
 
     _device: XknxDateDevice
@@ -129,9 +107,10 @@ class KnxYamlDateEntity(_KNXDateEntity, KnxYamlEntity):
         """Initialize a KNX date."""
         super().__init__(
             knx_module=knx_module,
-            device=_create_xknx_device(
+            device=XknxDateDevice(
                 knx_module.xknx,
                 name=config[CONF_NAME],
+                localtime=False,
                 group_address=config[KNX_ADDRESS],
                 group_address_state=config.get(CONF_STATE_ADDRESS),
                 respond_to_read=config[CONF_RESPOND_TO_READ],
@@ -142,7 +121,7 @@ class KnxYamlDateEntity(_KNXDateEntity, KnxYamlEntity):
         self._attr_unique_id = str(self._device.remote_value.group_address)
 
 
-class KnxUiDateEntity(_KNXDateEntity, KnxUiEntity):
+class KnxUiDate(_KNXDate, KnxUiEntity):
     """Representation of a KNX date configured from the UI."""
 
     _device: XknxDateDevice
@@ -157,9 +136,10 @@ class KnxUiDateEntity(_KNXDateEntity, KnxUiEntity):
             entity_config=config[CONF_ENTITY],
         )
         knx_conf = ConfigExtractor(config[DOMAIN])
-        self._device = _create_xknx_device(
+        self._device = XknxDateDevice(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
+            localtime=False,
             group_address=knx_conf.get_write(CONF_GA_DATE),
             group_address_state=knx_conf.get_state(CONF_GA_DATE),
             respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
