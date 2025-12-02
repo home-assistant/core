@@ -118,9 +118,7 @@ async def test_date_ui_load(knx: KNXTestKit) -> None:
     await knx.setup_integration(config_store_fixture="config_store_date.json")
 
     # date_with_state_address
-    await knx.assert_read(
-        "0/0/2", response=(0x18, 0x02, 0x18), ignore_order=True
-    )
+    await knx.assert_read("0/0/2", response=(0x18, 0x02, 0x18), ignore_order=True)
 
     knx.assert_state(
         "date.date_with_state_address",

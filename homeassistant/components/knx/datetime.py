@@ -146,7 +146,7 @@ class KnxUiDateTime(_KNXDateTime, KnxUiEntity):
             name=config[CONF_ENTITY][CONF_NAME],
             localtime=False,
             group_address=knx_conf.get_write(CONF_GA_DATETIME),
-            group_address_state=knx_conf.get_state(CONF_GA_DATETIME),
+            group_address_state=knx_conf.get_state_and_passive(CONF_GA_DATETIME),
             respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
             sync_state=knx_conf.get(CONF_SYNC_STATE),
         )

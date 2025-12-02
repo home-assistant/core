@@ -118,9 +118,7 @@ async def test_time_ui_load(knx: KNXTestKit) -> None:
     await knx.setup_integration(config_store_fixture="config_store_time.json")
 
     # time_with_state_address
-    await knx.assert_read(
-        "0/0/2", response=(0x01, 0x02, 0x03), ignore_order=True
-    )
+    await knx.assert_read("0/0/2", response=(0x01, 0x02, 0x03), ignore_order=True)
 
     knx.assert_state(
         "time.time_with_state_address",

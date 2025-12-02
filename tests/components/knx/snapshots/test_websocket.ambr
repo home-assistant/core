@@ -944,7 +944,7 @@
       dict({
         'name': 'ga_date',
         'options': dict({
-          'passive': False,
+          'passive': True,
           'state': dict({
             'required': False,
           }),
@@ -992,7 +992,7 @@
       dict({
         'name': 'ga_datetime',
         'options': dict({
-          'passive': False,
+          'passive': True,
           'state': dict({
             'required': False,
           }),
@@ -1508,7 +1508,7 @@
       dict({
         'name': 'ga_time',
         'options': dict({
-          'passive': False,
+          'passive': True,
           'state': dict({
             'required': False,
           }),

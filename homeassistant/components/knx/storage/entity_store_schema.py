@@ -204,9 +204,7 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
 
 DATE_KNX_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_GA_DATE): GASelector(
-            passive=False, write_required=True, valid_dpt="11.001"
-        ),
+        vol.Required(CONF_GA_DATE): GASelector(write_required=True, valid_dpt="11.001"),
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
@@ -215,7 +213,7 @@ DATE_KNX_SCHEMA = vol.Schema(
 DATETIME_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_DATETIME): GASelector(
-            passive=False, write_required=True, valid_dpt="19.001"
+            write_required=True, valid_dpt="19.001"
         ),
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
@@ -361,9 +359,7 @@ SWITCH_KNX_SCHEMA = vol.Schema(
 
 TIME_KNX_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_GA_TIME): GASelector(
-            passive=False, write_required=True, valid_dpt="10.001"
-        ),
+        vol.Required(CONF_GA_TIME): GASelector(write_required=True, valid_dpt="10.001"),
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }

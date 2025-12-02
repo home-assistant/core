@@ -14,7 +14,8 @@
           "knx": {
             "ga_datetime": {
               "write": "0/0/1",
-              "state": "0/0/2"
+              "state": "0/0/2",
+              "passive": []
             },
             "respond_to_read": true,
             "sync_state": "init"
@@ -29,7 +30,8 @@
           "knx": {
             "ga_datetime": {
               "write": "0/0/1",
-              "state": []
+              "state": null,
+              "passive": []
             },
             "respond_to_read": false,
             "sync_state": false
