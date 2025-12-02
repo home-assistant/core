@@ -442,7 +442,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="pm10_health_concern",
                 device_class=SensorDeviceClass.ENUM,
                 options=list(HEALTH_CONCERN.values()),
-                value_fn=lambda value: HEALTH_CONCERN.get(value, value),
+                value_fn=HEALTH_CONCERN.get,
             )
         ]
     },
@@ -503,7 +503,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="pm25_health_concern",
                 device_class=SensorDeviceClass.ENUM,
                 options=list(HEALTH_CONCERN.values()),
-                value_fn=lambda value: HEALTH_CONCERN.get(value, value),
+                value_fn=HEALTH_CONCERN.get,
             )
         ]
     },
@@ -1056,7 +1056,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="pm1_health_concern",
                 device_class=SensorDeviceClass.ENUM,
                 options=list(HEALTH_CONCERN.values()),
-                value_fn=lambda value: HEALTH_CONCERN.get(value, value),
+                value_fn=HEALTH_CONCERN.get,
             )
         ]
     },
