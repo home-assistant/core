@@ -340,7 +340,7 @@
           "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
         }
       },
-      "name": "Presence cleared"
+      "name": "Occupancy cleared"
     },
     "occupancy_detected": {
       "description": "Triggers after one ore more occupancy sensors start detecting occupancy.",
@@ -350,7 +350,7 @@
           "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
         }
       },
-      "name": "Presence detected"
+      "name": "Occupancy detected"
     }
   }
 }
