@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Iterable
 from typing import Any
 
@@ -16,30 +17,38 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
 
     Async friendly.
     """
-    found_ids: list[str] = []
-    for entity_id in entity_ids:
-        if not isinstance(entity_id, str) or entity_id in (
-            ENTITY_MATCH_NONE,
-            ENTITY_MATCH_ALL,
-        ):
-            continue
+    result: list[str] = []
+    seen: set[str] = set()
 
-        entity_id = entity_id.lower()
+    # Initialize a FIFO queue to preserve input order across expansions
+    queue: deque[str] = deque(
+        entity_id.lower()
+        for entity_id in entity_ids
+        if isinstance(entity_id, str)
+        and entity_id not in (ENTITY_MATCH_NONE, ENTITY_MATCH_ALL)
+    )
+
+    while queue:
+        entity_id = queue.popleft()
+
         # If entity_id points at a group, expand it
         if entity_id.startswith(ENTITY_PREFIX):
             child_entities = get_entity_ids(hass, entity_id)
             if entity_id in child_entities:
+                # Avoid copying unless necessary
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
-            found_ids.extend(
-                ent_id
-                for ent_id in expand_entity_ids(hass, child_entities)
-                if ent_id not in found_ids
+            # Normalize children ids and enqueue for further processing
+            queue.extend(
+                child.lower() for child in child_entities if isinstance(child, str)
             )
-        elif entity_id not in found_ids:
-            found_ids.append(entity_id)
+            continue
 
-    return found_ids
+        if entity_id not in seen:
+            seen.add(entity_id)
+            result.append(entity_id)
+
+    return result
 
 
 def get_entity_ids(
@@ -53,7 +62,7 @@ def get_entity_ids(
     if not group or ATTR_ENTITY_ID not in group.attributes:
         return []
     entity_ids: list[str] = group.attributes[ATTR_ENTITY_ID]
-    if not domain_filter:
+    if domain_filter is None:
         return entity_ids
-    domain_filter = f"{domain_filter.lower()}."
-    return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
+    prefix = f"{domain_filter.lower()}."
+    return [ent_id for ent_id in entity_ids if ent_id.startswith(prefix)]
