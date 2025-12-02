@@ -206,7 +206,7 @@ async def determine_api_version(
     try:
         await holeV6.authenticate()
     except HoleConnectionError as err:
-        _LOGGER.error(
+        _LOGGER.exception(
             "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version 5 API",
             holeV6.base_url,
             err,
