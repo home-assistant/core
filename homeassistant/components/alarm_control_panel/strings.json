@@ -160,7 +160,6 @@
   "triggers": {
     "armed": {
       "description": "Triggers when an alarm is armed.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::armed::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
@@ -171,7 +170,6 @@
     },
     "armed_away": {
       "description": "Triggers when an alarm is armed away.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::armed_away::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
@@ -182,7 +180,6 @@
     },
     "armed_home": {
       "description": "Triggers when an alarm is armed home.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::armed_home::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
@@ -193,7 +190,6 @@
     },
     "armed_night": {
       "description": "Triggers when an alarm is armed night.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::armed_night::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
@@ -204,7 +200,6 @@
     },
     "armed_vacation": {
       "description": "Triggers when an alarm is armed vacation.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::armed_vacation::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
@@ -215,7 +210,6 @@
     },
     "disarmed": {
       "description": "Triggers when an alarm is disarmed.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::disarmed::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
@@ -226,7 +220,6 @@
     },
     "triggered": {
       "description": "Triggers when an alarm is triggered.",
-      "description_configured": "[%key:component::alarm_control_panel::triggers::triggered::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
