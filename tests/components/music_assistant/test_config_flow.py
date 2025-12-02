@@ -32,6 +32,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_USER,
     SOURCE_ZEROCONF,
+    ConfigEntryState,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -463,6 +464,56 @@ async def test_hassio_flow_duplicate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_hassio_flow_updates_failed_entry_and_reloads(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test hassio discovery updates entry in SETUP_ERROR state and schedules reload."""
+    # Create an entry with old URL and token
+    failed_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={CONF_URL: "http://old-url:8094", CONF_TOKEN: "old_token"},
+        unique_id="1234",
+    )
+    failed_entry.add_to_hass(hass)
+
+    # First, setup the entry with invalid auth to get it into SETUP_ERROR state
+    with patch(
+        "homeassistant.components.music_assistant.MusicAssistantClient"
+    ) as mock_client:
+        mock_client.return_value.connect.side_effect = AuthenticationFailed(
+            "Invalid token"
+        )
+        await hass.config_entries.async_setup(failed_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify entry is in SETUP_ERROR state
+    assert failed_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Now trigger hassio discovery with valid token
+    # Mock async_schedule_reload to prevent actual reload attempt
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_HASSIO},
+            data=HASSIO_DATA,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+        # Verify the entry was updated with new URL and token
+        assert failed_entry.data[CONF_URL] == "http://addon-music-assistant:8094"
+        assert failed_entry.data[CONF_TOKEN] == "test_token"
+
+        # Verify reload was scheduled
+        mock_schedule_reload.assert_called_once_with(failed_entry.entry_id)
 
 
 @pytest.mark.parametrize(
