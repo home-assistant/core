@@ -21,7 +21,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.location import async_detect_location_info
-from homeassistant.util.network import is_ipv4_address
+from homeassistant.util.network import is_ipv4_address, is_ipv6_address
 
 from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
@@ -94,6 +94,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) 
     return True
 
 
+async def _get_ip(hass, needs_it, family, validator):
+    if not needs_it:
+        return None
+    session = async_get_clientsession(hass, family=family)
+    location_info = await async_detect_location_info(session)
+    if not location_info:
+        return None
+    if not validator(location_info.ip):
+        return None
+    return location_info.ip
+
+
 async def _async_update_cloudflare(
     hass: HomeAssistant,
     entry: CloudflareConfigEntry,
@@ -104,19 +116,37 @@ async def _async_update_cloudflare(
 
     _LOGGER.debug("Starting update for zone %s", dns_zone["name"])
 
-    records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
+    records = await client.list_dns_records(zone_id=dns_zone["id"])
     _LOGGER.debug("Records: %s", records)
 
-    session = async_get_clientsession(hass, family=socket.AF_INET)
-    location_info = await async_detect_location_info(session)
+    needs_ipv4 = any(record["type"] == "A" for record in records)
+    needs_ipv6 = any(record["type"] == "AAAA" for record in records)
+    ipv4, ipv6 = await asyncio.gather(
+        _get_ip(hass, needs_ipv4, socket.AF_INET, is_ipv4_address),
+        _get_ip(hass, needs_ipv6, socket.AF_INET6, is_ipv6_address),
+    )
 
-    if not location_info or not is_ipv4_address(location_info.ip):
-        raise HomeAssistantError("Could not get external IPv4 address")
+    def ipByFamily(family):
+        if family == "A":
+            if not ipv4:
+                raise HomeAssistantError(
+                    "Could not get external IPv4 address (remove A record to use IPv6 only)"
+                )
+            return ipv4
+        if family == "AAAA":
+            if not ipv6:
+                raise HomeAssistantError(
+                    "Could not get external IPv6 address (remove AAAA record to use IPv4 only)"
+                )
+            return ipv6
+        raise AssertionError("Bad family")
 
     filtered_records = [
         record
         for record in records
-        if record["name"] in target_records and record["content"] != location_info.ip
+        if record["type"] in ["A", "AAAA"]
+        and record["name"] in target_records
+        and record["content"] != ipByFamily(record["type"])
     ]
 
     if len(filtered_records) == 0:
@@ -128,7 +158,7 @@ async def _async_update_cloudflare(
             client.update_dns_record(
                 zone_id=dns_zone["id"],
                 record_id=record["id"],
-                record_content=location_info.ip,
+                record_content=ipByFamily(record["type"]),
                 record_name=record["name"],
                 record_type=record["type"],
                 record_proxied=record["proxied"],
