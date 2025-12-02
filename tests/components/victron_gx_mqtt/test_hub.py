@@ -12,7 +12,6 @@ from victron_mqtt import (
     OperationMode,
 )
 
-from homeassistant.components.victron_gx_mqtt.binary_sensor import VictronBinarySensor
 from homeassistant.components.victron_gx_mqtt.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -287,35 +286,6 @@ async def test_create_entity_sensor(
         )
         assert entity == mock_sensor.return_value
 
-
-async def test_create_entity_binary_sensor(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test creating a binary sensor entity."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    mock_device = MagicMock(spec=VictronVenusDevice)
-    mock_metric = MagicMock(spec=VictronVenusMetric)
-    mock_metric.metric_kind = MetricKind.BINARY_SENSOR
-    mock_device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, "12345_device_123")},
-        "name": "Test Device",
-    }
-
-    with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronBinarySensor"
-    ) as mock_binary_sensor:
-        entity = hub.create_entity(mock_device, mock_metric, mock_device_info, "12345")
-
-        mock_binary_sensor.assert_called_once_with(
-            mock_device, mock_metric, mock_device_info, False, "12345"
-        )
-        assert entity == mock_binary_sensor.return_value
-
-
 async def test_create_entity_unsupported(
     hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
 ) -> None:
@@ -402,60 +372,6 @@ async def test_on_new_metric_sensor(
         entity._on_update_task(100)
         assert mock_schedule_update.call_count == 2
         assert entity._attr_native_value == 100
-
-
-async def test_on_new_metric_binary_sensor(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test _on_new_metric callback for binary sensor."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    # Register callback for binary sensor
-    mock_add_entities = MagicMock()
-    hub.register_add_entities_callback(mock_add_entities, MetricKind.BINARY_SENSOR)
-
-    # Create mock device and metric
-    mock_device = MagicMock(spec=VictronVenusDevice)
-    mock_device.unique_id = "device_456"
-    mock_device.manufacturer = "Victron Energy"
-    mock_device.name = "Relay"
-    mock_device.device_id = "299"
-    mock_device.model = "GX Relay"
-    mock_device.serial_number = "HQ87654321"
-
-    mock_metric = MagicMock(spec=VictronVenusMetric)
-    mock_metric.metric_kind = MetricKind.BINARY_SENSOR
-    mock_metric.value = "Off"
-
-    # Trigger the callback
-    hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
-
-    # Verify add_entities was called with a list containing one entity
-    mock_add_entities.assert_called_once()
-    entities = mock_add_entities.call_args[0][0]
-    assert isinstance(entities, list)
-    assert len(entities) == 1
-    entity = entities[0]
-    assert isinstance(entity, VictronBinarySensor)
-
-    # Patch schedule_update_ha_state and call _on_update_task
-    with patch.object(entity, "schedule_update_ha_state") as mock_schedule_update:
-        # Call with a value that should trigger an update
-        entity._on_update_task("On")
-        mock_schedule_update.assert_called_once()
-        assert entity.is_on is True
-
-        # Call with same value that should not trigger an update
-        entity._on_update_task("On")
-        mock_schedule_update.assert_called_once()
-        assert entity.is_on is True
-
-        entity._on_update_task("Off")
-        assert mock_schedule_update.call_count == 2
-        assert entity.is_on is False
 
 
 async def test_hub_registers_stop_listener(
