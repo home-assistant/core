@@ -21,7 +21,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.location import async_detect_location_info
-from homeassistant.util.network import is_ipv4_address
+from homeassistant.util.network import is_ipv4_address, is_ipv6_address
 
 from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
@@ -100,41 +100,87 @@ async def _async_update_cloudflare(
 ) -> None:
     client = entry.runtime_data.client
     dns_zone = entry.runtime_data.dns_zone
-    target_records: list[str] = entry.data[CONF_RECORDS]
+    target_records: list[tuple[str, str]] = []
+    # Handle legacy CONF_RECORDS, if there is just the record name
+    if all("|" not in record for record in entry.data[CONF_RECORDS]):
+        # Legacy: only record name, assume type "A"
+        target_records = [(record, "A") for record in entry.data[CONF_RECORDS]]
+    else:
+        # New: list of "name|type" strings
+        target_records = [
+            tuple(record.split("|", 1)) for record in entry.data[CONF_RECORDS]
+        ]
 
     _LOGGER.debug("Starting update for zone %s", dns_zone["name"])
 
-    records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
+    records_a = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
+    records_aaaa = await client.list_dns_records(zone_id=dns_zone["id"], type="AAAA")
+    records = records_a + records_aaaa
     _LOGGER.debug("Records: %s", records)
 
     session = async_get_clientsession(hass, family=socket.AF_INET)
+    session_ipv6 = async_get_clientsession(hass, family=socket.AF_INET6)
     location_info = await async_detect_location_info(session)
+    location_info_ipv6 = await async_detect_location_info(session_ipv6)
 
-    if not location_info or not is_ipv4_address(location_info.ip):
-        raise HomeAssistantError("Could not get external IPv4 address")
+    ipv4_address = location_info.ip if location_info else None
+    ipv6_address = location_info_ipv6.ip if location_info_ipv6 else None
 
-    filtered_records = [
-        record
-        for record in records
-        if record["name"] in target_records and record["content"] != location_info.ip
-    ]
+    if ipv4_address is not None and not is_ipv4_address(ipv4_address):
+        _LOGGER.debug("Could not get IPv4 address ")
+        ipv4_address = None
 
-    if len(filtered_records) == 0:
-        _LOGGER.debug("All target records are up to date")
+    if ipv6_address is not None and not is_ipv6_address(ipv6_address):
+        _LOGGER.debug("Could not get IPv6 address ")
+        ipv6_address = None
+
+    if not ipv4_address and not ipv6_address:
+        raise HomeAssistantError("Could not get any external IP address")
+
+    update_tasks = []
+
+    for record in records:
+        if (record["name"], record["type"]) not in target_records:
+            continue
+
+        if record["type"] == "A" and ipv4_address and record["content"] != ipv4_address:
+            update_tasks.append(
+                client.update_dns_record(
+                    zone_id=dns_zone["id"],
+                    record_id=record["id"],
+                    record_content=ipv4_address,
+                    record_name=record["name"],
+                    record_type="A",
+                    record_proxied=record["proxied"],
+                )
+            )
+            _LOGGER.debug(
+                "Updating the content for the record %s (%s)", record["name"], record["type"]
+            )
+
+        elif (
+            record["type"] == "AAAA"
+            and ipv6_address
+            and record["content"] != ipv6_address
+        ):
+            update_tasks.append(
+                client.update_dns_record(
+                    zone_id=dns_zone["id"],
+                    record_id=record["id"],
+                    record_content=ipv6_address,
+                    record_name=record["name"],
+                    record_type="AAAA",
+                    record_proxied=record["proxied"],
+                )
+            )
+            _LOGGER.debug(
+                "Added Record %s (%s) to Updatetask", record["name"], record["type"]
+            )
+
+    if not update_tasks:
+        _LOGGER.debug("All possible target records are up to date")
         return
 
-    await asyncio.gather(
-        *[
-            client.update_dns_record(
-                zone_id=dns_zone["id"],
-                record_id=record["id"],
-                record_content=location_info.ip,
-                record_name=record["name"],
-                record_type=record["type"],
-                record_proxied=record["proxied"],
-            )
-            for record in filtered_records
-        ]
-    )
+    await asyncio.gather(*update_tasks)
 
-    _LOGGER.debug("Update for zone %s is complete", dns_zone["name"])
+    _LOGGER.debug("DNS record update for zone %s is complete", dns_zone["name"])
