@@ -510,24 +510,24 @@
   "title": "Light",
   "triggers": {
     "turned_off": {
-      "description": "Triggers when a light is turned off.",
+      "description": "Triggers after one or more lights turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a light is turned off"
+      "name": "Light turned off"
     },
     "turned_on": {
-      "description": "Triggers when a light is turned on.",
+      "description": "Triggers after one or more lights turn on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a light is turned on"
+      "name": "Light turned on"
     }
   }
 }
