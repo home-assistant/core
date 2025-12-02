@@ -22,6 +22,9 @@
         "data": {
           "stay_connected_bluetooth": "Keep Bluetooth connected"
         },
+        "data_description": {
+          "stay_connected_bluetooth": "If you select this option, the integration will not disconnect from Bluetooth preventing any other device from connecting to the mower."
+        },
         "description": "Set up {name}"
       },
       "reconfigure": {
@@ -29,12 +32,21 @@
           "account_name": "Mammotion email or account number",
           "password": "Mammotion account password",
           "use_wifi": "Use Wi-Fi"
+        },
+        "data_description": {
+          "account_name": "Mammotion email or account number for your shared mammotion account.",
+          "password": "Mammotion shared account password",
+          "use_wifi": "Connect using the cloud, can also connect over Bluetooth as well (deselect to only use Bluetooth)"
         }
       },
       "user": {
         "data": {
           "address": "Device",
           "stay_connected_bluetooth": "Keep Bluetooth connected"
+        },
+        "data_description": {
+          "address": "Bluetooth address of the mower",
+          "stay_connected_bluetooth": "If you select this option, the integration will not disconnect from Bluetooth preventing any other device from connecting to the mower."
         },
         "description": "Select your mower"
       },
@@ -43,6 +55,11 @@
           "account_name": "Mammotion email or account number",
           "password": "Mammotion account password",
           "use_wifi": "Use Wi-Fi (deselect to use Bluetooth)"
+        },
+        "data_description": {
+          "account_name": "Mammotion email or account number for your shared mammotion account.",
+          "password": "Mammotion shared account password",
+          "use_wifi": "Connect using the cloud, can also connect over Bluetooth as well (deselect to only use Bluetooth)"
         },
         "description": "Enter your Mammotion account email or ID and password",
         "title": "Connect to Wi-Fi"
@@ -79,6 +96,9 @@
         "data": {
           "stay_connected_bluetooth": "Keep Bluetooth connected",
           "title": "Update configuration"
+        },
+        "data_description": {
+          "stay_connected_bluetooth": "If you select this option, the integration will not disconnect from Bluetooth preventing any other device from connecting to the mower."
         }
       }
     }

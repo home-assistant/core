@@ -65,11 +65,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             for device_entry in device_entries:
-                # Check both MAC address and any other identifiers
                 identifiers = {device_id[1] for device_id in device_entry.identifiers}
                 if device.name in identifiers:
                     await self.async_set_unique_id(entry.data.get(CONF_ACCOUNT_ID))
-                    # # Update existing entry with BLE info
                     formatted_ble = (
                         format_mac(self._discovered_device.address)
                         if self._discovered_device
@@ -79,7 +77,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                     if (
                         CONNECTION_BLUETOOTH,
                         formatted_ble,
-                    ) not in device_entry.connections:
+                    ) not in device_entry.connections and formatted_ble is not None:
                         device_registry.async_update_device(
                             device_entry.id,
                             merge_connections={(CONNECTION_BLUETOOTH, formatted_ble)},
@@ -133,24 +131,20 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
 
-        assert self._discovered_device
-
-        if entry := await self.check_and_update_bluetooth_device(
-            self._discovered_device
-        ):
+        assert self._discovered_device is not None
+        assert self._discovered_device.name is not None
+        device = self._discovered_device
+        name = device.name if device.name else ""
+        if entry := await self.check_and_update_bluetooth_device(device):
             existing_devices = {
-                self._discovered_device.name: format_mac(
-                    self._discovered_device.address
-                ),
+                name: format_mac(device.address),
                 **entry.data.get(CONF_BLE_DEVICES, None),
             }
             self._abort_if_unique_id_configured(
                 updates={CONF_BLE_DEVICES: existing_devices}
             )
 
-        ble_devices: dict[str, str] = {
-            self._discovered_device.name: format_mac(self._discovered_device.address)
-        }
+        ble_devices: dict[str, str] = {name: format_mac(device.address)}
         self._config = {
             CONF_BLE_DEVICES: ble_devices,
         }
@@ -162,7 +156,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bluetooth_confirm",
             last_step=False,
-            description_placeholders={"name": self._discovered_device.name},
+            description_placeholders={"name": name},
             data_schema=vol.Schema(
                 {
                     vol.Optional(
@@ -187,13 +181,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             name = discovery_info.name
-            if address in current_addresses or address in self._discovered_devices:
+            if address in current_addresses:
                 continue
             if name is None or not name.startswith(DEVICE_SUPPORT):
-                continue
-            if self.hass.config_entries.async_entry_for_domain_unique_id(
-                self.handler, name
-            ):
                 continue
 
             self._discovered_devices[address] = discovery_info.name
@@ -234,7 +224,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             except HTTPException:
                 errors["base"] = "cannot_connect"
 
-            if login_info := mammotion_http.login_info:
+            if not errors and (login_info := mammotion_http.login_info):
                 user_account = login_info.userInformation.userAccount
 
                 await self.async_set_unique_id(user_account, raise_on_progress=False)
@@ -256,8 +246,12 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         if user_input is not None and user_input.get(CONF_USE_WIFI) is False:
+            assert self._discovered_device is not None
+            assert self._discovered_device.name is not None
             return self.async_create_entry(
-                title=self._discovered_device.name if self._discovered_device else "",
+                title=self._discovered_device.name
+                if self._discovered_device.name
+                else "",
                 data={
                     CONF_USE_WIFI: user_input.get(CONF_USE_WIFI),
                     **self._config,

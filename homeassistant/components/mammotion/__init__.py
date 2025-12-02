@@ -91,8 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
             if cloud_client is None:
                 await mammotion.login_and_initiate_cloud(account, password)
             else:
-                # sometimes mammotion_data is missing....
-                if cloud_client.mammotion_http is None:
+                if cloud_client.mammotion_http.login_info is None:
                     mammotion_http = MammotionHTTP()
                     await mammotion_http.login(account, password)
                     cloud_client.set_http(mammotion_http)
@@ -298,7 +297,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
     return unload_ok
 
 
-async def async_remove_config_entry(hass: HomeAssistant, entry: MammotionConfigEntry):
+async def async_remove_config_entry(
+    hass: HomeAssistant, entry: MammotionConfigEntry
+) -> None:
     """Remove a config entry."""
     await hass.config_entries.async_remove(entry.entry_id)
     store = MammotionConfigStore(hass)
