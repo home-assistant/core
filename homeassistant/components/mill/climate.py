@@ -1,5 +1,6 @@
 """Support for mill wifi-enabled home heaters."""
 
+import logging
 from typing import Any
 
 import mill
@@ -7,6 +8,7 @@ from mill_local import OperationMode
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -42,6 +44,8 @@ from .const import (
 )
 from .coordinator import MillDataUpdateCoordinator
 from .entity import MillBaseEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 SET_ROOM_TEMP_SCHEMA = vol.Schema(
     {
@@ -111,26 +115,37 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         super().__init__(coordinator, device)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_heater_temp(
             self._id, float(temperature)
         )
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            if hvac_mode in self._attr_hvac_modes:
+                await self._do_set_hvac_mode(hvac_mode)
+            else:
+                _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+        if hvac_mode in self._attr_hvac_modes:
+            await self._do_set_hvac_mode(hvac_mode)
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
+
+    async def _do_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode, pre-checked, without async_request_refresh."""
         if hvac_mode == HVACMode.HEAT:
             await self.coordinator.mill_data_connection.heater_control(
                 self._id, power_status=True
             )
-            await self.coordinator.async_request_refresh()
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.heater_control(
                 self._id, power_status=False
             )
-            await self.coordinator.async_request_refresh()
 
     @callback
     def _update_attr(self, device: mill.Heater) -> None:
@@ -189,22 +204,33 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         self._update_attr()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_target_temperature(
             float(temperature)
         )
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            if hvac_mode in self._attr_hvac_modes:
+                await self._do_set_hvac_mode(hvac_mode)
+            else:
+                _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+        if hvac_mode in self._attr_hvac_modes:
+            await self._do_set_hvac_mode(hvac_mode)
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
+
+    async def _do_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode, pre-checked, without async_request_refresh."""
         if hvac_mode == HVACMode.HEAT:
             await self.coordinator.mill_data_connection.set_operation_mode_control_individually()
-            await self.coordinator.async_request_refresh()
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.set_operation_mode_off()
-            await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
