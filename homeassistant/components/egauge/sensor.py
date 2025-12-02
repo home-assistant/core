@@ -101,7 +101,7 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the sensor value using the description's value function."""
         return self.entity_description.native_value_fn(
             self.coordinator.data, self._register_name
