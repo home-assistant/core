@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 import logging
+import types
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -1616,8 +1617,6 @@ async def test_platform_with_no_setup_custom_component_hint(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test setting up a custom integration platform without setup logs extra warning."""
-    import types
-
     platform_mod = types.ModuleType("custom_components.mock_integration.mock_platform")
     platform_mod.__file__ = "/config/custom_components/mock_integration/mock_platform.py"
 
