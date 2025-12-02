@@ -153,7 +153,9 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
 
         self._attr_available = description.available_fn(hub, obj_id)
         self._attr_device_info = description.device_info_fn(hub, obj_id)
-        self._attr_should_poll = description.should_poll
+        self._attr_should_poll = (
+            not hub.config.option_realtime_updates or description.should_poll
+        )
         self._attr_unique_id = description.unique_id_fn(hub, obj_id)
 
         obj = description.object_fn(self.api, obj_id)

@@ -41,7 +41,9 @@ class UnifiHub:
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.entity_loader = UnifiEntityLoader(self, config_entry)
         self._entity_helper = UnifiEntityHelper(hass, api)
-        self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
+        self.websocket: UnifiWebsocket | None = None
+        if self.is_realtime():
+            self.create_websocket()
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -49,7 +51,9 @@ class UnifiHub:
     @property
     def available(self) -> bool:
         """Websocket connection state."""
-        return self.websocket.available
+        if self.is_realtime():
+            return bool(self.websocket and self.websocket.available)
+        return True
 
     @property
     def signal_heartbeat_missed(self) -> str:
@@ -95,6 +99,27 @@ class UnifiHub:
             self.config.entry.add_update_listener(self.async_config_entry_updated)
         )
 
+    def is_realtime(self) -> bool:
+        """Check if the hub is configured for realtime updates."""
+        return self.config.option_realtime_updates
+
+    def create_websocket(self) -> None:
+        """Create a websocket connection."""
+        if self.websocket is None:
+            self.websocket = UnifiWebsocket(self.hass, self.api, self.signal_reachable)
+
+    def start_websocket(self) -> None:
+        """Start websocket connection."""
+        self.create_websocket()
+        if self.websocket:
+            self.websocket.start()
+
+    async def stop_websocket(self) -> None:
+        """Stop websocket connection."""
+        if self.websocket:
+            await self.websocket.stop_and_wait()
+            self.websocket = None
+
     @property
     def device_info(self) -> DeviceInfo:
         """UniFi Network device info."""
@@ -132,6 +157,11 @@ class UnifiHub:
         """
         hub = config_entry.runtime_data
         hub.config = UnifiConfig.from_config_entry(config_entry)
+        hub.entity_loader.build_polling_api_updaters()
+        if hub.is_realtime():
+            hub.start_websocket()
+        else:
+            await hub.stop_websocket()
         async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
@@ -140,7 +170,8 @@ class UnifiHub:
 
         Used as an argument to EventBus.async_listen_once.
         """
-        self.websocket.stop()
+        if self.websocket:
+            self.websocket.stop()
 
     async def async_reset(self) -> bool:
         """Reset this hub to default state.
@@ -148,7 +179,8 @@ class UnifiHub:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        await self.websocket.stop_and_wait()
+        if self.websocket:
+            await self.websocket.stop_and_wait()
 
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self.config.entry, PLATFORMS
