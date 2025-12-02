@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-from wled import WLED, Device, WLEDConnectionError
+from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -48,6 +48,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 device = await self._async_get_device(user_input[CONF_HOST])
+            except WLEDUnsupportedVersionError:
+                errors["base"] = "unsupported_version"
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -110,6 +112,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
         try:
             self.discovered_device = await self._async_get_device(discovery_info.host)
+        except WLEDUnsupportedVersionError:
+            return self.async_abort(reason="unsupported_version")
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 
