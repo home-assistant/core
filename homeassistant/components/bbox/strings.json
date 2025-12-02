@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The account credentials do not match the original Bbox router."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_base_url": "Invalid base URL format. Please enter a valid URL including protocol (http:// or https://).",
+      "timeout_connect": "Connection to the Bbox router timed out. Please check your network connection.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::bbox::config::step::user::data_description::password%]"
+        },
+        "description": "The authentication for your Bbox router has expired. Please enter your current admin password.",
+        "title": "Reauthenticate Bbox"
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "base_url": "Base URL (e.g., https://mabbox.bytel.fr/api/v1/)",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "base_url": "The base URL of your Bbox router API, including protocol and path (e.g., https://mabbox.bytel.fr/api/v1/)",
+          "password": "[%key:component::bbox::config::step::user::data_description::password%]"
+        },
+        "description": "Update the configuration for your Bbox router. Enter the new base URL and admin password.",
+        "title": "Reconfigure Bbox"
+      },
+      "user": {
+        "data": {
+          "base_url": "Base URL (e.g., https://mabbox.bytel.fr/api/v1/)",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "base_url": "The base URL of your Bbox router API, including protocol and path (e.g., https://mabbox.bytel.fr/api/v1/)",
+          "password": "The admin password for your Bbox router"
+        },
+        "description": "Enter the base URL of your Bbox router API and your admin password.\n\n**Example base URL:** https://mabbox.bytel.fr/api/v1/",
+        "title": "Set up Bbox"
+      }
+    }
+  },
+  "entity": {
+    "device_tracker": {
+      "device_tracker": {
+        "name": "{device_name}"
+      }
+    },
+    "sensor": {
+      "down_max_bandwidth": {
+        "name": "Maximum download bandwidth"
+      },
+      "down_stream": {
+        "name": "WAN download rate"
+      },
+      "number_of_reboots": {
+        "name": "Number of reboots"
+      },
+      "up_max_bandwidth": {
+        "name": "Maximum upload bandwidth"
+      },
+      "up_stream": {
+        "name": "WAN upload rate"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_authenticate": {
+      "message": "Error authenticating: {error}"
+    },
+    "update_failed": {
+      "message": "Error fetching data: {error}"
+    }
+  }
+}

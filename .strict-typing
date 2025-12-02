@@ -112,6 +112,7 @@ homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
+homeassistant.components.bbox.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
