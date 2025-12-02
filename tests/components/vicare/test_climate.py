@@ -25,6 +25,7 @@ async def test_all_entities(
     """Test all entities."""
     fixtures: list[Fixture] = [
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+        Fixture({"type:radiator"}, "vicare/TRV.json"),
     ]
     with (
         patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
