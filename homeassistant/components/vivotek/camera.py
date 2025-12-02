@@ -139,6 +139,7 @@ async def async_setup_entry(
                 stream_source,
                 entry.unique_id,
                 entry.options[CONF_FRAMERATE],
+                entry.title,
             )
         ]
     )
@@ -156,12 +157,14 @@ class VivotekCam(Camera):
         stream_source: str,
         unique_id: str,
         framerate: int,
+        name: str,
     ) -> None:
         """Initialize a Vivotek camera."""
         super().__init__()
         self._cam = cam_client
         self._attr_frame_interval = 1 / framerate
         self._attr_unique_id = unique_id
+        self._attr_name = name
         self._stream_source = stream_source
 
     def camera_image(
