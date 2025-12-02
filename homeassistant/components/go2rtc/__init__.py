@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 from secrets import token_hex
 import shutil
+from tempfile import mkdtemp
 
 from aiohttp import BasicAuth, ClientSession, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -62,11 +63,11 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
-    HA_MANAGED_UNIX_SOCKET,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
 from .server import Server
+from .util import get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,10 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         auth = BasicAuth(username, password)
         # HA will manage the binary
+        temp_dir = mkdtemp(prefix="go2rtc-")
         # Manually created session (not using the helper) needs to be closed manually
         # See on_stop listener below
         session = ClientSession(
-            connector=UnixConnector(path=HA_MANAGED_UNIX_SOCKET), auth=auth
+            connector=UnixConnector(path=get_go2rtc_unix_socket_path(temp_dir)),
+            auth=auth,
         )
         server = Server(
             hass,
@@ -166,6 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             enable_ui=domain_config.get(CONF_DEBUG_UI, False),
             username=username,
             password=password,
+            working_dir=temp_dir,
         )
         try:
             await server.start()
