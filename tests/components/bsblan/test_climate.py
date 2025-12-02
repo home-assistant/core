@@ -227,7 +227,7 @@ async def test_async_set_hvac_mode(
         (0, PRESET_ECO),  # 0 = off mode - can also set eco preset
     ],
 )
-async def test_async_set_preset_mode_succes(
+async def test_async_set_preset_mode_success(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -333,7 +333,6 @@ async def test_async_set_data(
     mock_bsblan.thermostat.reset_mock()
 
     # Test error handling
-    # Test error handling
     mock_bsblan.thermostat.side_effect = BSBLANError("Test error")
     error_message = "An error occurred while updating the BSBLAN device"
     with pytest.raises(HomeAssistantError, match=error_message):
@@ -343,31 +342,3 @@ async def test_async_set_data(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
-
-
-async def test_async_set_data_with_raw_integer_hvac_mode(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test async_set_data when hvac_mode is passed as raw integer (not HVACMode)."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    # Get the entity from the state machine
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-
-    # Access the entity directly to call async_set_data with a raw integer
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(ENTITY_ID)
-    assert entity_entry is not None
-
-    # Get the climate entity
-    climate_entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
-    assert climate_entity is not None
-
-    # Call async_set_data directly with a raw integer for hvac_mode
-    await climate_entity.async_set_data(hvac_mode=3)
-
-    # Should pass the raw integer directly to the API
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=3)

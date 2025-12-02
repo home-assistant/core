@@ -149,11 +149,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         if ATTR_TEMPERATURE in kwargs:
             data[ATTR_TARGET_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
         if ATTR_HVAC_MODE in kwargs:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
-            if isinstance(hvac_mode, HVACMode):
-                data[ATTR_HVAC_MODE] = HA_TO_BSBLAN_HVAC_MODE.get(hvac_mode)
-            else:
-                data[ATTR_HVAC_MODE] = hvac_mode
+            data[ATTR_HVAC_MODE] = HA_TO_BSBLAN_HVAC_MODE[kwargs[ATTR_HVAC_MODE]]
         if ATTR_PRESET_MODE in kwargs:
             # eco preset uses BSB-Lan mode 2, none preset uses mode 1 (auto)
             if kwargs[ATTR_PRESET_MODE] == PRESET_ECO:
