@@ -169,7 +169,11 @@ def async_subscribe_platform_events(
 async def _register_trigger_platform(
     hass: HomeAssistant, integration_domain: str, platform: TriggerProtocol
 ) -> None:
-    """Register a trigger platform."""
+    """Register a trigger platform and notify listeners.
+
+    If the trigger platform does not provide any triggers, or it is disabled,
+    listeners will not be notified.
+    """
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
