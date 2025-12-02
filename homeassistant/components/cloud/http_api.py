@@ -1108,6 +1108,7 @@ async def alexa_sync(
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
+@callback
 def tts_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -1142,6 +1143,7 @@ def tts_info(
         vol.Required("type"): "cloud/webrtc/ice_servers",
     }
 )
+@callback
 def websocket_webrtc_ice_servers(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
