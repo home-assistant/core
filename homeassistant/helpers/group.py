@@ -25,9 +25,8 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             continue
 
         entity_id = entity_id.lower()
-        # If entity_id points at a group, expand it
-        if entity_id.startswith(ENTITY_PREFIX):
-            child_entities = get_entity_ids(hass, entity_id)
+        # If entity_id points at a group, either group. or Group Entity, expand it
+        if len(child_entities := get_entity_ids(hass, entity_id)) > 0:
             if entity_id in child_entities:
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
