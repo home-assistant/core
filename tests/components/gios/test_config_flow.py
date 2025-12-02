@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 CONFIG = {
-    CONF_NAME: "Foo",
     CONF_STATION_ID: "123",
 }
 
@@ -68,12 +67,13 @@ async def test_form_submission_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
+
     mock_gios.async_update.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Name 1"
+    assert result["title"] == "Home"
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -87,7 +87,10 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Name 1"
-    assert result["data"][CONF_STATION_ID] == 123
+    assert result["title"] == "Home"
+    assert result["data"] == {
+        CONF_STATION_ID: 123,
+        CONF_NAME: "Home",
+    }
 
     assert result["result"].unique_id == "123"
