@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import selector
+from homeassistant.helpers import device_registry as dr, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
@@ -67,7 +67,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 if TYPE_CHECKING:
                     assert system_info is not None
-                await self.async_set_unique_id(system_info.mac_addr)
+                await self.async_set_unique_id(dr.format_mac(system_info.mac_addr))
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
                 else:
