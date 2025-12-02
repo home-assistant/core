@@ -41,6 +41,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "alarm_active": {
+        "name": "Alarm active"
+      },
+      "alarm_snooze": {
+        "name": "Alarm snoozed"
+      },
+      "alarm_upcoming": {
+        "name": "Alarm upcoming"
+      },
       "needsrestart": {
         "name": "Needs restart"
       },
@@ -72,6 +81,9 @@
       }
     },
     "sensor": {
+      "alarm_next": {
+        "name": "Next alarm"
+      },
       "info_total_albums": {
         "name": "Total albums",
         "unit_of_measurement": "albums"
