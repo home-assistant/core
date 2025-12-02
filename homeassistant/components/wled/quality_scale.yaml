@@ -65,9 +65,8 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: todo
-    comment: |
-      I see one problem: unsupported WLED version.
+    status: exempt
+    comment: This integration does not have any known issues that require repair.
   stale-devices:
     status: exempt
     comment: |
