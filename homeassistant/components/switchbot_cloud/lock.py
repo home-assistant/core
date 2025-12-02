@@ -1,5 +1,6 @@
 """Support for the Switchbot lock."""
 
+import asyncio
 from typing import Any
 
 from switchbot_api import Device, LockCommands, LockV2Commands, Remote, SwitchBotAPI
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from .const import AFTER_COMMAND_REFRESH, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -52,17 +53,17 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.send_api_command(LockCommands.LOCK)
-        self._attr_is_locked = True
-        self.async_write_ha_state()
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.send_api_command(LockCommands.UNLOCK)
-        self._attr_is_locked = False
-        self.async_write_ha_state()
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
 
     async def async_open(self, **kwargs: Any) -> None:
         """Latch open the lock."""
         await self.send_api_command(LockV2Commands.DEADBOLT)
-        self._attr_is_locked = False
-        self.async_write_ha_state()
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
