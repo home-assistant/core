@@ -182,7 +182,7 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     drain = 265
     spin = 266, 11010
     anti_crease = 267, 11029
-    finished = 268
+    finished = 268, 11012
     venting = 269
     starch_stop = 270
     freshen_up_and_moisten = 271
@@ -190,6 +190,7 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     hygiene = 279
     drying = 280
     disinfecting = 285
+    flex_load_active = 11047
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
@@ -481,8 +482,8 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     express_20 = 122
     down_filled_items = 129
     cottons_eco = 133
-    quick_power_wash = 146
-    eco_40_60 = 190
+    quick_power_wash = 146, 10031
+    eco_40_60 = 190, 10007
     normal = 10001
 
 
