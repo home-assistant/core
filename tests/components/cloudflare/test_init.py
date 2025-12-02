@@ -128,7 +128,7 @@ async def test_integration_services_with_issue(
             blocking=True,
         )
 
-    assert instance.update_dns_record.assert_not_called()
+    instance.update_dns_record.assert_not_called()
     assert "Could not get external IPv4 address" in caplog.text
 
 
