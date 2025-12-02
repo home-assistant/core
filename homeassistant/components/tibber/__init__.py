@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util, ssl as ssl_util
 from .const import DATA_HASS_CONFIG, DOMAIN
 from .services import async_setup_services
 
-PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
