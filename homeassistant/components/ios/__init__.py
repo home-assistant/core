@@ -18,6 +18,11 @@ from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json_object
 
+try:
+    from homeassistant.components.mobile_app.const import DATA_CARPLAY_CONFIG
+except ImportError:
+    DATA_CARPLAY_CONFIG = "carplay_config"
+
 from .const import (
     ATTR_BATTERY,
     ATTR_BATTERY_LEVEL,
@@ -320,7 +325,18 @@ class iOSConfigView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the user-defined configuration."""
-        return self.json(self.config)
+        hass = request.app[KEY_HASS]
+
+        # Include carplay config from mobile_app integration if available
+        response_config = self.config.copy()
+
+        # Check if mobile_app integration is loaded and has carplay config
+        if "mobile_app" in hass.data:
+            carplay_config = hass.data["mobile_app"].get(DATA_CARPLAY_CONFIG)
+            if carplay_config:
+                response_config["carplay"] = carplay_config
+
+        return self.json(response_config)
 
 
 class iOSIdentifyDeviceView(HomeAssistantView):
