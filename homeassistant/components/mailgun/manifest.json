@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mailgun",
   "iot_class": "cloud_push",
   "loggers": ["pymailgunner"],
-  "requirements": ["pymailgunner==1.4"]
+  "requirements": ["pymailgunner==1.5"]
 }
