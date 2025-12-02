@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING
 
 from libpyvivotek.vivotek import VivotekCamera
 import voluptuous as vol
@@ -29,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -70,32 +68,6 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_STREAM_PATH, default=DEFAULT_STREAM_SOURCE): cv.string,
     }
 )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: VivotekConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the component from a config entry."""
-    config = entry.data
-    creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
-    stream_source = (
-        f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
-    )
-    cam_client = entry.runtime_data
-    mac_address = await hass.async_add_executor_job(cam_client.get_mac)
-    unique_id = format_mac(mac_address)
-
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=unique_id,
-        )
-    merged_config = entry.data | entry.options
-    async_add_entities(
-        [VivotekCam(merged_config, cam_client, stream_source, unique_id)]
-    )
 
 
 async def async_setup_platform(
@@ -146,27 +118,49 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: VivotekConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the component from a config entry."""
+    config = entry.data
+    creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
+    stream_source = (
+        f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
+    )
+    cam_client = entry.runtime_data
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+    async_add_entities(
+        [
+            VivotekCam(
+                cam_client,
+                stream_source,
+                entry.unique_id,
+                entry.options[CONF_FRAMERATE],
+            )
+        ]
+    )
+
+
 class VivotekCam(Camera):
     """A Vivotek IP camera."""
 
     _attr_brand = DEFAULT_CAMERA_BRAND
     _attr_supported_features = CameraEntityFeature.STREAM
 
-    _attr_configuration_url: str | None = None
-    _attr_serial: str | None = None
-
     def __init__(
         self,
-        config: ConfigType | MappingProxyType[str, Any],
         cam_client: VivotekCamera,
         stream_source: str,
         unique_id: str,
+        framerate: int,
     ) -> None:
         """Initialize a Vivotek camera."""
         super().__init__()
-        self._cam_client = cam_client
-        self._attr_configuration_url = f"http://{config[CONF_IP_ADDRESS]}"
-        self._attr_frame_interval = 1 / config.get(CONF_FRAMERATE, DEFAULT_FRAMERATE)
+        self._cam = cam_client
+        self._attr_frame_interval = 1 / framerate
         self._attr_unique_id = unique_id
         self._stream_source = stream_source
 
@@ -174,7 +168,7 @@ class VivotekCam(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        return self._cam_client.snapshot()
+        return self._cam.snapshot()
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
@@ -182,16 +176,15 @@ class VivotekCam(Camera):
 
     def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        response = self._cam_client.set_param(DEFAULT_EVENT_0_KEY, 0)
+        response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 0)
         self._attr_motion_detection_enabled = int(response) == 1
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
-        response = self._cam_client.set_param(DEFAULT_EVENT_0_KEY, 1)
+        response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 1)
         self._attr_motion_detection_enabled = int(response) == 1
 
     def update(self) -> None:
         """Update entity status."""
-        self._attr_model = self._cam_client.model_name
+        self._attr_model = self._cam.model_name
         self._attr_available = self._attr_model is not None
-        self._attr_serial = self._cam_client.get_serial()

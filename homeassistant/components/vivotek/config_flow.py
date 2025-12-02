@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -17,32 +18,22 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    UnitOfFrequency,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from . import VivotekConfigEntry, async_build_and_test_cam_client, build_cam_client
-from .camera import (
-    DEFAULT_FRAMERATE,
-    DEFAULT_NAME,
-    DEFAULT_STREAM_SOURCE,
-    INTEGRATION_TITLE,
-)
-from .const import (
-    CONF_FRAMERATE,
-    CONF_SECURITY_LEVEL,
-    CONF_STREAM_PATH,
-    DOMAIN,
-    ISSUE_DEPRECATED_YAML,
-)
+from . import VivotekConfigEntry, build_cam_client
+from .camera import DEFAULT_FRAMERATE, DEFAULT_NAME, DEFAULT_STREAM_SOURCE
+from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +69,9 @@ CONF_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_FRAMERATE, default=DEFAULT_FRAMERATE): cv.positive_int,
+        vol.Required(CONF_FRAMERATE, default=DEFAULT_FRAMERATE): NumberSelector(
+            NumberSelectorConfig(min=0, unit_of_measurement=UnitOfFrequency.HERTZ)
+        ),
     }
 )
 
@@ -121,6 +114,9 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+            )
             try:
                 cam_client = build_cam_client(user_input)
                 mac_address = await self.hass.async_add_executor_job(cam_client.get_mac)
@@ -137,6 +133,7 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
+                    options={CONF_FRAMERATE: DEFAULT_FRAMERATE},
                 )
 
         return self.async_show_form(
@@ -153,47 +150,32 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Import a Yaml config."""
         self._async_abort_entries_match({CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]})
-
-        port = (import_data.get(CONF_SSL) and 443) or 80
-        import_data |= {CONF_PORT: port}
+        port = 443 if import_data[CONF_SSL] else 80
         try:
-            config_flow_result: ConfigFlowResult = await self.async_step_user(
-                import_data
-            )
-        except AbortFlow:
-            # this happens if the config entry is already imported
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                ISSUE_DEPRECATED_YAML,
-                breaks_in_ha_version="2026.1.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=ISSUE_DEPRECATED_YAML,
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                },
-            )
-            raise
-        else:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                ISSUE_DEPRECATED_YAML,
-                breaks_in_ha_version="2026.1.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=ISSUE_DEPRECATED_YAML,
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                },
-            )
-            return config_flow_result
+            cam_client = build_cam_client({**import_data, CONF_PORT: port})
+            mac_address = await self.hass.async_add_executor_job(cam_client.get_mac)
+        except VivotekCameraError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected error during camera connection test")
+            return self.async_abort(reason="unknown")
+        await self.async_set_unique_id(format_mac(mac_address))
+        self._abort_if_unique_id_configured()
 
-    async def _async_test_config(self, user_input: dict[str, Any]) -> None:
-        """Test if the provided configuration is valid."""
-        await async_build_and_test_cam_client(self.hass, user_input)
+        return self.async_create_entry(
+            title=import_data.get(CONF_NAME, DEFAULT_NAME),
+            data={
+                CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS],
+                CONF_PORT: port,
+                CONF_PASSWORD: import_data[CONF_PASSWORD],
+                CONF_USERNAME: import_data[CONF_USERNAME],
+                CONF_AUTHENTICATION: import_data[CONF_AUTHENTICATION],
+                CONF_SSL: import_data[CONF_SSL],
+                CONF_VERIFY_SSL: import_data[CONF_VERIFY_SSL],
+                CONF_SECURITY_LEVEL: import_data[CONF_SECURITY_LEVEL],
+                CONF_STREAM_PATH: import_data[CONF_STREAM_PATH],
+            },
+            options={
+                CONF_FRAMERATE: import_data[CONF_FRAMERATE],
+            },
+        )

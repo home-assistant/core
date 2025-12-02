@@ -1,12 +1,11 @@
 """The Vivotek camera component."""
 
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from libpyvivotek.vivotek import VivotekCamera, VivotekCameraError
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
@@ -26,12 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CAMERA]
 
-type VivotekConfigEntry = config_entries.ConfigEntry[VivotekCamera]
+type VivotekConfigEntry = ConfigEntry[VivotekCamera]
 
 
-def build_cam_client(
-    data: dict[str, Any] | MappingProxyType[str, Any],
-) -> VivotekCamera:
+def build_cam_client(data: dict[str, Any]) -> VivotekCamera:
     """Build the Vivotek camera client from the provided configuration data."""
     return VivotekCamera(
         host=data[CONF_IP_ADDRESS],
@@ -45,7 +42,7 @@ def build_cam_client(
 
 
 async def async_build_and_test_cam_client(
-    hass: HomeAssistant, data: dict[str, Any] | MappingProxyType[str, Any]
+    hass: HomeAssistant, data: dict[str, Any]
 ) -> VivotekCamera:
     """Build the client and test if the provided configuration is valid."""
     cam_client = build_cam_client(data)
@@ -58,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VivotekConfigEntry) -> b
     """Set up the Vivotek component from a config entry."""
 
     try:
-        cam_client = await async_build_and_test_cam_client(hass, entry.data)
+        cam_client = await async_build_and_test_cam_client(hass, dict(entry.data))
     except VivotekCameraError as err:
         raise ConfigEntryError("Failed to connect to camera") from err
 

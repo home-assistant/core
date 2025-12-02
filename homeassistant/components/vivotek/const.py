@@ -9,5 +9,3 @@ DOMAIN = "vivotek"
 MANUFACTURER = "Vivotek"
 
 INTEGRATION_TITLE = "Vivotek"
-
-ISSUE_DEPRECATED_YAML = "deprecated_yaml"
