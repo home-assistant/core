@@ -333,7 +333,7 @@ async def test_get_user_keyring_info_no_users(
     camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
 
     with pytest.raises(
-        HomeAssistantError, match="No users found, please check Protect permissions."
+        HomeAssistantError, match="No users found, please check Protect permissions"
     ):
         await hass.services.async_call(
             DOMAIN,

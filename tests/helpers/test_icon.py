@@ -188,10 +188,10 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=icon.build_resources,
     ) as mock_build:
         load1 = await icon.async_get_icons(hass, "entity_component")
-        assert len(mock_build.mock_calls) == 2
+        assert len(mock_build.mock_calls) == 3  # entity_component, services, triggers
 
         load2 = await icon.async_get_icons(hass, "entity_component")
-        assert len(mock_build.mock_calls) == 2
+        assert len(mock_build.mock_calls) == 3  # entity_component, services, triggers
 
         assert load1 == load2
 

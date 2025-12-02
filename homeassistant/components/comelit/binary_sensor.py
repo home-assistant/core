@@ -14,8 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import ObjectClassType
 from .coordinator import ComelitConfigEntry, ComelitVedoSystem
-from .utils import DeviceType, new_device_listener
+from .utils import new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -30,7 +31,7 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
-    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+    def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
         """Add entities for new monitors."""
         entities = [
             ComelitVedoBinarySensorEntity(coordinator, device, config_entry.entry_id)

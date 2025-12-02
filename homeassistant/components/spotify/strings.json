@@ -32,6 +32,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "system_health": {
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"

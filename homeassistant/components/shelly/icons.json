@@ -1,13 +1,13 @@
 {
   "entity": {
     "button": {
-      "mute": {
+      "mute_alarm": {
         "default": "mdi:volume-mute"
       },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
-      "unmute": {
+      "unmute_alarm": {
         "default": "mdi:volume-high"
       }
     },
@@ -26,6 +26,9 @@
       "detected_objects": {
         "default": "mdi:account-group"
       },
+      "detected_objects_with_channel_name": {
+        "default": "mdi:account-group"
+      },
       "gas_concentration": {
         "default": "mdi:gauge"
       },
@@ -38,8 +41,20 @@
       "lamp_life": {
         "default": "mdi:progress-wrench"
       },
+      "left_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "left_slot_vial": {
+        "default": "mdi:scent"
+      },
       "operation": {
         "default": "mdi:cog-transfer"
+      },
+      "right_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "right_slot_vial": {
+        "default": "mdi:scent"
       },
       "self_test": {
         "default": "mdi:progress-wrench"
@@ -52,24 +67,35 @@
       },
       "valve_status": {
         "default": "mdi:valve"
-      },
-      "vial_level": {
-        "default": "mdi:bottle-tonic-outline"
-      },
-      "vial_name": {
-        "default": "mdi:scent"
       }
     },
     "switch": {
-      "cury_boost": {
-        "default": "mdi:rocket-launch"
+      "cury_away_mode": {
+        "default": "mdi:home-outline",
+        "state": {
+          "off": "mdi:home-import-outline",
+          "on": "mdi:home-export-outline"
+        }
       },
-      "cury_slot": {
+      "left_slot": {
         "default": "mdi:scent",
         "state": {
           "off": "mdi:scent-off",
           "on": "mdi:scent"
         }
+      },
+      "left_slot_boost": {
+        "default": "mdi:rocket-launch"
+      },
+      "right_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
+        }
+      },
+      "right_slot_boost": {
+        "default": "mdi:rocket-launch"
       },
       "valve_switch": {
         "default": "mdi:valve",

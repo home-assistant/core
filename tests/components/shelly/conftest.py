@@ -36,10 +36,28 @@ MOCK_SETTINGS = {
         "mac": MOCK_MAC,
         "hostname": "test-host",
         "type": MODEL_25,
+        "num_inputs": 3,
         "num_outputs": 2,
     },
     "coiot": {"update_period": 15},
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
+    "inputs": [
+        {
+            "name": "TV LEDs",
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+        {
+            "name": "TV Spots",
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+        {
+            "name": None,
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+    ],
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
     "external_power": 0,
@@ -229,6 +247,7 @@ MOCK_CONFIG = {
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
     "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
+    "smoke:0": {"id": 0, "name": "test channel name"},
     "script:1": {"id": 1, "name": "test_script.js", "enable": True},
     "script:2": {"id": 2, "name": "test_script_2.js", "enable": False},
     "script:3": {"id": 3, "name": BLE_SCRIPT_NAME, "enable": False},
@@ -348,6 +367,7 @@ MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
     "auth": False,
     "fw": "20210715-092854/v1.11.0@57ac4ad8",
+    "num_inputs": 3,
     "num_outputs": 2,
 }
 
@@ -420,6 +440,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "smoke:0": {"id": 0, "alarm": False, "mute": False},
     "script:1": {
         "id": 1,
         "running": True,
@@ -555,6 +576,9 @@ def _mock_rpc_device(version: str | None = None):
         zigbee_enabled=False,
         zigbee_firmware=False,
         ip_address="10.10.10.10",
+        wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        shutdown=AsyncMock(),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

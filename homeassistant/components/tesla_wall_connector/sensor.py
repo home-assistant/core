@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -163,6 +164,15 @@ WALL_CONNECTOR_SENSORS = [
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="total_power_w",
+        translation_key="total_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].total_power_w,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     WallConnectorSensorDescription(
         key="session_energy_wh",

@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "account_mismatch": "The used account does not match the original account",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
@@ -9,7 +10,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]"
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -23,7 +26,25 @@
           "implementation": "[%key:common::config_flow::description::implementation%]"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The SENZ integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
+    }
+  },
+  "exceptions": {
+    "config_entry_auth_failed": {
+      "message": "Authentication failed. Please log in again."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the integration."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "set_attribute_error": {
+      "message": "Failed to set {attribute} on the device."
     }
   }
 }

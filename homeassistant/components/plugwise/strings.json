@@ -109,7 +109,7 @@
       }
     },
     "select": {
-      "dhw_mode": {
+      "select_dhw_mode": {
         "name": "DHW mode",
         "state": {
           "auto": "[%key:common::state::auto%]",
@@ -118,7 +118,7 @@
           "off": "[%key:common::state::off%]"
         }
       },
-      "gateway_mode": {
+      "select_gateway_mode": {
         "name": "Gateway mode",
         "state": {
           "away": "Pause",
@@ -126,7 +126,7 @@
           "vacation": "Vacation"
         }
       },
-      "regulation_mode": {
+      "select_regulation_mode": {
         "name": "Regulation mode",
         "state": {
           "bleeding_cold": "Bleeding cold",
@@ -140,6 +140,14 @@
         "name": "Thermostat schedule",
         "state": {
           "off": "[%key:common::state::off%]"
+        }
+      },
+      "select_zone_profile": {
+        "name": "Zone profile",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "off": "[%key:common::state::off%]",
+          "passive": "Passive"
         }
       }
     },

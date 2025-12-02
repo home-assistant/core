@@ -115,6 +115,11 @@
         "turned_on": "{entity_name} turned on"
       }
     },
+    "exceptions": {
+      "oauth2_implementation_unavailable": {
+        "message": "OAuth2 implementation unavailable, will retry"
+      }
+    },
     "generic": {
       "model": "Model",
       "ui_managed": "Managed via UI"

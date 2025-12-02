@@ -31,16 +31,19 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
+    deserialize_entity_description,
 )
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import current_entry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1920,3 +1923,55 @@ async def test_naming(hass: HomeAssistant) -> None:
     assert sensor_entity.translation_key is None
 
     cancel_coordinator()
+
+
+@pytest.mark.parametrize(
+    ("description_type", "description_dict", "expected_description"),
+    [
+        (
+            SensorEntityDescription,
+            {
+                "key": "humidity",
+                "native_unit_of_measurement": "%",
+                "device_class": "humidity",
+                "state_class": "measurement",
+            },
+            SensorEntityDescription(
+                key="humidity",
+                native_unit_of_measurement="%",
+                device_class=SensorDeviceClass.HUMIDITY,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+        ),
+        (
+            BinarySensorEntityDescription,
+            {
+                "key": "motion",
+                "device_class": "motion",
+            },
+            BinarySensorEntityDescription(
+                key="motion",
+                device_class=BinarySensorDeviceClass.MOTION,
+            ),
+        ),
+        (
+            SensorEntityDescription,
+            {
+                "key": "temperature",
+                "name": None,
+            },
+            SensorEntityDescription(
+                key="temperature",
+                name=None,
+            ),
+        ),
+    ],
+)
+def test_deserialize_entity_description(
+    description_type: type[EntityDescription],
+    description_dict: dict[str, Any],
+    expected_description: EntityDescription,
+) -> None:
+    """Test deserializing an entity description."""
+    description = deserialize_entity_description(description_type, description_dict)
+    assert description == expected_description

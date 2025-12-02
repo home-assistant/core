@@ -64,7 +64,11 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
-from .automation import get_absolute_description_key, get_relative_description_key
+from .automation import (
+    get_absolute_description_key,
+    get_relative_description_key,
+    move_options_fields_to_top_level,
+)
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .template import Template, render_complex
@@ -105,6 +109,9 @@ INPUT_ENTITY_ID = re.compile(
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
+)
+CONDITION_DISABLED_CONDITIONS: HassKey[set[str]] = HassKey(
+    "condition_disabled_conditions"
 )
 CONDITION_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
@@ -147,9 +154,27 @@ _CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the condition helper."""
+    from homeassistant.components import automation, labs  # noqa: PLC0415
+
     hass.data[CONDITION_DESCRIPTION_CACHE] = {}
+    hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        # Invalidate the cache
+        hass.data[CONDITION_DESCRIPTION_CACHE] = {}
+        hass.data[CONDITION_DISABLED_CONDITIONS] = set()
+
+    labs.async_listen(
+        hass,
+        automation.DOMAIN,
+        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
+    )
+
     await async_process_integration_platforms(
         hass, "condition", _register_condition_platform, wait_for_platforms=True
     )
@@ -173,7 +198,12 @@ def async_subscribe_platform_events(
 async def _register_condition_platform(
     hass: HomeAssistant, integration_domain: str, platform: ConditionProtocol
 ) -> None:
-    """Register a condition platform."""
+    """Register a condition platform and notify listeners.
+
+    If the condition platform does not provide any conditions, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
 
@@ -184,11 +214,21 @@ async def _register_condition_platform(
             )
             hass.data[CONDITIONS][condition_key] = integration_domain
             new_conditions.add(condition_key)
+        if not new_conditions:
+            _LOGGER.debug(
+                "Integration %s returned no conditions in async_get_conditions",
+                integration_domain,
+            )
+            return
     else:
         _LOGGER.debug(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_condition(hass, integration_domain):
+        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -202,10 +242,14 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
-_CONDITION_SCHEMA = vol.Schema(
+_CONDITION_BASE_SCHEMA = vol.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): str,
+    }
+)
+_CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
+    {
         vol.Optional(CONF_OPTIONS): object,
         vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
@@ -344,11 +388,21 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
 async def _async_get_condition_platform(
     hass: HomeAssistant, condition_key: str
 ) -> tuple[str, ConditionProtocol | None]:
+    from homeassistant.components import automation  # noqa: PLC0415
+
     platform_and_sub_type = condition_key.split(".")
     platform: str | None = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
         return "", None
+
+    if automation.is_disabled_experimental_condition(hass, platform):
+        raise vol.Invalid(
+            f"Condition '{condition_key}' requires the experimental 'New triggers and "
+            "conditions' feature to be enabled in Home Assistant Labs settings "
+            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
+        )
+
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
@@ -1044,6 +1098,8 @@ async def async_validate_condition_config(
             raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
         return await condition_class.async_validate_complete_config(hass, config)
 
+    config = move_options_fields_to_top_level(config, _CONDITION_BASE_SCHEMA)
+
     if condition_key in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],
@@ -1199,6 +1255,8 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all conditions."""
+    from homeassistant.components import automation  # noqa: PLC0415
+
     descriptions_cache = hass.data[CONDITION_DESCRIPTION_CACHE]
 
     conditions = hass.data[CONDITIONS]
@@ -1207,7 +1265,12 @@ async def async_get_all_descriptions(
     all_conditions = set(conditions)
     previous_all_conditions = set(descriptions_cache)
     # If the conditions are the same, we can return the cache
-    if previous_all_conditions == all_conditions:
+
+    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
+    if (
+        previous_all_conditions | hass.data[CONDITION_DISABLED_CONDITIONS]  # type: ignore[index]
+        == all_conditions
+    ):
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1247,6 +1310,9 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_condition in missing_conditions:
         domain = conditions[missing_condition]
+        if automation.is_disabled_experimental_condition(hass, domain):
+            hass.data[CONDITION_DISABLED_CONDITIONS].add(missing_condition)
+            continue
 
         if (
             yaml_description := new_conditions_descriptions.get(domain, {}).get(
@@ -1261,6 +1327,9 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
+
+        if (target := yaml_description.get("target")) is not None:
+            description["target"] = target
 
         new_descriptions_cache[missing_condition] = description
 

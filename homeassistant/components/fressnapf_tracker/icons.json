@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "device_tracker": {
+      "pet": {
+        "default": "mdi:paw"
+      }
+    }
+  }
+}

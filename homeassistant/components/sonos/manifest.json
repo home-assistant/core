@@ -6,10 +6,15 @@
   "config_flow": true,
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/sonos",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["soco", "sonos_websocket"],
   "quality_scale": "bronze",
-  "requirements": ["soco==0.30.12", "sonos-websocket==0.1.3"],
+  "requirements": [
+    "defusedxml==0.7.1",
+    "soco==0.30.12",
+    "sonos-websocket==0.1.3"
+  ],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:ZonePlayer:1"

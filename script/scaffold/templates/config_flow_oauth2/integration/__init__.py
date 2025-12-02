@@ -6,9 +6,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 
 from . import api
@@ -26,17 +28,13 @@ type New_NameConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
 async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
     """Set up NEW_NAME from a config entry."""
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
-        )
+        implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
             "OAuth2 implementation temporarily unavailable, will retry"
         ) from err
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    session = OAuth2Session(hass, entry, implementation)
 
     # If using a requests-based API lib
     entry.runtime_data = api.ConfigEntryAuth(hass, session)

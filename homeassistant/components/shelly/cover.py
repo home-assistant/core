@@ -27,11 +27,11 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
     rpc_call,
 )
-from .utils import get_device_entry_gen
+from .utils import get_device_entry_gen, get_rpc_channel_name
 
 PARALLEL_UPDATES = 0
 
@@ -81,7 +81,7 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_COVERS, BlockShellyCover
     )
 
@@ -120,6 +120,7 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         """Initialize block cover."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         if self.coordinator.device.settings["rollers"][0]["positioning"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
@@ -204,6 +205,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     ) -> None:
         """Initialize rpc cover."""
         super().__init__(coordinator, key, attribute, description)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
         self._update_task: asyncio.Task | None = None
         if self.status["pos_control"]:

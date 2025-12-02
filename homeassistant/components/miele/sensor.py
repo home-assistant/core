@@ -36,8 +36,8 @@ from .const import (
     COFFEE_SYSTEM_PROFILE,
     DISABLED_TEMP_ENTITIES,
     DOMAIN,
+    PROGRAM_IDS,
     PROGRAM_PHASE,
-    STATE_PROGRAM_ID,
     STATE_STATUS_TAGS,
     MieleAppliance,
     PlatePowerStep,
@@ -979,21 +979,16 @@ class MieleProgramIdSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_ID.get(self.device.device_type, {}).get(
-            self.device.state_program_id
+        return (
+            PROGRAM_IDS[self.device.device_type](self.device.state_program_id).name
+            if self.device.device_type in PROGRAM_IDS
+            else None
         )
-        if ret_val is None:
-            _LOGGER.debug(
-                "Unknown program id: %s on device type: %s",
-                self.device.state_program_id,
-                self.device.device_type,
-            )
-        return ret_val
 
     @property
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
-        return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
+        return sorted(PROGRAM_IDS.get(self.device.device_type, {}).keys())
 
 
 class MieleTimeSensor(MieleRestorableSensor):

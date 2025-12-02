@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock
 
 from uiprotect.data import Camera, CloudAccount, Version
 
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .utils import MockUFPFixture, init_entry
 
@@ -282,3 +283,26 @@ async def test_rtsp_no_fix_if_third_party(
 
     assert msg["success"]
     assert not msg["result"]["issues"]
+
+
+async def test_rtsp_no_fix_if_globally_disabled(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test no RTSP disabled warning if RTSP is globally disabled on integration."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+
+    # Set RTSP globally disabled in config entry options
+    hass.config_entries.async_update_entry(
+        ufp.entry,
+        options={**ufp.entry.options, CONF_DISABLE_RTSP: True},
+    )
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+
+    assert len(issue_registry.issues) == 0

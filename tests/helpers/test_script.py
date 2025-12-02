@@ -3687,6 +3687,7 @@ async def test_sequence(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                         },
                     },
                 ],
+                "metadata": {"anything": "not used by core"},
             },
             {
                 "alias": "action 2",

@@ -9,6 +9,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/fronius",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyfronius"],
   "quality_scale": "platinum",

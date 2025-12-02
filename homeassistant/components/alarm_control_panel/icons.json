@@ -36,5 +36,28 @@
     "alarm_trigger": {
       "service": "mdi:bell-ring"
     }
+  },
+  "triggers": {
+    "armed": {
+      "trigger": "mdi:shield"
+    },
+    "armed_away": {
+      "trigger": "mdi:shield-lock"
+    },
+    "armed_home": {
+      "trigger": "mdi:shield-home"
+    },
+    "armed_night": {
+      "trigger": "mdi:shield-moon"
+    },
+    "armed_vacation": {
+      "trigger": "mdi:shield-airplane"
+    },
+    "disarmed": {
+      "trigger": "mdi:shield-off"
+    },
+    "triggered": {
+      "trigger": "mdi:bell-ring"
+    }
   }
 }

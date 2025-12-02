@@ -35,6 +35,7 @@ async def async_get_config_entry_diagnostics(
             "last_update success": avm_wrapper.last_update_success,
             "last_exception": avm_wrapper.last_exception,
             "discovered_services": list(avm_wrapper.connection.services),
+            "current_user_rights": await avm_wrapper.async_get_current_user_rights(),
             "client_devices": [
                 {
                     "connected_to": device.connected_to,

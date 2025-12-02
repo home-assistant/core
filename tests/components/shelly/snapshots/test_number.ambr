@@ -27,7 +27,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'External temperature',
     'platform': 'shelly',
@@ -42,6 +42,7 @@
 # name: test_blu_trv_number_entity[number.trv_name_external_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'TRV-Name External temperature',
       'max': 50,
       'min': -50,
@@ -150,7 +151,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'left_slot_intensity',
     'unique_id': '123456789ABC-cury:0-left_slot_intensity',
     'unit_of_measurement': '%',
   })
@@ -208,7 +209,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'right_slot_intensity',
     'unique_id': '123456789ABC-cury:0-right_slot_intensity',
     'unit_of_measurement': '%',
   })

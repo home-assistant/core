@@ -412,8 +412,8 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         self._attr_current_option = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(cast(ProgramKey, event.value))
-            if event
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(ProgramKey(event_value))
+            if event and isinstance(event_value := event.value, str)
             else None
         )
 

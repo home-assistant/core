@@ -1,4 +1,192 @@
 # serializer version: 1
+# name: test_change_entity_id_config_entry[None]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'test_domain',
+    'entity_category': None,
+    'entity_id': 'test_domain.test_5678',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'test',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5678',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_change_entity_id_config_entry[None].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'test_domain.test_5678',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_change_entity_id_config_entry[None].2
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'test_domain',
+    'entity_category': None,
+    'entity_id': 'test_domain.test2',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'test',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5678',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_change_entity_id_config_entry[None].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'test_domain.test2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_change_entity_id_config_entry[mock-subentry-id-1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'test_domain',
+    'entity_category': None,
+    'entity_id': 'test_domain.test_5678',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'test',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5678',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_change_entity_id_config_entry[mock-subentry-id-1].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'test_domain.test_5678',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_change_entity_id_config_entry[mock-subentry-id-1].2
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'test_domain',
+    'entity_category': None,
+    'entity_id': 'test_domain.test2',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'test',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5678',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_change_entity_id_config_entry[mock-subentry-id-1].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'test_domain.test2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entity_description_as_dataclass
   dict({
     'device_class': 'test',
