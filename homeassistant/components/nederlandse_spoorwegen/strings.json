@@ -119,16 +119,8 @@
       "status": {
         "name": "Status",
         "state": {
-          "additional": "Additional",
-          "alternative_transport": "Alternative transport",
           "cancelled": "Cancelled",
-          "change_not_possible": "Change not possible",
-          "disruption": "Disruption",
-          "maintenance": "Maintenance",
-          "normal": "Normal",
-          "replacement": "Replacement",
-          "special": "Special",
-          "uncertain": "Uncertain"
+          "normal": "Normal"
         }
       },
       "transfers": {

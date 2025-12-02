@@ -19,7 +19,13 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_PLATFORM,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -81,7 +87,6 @@ async def test_config_import(
 async def test_sensor(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -97,7 +102,6 @@ async def test_sensor(
 async def test_single_trip_sensor(
     hass: HomeAssistant,
     mock_single_trip_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -113,21 +117,23 @@ async def test_single_trip_sensor(
 async def test_no_trips_sensor(
     hass: HomeAssistant,
     mock_no_trips_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor initialization."""
     await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        state = hass.states.get(entity_entry.entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_sensor_with_api_connection_error(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor behavior when API connection fails."""
@@ -154,7 +160,6 @@ async def test_sensor_with_api_connection_error(
 async def test_sensor_with_custom_time_parsing(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_sensor_platform,
     time_input,
     route_name,
     description,

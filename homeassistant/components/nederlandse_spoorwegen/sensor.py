@@ -65,6 +65,11 @@ def _get_route(trip: Trip | None) -> list[str]:
     return route
 
 
+TRIP_STATUS = {
+    "NORMAL": "normal",
+    "CANCELLED": "cancelled",
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0  # since we use coordinator pattern
@@ -122,47 +127,47 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
     NSSensorEntityDescription(
         key="departure_platform_actual",
         translation_key="departure_platform_actual",
-        value_fn=lambda trip: trip.departure_platform_actual if trip else None,
+        value_fn=lambda trip: trip.departure_platform_actual,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_platform_planned",
         translation_key="arrival_platform_planned",
-        value_fn=lambda trip: trip.arrival_platform_planned if trip else None,
+        value_fn=lambda trip: trip.arrival_platform_planned,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_platform_actual",
         translation_key="arrival_platform_actual",
-        value_fn=lambda trip: trip.arrival_platform_actual if trip else None,
+        value_fn=lambda trip: trip.arrival_platform_actual,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_time_planned",
         translation_key="departure_time_planned",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: trip.departure_time_planned if trip else None,
+        value_fn=lambda trip: trip.departure_time_planned,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_time_actual",
         translation_key="departure_time_actual",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: trip.departure_time_actual if trip else None,
+        value_fn=lambda trip: trip.departure_time_actual,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_time_planned",
         translation_key="arrival_time_planned",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: trip.arrival_time_planned if trip else None,
+        value_fn=lambda trip: trip.arrival_time_planned,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_time_actual",
         translation_key="arrival_time_actual",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda trip: trip.arrival_time_actual if trip else None,
+        value_fn=lambda trip: trip.arrival_time_actual,
         entity_registry_enabled_default=False,
     ),
     # Trip information
@@ -170,7 +175,8 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda trip: trip.status if trip else None,
+        options=list(TRIP_STATUS.values()),
+        value_fn=lambda trip: TRIP_STATUS.get(trip.status),
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
@@ -287,9 +293,6 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
-        if not self.coordinator or not self.coordinator.data:
-            return None
-
         data = (
             self.coordinator.data.first_trip
             if not self.entity_description.is_next
