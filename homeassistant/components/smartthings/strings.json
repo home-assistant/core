@@ -411,6 +411,9 @@
           "simmer": "Simmer"
         }
       },
+      "hood_filter_usage": {
+        "name": "Filter usage"
+      },
       "infrared_level": {
         "name": "Infrared level"
       },
