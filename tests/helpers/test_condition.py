@@ -2899,9 +2899,9 @@ async def test_subscribe_conditions_experimental_conditions(
     expected_events: list[set[str]],
 ) -> None:
     """Test condition.async_subscribe_platform_events doesn't send events for disabled conditions."""
-    light_condition_descriptions = """
-        _: {}
-        """
+    # Return empty conditions.yaml for light integration, the actual condition
+    # descriptions are irrelevant for this test
+    light_condition_descriptions = ""
 
     def _load_yaml(fname, secrets=None):
         if fname.endswith("light/conditions.yaml"):
@@ -2956,9 +2956,9 @@ async def test_subscribe_conditions_no_conditions(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test condition.async_subscribe_platform_events doesn't send events for platforms without conditions."""
-    light_condition_descriptions = """
-        _: {}
-        """
+    # Return empty conditions.yaml for light integration, the actual condition
+    # descriptions are irrelevant for this test
+    light_condition_descriptions = ""
 
     def _load_yaml(fname, secrets=None):
         if fname.endswith("light/conditions.yaml"):
