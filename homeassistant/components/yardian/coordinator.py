@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import datetime
 import logging
 
@@ -11,7 +12,7 @@ from pyyardian.typing import OperationInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -22,22 +23,25 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
-class YardianCombinedState:
+@dataclass(slots=True)
+class YardianZone:
+    """Normalized metadata for a Yardian irrigation zone."""
+
+    name: str
+    is_enabled: bool
+    raw: tuple[object, ...] = ()
+
+
+@dataclass
+class YardianCoordinatorData:
     """Combined device state for Yardian."""
 
-    def __init__(
-        self,
-        zones: list[list],
-        active_zones: set[int],
-        oper_info: OperationInfo,
-    ) -> None:
-        """Initialize combined state with zones, active_zones and oper_info."""
-        self.zones = zones
-        self.active_zones = active_zones
-        self.oper_info = oper_info
+    zones: list[YardianZone]
+    active_zones: set[int]
+    oper_info: OperationInfo
 
 
-class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
+class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
     """Coordinator for Yardian API calls."""
 
     config_entry: ConfigEntry
@@ -75,7 +79,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
             serial_number=self._serial,
         )
 
-    async def _async_update_data(self) -> YardianCombinedState:
+    async def _async_update_data(self) -> YardianCoordinatorData:
         """Fetch data from Yardian device."""
         try:
             async with asyncio.timeout(10):
@@ -88,25 +92,40 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
                 # handled by the outer block to avoid double-logging.
                 dev_state = await self.controller.fetch_device_state()
                 oper_info = await self.controller.fetch_oper_info()
-                oper_keys = list(oper_info.keys()) if hasattr(oper_info, "keys") else []
-                _LOGGER.debug(
-                    "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
-                    len(getattr(dev_state, "zones", [])),
-                    len(getattr(dev_state, "active_zones", [])),
-                    oper_keys,
-                )
-                return YardianCombinedState(
-                    zones=dev_state.zones,
-                    active_zones=dev_state.active_zones,
-                    oper_info=oper_info,
-                )
 
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
         except NotAuthorizedException as e:
-            raise ConfigEntryError("Invalid access token") from e
+            # Trigger reauth flow according to HA best practices
+            raise ConfigEntryAuthFailed("Invalid access token") from e
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
         except Exception as e:  # safety net for tests to surface failure reason
             _LOGGER.exception("Unexpected error while fetching Yardian data")
             raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
+
+        oper_keys = list(oper_info.keys()) if hasattr(oper_info, "keys") else []
+        _LOGGER.debug(
+            "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
+            len(getattr(dev_state, "zones", [])),
+            len(getattr(dev_state, "active_zones", [])),
+            oper_keys,
+        )
+        zones: list[YardianZone] = []
+        for index, zone_info in enumerate(dev_state.zones):
+            # Zone info comes from the proprietary API as a positional list.
+            name = str(zone_info[0]) if zone_info else f"Zone {index + 1}"
+            is_enabled = (zone_info[1] == 1) if len(zone_info) > 1 else True
+            zones.append(
+                YardianZone(
+                    name=name,
+                    is_enabled=is_enabled,
+                    raw=tuple(zone_info),
+                )
+            )
+
+        return YardianCoordinatorData(
+            zones=zones,
+            active_zones=set(dev_state.active_zones),
+            oper_info=oper_info,
+        )

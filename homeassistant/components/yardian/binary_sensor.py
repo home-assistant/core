@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import YardianUpdateCoordinator
+from .coordinator import YardianUpdateCoordinator, YardianZone
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -32,9 +33,16 @@ def _zone_enabled_value(
 ) -> bool | None:
     """Return True if zone is enabled on controller."""
     try:
-        return coordinator.data.zones[zone_id][1] == 1
-    except (IndexError, TypeError):
+        zone = coordinator.data.zones[zone_id]
+    except IndexError:
         return None
+    if isinstance(zone, YardianZone):
+        return zone.is_enabled
+    if isinstance(zone, (tuple, list)):
+        zone_seq = cast(Sequence[Any], zone)
+        if len(zone_seq) > 1:
+            return zone_seq[1] == 1
+    return None
 
 
 def _zone_value_factory(
