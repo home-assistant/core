@@ -1359,7 +1359,7 @@
     'state': '35.388',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_apparent_temperature-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_apparent_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1399,7 +1399,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_apparent_temperature-state]
+# name: test_sensor_states[v30][sensor.openweathermap_apparent_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1416,7 +1416,7 @@
     'state': '2.07',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1453,7 +1453,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-state]
+# name: test_sensor_states[v30][sensor.openweathermap_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1469,7 +1469,7 @@
     'state': '75',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_condition-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1504,7 +1504,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_condition-state]
+# name: test_sensor_states[v30][sensor.openweathermap_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1518,7 +1518,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point_temperature-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_dew_point_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1558,7 +1558,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point_temperature-state]
+# name: test_sensor_states[v30][sensor.openweathermap_dew_point_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1575,7 +1575,7 @@
     'state': '3.99',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_humidity-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1612,7 +1612,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_humidity-state]
+# name: test_sensor_states[v30][sensor.openweathermap_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1629,7 +1629,7 @@
     'state': '82',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_precipitation_kind-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_precipitation_kind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1664,7 +1664,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_precipitation_kind-state]
+# name: test_sensor_states[v30][sensor.openweathermap_precipitation_kind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1678,7 +1678,7 @@
     'state': 'Rain',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_pressure-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1718,7 +1718,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_pressure-state]
+# name: test_sensor_states[v30][sensor.openweathermap_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1735,7 +1735,7 @@
     'state': '1000',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_rain_intensity-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_rain_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1775,7 +1775,7 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_rain_intensity-state]
+# name: test_sensor_states[v30][sensor.openweathermap_rain_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1792,7 +1792,7 @@
     'state': '1.21',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_snow_intensity-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_snow_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1832,7 +1832,7 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_snow_intensity-state]
+# name: test_sensor_states[v30][sensor.openweathermap_snow_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1849,7 +1849,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_temperature-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1889,7 +1889,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_temperature-state]
+# name: test_sensor_states[v30][sensor.openweathermap_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1906,7 +1906,7 @@
     'state': '6.84',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_uv_index-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_uv_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1943,7 +1943,7 @@
     'unit_of_measurement': 'UV index',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_uv_index-state]
+# name: test_sensor_states[v30][sensor.openweathermap_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1959,7 +1959,7 @@
     'state': '0.13',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_visibility-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_visibility-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1999,7 +1999,7 @@
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_visibility-state]
+# name: test_sensor_states[v30][sensor.openweathermap_visibility-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -2016,7 +2016,7 @@
     'state': '10000',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_weather-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_weather-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2051,7 +2051,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_weather-state]
+# name: test_sensor_states[v30][sensor.openweathermap_weather-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -2065,7 +2065,7 @@
     'state': 'broken clouds',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_weather_code-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_weather_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2100,7 +2100,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_weather_code-state]
+# name: test_sensor_states[v30][sensor.openweathermap_weather_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -2114,7 +2114,7 @@
     'state': '803',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_direction-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_wind_direction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2151,7 +2151,7 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_direction-state]
+# name: test_sensor_states[v30][sensor.openweathermap_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -2168,7 +2168,7 @@
     'state': '199',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust_speed-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_wind_gust_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2211,7 +2211,7 @@
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust_speed-state]
+# name: test_sensor_states[v30][sensor.openweathermap_wind_gust_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -2228,7 +2228,7 @@
     'state': '42.516',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_speed-entry]
+# name: test_sensor_states[v30][sensor.openweathermap_wind_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2271,7 +2271,7 @@
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_speed-state]
+# name: test_sensor_states[v30][sensor.openweathermap_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',

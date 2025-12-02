@@ -24,9 +24,12 @@ from homeassistant.helpers.selector import (
     LanguageSelectorConfig,
     LocationSelector,
     LocationSelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
 )
 
 from .const import (
+    CONFIG_FLOW_MINOR_VERSION,
     CONFIG_FLOW_VERSION,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
@@ -46,7 +49,12 @@ USER_SCHEMA = vol.Schema(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=OWM_MODES,
+                translation_key="api_mode",
+            )
+        ),
     }
 )
 
@@ -55,7 +63,12 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=OWM_MODES,
+                translation_key="api_mode",
+            )
+        ),
     }
 )
 
@@ -64,6 +77,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
 
     VERSION = CONFIG_FLOW_VERSION
+    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
 
     @staticmethod
     @callback
