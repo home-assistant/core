@@ -13,6 +13,7 @@ from homeassistant.components.template.cover import LEGACY_FIELDS as COVER_LEGAC
 from homeassistant.components.template.fan import LEGACY_FIELDS as FAN_LEGACY_FIELDS
 from homeassistant.components.template.helpers import (
     async_setup_template_platform,
+    create_legacy_template_issue,
     format_migration_config,
     rewrite_legacy_to_modern_config,
     rewrite_legacy_to_modern_configs,
@@ -596,6 +597,7 @@ async def test_legacy_deprecation(
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders["breadcrumb"] == breadcrumb
+    assert "platform: template" not in issue.translation_placeholders["config"]
 
 
 @pytest.mark.parametrize(
@@ -637,3 +639,40 @@ async def test_yaml_config_recursion_depth(hass: HomeAssistant) -> None:
 
     with pytest.raises(RecursionError):
         format_migration_config({1: {2: {3: {4: {5: {6: [{7: {8: {9: {10: {}}}}}]}}}}}})
+
+
+@pytest.mark.parametrize(
+    ("domain", "config"),
+    [
+        (
+            "media_player",
+            {
+                "media_player": {
+                    "platform": "template",
+                    "name": "My Media Player",
+                    "unique_id": "Foobar",
+                },
+            },
+        ),
+        (
+            "climate",
+            {
+                "climate": {
+                    "platform": "template",
+                    "name": "My Climate",
+                    "unique_id": "Foobar",
+                },
+            },
+        ),
+    ],
+)
+async def test_custom_integration_deprecation(
+    hass: HomeAssistant,
+    domain: str,
+    config: dict,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that custom integrations do not create deprecations."""
+
+    create_legacy_template_issue(hass, config, domain)
+    assert len(issue_registry.issues) == 0

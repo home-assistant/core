@@ -26,7 +26,6 @@ from homeassistant.helpers.singleton import singleton
 
 from . import DATA_COMPONENT
 from .const import (
-    DOMAIN,
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
@@ -366,6 +365,22 @@ async def probe_silabs_firmware_type(
     return fw_info.firmware_type
 
 
+@asynccontextmanager
+async def async_firmware_flashing_context(
+    hass: HomeAssistant, device: str, source_domain: str
+) -> AsyncIterator[None]:
+    """Register a device as having its firmware being actively interacted with."""
+    async with async_firmware_update_context(hass, device, source_domain):
+        firmware_info = await guess_firmware_info(hass, device)
+        _LOGGER.debug("Guessed firmware info before update: %s", firmware_info)
+
+        async with AsyncExitStack() as stack:
+            for owner in firmware_info.owners:
+                await stack.enter_async_context(owner.temporarily_stop(hass))
+
+            yield
+
+
 async def async_flash_silabs_firmware(
     hass: HomeAssistant,
     device: str,
@@ -374,10 +389,11 @@ async def async_flash_silabs_firmware(
     bootloader_reset_methods: Sequence[ResetTarget],
     application_probe_methods: Sequence[tuple[ApplicationType, int]],
     progress_callback: Callable[[int, int], None] | None = None,
-    *,
-    domain: str = DOMAIN,
 ) -> FirmwareInfo:
-    """Flash firmware to the SiLabs device."""
+    """Flash firmware to the SiLabs device.
+
+    This function is meant to be used within a firmware update context.
+    """
     if not any(
         method == expected_installed_firmware_type
         for method, _ in application_probe_methods
@@ -387,54 +403,44 @@ async def async_flash_silabs_firmware(
             f" not in application probe methods {application_probe_methods!r}"
         )
 
-    async with async_firmware_update_context(hass, device, domain):
-        firmware_info = await guess_firmware_info(hass, device)
-        _LOGGER.debug("Identified firmware info: %s", firmware_info)
+    fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
 
-        fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
+    flasher = Flasher(
+        device=device,
+        probe_methods=tuple(
+            (m.as_flasher_application_type(), baudrate)
+            for m, baudrate in application_probe_methods
+        ),
+        bootloader_reset=tuple(
+            m.as_flasher_reset_target() for m in bootloader_reset_methods
+        ),
+    )
 
-        flasher = Flasher(
-            device=device,
-            probe_methods=tuple(
-                (m.as_flasher_application_type(), baudrate)
-                for m, baudrate in application_probe_methods
-            ),
-            bootloader_reset=tuple(
-                m.as_flasher_reset_target() for m in bootloader_reset_methods
-            ),
-        )
+    try:
+        # Enter the bootloader with indeterminate progress
+        await flasher.enter_bootloader()
 
-        async with AsyncExitStack() as stack:
-            for owner in firmware_info.owners:
-                await stack.enter_async_context(owner.temporarily_stop(hass))
+        # Flash the firmware, with progress
+        await flasher.flash_firmware(fw_image, progress_callback=progress_callback)
+    except PermissionError as err:
+        raise HomeAssistantError(
+            "Failed to flash firmware: Device is used by another application"
+        ) from err
+    except Exception as err:
+        raise HomeAssistantError("Failed to flash firmware") from err
 
-            try:
-                # Enter the bootloader with indeterminate progress
-                await flasher.enter_bootloader()
+    probed_firmware_info = await probe_silabs_firmware_info(
+        device,
+        bootloader_reset_methods=bootloader_reset_methods,
+        # Only probe for the expected installed firmware type
+        application_probe_methods=[
+            (method, baudrate)
+            for method, baudrate in application_probe_methods
+            if method == expected_installed_firmware_type
+        ],
+    )
 
-                # Flash the firmware, with progress
-                await flasher.flash_firmware(
-                    fw_image, progress_callback=progress_callback
-                )
-            except PermissionError as err:
-                raise HomeAssistantError(
-                    "Failed to flash firmware: Device is used by another application"
-                ) from err
-            except Exception as err:
-                raise HomeAssistantError("Failed to flash firmware") from err
+    if probed_firmware_info is None:
+        raise HomeAssistantError("Failed to probe the firmware after flashing")
 
-            probed_firmware_info = await probe_silabs_firmware_info(
-                device,
-                bootloader_reset_methods=bootloader_reset_methods,
-                # Only probe for the expected installed firmware type
-                application_probe_methods=[
-                    (method, baudrate)
-                    for method, baudrate in application_probe_methods
-                    if method == expected_installed_firmware_type
-                ],
-            )
-
-        if probed_firmware_info is None:
-            raise HomeAssistantError("Failed to probe the firmware after flashing")
-
-        return probed_firmware_info
+    return probed_firmware_info

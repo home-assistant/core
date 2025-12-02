@@ -382,7 +382,6 @@
   "triggers": {
     "stopped_playing": {
       "description": "Triggers when a media player stops playing.",
-      "description_configured": "[%key:component::media_player::triggers::stopped_playing::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::media_player::common::trigger_behavior_description%]",

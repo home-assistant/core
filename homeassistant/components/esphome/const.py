@@ -20,7 +20,7 @@ SERVICE_EXECUTE_TIMEOUT: Final = 30.0
 
 DEFAULT_PORT: Final = 6053
 
-STABLE_BLE_VERSION_STR = "2025.8.0"
+STABLE_BLE_VERSION_STR = "2025.11.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
