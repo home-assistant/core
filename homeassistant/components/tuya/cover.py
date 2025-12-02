@@ -23,7 +23,6 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
-from .util import get_dpcode
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
@@ -127,12 +126,46 @@ class _SpecialInstructionEnumWrapper(_InstructionEnumWrapper):
     stop_instruction = "STOP"
 
 
+class _IsClosedWrapper:
+    """Wrapper for checking if cover is closed."""
+
+    def is_closed(self, device: CustomerDevice) -> bool | None:
+        return None
+
+
+class _IsClosedInvertedWrapper(DPCodeBooleanWrapper, _IsClosedWrapper):
+    """Boolean wrapper for checking if cover is closed (inverted)."""
+
+    def is_closed(self, device: CustomerDevice) -> bool | None:
+        if (value := self.read_device_status(device)) is None:
+            return None
+        return not value
+
+
+class _IsClosedEnumWrapper(DPCodeEnumWrapper, _IsClosedWrapper):
+    """Enum wrapper for checking if state is closed."""
+
+    _MAPPINGS = {
+        "close": True,
+        "fully_close": True,
+        "open": False,
+        "fully_open": False,
+    }
+
+    def is_closed(self, device: CustomerDevice) -> bool | None:
+        if (value := self.read_device_status(device)) is None:
+            return None
+        return self._MAPPINGS.get(value)
+
+
 @dataclass(frozen=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
-    current_state_inverse: bool = False
+    current_state_wrapper: type[_IsClosedInvertedWrapper | _IsClosedEnumWrapper] = (
+        _IsClosedEnumWrapper
+    )
     current_position: DPCode | tuple[DPCode, ...] | None = None
     instruction_wrapper: type[_InstructionEnumWrapper] = _InstructionEnumWrapper
     position_wrapper: type[_DPCodePercentageMappingWrapper] = (
@@ -148,7 +181,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "1"},
             current_state=DPCode.DOORCONTACT_STATE,
-            current_state_inverse=True,
+            current_state_wrapper=_IsClosedInvertedWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
@@ -156,7 +189,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "2"},
             current_state=DPCode.DOORCONTACT_STATE_2,
-            current_state_inverse=True,
+            current_state_wrapper=_IsClosedInvertedWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
@@ -164,7 +197,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "3"},
             current_state=DPCode.DOORCONTACT_STATE_3,
-            current_state_inverse=True,
+            current_state_wrapper=_IsClosedInvertedWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
     ),
@@ -283,6 +316,9 @@ async def async_setup_entry(
                         instruction_wrapper=_get_instruction_wrapper(
                             device, description
                         ),
+                        current_state_wrapper=description.current_state_wrapper.find_dpcode(
+                            device, description.current_state
+                        ),
                         set_position=description.position_wrapper.find_dpcode(
                             device, description.set_position, prefer_function=True
                         ),
@@ -311,7 +347,6 @@ async def async_setup_entry(
 class TuyaCoverEntity(TuyaEntity, CoverEntity):
     """Tuya Cover Device."""
 
-    _current_state: DPCode | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -320,10 +355,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
         *,
-        current_position: _DPCodePercentageMappingWrapper | None = None,
-        instruction_wrapper: _InstructionWrapper | None = None,
-        set_position: _DPCodePercentageMappingWrapper | None = None,
-        tilt_position: _DPCodePercentageMappingWrapper | None = None,
+        current_position: _DPCodePercentageMappingWrapper | None,
+        current_state_wrapper: _IsClosedWrapper | None,
+        instruction_wrapper: _InstructionWrapper | None,
+        set_position: _DPCodePercentageMappingWrapper | None,
+        tilt_position: _DPCodePercentageMappingWrapper | None,
     ) -> None:
         """Init Tuya Cover."""
         super().__init__(device, device_manager)
@@ -332,6 +368,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = CoverEntityFeature(0)
 
         self._current_position = current_position or set_position
+        self._current_state_wrapper = current_state_wrapper
         self._instruction_wrapper = instruction_wrapper
         self._set_position = set_position
         self._tilt_position = tilt_position
@@ -343,8 +380,6 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._attr_supported_features |= CoverEntityFeature.CLOSE
             if instruction_wrapper.get_stop_command(device) is not None:
                 self._attr_supported_features |= CoverEntityFeature.STOP
-
-        self._current_state = get_dpcode(self.device, description.current_state)
 
         if set_position:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
@@ -371,15 +406,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if (position := self.current_cover_position) is not None:
             return position == 0
 
-        if (
-            self._current_state is not None
-            and (current_state := self.device.status.get(self._current_state))
-            is not None
-            and current_state != "stop"
-        ):
-            return self.entity_description.current_state_inverse is not (
-                current_state in (True, "close", "fully_close")
-            )
+        if self._current_state_wrapper:
+            return self._current_state_wrapper.is_closed(self.device)
 
         return None
 
@@ -393,7 +421,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if self._set_position is not None:
             await self._async_send_commands(
-                [self._set_position.get_update_command(self.device, 100)]
+                self._set_position.get_update_commands(self.device, 100)
             )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -406,12 +434,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if self._set_position is not None:
             await self._async_send_commands(
-                [self._set_position.get_update_command(self.device, 0)]
+                self._set_position.get_update_commands(self.device, 0)
             )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_send_dpcode_update(self._set_position, kwargs[ATTR_POSITION])
+        await self._async_send_wrapper_updates(
+            self._set_position, kwargs[ATTR_POSITION]
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -422,6 +452,6 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self._async_send_dpcode_update(
+        await self._async_send_wrapper_updates(
             self._tilt_position, kwargs[ATTR_TILT_POSITION]
         )

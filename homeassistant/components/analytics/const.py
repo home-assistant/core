@@ -5,15 +5,17 @@ import logging
 
 import voluptuous as vol
 
-ANALYTICS_ENDPOINT_URL = "https://analytics-api.home-assistant.io/v1"
-ANALYTICS_ENDPOINT_URL_DEV = "https://analytics-api-dev.home-assistant.io/v1"
-SNAPSHOT_VERSION = "1"
-ANALYTICS_SNAPSHOT_ENDPOINT_URL = f"https://device-database.eco-dev-aws.openhomefoundation.com/api/v1/snapshot/{SNAPSHOT_VERSION}"
 DOMAIN = "analytics"
 INTERVAL = timedelta(days=1)
 STORAGE_KEY = "core.analytics"
 STORAGE_VERSION = 1
 
+BASIC_ENDPOINT_URL = "https://analytics-api.home-assistant.io/v1"
+BASIC_ENDPOINT_URL_DEV = "https://analytics-api-dev.home-assistant.io/v1"
+
+SNAPSHOT_VERSION = 1
+SNAPSHOT_DEFAULT_URL = "https://device-database.eco-dev-aws.openhomefoundation.com"
+SNAPSHOT_URL_PATH = f"/api/v1/snapshot/{SNAPSHOT_VERSION}"
 
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
