@@ -735,6 +735,7 @@ FLOWS = {
         "victron_ble",
         "victron_remote_monitoring",
         "vilfo",
+        "vivotek",
         "vizio",
         "vlc_telnet",
         "vodafone_station",
