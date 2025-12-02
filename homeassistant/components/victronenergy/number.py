@@ -112,6 +112,11 @@ class MQTTDiscoveredNumber(NumberEntity):
         return self._attr_unique_id or ""
 
     @property
+    def should_poll(self) -> bool:
+        """Return False as this entity is updated via MQTT messages."""
+        return False
+
+    @property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the device class for the entity."""
         if self._attr_device_class:

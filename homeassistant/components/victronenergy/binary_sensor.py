@@ -109,6 +109,11 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
         return self._attr_unique_id
 
     @property
+    def should_poll(self) -> bool:
+        """Return False as this entity is updated via MQTT messages."""
+        return False
+
+    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._attr_is_on
