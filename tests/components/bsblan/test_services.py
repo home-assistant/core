@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -34,7 +34,7 @@ async def test_sync_time_service(
     await hass.services.async_call(
         DOMAIN,
         "sync_time",
-        {},
+        {"config_entry_id": mock_config_entry.entry_id},
         blocking=True,
     )
 
@@ -67,7 +67,7 @@ async def test_sync_time_service_no_update_when_same(
     await hass.services.async_call(
         DOMAIN,
         "sync_time",
-        {},
+        {"config_entry_id": mock_config_entry.entry_id},
         blocking=True,
     )
 
@@ -76,35 +76,6 @@ async def test_sync_time_service_no_update_when_same(
 
     # Verify set_time() was NOT called since times match
     assert not mock_bsblan.set_time.called
-
-
-async def test_sync_time_service_with_config_entry_id(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bsblan: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the sync_time service with specific config entry ID."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Mock device time that differs
-    mock_bsblan.time.return_value = DeviceTime.from_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
-    )
-
-    # Call the service with config entry ID
-    await hass.services.async_call(
-        DOMAIN,
-        "sync_time",
-        {"config_entry_id": mock_config_entry.entry_id},
-        blocking=True,
-    )
-
-    # Verify time was synced
-    assert mock_bsblan.time.called
-    assert mock_bsblan.set_time.called
 
 
 async def test_sync_time_service_error_handling(
@@ -125,7 +96,7 @@ async def test_sync_time_service_error_handling(
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
-            {},
+            {"config_entry_id": mock_config_entry.entry_id},
             blocking=True,
         )
 
@@ -153,17 +124,38 @@ async def test_sync_time_service_set_time_error(
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
-            {},
+            {"config_entry_id": mock_config_entry.entry_id},
             blocking=True,
         )
 
 
-async def test_sync_time_service_skips_unloaded_entries(
+async def test_sync_time_service_entry_not_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
 ) -> None:
-    """Test the sync_time service skips entries that are not loaded."""
+    """Test the sync_time service raises error for non-existent entry."""
+    # Set up the entry (this registers the service)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Call the service with a non-existent entry ID
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"config_entry_id": "non_existent_entry_id"},
+            blocking=True,
+        )
+
+
+async def test_sync_time_service_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test the sync_time service raises error for unloaded entry."""
     # Set up the first entry (this registers the service)
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -179,23 +171,11 @@ async def test_sync_time_service_skips_unloaded_entries(
     unloaded_entry.add_to_hass(hass)
     # Don't call async_setup on this entry, so it stays NOT_LOADED
 
-    # Reset mock to verify the unloaded entry doesn't trigger calls
-    mock_bsblan.time.reset_mock()
-    mock_bsblan.set_time.reset_mock()
-
-    # Mock device time that differs for any calls
-    mock_bsblan.time.return_value = DeviceTime.from_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
-    )
-
-    # Call the service with the unloaded entry ID
-    await hass.services.async_call(
-        DOMAIN,
-        "sync_time",
-        {"config_entry_id": unloaded_entry.entry_id},
-        blocking=True,
-    )
-
-    # Verify time() and set_time() were NOT called since entry isn't loaded
-    assert not mock_bsblan.time.called
-    assert not mock_bsblan.set_time.called
+    # Call the service with the unloaded entry ID - should raise error
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"config_entry_id": unloaded_entry.entry_id},
+            blocking=True,
+        )
