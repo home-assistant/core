@@ -30,7 +30,6 @@ class FressnapfTrackerSensorDescription(SensorEntityDescription):
 
 SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
     FressnapfTrackerSensorDescription(
-        translation_key="battery",
         key="battery",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,

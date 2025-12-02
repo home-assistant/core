@@ -45,12 +45,5 @@
         }
       }
     }
-  },
-  "entity": {
-    "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      }
-    }
   }
 }
