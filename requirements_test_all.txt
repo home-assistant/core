@@ -243,7 +243,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.8.0
+aioesphomeapi==42.9.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -378,7 +378,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.21.0
+aioshelly==13.22.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -480,7 +480,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.73.0
+anthropic==0.75.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -609,7 +609,7 @@ bluetooth-data-tools==1.28.4
 bond-async==0.2.1
 
 # homeassistant.components.bosch_alarm
-bosch-alarm-mode2==0.4.6
+bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.107
@@ -880,6 +880,9 @@ forecast-solar==4.2.0
 # homeassistant.components.freebox
 freebox-api==1.2.2
 
+# homeassistant.components.fressnapf_tracker
+fressnapftracker==0.1.2
+
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.0
@@ -963,13 +966,13 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==9.1.0
+google-nest-sdm==9.1.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==1.1.2
+google_air_quality_api==1.1.3
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1059,7 +1062,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251127.0
+home-assistant-frontend==20251201.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.11.24
@@ -2132,13 +2135,13 @@ python-overseerr==0.7.1
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.8.0
+python-pooldose==0.8.1
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.8.1
+python-roborock==3.8.4
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2196,7 +2199,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.16
 
 # homeassistant.components.vesync
-pyvesync==3.2.2
+pyvesync==3.3.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2481,7 +2484,7 @@ thermobeacon-ble==0.10.0
 thermopro-ble==1.1.2
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.8
+thinqconnect==1.0.9
 
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1
@@ -2538,7 +2541,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.29.0
+uiprotect==7.31.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2689,7 +2692,7 @@ youless-api==2.2.0
 youtubeaio==2.1.1
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.10.22
+yt-dlp[default]==2025.11.12
 
 # homeassistant.components.zamg
 zamg==0.3.6

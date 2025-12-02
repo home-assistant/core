@@ -167,7 +167,6 @@
   "triggers": {
     "turned_off": {
       "description": "Triggers when a fan is turned off.",
-      "description_configured": "[%key:component::fan::triggers::turned_off::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::trigger_behavior_description%]",
@@ -178,7 +177,6 @@
     },
     "turned_on": {
       "description": "Triggers when a fan is turned on.",
-      "description_configured": "[%key:component::fan::triggers::turned_on::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::trigger_behavior_description%]",
