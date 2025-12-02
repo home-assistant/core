@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    SOURCE_USER,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -69,10 +68,10 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     assert system_info is not None
                 await self.async_set_unique_id(system_info.mac_addr)
-                if self.source == SOURCE_USER:
-                    self._abort_if_unique_id_configured()
-                elif self.source == SOURCE_RECONFIGURE:
+                if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
+                else:
+                    self._abort_if_unique_id_configured()
                 self._box = box
                 self._config.update(user_input)
                 return await self.async_step_choose_auth()
