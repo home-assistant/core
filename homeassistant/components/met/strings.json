@@ -19,6 +19,14 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the web site."
+    },
+    "update_failed": {
+      "message": "Update of data from the web site failed: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
