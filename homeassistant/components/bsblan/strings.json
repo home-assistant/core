@@ -70,6 +70,12 @@
     }
   },
   "exceptions": {
+    "entry_not_found": {
+      "message": "The BSB-Lan config entry was not found"
+    },
+    "entry_not_loaded": {
+      "message": "The BSB-Lan config entry is not loaded"
+    },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-Lan device"
     },
@@ -97,7 +103,7 @@
       "description": "Synchronize Home Assistant time to the BSB-Lan device. Only updates if device time differs from Home Assistant time.",
       "fields": {
         "config_entry_id": {
-          "description": "The config entry ID of the BSB-Lan device. If not specified, syncs time for all BSB-Lan devices.",
+          "description": "The config entry ID of the BSB-Lan device to sync time for.",
           "name": "Config entry"
         }
       },
