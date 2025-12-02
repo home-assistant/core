@@ -1169,8 +1169,6 @@ hass-nabucasa==1.6.2
 hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
-hassil==3.4.0
-
 # homeassistant.components.conversation
 hassil==3.5.0
 
