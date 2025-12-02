@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import base64
 from functools import partial
-import itertools
 import logging
 import secrets
 import struct
@@ -129,9 +128,6 @@ LOGGER_TO_LOG_LEVEL = {
     logging.ERROR: LogLevel.LOG_LEVEL_ERROR,
     logging.CRITICAL: LogLevel.LOG_LEVEL_ERROR,
 }
-
-# Counter for generating unique call IDs for service execution
-_CALL_ID_COUNTER = itertools.count(1)
 
 
 @callback
@@ -1192,7 +1188,6 @@ async def execute_service(
         return None
 
     # Wait for response
-    call_id = next(_CALL_ID_COUNTER)
     loop = asyncio.get_running_loop()
     future: asyncio.Future[ExecuteServiceResponse] = loop.create_future()
 
@@ -1212,7 +1207,6 @@ async def execute_service(
         entry_data.client.execute_service(
             service,
             call.data,
-            call_id=call_id,
             on_response=on_response,
             return_response=need_response_data,
         )
