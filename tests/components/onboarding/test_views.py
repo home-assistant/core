@@ -248,11 +248,14 @@ async def test_onboarding_user(
 
     # Validate created areas
     assert len(area_registry.areas) == 3
-    assert sorted(area.name for area in area_registry.async_list_areas()) == [
-        "Bedroom",
-        "Kitchen",
-        "Living Room",
-    ]
+    areas = {area.name: area for area in area_registry.async_list_areas()}
+    assert sorted(areas.keys()) == ["Bedroom", "Kitchen", "Living Room"]
+
+    # Verify default icons are set for areas created by onboarding
+    assert areas["Bedroom"].icon == "mdi:bed"
+    assert areas["Kitchen"].icon == "mdi:stove"
+    # Living Room was created by integration before onboarding, so no icon
+    assert areas["Living Room"].icon is None
 
 
 async def test_onboarding_user_invalid_name(
