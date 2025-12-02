@@ -26,7 +26,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_MAC, CONF_SERIAL_NUMBER, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,21 +76,16 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await selected_gateway.disconnect()
-                # MAC address will be populated by DHCP discovery if available
-                # or can be added later when DHCP sees the device
-                data = {
-                    CONF_SERIAL_NUMBER: selected_gateway.gw_sn,
-                    CONF_HOST: selected_gateway.gw_ip,
-                    CONF_PORT: selected_gateway.port,
-                    CONF_NAME: selected_gateway.name,
-                    CONF_USERNAME: selected_gateway.username,
-                    CONF_PASSWORD: selected_gateway.passwd,
-                }
-                # MAC address may already be set if coming from DHCP discovery
-                # Check if we have it in the discovered gateway (though current library doesn't provide it)
                 return self.async_create_entry(
                     title=selected_gateway.name,
-                    data=data,
+                    data={
+                        CONF_SERIAL_NUMBER: selected_gateway.gw_sn,
+                        CONF_HOST: selected_gateway.gw_ip,
+                        CONF_PORT: selected_gateway.port,
+                        CONF_NAME: selected_gateway.name,
+                        CONF_USERNAME: selected_gateway.username,
+                        CONF_PASSWORD: selected_gateway.passwd,
+                    },
                 )
 
         if not self._discovered_gateways:
@@ -143,41 +138,11 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Handle DHCP discovery."""
+        """Handle DHCP discovery to update existing entries."""
         mac_address = format_mac(discovery_info.macaddress)
-        current_ip = discovery_info.ip
+        serial_number = mac_address.replace(":", "").upper()
 
-        _LOGGER.debug(
-            "DHCP discovered device at %s with MAC %s", current_ip, mac_address
-        )
+        await self.async_set_unique_id(serial_number)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        # Try to discover gateways to get serial number from the discovered IP
-        discovery = DaliGatewayDiscovery()
-        try:
-            discovered = await discovery.discover_gateways()
-        except DaliGatewayError as err:
-            _LOGGER.debug("Gateway discovery failed during DHCP flow", exc_info=err)
-            return self.async_abort(reason="discovery_failed")
-
-        # Find the gateway at the DHCP discovered IP
-        gateway = None
-        for gw in discovered:
-            if gw.gw_ip == current_ip:
-                gateway = gw
-                break
-
-        if not gateway:
-            _LOGGER.debug("No gateway found at DHCP discovered IP %s", current_ip)
-            return self.async_abort(reason="discovery_failed")
-
-        # Set unique ID and update IP/MAC if entry already exists
-        await self.async_set_unique_id(gateway.gw_sn)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: current_ip, CONF_MAC: mac_address}
-        )
-
-        # Store gateway for the next step
-        self._discovered_gateways = {gateway.gw_sn: gateway}
-
-        # Continue with normal flow
-        return await self.async_step_select_gateway()
+        return self.async_abort(reason="unknown")
