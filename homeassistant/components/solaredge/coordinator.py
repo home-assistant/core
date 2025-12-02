@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 
 from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb, TimeUnit
-from stringcase import snakecase
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -26,7 +25,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, snakecase
 from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import (

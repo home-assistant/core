@@ -26,7 +26,6 @@ _VICTRON_MQTT_LOGGER = logging.getLogger("victron_mqtt")
 # Config schema - this integration is config entry only
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 
@@ -68,14 +67,14 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.info("Victron MQTT services registered")
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     _LOGGER.info("Options for victron_mqtt have been updated - applying changes")
     # Reload the integration to apply changes
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def get_package_version(package_name) -> str:
+async def get_package_version(package_name: str) -> str:
     return await asyncio.get_event_loop().run_in_executor(
         None, importlib.metadata.version, package_name
     )
