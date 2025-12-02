@@ -299,7 +299,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 class MockNotifyEntity(MockEntity, NotifyEntity):
     """Mock Email notifier entity to use in tests."""
 
-    def __init__(self, is_title_supported: bool, **values: Any) -> None:
+    def __init__(self, *, is_title_supported: bool, **values: Any) -> None:
         """Initialize the mock entity."""
         super().__init__(**values)
         if is_title_supported:
@@ -335,8 +335,8 @@ async def mock_notifiers(
     hass: HomeAssistant, config_flow_fixture: None
 ) -> list[NotifyEntity]:
     """Set up the notify entities."""
-    entity = MockNotifyEntity(True, name="test", entity_id="notify.test")
-    entity2 = MockNotifyEntity(False, name="test2", entity_id="notify.test2")
+    entity = MockNotifyEntity(is_title_supported=True, name="test", entity_id="notify.test")
+    entity2 = MockNotifyEntity(is_title_supported=False, name="test2", entity_id="notify.test2")
     entities = [entity, entity2]
     test_entry = MockConfigEntry(domain="test")
     test_entry.add_to_hass(hass)
