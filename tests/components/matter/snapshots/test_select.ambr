@@ -1105,6 +1105,75 @@
     'state': 'Vacuum & Mop',
   })
 # ---
+# name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Auto Mop & Vacuum',
+        'Auto Vacuum',
+        'Auto Deep Mop & Vacuum',
+        'Quick Mop & Vacuum',
+        'Quick Vacuum',
+        'Low Noise Mop & Vacuum',
+        'Low Noise Vacuum',
+        'Eufy Customize Mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.2bavs_ab6031x_44pe_clean_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '2BAVS-AB6031X-44PE Clean mode',
+      'options': list([
+        'Auto Mop & Vacuum',
+        'Auto Vacuum',
+        'Auto Deep Mop & Vacuum',
+        'Quick Mop & Vacuum',
+        'Quick Vacuum',
+        'Low Noise Mop & Vacuum',
+        'Low Noise Vacuum',
+        'Eufy Customize Mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.2bavs_ab6031x_44pe_clean_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto Mop & Vacuum',
+  })
+# ---
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

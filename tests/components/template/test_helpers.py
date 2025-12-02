@@ -597,6 +597,7 @@ async def test_legacy_deprecation(
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders["breadcrumb"] == breadcrumb
+    assert "platform: template" not in issue.translation_placeholders["config"]
 
 
 @pytest.mark.parametrize(
