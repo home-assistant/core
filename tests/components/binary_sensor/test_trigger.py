@@ -1,11 +1,17 @@
-"""Test fan trigger."""
+"""Test binary sensor trigger."""
 
 from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_LABEL_ID,
+    CONF_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -35,22 +41,22 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 
 
 @pytest.fixture
-async def target_fans(hass: HomeAssistant) -> list[str]:
-    """Create multiple fan entities associated with different targets."""
-    return (await target_entities(hass, "fan"))["included"]
+async def target_binary_sensors(hass: HomeAssistant) -> tuple[list[str], list[str]]:
+    """Create multiple binary sensor entities associated with different targets."""
+    return await target_entities(hass, "binary_sensor")
 
 
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "fan.turned_off",
-        "fan.turned_on",
+        "binary_sensor.occupancy_detected",
+        "binary_sensor.occupancy_cleared",
     ],
 )
-async def test_fan_triggers_gated_by_labs_flag(
+async def test_binary_sensor_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
-    """Test the fan triggers are gated by the labs flag."""
+    """Test the binary sensor triggers are gated by the labs flag."""
     await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Trigger "
@@ -63,46 +69,55 @@ async def test_fan_triggers_gated_by_labs_flag(
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("binary_sensor"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="fan.turned_on",
+            trigger="binary_sensor.occupancy_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="fan.turned_off",
+            trigger="binary_sensor.occupancy_cleared",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            trigger_from_none=False,
         ),
     ],
 )
-async def test_fan_state_trigger_behavior_any(
+async def test_binary_sensor_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_fans: list[str],
+    target_binary_sensors: dict[list[str], list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when any fan state changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
+    """Test that the binary sensor state trigger fires when any binary sensor state changes to a specific state."""
+    await async_setup_component(hass, "binary_sensor", {})
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
+    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all binary sensors, including the tested binary sensor, to the initial state
+    for eid in target_binary_sensors["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
+        excluded_state = state["excluded"]
         included_state = state["included"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
@@ -111,9 +126,12 @@ async def test_fan_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other fans also triggers
+        # Check if changing other binary sensors also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -122,46 +140,55 @@ async def test_fan_state_trigger_behavior_any(
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("binary_sensor"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="fan.turned_on",
+            trigger="binary_sensor.occupancy_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="fan.turned_off",
+            trigger="binary_sensor.occupancy_cleared",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            trigger_from_none=False,
         ),
     ],
 )
-async def test_fan_state_trigger_behavior_first(
+async def test_binary_sensor_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_fans: list[str],
+    target_binary_sensors: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the first fan changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
+    """Test that the binary sensor state trigger fires when the first binary sensor state changes to a specific state."""
+    await async_setup_component(hass, "binary_sensor", {})
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
+    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all binary sensors, including the tested binary sensor, to the initial state
+    for eid in target_binary_sensors["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
+        excluded_state = state["excluded"]
         included_state = state["included"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
@@ -170,9 +197,12 @@ async def test_fan_state_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other fans should not cause the trigger to fire again
+        # Triggering other binary sensors should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
+            set_or_remove_state(hass, other_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -180,49 +210,58 @@ async def test_fan_state_trigger_behavior_first(
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("binary_sensor"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
         *parametrize_trigger_states(
-            trigger="fan.turned_on",
+            trigger="binary_sensor.occupancy_detected",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="fan.turned_off",
+            trigger="binary_sensor.occupancy_cleared",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            additional_attributes={ATTR_DEVICE_CLASS: "occupancy"},
+            trigger_from_none=False,
         ),
     ],
 )
-async def test_fan_state_trigger_behavior_last(
+async def test_binary_sensor_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_fans: list[str],
+    target_binary_sensors: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[StateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the last fan changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
+    """Test that the binary sensor state trigger fires when the last binary sensor state changes to a specific state."""
+    await async_setup_component(hass, "binary_sensor", {})
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
+    excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all binary sensors, including the tested binary sensor, to the initial state
+    for eid in target_binary_sensors["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
+        excluded_state = state["excluded"]
         included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
+            set_or_remove_state(hass, other_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -232,3 +271,8 @@ async def test_fan_state_trigger_behavior_last(
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
+
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
