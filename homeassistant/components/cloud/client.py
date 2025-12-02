@@ -271,6 +271,7 @@ class CloudClient(Interface):
 
     async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
+        self._ice_servers = []
         await self.prefs.async_set_username(None)
 
         if self._alexa_config:
