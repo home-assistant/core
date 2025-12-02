@@ -170,18 +170,19 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token = discovery_info.config["auth_token"]
 
         self.server_info = server_info
-        await self.async_set_unique_id(server_info.server_id)
 
         # Check if there's an existing entry
-        if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, server_info.server_id
-        ):
+        if entry := await self.async_set_unique_id(server_info.server_id):
             # Update the entry with new URL and token
             if self.hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_URL: self.url, CONF_TOKEN: self.token}
             ):
-                # If entry is in failed auth state, reload it
-                if entry.state is ConfigEntryState.SETUP_ERROR:
+                # Reload the entry if it's in a state that can be reloaded
+                if entry.state in (
+                    ConfigEntryState.LOADED,
+                    ConfigEntryState.SETUP_ERROR,
+                    ConfigEntryState.SETUP_RETRY,
+                ):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
             # Abort since entry already exists
