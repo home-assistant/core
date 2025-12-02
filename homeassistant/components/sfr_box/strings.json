@@ -123,5 +123,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the SFR box: {error}"
+    }
   }
 }
