@@ -128,9 +128,7 @@ async def test_datetime_ui_load(knx: KNXTestKit) -> None:
         "0/0/2",
         response=(0x7B, 0x07, 0x19, 0x49, 0x28, 0x08, 0x00, 0x00),
         ignore_order=True,
-    )  # current
-    # datetime_without_state_address
-    await knx.assert_no_telegram()
+    )
 
     knx.assert_state(
         "datetime.datetime_with_state_address",

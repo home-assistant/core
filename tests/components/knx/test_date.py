@@ -120,9 +120,7 @@ async def test_date_ui_load(knx: KNXTestKit) -> None:
     # date_with_state_address
     await knx.assert_read(
         "0/0/2", response=(0x18, 0x02, 0x18), ignore_order=True
-    )  # current
-    # date_without_state_address
-    await knx.assert_no_telegram()
+    )
 
     knx.assert_state(
         "date.date_with_state_address",

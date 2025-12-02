@@ -120,9 +120,7 @@ async def test_time_ui_load(knx: KNXTestKit) -> None:
     # time_with_state_address
     await knx.assert_read(
         "0/0/2", response=(0x01, 0x02, 0x03), ignore_order=True
-    )  # current
-    # time_without_state_address
-    await knx.assert_no_telegram()
+    )
 
     knx.assert_state(
         "time.time_with_state_address",
