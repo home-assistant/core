@@ -59,4 +59,4 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except SilentWaveError as exc:
             raise UpdateFailed("Failed to fetch device status") from exc
         else:
-            return status
+            return {"status": status}
