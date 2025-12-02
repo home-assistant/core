@@ -26,8 +26,8 @@ async def async_setup_entry(
 
 
 class CloudConversationEntity(
-    conversation.ConversationEntity,
     BaseCloudLLMEntity,
+    conversation.ConversationEntity,
 ):
     """Home Assistant Cloud conversation agent."""
 
