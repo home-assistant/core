@@ -61,28 +61,25 @@ class TuyaEntity(Entity):
     ) -> None:
         self.async_write_ha_state()
 
-    def _send_command(self, commands: list[dict[str, Any]]) -> None:
-        """Send command to the device."""
-        LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
-        self.device_manager.send_commands(self.device.id, commands)
-
     async def _async_send_commands(self, commands: list[dict[str, Any]]) -> None:
         """Send a list of commands to the device."""
-        await self.hass.async_add_executor_job(self._send_command, commands)
+        LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
+        await self.hass.async_add_executor_job(
+            self.device_manager.send_commands, self.device.id, commands
+        )
 
-    def _read_wrapper(self, dpcode_wrapper: DPCodeWrapper | None) -> Any | None:
+    def _read_wrapper(self, wrapper: DPCodeWrapper | None) -> Any | None:
         """Read the wrapper device status."""
-        if dpcode_wrapper is None:
+        if wrapper is None:
             return None
-        return dpcode_wrapper.read_device_status(self.device)
+        return wrapper.read_device_status(self.device)
 
-    async def _async_send_dpcode_update(
-        self, dpcode_wrapper: DPCodeWrapper | None, value: Any
+    async def _async_send_wrapper_updates(
+        self, wrapper: DPCodeWrapper | None, value: Any
     ) -> None:
         """Send command to the device."""
-        if dpcode_wrapper is None:
+        if wrapper is None:
             return
-        await self.hass.async_add_executor_job(
-            self._send_command,
-            [dpcode_wrapper.get_update_command(self.device, value)],
+        await self._async_send_commands(
+            wrapper.get_update_commands(self.device, value),
         )
