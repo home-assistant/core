@@ -65,9 +65,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, system_info.mac_addr)},
         identifiers={(DOMAIN, system_info.mac_addr)},
         name="SFR Box",
-        model=system_info.product_id,
+        model=None,
         model_id=system_info.product_id,
         sw_version=system_info.version_mainfirmware,
         configuration_url=f"http://{entry.data[CONF_HOST]}",
