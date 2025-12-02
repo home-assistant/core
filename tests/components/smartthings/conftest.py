@@ -147,6 +147,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_ks_range_0101x",
         "da_ks_oven_01061",
         "da_ks_oven_0107x",
+        "da_ks_walloven_0107x",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
         "c2c_shade",
