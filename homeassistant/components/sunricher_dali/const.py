@@ -3,3 +3,4 @@
 DOMAIN = "sunricher_dali"
 MANUFACTURER = "Sunricher"
 CONF_SERIAL_NUMBER = "serial_number"
+CONF_MAC = "mac"

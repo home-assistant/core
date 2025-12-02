@@ -6,9 +6,9 @@ from collections.abc import Sequence
 import logging
 
 from PySrDaliGateway import DaliGateway, Device
-from PySrDaliGateway.discovery import DaliGatewayDiscovery
 from PySrDaliGateway.exceptions import DaliGatewayError
 
+from homeassistant.components.dhcp import helpers as dhcp_helpers
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
+from .const import CONF_MAC, CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -79,40 +79,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         await gateway.connect()
     except DaliGatewayError as exc:
         _LOGGER.debug(
-            "Failed to connect to gateway at %s, attempting rediscovery", current_host
+            "Failed to connect to gateway at %s, attempting IP lookup via DHCP",
+            current_host,
         )
 
-        try:
-            discovered = await DaliGatewayDiscovery().discover_gateways(gw_sn)
-        except DaliGatewayError as discovery_exc:
-            raise ConfigEntryNotReady(
-                f"Unable to connect to gateway at {current_host} and rediscovery failed"
-            ) from discovery_exc
+        # Try to find the gateway's current IP using DHCP data if we have the MAC address
+        new_ip = None
+        if CONF_MAC in entry.data:
+            mac_address = entry.data[CONF_MAC]
+            dhcp_data = dhcp_helpers.async_get_address_data_internal(hass)
 
-        if not discovered:
+            if mac_address in dhcp_data:
+                new_ip = dhcp_data[mac_address]["ip"]
+                _LOGGER.debug(
+                    "Found gateway at new IP %s via DHCP (MAC: %s)",
+                    new_ip,
+                    mac_address,
+                )
+
+        if not new_ip or new_ip == current_host:
             raise ConfigEntryNotReady(
-                f"Gateway with serial number {gw_sn} not found on network"
+                f"Unable to connect to gateway at {current_host} and no alternative IP found via DHCP"
             ) from exc
 
-        new_ip = discovered[0].gw_ip
+        # Update config entry with new IP
+        _LOGGER.info(
+            "Gateway IP changed from %s to %s, updating configuration",
+            current_host,
+            new_ip,
+        )
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_HOST: new_ip}
+        )
 
-        if new_ip != current_host:
-            _LOGGER.info(
-                "Gateway IP changed from %s to %s, updating configuration",
-                current_host,
-                new_ip,
-            )
-            hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_HOST: new_ip}
-            )
-            gateway = DaliGateway(
-                gw_sn,
-                new_ip,
-                entry.data[CONF_PORT],
-                entry.data[CONF_USERNAME],
-                entry.data[CONF_PASSWORD],
-                name=entry.data[CONF_NAME],
-            )
+        # Create new gateway instance with updated IP
+        gateway = DaliGateway(
+            gw_sn,
+            new_ip,
+            entry.data[CONF_PORT],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            name=entry.data[CONF_NAME],
+        )
 
         try:
             await gateway.connect()

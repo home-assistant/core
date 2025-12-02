@@ -31,37 +31,41 @@ async def test_setup_entry_success(
 
 
 @pytest.mark.parametrize(
-    ("discovery_side_effect", "discovery_return_value"),
-    [
-        (DaliGatewayError("Discovery failed"), None),
-        (None, []),
-    ],
-    ids=["rediscovery_fails", "gateway_not_found"],
+    "dhcp_data_available",
+    [False, True],
+    ids=["no_mac_stored", "mac_stored_no_dhcp_data"],
 )
 async def test_setup_entry_connection_failure_scenarios(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
-    discovery_side_effect: Exception | None,
-    discovery_return_value: list | None,
+    dhcp_data_available: bool,
 ) -> None:
-    """Test setup fails when gateway connection fails and rediscovery fails."""
+    """Test setup fails when gateway connection fails and DHCP lookup fails."""
+    # Create config entry with MAC if needed
+    config_data = {
+        "serial_number": "6A242121110E",
+        "host": "192.168.1.100",
+        "port": 1883,
+        "name": "Test Gateway",
+        "username": "gateway_user",
+        "password": "gateway_pass",
+    }
+    if dhcp_data_available:
+        config_data["mac"] = "aa:bb:cc:dd:ee:ff"
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        unique_id="6A242121110E",
+        title="Test Gateway",
+    )
     mock_config_entry.add_to_hass(hass)
     mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
 
     with patch(
-        "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
-    ) as mock_discovery_class:
-        mock_discovery = mock_discovery_class.return_value
-        if discovery_side_effect:
-            mock_discovery.discover_gateways = AsyncMock(
-                side_effect=discovery_side_effect
-            )
-        else:
-            mock_discovery.discover_gateways = AsyncMock(
-                return_value=discovery_return_value
-            )
-
+        "homeassistant.components.sunricher_dali.dhcp_helpers.async_get_address_data_internal",
+        return_value={},  # Empty DHCP data - no IP found
+    ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -79,14 +83,28 @@ async def test_setup_entry_connection_failure_scenarios(
 )
 async def test_setup_entry_ip_change_scenarios(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
     mock_devices: list[MagicMock],
     new_ip: str,
     reconnect_succeeds: bool,
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup when gateway IP changes with different reconnection outcomes."""
+    """Test setup when gateway IP changes via DHCP with different reconnection outcomes."""
+    # Create config entry with MAC address
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "serial_number": "6A242121110E",
+            "host": "192.168.1.100",
+            "port": 1883,
+            "name": "Test Gateway",
+            "username": "gateway_user",
+            "password": "gateway_pass",
+            "mac": "aa:bb:cc:dd:ee:ff",
+        },
+        unique_id="6A242121110E",
+        title="Test Gateway",
+    )
     mock_config_entry.add_to_hass(hass)
 
     new_gateway = MagicMock()
@@ -106,15 +124,13 @@ async def test_setup_entry_ip_change_scenarios(
 
     with (
         patch(
-            "homeassistant.components.sunricher_dali.DaliGatewayDiscovery"
-        ) as mock_discovery_class,
+            "homeassistant.components.sunricher_dali.dhcp_helpers.async_get_address_data_internal",
+            return_value={"aa:bb:cc:dd:ee:ff": {"ip": new_ip, "hostname": "gateway"}},
+        ),
         patch(
             "homeassistant.components.sunricher_dali.DaliGateway"
         ) as mock_gateway_class,
     ):
-        mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock(return_value=[new_gateway])
-
         mock_gateway.connect.side_effect = DaliGatewayError("Initial connection failed")
         mock_gateway_class.side_effect = [mock_gateway, new_gateway]
 
