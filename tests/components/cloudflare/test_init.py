@@ -92,6 +92,9 @@ async def test_integration_services(
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
+    assert len(instance.update_dns_record.mock_calls) == 2
+    instance.update_dns_record.reset_mock()
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPDATE_RECORDS,
@@ -100,7 +103,7 @@ async def test_integration_services(
     )
     await hass.async_block_till_done()
 
-    assert len(instance.update_dns_record.mock_calls) == 4
+    assert len(instance.update_dns_record.mock_calls) == 2
     assert "All target records are up to date" not in caplog.text
 
 
@@ -114,6 +117,9 @@ async def test_integration_services_with_issue(
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
+    assert len(instance.update_dns_record.mock_calls) == 2
+    instance.update_dns_record.reset_mock()
+
     with patch(LOCATION_PATCH_TARGET, return_value=None):
         await hass.services.async_call(
             DOMAIN,
@@ -122,7 +128,7 @@ async def test_integration_services_with_issue(
             blocking=True,
         )
 
-    assert len(instance.update_dns_record.mock_calls) == 2
+    assert instance.update_dns_record.assert_not_called()
     assert "Could not get external IPv4 address" in caplog.text
 
 
