@@ -790,7 +790,7 @@
           "name": "Device"
         },
         "key": {
-          "description": "The name of the key for which the KVS value will be set.",
+          "description": "The name of the key under which the KVS value will be stored.",
           "name": "Key"
         },
         "value": {
