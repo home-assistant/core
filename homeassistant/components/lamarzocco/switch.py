@@ -50,6 +50,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             ).mode
             is MachineMode.BREWING_MODE
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
@@ -65,6 +66,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
@@ -80,6 +82,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             not in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="smart_standby_enabled",
@@ -91,6 +94,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             minutes=machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
         ),
         is_on_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
+        bt_offline_mode=True,
     ),
 )
 
@@ -106,7 +110,9 @@ async def async_setup_entry(
 
     entities: list[SwitchEntity] = []
     entities.extend(
-        LaMarzoccoSwitchEntity(coordinator, description)
+        LaMarzoccoSwitchEntity(
+            coordinator, description, entry.runtime_data.bluetooth_coordinator
+        )
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )

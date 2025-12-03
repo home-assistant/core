@@ -1,0 +1,290 @@
+# serializer version: 1
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][binary_sensor.GS012345_water_tank_empty]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'GS012345 Water tank empty',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gs012345_water_tank_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][device_bluetooth_GS012345]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lamarzocco',
+        'GS012345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'La Marzocco',
+    'model': 'GS3 AV',
+    'model_id': 'GS3AV',
+    'name': 'GS012345',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'GS012345',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][number.GS012345_coffee_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GS012345 Coffee target temperature',
+      'max': 104,
+      'min': 85,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.gs012345_coffee_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '98.0',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][number.GS012345_smart_standby_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'GS012345 Smart standby time',
+      'max': 240,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.gs012345_smart_standby_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][number.GS012345_steam_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'GS012345 Steam target temperature',
+      'max': 134,
+      'min': 20,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.gs012345_steam_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121.0',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][switch.GS012345]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS012345',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs012345',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][switch.GS012345_smart_standby_enabled]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS012345 Smart standby enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs012345_smart_standby_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[GS3 AV-entities1][switch.GS012345_steam_boiler]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS012345 Steam boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs012345_steam_boiler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][binary_sensor.MR012345_water_tank_empty]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'MR012345 Water tank empty',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mr012345_water_tank_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][device_bluetooth_MR012345]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lamarzocco',
+        'MR012345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'La Marzocco',
+    'model': 'Linea Micra',
+    'model_id': 'LINEAMICRA',
+    'name': 'MR012345',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'MR012345',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][number.MR012345_coffee_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'MR012345 Coffee target temperature',
+      'max': 104,
+      'min': 85,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mr012345_coffee_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '94.0',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][number.MR012345_smart_standby_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'MR012345 Smart standby time',
+      'max': 240,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mr012345_smart_standby_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][select.MR012345_steam_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MR012345 Steam level',
+      'options': list([
+        '1',
+        '2',
+        '3',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mr012345_steam_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][switch.MR012345]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MR012345',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mr012345',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][switch.MR012345_smart_standby_enabled]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MR012345 Smart standby enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mr012345_smart_standby_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_through_bluetooth_only[Linea Micra-entities0][switch.MR012345_steam_boiler]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MR012345 Steam boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mr012345_steam_boiler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
