@@ -25,13 +25,13 @@ async def test_inverse_cover_position_inversion(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     inv_id = "cover.abc"
-    
+
     # Verify initial state inversion: source is "open" -> inverse is_closed should be True
     state = hass.states.get(inv_id)
     assert state is not None
     assert state.state == "closed"  # Inverse of "open"
     assert state.attributes.get("current_position") == 80  # Inverse of 20
-    
+
     # Call the inverse entity to set a position
     await hass.services.async_call(
         "cover",
@@ -72,4 +72,3 @@ async def test_inverse_cover_state_inversion(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == "open"  # Inverted from "closed"
     assert state.attributes.get("current_position") == 100  # Inverted from 0
-
