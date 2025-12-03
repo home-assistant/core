@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
+from . import MotionBlindConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,12 +34,12 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionBlindConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities based on a config entry."""
 
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
 
     if device.blind_type not in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}:
         async_add_entities([SpeedSelect(device, entry, SELECT_TYPES[ATTR_SPEED])])

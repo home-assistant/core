@@ -39,6 +39,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MotionblindsBLEEntity
+from . import MotionBlindConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,12 +94,12 @@ SENSORS: tuple[MotionblindsBLESensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionBlindConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities based on a config entry."""
 
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
 
     entities: list[SensorEntity] = [
         MotionblindsBLESensorEntity(device, entry, description)

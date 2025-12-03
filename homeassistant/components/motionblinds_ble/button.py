@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
+from . import MotionBlindConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +55,13 @@ BUTTON_TYPES: list[MotionblindsBLEButtonEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionBlindConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button entities based on a config entry."""
 
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
-
+    device = entry.runtime_data
+    
     async_add_entities(
         MotionblindsBLEButtonEntity(
             device,

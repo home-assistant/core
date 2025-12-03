@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN, ICON_VERTICAL_BLIND
 from .entity import MotionblindsBLEEntity
+from . import MotionBlindConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ BLIND_TYPE_TO_ENTITY_DESCRIPTION: dict[str, MotionblindsBLECoverEntityDescriptio
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionBlindConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover entity based on a config entry."""
@@ -70,7 +71,7 @@ async def async_setup_entry(
     cover_class: type[MotionblindsBLECoverEntity] = BLIND_TYPE_TO_CLASS[
         entry.data[CONF_BLIND_TYPE].upper()
     ]
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
     entity_description: MotionblindsBLECoverEntityDescription = (
         BLIND_TYPE_TO_ENTITY_DESCRIPTION[entry.data[CONF_BLIND_TYPE].upper()]
     )

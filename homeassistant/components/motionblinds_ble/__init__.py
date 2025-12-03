@@ -43,6 +43,7 @@ PLATFORMS: list[Platform] = [
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+type MotionBlindConfigEntry = ConfigEntry[MotionDevice]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Motionblinds Bluetooth integration."""
@@ -95,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
+    entry.runtime_data = device
 
     # Register OptionsFlow update listener
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
@@ -120,10 +121,9 @@ async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> No
     await apply_options(hass, entry)
 
 
-async def apply_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def apply_options(hass: HomeAssistant, entry: MotionBlindConfigEntry) -> None:
     """Apply the options from the OptionsFlow."""
-
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
     disconnect_time: float | None = entry.options.get(OPTION_DISCONNECT_TIME, None)
     permanent_connection: bool = entry.options.get(OPTION_PERMANENT_CONNECTION, False)
 
@@ -134,7 +134,6 @@ async def apply_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Motionblinds Bluetooth device from a config entry."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     return unload_ok
