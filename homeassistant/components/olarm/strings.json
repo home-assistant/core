@@ -40,10 +40,10 @@
         "name": "AC power"
       },
       "zone": {
-        "name": "Zone {zone_number} {zone_label}"
+        "name": "Zone {zone_number} ({zone_label})"
       },
       "zone_bypass": {
-        "name": "Zone {zone_number} Bypassed {zone_label}"
+        "name": "Zone {zone_number} ({zone_label}) bypassed"
       }
     }
   },
