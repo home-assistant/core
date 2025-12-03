@@ -86,6 +86,12 @@
       "current_phase": {
         "default": "mdi:state-machine"
       },
+      "door_closed_events": {
+        "default": "mdi:door-closed"
+      },
+      "door_open_events": {
+        "default": "mdi:door-open"
+      },
       "esa_opt_out_state": {
         "default": "mdi:home-lightning-bolt"
       },

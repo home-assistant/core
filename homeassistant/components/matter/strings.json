@@ -375,6 +375,12 @@
       "current_phase": {
         "name": "Current phase"
       },
+      "door_closed_events": {
+        "name": "Door closed events"
+      },
+      "door_open_events": {
+        "name": "Door open events"
+      },
       "energy_exported": {
         "name": "Energy exported"
       },
