@@ -104,7 +104,7 @@ def mock_devices() -> list[MagicMock]:
 
 @pytest.fixture
 def mock_discovery(mock_gateway: MagicMock) -> Generator[MagicMock]:
-    """Mock DaliGatewayDiscovery for config flow."""
+    """Mock DaliGatewayDiscovery."""
     with patch(
         "homeassistant.components.sunricher_dali.config_flow.DaliGatewayDiscovery"
     ) as mock_discovery_class:
