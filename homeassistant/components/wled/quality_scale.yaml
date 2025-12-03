@@ -1,10 +1,16 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: This integration does not have custom service actions.
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      This should be marked as todo, but linter doesn't like that.
+      test_connection_error and test_unsupported_version_error should end in CREATE_ENTRY
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -22,13 +28,14 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not have custom service actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: |
+      The WLEDSegmentLight.available property can just be an if .. in .. check
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -36,7 +43,13 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      The test_setting_unique_id test is redundant.
+      The test_websocket_already_connected test can use the freezer.
+      The snapshot tests should be used more widely.
+      We should use pytest.mark.freeze_time instead of mock.
   # Gold
   devices: done
   diagnostics: done
@@ -58,7 +71,9 @@ rules:
     comment: |
       This integration has a fixed single device.
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: Led count could receive unit of measurement
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
