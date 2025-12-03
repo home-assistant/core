@@ -1,27 +1,34 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "This TIS Control bridge is already configured.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_port": "The port is invalid. It must be a number between 1 and 65535."
+    },
     "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
       "user": {
-        "title": "TIS Control Bridge",
-        "description": "Please enter the port number for your TIS Control bridge.",
         "data": {
           "port": "Port"
         },
         "data_description": {
           "port": "The port number used by the TIS Control bridge."
-        }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+        },
+        "description": "Please enter the port number for your TIS Control bridge.",
+        "title": "TIS Control Bridge"
       }
-    },
-    "error": {
-      "invalid_port": "The port is invalid. It must be a number between 1 and 65535."
-    },
-    "abort": {
-      "already_configured": "This TIS Control bridge is already configured.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "tis_switch": {
+        "name": "Switch"
+      }
     }
   }
 }
