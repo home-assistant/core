@@ -166,7 +166,6 @@ set_program_and_options:
             - laundry_care_washer_program_hygiene_plus
             - laundry_care_washer_program_mix
             - laundry_care_washer_program_mix_night_wash
-            - laundry_care_washer_program_wool
             - laundry_care_washer_program_monsoon
             - laundry_care_washer_program_outdoor
             - laundry_care_washer_program_plush_toy
@@ -177,10 +176,11 @@ set_program_and_options:
             - laundry_care_washer_program_shirts_blouses
             - laundry_care_washer_program_spin_drain
             - laundry_care_washer_program_sport_fitness
-            - laundry_care_washer_program_towels
-            - laundry_care_washer_program_water_proof
             - laundry_care_washer_program_super_153045_super_15
             - laundry_care_washer_program_super_153045_super_1530
+            - laundry_care_washer_program_towels
+            - laundry_care_washer_program_water_proof
+            - laundry_care_washer_program_wool
             - laundry_care_washer_dryer_program_cotton
             - laundry_care_washer_dryer_program_cotton_eco_4060
             - laundry_care_washer_dryer_program_mix
