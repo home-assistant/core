@@ -30,6 +30,7 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration flow is already in progress, perhaps because it was already automatically detected.",
       "cannot_connect": "Connection failed. Please check the device is online",
       "invalid_auth": "Authentication failed. Please check your credentials.",
       "invalid_host": "Invalid hostname or IP address: {error}",
