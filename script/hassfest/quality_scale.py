@@ -1060,7 +1060,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "wirelesstag",
     "withings",
     "wiz",
-    "wled",
     "wmspro",
     "wolflink",
     "workday",
