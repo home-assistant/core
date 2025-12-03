@@ -218,7 +218,8 @@ class HassIO:
             response = await self.websession.request(
                 method,
                 joined_url,
-                json=payload,
+                json=payload if method != "get" else None,
+                params=payload if method == "get" else None,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
