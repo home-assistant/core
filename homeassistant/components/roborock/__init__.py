@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    MAP_SCALE,
     PLATFORMS,
 )
 from .coordinator import (
@@ -72,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                     if entry.options.get(DRAWABLES, {}).get(drawable, default_value)
                 ],
                 show_background=entry.options.get(CONF_SHOW_BACKGROUND, False),
-                map_scale=1,
+                map_scale=MAP_SCALE,
             ),
         )
     except RoborockInvalidCredentials as err:
