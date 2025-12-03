@@ -13,6 +13,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from .coordinator import OlarmDataUpdateCoordinator
 from .mqtt import OlarmFlowClientMQTT
@@ -39,11 +42,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
     """Set up olarm from a config entry."""
 
     # use oauth2 to get tokens
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            "OAuth2 implementation temporarily unavailable, will retry"
+        ) from err
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
