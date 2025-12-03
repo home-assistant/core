@@ -74,6 +74,9 @@
       }
     },
     "button": {
+      "reset_hood_filter": {
+        "name": "Reset filter"
+      },
       "reset_water_filter": {
         "name": "Reset water filter"
       },
