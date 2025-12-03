@@ -68,6 +68,35 @@
         "name": "Auxiliary relay 3 status"
       }
     },
+    "number": {
+      "cl_target": {
+        "name": "Chlorine target"
+      },
+      "ofa_cl_lower": {
+        "name": "Chlorine overfeed alarm lower limit"
+      },
+      "ofa_cl_upper": {
+        "name": "Chlorine overfeed alarm upper limit"
+      },
+      "ofa_orp_lower": {
+        "name": "ORP overfeed alarm lower limit"
+      },
+      "ofa_orp_upper": {
+        "name": "ORP overfeed alarm upper limit"
+      },
+      "ofa_ph_lower": {
+        "name": "pH overfeed alarm lower limit"
+      },
+      "ofa_ph_upper": {
+        "name": "pH overfeed alarm upper limit"
+      },
+      "orp_target": {
+        "name": "ORP target"
+      },
+      "ph_target": {
+        "name": "pH target"
+      }
+    },
     "sensor": {
       "cl": {
         "name": "Chlorine"
@@ -160,6 +189,9 @@
           "acid": "pH-",
           "alcalyne": "pH+"
         }
+      },
+      "water_meter_total_permanent": {
+        "name": "Totalizer"
       }
     },
     "switch": {

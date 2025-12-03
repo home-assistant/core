@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 
+from homeassistant.const import EVENT_LABS_UPDATED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.generated.labs import LABS_PREVIEW_FEATURES
 from homeassistant.helpers import config_validation as cv
@@ -17,7 +18,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_custom_components
 
-from .const import DOMAIN, EVENT_LABS_UPDATED, LABS_DATA, STORAGE_KEY, STORAGE_VERSION
+from .const import DOMAIN, LABS_DATA, STORAGE_KEY, STORAGE_VERSION
 from .models import (
     EventLabsUpdatedData,
     LabPreviewFeature,
