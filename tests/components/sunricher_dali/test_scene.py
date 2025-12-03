@@ -55,8 +55,9 @@ async def test_entities(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_scenes: list[MagicMock],
 ) -> None:
-    """Test the scene entities."""
+    """Test the scene entities and their attributes."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     device_entry = device_registry.async_get_device(
@@ -70,37 +71,41 @@ async def test_entities(
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
 
+    state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("gateway_sn") == "6A242121110E"
+    assert state.attributes.get("scene_id") == 1
+    assert state.attributes.get("area_id") == "1"
+    assert state.attributes.get("channel") == 0
+    assert "entity_id" in state.attributes
 
-async def test_activate_scene(
+    mock_scenes[0].register_listener.assert_called()
+    calls = mock_scenes[0].register_listener.call_args_list
+    event_types = [call[0][0] for call in calls]
+    assert CallbackEventType.ONLINE_STATUS in event_types
+
+
+async def test_activate_scenes(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_scenes: list[MagicMock],
 ) -> None:
-    """Test activating a scene."""
+    """Test activating single and multiple scenes."""
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: TEST_SCENE_1_ENTITY_ID},
         blocking=True,
     )
-
     mock_scenes[0].activate.assert_called_once()
 
-
-async def test_activate_multiple_scenes(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_scenes: list[MagicMock],
-) -> None:
-    """Test activating multiple scenes."""
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [TEST_SCENE_1_ENTITY_ID, TEST_SCENE_2_ENTITY_ID]},
         blocking=True,
     )
-
-    mock_scenes[0].activate.assert_called_once()
+    assert mock_scenes[0].activate.call_count == 2
     mock_scenes[1].activate.assert_called_once()
 
 
@@ -118,43 +123,13 @@ async def test_scene_availability(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
-    assert state is not None
     assert state.state == "unavailable"
 
     _trigger_availability_callback(mock_scenes[0], True)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
-    assert state is not None
     assert state.state != "unavailable"
-
-
-async def test_scene_extra_state_attributes(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test scene extra state attributes."""
-    state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
-    assert state is not None
-
-    assert state.attributes.get("gateway_sn") == "6A242121110E"
-    assert state.attributes.get("scene_id") == 1
-    assert state.attributes.get("area_id") == "1"
-    assert state.attributes.get("channel") == 0
-    assert "entity_id" in state.attributes
-
-
-async def test_callback_registration(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_scenes: list[MagicMock],
-) -> None:
-    """Test that callbacks are properly registered."""
-    mock_scenes[0].register_listener.assert_called()
-
-    calls = mock_scenes[0].register_listener.call_args_list
-    event_types = [call[0][0] for call in calls]
-    assert CallbackEventType.ONLINE_STATUS in event_types
 
 
 async def test_scene_read_failure(
@@ -182,14 +157,14 @@ async def test_scene_read_failure(
     assert "Failed to read scene details" in caplog.text
 
 
-async def test_scene_entity_mapping_with_lights(
+async def test_scene_entity_mapping(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
     mock_devices: list[MagicMock],
     mock_scenes: list[MagicMock],
 ) -> None:
-    """Test that scene entities map to light entities correctly."""
+    """Test scene entity mapping with lights and group devices."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -201,16 +176,9 @@ async def test_scene_entity_mapping_with_lights(
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
     assert state is not None
-
     entity_ids = state.attributes.get("entity_id", [])
     assert isinstance(entity_ids, list)
 
-
-async def test_scene_with_group_device(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test scene with group device (dev_type 0401)."""
     state = hass.states.get(TEST_SCENE_2_ENTITY_ID)
     assert state is not None
     assert state.attributes.get("scene_id") == 2
@@ -221,3 +189,4 @@ async def test_scene_with_group_device(
         {ATTR_ENTITY_ID: TEST_SCENE_2_ENTITY_ID},
         blocking=True,
     )
+    mock_scenes[1].activate.assert_called_once()
