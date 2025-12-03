@@ -178,16 +178,6 @@
           "standard": "[%key:component::smartthings::entity::select::detergent_amount::state::standard%]"
         }
       },
-      "hood_fan_speed": {
-        "name": "Fan speed",
-        "state": {
-          "boost": "Boost",
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "smart": "Smart"
-        }
-      },
       "lamp": {
         "name": "Lamp",
         "state": {

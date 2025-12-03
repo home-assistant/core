@@ -36,14 +36,6 @@ WASHER_SOIL_LEVEL_TO_HA = {
     "down": "down",
 }
 
-HOOD_FAN_SPEED_TO_HA = {
-    "14": "smart",
-    "15": "low",
-    "16": "medium",
-    "17": "high",
-    "19": "boost",
-}
-
 WASHER_SPIN_LEVEL_TO_HA = {
     "none": "none",
     "rinseHold": "rinse_hold",
@@ -203,15 +195,6 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         entity_category=EntityCategory.CONFIG,
         value_is_integer=True,
     ),
-    Capability.SAMSUNG_CE_HOOD_FAN_SPEED: SmartThingsSelectDescription(
-        key=Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
-        translation_key="hood_fan_speed",
-        options_attribute=Attribute.SUPPORTED_HOOD_FAN_SPEED,
-        status_attribute=Attribute.HOOD_FAN_SPEED,
-        command=Command.SET_HOOD_FAN_SPEED,
-        options_map=HOOD_FAN_SPEED_TO_HA,
-        value_is_integer=True,
-    ),
 }
 
 
@@ -275,14 +258,14 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             or self.entity_description.default_options
             or []
         )
-        if self.entity_description.value_is_integer:
-            options = [str(option) for option in options]
         if self.entity_description.options_map:
             options = [
                 self.entity_description.options_map[option]
                 for option in options
                 if option in self.entity_description.options_map
             ]
+        if self.entity_description.value_is_integer:
+            options = [str(option) for option in options]
         return options
 
     @property
