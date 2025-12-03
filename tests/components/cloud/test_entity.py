@@ -219,3 +219,37 @@ async def test_prepare_chat_for_generation_passes_messages_through(
 
     assert response["messages"] == messages
     assert response["conversation_id"] == "conversation-id"
+
+
+async def test_async_handle_chat_log_sets_structured_output_non_strict(
+    hass: HomeAssistant, cloud_entity: BaseCloudLLMEntity
+) -> None:
+    """Ensure structured output requests always disable strict validation."""
+    chat_log = conversation.ChatLog(hass, "conversation-id")
+    chat_log.async_add_user_content(conversation.UserContent(content="ping"))
+    structure = vol.Schema({vol.Required("value"): str})
+
+    async_generate_data = AsyncMock(return_value=object())
+    cloud_entity._cloud.llm.async_generate_data = async_generate_data
+
+    def _empty_delta_stream(*args, **kwargs):
+        async def _generator():
+            for _ in range(0):
+                yield None
+
+        return _generator()
+
+    with patch(
+        "homeassistant.components.cloud.entity._transform_stream",
+        new=_empty_delta_stream,
+    ):
+        await cloud_entity._async_handle_chat_log(
+            "ai_task",
+            chat_log,
+            structure_name="Device Report",
+            structure=structure,
+        )
+
+    async_generate_data.assert_awaited_once()
+    call_kwargs = async_generate_data.call_args.kwargs
+    assert call_kwargs["response_format"]["json_schema"]["strict"] is False
