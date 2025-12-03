@@ -49,12 +49,6 @@ ENERGY_SENSOR = EgaugeSensorEntityDescription(
 )
 
 
-# Mapping of register types to sensor descriptions
-SENSOR_DESCRIPTIONS: dict[RegisterType, list[EgaugeSensorEntityDescription]] = {
-    RegisterType.POWER: [POWER_SENSOR, ENERGY_SENSOR],
-}
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EgaugeConfigEntry,
@@ -65,16 +59,13 @@ async def async_setup_entry(
     sensors: list[SensorEntity] = []
 
     for register_name, register_info in coordinator.data.register_info.items():
-        # Get sensor descriptions for this register type
-        descriptions = SENSOR_DESCRIPTIONS.get(register_info.type)
-        if not descriptions:
-            continue  # Skip unsupported types
-
-        # Create sensor for each description
-        sensors.extend(
-            EgaugeSensor(coordinator, register_name, description)
-            for description in descriptions
-        )
+        if register_info.type == RegisterType.POWER:
+            sensors.extend(
+                [
+                    EgaugeSensor(coordinator, register_name, POWER_SENSOR),
+                    EgaugeSensor(coordinator, register_name, ENERGY_SENSOR),
+                ]
+            )
 
     async_add_entities(sensors)
 
