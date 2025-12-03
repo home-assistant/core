@@ -13,6 +13,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
+__all__ = [
+    "CONFIG_SCHEMA",
+    "DOMAIN",
+    "async_get_ice_servers",
+    "async_register_ice_servers",
+    "async_setup",
+]
+
 DOMAIN = "web_rtc"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -20,6 +28,13 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
     "web_rtc_ice_servers"
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the WebRTC integration."""
+    hass.data[DATA_ICE_SERVERS] = []
+    websocket_api.async_register_command(hass, ws_ice_servers)
+    return True
 
 
 @callback
@@ -75,10 +90,3 @@ def ws_ice_servers(
     """Handle get WebRTC ICE servers websocket command."""
     ice_servers = [server.to_dict() for server in async_get_ice_servers(hass)]
     connection.send_result(msg["id"], ice_servers)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the WebRTC integration."""
-    hass.data[DATA_ICE_SERVERS] = []
-    websocket_api.async_register_command(hass, ws_ice_servers)
-    return True
