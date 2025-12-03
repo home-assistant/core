@@ -43,8 +43,14 @@ from .const import (  # noqa: F401
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
+    ATTR_OCCUPIED_SETBACK,
+    ATTR_OCCUPIED_SETBACK_MAX,
+    ATTR_OCCUPIED_SETBACK_MIN,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    ATTR_SETPOINT_CHANGE_AMOUNT,
+    ATTR_SETPOINT_CHANGE_SOURCE,
+    ATTR_SETPOINT_CHANGE_SOURCE_TIMESTAMP,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_HORIZONTAL_MODES,
     ATTR_SWING_MODE,
@@ -52,6 +58,9 @@ from .const import (  # noqa: F401
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
+    ATTR_UNOCCUPIED_SETBACK,
+    ATTR_UNOCCUPIED_SETBACK_MAX,
+    ATTR_UNOCCUPIED_SETBACK_MIN,
     DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -229,6 +238,15 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "swing_modes",
     "swing_horizontal_mode",
     "swing_horizontal_modes",
+    "setpoint_change_amount",
+    "setpoint_change_source",
+    "setpoint_change_source_timestamp",
+    "occupied_setback",
+    "occupied_setback_min",
+    "occupied_setback_max",
+    "unoccupied_setback",
+    "unoccupied_setback_min",
+    "unoccupied_setback_max",
     "supported_features",
     "min_temp",
     "max_temp",
@@ -251,6 +269,10 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_MAX_HUMIDITY,
             ATTR_TARGET_TEMP_STEP,
             ATTR_PRESET_MODES,
+            ATTR_OCCUPIED_SETBACK_MIN,
+            ATTR_OCCUPIED_SETBACK_MAX,
+            ATTR_UNOCCUPIED_SETBACK_MIN,
+            ATTR_UNOCCUPIED_SETBACK_MAX,
         }
     )
 
@@ -280,6 +302,15 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
+    _attr_setpoint_change_amount: int | None = None
+    _attr_setpoint_change_source: str | None = None
+    _attr_setpoint_change_source_timestamp: int | None = None
+    _attr_occupied_setback: int | None = None
+    _attr_occupied_setback_min: int | None = None
+    _attr_occupied_setback_max: int | None = None
+    _attr_unoccupied_setback: int | None = None
+    _attr_unoccupied_setback_min: int | None = None
+    _attr_unoccupied_setback_max: int | None = None
 
     @final
     @property
@@ -335,6 +366,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
             data[ATTR_SWING_HORIZONTAL_MODES] = self.swing_horizontal_modes
 
+        if ClimateEntityFeature.SETBACK in supported_features:
+            data[ATTR_OCCUPIED_SETBACK_MIN] = self.occupied_setback_min
+            data[ATTR_OCCUPIED_SETBACK_MAX] = self.occupied_setback_max
+            data[ATTR_UNOCCUPIED_SETBACK_MIN] = self.unoccupied_setback_min
+            data[ATTR_UNOCCUPIED_SETBACK_MAX] = self.unoccupied_setback_max
+
         return data
 
     @final
@@ -388,6 +425,23 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
             data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_mode
+
+        if (setpoint_change_amount := self.setpoint_change_amount) is not None:
+            data[ATTR_SETPOINT_CHANGE_AMOUNT] = setpoint_change_amount
+
+        if (setpoint_change_source := self.setpoint_change_source) is not None:
+            data[ATTR_SETPOINT_CHANGE_SOURCE] = setpoint_change_source
+
+        if (
+            setpoint_change_source_timestamp := self.setpoint_change_source_timestamp
+        ) is not None:
+            data[ATTR_SETPOINT_CHANGE_SOURCE_TIMESTAMP] = (
+                setpoint_change_source_timestamp
+            )
+
+        if ClimateEntityFeature.SETBACK in supported_features:
+            data[ATTR_OCCUPIED_SETBACK] = self.occupied_setback
+            data[ATTR_UNOCCUPIED_SETBACK] = self.unoccupied_setback
 
         return data
 
@@ -727,6 +781,69 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def max_humidity(self) -> float:
         """Return the maximum humidity."""
         return self._attr_max_humidity
+
+    @cached_property
+    def setpoint_change_amount(self) -> int | None:
+        """Return the setpoint change amount in degrees (Matter Thermostat)."""
+        return self._attr_setpoint_change_amount
+
+    @cached_property
+    def setpoint_change_source(self) -> str | None:
+        """Return the source of the last setpoint change (Matter Thermostat)."""
+        return self._attr_setpoint_change_source
+
+    @cached_property
+    def setpoint_change_source_timestamp(self) -> int | None:
+        """Return the timestamp of the last setpoint change (Matter Thermostat)."""
+        return self._attr_setpoint_change_source_timestamp
+
+    @cached_property
+    def occupied_setback(self) -> int | None:
+        """Return the occupied setback temperature adjustment (Matter Thermostat).
+
+        Requires ClimateEntityFeature.SETBACK.
+        """
+        return self._attr_occupied_setback
+
+    @cached_property
+    def occupied_setback_min(self) -> int | None:
+        """Return the minimum occupied setback value (Matter Thermostat).
+
+        Requires ClimateEntityFeature.SETBACK.
+        """
+        return self._attr_occupied_setback_min
+
+    @cached_property
+    def occupied_setback_max(self) -> int | None:
+        """Return the maximum occupied setback value (Matter Thermostat).
+
+        Requires ClimateEntityFeature.SETBACK.
+        """
+        return self._attr_occupied_setback_max
+
+    @cached_property
+    def unoccupied_setback(self) -> int | None:
+        """Return the unoccupied setback temperature adjustment (Matter Thermostat).
+
+        Requires ClimateEntityFeature.SETBACK.
+        """
+        return self._attr_unoccupied_setback
+
+    @cached_property
+    def unoccupied_setback_min(self) -> int | None:
+        """Return the minimum unoccupied setback value (Matter Thermostat).
+
+        Requires ClimateEntityFeature.SETBACK.
+        """
+        return self._attr_unoccupied_setback_min
+
+    @cached_property
+    def unoccupied_setback_max(self) -> int | None:
+        """Return the maximum unoccupied setback value (Matter Thermostat).
+
+        Requires ClimateEntityFeature.SETBACK.
+        """
+        return self._attr_unoccupied_setback_max
 
 
 async def async_service_humidity_set(

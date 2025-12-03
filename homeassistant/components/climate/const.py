@@ -117,6 +117,15 @@ ATTR_SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
+ATTR_SETPOINT_CHANGE_AMOUNT = "setpoint_change_amount"
+ATTR_SETPOINT_CHANGE_SOURCE = "setpoint_change_source"
+ATTR_SETPOINT_CHANGE_SOURCE_TIMESTAMP = "setpoint_change_source_timestamp"
+ATTR_OCCUPIED_SETBACK = "occupied_setback"
+ATTR_OCCUPIED_SETBACK_MIN = "occupied_setback_min"
+ATTR_OCCUPIED_SETBACK_MAX = "occupied_setback_max"
+ATTR_UNOCCUPIED_SETBACK = "unoccupied_setback"
+ATTR_UNOCCUPIED_SETBACK_MIN = "unoccupied_setback_min"
+ATTR_UNOCCUPIED_SETBACK_MAX = "unoccupied_setback_max"
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
@@ -148,3 +157,4 @@ class ClimateEntityFeature(IntFlag):
     TURN_OFF = 128
     TURN_ON = 256
     SWING_HORIZONTAL_MODE = 512
+    SETBACK = 1024
