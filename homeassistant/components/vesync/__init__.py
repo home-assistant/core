@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_COORDINATOR, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
