@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import logging
 from typing import Any
 
@@ -31,12 +32,15 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
-    SUGGESTED_SERVERS: list[str] = SERVER_LOCATOR.find_servers()
+    SUGGESTED_SERVERS: list[str] = []
+    in_progress_suggested_servers: Coroutine[None, Any, list[str]]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        self.in_progress_suggested_servers = SERVER_LOCATOR.find_servers()
+
         errors: dict[str, str] = {}
 
         if user_input:
@@ -72,9 +76,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
-        return self._show_config_form(user_input, errors)
+        return await self._show_config_form(user_input, errors)
 
-    def _show_config_form(
+    async def _show_config_form(
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
@@ -85,6 +89,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema_entries: dict[vol.Marker, Any] = {}
 
+        self.SUGGESTED_SERVERS = await self.in_progress_suggested_servers
         if len(self.SUGGESTED_SERVERS) <= 0:
             self.SUGGESTED_SERVERS.append(NO_SERVERS_FOUND_MESSAGE)
 

@@ -17,7 +17,7 @@ class ServerLocator(ABC):
     """
 
     @abstractmethod
-    def find_servers(self) -> list[str]:
+    async def find_servers(self) -> list[str]:
         """Returns a list of servers."""
 
 
@@ -35,7 +35,7 @@ class MockServerLocator(ServerLocator):
         """Specify whether the mock should return a value, or not."""
         self._should_return = should_return
 
-    def find_servers(self) -> list[str]:
+    async def find_servers(self) -> list[str]:
         """Tries to locate servers."""
         if self._should_return:
             return ["127.0.0.1:25565"]
@@ -58,9 +58,9 @@ async def _ping_server(ip: str) -> None | str:
 class LocalServerLocator(ServerLocator):
     """Version of ServerLocator meant to find servers on the local network."""
 
-    def find_servers(self) -> list[str]:
+    async def find_servers(self) -> list[str]:
         """Returns a list of servers."""
-        return asyncio.run(self._find_minecraft_servers_async())
+        return await self._find_minecraft_servers_async()
 
     async def _find_minecraft_servers_async(self) -> list[str]:
         tasks: list[Coroutine[None, None, str | None]] = []
@@ -71,7 +71,9 @@ class LocalServerLocator(ServerLocator):
         ip_results: list[str | None] = await asyncio.gather(*tasks)
         return [ip for ip in ip_results if ip is not None]
 
-    async def _get_local_networks(self) -> list[tuple[str, Address]]:
+    async def _get_local_networks(
+        self,
+    ) -> list[tuple[str, Address]]:
         """Returns a list of local networks."""
         ifaces = interfaces()  # Returns a list of all networks
         local_networks: list[tuple[str, Address]] = []
