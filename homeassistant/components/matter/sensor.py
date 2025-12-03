@@ -183,6 +183,16 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
+SETPOINT_CHANGE_SOURCE_MAP = {
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kManual: "manual",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kSchedule: "schedule",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kExternal: "external",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kUnknownEnumValue: None,
+}
+
+MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
+    946684800  # Seconds from Matter 2000 epoch to Unix epoch
+)
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
@@ -1487,5 +1497,55 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ServiceArea.Attributes.EstimatedEndTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SetpointChangeSource",
+            translation_key="setpoint_change_source",
+            device_class=SensorDeviceClass.ENUM,
+            state_class=None,
+            options=[x for x in SETPOINT_CHANGE_SOURCE_MAP.values() if x is not None],
+            device_to_ha=lambda x: SETPOINT_CHANGE_SOURCE_MAP[x],
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.SetpointChangeSource,),
+        device_type=(device_types.Thermostat,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SetpointChangeSourceTimestamp",
+            translation_key="setpoint_change_timestamp",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            state_class=None,
+            device_to_ha=(
+                lambda x: (
+                    dt_util.utc_from_timestamp(x + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
+                    if x > 0
+                    else None
+                )
+            ),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
+        device_type=(device_types.Thermostat,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSetpointChangeAmount",
+            translation_key="setpoint_change_amount",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            suggested_display_precision=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.SetpointChangeAmount,),
+        device_type=(device_types.Thermostat,),
     ),
 ]
