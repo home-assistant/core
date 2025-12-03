@@ -16,12 +16,12 @@
       "description": "Sets the default theme Home Assistant uses. Can be overridden by a user.",
       "fields": {
         "name": {
-          "description": "Name of the theme to use when a light-mode client requests the default theme.",
+          "description": "Name of the theme to use when a light mode client requests the default theme.",
           "name": "Theme"
         },
         "name_dark": {
-          "description": "Name of the theme to use when a dark-mode client requests the default theme.",
-          "name": "Dark Theme"
+          "description": "Name of the theme to use when a dark mode client requests the default theme.",
+          "name": "Dark theme"
         }
       },
       "name": "Set the default theme"
