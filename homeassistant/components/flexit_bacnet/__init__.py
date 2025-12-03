@@ -30,29 +30,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bo
 
     # Check if deprecated fireplace switch is enabled and create repair issue
     entity_reg = er.async_get(hass)
-    fireplace_switch_id = f"{coordinator.device.serial_number}-fireplace_mode"
+    fireplace_switch_unique_id = f"{coordinator.device.serial_number}-fireplace_mode"
+    climate_unique_id = coordinator.device.serial_number
 
-    # Look for the fireplace switch entity
-    for entity in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
-        if entity.unique_id == fireplace_switch_id and not entity.disabled:
-            # Switch is enabled, create deprecation issue
-            climate_entity_id = entity.entity_id.replace("switch.", "climate.").replace(
-                "_fireplace_mode", ""
+    # Look up the fireplace switch entity by unique_id
+    fireplace_switch_entity_id = entity_reg.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, fireplace_switch_unique_id
+    )
+
+    if fireplace_switch_entity_id:
+        entity_entry = entity_reg.async_get(fireplace_switch_entity_id)
+        if entity_entry and not entity_entry.disabled:
+            # Look up the climate entity by unique_id
+            climate_entity_id = entity_reg.async_get_entity_id(
+                Platform.CLIMATE, DOMAIN, climate_unique_id
             )
-            async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_switch_{entity.unique_id}",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_fireplace_switch",
-                translation_placeholders={
-                    "entity_id": entity.entity_id,
-                    "climate_entity_id": climate_entity_id,
-                },
-            )
-            break
+            if climate_entity_id:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_switch_{fireplace_switch_unique_id}",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_fireplace_switch",
+                    translation_placeholders={
+                        "entity_id": fireplace_switch_entity_id,
+                        "climate_entity_id": climate_entity_id,
+                    },
+                )
 
     return True
 

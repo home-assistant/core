@@ -132,7 +132,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return OPERATION_TO_PRESET_MODE_MAP.get(self.device.operation_mode, PRESET_HOME)
+        return OPERATION_TO_PRESET_MODE_MAP[self.device.operation_mode]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
