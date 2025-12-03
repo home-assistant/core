@@ -31,10 +31,6 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: todo
-  entity-unavailable:
-    status: todo
-    comment: |
-      The WLEDSegmentLight.available property can just be an if .. in .. check
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
