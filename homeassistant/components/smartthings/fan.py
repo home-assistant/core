@@ -180,6 +180,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
         | FanEntityFeature.SET_SPEED
     )
     _attr_preset_modes = [PRESET_SMART]
+    _attr_translation_key = "hood"
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""

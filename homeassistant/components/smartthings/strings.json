@@ -135,6 +135,17 @@
         }
       }
     },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
