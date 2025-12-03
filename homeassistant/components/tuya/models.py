@@ -2,45 +2,61 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import base64
 from dataclasses import dataclass
-import json
-from typing import Any, Literal, Self, overload
+from typing import Any, Literal, Self, cast, overload
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import json_loads, json_loads_object
 
-from .const import DPCode, DPType
+from .const import LOGGER, DPType
 from .util import parse_dptype, remap_value
 
+# Dictionary to track logged warnings to avoid spamming logs
+# Keyed by device ID
+DEVICE_WARNINGS: dict[str, set[str]] = {}
 
-@dataclass
+
+def _should_log_warning(device_id: str, warning_key: str) -> bool:
+    """Check if a warning has already been logged for a device and add it if not.
+
+    Returns: False if the warning was already logged, True if it was added.
+    """
+    if (device_warnings := DEVICE_WARNINGS.get(device_id)) is None:
+        device_warnings = set()
+        DEVICE_WARNINGS[device_id] = device_warnings
+    if warning_key in device_warnings:
+        return False
+    DEVICE_WARNINGS[device_id].add(warning_key)
+    return True
+
+
+@dataclass(kw_only=True)
 class TypeInformation:
     """Type information.
 
     As provided by the SDK, from `device.function` / `device.status_range`.
     """
 
-    dpcode: DPCode
+    dpcode: str
+    type_data: str | None = None
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
-        return cls(dpcode)
+        return cls(dpcode=dpcode, type_data=type_data)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
     min: int
     max: int
-    scale: float
-    step: float
+    scale: int
+    step: int
     unit: str | None = None
-    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -57,13 +73,13 @@ class IntegerTypeData(TypeInformation):
         """Return the step scaled."""
         return self.step / (10**self.scale)
 
-    def scale_value(self, value: float) -> float:
+    def scale_value(self, value: int) -> float:
         """Scale a value."""
         return value / (10**self.scale)
 
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
-        return int(value * (10**self.scale))
+        return round(value * (10**self.scale))
 
     def remap_value_to(
         self,
@@ -86,48 +102,56 @@ class IntegerTypeData(TypeInformation):
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
 
         return cls(
-            dpcode,
+            dpcode=dpcode,
+            type_data=type_data,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
-            scale=float(parsed["scale"]),
-            step=max(float(parsed["step"]), 1),
+            scale=int(parsed["scale"]),
+            step=int(parsed["step"]),
             unit=parsed.get("unit"),
-            type=parsed.get("type"),
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BitmapTypeInformation(TypeInformation):
     """Bitmap type information."""
 
     label: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(type_data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(
+            dpcode=dpcode,
+            type_data=type_data,
+            **cast(dict[str, list[str]], parsed),
+        )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
     range: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(type_data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(
+            dpcode=dpcode,
+            type_data=type_data,
+            **cast(dict[str, list[str]], parsed),
+        )
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
@@ -137,11 +161,26 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
     DPType.INTEGER: IntegerTypeData,
     DPType.JSON: TypeInformation,
     DPType.RAW: TypeInformation,
+    DPType.STRING: TypeInformation,
 }
 
 
-class DPCodeWrapper(ABC):
-    """Base DPCode wrapper.
+class DeviceWrapper:
+    """Base device wrapper."""
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read device status and convert to a Home Assistant value."""
+        raise NotImplementedError
+
+    def get_update_commands(
+        self, device: CustomerDevice, value: Any
+    ) -> list[dict[str, Any]]:
+        """Generate update commands for a Home Assistant action."""
+        raise NotImplementedError
+
+
+class DPCodeWrapper(DeviceWrapper):
+    """Base device wrapper for a single DPCode.
 
     Used as a common interface for referring to a DPCode, and
     access read conversion routines.
@@ -161,30 +200,27 @@ class DPCodeWrapper(ABC):
         """
         return device.status.get(self.dpcode)
 
-    @abstractmethod
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode.
-
-        The raw device status is converted to a Home Assistant value.
-        """
-
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
 
-        This is called by `get_update_command` to prepare the value for sending
+        This is called by `get_update_commands` to prepare the value for sending
         back to the device, and should be implemented in concrete classes if needed.
         """
         raise NotImplementedError
 
-    def get_update_command(self, device: CustomerDevice, value: Any) -> dict[str, Any]:
-        """Get the update command for the dpcode.
+    def get_update_commands(
+        self, device: CustomerDevice, value: Any
+    ) -> list[dict[str, Any]]:
+        """Get the update commands for the dpcode.
 
         The Home Assistant value is converted back to a raw device value.
         """
-        return {
-            "code": self.dpcode,
-            "value": self._convert_value_to_raw_value(device, value),
-        }
+        return [
+            {
+                "code": self.dpcode,
+                "value": self._convert_value_to_raw_value(device, value),
+            }
+        ]
 
 
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
@@ -202,7 +238,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def find_dpcode(
         cls,
         device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        dpcodes: str | tuple[str, ...] | None,
         *,
         prefer_function: bool = False,
     ) -> Self | None:
@@ -278,11 +314,22 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
         Values outside of the list defined by the Enum type information will
         return None.
         """
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
-            return raw_value
-        return None
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        if raw_value not in self.type_information.range:
+            if _should_log_warning(
+                device.id, f"enum_out_range|{self.dpcode}|{raw_value}"
+            ):
+                LOGGER.warning(
+                    "Found invalid enum value `%s` for datapoint `%s` in product id `%s`,"
+                    " expected one of `%s`; please report this defect to Tuya support",
+                    raw_value,
+                    self.dpcode,
+                    device.product_id,
+                    self.type_information.range,
+                )
+            return None
+        return raw_value
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
@@ -327,6 +374,16 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
         )
 
 
+class DPCodeStringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+    """Wrapper to extract information from a STRING value."""
+
+    DPTYPE = DPType.STRING
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode."""
+        return self._read_device_status_raw(device)
+
+
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
     """Simple wrapper for a specific bit in bitmap values."""
 
@@ -345,7 +402,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
     def find_dpcode(
         cls,
         device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
+        dpcodes: str | tuple[str, ...],
         *,
         bitmap_key: str,
     ) -> Self | None:
@@ -362,7 +419,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.BITMAP],
@@ -372,7 +429,7 @@ def find_dpcode(
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.ENUM],
@@ -382,7 +439,7 @@ def find_dpcode(
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.INTEGER],
@@ -392,7 +449,7 @@ def find_dpcode(
 @overload
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: Literal[DPType.BOOLEAN, DPType.JSON, DPType.RAW],
@@ -401,7 +458,7 @@ def find_dpcode(
 
 def find_dpcode(
     device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    dpcodes: str | tuple[str, ...] | None,
     *,
     prefer_function: bool = False,
     dptype: DPType,
@@ -413,9 +470,7 @@ def find_dpcode(
     if dpcodes is None:
         return None
 
-    if isinstance(dpcodes, str):
-        dpcodes = (DPCode(dpcodes),)
-    elif not isinstance(dpcodes, tuple):
+    if not isinstance(dpcodes, tuple):
         dpcodes = (dpcodes,)
 
     lookup_tuple = (
@@ -431,7 +486,7 @@ def find_dpcode(
                 and parse_dptype(current_definition.type) is dptype
                 and (
                     type_information := type_information_cls.from_json(
-                        dpcode, current_definition.values
+                        dpcode=dpcode, type_data=current_definition.values
                     )
                 )
             ):

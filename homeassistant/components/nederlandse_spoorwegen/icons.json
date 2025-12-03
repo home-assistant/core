@@ -1,0 +1,56 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "is_arrival_delayed": {
+        "default": "mdi:bell-alert-outline"
+      },
+      "is_departure_delayed": {
+        "default": "mdi:bell-alert-outline"
+      },
+      "is_going": {
+        "default": "mdi:bell-cancel-outline"
+      }
+    },
+    "sensor": {
+      "arrival_platform_actual": {
+        "default": "mdi:logout"
+      },
+      "arrival_platform_planned": {
+        "default": "mdi:logout"
+      },
+      "arrival_time_actual": {
+        "default": "mdi:clock"
+      },
+      "arrival_time_planned": {
+        "default": "mdi:calendar-clock"
+      },
+      "departure": {
+        "default": "mdi:train"
+      },
+      "departure_platform_actual": {
+        "default": "mdi:login"
+      },
+      "departure_platform_planned": {
+        "default": "mdi:login"
+      },
+      "departure_time_actual": {
+        "default": "mdi:clock"
+      },
+      "departure_time_planned": {
+        "default": "mdi:calendar-clock"
+      },
+      "next_departure_time": {
+        "default": "mdi:train"
+      },
+      "route": {
+        "default": "mdi:transit-connection-variant"
+      },
+      "status": {
+        "default": "mdi:information"
+      },
+      "transfers": {
+        "default": "mdi:swap-horizontal"
+      }
+    }
+  }
+}
