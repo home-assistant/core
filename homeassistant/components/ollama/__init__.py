@@ -22,8 +22,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
 from .const import (
+    CONF_API_KEY,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
+    CONF_MODE,
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
@@ -32,6 +34,8 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    MODE_CLOUD,
+    MODE_LOCAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,14 +59,32 @@ type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Ollama."""
-    await async_migrate_integration(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
-    client = ollama.AsyncClient(host=settings[CONF_URL], verify=get_default_context())
+
+    # Create client with appropriate configuration based on mode
+    client_kwargs = {"host": settings[CONF_URL]}
+
+    # For local mode, add SSL verification
+    if settings.get(CONF_MODE, MODE_LOCAL) == MODE_LOCAL:
+        # Create SSL context in executor to avoid blocking call
+        ssl_context = await hass.async_add_executor_job(get_default_context)
+        client_kwargs["verify"] = ssl_context
+
+    # For cloud mode, add authorization header
+    if settings.get(CONF_MODE) == MODE_CLOUD and (
+        api_key := settings.get(CONF_API_KEY)
+    ):
+        client_kwargs["headers"] = {"Authorization": f"Bearer {api_key}"}
+
+    # Create client in executor to avoid blocking SSL operations during initialization
+    client = await hass.async_add_executor_job(
+        lambda: ollama.AsyncClient(**client_kwargs)
+    )
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
             await client.list()
@@ -198,10 +220,10 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 entry,
                 title=DEFAULT_NAME,
                 # Update parent entry to only keep URL, remove model
-                data={CONF_URL: entry.data[CONF_URL]},
+                data={CONF_URL: entry.data[CONF_URL], CONF_MODE: MODE_LOCAL},
                 options={},
                 version=3,
-                minor_version=3,
+                minor_version=4,
             )
 
 
@@ -281,6 +303,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
                     disabled_by=er.RegistryEntryDisabler.DEVICE,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=3)
+
+    if entry.version == 3 and entry.minor_version == 3:
+        # Add mode field to existing entries for cloud mode support
+        # All existing entries are local mode by default
+        updated_data = dict(entry.data)
+        if CONF_MODE not in updated_data:
+            updated_data[CONF_MODE] = MODE_LOCAL
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=updated_data,
+            minor_version=4,
+        )
 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

@@ -40,8 +40,11 @@ from homeassistant.util.ssl import get_default_context
 
 from . import OllamaConfigEntry
 from .const import (
+    CLOUD_URL,
+    CONF_API_KEY,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
+    CONF_MODE,
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
@@ -57,6 +60,8 @@ from .const import (
     DOMAIN,
     MAX_NUM_CTX,
     MIN_NUM_CTX,
+    MODE_CLOUD,
+    MODE_LOCAL,
     MODEL_NAMES,
 )
 
@@ -65,8 +70,14 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(CONF_MODE, default=MODE_LOCAL): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(label="Local", value=MODE_LOCAL),
+                    SelectOptionDict(label="Cloud", value=MODE_CLOUD),
+                ],
+                mode="dropdown",
+            )
         ),
     }
 )
@@ -76,7 +87,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
     VERSION = 3
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -91,6 +102,28 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
+        mode = user_input[CONF_MODE]
+
+        if mode == MODE_LOCAL:
+            return await self.async_step_local()
+        return await self.async_step_cloud()
+
+    async def async_step_local(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle local mode configuration."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="local",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_URL): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.URL)
+                        ),
+                    }
+                ),
+            )
+
         errors = {}
         url = user_input[CONF_URL]
 
@@ -101,9 +134,16 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         except vol.Invalid:
             errors["base"] = "invalid_url"
             return self.async_show_form(
-                step_id="user",
+                step_id="local",
                 data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, user_input
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_URL): TextSelector(
+                                TextSelectorConfig(type=TextSelectorType.URL)
+                            ),
+                        }
+                    ),
+                    user_input,
                 ),
                 errors=errors,
             )
@@ -120,16 +160,93 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user",
+                step_id="local",
                 data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, user_input
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_URL): TextSelector(
+                                TextSelectorConfig(type=TextSelectorType.URL)
+                            ),
+                        }
+                    ),
+                    user_input,
                 ),
                 errors=errors,
             )
 
         return self.async_create_entry(
             title=url,
-            data={CONF_URL: url},
+            data={CONF_MODE: MODE_LOCAL, CONF_URL: url},
+        )
+
+    async def async_step_cloud(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle cloud mode configuration."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="cloud",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_API_KEY): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="api-key",
+                            )
+                        ),
+                    }
+                ),
+            )
+
+        errors = {}
+        api_key = user_input[CONF_API_KEY]
+
+        # Check for duplicate cloud entries
+        self._async_abort_entries_match({CONF_MODE: MODE_CLOUD})
+
+        try:
+            client = ollama.AsyncClient(
+                host=CLOUD_URL,
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
+                await client.list()
+        except httpx.ConnectError:
+            errors["base"] = "cannot_connect"
+        except TimeoutError:
+            errors["base"] = "cannot_connect"
+        except httpx.HTTPStatusError as err:
+            if err.response.status_code == 401:
+                errors["base"] = "invalid_auth"
+            else:
+                _LOGGER.exception("HTTP error")
+                errors["base"] = "unknown"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        if errors:
+            return self.async_show_form(
+                step_id="cloud",
+                data_schema=self.add_suggested_values_to_schema(
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_API_KEY): TextSelector(
+                                TextSelectorConfig(
+                                    type=TextSelectorType.PASSWORD,
+                                    autocomplete="api-key",
+                                )
+                            ),
+                        }
+                    ),
+                    user_input,
+                ),
+                errors=errors,
+            )
+
+        return self.async_create_entry(
+            title="Ollama Cloud",
+            data={CONF_MODE: MODE_CLOUD, CONF_URL: CLOUD_URL, CONF_API_KEY: api_key},
         )
 
     @classmethod

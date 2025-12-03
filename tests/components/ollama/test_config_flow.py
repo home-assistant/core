@@ -26,12 +26,22 @@ async def test_form(hass: HomeAssistant) -> None:
         state=config_entries.ConfigEntryState.LOADED,
     ).add_to_hass(hass)
 
+    # Step 1: Mode selection
     result = await hass.config_entries.flow.async_init(
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] is None
 
+    # Step 2: Select local mode
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mode": "local"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "local"
+
+    # Step 3: Configure local URL
     with (
         patch(
             "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
@@ -42,17 +52,18 @@ async def test_form(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["data"] == {
+        "mode": "local",
         ollama.CONF_URL: "http://localhost:11434",
     }
     # No subentries created by default
-    assert len(result2.get("subentries", [])) == 0
+    assert len(result3.get("subentries", [])) == 0
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -61,6 +72,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=ollama.DOMAIN,
         data={
+            "mode": "local",
             ollama.CONF_URL: "http://localhost:11434",
             ollama.CONF_MODEL: "test_model",
         },
@@ -70,21 +82,29 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert not result["errors"]
+
+    # Select local mode
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mode": "local"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "local"
 
     with patch(
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
         return_value={"models": [{"model": "test_model"}]},
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
                 ollama.CONF_URL: "http://localhost:11434",
             },
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "already_configured"
 
 
 async def test_subentry_options(
@@ -320,16 +340,23 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Select local mode
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mode": "local"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "local"
+
     with patch(
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
         side_effect=side_effect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": error}
 
 
 async def test_form_invalid_url(hass: HomeAssistant) -> None:
@@ -338,12 +365,19 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Select local mode
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {ollama.CONF_URL: "not-a-valid-url"}
+        result["flow_id"], {"mode": "local"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "local"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], {ollama.CONF_URL: "not-a-valid-url"}
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_url"}
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "invalid_url"}
 
 
 async def test_subentry_connection_error(
@@ -557,3 +591,98 @@ async def test_ai_task_subentry_not_loaded(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "entry_not_loaded"
+
+
+async def test_cloud_form(hass: HomeAssistant) -> None:
+    """Test flow when configuring cloud mode with API key."""
+    # Pretend we already set up a config entry.
+    hass.config.components.add(ollama.DOMAIN)
+    MockConfigEntry(
+        domain=ollama.DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
+    # Step 1: Mode selection
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    # Step 2: Select cloud mode
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mode": "cloud"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "cloud"
+
+    # Step 3: Provide API key
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {ollama.CONF_API_KEY: "test_api_key_123"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Ollama Cloud"
+    assert result3["data"] == {
+        "mode": "cloud",
+        ollama.CONF_URL: "https://ollama.com",
+        ollama.CONF_API_KEY: "test_api_key_123",
+    }
+
+
+async def test_cloud_form_invalid_auth(hass: HomeAssistant) -> None:
+    """Test cloud mode with invalid API key."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select cloud mode
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mode": "cloud"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "cloud"
+
+    # Provide invalid API key - authentication fails
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        side_effect=ConnectError(message="401 Unauthorized"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {ollama.CONF_API_KEY: "invalid_key"}
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "invalid_auth"}
+
+
+async def test_cloud_form_connection_error(hass: HomeAssistant) -> None:
+    """Test cloud mode with connection error."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select cloud mode
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mode": "cloud"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "cloud"
+
+    # Connection error (non-auth related)
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        side_effect=ConnectError(message="Network error"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {ollama.CONF_API_KEY: "test_key"}
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "cannot_connect"}

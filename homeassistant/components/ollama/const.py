@@ -7,6 +7,12 @@ DEFAULT_NAME = "Ollama"
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
 CONF_THINK = "think"
+CONF_MODE = "mode"
+CONF_API_KEY = "api_key"
+
+MODE_LOCAL = "local"
+MODE_CLOUD = "cloud"
+CLOUD_URL = "https://ollama.com"
 
 CONF_KEEP_ALIVE = "keep_alive"
 DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never

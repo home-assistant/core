@@ -5,14 +5,31 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Invalid authentication credentials",
       "invalid_url": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "cloud": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Create an API key at https://ollama.com/settings/keys"
+        },
+        "description": "Connect to Ollama Cloud. Cloud models run on Ollama's servers without requiring a local GPU."
+      },
+      "local": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
-        }
+        },
+        "description": "Connect to a local Ollama server."
+      },
+      "user": {
+        "data": {
+          "mode": "Connection mode"
+        },
+        "description": "Choose how you want to connect to Ollama."
       }
     }
   },
