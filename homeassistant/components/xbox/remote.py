@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
-from xbox.webapi.api.provider.smartglass.models import InputKeyType, PowerState
+from pythonxbox.api.provider.smartglass import SmartglassProvider
+from pythonxbox.api.provider.smartglass.models import InputKeyType, PowerState
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -20,6 +21,24 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import XboxConfigEntry
 from .entity import XboxConsoleBaseEntity
 
+PARALLEL_UPDATES = 1
+
+MAP_COMMAND: dict[str, Callable[[SmartglassProvider], Callable]] = {
+    "WakeUp": lambda x: x.wake_up,
+    "TurnOff": lambda x: x.turn_off,
+    "Reboot": lambda x: x.reboot,
+    "Mute": lambda x: x.mute,
+    "Unmute": lambda x: x.unmute,
+    "Play": lambda x: x.play,
+    "Pause": lambda x: x.pause,
+    "Previous": lambda x: x.previous,
+    "Next": lambda x: x.next,
+    "GoHome": lambda x: x.go_home,
+    "GoBack": lambda x: x.go_back,
+    "ShowGuideTab": lambda x: x.show_guide_tab,
+    "ShowGuide": lambda x: x.show_tv_guide,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -27,7 +46,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     async_add_entities(
         [XboxRemote(console, coordinator) for console in coordinator.consoles.result]
@@ -57,10 +76,14 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                try:
+                if single_command in InputKeyType:
                     button = InputKeyType(single_command)
                     await self.client.smartglass.press_button(self._console.id, button)
-                except ValueError:
+                elif single_command in MAP_COMMAND:
+                    await MAP_COMMAND[single_command](self.client.smartglass)(
+                        self._console.id
+                    )
+                else:
                     await self.client.smartglass.insert_text(
                         self._console.id, single_command
                     )

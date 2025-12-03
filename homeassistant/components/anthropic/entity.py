@@ -1,17 +1,24 @@
 """Base entity for Anthropic."""
 
+import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 from dataclasses import dataclass, field
 import json
+from mimetypes import guess_file_type
+from pathlib import Path
 from typing import Any
 
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
+    Base64ImageSourceParam,
+    Base64PDFSourceParam,
     CitationsDelta,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     ContentBlockParam,
+    DocumentBlockParam,
+    ImageBlockParam,
     InputJSONDelta,
     MessageDeltaUsage,
     MessageParam,
@@ -37,6 +44,9 @@ from anthropic.types import (
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
+    ToolChoiceAnyParam,
+    ToolChoiceAutoParam,
+    ToolChoiceToolParam,
     ToolParam,
     ToolResultBlockParam,
     ToolUnionParam,
@@ -50,13 +60,16 @@ from anthropic.types import (
     WebSearchToolResultError,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 from . import AnthropicConfigEntry
 from .const import (
@@ -71,14 +84,11 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
     NON_THINKING_MODELS,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_THINKING_BUDGET,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -321,6 +331,7 @@ def _convert_content(
 async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
     chat_log: conversation.ChatLog,
     stream: AsyncStream[MessageStreamEvent],
+    output_tool: str | None = None,
 ) -> AsyncGenerator[
     conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
 ]:
@@ -378,9 +389,19 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input="",
+                    input={},
                 )
                 current_tool_args = ""
+                if response.content_block.name == output_tool:
+                    if first_block or content_details.has_content():
+                        if content_details.has_citations():
+                            content_details.delete_empty()
+                            yield {"native": content_details}
+                        content_details = ContentDetails()
+                        content_details.add_citation_detail()
+                        yield {"role": "assistant"}
+                        has_native = False
+                        first_block = False
             elif isinstance(response.content_block, TextBlock):
                 if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
                     first_block
@@ -435,7 +456,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input="",
+                    input={},
                 )
                 current_tool_args = ""
             elif isinstance(response.content_block, WebSearchToolResultBlock):
@@ -471,7 +492,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 first_block = True
         elif isinstance(response, RawContentBlockDeltaEvent):
             if isinstance(response.delta, InputJSONDelta):
-                current_tool_args += response.delta.partial_json
+                if (
+                    current_tool_block is not None
+                    and current_tool_block["name"] == output_tool
+                ):
+                    content_details.citation_details[-1].length += len(
+                        response.delta.partial_json
+                    )
+                    yield {"content": response.delta.partial_json}
+                else:
+                    current_tool_args += response.delta.partial_json
             elif isinstance(response.delta, TextDelta):
                 content_details.citation_details[-1].length += len(response.delta.text)
                 yield {"content": response.delta.text}
@@ -490,6 +520,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 content_details.add_citation(response.delta.citation)
         elif isinstance(response, RawContentBlockStopEvent):
             if current_tool_block is not None:
+                if current_tool_block["name"] == output_tool:
+                    current_tool_block = None
+                    continue
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
                 current_tool_block["input"] = tool_args
                 yield {
@@ -557,6 +590,8 @@ class AnthropicBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -566,17 +601,19 @@ class AnthropicBaseLLMEntity(Entity):
             raise TypeError("First message must be a system message")
         messages = _convert_content(chat_log.content[1:])
 
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
         model_args = MessageCreateParamsStreaming(
             model=model,
             messages=messages,
-            max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             system=system.content,
             stream=True,
         )
 
-        thinking_budget = options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)
+        thinking_budget = options.get(
+            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
+        )
         if (
             not model.startswith(tuple(NON_THINKING_MODELS))
             and thinking_budget >= MIN_THINKING_BUDGET
@@ -587,7 +624,7 @@ class AnthropicBaseLLMEntity(Entity):
         else:
             model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
             model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
             )
 
         tools: list[ToolUnionParam] = []
@@ -613,6 +650,74 @@ class AnthropicBaseLLMEntity(Entity):
                 }
             tools.append(web_search)
 
+        # Handle attachments by adding them to the last user message
+        last_content = chat_log.content[-1]
+        if last_content.role == "user" and last_content.attachments:
+            last_message = messages[-1]
+            if last_message["role"] != "user":
+                raise HomeAssistantError(
+                    "Last message must be a user message to add attachments"
+                )
+            if isinstance(last_message["content"], str):
+                last_message["content"] = [
+                    TextBlockParam(type="text", text=last_message["content"])
+                ]
+            last_message["content"].extend(  # type: ignore[union-attr]
+                await async_prepare_files_for_prompt(
+                    self.hass, [(a.path, a.mime_type) for a in last_content.attachments]
+                )
+            )
+
+        if structure and structure_name:
+            structure_name = slugify(structure_name)
+            if model_args["thinking"]["type"] == "disabled":
+                if not tools:
+                    # Simplest case: no tools and no extended thinking
+                    # Add a tool and force its use
+                    model_args["tool_choice"] = ToolChoiceToolParam(
+                        type="tool",
+                        name=structure_name,
+                    )
+                else:
+                    # Second case: tools present but no extended thinking
+                    # Allow the model to use any tool but not text response
+                    # The model should know to use the right tool by its description
+                    model_args["tool_choice"] = ToolChoiceAnyParam(
+                        type="any",
+                    )
+            else:
+                # Extended thinking is enabled. With extended thinking, we cannot
+                # force tool use or disable text responses, so we add a hint to the
+                # system prompt instead. With extended thinking, the model should be
+                # smart enough to use the tool.
+                model_args["tool_choice"] = ToolChoiceAutoParam(
+                    type="auto",
+                )
+
+                if isinstance(model_args["system"], str):
+                    model_args["system"] = [
+                        TextBlockParam(type="text", text=model_args["system"])
+                    ]
+                model_args["system"].append(  # type: ignore[union-attr]
+                    TextBlockParam(
+                        type="text",
+                        text=f"Claude MUST use the '{structure_name}' tool to provide the final answer instead of plain text.",
+                    )
+                )
+
+            tools.append(
+                ToolParam(
+                    name=structure_name,
+                    description="Use this tool to reply to the user",
+                    input_schema=convert(
+                        structure,
+                        custom_serializer=chat_log.llm_api.custom_serializer
+                        if chat_log.llm_api
+                        else llm.selector_serializer,
+                    ),
+                )
+            )
+
         if tools:
             model_args["tools"] = tools
 
@@ -629,7 +734,11 @@ class AnthropicBaseLLMEntity(Entity):
                             content
                             async for content in chat_log.async_add_delta_content_stream(
                                 self.entity_id,
-                                _transform_stream(chat_log, stream),
+                                _transform_stream(
+                                    chat_log,
+                                    stream,
+                                    output_tool=structure_name if structure else None,
+                                ),
                             )
                         ]
                     )
@@ -641,3 +750,59 @@ class AnthropicBaseLLMEntity(Entity):
 
             if not chat_log.unresponded_tool_results:
                 break
+
+
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, files: list[tuple[Path, str | None]]
+) -> Iterable[ImageBlockParam | DocumentBlockParam]:
+    """Append files to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def append_files_to_content() -> Iterable[ImageBlockParam | DocumentBlockParam]:
+        content: list[ImageBlockParam | DocumentBlockParam] = []
+
+        for file_path, mime_type in files:
+            if not file_path.exists():
+                raise HomeAssistantError(f"`{file_path}` does not exist")
+
+            if mime_type is None:
+                mime_type = guess_file_type(file_path)[0]
+
+            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+                raise HomeAssistantError(
+                    "Only images and PDF are supported by the Anthropic API,"
+                    f"`{file_path}` is not an image file or PDF"
+                )
+            if mime_type == "image/jpg":
+                mime_type = "image/jpeg"
+
+            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+
+            if mime_type.startswith("image/"):
+                content.append(
+                    ImageBlockParam(
+                        type="image",
+                        source=Base64ImageSourceParam(
+                            type="base64",
+                            media_type=mime_type,  # type: ignore[typeddict-item]
+                            data=base64_file,
+                        ),
+                    )
+                )
+            elif mime_type.startswith("application/pdf"):
+                content.append(
+                    DocumentBlockParam(
+                        type="document",
+                        source=Base64PDFSourceParam(
+                            type="base64",
+                            media_type=mime_type,  # type: ignore[typeddict-item]
+                            data=base64_file,
+                        ),
+                    )
+                )
+
+        return content
+
+    return await hass.async_add_executor_job(append_files_to_content)

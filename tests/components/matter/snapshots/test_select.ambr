@@ -58,6 +58,124 @@
     'state': '30 mm',
   })
 # ---
+# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard',
+  })
+# ---
+# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
 # name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -113,6 +231,69 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Celsius',
+  })
+# ---
+# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
   })
 # ---
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-entry]
@@ -495,6 +676,69 @@
     'state': 'previous',
   })
 # ---
+# name: test_selects[door_lock][select.mock_door_lock_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[door_lock][select.mock_door_lock_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Operating mode',
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_selects[door_lock][select.mock_door_lock_power_on_behavior_on_startup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -617,6 +861,69 @@
     'state': 'silent',
   })
 # ---
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_selects[door_lock_with_unbolt][select.mock_door_lock_with_unbolt_power_on_behavior_on_startup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -737,6 +1044,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'silent',
+  })
+# ---
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ecodeebot_clean_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ecodeebot Clean mode',
+      'options': list([
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ecodeebot_clean_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Vacuum & Mop',
   })
 # ---
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-entry]
@@ -1158,6 +1524,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
+  })
+# ---
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
   })
 # ---
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
@@ -1891,6 +2316,63 @@
     'state': 'Low',
   })
 # ---
+# name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link HVAC Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
 # name: test_selects[microwave_oven][select.microwave_oven_power_level_w-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1962,6 +2444,130 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1000',
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_lock_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Operating mode',
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_lock_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_sound_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_lock_sound_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_sound_volume',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_sound_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Sound volume',
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_lock_sound_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'silent',
   })
 # ---
 # name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-entry]
@@ -3043,6 +3649,69 @@
     'state': 'normal',
   })
 # ---
+# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.secuyou_smart_lock_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Operating mode',
+      'options': list([
+        'normal',
+        'vacation',
+        'privacy',
+        'no_remote_lock_unlock',
+        'passage',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.secuyou_smart_lock_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_selects[silabs_evse_charging][select.evse_energy_management_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3588,63 +4257,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Quick',
-  })
-# ---
-# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'Celsius',
-        'Fahrenheit',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Temperature display mode',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_display_mode',
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Temperature display mode',
-      'options': list([
-        'Celsius',
-        'Fahrenheit',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Celsius',
   })
 # ---
 # name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-entry]

@@ -5,8 +5,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import CapabilityMap, CapabilitySet, CapabilitySetTypes
+from deebot_client.command import CommandWithMessageHandling
 from deebot_client.device import Device
-from deebot_client.events import WorkModeEvent
+from deebot_client.events import WorkModeEvent, auto_empty
 from deebot_client.events.base import Event
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent
 from deebot_client.events.water_info import WaterAmountEvent
@@ -34,6 +35,9 @@ class EcovacsSelectEntityDescription[EventT: Event](
 
     current_option_fn: Callable[[EventT], str | None]
     options_fn: Callable[[CapabilitySetTypes], list[str]]
+    set_option_fn: Callable[[CapabilitySetTypes, str], CommandWithMessageHandling] = (
+        lambda cap, option: cap.set(option)
+    )
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
@@ -57,6 +61,14 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         translation_key="work_mode",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
+    ),
+    EcovacsSelectEntityDescription[auto_empty.AutoEmptyEvent](
+        capability_fn=lambda caps: caps.station.auto_empty if caps.station else None,
+        current_option_fn=lambda e: get_name_key(e.frequency) if e.frequency else None,
+        options_fn=lambda cap: [get_name_key(freq) for freq in cap.types],
+        set_option_fn=lambda cap, option: cap.set(None, option),
+        key="auto_empty",
+        translation_key="auto_empty",
     ),
 )
 
@@ -106,14 +118,17 @@ class EcovacsSelectEntity[EventT: Event](
         await super().async_added_to_hass()
 
         async def on_event(event: EventT) -> None:
-            self._attr_current_option = self.entity_description.current_option_fn(event)
-            self.async_write_ha_state()
+            if (option := self.entity_description.current_option_fn(event)) is not None:
+                self._attr_current_option = option
+                self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._device.execute_command(self._capability.set(option))
+        await self._device.execute_command(
+            self.entity_description.set_option_fn(self._capability, option)
+        )
 
 
 class EcovacsActiveMapSelectEntity(

@@ -58,7 +58,10 @@ from homeassistant.const import (
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from .config import AbstractConfig
 from .const import (
@@ -844,7 +847,7 @@ def temperature_from_object(
         temp -= 273.15
 
     if interval:
-        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+        return TemperatureDeltaConverter.convert(temp, from_unit, to_unit)
     return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 

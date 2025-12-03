@@ -24,14 +24,14 @@ SCAN_INTERVAL = timedelta(minutes=5)  # Use standard polling
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config_entry: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up rain sensor(s) for Velux platform."""
-    pyvlx = config.runtime_data
+    pyvlx = config_entry.runtime_data
 
     async_add_entities(
-        VeluxRainSensor(node, config.entry_id)
+        VeluxRainSensor(node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, Window) and node.rain_sensor
     )

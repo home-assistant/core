@@ -119,9 +119,9 @@ async def test_form_already_configured_as_subentry(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (PSNAWPNotFoundError(), "invalid_account"),
-        (PSNAWPAuthenticationError(), "invalid_auth"),
-        (PSNAWPError(), "cannot_connect"),
+        (PSNAWPNotFoundError("error msg"), "invalid_account"),
+        (PSNAWPAuthenticationError("error msg"), "invalid_auth"),
+        (PSNAWPError("error msg"), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
@@ -169,7 +169,7 @@ async def test_parse_npsso_token_failures(
     mock_psnawp_npsso: MagicMock,
 ) -> None:
     """Test parse_npsso_token raises the correct exceptions during config flow."""
-    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError
+    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError("error msg")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -221,9 +221,9 @@ async def test_flow_reauth(
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (PSNAWPNotFoundError(), "invalid_account"),
-        (PSNAWPAuthenticationError(), "invalid_auth"),
-        (PSNAWPError(), "cannot_connect"),
+        (PSNAWPNotFoundError("error msg"), "invalid_account"),
+        (PSNAWPAuthenticationError("error msg"), "invalid_auth"),
+        (PSNAWPError("error msg"), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
@@ -287,7 +287,7 @@ async def test_flow_reauth_token_error(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError
+    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError("error msg")
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

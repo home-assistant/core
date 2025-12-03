@@ -281,6 +281,9 @@
       },
       "honk_flash": {
         "default": "mdi:alarm-light"
+      },
+      "lock_reduced_guard": {
+        "default": "mdi:lock-minus"
       }
     },
     "device_tracker": {

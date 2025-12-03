@@ -1,4 +1,306 @@
 # serializer version: 1
+# name: test_device_diagnostics[mal_gyitctrjj1kefxp2]
+  dict({
+    'active_time': '2024-12-02T20:08:56+00:00',
+    'category': 'mal',
+    'create_time': '2024-12-02T20:08:56+00:00',
+    'disabled_by': None,
+    'disabled_polling': False,
+    'endpoint': 'https://apigw.tuyaeu.com',
+    'function': dict({
+      'alarm_delay_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"min","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'delay_set': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'master_mode': dict({
+        'type': 'Enum',
+        'value': '{"range":["disarmed","arm","home","sos"]}',
+      }),
+      'master_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","alarm"]}',
+      }),
+      'muffling': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'sub_admin': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'sub_class': dict({
+        'type': 'Enum',
+        'value': '{"range":["remote_controller","detector"]}',
+      }),
+      'switch_alarm_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_propel': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_mode_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+    }),
+    'home_assistant': dict({
+      'disabled': False,
+      'disabled_by': None,
+      'entities': list([
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': None,
+          'icon': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'changed_by': None,
+              'code_arm_required': False,
+              'code_format': None,
+              'friendly_name': 'Multifunction alarm',
+              'supported_features': 11,
+            }),
+            'entity_id': 'alarm_control_panel.multifunction_alarm',
+            'state': 'disarmed',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'config',
+          'icon': None,
+          'original_device_class': 'duration',
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'duration',
+              'friendly_name': 'Multifunction alarm Arm delay',
+              'max': 999.0,
+              'min': 0.0,
+              'mode': 'auto',
+              'step': 1.0,
+              'unit_of_measurement': 's',
+            }),
+            'entity_id': 'number.multifunction_alarm_arm_delay',
+            'state': '15.0',
+          }),
+          'unit_of_measurement': 's',
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'config',
+          'icon': None,
+          'original_device_class': 'duration',
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'duration',
+              'friendly_name': 'Multifunction alarm Alarm delay',
+              'max': 999.0,
+              'min': 0.0,
+              'mode': 'auto',
+              'step': 1.0,
+              'unit_of_measurement': 's',
+            }),
+            'entity_id': 'number.multifunction_alarm_alarm_delay',
+            'state': '20.0',
+          }),
+          'unit_of_measurement': 's',
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'config',
+          'icon': None,
+          'original_device_class': 'duration',
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'duration',
+              'friendly_name': 'Multifunction alarm Siren duration',
+              'max': 999.0,
+              'min': 0.0,
+              'mode': 'auto',
+              'step': 1.0,
+              'unit_of_measurement': 'min',
+            }),
+            'entity_id': 'number.multifunction_alarm_siren_duration',
+            'state': '3.0',
+          }),
+          'unit_of_measurement': 'min',
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'config',
+          'icon': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Multifunction alarm Arm beep',
+            }),
+            'entity_id': 'switch.multifunction_alarm_arm_beep',
+            'state': 'on',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'config',
+          'icon': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Multifunction alarm Siren',
+            }),
+            'entity_id': 'switch.multifunction_alarm_siren',
+            'state': 'on',
+          }),
+          'unit_of_measurement': None,
+        }),
+      ]),
+      'name': 'Multifunction alarm',
+      'name_by_user': None,
+    }),
+    'id': '2pxfek1jjrtctiyglam',
+    'mqtt_connected': True,
+    'name': 'Multifunction alarm',
+    'online': True,
+    'product_id': 'gyitctrjj1kefxp2',
+    'product_name': 'Multifunction alarm',
+    'set_up': True,
+    'status': dict({
+      'alarm_delay_time': 20,
+      'alarm_msg': '**REDACTED**',
+      'alarm_time': 3,
+      'delay_set': 15,
+      'master_mode': 'disarmed',
+      'master_state': 'normal',
+      'muffling': False,
+      'sub_admin': 'AgEFCggC////HABLAGkAdABjAGgAZQBuACAAUwBtAG8AawBlACBjAAL///8gAHUAbgBkAGUAbABlAHQAYQBiAGwAZQA6AEUATwBMADFkAAL///8gAHUAbgBkAGUAbABlAHQAYQBiAGwAZQA6AEUATwBMADJlAAL///8gAHUAbgBkAGUAbABlAHQAYQBiAGwAZQA6AEUATwBMADNmAAL///8gAHUAbgBkAGUAbABlAHQAYQBiAGwAZQA6AEUATwBMADQ=',
+      'sub_class': 'remote_controller',
+      'sub_state': 'normal',
+      'switch_alarm_light': True,
+      'switch_alarm_propel': True,
+      'switch_alarm_sound': True,
+      'switch_kb_light': False,
+      'switch_kb_sound': False,
+      'switch_mode_sound': True,
+      'telnet_state': 'sim_card_no',
+    }),
+    'status_range': dict({
+      'alarm_delay_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'alarm_msg': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"min","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'delay_set': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'master_mode': dict({
+        'type': 'Enum',
+        'value': '{"range":["disarmed","arm","home","sos"]}',
+      }),
+      'master_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","alarm"]}',
+      }),
+      'muffling': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'sub_admin': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'sub_class': dict({
+        'type': 'Enum',
+        'value': '{"range":["remote_controller","detector"]}',
+      }),
+      'sub_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","alarm","fault","others"]}',
+      }),
+      'switch_alarm_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_propel': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_mode_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'telnet_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","network_no","phone_no","sim_card_no","network_search","signal_level_1","signal_level_2","signal_level_3","signal_level_4","signal_level_5"]}',
+      }),
+    }),
+    'sub': False,
+    'support_local': True,
+    'terminal_id': '7cd96aff-6ec8-4006-b093-3dbff7947591',
+    'time_zone': '+02:00',
+    'update_time': '2024-12-02T20:08:56+00:00',
+    'warnings': None,
+  })
+# ---
 # name: test_device_diagnostics[rqbj_4iqe2hsfyd86kwwc]
   dict({
     'active_time': '2025-06-24T20:33:10+00:00',
@@ -8,10 +310,17 @@
     'disabled_polling': False,
     'endpoint': 'https://apigw.tuyaeu.com',
     'function': dict({
-      'null': dict({
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+      }),
+      'muffling': dict({
         'type': 'Boolean',
-        'value': dict({
-        }),
+        'value': '{}',
+      }),
+      'self_checking': dict({
+        'type': 'Boolean',
+        'value': '{}',
       }),
     }),
     'home_assistant': dict({
@@ -75,10 +384,29 @@
       'self_checking': False,
     }),
     'status_range': dict({
-      'null': dict({
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+      }),
+      'checking_result': dict({
+        'type': 'Enum',
+        'value': '{"range":["checking","check_success","check_failure","others"]}',
+      }),
+      'gas_sensor_status': dict({
+        'type': 'Enum',
+        'value': '{"range":["alarm","normal"]}',
+      }),
+      'gas_sensor_value': dict({
+        'type': 'Integer',
+        'value': '{"unit":"ppm","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'muffling': dict({
         'type': 'Boolean',
-        'value': dict({
-        }),
+        'value': '{}',
+      }),
+      'self_checking': dict({
+        'type': 'Boolean',
+        'value': '{}',
       }),
     }),
     'sub': False,
@@ -86,6 +414,167 @@
     'terminal_id': '7cd96aff-6ec8-4006-b093-3dbff7947591',
     'time_zone': '-04:00',
     'update_time': '2025-06-24T20:33:10+00:00',
+    'warnings': None,
+  })
+# ---
+# name: test_device_diagnostics[tdq_9htyiowaf5rtdhrv]
+  dict({
+    'active_time': '2024-09-08T13:46:46+00:00',
+    'category': 'tdq',
+    'create_time': '2024-09-08T13:46:46+00:00',
+    'disabled_by': None,
+    'disabled_polling': False,
+    'endpoint': 'https://apigw.tuyaeu.com',
+    'function': dict({
+      'countdown_1': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":86400,"scale":0,"step":1}',
+      }),
+      'cycle_time': dict({
+        'type': 'String',
+        'value': '{"maxlen":255}',
+      }),
+      'random_time': dict({
+        'type': 'String',
+        'value': '{"maxlen":255}',
+      }),
+      'relay_status': dict({
+        'type': 'Enum',
+        'value': '{"range":["0","1","2"]}',
+      }),
+      'remote_add': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'remote_list': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'switch_1': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_inching': dict({
+        'type': 'String',
+        'value': '{"maxlen":255}',
+      }),
+      'switch_type': dict({
+        'type': 'Enum',
+        'value': '{"range":["flip","sync","button"]}',
+      }),
+    }),
+    'home_assistant': dict({
+      'disabled': False,
+      'disabled_by': None,
+      'entities': list([
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'config',
+          'icon': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Framboisiers Power on behavior',
+              'options': list([
+                '0',
+                '1',
+                '2',
+              ]),
+            }),
+            'entity_id': 'select.framboisiers_power_on_behavior',
+            'state': 'unknown',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': None,
+          'icon': None,
+          'original_device_class': 'outlet',
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'outlet',
+              'friendly_name': 'Framboisiers Switch 1',
+            }),
+            'entity_id': 'switch.framboisiers_switch_1',
+            'state': 'off',
+          }),
+          'unit_of_measurement': None,
+        }),
+      ]),
+      'name': 'Framboisiers',
+      'name_by_user': None,
+    }),
+    'id': 'vrhdtr5fawoiyth9qdt',
+    'mqtt_connected': True,
+    'name': 'Framboisiers',
+    'online': True,
+    'product_id': '9htyiowaf5rtdhrv',
+    'product_name': '1-433',
+    'set_up': True,
+    'status': dict({
+      'countdown_1': 0,
+      'cycle_time': '',
+      'random_time': '',
+      'relay_status': 2,
+      'remote_add': '',
+      'remote_list': 'AA==',
+      'switch_1': False,
+      'switch_inching': 'AAAC',
+      'switch_type': 'button',
+    }),
+    'status_range': dict({
+      'countdown_1': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":86400,"scale":0,"step":1}',
+      }),
+      'cycle_time': dict({
+        'type': 'String',
+        'value': '{"maxlen":255}',
+      }),
+      'random_time': dict({
+        'type': 'String',
+        'value': '{"maxlen":255}',
+      }),
+      'relay_status': dict({
+        'type': 'Enum',
+        'value': '{"range":["0","1","2"]}',
+      }),
+      'remote_add': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'remote_list': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'switch_1': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_inching': dict({
+        'type': 'String',
+        'value': '{"maxlen":255}',
+      }),
+      'switch_type': dict({
+        'type': 'Enum',
+        'value': '{"range":["flip","sync","button"]}',
+      }),
+    }),
+    'sub': False,
+    'support_local': True,
+    'terminal_id': '7cd96aff-6ec8-4006-b093-3dbff7947591',
+    'time_zone': '+02:00',
+    'update_time': '2024-09-08T13:46:46+00:00',
+    'warnings': list([
+      'enum_out_range|relay_status|2',
+    ]),
   })
 # ---
 # name: test_entry_diagnostics[rqbj_4iqe2hsfyd86kwwc]
@@ -96,10 +585,17 @@
         'category': 'rqbj',
         'create_time': '2025-06-24T20:33:10+00:00',
         'function': dict({
-          'null': dict({
+          'alarm_time': dict({
+            'type': 'Integer',
+            'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+          }),
+          'muffling': dict({
             'type': 'Boolean',
-            'value': dict({
-            }),
+            'value': '{}',
+          }),
+          'self_checking': dict({
+            'type': 'Boolean',
+            'value': '{}',
           }),
         }),
         'home_assistant': dict({
@@ -162,16 +658,36 @@
           'self_checking': False,
         }),
         'status_range': dict({
-          'null': dict({
+          'alarm_time': dict({
+            'type': 'Integer',
+            'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+          }),
+          'checking_result': dict({
+            'type': 'Enum',
+            'value': '{"range":["checking","check_success","check_failure","others"]}',
+          }),
+          'gas_sensor_status': dict({
+            'type': 'Enum',
+            'value': '{"range":["alarm","normal"]}',
+          }),
+          'gas_sensor_value': dict({
+            'type': 'Integer',
+            'value': '{"unit":"ppm","min":0,"max":999,"scale":0,"step":1}',
+          }),
+          'muffling': dict({
             'type': 'Boolean',
-            'value': dict({
-            }),
+            'value': '{}',
+          }),
+          'self_checking': dict({
+            'type': 'Boolean',
+            'value': '{}',
           }),
         }),
         'sub': False,
         'support_local': True,
         'time_zone': '-04:00',
         'update_time': '2025-06-24T20:33:10+00:00',
+        'warnings': None,
       }),
     ]),
     'disabled_by': None,

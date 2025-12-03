@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from aioamazondevices.structures import AmazonDevice
@@ -60,5 +61,5 @@ def build_device_data(device: AmazonDevice) -> dict[str, Any]:
         "online": device.online,
         "serial number": device.serial_number,
         "software version": device.software_version,
-        "sensors": device.sensors,
+        "sensors": {key: asdict(sensor) for key, sensor in device.sensors.items()},
     }

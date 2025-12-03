@@ -1,4 +1,129 @@
 # serializer version: 1
+# name: test_browse_media[apps]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'app',
+        'media_content_id': '9WZDNCRFJ3TJ',
+        'media_content_type': 'app',
+        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.51598.9007199266246365.9538e419-4ced-4bb5-b027-e23a78887cd2.c4963fa6-7627-4a17-b2a8-fb1321b226d0',
+        'title': 'Netflix',
+      }),
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'app',
+        'media_content_id': '9NBLGGGZ5QDQ',
+        'media_content_type': 'app',
+        'thumbnail': None,
+        'title': 'Xbox Original Avatars',
+      }),
+    ]),
+    'children_media_class': 'app',
+    'media_class': 'directory',
+    'media_content_id': 'App',
+    'media_content_type': 'app',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Apps',
+  })
+# ---
+# name: test_browse_media[games]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'game',
+        'media_content_id': 'BPK4ZKFCFL5G',
+        'media_content_type': 'game',
+        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.43721.14415742612829493.1297136a-f273-41f1-947f-59044c848c55.11020954-c4b7-4cb8-abf9-8c135631b574',
+        'title': 'Halo: The Master Chief Collection',
+      }),
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'game',
+        'media_content_id': 'C2HGK9J5367F',
+        'media_content_type': 'game',
+        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.64736.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6491fb2f-52e7-4129-bcbd-d23a67117ae0',
+        'title': 'Blue Dragon',
+      }),
+    ]),
+    'children_media_class': 'game',
+    'media_class': 'directory',
+    'media_content_id': 'Game',
+    'media_content_type': 'game',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Games',
+  })
+# ---
+# name: test_browse_media[library]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'app',
+        'media_content_id': 'Home',
+        'media_content_type': 'app',
+        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.51598.9007199266246365.9538e419-4ced-4bb5-b027-e23a78887cd2.c4963fa6-7627-4a17-b2a8-fb1321b226d0',
+        'title': 'Home',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': 'app',
+        'media_class': 'directory',
+        'media_content_id': 'App',
+        'media_content_type': 'app',
+        'thumbnail': None,
+        'title': 'Apps',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': 'game',
+        'media_class': 'directory',
+        'media_content_id': 'Game',
+        'media_content_type': 'game',
+        'thumbnail': None,
+        'title': 'Games',
+      }),
+    ]),
+    'children_media_class': 'directory',
+    'media_class': 'directory',
+    'media_content_id': 'library',
+    'media_content_type': 'library',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Installed Applications',
+  })
+# ---
 # name: test_media_players[media_player.xone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -30,7 +155,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 149385>,
-    'translation_key': None,
+    'translation_key': 'xbox',
     'unique_id': 'HIJKLMN',
     'unit_of_measurement': None,
   })
@@ -41,6 +166,7 @@
       'entity_picture': 'http://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
       'entity_picture_local': '/api/media_player_proxy/media_player.xone?token=mock_token&cache=739260d7bff66329',
       'friendly_name': 'XONE',
+      'media_content_id': '9WZDNCRFJ3TJ',
       'media_content_type': <MediaType.APP: 'app'>,
       'media_title': 'Netflix',
       'supported_features': <MediaPlayerEntityFeature: 149385>,
@@ -84,7 +210,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 149385>,
-    'translation_key': None,
+    'translation_key': 'xbox',
     'unique_id': 'ABCDEFG',
     'unit_of_measurement': None,
   })
@@ -95,6 +221,7 @@
       'entity_picture': 'http://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
       'entity_picture_local': '/api/media_player_proxy/media_player.xonex?token=mock_token&cache=739260d7bff66329',
       'friendly_name': 'XONEX',
+      'media_content_id': '9WZDNCRFJ3TJ',
       'media_content_type': <MediaType.APP: 'app'>,
       'media_title': 'Netflix',
       'supported_features': <MediaPlayerEntityFeature: 149385>,

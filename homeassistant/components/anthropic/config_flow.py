@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 import json
 import logging
+import re
 from typing import Any, cast
 
 import anthropic
@@ -38,6 +38,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     TemplateSelector,
 )
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -53,15 +54,11 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_THINKING_BUDGET,
-    RECOMMENDED_WEB_SEARCH,
-    RECOMMENDED_WEB_SEARCH_MAX_USES,
-    RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
 
@@ -73,10 +70,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-RECOMMENDED_OPTIONS = {
+DEFAULT_CONVERSATION_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+}
+
+DEFAULT_AI_TASK_OPTIONS = {
+    CONF_RECOMMENDED: True,
 }
 
 
@@ -101,7 +102,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self._async_abort_entries_match(user_input)
@@ -129,10 +130,16 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                     subentries=[
                         {
                             "subentry_type": "conversation",
-                            "data": RECOMMENDED_OPTIONS,
+                            "data": DEFAULT_CONVERSATION_OPTIONS,
                             "title": DEFAULT_CONVERSATION_NAME,
                             "unique_id": None,
-                        }
+                        },
+                        {
+                            "subentry_type": "ai_task_data",
+                            "data": DEFAULT_AI_TASK_OPTIONS,
+                            "title": DEFAULT_AI_TASK_NAME,
+                            "unique_id": None,
+                        },
                     ],
                 )
 
@@ -146,102 +153,281 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"conversation": ConversationSubentryFlowHandler}
+        return {
+            "conversation": ConversationSubentryFlowHandler,
+            "ai_task_data": ConversationSubentryFlowHandler,
+        }
 
 
 class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
-    last_rendered_recommended = False
+    options: dict[str, Any]
 
     @property
     def _is_new(self) -> bool:
         """Return if this is a new subentry."""
         return self.source == "user"
 
-    async def async_step_set_options(
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Set conversation options."""
+        """Add a subentry."""
+        if self._subentry_type == "ai_task_data":
+            self.options = DEFAULT_AI_TASK_OPTIONS.copy()
+        else:
+            self.options = DEFAULT_CONVERSATION_OPTIONS.copy()
+        return await self.async_step_init()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a subentry."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init()
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Set initial options."""
         # abort if entry is not loaded
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(self.hass)
+        ]
+        if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
+            suggested_llm_apis, str
+        ):
+            self.options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+
+        step_schema: VolDictType = {}
         errors: dict[str, str] = {}
 
-        if user_input is None:
-            if self._is_new:
-                options = RECOMMENDED_OPTIONS.copy()
+        if self._is_new:
+            if self._subentry_type == "ai_task_data":
+                default_name = DEFAULT_AI_TASK_NAME
             else:
-                # If this is a reconfiguration, we need to copy the existing options
-                # so that we can show the current values in the form.
-                options = self._get_reconfigure_subentry().data.copy()
+                default_name = DEFAULT_CONVERSATION_NAME
+            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
 
-            self.last_rendered_recommended = cast(
-                bool, options.get(CONF_RECOMMENDED, False)
+        if self._subentry_type == "conversation":
+            step_schema.update(
+                {
+                    vol.Optional(CONF_PROMPT): TemplateSelector(),
+                    vol.Optional(
+                        CONF_LLM_HASS_API,
+                    ): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                }
             )
 
-        elif user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
+        step_schema[
+            vol.Required(
+                CONF_RECOMMENDED, default=self.options.get(CONF_RECOMMENDED, False)
+            )
+        ] = bool
+
+        if user_input is not None:
             if not user_input.get(CONF_LLM_HASS_API):
                 user_input.pop(CONF_LLM_HASS_API, None)
-            if user_input.get(
-                CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
-            ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
-                errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
-            if user_input.get(CONF_WEB_SEARCH, RECOMMENDED_WEB_SEARCH):
-                model = user_input.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-                if model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
-                    errors[CONF_WEB_SEARCH] = "web_search_unsupported_model"
-                elif user_input.get(
-                    CONF_WEB_SEARCH_USER_LOCATION, RECOMMENDED_WEB_SEARCH_USER_LOCATION
+
+            if user_input[CONF_RECOMMENDED]:
+                if not errors:
+                    if self._is_new:
+                        return self.async_create_entry(
+                            title=user_input.pop(CONF_NAME),
+                            data=user_input,
+                        )
+                    return self.async_update_and_abort(
+                        self._get_entry(),
+                        self._get_reconfigure_subentry(),
+                        data=user_input,
+                    )
+            else:
+                self.options.update(user_input)
+                if (
+                    CONF_LLM_HASS_API in self.options
+                    and CONF_LLM_HASS_API not in user_input
+                ):
+                    self.options.pop(CONF_LLM_HASS_API)
+                if not errors:
+                    return await self.async_step_advanced()
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), self.options
+            ),
+            errors=errors or None,
+        )
+
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage advanced options."""
+        errors: dict[str, str] = {}
+
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_CHAT_MODEL,
+                default=DEFAULT[CONF_CHAT_MODEL],
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=await self._get_model_list(), custom_value=True
+                )
+            ),
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                default=DEFAULT[CONF_MAX_TOKENS],
+            ): int,
+            vol.Optional(
+                CONF_TEMPERATURE,
+                default=DEFAULT[CONF_TEMPERATURE],
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        }
+
+        if user_input is not None:
+            self.options.update(user_input)
+
+            if not errors:
+                return await self.async_step_model()
+
+        return self.async_show_form(
+            step_id="advanced",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), self.options
+            ),
+            errors=errors,
+        )
+
+    async def async_step_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage model-specific options."""
+        errors: dict[str, str] = {}
+
+        step_schema: VolDictType = {}
+
+        model = self.options[CONF_CHAT_MODEL]
+
+        if not model.startswith(tuple(NON_THINKING_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
+                )
+            ] = vol.All(
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=0,
+                        max=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
+                    )
+                ),
+                vol.Coerce(int),
+            )
+        else:
+            self.options.pop(CONF_THINKING_BUDGET, None)
+
+        if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_WEB_SEARCH,
+                        default=DEFAULT[CONF_WEB_SEARCH],
+                    ): bool,
+                    vol.Optional(
+                        CONF_WEB_SEARCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                    ): int,
+                    vol.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                    ): bool,
+                }
+            )
+        else:
+            self.options.pop(CONF_WEB_SEARCH, None)
+            self.options.pop(CONF_WEB_SEARCH_MAX_USES, None)
+            self.options.pop(CONF_WEB_SEARCH_USER_LOCATION, None)
+
+        self.options.pop(CONF_WEB_SEARCH_CITY, None)
+        self.options.pop(CONF_WEB_SEARCH_REGION, None)
+        self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
+        self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+
+        if not step_schema:
+            user_input = {}
+
+        if user_input is not None:
+            if user_input.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH]) and not errors:
+                if user_input.get(
+                    CONF_WEB_SEARCH_USER_LOCATION,
+                    DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
                 ):
                     user_input.update(await self._get_location_data())
+
+            self.options.update(user_input)
 
             if not errors:
                 if self._is_new:
                     return self.async_create_entry(
-                        title=user_input.pop(CONF_NAME),
-                        data=user_input,
+                        title=self.options.pop(CONF_NAME),
+                        data=self.options,
                     )
 
                 return self.async_update_and_abort(
                     self._get_entry(),
                     self._get_reconfigure_subentry(),
-                    data=user_input,
+                    data=self.options,
                 )
 
-            options = user_input
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-        else:
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
-            }
-
-        suggested_values = options.copy()
-        if not suggested_values.get(CONF_PROMPT):
-            suggested_values[CONF_PROMPT] = llm.DEFAULT_INSTRUCTIONS_PROMPT
-        if (
-            suggested_llm_apis := suggested_values.get(CONF_LLM_HASS_API)
-        ) and isinstance(suggested_llm_apis, str):
-            suggested_values[CONF_LLM_HASS_API] = [suggested_llm_apis]
-
-        schema = self.add_suggested_values_to_schema(
-            vol.Schema(
-                anthropic_config_option_schema(self.hass, self._is_new, options)
-            ),
-            suggested_values,
-        )
-
         return self.async_show_form(
-            step_id="set_options",
-            data_schema=schema,
+            step_id="model",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), self.options
+            ),
             errors=errors or None,
+            last_step=True,
         )
+
+    async def _get_model_list(self) -> list[SelectOptionDict]:
+        """Get list of available models."""
+        try:
+            client = await self.hass.async_add_executor_job(
+                partial(
+                    anthropic.AsyncAnthropic,
+                    api_key=self._get_entry().data[CONF_API_KEY],
+                )
+            )
+            models = (await client.models.list()).data
+        except anthropic.AnthropicError:
+            models = []
+        _LOGGER.debug("Available models: %s", models)
+        model_options: list[SelectOptionDict] = []
+        short_form = re.compile(r"[^\d]-\d$")
+        for model_info in models:
+            # Resolve alias from versioned model name:
+            model_alias = (
+                model_info.id[:-9]
+                if model_info.id
+                not in ("claude-3-haiku-20240307", "claude-3-opus-20240229")
+                else model_info.id
+            )
+            if short_form.search(model_alias):
+                model_alias += "-0"
+            model_options.append(
+                SelectOptionDict(
+                    label=model_info.display_name,
+                    value=model_alias,
+                )
+            )
+        return model_options
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
@@ -267,7 +453,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
             response = await client.messages.create(
-                model=RECOMMENDED_CHAT_MODEL,
+                model=cast(str, DEFAULT[CONF_CHAT_MODEL]),
                 messages=[
                     {
                         "role": "user",
@@ -282,7 +468,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         "content": "{",  # hints the model to skip any preamble
                     },
                 ],
-                max_tokens=RECOMMENDED_MAX_TOKENS,
+                max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
             )
             _LOGGER.debug("Model response: %s", response.content)
             location_data = location_schema(
@@ -304,77 +490,3 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         _LOGGER.debug("Location data: %s", location_data)
 
         return location_data
-
-    async_step_user = async_step_set_options
-    async_step_reconfigure = async_step_set_options
-
-
-def anthropic_config_option_schema(
-    hass: HomeAssistant,
-    is_new: bool,
-    options: Mapping[str, Any],
-) -> dict:
-    """Return a schema for Anthropic completion options."""
-    hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
-    ]
-
-    if is_new:
-        schema: dict[vol.Required | vol.Optional, Any] = {
-            vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME): str,
-        }
-    else:
-        schema = {}
-
-    schema.update(
-        {
-            vol.Optional(CONF_PROMPT): TemplateSelector(),
-            vol.Optional(
-                CONF_LLM_HASS_API,
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
-            vol.Required(
-                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-            ): bool,
-        }
-    )
-
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
-    schema.update(
-        {
-            vol.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_THINKING_BUDGET,
-                default=RECOMMENDED_THINKING_BUDGET,
-            ): int,
-            vol.Optional(
-                CONF_WEB_SEARCH,
-                default=RECOMMENDED_WEB_SEARCH,
-            ): bool,
-            vol.Optional(
-                CONF_WEB_SEARCH_MAX_USES,
-                default=RECOMMENDED_WEB_SEARCH_MAX_USES,
-            ): int,
-            vol.Optional(
-                CONF_WEB_SEARCH_USER_LOCATION,
-                default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
-            ): bool,
-        }
-    )
-    return schema

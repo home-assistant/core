@@ -244,7 +244,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
     ("service"),
     [SERVICE_GET_FORECASTS],
 )
-@freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
+@pytest.mark.freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
 async def test_v4_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

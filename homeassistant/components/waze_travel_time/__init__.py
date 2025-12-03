@@ -14,7 +14,6 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -47,6 +46,7 @@ from .const import (
     VEHICLE_TYPES,
 )
 from .coordinator import WazeTravelTimeCoordinator, async_get_travel_times
+from .httpx_client import create_httpx_client
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -106,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if SEMAPHORE not in hass.data.setdefault(DOMAIN, {}):
         hass.data.setdefault(DOMAIN, {})[SEMAPHORE] = asyncio.Semaphore(1)
 
-    httpx_client = get_async_client(hass)
+    httpx_client = await create_httpx_client(hass)
+
     client = WazeRouteCalculator(
         region=config_entry.data[CONF_REGION].upper(), client=httpx_client
     )
@@ -119,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
-        httpx_client = get_async_client(hass)
+        httpx_client = await create_httpx_client(hass)
         client = WazeRouteCalculator(
             region=service.data[CONF_REGION].upper(), client=httpx_client
         )

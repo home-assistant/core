@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted Assist satellites to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "Assist satellite",
@@ -15,6 +19,13 @@
       "fields": {
         "id": "Answer ID",
         "sentences": "Sentences"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -98,5 +109,47 @@
       "name": "Start conversation"
     }
   },
-  "title": "Assist satellite"
+  "title": "Assist satellite",
+  "triggers": {
+    "idle": {
+      "description": "Triggers after one or more voice assistant satellites become idle after having processed a command.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite became idle"
+    },
+    "listening": {
+      "description": "Triggers after one or more voice assistant satellites start listening for a command from someone.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite started listening"
+    },
+    "processing": {
+      "description": "Triggers after one or more voice assistant satellites start processing a command after having heard it.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite started processing"
+    },
+    "responding": {
+      "description": "Triggers after one or more voice assistant satellites start responding to a command after having processed it, or start announcing something.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite started responding"
+    }
+  }
 }

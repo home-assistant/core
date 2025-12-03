@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "mount": {
+        "name": "Connected"
+      },
       "state": {
         "name": "Running"
       }
@@ -127,7 +130,7 @@
       "title": "Restart(s) required"
     },
     "issue_system_free_space": {
-      "description": "The data disk has only {free_space}GB free space left. This may cause issues with system stability and interfere with functionality such as backups and updates. See [clear up storage]({more_info_free_space}) for tips on how to free up space.",
+      "description": "The data disk has only {free_space}GB free space left. This may cause issues with system stability and interfere with functionality such as backups and updates. Go to [storage]({storage_url}) to see what is taking up space or see [clear up storage]({more_info_free_space}) for tips on how to free up space.",
       "title": "Data disk is running low on free space"
     },
     "issue_system_multiple_data_disks": {

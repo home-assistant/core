@@ -42,7 +42,14 @@ async def test_entry_diagnostics(
     )
 
 
-@pytest.mark.parametrize("mock_device_code", ["rqbj_4iqe2hsfyd86kwwc"])
+@pytest.mark.parametrize(
+    "mock_device_code",
+    [
+        "rqbj_4iqe2hsfyd86kwwc",
+        "mal_gyitctrjj1kefxp2",  # with redacted dpcodes
+        "tdq_9htyiowaf5rtdhrv",  # with bad enum warnings
+    ],
+)
 async def test_device_diagnostics(
     hass: HomeAssistant,
     mock_manager: Manager,

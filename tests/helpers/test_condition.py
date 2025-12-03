@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.device_automation import (
     DOMAIN as DOMAIN_DEVICE_AUTOMATION,
 )
+from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
@@ -47,6 +48,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+from tests.typing import WebSocketGenerator
 
 
 def assert_element(trace_element, expected_element, path):
@@ -2170,7 +2172,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
         await condition.async_from_config(hass, config_3)
 
 
-async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
+async def test_platform_migrate_condition(hass: HomeAssistant) -> None:
     """Test a condition platform with a migration."""
 
     OPTIONS_SCHEMA_DICT = {
@@ -2236,6 +2238,29 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
         await async_validate_condition_config(hass, config_2_migrated)
         == config_2_migrated
     )
+
+
+async def test_platform_backwards_compatibility_for_new_style_configs(
+    hass: HomeAssistant,
+) -> None:
+    """Test backwards compatibility for old-style conditions with new-style configs."""
+    config_old_style = {
+        "condition": "numeric_state",
+        "entity_id": ["sensor.test"],
+        "above": 50,
+    }
+    result = await async_validate_condition_config(hass, config_old_style)
+    assert result == config_old_style
+
+    config_new_style = {
+        "condition": "numeric_state",
+        "options": {
+            "entity_id": ["sensor.test"],
+            "above": 50,
+        },
+    }
+    result = await async_validate_condition_config(hass, config_new_style)
+    assert result == config_old_style
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
@@ -2477,7 +2502,9 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     ],
 )
 async def test_async_get_all_descriptions(
-    hass: HomeAssistant, sun_condition_descriptions: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    sun_condition_descriptions: str,
 ) -> None:
     """Test async_get_all_descriptions."""
     device_automation_condition_descriptions = """
@@ -2491,6 +2518,18 @@ async def test_async_get_all_descriptions(
                     supported_features:
                       - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
         """
+    light_condition_descriptions = """
+        is_off:
+          target:
+            entity:
+              domain: light
+        is_on:
+          target:
+            entity:
+              domain: light
+        """
+
+    ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
     assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
@@ -2499,6 +2538,8 @@ async def test_async_get_all_descriptions(
     def _load_yaml(fname, secrets=None):
         if fname.endswith("device_automation/conditions.yaml"):
             condition_descriptions = device_automation_condition_descriptions
+        elif fname.endswith("light/conditions.yaml"):
+            condition_descriptions = light_condition_descriptions
         elif fname.endswith("sun/conditions.yaml"):
             condition_descriptions = sun_condition_descriptions
         with io.StringIO(condition_descriptions) as file:
@@ -2526,7 +2567,7 @@ async def test_async_get_all_descriptions(
     )
 
     # system_health does not have conditions and should not be in descriptions
-    assert descriptions == {
+    expected_descriptions = {
         "sun": {
             "fields": {
                 "after": {
@@ -2556,6 +2597,7 @@ async def test_async_get_all_descriptions(
             }
         }
     }
+    assert descriptions == expected_descriptions
 
     # Verify the cache returns the same object
     assert await condition.async_get_all_descriptions(hass) is descriptions
@@ -2573,35 +2615,8 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    assert new_descriptions == {
-        "sun": {
-            "fields": {
-                "after": {
-                    "example": "sunrise",
-                    "selector": {
-                        "select": {
-                            "custom_value": False,
-                            "multiple": False,
-                            "options": ["sunrise", "sunset"],
-                            "sort": False,
-                        }
-                    },
-                },
-                "after_offset": {"selector": {"time": {}}},
-                "before": {
-                    "example": "sunrise",
-                    "selector": {
-                        "select": {
-                            "custom_value": False,
-                            "multiple": False,
-                            "options": ["sunrise", "sunset"],
-                            "sort": False,
-                        }
-                    },
-                },
-                "before_offset": {"selector": {"time": {}}},
-            }
-        },
+    # The device automation conditions should now be present
+    expected_descriptions |= {
         "device": {
             "fields": {
                 "entity": {
@@ -2621,6 +2636,114 @@ async def test_async_get_all_descriptions(
             }
         },
     }
+    assert new_descriptions == expected_descriptions
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is new_descriptions
+
+    # Load the light integration and check a new cache object is created
+    assert await async_setup_component(hass, DOMAIN_LIGHT, {})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        new_descriptions = await condition.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    # No light conditions added, they are gated by the automation.new_triggers_conditions
+    # labs flag
+    assert new_descriptions == expected_descriptions
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is new_descriptions
+
+    # Enable the new_triggers_conditions flag and verify light conditions are loaded
+    assert await async_setup_component(hass, "labs", {})
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        new_descriptions = await condition.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    # The light conditions should now be present
+    assert new_descriptions == expected_descriptions | {
+        "light.is_off": {
+            "fields": {},
+            "target": {
+                "entity": [
+                    {
+                        "domain": [
+                            "light",
+                        ],
+                    },
+                ],
+            },
+        },
+        "light.is_on": {
+            "fields": {},
+            "target": {
+                "entity": [
+                    {
+                        "domain": [
+                            "light",
+                        ],
+                    },
+                ],
+            },
+        },
+    }
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is new_descriptions
+
+    # Disable the new_triggers_conditions flag and verify light conditions are removed
+    assert await async_setup_component(hass, "labs", {})
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": False,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        new_descriptions = await condition.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    # The light conditions should no longer be present
+    assert new_descriptions == expected_descriptions
 
     # Verify the cache returns the same object
     assert await condition.async_get_all_descriptions(hass) is new_descriptions
@@ -2755,3 +2878,122 @@ async def test_subscribe_conditions(
 
     assert condition_events == [{"sun"}]
     assert "Error while notifying condition platform listener" in caplog.text
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+@pytest.mark.parametrize(
+    ("new_triggers_conditions_enabled", "expected_events"),
+    [
+        (True, [{"light.is_off", "light.is_on"}]),
+        (False, []),
+    ],
+)
+async def test_subscribe_conditions_experimental_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    new_triggers_conditions_enabled: bool,
+    expected_events: list[set[str]],
+) -> None:
+    """Test condition.async_subscribe_platform_events doesn't send events for disabled conditions."""
+    # Return empty conditions.yaml for light integration, the actual condition
+    # descriptions are irrelevant for this test
+    light_condition_descriptions = ""
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/conditions.yaml"):
+            condition_descriptions = light_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a working subscriber."""
+        condition_events.append(new_conditions)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": new_triggers_conditions_enabled,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert condition_events == expected_events
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+@patch(
+    "homeassistant.components.light.condition.async_get_conditions",
+    new=AsyncMock(return_value={}),
+)
+async def test_subscribe_conditions_no_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test condition.async_subscribe_platform_events doesn't send events for platforms without conditions."""
+    # Return empty conditions.yaml for light integration, the actual condition
+    # descriptions are irrelevant for this test
+    light_condition_descriptions = ""
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/conditions.yaml"):
+            condition_descriptions = light_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a working subscriber."""
+        condition_events.append(new_conditions)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert condition_events == []

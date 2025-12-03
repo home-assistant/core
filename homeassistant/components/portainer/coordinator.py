@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -13,7 +14,7 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, DockerContainerStats
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
@@ -39,9 +40,18 @@ class PortainerCoordinatorData:
     id: int
     name: str | None
     endpoint: Endpoint
-    containers: dict[str, DockerContainer]
+    containers: dict[str, PortainerContainerData]
     docker_version: DockerVersion
     docker_info: DockerInfo
+
+
+@dataclass(slots=True)
+class PortainerContainerData:
+    """Container data held by the Portainer coordinator."""
+
+    container: DockerContainer
+    stats: DockerContainerStats
+    stats_pre: DockerContainerStats | None
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -72,7 +82,9 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             Callable[[list[PortainerCoordinatorData]], None]
         ] = []
         self.new_containers_callbacks: list[
-            Callable[[list[tuple[PortainerCoordinatorData, DockerContainer]]], None]
+            Callable[
+                [list[tuple[PortainerCoordinatorData, PortainerContainerData]]], None
+            ]
         ] = []
 
     async def _async_setup(self) -> None:
@@ -119,8 +131,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        else:
-            _LOGGER.debug("Fetched endpoints: %s", endpoints)
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
@@ -136,6 +146,47 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 containers = await self.portainer.get_containers(endpoint.id)
                 docker_version = await self.portainer.docker_version(endpoint.id)
                 docker_info = await self.portainer.docker_info(endpoint.id)
+
+                container_map: dict[str, PortainerContainerData] = {}
+
+                container_stats_task = [
+                    (
+                        container,
+                        self.portainer.container_stats(
+                            endpoint_id=endpoint.id,
+                            container_id=container.id,
+                        ),
+                    )
+                    for container in containers
+                ]
+
+                container_stats_gather = await asyncio.gather(
+                    *[task for _, task in container_stats_task],
+                )
+                for (container, _), container_stats in zip(
+                    container_stats_task, container_stats_gather, strict=False
+                ):
+                    container_name = container.names[0].replace("/", " ").strip()
+
+                    # Store previous stats if available. This is used to calculate deltas for CPU and network usage
+                    # In the first call it will be None, since it has nothing to compare with
+                    # Added a walrus pattern to check if not None on prev_container, to keep mypy happy. :)
+                    container_map[container_name] = PortainerContainerData(
+                        container=container,
+                        stats=container_stats,
+                        stats_pre=(
+                            prev_container.stats
+                            if self.data
+                            and (prev_data := self.data.get(endpoint.id)) is not None
+                            and (
+                                prev_container := prev_data.containers.get(
+                                    container_name
+                                )
+                            )
+                            is not None
+                            else None
+                        ),
+                    )
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -155,10 +206,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers={
-                    container.names[0].replace("/", " ").strip(): container
-                    for container in containers
-                },
+                containers=container_map,
                 docker_version=docker_version,
                 docker_info=docker_info,
             )
@@ -179,7 +227,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         # Surprise, we also handle containers here :)
         current_containers = {
-            (endpoint.id, container.id)
+            (endpoint.id, container.container.id)
             for endpoint in mapped_endpoints.values()
             for container in endpoint.containers.values()
         }

@@ -1,4 +1,126 @@
 # serializer version: 1
+# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.clim_salon_dust_filter_alarm_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust filter alarm threshold',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dust_filter_alarm',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_samsungce.dustFilterAlarm_alarmThreshold_alarmThreshold',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clim Salon Dust filter alarm threshold',
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.clim_salon_dust_filter_alarm_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '500',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust filter alarm threshold',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dust_filter_alarm',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_samsungce.dustFilterAlarm_alarmThreshold_alarmThreshold',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aire Dormitorio Principal Dust filter alarm threshold',
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '500',
+  })
+# ---
 # name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -113,6 +235,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'high',
+  })
+# ---
+# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_oven_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lamp',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lamp',
+    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen oven Lamp',
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_oven_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-entry]
@@ -271,6 +450,65 @@
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][select.dishwasher-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher',
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dishwasher',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operating_state',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_dishwasherOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher',
@@ -713,6 +951,71 @@
     'state': 'high',
   })
 # ---
+# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'tap_cold',
+        'cold',
+        'warm',
+        'hot',
+        'extra_hot',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.washer_water_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_temperature',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerWaterTemperature_washerWaterTemperature_washerWaterTemperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washer Water temperature',
+      'options': list([
+        'none',
+        'tap_cold',
+        'cold',
+        'warm',
+        'hot',
+        'extra_hot',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.washer_water_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'warm',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -837,6 +1140,73 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1400',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'cold',
+        '20',
+        '30',
+        '40',
+        '60',
+        '90',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.washing_machine_water_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_temperature',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.washerWaterTemperature_washerWaterTemperature_washerWaterTemperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_water_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing Machine Water temperature',
+      'options': list([
+        'none',
+        'cold',
+        '20',
+        '30',
+        '40',
+        '60',
+        '90',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.washing_machine_water_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
   })
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver-entry]
@@ -1087,6 +1457,73 @@
     'state': '1000',
   })
 # ---
+# name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'cold',
+        '20',
+        '30',
+        '40',
+        '60',
+        '90',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.machine_a_laver_water_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_temperature',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_custom.washerWaterTemperature_washerWaterTemperature_washerWaterTemperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_water_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Water temperature',
+      'options': list([
+        'none',
+        'cold',
+        '20',
+        '30',
+        '40',
+        '60',
+        '90',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.machine_a_laver_water_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_100001][select.washer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1144,5 +1581,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100002][select.washer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'run',
+        'pause',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.washer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operating_state',
+    'unique_id': 'C097276D-C8D4-0000-0000-000000000000_main_washerOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100002][select.washer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washer',
+      'options': list([
+        'run',
+        'pause',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.washer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'run',
   })
 # ---

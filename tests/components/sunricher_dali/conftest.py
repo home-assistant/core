@@ -56,6 +56,7 @@ def _create_mock_device(
     device.turn_on = MagicMock()
     device.turn_off = MagicMock()
     device.read_status = MagicMock()
+    device.register_listener = MagicMock(return_value=lambda: None)
     return device
 
 

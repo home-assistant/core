@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import json
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
@@ -124,62 +123,6 @@ async def test_classic_api_setup(
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
     assert device_entry is not None
     assert device_entry == snapshot
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_unload_removes_listeners(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that unloading removes all listeners."""
-    # Get initial listener count
-    initial_listeners = len(hass.bus.async_listeners())
-
-    # Unload the integration
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify listeners were removed (should be same or less)
-    final_listeners = len(hass.bus.async_listeners())
-    assert final_listeners <= initial_listeners
-
-
-async def test_multiple_devices_discovered(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_growatt_v1_api,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test handling multiple devices from device_list."""
-    # Reset and add multiple devices
-    mock_config_entry_new = MockConfigEntry(
-        domain=DOMAIN,
-        data=mock_config_entry.data,
-        unique_id="plant_456",
-    )
-
-    mock_growatt_v1_api.device_list.return_value = {
-        "devices": [
-            {"device_sn": "MIN123456", "type": 7},
-            {"device_sn": "MIN789012", "type": 7},
-        ]
-    }
-
-    with patch(
-        "homeassistant.components.growatt_server.coordinator.SCAN_INTERVAL",
-        timedelta(minutes=5),
-    ):
-        await setup_integration(hass, mock_config_entry_new)
-
-    # Verify both devices were created
-    device1 = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
-    device2 = device_registry.async_get_device(identifiers={(DOMAIN, "MIN789012")})
-
-    assert device1 is not None
-    assert device1 == snapshot(name="device_min123456")
-    assert device2 is not None
-    assert device2 == snapshot(name="device_min789012")
 
 
 async def test_migrate_legacy_api_token_config(

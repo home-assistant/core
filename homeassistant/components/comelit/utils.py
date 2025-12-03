@@ -2,13 +2,9 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
-from aiocomelit.api import (
-    ComelitSerialBridgeObject,
-    ComelitVedoAreaObject,
-    ComelitVedoZoneObject,
-)
+from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
 from aiohttp import ClientSession, CookieJar
 
@@ -22,11 +18,9 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, ObjectClassType
 from .coordinator import ComelitBaseCoordinator
 from .entity import ComelitBridgeBaseEntity
-
-DeviceType = ComelitSerialBridgeObject | ComelitVedoAreaObject | ComelitVedoZoneObject
 
 
 async def async_client_session(hass: HomeAssistant) -> ClientSession:
@@ -126,11 +120,7 @@ def new_device_listener(
     coordinator: ComelitBaseCoordinator,
     new_devices_callback: Callable[
         [
-            list[
-                ComelitSerialBridgeObject
-                | ComelitVedoAreaObject
-                | ComelitVedoZoneObject
-            ],
+            list[ObjectClassType],
             str,
         ],
         None,
@@ -142,10 +132,10 @@ def new_device_listener(
 
     def _check_devices() -> None:
         """Check for new devices and call callback with any new monitors."""
-        if not coordinator.data:
-            return
+        if TYPE_CHECKING:
+            assert coordinator.data
 
-        new_devices: list[DeviceType] = []
+        new_devices: list[ObjectClassType] = []
         for _id in coordinator.data[data_type]:
             if _id not in (id_list := known_devices.get(data_type, [])):
                 known_devices.update({data_type: [*id_list, _id]})

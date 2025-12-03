@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_adam_sensor_snapshot[platforms0][sensor.adam_outdoor_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.adam_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13,7 +13,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.adam_outdoor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
@@ -35,11 +35,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outdoor_temperature',
-    'unique_id': 'fe799307f1624099878210aa0b9f1475-outdoor_temperature',
+    'unique_id': 'da224107914542988a88561b4452b0f6-outdoor_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.adam_outdoor_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.adam_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -52,10 +52,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.81',
+    'state': '-1.25',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.badkamer_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.anna_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -69,8 +69,64 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.badkamer_temperature',
+    'entity_category': None,
+    'entity_id': 'sensor.anna_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Setpoint',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint',
+    'unique_id': 'ad4838d7d35c4d6ea796ee12ae5aedf8-setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.anna_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Anna Setpoint',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.anna_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.anna_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.anna_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -91,27 +147,195 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '08963fec7c53423ca5680aa4cb502c63-temperature',
+    'unique_id': 'ad4838d7d35c4d6ea796ee12ae5aedf8-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.badkamer_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.anna_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Badkamer Temperature',
+      'friendly_name': 'Anna Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.badkamer_temperature',
+    'entity_id': 'sensor.anna_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18.9',
+    'state': '19.1',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_electricity_consumed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bathroom_electricity_consumed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumed',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_consumed',
+    'unique_id': 'f871b8c4d63549319221e294e4f88074-electricity_consumed',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_electricity_consumed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Bathroom Electricity consumed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bathroom_electricity_consumed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_electricity_produced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bathroom_electricity_produced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced',
+    'unique_id': 'f871b8c4d63549319221e294e4f88074-electricity_produced',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_electricity_produced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Bathroom Electricity produced',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bathroom_electricity_produced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bathroom_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f871b8c4d63549319221e294e4f88074-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Bathroom Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bathroom_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.9',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,7 +350,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_battery',
+    'entity_id': 'sensor.emma_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -144,1356 +368,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2c3583e0a6349358998b760cea82d2a-battery',
+    'unique_id': '14df5c4dc8cb4ba69f9d1ac0eaf7c5c6-battery',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_battery-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Bios Cv Thermostatic Radiator  Battery',
+      'friendly_name': 'Emma Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '62',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'a2c3583e0a6349358998b760cea82d2a-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Bios Cv Thermostatic Radiator  Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a2c3583e0a6349358998b760cea82d2a-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Bios Cv Thermostatic Radiator  Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17.2',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_temperature_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature difference',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_difference',
-    'unique_id': 'a2c3583e0a6349358998b760cea82d2a-temperature_difference',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Bios Cv Thermostatic Radiator  Temperature difference',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_temperature_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-0.2',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_valve_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_valve_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Valve position',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'valve_position',
-    'unique_id': 'a2c3583e0a6349358998b760cea82d2a-valve_position',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_valve_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bios Cv Thermostatic Radiator  Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_cv_thermostatic_radiator_valve_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_consumed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bios_electricity_consumed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': '12493538af164a409c6a1c79e38afe1c-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_consumed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Bios Electricity consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_electricity_consumed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bios_electricity_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': '12493538af164a409c6a1c79e38afe1c-electricity_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Bios Electricity produced',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_electricity_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bios_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12493538af164a409c6a1c79e38afe1c-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.bios_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Bios Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bios_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '16.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cv_kraan_garage_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'e7693eb9582644e5b865dba8d4447cf1-battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CV Kraan Garage Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_kraan_garage_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '68',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cv_kraan_garage_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'e7693eb9582644e5b865dba8d4447cf1-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CV Kraan Garage Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_kraan_garage_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cv_kraan_garage_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'e7693eb9582644e5b865dba8d4447cf1-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CV Kraan Garage Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_kraan_garage_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15.6',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cv_kraan_garage_temperature_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature difference',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_difference',
-    'unique_id': 'e7693eb9582644e5b865dba8d4447cf1-temperature_difference',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CV Kraan Garage Temperature difference',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_kraan_garage_temperature_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_valve_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cv_kraan_garage_valve_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Valve position',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'valve_position',
-    'unique_id': 'e7693eb9582644e5b865dba8d4447cf1-valve_position',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_valve_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'CV Kraan Garage Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_kraan_garage_valve_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cv_pomp_electricity_consumed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': '78d1126fc4c743db81b61c20e88342a7-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CV Pomp Electricity consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_pomp_electricity_consumed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '35.6',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cv_pomp_electricity_consumed_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': '78d1126fc4c743db81b61c20e88342a7-electricity_consumed_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CV Pomp Electricity consumed interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_pomp_electricity_consumed_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7.37',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cv_pomp_electricity_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': '78d1126fc4c743db81b61c20e88342a7-electricity_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CV Pomp Electricity produced',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_pomp_electricity_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cv_pomp_electricity_produced_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': '78d1126fc4c743db81b61c20e88342a7-electricity_produced_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CV Pomp Electricity produced interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cv_pomp_electricity_produced_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.fibaro_hc2_electricity_consumed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': 'a28f588dc4a049a483fd03a30361ad3a-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Fibaro HC2 Electricity consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fibaro_hc2_electricity_consumed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.fibaro_hc2_electricity_consumed_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': 'a28f588dc4a049a483fd03a30361ad3a-electricity_consumed_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Fibaro HC2 Electricity consumed interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fibaro_hc2_electricity_consumed_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.8',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.fibaro_hc2_electricity_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': 'a28f588dc4a049a483fd03a30361ad3a-electricity_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Fibaro HC2 Electricity produced',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fibaro_hc2_electricity_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.fibaro_hc2_electricity_produced_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': 'a28f588dc4a049a483fd03a30361ad3a-electricity_produced_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Fibaro HC2 Electricity produced interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fibaro_hc2_electricity_produced_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.floor_kraan_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'b310b72a0e354bfab43089919b9a88bf-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Floor kraan Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.floor_kraan_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.floor_kraan_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'b310b72a0e354bfab43089919b9a88bf-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Floor kraan Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.floor_kraan_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.floor_kraan_temperature_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature difference',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_difference',
-    'unique_id': 'b310b72a0e354bfab43089919b9a88bf-temperature_difference',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Floor kraan Temperature difference',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.floor_kraan_temperature_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_valve_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.floor_kraan_valve_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Valve position',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'valve_position',
-    'unique_id': 'b310b72a0e354bfab43089919b9a88bf-valve_position',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_valve_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Floor kraan Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.floor_kraan_valve_position',
+    'entity_id': 'sensor.emma_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.garage_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1507,8 +402,117 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garage_temperature',
+    'entity_category': None,
+    'entity_id': 'sensor.emma_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '14df5c4dc8cb4ba69f9d1ac0eaf7c5c6-humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Emma Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.emma_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.emma_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Setpoint',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint',
+    'unique_id': '14df5c4dc8cb4ba69f9d1ac0eaf7c5c6-setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Emma Setpoint',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.emma_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.emma_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1529,27 +533,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '446ac08dd04d4eff8ac57489757b7314-temperature',
+    'unique_id': '14df5c4dc8cb4ba69f9d1ac0eaf7c5c6-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.garage_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Garage Temperature',
+      'friendly_name': 'Emma Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garage_temperature',
+    'entity_id': 'sensor.emma_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '15.6',
+    'state': '19.5',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.jessie_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1564,7 +568,169 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.jessie_temperature',
+    'entity_id': 'sensor.jip_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'da575e9e09b947e281fb6e3ebce3b174-battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Jip Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jip_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.jip_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'da575e9e09b947e281fb6e3ebce3b174-humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Jip Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jip_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.8',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.jip_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Setpoint',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint',
+    'unique_id': 'da575e9e09b947e281fb6e3ebce3b174-setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Jip Setpoint',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jip_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.jip_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1585,475 +751,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '82fa13f017d240daa0d0ea1775420f24-temperature',
+    'unique_id': 'da575e9e09b947e281fb6e3ebce3b174-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.jessie_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Jessie Temperature',
+      'friendly_name': 'Jip Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.jessie_temperature',
+    'entity_id': 'sensor.jip_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '17.2',
+    'state': '19.3',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nas_electricity_consumed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': 'cd0ddb54ef694e11ac18ed1cbce5dbbd-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'NAS Electricity consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nas_electricity_consumed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '16.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nas_electricity_consumed_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': 'cd0ddb54ef694e11ac18ed1cbce5dbbd-electricity_consumed_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'NAS Electricity consumed interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nas_electricity_consumed_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nas_electricity_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': 'cd0ddb54ef694e11ac18ed1cbce5dbbd-electricity_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'NAS Electricity produced',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nas_electricity_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nas_electricity_produced_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': 'cd0ddb54ef694e11ac18ed1cbce5dbbd-electricity_produced_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'NAS Electricity produced interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nas_electricity_produced_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nvr_electricity_consumed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': '02cf28bfec924855854c544690a609ef-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'NVR Electricity consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nvr_electricity_consumed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '34.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nvr_electricity_consumed_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': '02cf28bfec924855854c544690a609ef-electricity_consumed_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'NVR Electricity consumed interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nvr_electricity_consumed_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '9.15',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nvr_electricity_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': '02cf28bfec924855854c544690a609ef-electricity_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'NVR Electricity produced',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nvr_electricity_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.nvr_electricity_produced_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': '02cf28bfec924855854c544690a609ef-electricity_produced_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'NVR Electricity produced interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nvr_electricity_produced_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_intended_boiler_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2068,7 +786,340 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.onoff_intended_boiler_temperature',
+    'entity_id': 'sensor.lisa_badkamer_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e2f4322d57924fa090fbbc48b3a140dc-battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Lisa Badkamer Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lisa_badkamer_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '71',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lisa_badkamer_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Setpoint',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint',
+    'unique_id': 'e2f4322d57924fa090fbbc48b3a140dc-setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Lisa Badkamer Setpoint',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lisa_badkamer_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lisa_badkamer_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e2f4322d57924fa090fbbc48b3a140dc-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Lisa Badkamer Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lisa_badkamer_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.9',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_electricity_consumed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.living_room_electricity_consumed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumed',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_consumed',
+    'unique_id': 'f2bf9048bef64cc5b6d5110154e33c81-electricity_consumed',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_electricity_consumed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Living room Electricity consumed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.living_room_electricity_consumed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60.8',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_electricity_produced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.living_room_electricity_produced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced',
+    'unique_id': 'f2bf9048bef64cc5b6d5110154e33c81-electricity_produced',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_electricity_produced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Living room Electricity produced',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.living_room_electricity_produced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.living_room_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f2bf9048bef64cc5b6d5110154e33c81-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Living room Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.living_room_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.1',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.opentherm_intended_boiler_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.opentherm_intended_boiler_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2089,27 +1140,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intended_boiler_temperature',
-    'unique_id': '90986d591dcd426cae3ec3e8111ff730-intended_boiler_temperature',
+    'unique_id': '056ee145a816487eaa69243c3280f8bf-intended_boiler_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_intended_boiler_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.opentherm_intended_boiler_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'OnOff Intended boiler temperature',
+      'friendly_name': 'OpenTherm Intended boiler temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.onoff_intended_boiler_temperature',
+    'entity_id': 'sensor.opentherm_intended_boiler_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.0',
+    'state': '38.1',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_modulation_level-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.opentherm_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2124,59 +1175,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.onoff_modulation_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Modulation level',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'modulation_level',
-    'unique_id': '90986d591dcd426cae3ec3e8111ff730-modulation_level',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_modulation_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'OnOff Modulation level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.onoff_modulation_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_water_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.onoff_water_temperature',
+    'entity_id': 'sensor.opentherm_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2197,251 +1196,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_temperature',
-    'unique_id': '90986d591dcd426cae3ec3e8111ff730-water_temperature',
+    'unique_id': '056ee145a816487eaa69243c3280f8bf-water_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_water_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.opentherm_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'OnOff Water temperature',
+      'friendly_name': 'OpenTherm Water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.onoff_water_temperature',
+    'entity_id': 'sensor.opentherm_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.0',
+    'state': '37.0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_consumed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': '21f2b542c49845e6bb416884c55778d6-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Playstation Smart Plug Electricity consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_consumed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '84.1',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_consumed_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumed interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': '21f2b542c49845e6bb416884c55778d6-electricity_consumed_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Playstation Smart Plug Electricity consumed interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_consumed_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8.6',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_produced',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': '21f2b542c49845e6bb416884c55778d6-electricity_produced',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Playstation Smart Plug Electricity produced',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_produced',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced_interval-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_produced_interval',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity produced interval',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': '21f2b542c49845e6bb416884c55778d6-electricity_produced_interval',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced_interval-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Playstation Smart Plug Electricity produced interval',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.playstation_smart_plug_electricity_produced_interval',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2456,7 +1231,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_battery',
+    'entity_id': 'sensor.tom_badkamer_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2474,27 +1249,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '680423ff840043738f42cc7f1ff97a36-battery',
+    'unique_id': '1772a4ea304041adb83f357b751341ff-battery',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_battery-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Thermostatic Radiator Badkamer 1 Battery',
+      'friendly_name': 'Tom Badkamer Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_battery',
+    'entity_id': 'sensor.tom_badkamer_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '51',
+    'state': '60',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2508,8 +1283,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_setpoint',
+    'entity_category': None,
+    'entity_id': 'sensor.tom_badkamer_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2530,27 +1305,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'setpoint',
-    'unique_id': '680423ff840043738f42cc7f1ff97a36-setpoint',
+    'unique_id': '1772a4ea304041adb83f357b751341ff-setpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Badkamer 1 Setpoint',
+      'friendly_name': 'Tom Badkamer Setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_setpoint',
+    'entity_id': 'sensor.tom_badkamer_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.0',
+    'state': '25.0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2564,8 +1339,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_temperature',
+    'entity_category': None,
+    'entity_id': 'sensor.tom_badkamer_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2586,27 +1361,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '680423ff840043738f42cc7f1ff97a36-temperature',
+    'unique_id': '1772a4ea304041adb83f357b751341ff-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Badkamer 1 Temperature',
+      'friendly_name': 'Tom Badkamer Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_temperature',
+    'entity_id': 'sensor.tom_badkamer_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '19.1',
+    'state': '18.6',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature_difference-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2621,7 +1396,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_temperature_difference',
+    'entity_id': 'sensor.tom_badkamer_temperature_difference',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2642,27 +1417,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_difference',
-    'unique_id': '680423ff840043738f42cc7f1ff97a36-temperature_difference',
+    'unique_id': '1772a4ea304041adb83f357b751341ff-temperature_difference',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature_difference-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Badkamer 1 Temperature difference',
+      'friendly_name': 'Tom Badkamer Temperature difference',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_temperature_difference',
+    'entity_id': 'sensor.tom_badkamer_temperature_difference',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-0.4',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_valve_position-entry]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2677,7 +1452,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_valve_position',
+    'entity_id': 'sensor.tom_badkamer_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2695,26 +1470,247 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_position',
-    'unique_id': '680423ff840043738f42cc7f1ff97a36-valve_position',
+    'unique_id': '1772a4ea304041adb83f357b751341ff-valve_position',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_valve_position-state]
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Thermostatic Radiator Badkamer 1 Valve position',
+      'friendly_name': 'Tom Badkamer Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_1_valve_position',
+    'entity_id': 'sensor.tom_badkamer_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.anna_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1e5e55b958ac445583602f767cb45942-illuminance',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Anna Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.anna_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.anna_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Setpoint',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint',
+    'unique_id': '1e5e55b958ac445583602f767cb45942-setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Anna Setpoint',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.anna_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.0',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.anna_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1e5e55b958ac445583602f767cb45942-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Anna Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.anna_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.4',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_intended_boiler_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.opentherm_intended_boiler_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Intended boiler temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'intended_boiler_temperature',
+    'unique_id': '36b937e44ad145bab165fa0fe99d742d-intended_boiler_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_intended_boiler_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'OpenTherm Intended boiler temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.opentherm_intended_boiler_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_battery-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_modulation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2729,393 +1725,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_2_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'f1fee6043d3642a9b0a65297455f008e-battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Thermostatic Radiator Badkamer 2 Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_2_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '92',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_2_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'f1fee6043d3642a9b0a65297455f008e-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Badkamer 2 Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_2_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '14.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_2_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'f1fee6043d3642a9b0a65297455f008e-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Badkamer 2 Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_badkamer_2_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '18.9',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'd3da73bde12a47d5a6b8f9dad971f2ec-battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Thermostatic Radiator Jessie Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '62',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'd3da73bde12a47d5a6b8f9dad971f2ec-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Jessie Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'd3da73bde12a47d5a6b8f9dad971f2ec-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Jessie Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17.1',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_temperature_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature difference',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_difference',
-    'unique_id': 'd3da73bde12a47d5a6b8f9dad971f2ec-temperature_difference',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Thermostatic Radiator Jessie Temperature difference',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_temperature_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.1',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_valve_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_valve_position',
+    'entity_id': 'sensor.opentherm_modulation_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3127,32 +1737,32 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Valve position',
+    'original_name': 'Modulation level',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'valve_position',
-    'unique_id': 'd3da73bde12a47d5a6b8f9dad971f2ec-valve_position',
+    'translation_key': 'modulation_level',
+    'unique_id': '36b937e44ad145bab165fa0fe99d742d-modulation_level',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_valve_position-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_modulation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Thermostatic Radiator Jessie Valve position',
+      'friendly_name': 'OpenTherm Modulation level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.thermostatic_radiator_jessie_valve_position',
+    'entity_id': 'sensor.opentherm_modulation_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3166,8 +1776,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.usg_smart_plug_electricity_consumed',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.opentherm_water_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3177,38 +1787,150 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed',
+    'original_name': 'Water pressure',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': '4a810418d5394b3f82727340b91ba740-electricity_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'translation_key': 'water_pressure',
+    'unique_id': '36b937e44ad145bab165fa0fe99d742d-water_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'USG Smart Plug Electricity consumed',
+      'device_class': 'pressure',
+      'friendly_name': 'OpenTherm Water pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.usg_smart_plug_electricity_consumed',
+    'entity_id': 'sensor.opentherm_water_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8.5',
+    'state': '6.0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed_interval-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.opentherm_water_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Water temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_temperature',
+    'unique_id': '36b937e44ad145bab165fa0fe99d742d-water_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'OpenTherm Water temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.opentherm_water_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35.0',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_electricity_consumed_off_peak_cumulative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumed off-peak cumulative',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_consumed_off_peak_cumulative',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_consumed_off_peak_cumulative',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_cumulative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'P1 Electricity consumed off-peak cumulative',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_electricity_consumed_off_peak_cumulative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '618.001',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3223,7 +1945,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.usg_smart_plug_electricity_consumed_interval',
+    'entity_id': 'sensor.p1_electricity_consumed_off_peak_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3238,33 +1960,33 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed interval',
+    'original_name': 'Electricity consumed off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': '4a810418d5394b3f82727340b91ba740-electricity_consumed_interval',
+    'translation_key': 'electricity_consumed_off_peak_interval',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_consumed_off_peak_interval',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed_interval-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'USG Smart Plug Electricity consumed interval',
+      'friendly_name': 'P1 Electricity consumed off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.usg_smart_plug_electricity_consumed_interval',
+    'entity_id': 'sensor.p1_electricity_consumed_off_peak_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '7',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3279,7 +2001,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.usg_smart_plug_electricity_produced',
+    'entity_id': 'sensor.p1_electricity_consumed_off_peak_point',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3294,33 +2016,89 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity produced',
+    'original_name': 'Electricity consumed off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': '4a810418d5394b3f82727340b91ba740-electricity_produced',
+    'translation_key': 'electricity_consumed_off_peak_point',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_consumed_off_peak_point',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'USG Smart Plug Electricity produced',
+      'friendly_name': 'P1 Electricity consumed off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.usg_smart_plug_electricity_produced',
+    'entity_id': 'sensor.p1_electricity_consumed_off_peak_point',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '393',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced_interval-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_cumulative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_electricity_consumed_peak_cumulative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumed peak cumulative',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_consumed_peak_cumulative',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_consumed_peak_cumulative',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_cumulative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'P1 Electricity consumed peak cumulative',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_electricity_consumed_peak_cumulative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '576.014',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3335,7 +2113,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.usg_smart_plug_electricity_produced_interval',
+    'entity_id': 'sensor.p1_electricity_consumed_peak_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3350,33 +2128,33 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced interval',
+    'original_name': 'Electricity consumed peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': '4a810418d5394b3f82727340b91ba740-electricity_produced_interval',
+    'translation_key': 'electricity_consumed_peak_interval',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_consumed_peak_interval',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced_interval-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'USG Smart Plug Electricity produced interval',
+      'friendly_name': 'P1 Electricity consumed peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.usg_smart_plug_electricity_produced_interval',
+    'entity_id': 'sensor.p1_electricity_consumed_peak_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_consumed-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3391,7 +2169,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.woonkamer_electricity_consumed',
+    'entity_id': 'sensor.p1_electricity_consumed_peak_point',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3406,33 +2184,33 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed',
+    'original_name': 'Electricity consumed peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': 'c50f167537524366a5af7aa3942feb1e-electricity_consumed',
+    'translation_key': 'electricity_consumed_peak_point',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_consumed_peak_point',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_consumed-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Woonkamer Electricity consumed',
+      'friendly_name': 'P1 Electricity consumed peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.woonkamer_electricity_consumed',
+    'entity_id': 'sensor.p1_electricity_consumed_peak_point',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '35.6',
+    'state': '0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_produced-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_phase_one_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3447,7 +2225,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.woonkamer_electricity_produced',
+    'entity_id': 'sensor.p1_electricity_phase_one_consumed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3462,89 +2240,33 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity produced',
+    'original_name': 'Electricity phase one consumed',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': 'c50f167537524366a5af7aa3942feb1e-electricity_produced',
+    'translation_key': 'electricity_phase_one_consumed',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_phase_one_consumed',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_produced-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_phase_one_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Woonkamer Electricity produced',
+      'friendly_name': 'P1 Electricity phase one consumed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.woonkamer_electricity_produced',
+    'entity_id': 'sensor.p1_electricity_phase_one_consumed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '393',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.woonkamer_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'c50f167537524366a5af7aa3942feb1e-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Woonkamer Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.woonkamer_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.9',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_phase_one_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3559,7 +2281,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ziggo_modem_electricity_consumed',
+    'entity_id': 'sensor.p1_electricity_phase_one_produced',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3574,33 +2296,89 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed',
+    'original_name': 'Electricity phase one produced',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_consumed',
-    'unique_id': '675416a629f343c495449970e2ca37b5-electricity_consumed',
+    'translation_key': 'electricity_phase_one_produced',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_phase_one_produced',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_phase_one_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Ziggo Modem Electricity consumed',
+      'friendly_name': 'P1 Electricity phase one produced',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ziggo_modem_electricity_consumed',
+    'entity_id': 'sensor.p1_electricity_phase_one_produced',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.2',
+    'state': '0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed_interval-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_cumulative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_electricity_produced_off_peak_cumulative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced off-peak cumulative',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced_off_peak_cumulative',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_produced_off_peak_cumulative',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_cumulative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'P1 Electricity produced off-peak cumulative',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_electricity_produced_off_peak_cumulative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '246.504',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3615,7 +2393,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ziggo_modem_electricity_consumed_interval',
+    'entity_id': 'sensor.p1_electricity_produced_off_peak_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3630,33 +2408,33 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed interval',
+    'original_name': 'Electricity produced off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_consumed_interval',
-    'unique_id': '675416a629f343c495449970e2ca37b5-electricity_consumed_interval',
+    'translation_key': 'electricity_produced_off_peak_interval',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_produced_off_peak_interval',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed_interval-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Ziggo Modem Electricity consumed interval',
+      'friendly_name': 'P1 Electricity produced off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ziggo_modem_electricity_consumed_interval',
+    'entity_id': 'sensor.p1_electricity_produced_off_peak_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.97',
+    'state': '0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3671,7 +2449,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ziggo_modem_electricity_produced',
+    'entity_id': 'sensor.p1_electricity_produced_off_peak_point',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3686,33 +2464,89 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity produced',
+    'original_name': 'Electricity produced off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_produced',
-    'unique_id': '675416a629f343c495449970e2ca37b5-electricity_produced',
+    'translation_key': 'electricity_produced_off_peak_point',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_produced_off_peak_point',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Ziggo Modem Electricity produced',
+      'friendly_name': 'P1 Electricity produced off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ziggo_modem_electricity_produced',
+    'entity_id': 'sensor.p1_electricity_produced_off_peak_point',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced_interval-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_cumulative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_electricity_produced_peak_cumulative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced peak cumulative',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced_peak_cumulative',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_produced_peak_cumulative',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_cumulative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'P1 Electricity produced peak cumulative',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_electricity_produced_peak_cumulative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '709.442',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3727,7 +2561,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ziggo_modem_electricity_produced_interval',
+    'entity_id': 'sensor.p1_electricity_produced_peak_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3742,33 +2576,33 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced interval',
+    'original_name': 'Electricity produced peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_produced_interval',
-    'unique_id': '675416a629f343c495449970e2ca37b5-electricity_produced_interval',
+    'translation_key': 'electricity_produced_peak_interval',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_produced_peak_interval',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced_interval-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Ziggo Modem Electricity produced interval',
+      'friendly_name': 'P1 Electricity produced peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ziggo_modem_electricity_produced_interval',
+    'entity_id': 'sensor.p1_electricity_produced_peak_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_battery-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3782,8 +2616,120 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_lisa_bios_battery',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_electricity_produced_peak_point',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced peak point',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced_peak_point',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-electricity_produced_peak_point',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_point-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'P1 Electricity produced peak point',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_electricity_produced_peak_point',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_gas_consumed_cumulative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_gas_consumed_cumulative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
+    'original_icon': None,
+    'original_name': 'Gas consumed cumulative',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_consumed_cumulative',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-gas_consumed_cumulative',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_gas_consumed_cumulative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gas',
+      'friendly_name': 'P1 Gas consumed cumulative',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_gas_consumed_cumulative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.37',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_gas_consumed_interval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_gas_consumed_interval',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3793,35 +2739,202 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Gas consumed interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'df4a4a8169904cdb9c03d61a21f42140-battery',
-    'unit_of_measurement': '%',
+    'translation_key': 'gas_consumed_interval',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-gas_consumed_interval',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_battery-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_gas_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Zone Lisa Bios Battery',
+      'friendly_name': 'P1 Gas consumed interval',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zone_lisa_bios_battery',
+    'entity_id': 'sensor.p1_gas_consumed_interval',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '67',
+    'state': '0.01',
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_setpoint-entry]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_net_electricity_cumulative-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_net_electricity_cumulative',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Net electricity cumulative',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_electricity_cumulative',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-net_electricity_cumulative',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_net_electricity_cumulative-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'P1 Net electricity cumulative',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_net_electricity_cumulative',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '238.069',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_net_electricity_point-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_net_electricity_point',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Net electricity point',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_electricity_point',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-net_electricity_point',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_net_electricity_point-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'P1 Net electricity point',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_net_electricity_point',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '393',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_voltage_phase_one-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_voltage_phase_one',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage phase one',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage_phase_one',
+    'unique_id': 'da7be222ab3b420c927f3e49fade0304-voltage_phase_one',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_voltage_phase_one-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'P1 Voltage phase one',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_voltage_phase_one',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '234.6',
+  })
+# ---
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.smile_anna_p1_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3836,7 +2949,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_lisa_bios_setpoint',
+    'entity_id': 'sensor.smile_anna_p1_outdoor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3851,416 +2964,30 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Setpoint',
+    'original_name': 'Outdoor temperature',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'df4a4a8169904cdb9c03d61a21f42140-setpoint',
+    'translation_key': 'outdoor_temperature',
+    'unique_id': '53130847be2f436cb946b78dedb9053a-outdoor_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_setpoint-state]
+# name: test_anna_p1_sensor_snapshot[platforms0][sensor.smile_anna_p1_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Zone Lisa Bios Setpoint',
+      'friendly_name': 'Smile Anna P1 Outdoor temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zone_lisa_bios_setpoint',
+    'entity_id': 'sensor.smile_anna_p1_outdoor_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '13.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_lisa_bios_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'df4a4a8169904cdb9c03d61a21f42140-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Zone Lisa Bios Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_lisa_bios_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '16.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_lisa_wk_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'b59bcebaf94b499ea7d46e4a66fb62d8-battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Zone Lisa WK Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_lisa_wk_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '34',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_lisa_wk_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': 'b59bcebaf94b499ea7d46e4a66fb62d8-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Zone Lisa WK Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_lisa_wk_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.5',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_lisa_wk_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'b59bcebaf94b499ea7d46e4a66fb62d8-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Zone Lisa WK Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_lisa_wk_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.9',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_thermostat_jessie_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '6a3bf693d05e48e0b460c815a4fdd09d-battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Zone Thermostat Jessie Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_thermostat_jessie_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '37',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_thermostat_jessie_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint',
-    'unique_id': '6a3bf693d05e48e0b460c815a4fdd09d-setpoint',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Zone Thermostat Jessie Setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_thermostat_jessie_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15.0',
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zone_thermostat_jessie_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'plugwise',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '6a3bf693d05e48e0b460c815a4fdd09d-temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Zone Thermostat Jessie Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zone_thermostat_jessie_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17.2',
+    'state': '11.8',
   })
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_cooling_setpoint-entry]
@@ -4277,7 +3004,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.anna_cooling_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
@@ -4333,7 +3060,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.anna_heating_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
@@ -4442,7 +3169,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.anna_temperature',
     'has_entity_name': True,
     'hidden_by': None,
@@ -4886,7 +3613,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.smile_anna_outdoor_temperature',
     'has_entity_name': True,
     'hidden_by': None,

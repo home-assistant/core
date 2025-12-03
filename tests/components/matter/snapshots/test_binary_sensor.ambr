@@ -97,6 +97,55 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[aqara_presence_fp300][binary_sensor.presence_multi_sensor_fp300_1_occupancy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.presence_multi_sensor_fp300_1_occupancy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Occupancy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[aqara_presence_fp300][binary_sensor.presence_multi_sensor_fp300_1_occupancy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'occupancy',
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Occupancy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_multi_sensor_fp300_1_occupancy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -293,6 +342,104 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_motion_sensor_m1][binary_sensor.smart_motion_sensor_occupancy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.smart_motion_sensor_occupancy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Occupancy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_motion_sensor_m1][binary_sensor.smart_motion_sensor_occupancy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'occupancy',
+      'friendly_name': 'Smart motion sensor Occupancy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_motion_sensor_occupancy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[leak_sensor][binary_sensor.water_leak_detector_water_leak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -340,6 +487,153 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[longan_link_thermostat][binary_sensor.longan_link_hvac_occupancy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Occupancy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatOccupancySensor-513-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[longan_link_thermostat][binary_sensor.longan_link_hvac_occupancy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'occupancy',
+      'friendly_name': 'Longan link HVAC Occupancy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_lock_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-BatteryChargeLevel-47-14',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Lock Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_lock_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.mock_lock_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-LockDoorStateSensor-257-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Mock Lock Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_lock_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[occupancy_sensor][binary_sensor.mock_occupancy_sensor_occupancy-entry]
@@ -1222,55 +1516,6 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[thermostat][binary_sensor.longan_link_hvac_occupancy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
-    'original_icon': None,
-    'original_name': 'Occupancy',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatOccupancySensor-513-2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[thermostat][binary_sensor.longan_link_hvac_occupancy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Longan link HVAC Occupancy',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_binary_sensors[valve][binary_sensor.valve_general_fault-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1412,6 +1657,300 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.valve_valve_leaking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[window_covering_full][binary_sensor.mock_full_window_covering_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_full_window_covering_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[window_covering_full][binary_sensor.mock_full_window_covering_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Full Window Covering Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_full_window_covering_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[window_covering_lift][binary_sensor.mock_lift_window_covering_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_lift_window_covering_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[window_covering_lift][binary_sensor.mock_lift_window_covering_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Lift Window Covering Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_lift_window_covering_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.longan_link_wncv_da01_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Longan link WNCV DA01 Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.longan_link_wncv_da01_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock PA Tilt Window Covering Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[window_covering_tilt][binary_sensor.mock_tilt_window_covering_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_tilt_window_covering_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[window_covering_tilt][binary_sensor.mock_tilt_window_covering_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Tilt Window Covering Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_tilt_window_covering_problem',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Zemismart MT25B Roller Motor Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

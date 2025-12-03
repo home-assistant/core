@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, overload
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -10,8 +10,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
-from .models import EnumTypeData, IntegerTypeData
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .models import DPCodeWrapper
 
 
 class TuyaEntity(Entity):
@@ -44,77 +44,6 @@ class TuyaEntity(Entity):
         """Return if the device is available."""
         return self.device.online
 
-    @overload
-    def find_dpcode(
-        self,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-        *,
-        prefer_function: bool = False,
-        dptype: Literal[DPType.ENUM],
-    ) -> EnumTypeData | None: ...
-
-    @overload
-    def find_dpcode(
-        self,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-        *,
-        prefer_function: bool = False,
-        dptype: Literal[DPType.INTEGER],
-    ) -> IntegerTypeData | None: ...
-
-    def find_dpcode(
-        self,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-        *,
-        prefer_function: bool = False,
-        dptype: DPType,
-    ) -> EnumTypeData | IntegerTypeData | None:
-        """Find type information for a matching DP code available for this device."""
-        if dptype not in (DPType.ENUM, DPType.INTEGER):
-            raise NotImplementedError("Only ENUM and INTEGER types are supported")
-
-        if dpcodes is None:
-            return None
-
-        if isinstance(dpcodes, str):
-            dpcodes = (DPCode(dpcodes),)
-        elif not isinstance(dpcodes, tuple):
-            dpcodes = (dpcodes,)
-
-        order = ["status_range", "function"]
-        if prefer_function:
-            order = ["function", "status_range"]
-
-        for dpcode in dpcodes:
-            for key in order:
-                if dpcode not in getattr(self.device, key):
-                    continue
-                if (
-                    dptype == DPType.ENUM
-                    and getattr(self.device, key)[dpcode].type == DPType.ENUM
-                ):
-                    if not (
-                        enum_type := EnumTypeData.from_json(
-                            dpcode, getattr(self.device, key)[dpcode].values
-                        )
-                    ):
-                        continue
-                    return enum_type
-
-                if (
-                    dptype == DPType.INTEGER
-                    and getattr(self.device, key)[dpcode].type == DPType.INTEGER
-                ):
-                    if not (
-                        integer_type := IntegerTypeData.from_json(
-                            dpcode, getattr(self.device, key)[dpcode].values
-                        )
-                    ):
-                        continue
-                    return integer_type
-
-        return None
-
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.async_on_remove(
@@ -136,3 +65,24 @@ class TuyaEntity(Entity):
         """Send command to the device."""
         LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)
+
+    async def _async_send_commands(self, commands: list[dict[str, Any]]) -> None:
+        """Send a list of commands to the device."""
+        await self.hass.async_add_executor_job(self._send_command, commands)
+
+    def _read_wrapper(self, dpcode_wrapper: DPCodeWrapper | None) -> Any | None:
+        """Read the wrapper device status."""
+        if dpcode_wrapper is None:
+            return None
+        return dpcode_wrapper.read_device_status(self.device)
+
+    async def _async_send_dpcode_update(
+        self, dpcode_wrapper: DPCodeWrapper | None, value: Any
+    ) -> None:
+        """Send command to the device."""
+        if dpcode_wrapper is None:
+            return
+        await self.hass.async_add_executor_job(
+            self._send_command,
+            [dpcode_wrapper.get_update_command(self.device, value)],
+        )

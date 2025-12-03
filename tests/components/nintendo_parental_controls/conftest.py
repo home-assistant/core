@@ -32,7 +32,10 @@ def mock_nintendo_device() -> Device:
     mock = AsyncMock(spec=Device)
     mock.device_id = "testdevid"
     mock.name = "Home Assistant Test"
-    mock.extra = {"firmwareVersion": {"displayedVersion": "99.99.99"}}
+    mock.extra = {
+        "firmwareVersion": {"displayedVersion": "99.99.99"},
+        "serialNumber": "SN12345678",
+    }
     mock.limit_time = 120
     mock.today_playing_time = 110
     mock.today_time_remaining = 10

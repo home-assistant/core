@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
+from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
@@ -93,12 +94,30 @@ async def async_setup_entry(
     )
 
 
-class StateImageEntity(TemplateEntity, ImageEntity):
+class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
+    """Representation of a template image features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
+    _attr_image_url: str | None = None
+
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
+        ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
+        self._url_template = config[CONF_URL]
+        self._has_picture_template = CONF_PICTURE in config
+
+    def _handle_state(self, result: Any) -> None:
+        self._attr_image_last_updated = dt_util.utcnow()
+        self._cached_image = None
+        self._attr_image_url = result
+
+
+class StateImageEntity(TemplateEntity, AbstractTemplateImage):
     """Representation of a template image."""
 
     _attr_should_poll = False
-    _attr_image_url: str | None = None
-    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -108,13 +127,12 @@ class StateImageEntity(TemplateEntity, ImageEntity):
     ) -> None:
         """Initialize the image."""
         TemplateEntity.__init__(self, hass, config, unique_id)
-        ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
-        self._url_template = config[CONF_URL]
+        AbstractTemplateImage.__init__(self, hass, config)
 
     @property
     def entity_picture(self) -> str | None:
         """Return entity picture."""
-        if self._entity_picture_template:
+        if self._has_picture_template:
             return TemplateEntity.entity_picture.__get__(self)
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         return ImageEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
@@ -124,9 +142,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         if isinstance(result, TemplateError):
             self._attr_image_url = None
             return
-        self._attr_image_last_updated = dt_util.utcnow()
-        self._cached_image = None
-        self._attr_image_url = result
+        self._handle_state(result)
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -135,11 +151,8 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         super()._async_setup_templates()
 
 
-class TriggerImageEntity(TriggerEntity, ImageEntity):
+class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
     """Image entity based on trigger data."""
-
-    _attr_image_url: str | None = None
-    _entity_id_format = ENTITY_ID_FORMAT
 
     domain = IMAGE_DOMAIN
     extra_template_keys = (CONF_URL,)
@@ -152,20 +165,18 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
+        AbstractTemplateImage.__init__(self, hass, config)
 
     @property
     def entity_picture(self) -> str | None:
         """Return entity picture."""
+        if self._has_picture_template:
+            return TriggerEntity.entity_picture.__get__(self)
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        if CONF_PICTURE in self._config:
-            return TriggerEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
         return ImageEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
 
     @callback
     def _process_data(self) -> None:
         """Process new data."""
         super()._process_data()
-        self._attr_image_last_updated = dt_util.utcnow()
-        self._cached_image = None
-        self._attr_image_url = self._rendered.get(CONF_URL)
+        self._handle_state(self._rendered.get(CONF_URL))

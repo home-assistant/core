@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description_occupancy": "The behavior of the targeted occupancy sensors to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
@@ -317,5 +321,36 @@
       }
     }
   },
-  "title": "Binary sensor"
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Binary sensor",
+  "triggers": {
+    "occupancy_cleared": {
+      "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_occupancy%]",
+          "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Occupancy cleared"
+    },
+    "occupancy_detected": {
+      "description": "Triggers after one or more occupancy sensors start detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_occupancy%]",
+          "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Occupancy detected"
+    }
+  }
 }

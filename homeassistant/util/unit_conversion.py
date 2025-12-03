@@ -38,6 +38,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.deprecation import deprecated_function
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -707,6 +708,9 @@ class TemperatureConverter(BaseUnitConverter):
         )
 
     @classmethod
+    @deprecated_function(
+        "TemperatureDeltaConverter.convert", breaks_in_ha_version="2026.12.0"
+    )
     def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
         """Convert a temperature interval from one unit to another.
 

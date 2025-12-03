@@ -30,6 +30,7 @@ from .const import (
     MODEL_FRANKEVER_WATER_VALVE,
     ROLE_GENERIC,
     SHELLY_GAS_MODELS,
+    SHELLY_WALL_DISPLAY_MODELS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -46,6 +47,7 @@ from .utils import (
     format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_key_id,
     get_rpc_key_ids,
     get_rpc_key_instances,
     get_rpc_role_by_key,
@@ -62,6 +64,7 @@ class ShellyButtonDescription[
     """Class to describe a Button entity."""
 
     press_action: str
+    params: dict[str, Any] | None = None
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
@@ -74,14 +77,12 @@ class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
-        name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
-        name="Self test",
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action="trigger_shelly_gas_self_test",
@@ -89,19 +90,31 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
-        name="Mute",
-        translation_key="mute",
+        translation_key="mute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_mute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
-        name="Unmute",
-        translation_key="unmute",
+        translation_key="unmute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
+    ),
+    ShellyButtonDescription[ShellyRpcCoordinator](
+        key="turn_on_screen",
+        translation_key="turn_on_the_screen",
+        press_action="wall_display_set_screen",
+        params={"value": True},
+        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+    ),
+    ShellyButtonDescription[ShellyRpcCoordinator](
+        key="turn_off_screen",
+        translation_key="turn_off_the_screen",
+        press_action="wall_display_set_screen",
+        params={"value": False},
+        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
     ),
 ]
 
@@ -317,7 +330,7 @@ class ShellyButton(ShellyBaseButton):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method()
+        await method(**(self.entity_description.params or {}))
 
 
 class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
@@ -331,7 +344,7 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcButtonDescription,
     ) -> None:
         """Initialize button."""
         super().__init__(coordinator, key, attribute, description)
@@ -377,8 +390,7 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
 
-        _id = int(self.key.split(":")[-1])
-        await self.coordinator.device.smoke_mute_alarm(_id)
+        await self.coordinator.device.smoke_mute_alarm(get_rpc_key_id(self.key))
 
     @property
     def available(self) -> bool:
@@ -398,19 +410,20 @@ RPC_BUTTONS = {
     ),
     "button_open": RpcButtonDescription(
         key="button",
+        translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "button_close": RpcButtonDescription(
         key="button",
+        translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "calibrate": RpcButtonDescription(
         key="blutrv",
-        name="Calibrate",
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
@@ -419,7 +432,6 @@ RPC_BUTTONS = {
     "smoke_mute": RpcButtonDescription(
         key="smoke",
         sub_key="mute",
-        name="Mute alarm",
-        translation_key="mute",
+        translation_key="mute_alarm",
     ),
 }

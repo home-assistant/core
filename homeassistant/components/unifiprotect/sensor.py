@@ -17,7 +17,6 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     Sensor,
-    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -533,18 +532,6 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
-    ProtectSensorEventEntityDescription(
-        key="smart_obj_licenseplate",
-        icon="mdi:car",
-        translation_key="license_plate_detected",
-        ufp_obj_type=SmartDetectObjectType.LICENSE_PLATE,
-        ufp_required_field="can_detect_license_plate",
-        ufp_event_obj="last_license_plate_detect_event",
-    ),
-)
-
-
 LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="motion_last_trip_time",
@@ -680,20 +667,6 @@ def _async_event_entities(
                 camera.display_name,
             )
 
-        if not camera.feature_flags.has_smart_detect:
-            continue
-
-        for event_desc in LICENSE_PLATE_EVENT_SENSORS:
-            if not event_desc.has_required(camera):
-                continue
-
-            entities.append(ProtectLicensePlateEventSensor(data, camera, event_desc))
-            _LOGGER.debug(
-                "Adding sensor entity %s for %s",
-                description.name,
-                camera.display_name,
-            )
-
     return entities
 
 
@@ -738,40 +711,3 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         "_attr_native_value",
         "_attr_extra_state_attributes",
     )
-
-
-class ProtectLicensePlateEventSensor(ProtectEventSensor):
-    """A UniFi Protect license plate sensor."""
-
-    device: Camera
-
-    @callback
-    def _set_event_done(self) -> None:
-        self._attr_native_value = OBJECT_TYPE_NONE
-        self._attr_extra_state_attributes = {}
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        description = self.entity_description
-
-        prev_event = self._event
-        prev_event_end = self._event_end
-        super()._async_update_device_from_protect(device)
-        if event := description.get_event_obj(device):
-            self._event = event
-            self._event_end = event.end
-
-        if not (
-            event
-            and (metadata := event.metadata)
-            and (license_plate := metadata.license_plate)
-            and description.has_matching_smart(event)
-            and not self._event_already_ended(prev_event, prev_event_end)
-        ):
-            self._set_event_done()
-            return
-
-        self._attr_native_value = license_plate.name
-        self._set_event_attrs(event)
-        if event.end:
-            self._async_event_with_immediate_end()

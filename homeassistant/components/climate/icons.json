@@ -96,5 +96,22 @@
     "turn_on": {
       "service": "mdi:power-on"
     }
+  },
+  "triggers": {
+    "started_cooling": {
+      "trigger": "mdi:snowflake"
+    },
+    "started_drying": {
+      "trigger": "mdi:water-percent"
+    },
+    "started_heating": {
+      "trigger": "mdi:fire"
+    },
+    "turned_off": {
+      "trigger": "mdi:power-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:power-on"
+    }
   }
 }

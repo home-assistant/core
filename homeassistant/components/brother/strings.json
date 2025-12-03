@@ -38,11 +38,11 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "type": "Type of the printer"
+          "type": "Printer type"
         },
         "data_description": {
           "host": "The hostname or IP address of the Brother printer to control.",
-          "type": "Brother printer type: ink or laser."
+          "type": "The type of the Brother printer."
         },
         "sections": {
           "advanced_settings": {
@@ -207,8 +207,19 @@
     "cannot_connect": {
       "message": "An error occurred while connecting to the {device} printer: {error}"
     },
+    "serial_mismatch": {
+      "message": "The serial number for {device} doesn't match the one in the configuration. It's possible that the two Brother printers have swapped IP addresses. Restore the previous IP address configuration or reconfigure the devices with Home Assistant."
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from the {device} printer: {error}"
+    }
+  },
+  "selector": {
+    "printer_type": {
+      "options": {
+        "ink": "ink",
+        "laser": "laser"
+      }
     }
   }
 }

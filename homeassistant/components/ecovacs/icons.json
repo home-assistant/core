@@ -81,6 +81,9 @@
       "active_map": {
         "default": "mdi:floor-plan"
       },
+      "auto_empty": {
+        "default": "mdi:delete-empty"
+      },
       "water_amount": {
         "default": "mdi:water"
       },
@@ -159,6 +162,9 @@
     "switch": {
       "advanced_mode": {
         "default": "mdi:tune"
+      },
+      "border_spin": {
+        "default": "mdi:rotate-right"
       },
       "border_switch": {
         "default": "mdi:land-fields"

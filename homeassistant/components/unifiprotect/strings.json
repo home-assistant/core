@@ -253,6 +253,16 @@
             }
           }
         }
+      },
+      "vehicle": {
+        "name": "Vehicle",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "detected": "Detected"
+            }
+          }
+        }
       }
     },
     "media_player": {

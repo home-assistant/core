@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from base64 import b64decode
-from dataclasses import dataclass
-from enum import StrEnum
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -19,54 +18,89 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import EnumTypeData
-from .util import get_dpcode
+from .models import DPCodeBase64Wrapper, DPCodeEnumWrapper
 
-
-@dataclass(frozen=True)
-class TuyaAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription):
-    """Describe a Tuya Alarm Control Panel entity."""
-
-    master_state: DPCode | None = None
-    alarm_msg: DPCode | None = None
-
-
-class Mode(StrEnum):
-    """Alarm modes."""
-
-    ARM = "arm"
-    DISARMED = "disarmed"
-    HOME = "home"
-    SOS = "sos"
-
-
-class State(StrEnum):
-    """Alarm states."""
-
-    NORMAL = "normal"
-    ALARM = "alarm"
-
-
-STATE_MAPPING: dict[str, AlarmControlPanelState] = {
-    Mode.DISARMED: AlarmControlPanelState.DISARMED,
-    Mode.ARM: AlarmControlPanelState.ARMED_AWAY,
-    Mode.HOME: AlarmControlPanelState.ARMED_HOME,
-    Mode.SOS: AlarmControlPanelState.TRIGGERED,
-}
-
-
-ALARM: dict[DeviceCategory, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
+ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
     DeviceCategory.MAL: (
-        TuyaAlarmControlPanelEntityDescription(
+        AlarmControlPanelEntityDescription(
             key=DPCode.MASTER_MODE,
-            master_state=DPCode.MASTER_STATE,
-            alarm_msg=DPCode.ALARM_MSG,
             name="Alarm",
         ),
     )
 }
+
+
+class _AlarmChangedByWrapper(DPCodeBase64Wrapper):
+    """Wrapper for changed_by.
+
+    Decode base64 to utf-16be string, but only if alarm has been triggered.
+    """
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device status."""
+        if (
+            device.status.get(DPCode.MASTER_STATE) != "alarm"
+            or (data := self.read_bytes(device)) is None
+        ):
+            return None
+        return data.decode("utf-16be")
+
+
+class _AlarmModeWrapper(DPCodeEnumWrapper):
+    """Wrapper for the alarm mode of a device.
+
+    Handles alarm mode enum values and determines the alarm state,
+    including logic for detecting when the alarm is triggered and
+    distinguishing triggered state from battery warnings.
+    """
+
+    _ACTION_MAPPINGS = {
+        # Home Assistant action => Tuya device mode
+        "arm_home": "home",
+        "arm_away": "arm",
+        "disarm": "disarmed",
+        "trigger": "sos",
+    }
+    _STATE_MAPPINGS = {
+        # Tuya device mode => Home Assistant panel state
+        "disarmed": AlarmControlPanelState.DISARMED,
+        "arm": AlarmControlPanelState.ARMED_AWAY,
+        "home": AlarmControlPanelState.ARMED_HOME,
+        "sos": AlarmControlPanelState.TRIGGERED,
+    }
+
+    def read_panel_state(self, device: CustomerDevice) -> AlarmControlPanelState | None:
+        """Read the device status."""
+        # When the alarm is triggered, only its 'state' is changing. From 'normal' to 'alarm'.
+        # The 'mode' doesn't change, and stays as 'arm' or 'home'.
+        if device.status.get(DPCode.MASTER_STATE) == "alarm":
+            # Only report as triggered if NOT a battery warning
+            if not (
+                (encoded_msg := device.status.get(DPCode.ALARM_MSG))
+                and (decoded_message := b64decode(encoded_msg).decode("utf-16be"))
+                and "Sensor Low Battery" in decoded_message
+            ):
+                return AlarmControlPanelState.TRIGGERED
+
+        if (status := self.read_device_status(device)) is None:
+            return None
+        return self._STATE_MAPPINGS.get(status)
+
+    def supports_action(self, action: str) -> bool:
+        """Return if action is supported."""
+        return (
+            mapped_value := self._ACTION_MAPPINGS.get(action)
+        ) is not None and mapped_value in self.type_information.range
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert value to raw value."""
+        if (
+            mapped_value := self._ACTION_MAPPINGS.get(value)
+        ) is not None and mapped_value in self.type_information.range:
+            return mapped_value
+        raise ValueError(f"Unsupported value {value} for {self.dpcode}")
 
 
 async def async_setup_entry(
@@ -85,9 +119,21 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
                 entities.extend(
-                    TuyaAlarmEntity(device, manager, description)
+                    TuyaAlarmEntity(
+                        device,
+                        manager,
+                        description,
+                        mode_wrapper=mode_wrapper,
+                        changed_by_wrapper=_AlarmChangedByWrapper.find_dpcode(
+                            device, DPCode.ALARM_MSG
+                        ),
+                    )
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        mode_wrapper := _AlarmModeWrapper.find_dpcode(
+                            device, DPCode.MASTER_MODE, prefer_function=True
+                        )
+                    )
                 )
         async_add_entities(entities)
 
@@ -103,88 +149,55 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
 
     _attr_name = None
     _attr_code_arm_required = False
-    _master_state: EnumTypeData | None = None
-    _alarm_msg_dpcode: DPCode | None = None
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: TuyaAlarmControlPanelEntityDescription,
+        description: AlarmControlPanelEntityDescription,
+        *,
+        mode_wrapper: _AlarmModeWrapper,
+        changed_by_wrapper: _AlarmChangedByWrapper | None,
     ) -> None:
         """Init Tuya Alarm."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._mode_wrapper = mode_wrapper
+        self._changed_by_wrapper = changed_by_wrapper
 
-        # Determine supported  modes
-        if supported_modes := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
-        ):
-            if Mode.HOME in supported_modes.range:
-                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-
-            if Mode.ARM in supported_modes.range:
-                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-
-            if Mode.SOS in supported_modes.range:
-                self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
-
-        # Determine master state
-        if enum_type := self.find_dpcode(
-            description.master_state, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._master_state = enum_type
-
-        # Determine alarm message
-        if dp_code := get_dpcode(self.device, description.alarm_msg):
-            self._alarm_msg_dpcode = dp_code
+        # Determine supported modes
+        if mode_wrapper.supports_action("arm_home"):
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
+        if mode_wrapper.supports_action("arm_away"):
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if mode_wrapper.supports_action("trigger"):
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
-        # When the alarm is triggered, only its 'state' is changing. From 'normal' to 'alarm'.
-        # The 'mode' doesn't change, and stays as 'arm' or 'home'.
-        if (
-            self._master_state is not None
-            and self.device.status.get(self._master_state.dpcode) == State.ALARM
-        ):
-            # Only report as triggered if NOT a battery warning
-            if (
-                changed_by := self.changed_by
-            ) is None or "Sensor Low Battery" not in changed_by:
-                return AlarmControlPanelState.TRIGGERED
-
-        if not (status := self.device.status.get(self.entity_description.key)):
-            return None
-        return STATE_MAPPING.get(status)
+        return self._mode_wrapper.read_panel_state(self.device)
 
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        if (
-            self._master_state is not None
-            and self._alarm_msg_dpcode is not None
-            and self.device.status.get(self._master_state.dpcode) == State.ALARM
-            and (encoded_msg := self.device.status.get(self._alarm_msg_dpcode))
-        ):
-            return b64decode(encoded_msg).decode("utf-16be")
-        return None
+        if self._changed_by_wrapper is None:
+            return None
+        return self._changed_by_wrapper.read_device_status(self.device)
 
-    def alarm_disarm(self, code: str | None = None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
-        self._send_command(
-            [{"code": self.entity_description.key, "value": Mode.DISARMED}]
-        )
+        await self._async_send_dpcode_update(self._mode_wrapper, "disarm")
 
-    def alarm_arm_home(self, code: str | None = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send Home command."""
-        self._send_command([{"code": self.entity_description.key, "value": Mode.HOME}])
+        await self._async_send_dpcode_update(self._mode_wrapper, "arm_home")
 
-    def alarm_arm_away(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send Arm command."""
-        self._send_command([{"code": self.entity_description.key, "value": Mode.ARM}])
+        await self._async_send_dpcode_update(self._mode_wrapper, "arm_away")
 
-    def alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
-        self._send_command([{"code": self.entity_description.key, "value": Mode.SOS}])
+        await self._async_send_dpcode_update(self._mode_wrapper, "trigger")

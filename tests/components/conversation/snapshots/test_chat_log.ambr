@@ -8,6 +8,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': object(
       ),
       'role': 'assistant',
@@ -21,6 +22,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -37,6 +39,7 @@
     }),
     dict({
       'agent_id': 'mock-agent-id',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
@@ -49,6 +52,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -61,6 +65,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -69,6 +74,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test 2',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -81,6 +87,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -97,6 +104,7 @@
     }),
     dict({
       'agent_id': 'mock-agent-id',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
@@ -109,6 +117,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -125,6 +134,7 @@
     }),
     dict({
       'agent_id': 'mock-agent-id',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
@@ -137,6 +147,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -153,6 +164,7 @@
     }),
     dict({
       'agent_id': 'mock-agent-id',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
@@ -161,6 +173,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test 2',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -173,6 +186,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -197,6 +211,7 @@
     }),
     dict({
       'agent_id': 'mock-agent-id',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
@@ -204,6 +219,7 @@
     }),
     dict({
       'agent_id': 'mock-agent-id',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id-2',
       'tool_name': 'test_tool',
@@ -216,6 +232,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': 'Test Thinking',
@@ -228,6 +245,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': 'Test Thinking',
@@ -240,6 +258,7 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': dict({
         'type': 'test',
         'value': 'Test Native',

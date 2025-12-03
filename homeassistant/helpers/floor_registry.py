@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
+import math
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
@@ -30,7 +31,7 @@ EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventTy
 )
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 
 class _FloorStoreData(TypedDict):
@@ -54,8 +55,8 @@ class FloorRegistryStoreData(TypedDict):
 class EventFloorRegistryUpdatedData(TypedDict):
     """Event data for when the floor registry is updated."""
 
-    action: Literal["create", "remove", "update"]
-    floor_id: str
+    action: Literal["create", "remove", "update", "reorder"]
+    floor_id: str | None
 
 
 type EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
@@ -90,6 +91,16 @@ class FloorRegistryStore(Store[FloorRegistryStoreData]):
                 created_at = utc_from_timestamp(0).isoformat()
                 for floor in old_data["floors"]:
                     floor["created_at"] = floor["modified_at"] = created_at
+
+            if old_minor_version < 3:
+                # Version 1.3 sorts the floors by their level attribute, then by name
+                old_data["floors"] = sorted(
+                    old_data["floors"],
+                    key=lambda floor: (
+                        math.inf if floor["level"] is None else -floor["level"],
+                        floor["name"].casefold(),
+                    ),
+                )
 
         return old_data  # type: ignore[return-value]
 
@@ -260,6 +271,28 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         )
 
         return new
+
+    @callback
+    def async_reorder(self, floor_ids: list[str]) -> None:
+        """Reorder floors."""
+        self.hass.verify_event_loop_thread("floor_registry.async_reorder")
+
+        if set(floor_ids) != set(self.floors.data.keys()):
+            raise ValueError(
+                "The floor_ids list must contain all existing floor IDs exactly once"
+            )
+
+        reordered_data = {
+            floor_id: self.floors.data[floor_id] for floor_id in floor_ids
+        }
+        self.floors.data.clear()
+        self.floors.data.update(reordered_data)
+
+        self.async_schedule_save()
+        self.hass.bus.async_fire_internal(
+            EVENT_FLOOR_REGISTRY_UPDATED,
+            EventFloorRegistryUpdatedData(action="reorder", floor_id=None),
+        )
 
     async def async_load(self) -> None:
         """Load the floor registry."""

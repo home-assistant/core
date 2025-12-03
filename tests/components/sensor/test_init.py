@@ -9,7 +9,6 @@ import math
 from typing import Any
 from unittest.mock import patch
 
-from freezegun.api import freeze_time
 import pytest
 
 from homeassistant.components import sensor
@@ -477,7 +476,7 @@ async def test_restore_sensor_save_state(
     assert type(extra_data["native_value"]) is native_value_type
 
 
-@freeze_time("2020-02-08 15:00:00")
+@pytest.mark.freeze_time("2020-02-08 15:00:00")
 async def test_restore_sensor_save_state_frozen_time_datetime(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -505,7 +504,7 @@ async def test_restore_sensor_save_state_frozen_time_datetime(
     assert type(extra_data["native_value"]) is dict
 
 
-@freeze_time("2020-02-08 15:00:00")
+@pytest.mark.freeze_time("2020-02-08 15:00:00")
 async def test_restore_sensor_save_state_frozen_time_date(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

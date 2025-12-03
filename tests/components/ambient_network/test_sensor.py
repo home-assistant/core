@@ -1,11 +1,11 @@
 """Test Ambient Weather Network sensors."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioambient import OpenAPI
 from aioambient.errors import RequestError
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,7 +18,7 @@ from .conftest import setup_platform
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
-@freeze_time("2023-11-9")
+@pytest.mark.freeze_time("2023-11-9")
 @pytest.mark.parametrize(
     "config_entry",
     ["AA:AA:AA:AA:AA:AA", "CC:CC:CC:CC:CC:CC", "DD:DD:DD:DD:DD:DD"],
@@ -54,45 +54,43 @@ async def test_sensors_with_no_data(
 
 
 @pytest.mark.parametrize("config_entry", ["AA:AA:AA:AA:AA:AA"], indirect=True)
+@pytest.mark.freeze_time("2023-11-8")
 async def test_sensors_disappearing(
     hass: HomeAssistant,
     open_api: OpenAPI,
     aioambient: AsyncMock,
     config_entry: ConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that we log errors properly."""
 
-    initial_datetime = datetime(year=2023, month=11, day=8)
-    with freeze_time(initial_datetime) as frozen_datetime:
-        # Normal state, sensor is available.
-        await setup_platform(True, hass, config_entry)
+    # Normal state, sensor is available.
+    await setup_platform(True, hass, config_entry)
+    sensor = hass.states.get("sensor.station_a_relative_pressure")
+    assert sensor is not None
+    assert float(sensor.state) == pytest.approx(1001.89694313129)
+
+    # Sensor becomes unavailable if the network is unavailable. Log message
+    # should only show up once.
+    for _ in range(5):
+        with patch.object(open_api, "get_device_details", side_effect=RequestError()):
+            freezer.tick(timedelta(minutes=10))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+        sensor = hass.states.get("sensor.station_a_relative_pressure")
+        assert sensor is not None
+        assert sensor.state == "unavailable"
+        assert caplog.text.count("Cannot connect to Ambient Network") == 1
+
+    # Network comes back. Sensor should start reporting again. Log message
+    # should only show up once.
+    for _ in range(5):
+        freezer.tick(timedelta(minutes=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         sensor = hass.states.get("sensor.station_a_relative_pressure")
         assert sensor is not None
         assert float(sensor.state) == pytest.approx(1001.89694313129)
-
-        # Sensor becomes unavailable if the network is unavailable. Log message
-        # should only show up once.
-        for _ in range(5):
-            with patch.object(
-                open_api, "get_device_details", side_effect=RequestError()
-            ):
-                frozen_datetime.tick(timedelta(minutes=10))
-                async_fire_time_changed(hass)
-                await hass.async_block_till_done()
-
-            sensor = hass.states.get("sensor.station_a_relative_pressure")
-            assert sensor is not None
-            assert sensor.state == "unavailable"
-            assert caplog.text.count("Cannot connect to Ambient Network") == 1
-
-        # Network comes back. Sensor should start reporting again. Log message
-        # should only show up once.
-        for _ in range(5):
-            frozen_datetime.tick(timedelta(minutes=10))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
-            sensor = hass.states.get("sensor.station_a_relative_pressure")
-            assert sensor is not None
-            assert float(sensor.state) == pytest.approx(1001.89694313129)
-            assert caplog.text.count("Fetching ambient_network data recovered") == 1
+        assert caplog.text.count("Fetching ambient_network data recovered") == 1

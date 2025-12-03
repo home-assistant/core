@@ -1,6 +1,7 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
+from collections.abc import Generator
 from copy import deepcopy
 import io
 import logging
@@ -15,6 +16,7 @@ import voluptuous as vol
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
+from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
@@ -52,6 +54,7 @@ from tests.common import (
     MockModule,
     MockUser,
     async_mock_service,
+    mock_device_registry,
     mock_integration,
     mock_platform,
 )
@@ -72,6 +75,16 @@ STATE_KEY_SHORT_NAMES = {
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
 
 
+@pytest.fixture(name="enable_experimental_triggers_conditions")
+def enable_experimental_triggers_conditions() -> Generator[None]:
+    """Enable experimental triggers and conditions."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture
 def fake_integration(hass: HomeAssistant):
     """Set up a mock integration with device automation support."""
@@ -89,6 +102,168 @@ def fake_integration(hass: HomeAssistant):
             spec=["ACTION_SCHEMA"],
         ),
     )
+
+
+@pytest.fixture
+async def target_entities(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+):
+    """Fixture to create targets and entities used in target-based tests.
+
+    The list of created entities, areas, labels, and devices can be found in the
+    assertions at the end.
+    """
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    kitchen_area = area_registry.async_create("Kitchen")
+    living_room_area = area_registry.async_create("Living Room")
+    label_area = area_registry.async_create("Bathroom")
+    label1 = label_registry.async_create("Label 1")
+    label2 = label_registry.async_create("Label 2")
+
+    area_registry.async_update(label_area.id, labels={label1.label_id})
+
+    device1 = dr.DeviceEntry(id="device1", identifiers={("test", "device1")})
+    device2 = dr.DeviceEntry(id="device2", identifiers={("test", "device2")})
+    area_device = dr.DeviceEntry(
+        id="area_device", identifiers={("test", "device3")}, area_id=kitchen_area.id
+    )
+    label2_device = dr.DeviceEntry(
+        id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
+    )
+    mock_device_registry(
+        hass,
+        {
+            device1.id: device1,
+            device2.id: device2,
+            area_device.id: area_device,
+            label2_device.id: label2_device,
+        },
+    )
+
+    # Create entities
+    not_registry_light = MockEntity(entity_id="light.not_registry")
+    device1_light = MockEntity(
+        entity_id="light.test1",
+        unique_id="test1",
+        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
+    )
+    label_device_light = MockEntity(
+        entity_id="light.test4",
+        unique_id="test4",
+        device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
+    )
+    area_light = MockEntity(entity_id="light.test6", unique_id="test6")
+
+    light_platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    light_platform.config_entry = config_entry
+    await light_platform.async_add_entities(
+        [not_registry_light, device1_light, label_device_light, area_light]
+    )
+    assert entity_registry.async_get(not_registry_light.entity_id) is None
+
+    device1_switch = MockEntity(
+        entity_id="switch.test2",
+        unique_id="test2",
+        device_info=dr.DeviceInfo(identifiers=device1.identifiers),
+    )
+    area_device_switch = MockEntity(
+        entity_id="switch.test5",
+        unique_id="test5",
+        device_info=dr.DeviceInfo(identifiers=area_device.identifiers),
+    )
+    switch_platform = MockEntityPlatform(hass, domain="switch", platform_name="test")
+    switch_platform.config_entry = config_entry
+    await switch_platform.async_add_entities([device1_switch, area_device_switch])
+
+    component1_light = MockEntity(
+        entity_id="light.component1_light", unique_id="component1_light"
+    )
+    component1_flash_light = MockEntity(
+        entity_id="light.component1_flash_light",
+        unique_id="component1_flash_light",
+        supported_features=LightEntityFeature.FLASH,
+    )
+    component1_effect_flash_light = MockEntity(
+        entity_id="light.component1_effect_flash_light",
+        unique_id="component1_effect_flash_light",
+        supported_features=LightEntityFeature.EFFECT | LightEntityFeature.FLASH,
+    )
+    component1_flash_transition_light = MockEntity(
+        entity_id="light.component1_flash_transition_light",
+        unique_id="component1_flash_transition_light",
+        supported_features=LightEntityFeature.FLASH | LightEntityFeature.TRANSITION,
+    )
+
+    component1_light_platform = MockEntityPlatform(
+        hass, domain="light", platform_name="component1"
+    )
+    component1_light_platform.config_entry = config_entry
+    await component1_light_platform.async_add_entities(
+        [
+            component1_light,
+            component1_flash_light,
+            component1_effect_flash_light,
+            component1_flash_transition_light,
+        ]
+    )
+
+    label_component1_switch = MockEntity(
+        entity_id="switch.component1_switch", unique_id="component1_switch"
+    )
+
+    component1_switch_platform = MockEntityPlatform(
+        hass, domain="switch", platform_name="component1"
+    )
+    component1_switch_platform.config_entry = config_entry
+    await component1_switch_platform.async_add_entities([label_component1_switch])
+
+    device2_component1_sensor = MockEntity(
+        entity_id="sensor.component1_sensor",
+        unique_id="component1_sensor",
+        device_class="illuminance",
+        device_info=dr.DeviceInfo(identifiers=device2.identifiers),
+    )
+    component1_sensor_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="component1"
+    )
+    component1_sensor_platform.config_entry = config_entry
+    await component1_sensor_platform.async_add_entities([device2_component1_sensor])
+
+    # Associate entities with areas and labels
+    entity_registry.async_update_entity(
+        area_light.entity_id, area_id=living_room_area.id
+    )
+    entity_registry.async_update_entity(
+        label_component1_switch.entity_id, labels={label1.label_id}
+    )
+
+    assert set(hass.states.async_entity_ids()) == {
+        "light.not_registry",
+        "light.test1",
+        "light.test4",
+        "light.test6",
+        "switch.test2",
+        "switch.test5",
+        "light.component1_light",
+        "light.component1_flash_light",
+        "light.component1_effect_flash_light",
+        "light.component1_flash_transition_light",
+        "switch.component1_switch",
+        "sensor.component1_sensor",
+    }
+    assert set(label_registry.labels) == {"label_1", "label_2"}
+    assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom"}
+    assert set(dr.async_get(hass).devices) == {
+        "device1",
+        "device2",
+        "area_device",
+        "label_device",
+    }
 
 
 def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
@@ -2316,9 +2491,9 @@ async def test_render_template_with_timeout(
     """Test a template that will timeout."""
 
     slow_template_str = """
-{% for var in range(1000) -%}
-  {% for var in range(1000) -%}
-    {{ var }}
+{% for var in range(10000) -%}
+  {% for var in range(10000) -%}
+    {{ "" }}
   {%- endfor %}
 {%- endfor %}
 """
@@ -3259,7 +3434,7 @@ async def test_extract_from_target(
 ) -> None:
     """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
 
-    async def call_command(target: dict[str, str]) -> Any:
+    async def call_command(target: dict[str, list[str]]) -> Any:
         await websocket_client.send_json_auto_id(
             {"type": "extract_from_target", "target": target}
         )
@@ -3480,3 +3655,510 @@ async def test_extract_from_target_validation_error(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert "error" in msg
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions", "target_entities")
+@patch("annotatedyaml.loader.load_yaml")
+@pytest.mark.parametrize("automation_component", ["trigger", "condition"])
+async def test_get_triggers_for_target(
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    automation_component: str,
+) -> None:
+    """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
+
+    async def async_get_triggers_conditions(hass: HomeAssistant) -> dict[str, type]:
+        return {
+            "turned_on": Mock,
+            "non_target": Mock,
+        }
+
+    common_mock = Mock(
+        **{f"async_get_{automation_component}s": async_get_triggers_conditions}
+    )
+
+    mock_platform(hass, f"light.{automation_component}", common_mock)
+    mock_platform(hass, f"switch.{automation_component}", common_mock)
+    mock_platform(hass, f"sensor.{automation_component}", common_mock)
+    mock_platform(
+        hass,
+        f"component1.{automation_component}",
+        Mock(
+            **{
+                f"async_get_{automation_component}s": AsyncMock(
+                    return_value={
+                        "_": Mock,
+                        "light_message": Mock,
+                        "light_flash": Mock,
+                        "light_dance": Mock,
+                    }
+                )
+            }
+        ),
+    )
+    mock_platform(
+        hass,
+        f"component2.{automation_component}",
+        Mock(
+            **{
+                f"async_get_{automation_component}s": AsyncMock(
+                    return_value={"match_all": Mock, "other_integration_lights": Mock}
+                )
+            }
+        ),
+    )
+
+    def get_common_descriptions(domain: str):
+        return f"""
+        turned_on:
+          target:
+            entity:
+              domain: {domain}
+          fields:
+            behavior:
+              required: true
+              default: any
+              selector:
+                select:
+                  options:
+                    - first
+                    - last
+                    - any
+        non_target:
+          fields:
+            behavior:
+              required: true
+              default: any
+              selector:
+                select:
+                  options:
+                    - first
+                    - last
+                    - any
+    """
+
+    component1_descriptions = """
+        _:
+          target:
+            entity:
+              integration: component1
+        light_message:
+          target:
+            entity:
+              - domain: light
+                integration: component1
+              - domain: sensor
+                integration: component1
+                device_class: illuminance
+        light_flash:
+          target:
+            entity:
+              domain: light
+              integration: component1
+              supported_features:
+                - light.LightEntityFeature.FLASH
+                - light.LightEntityFeature.EFFECT
+        light_dance:
+          target:
+            entity:
+              domain: light
+              integration: component1
+              supported_features: # both required features
+                - - light.LightEntityFeature.FLASH
+                  - light.LightEntityFeature.TRANSITION
+    """
+
+    component2_descriptions = """
+        match_all:
+          target:
+
+        other_integration_lights:
+          target:
+            entity:
+              - domain: light
+                supported_features:
+                  - light.LightEntityFeature.EFFECT
+              - integration: test
+                domain: light
+    """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith(f"component1/{automation_component}s.yaml"):
+            descriptions = component1_descriptions
+        elif fname.endswith(f"component2/{automation_component}s.yaml"):
+            descriptions = component2_descriptions
+        else:
+            descriptions = get_common_descriptions(fname.split("/")[-2])
+        with io.StringIO(descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+    with patch.object(Integration, f"has_{automation_component}s", return_value=True):
+        assert await async_setup_component(hass, "light", {})
+        assert await async_setup_component(hass, "switch", {})
+        assert await async_setup_component(hass, "sensor", {})
+        assert await async_setup_component(hass, "component1", {})
+        assert await async_setup_component(hass, "component2", {})
+        await hass.async_block_till_done()
+
+        async def assert_command(
+            target: dict[str, list[str]], expected: list[str]
+        ) -> Any:
+            """Call the command and assert expected triggers/conditions."""
+            await websocket_client.send_json_auto_id(
+                {"type": f"get_{automation_component}s_for_target", "target": target}
+            )
+            msg = await websocket_client.receive_json()
+
+            assert msg["type"] == const.TYPE_RESULT
+            assert msg["success"]
+            assert sorted(msg["result"]) == sorted(expected)
+
+        # Test entity target - unknown entity
+        await assert_command({"entity_id": ["light.unknown_entity"]}, [])
+
+        # Test entity target - entity not in registry
+        await assert_command(
+            {"entity_id": ["light.not_registry"]},
+            [
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+            ],
+        )
+
+        # Test entity targets
+        await assert_command(
+            {"entity_id": ["light.component1_light", "switch.component1_switch"]},
+            [
+                "component1",
+                "component1.light_message",
+                "component2.match_all",
+                "light.turned_on",
+                "switch.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["light.component1_flash_light"]},
+            [
+                "component1",
+                "component1.light_flash",
+                "component1.light_message",
+                "component2.match_all",
+                "light.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["light.component1_effect_flash_light"]},
+            [
+                "component1",
+                "component1.light_flash",
+                "component1.light_message",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["light.component1_flash_transition_light"]},
+            [
+                "component1",
+                "component1.light_dance",
+                "component1.light_flash",
+                "component1.light_message",
+                "component2.match_all",
+                "light.turned_on",
+            ],
+        )
+
+        # Test device target - multiple devices
+        await assert_command(
+            {"device_id": ["device1", "device2"]},
+            [
+                "component1",
+                "component1.light_message",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+                "sensor.turned_on",
+                "switch.turned_on",
+            ],
+        )
+
+        # Test area target - multiple areas
+        await assert_command(
+            {"area_id": ["kitchen", "living_room"]},
+            [
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+                "switch.turned_on",
+            ],
+        )
+
+        # Test label target - multiple labels
+        await assert_command(
+            {"label_id": ["label_1", "label_2"]},
+            [
+                "light.turned_on",
+                "component1",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "switch.turned_on",
+            ],
+        )
+        # Test mixed target types
+        await assert_command(
+            {
+                "entity_id": ["light.test1"],
+                "device_id": ["device2"],
+                "area_id": ["kitchen"],
+                "label_id": ["label_1"],
+            },
+            [
+                "component1",
+                "component1.light_message",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+                "sensor.turned_on",
+                "switch.turned_on",
+            ],
+        )
+
+
+@pytest.mark.usefixtures("target_entities")
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_services", return_value=True)
+async def test_get_services_for_target(
+    mock_has_services: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test get_services_for_target command with mixed target types."""
+
+    def get_common_service_descriptions(domain: str):
+        return f"""
+        turn_on:
+          target:
+            entity:
+              domain: {domain}
+          fields:
+            behavior:
+              required: true
+              default: any
+              selector:
+                select:
+                  options:
+                    - first
+                    - last
+                    - any
+        non_target_service:
+          fields:
+            behavior:
+              required: true
+              default: any
+              selector:
+                select:
+                  options:
+                    - first
+                    - last
+                    - any
+    """
+
+    component1_service_descriptions = """
+        light_message:
+          target:
+            entity:
+              - domain: light
+                integration: component1
+              - domain: sensor
+                integration: component1
+                device_class: illuminance
+        light_flash:
+          target:
+            entity:
+              domain: light
+              integration: component1
+              supported_features:
+                - light.LightEntityFeature.FLASH
+                - light.LightEntityFeature.EFFECT
+        light_dance:
+          target:
+            entity:
+              domain: light
+              integration: component1
+              supported_features: # both required features
+                - - light.LightEntityFeature.FLASH
+                  - light.LightEntityFeature.TRANSITION
+    """
+
+    component2_service_descriptions = """
+        match_all:
+          target:
+
+        other_integration_lights:
+          target:
+            entity:
+              - domain: light
+                supported_features:
+                  - light.LightEntityFeature.EFFECT
+              - integration: test
+                domain: light
+    """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("component1/services.yaml"):
+            service_descriptions = component1_service_descriptions
+        elif fname.endswith("component2/services.yaml"):
+            service_descriptions = component2_service_descriptions
+        else:
+            service_descriptions = get_common_service_descriptions(fname.split("/")[-2])
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+    mock_integration(hass, MockModule("light"))
+    assert await async_setup_component(hass, "light", {})
+    mock_integration(hass, MockModule("switch"))
+    assert await async_setup_component(hass, "switch", {})
+    mock_integration(hass, MockModule("sensor"))
+    assert await async_setup_component(hass, "sensor", {})
+    mock_integration(hass, MockModule("component1"))
+    assert await async_setup_component(hass, "component1", {})
+    mock_integration(hass, MockModule("component2"))
+    assert await async_setup_component(hass, "component2", {})
+    await hass.async_block_till_done()
+
+    hass.services.async_register("light", "turn_on", lambda call: None)
+    hass.services.async_register("light", "non_target_service", lambda call: None)
+    hass.services.async_register("switch", "turn_on", lambda call: None)
+    hass.services.async_register("switch", "non_target_service", lambda call: None)
+    hass.services.async_register("sensor", "turn_on", lambda call: None)
+    hass.services.async_register("sensor", "non_target_service", lambda call: None)
+    hass.services.async_register("component1", "light_message", lambda call: None)
+    hass.services.async_register("component1", "light_flash", lambda call: None)
+    hass.services.async_register("component1", "light_dance", lambda call: None)
+    hass.services.async_register("component2", "match_all", lambda call: None)
+    hass.services.async_register(
+        "component2", "other_integration_lights", lambda call: None
+    )
+    await hass.async_block_till_done()
+
+    async def assert_services(target: dict[str, list[str]], expected: list[str]) -> Any:
+        """Call the command and assert expected services."""
+        await websocket_client.send_json_auto_id(
+            {"type": "get_services_for_target", "target": target}
+        )
+        msg = await websocket_client.receive_json()
+
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"]
+        assert sorted(msg["result"]) == sorted(expected)
+
+    # Test entity target - unknown entity
+    await assert_services({"entity_id": ["light.unknown_entity"]}, [])
+
+    # Test entity target - entity not in registry
+    await assert_services(
+        {"entity_id": ["light.not_registry"]},
+        [
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "light.turn_on",
+        ],
+    )
+
+    # Test entity targets
+    await assert_services(
+        {"entity_id": ["light.component1_light", "switch.component1_switch"]},
+        [
+            "component1.light_message",
+            "component2.match_all",
+            "light.turn_on",
+            "switch.turn_on",
+        ],
+    )
+    await assert_services(
+        {"entity_id": ["light.component1_flash_light"]},
+        [
+            "component1.light_flash",
+            "component1.light_message",
+            "component2.match_all",
+            "light.turn_on",
+        ],
+    )
+    await assert_services(
+        {"entity_id": ["light.component1_effect_flash_light"]},
+        [
+            "component1.light_flash",
+            "component1.light_message",
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "light.turn_on",
+        ],
+    )
+    await assert_services(
+        {"entity_id": ["light.component1_flash_transition_light"]},
+        [
+            "component1.light_dance",
+            "component1.light_flash",
+            "component1.light_message",
+            "component2.match_all",
+            "light.turn_on",
+        ],
+    )
+
+    # Test device target - multiple devices
+    await assert_services(
+        {"device_id": ["device1", "device2"]},
+        [
+            "component1.light_message",
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "light.turn_on",
+            "sensor.turn_on",
+            "switch.turn_on",
+        ],
+    )
+
+    # Test area target - multiple areas
+    await assert_services(
+        {"area_id": ["kitchen", "living_room"]},
+        [
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "light.turn_on",
+            "switch.turn_on",
+        ],
+    )
+
+    # Test label target - multiple labels
+    await assert_services(
+        {"label_id": ["label_1", "label_2"]},
+        [
+            "light.turn_on",
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "switch.turn_on",
+        ],
+    )
+    # Test mixed target types
+    await assert_services(
+        {
+            "entity_id": ["light.test1"],
+            "device_id": ["device2"],
+            "area_id": ["kitchen"],
+            "label_id": ["label_1"],
+        },
+        [
+            "component1.light_message",
+            "component2.match_all",
+            "component2.other_integration_lights",
+            "light.turn_on",
+            "sensor.turn_on",
+            "switch.turn_on",
+        ],
+    )

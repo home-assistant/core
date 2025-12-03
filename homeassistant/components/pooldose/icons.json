@@ -1,10 +1,87 @@
 {
   "entity": {
+    "binary_sensor": {
+      "alarm_ofa_cl": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "alarm_ofa_orp": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "alarm_ofa_ph": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "flow_rate_alarm": {
+        "default": "mdi:autorenew",
+        "state": {
+          "on": "mdi:autorenew-off"
+        }
+      },
+      "orp_level_alarm": {
+        "default": "mdi:flask",
+        "state": {
+          "on": "mdi:flask-empty"
+        }
+      },
+      "ph_level_alarm": {
+        "default": "mdi:flask",
+        "state": {
+          "on": "mdi:flask-empty"
+        }
+      },
+      "pump_alarm": {
+        "default": "mdi:pump",
+        "state": {
+          "on": "mdi:pump-off"
+        }
+      },
+      "relay_alarm": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      },
+      "relay_aux1": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      },
+      "relay_aux2": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      },
+      "relay_aux3": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      }
+    },
     "sensor": {
-      "ofa_orp_value": {
+      "cl": {
+        "default": "mdi:pool"
+      },
+      "cl_type_dosing": {
+        "default": "mdi:beaker"
+      },
+      "flow_rate": {
+        "default": "mdi:pipe-valve"
+      },
+      "ofa_orp_time": {
         "default": "mdi:clock"
       },
-      "ofa_ph_value": {
+      "ofa_ph_time": {
         "default": "mdi:clock"
       },
       "orp": {
@@ -20,7 +97,10 @@
         "default": "mdi:form-select"
       },
       "orp_type_dosing": {
-        "default": "mdi:flask"
+        "default": "mdi:beaker"
+      },
+      "peristaltic_cl_dosing": {
+        "default": "mdi:pump"
       },
       "peristaltic_orp_dosing": {
         "default": "mdi:pump"
@@ -38,7 +118,30 @@
         "default": "mdi:form-select"
       },
       "ph_type_dosing": {
-        "default": "mdi:flask"
+        "default": "mdi:beaker"
+      }
+    },
+    "switch": {
+      "frequency_input": {
+        "default": "mdi:sine-wave",
+        "state": {
+          "off": "mdi:pulse",
+          "on": "mdi:sine-wave"
+        }
+      },
+      "pause_dosing": {
+        "default": "mdi:pause",
+        "state": {
+          "off": "mdi:play",
+          "on": "mdi:pause"
+        }
+      },
+      "pump_monitoring": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off",
+          "on": "mdi:pump"
+        }
       }
     }
   }

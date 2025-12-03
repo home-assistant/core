@@ -36,6 +36,10 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
+# BLE provisioning
+PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to WiFi
+CONF_SSID: Final = "ssid"
+
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
@@ -164,6 +168,7 @@ INPUTS_EVENTS_SUBTYPES: Final = {
     "button2": 2,
     "button3": 3,
     "button4": 4,
+    "button5": 5,
 }
 
 SHBTN_MODELS: Final = [MODEL_BUTTON1, MODEL_BUTTON1_V2]
@@ -219,6 +224,11 @@ UPTIME_DEVIATION: Final = 60
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = [MODEL_GAS]
+SHELLY_WALL_DISPLAY_MODELS = (
+    MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
+)
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
@@ -245,6 +255,7 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
 )
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
+OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 
 
 class DeprecatedFirmwareInfo(TypedDict):

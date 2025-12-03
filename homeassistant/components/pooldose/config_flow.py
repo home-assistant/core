@@ -31,6 +31,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the Pooldose integration including DHCP discovery."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow and store the discovered IP address and MAC."""

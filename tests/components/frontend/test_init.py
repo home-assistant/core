@@ -645,6 +645,7 @@ async def test_get_panels(
     assert msg["result"]["map"]["icon"] == "mdi:tooltip-account"
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
+    assert msg["result"]["map"]["default_visible"] is True
 
     async_remove_panel(hass, "map")
 
@@ -683,6 +684,45 @@ async def test_get_panels_non_admin(
     assert msg["success"]
     assert "history" in msg["result"]
     assert "map" not in msg["result"]
+
+
+async def test_panel_sidebar_default_visible(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client: TestClient,
+) -> None:
+    """Test sidebar_default_visible property in panels."""
+    async_register_built_in_panel(
+        hass,
+        "default_panel",
+        "Default Panel",
+    )
+    async_register_built_in_panel(
+        hass,
+        "visible_panel",
+        "Visible Panel",
+        "mdi:eye",
+        sidebar_default_visible=True,
+    )
+    async_register_built_in_panel(
+        hass,
+        "hidden_panel",
+        "Hidden Panel",
+        "mdi:eye-off",
+        sidebar_default_visible=False,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "get_panels"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["default_panel"]["default_visible"] is True
+    assert msg["result"]["visible_panel"]["default_visible"] is True
+    assert msg["result"]["hidden_panel"]["default_visible"] is False
 
 
 async def test_get_translations(ws_client: MockHAClientWebSocket) -> None:

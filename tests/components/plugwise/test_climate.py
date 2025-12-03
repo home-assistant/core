@@ -471,16 +471,14 @@ async def test_anna_2_climate_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
-@pytest.mark.parametrize("chosen_env", ["m_anna_heatpump_idle"], indirect=True)
-@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_anna_3_climate_snapshot(
+async def test_anna_p1_climate_snapshot(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
+    mock_smile_anna_p1: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
 ) -> None:
-    """Test Anna 3 climate snapshot."""
+    """Test Anna P1 climate snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)

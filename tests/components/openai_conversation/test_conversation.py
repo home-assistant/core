@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import httpx
 from openai import AuthenticationError, RateLimitError
 from openai.types.responses import (
@@ -21,6 +22,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -239,6 +241,7 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_reasoning_model: MockConfigEntry,
@@ -298,6 +301,7 @@ async def test_function_call(
     assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
+@freeze_time("2025-10-31 18:00:00")
 async def test_function_call_without_reasoning(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -429,6 +433,7 @@ async def test_assist_api_tools_conversion(
     assert tools
 
 
+@pytest.mark.parametrize("inline_citations", [True, False])
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -436,6 +441,7 @@ async def test_web_search(
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
     snapshot: SnapshotAssertion,
+    inline_citations: bool,
 ) -> None:
     """Test web_search_tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -451,11 +457,17 @@ async def test_web_search(
             CONF_WEB_SEARCH_COUNTRY: "US",
             CONF_WEB_SEARCH_REGION: "California",
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            CONF_WEB_SEARCH_INLINE_CITATIONS: inline_citations,
         },
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    message = "Home Assistant now supports ChatGPT Search in Assist"
+    message = [
+        "Home Assistant now supports ",
+        "ChatGPT Search in Assist",
+        " ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)",
+        ").",
+    ]
     mock_create_stream.return_value = [
         # Initial conversation
         (
@@ -486,7 +498,6 @@ async def test_web_search(
         }
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
     # Test follow-up message in multi-turn conversation
     mock_create_stream.return_value = [
@@ -501,6 +512,11 @@ async def test_web_search(
         agent_id="conversation.openai_conversation",
     )
 
+    assert (
+        isinstance(mock_create_stream.mock_calls[0][2]["input"][0]["content"], list)
+        and "do not include source citations"
+        in mock_create_stream.mock_calls[0][2]["input"][0]["content"][1]["text"]
+    ) is not inline_citations
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
 
 

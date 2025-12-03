@@ -83,6 +83,9 @@
       "cpu_total": {
         "name": "Total CPU"
       },
+      "cpu_usage_total": {
+        "name": "CPU usage total"
+      },
       "docker_version": {
         "name": "Docker version"
       },
@@ -95,8 +98,17 @@
       "kernel_version": {
         "name": "Kernel version"
       },
+      "memory_limit": {
+        "name": "Memory limit"
+      },
       "memory_total": {
         "name": "Total memory"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_usage_percentage": {
+        "name": "Memory usage percentage"
       },
       "operating_system": {
         "name": "Operating system"

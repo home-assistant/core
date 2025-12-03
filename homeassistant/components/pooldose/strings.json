@@ -33,11 +33,59 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm_ofa_cl": {
+        "name": "Chlorine tank level"
+      },
+      "alarm_ofa_orp": {
+        "name": "ORP overfeed"
+      },
+      "alarm_ofa_ph": {
+        "name": "pH overfeed"
+      },
+      "flow_rate_alarm": {
+        "name": "Flow rate"
+      },
+      "orp_level_alarm": {
+        "name": "ORP tank level"
+      },
+      "ph_level_alarm": {
+        "name": "pH tank level"
+      },
+      "pump_alarm": {
+        "name": "Recirculation"
+      },
+      "relay_alarm": {
+        "name": "Alarm relay status"
+      },
+      "relay_aux1": {
+        "name": "Auxiliary relay 1 status"
+      },
+      "relay_aux2": {
+        "name": "Auxiliary relay 2 status"
+      },
+      "relay_aux3": {
+        "name": "Auxiliary relay 3 status"
+      }
+    },
     "sensor": {
-      "ofa_orp_value": {
+      "cl": {
+        "name": "Chlorine"
+      },
+      "cl_type_dosing": {
+        "name": "Chlorine dosing type",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "flow_rate": {
+        "name": "Flow rate"
+      },
+      "ofa_orp_time": {
         "name": "ORP overfeed alert time"
       },
-      "ofa_ph_value": {
+      "ofa_ph_time": {
         "name": "pH overfeed alert time"
       },
       "orp": {
@@ -62,6 +110,15 @@
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]"
+        }
+      },
+      "peristaltic_cl_dosing": {
+        "name": "Chlorine peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
         }
       },
       "peristaltic_orp_dosing": {
@@ -103,6 +160,17 @@
           "acid": "pH-",
           "alcalyne": "pH+"
         }
+      }
+    },
+    "switch": {
+      "frequency_input": {
+        "name": "Frequency input"
+      },
+      "pause_dosing": {
+        "name": "Pause dosing"
+      },
+      "pump_monitoring": {
+        "name": "Pump monitoring"
       }
     }
   }
