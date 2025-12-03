@@ -183,6 +183,9 @@
     "auto_on_off_error": {
       "message": "Error while setting auto on/off to {state} for {id}"
     },
+    "bluetooth_connection_failed": {
+      "message": "Error while connecting to machine via Bluetooth"
+    },
     "button_error": {
       "message": "Error while executing button {key}"
     },

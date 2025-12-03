@@ -125,6 +125,15 @@ OVEN_MODE = {
     "Rinse": "rinse",
 }
 
+HEALTH_CONCERN = {
+    "good": "good",
+    "moderate": "moderate",
+    "slightlyUnhealthy": "slightly_unhealthy",
+    "unhealthy": "unhealthy",
+    "veryUnhealthy": "very_unhealthy",
+    "hazardous": "hazardous",
+}
+
 WASHER_OPTIONS = ["pause", "run", "stop"]
 
 
@@ -426,6 +435,17 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.DUST_HEALTH_CONCERN: {
+        Attribute.DUST_HEALTH_CONCERN: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DUST_HEALTH_CONCERN,
+                translation_key="pm10_health_concern",
+                device_class=SensorDeviceClass.ENUM,
+                options=list(HEALTH_CONCERN.values()),
+                value_fn=HEALTH_CONCERN.get,
+            )
+        ]
+    },
     Capability.DUST_SENSOR: {
         Attribute.DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -473,6 +493,17 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.FINE_DUST_HEALTH_CONCERN: {
+        Attribute.FINE_DUST_HEALTH_CONCERN: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_HEALTH_CONCERN,
+                translation_key="pm25_health_concern",
+                device_class=SensorDeviceClass.ENUM,
+                options=list(HEALTH_CONCERN.values()),
+                value_fn=HEALTH_CONCERN.get,
             )
         ]
     },
@@ -1018,6 +1049,17 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.VERY_FINE_DUST_HEALTH_CONCERN: {
+        Attribute.VERY_FINE_DUST_HEALTH_CONCERN: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VERY_FINE_DUST_HEALTH_CONCERN,
+                translation_key="pm1_health_concern",
+                device_class=SensorDeviceClass.ENUM,
+                options=list(HEALTH_CONCERN.values()),
+                value_fn=HEALTH_CONCERN.get,
+            )
+        ]
+    },
     Capability.VERY_FINE_DUST_SENSOR: {
         Attribute.VERY_FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -1112,6 +1154,17 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.WATER,
                 native_unit_of_measurement=UnitOfVolume.LITERS,
                 value_fn=lambda value: value["cumulativeAmount"] / 1000,
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_HOOD_FILTER: {
+        Attribute.HOOD_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.HOOD_FILTER_USAGE,
+                translation_key="hood_filter_usage",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=PERCENTAGE,
+                entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
     },
