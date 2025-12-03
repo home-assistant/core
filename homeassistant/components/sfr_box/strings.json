@@ -60,7 +60,7 @@
       },
       "dsl_connect_count": {
         "name": "DSL connect count",
-        "unit_of_measurement": "connects"
+        "unit_of_measurement": "attempts"
       },
       "dsl_crc_error_count": {
         "name": "DSL CRC error count",

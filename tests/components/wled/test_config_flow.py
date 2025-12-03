@@ -4,7 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from wled import WLEDConnectionError
+from wled import WLEDConnectionError, WLEDUnsupportedVersionError
 
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -215,6 +215,23 @@ async def test_connection_error(hass: HomeAssistant, mock_wled: MagicMock) -> No
     assert result.get("errors") == {"base": "cannot_connect"}
 
 
+async def test_unsupported_version_error(
+    hass: HomeAssistant, mock_wled: MagicMock
+) -> None:
+    """Test we show user form on WLED unsupported version error."""
+    mock_wled.update.side_effect = WLEDUnsupportedVersionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "example.com"},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"base": "unsupported_version"}
+
+
 async def test_zeroconf_connection_error(
     hass: HomeAssistant, mock_wled: MagicMock
 ) -> None:
@@ -237,6 +254,30 @@ async def test_zeroconf_connection_error(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
+
+
+async def test_zeroconf_unsupported_version_error(
+    hass: HomeAssistant, mock_wled: MagicMock
+) -> None:
+    """Test we abort zeroconf flow on WLED unsupported version error."""
+    mock_wled.update.side_effect = WLEDUnsupportedVersionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "aabbccddeeff"},
+            type="mock_type",
+        ),
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unsupported_version"
 
 
 @pytest.mark.usefixtures("mock_wled")
