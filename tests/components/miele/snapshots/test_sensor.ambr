@@ -4678,6 +4678,104 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7024,6 +7122,104 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_consumption-entry]

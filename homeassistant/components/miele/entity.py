@@ -1,6 +1,6 @@
 """Entity base class for the Miele integration."""
 
-from pymiele import MieleAction, MieleAPI, MieleDevice
+from pymiele import MieleAction, MieleAPI, MieleDevice, MieleFillingLevel
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -60,6 +60,11 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
     def action(self) -> MieleAction:
         """Return the actions object."""
         return self.coordinator.data.actions[self._device_id]
+
+    @property
+    def levels(self) -> MieleFillingLevel:
+        """Return the filling levels object."""
+        return self.coordinator.data.filling_levels[self._device_id]
 
     @property
     def api(self) -> MieleAPI:

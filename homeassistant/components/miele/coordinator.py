@@ -9,7 +9,7 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientResponseError
-from pymiele import MieleAction, MieleAPI, MieleDevice
+from pymiele import MieleAction, MieleAPI, MieleDevice, MieleFillingLevel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,6 +29,7 @@ class MieleCoordinatorData:
 
     devices: dict[str, MieleDevice]
     actions: dict[str, MieleAction]
+    filling_levels: dict[str, MieleFillingLevel]
 
 
 class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
@@ -65,7 +66,13 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                 for device_id, device in devices_json.items()
             }
             self.devices = devices
+            filling_levels_json = await self.api.get_filling_levels()
+            filling_levels = {
+                record["deviceId"]: MieleFillingLevel(record["fillingLevels"])
+                for record in filling_levels_json
+            }
             actions = {}
+
             for device_id in devices:
                 try:
                     actions_json = await self.api.get_actions(device_id)
@@ -84,7 +91,9 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                     )
                     actions_json = {}
                 actions[device_id] = MieleAction(actions_json)
-            return MieleCoordinatorData(devices=devices, actions=actions)
+            return MieleCoordinatorData(
+                devices=devices, actions=actions, filling_levels=filling_levels
+            )
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""
@@ -102,6 +111,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             MieleCoordinatorData(
                 devices=devices,
                 actions=self.data.actions,
+                filling_levels=self.data.filling_levels,
             )
         )
 
@@ -114,5 +124,6 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             MieleCoordinatorData(
                 devices=self.data.devices,
                 actions=actions,
+                filling_levels=self.data.filling_levels,
             )
         )

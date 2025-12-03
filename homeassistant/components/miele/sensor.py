@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
-from pymiele import MieleDevice, MieleTemperature
+from pymiele import MieleDevice, MieleFillingLevel, MieleTemperature
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -148,6 +148,7 @@ class MieleSensorDescription(SensorEntityDescription):
     extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
+    level_value_fn: Callable[[MieleFillingLevel], StateType | datetime] | None = None
 
 
 @dataclass
@@ -679,6 +680,28 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
     ),
     MieleSensorDefinition(
+        types=(MieleAppliance.WASHING_MACHINE,),
+        description=MieleSensorDescription(
+            key="twin_dos_1_level",
+            translation_key="twin_dos_1_level",
+            value_fn=lambda value: None,
+            level_value_fn=lambda value: value.twin_dos_container_1_filling_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.WASHING_MACHINE,),
+        description=MieleSensorDescription(
+            key="twin_dos_2_level",
+            translation_key="twin_dos_2_level",
+            value_fn=lambda value: None,
+            level_value_fn=lambda value: value.twin_dos_container_2_filling_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
         types=(MieleAppliance.ROBOT_VACUUM_CLEANER,),
         description=MieleSensorDescription(
             key="state_battery",
@@ -715,6 +738,8 @@ async def async_setup_entry(
             "state_finish_timestamp": MieleAbsoluteTimeSensor,
             "current_energy_consumption": MieleConsumptionSensor,
             "current_water_consumption": MieleConsumptionSensor,
+            "twin_dos_1_level": MieleLevelSensor,
+            "twin_dos_2_level": MieleLevelSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -884,6 +909,19 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """Handle updated data from the coordinator."""
         self._update_native_value()
         super()._handle_coordinator_update()
+
+
+class MieleLevelSensor(MieleSensor):
+    """Representation of a filling level Sensor."""
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the level sensor."""
+        return (
+            self.entity_description.level_value_fn(self.levels)
+            if self.entity_description.level_value_fn is not None
+            else None
+        )
 
 
 class MielePlateSensor(MieleSensor):

@@ -95,6 +95,12 @@
       "target_temperature": {
         "default": "mdi:thermometer-check"
       },
+      "twin_dos_1_level": {
+        "default": "mdi:car-coolant-level"
+      },
+      "twin_dos_2_level": {
+        "default": "mdi:car-coolant-level"
+      },
       "water_forecast": {
         "default": "mdi:water-outline"
       }

@@ -41,6 +41,12 @@ async def async_get_config_entry_diagnostics(
                 for device_id, device_data in config_entry.runtime_data.data.devices.items()
             }
         ),
+        "filling_levels": redact_identifiers(
+            {
+                device_id: filling_level_data.raw
+                for device_id, filling_level_data in config_entry.runtime_data.data.filling_levels.items()
+            }
+        ),
         "actions": redact_identifiers(
             {
                 device_id: action_data.raw
@@ -74,6 +80,9 @@ async def async_get_device_diagnostics(
     miele_data: dict[str, Any] = {
         "devices": {
             hash_identifier(device_id): coordinator.data.devices[device_id].raw
+        },
+        "filling_levels": {
+            hash_identifier(device_id): coordinator.data.filling_levels[device_id].raw
         },
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
