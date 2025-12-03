@@ -3,11 +3,7 @@ rules:
   config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - test_config_flow_skip_auth -> I'd split the happy from the not happy flows
-      - We should test created mac address
+  config-flow-test-coverage: done
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -36,34 +32,17 @@ rules:
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
-  test-coverage:
-    status: todo
-    comment: |
-      - 93% on diagnostics / 92% on sensors, need to improve overall coverage
-      - you can use load_json_object_fixture
-      - It would be nice to use the snapshot helper as currently it would just throw everything in a list
-      - We also test the devices in each platform, kinda overkill
-      - assert not hass.data.get(DOMAIN) not needed
-      - We should use entity_registry_enabled_by_default instead to enable entities
+  test-coverage: done
   integration-owner: done
-  docs-installation-parameters:
-    status: todo
-    comment: not yet documented
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
 
   ## Gold
   entity-translations: done
-  entity-device-class:
-    status: todo
-    comment: |
-      What does DSL counter count?
-      What is the state of CRC?
-      line_status and training and net_infra and mode -> unknown shouldn't be an option and the entity should return None instead
-  devices:
-    status: todo
-    comment: MAC address can be set to the connections
+  entity-device-class: done
+  devices: done
   entity-category: done
   entity-disabled-by-default: done
   discovery:
@@ -71,13 +50,9 @@ rules:
     comment: Should be possible
   stale-devices: done
   diagnostics: done
-  exception-translations:
-    status: todo
-    comment: not yet documented
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: Need to be able to manually change the IP address
+  reconfiguration-flow: done
   dynamic-devices: done
   discovery-update-info:
     status: todo

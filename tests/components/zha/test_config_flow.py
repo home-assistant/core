@@ -19,6 +19,7 @@ import uuid
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
 from zha.application.const import RadioType
+from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -97,9 +98,11 @@ def mock_multipan_platform():
 @pytest.fixture(autouse=True)
 def mock_app() -> Generator[AsyncMock]:
     """Mock zigpy app interface."""
-    mock_app = AsyncMock()
+    mock_app = create_autospec(ControllerApplication, instance=True)
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+
+    mock_app.state = MagicMock()
     mock_app.state.network_info.extended_pan_id = zigpy.types.EUI64.convert(
         "AABBCCDDEE000000"
     )

@@ -421,6 +421,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
             if short_form.search(model_alias):
                 model_alias += "-0"
+            if model_alias.endswith(("haiku", "opus", "sonnet")):
+                model_alias += "-latest"
             model_options.append(
                 SelectOptionDict(
                     label=model_info.display_name,
