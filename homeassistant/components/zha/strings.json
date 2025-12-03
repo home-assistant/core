@@ -387,6 +387,30 @@
         "name": "[%key:component::cover::entity_component::shade::name%]"
       }
     },
+    "event": {
+      "level_control": {
+        "name": "Level control",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "move": "Move",
+              "move_to_level": "Move to level",
+              "move_to_level_with_on_off": "Move to level with on/off",
+              "move_with_on_off": "Move with on/off",
+              "step": "Step",
+              "step_with_on_off": "Step with on/off",
+              "stop": "Stop"
+            }
+          },
+          "level": { "name": "Level" },
+          "move_mode": { "name": "Move Mode" },
+          "rate": { "name": "Rate" },
+          "step_mode": { "name": "Step Mode" },
+          "step_size": { "name": "Step Size" },
+          "transition_time": { "name": "Transition Time" }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]",
