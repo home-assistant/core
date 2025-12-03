@@ -41,6 +41,7 @@ from .storage import async_setup_frontend_storage
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "frontend"
+CONF_NAME_DARK = "name_dark"
 CONF_THEMES = "themes"
 CONF_THEMES_MODES = "modes"
 CONF_THEMES_LIGHT = "light"
@@ -566,9 +567,8 @@ async def _async_setup_themes(
             MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
-    @callback
-    def set_theme(call: ServiceCall) -> None:
-        """Set backend-preferred theme."""
+    def set_theme_legacy(call: ServiceCall) -> None:
+        """Set backend-preferred theme (legacy schema)."""
         name = call.data[CONF_NAME]
         mode = call.data.get("mode", "light")
 
@@ -590,6 +590,49 @@ async def _async_setup_themes(
             to_set = name
 
         hass.data[theme_key] = to_set
+        store.async_delay_save(
+            lambda: {
+                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
+                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
+            },
+            THEMES_SAVE_DELAY,
+        )
+        update_theme_and_fire_event()
+
+    @callback
+    def set_theme(call: ServiceCall) -> None:
+        """Set backend-preferred theme."""
+        if CONF_MODE in call.data:
+            set_theme_legacy(call)
+            return
+
+        name = call.data.get(CONF_NAME)
+        name_dark = call.data.get(CONF_NAME_DARK)
+
+        if (
+            name
+            and name not in (DEFAULT_THEME, VALUE_NO_THEME)
+            and name not in hass.data[DATA_THEMES]
+        ):
+            _LOGGER.warning("Theme %s not found", name)
+            return
+        if (
+            name_dark
+            and name_dark not in (DEFAULT_THEME, VALUE_NO_THEME)
+            and name_dark not in hass.data[DATA_THEMES]
+        ):
+            _LOGGER.warning("Theme %s not found", name_dark)
+            return
+
+        if name:
+            hass.data[DATA_DEFAULT_THEME] = (
+                DEFAULT_THEME if name == VALUE_NO_THEME else name
+            )
+        if name_dark:
+            hass.data[DATA_DEFAULT_DARK_THEME] = (
+                None if name_dark == VALUE_NO_THEME else name_dark
+            )
+
         store.async_delay_save(
             lambda: {
                 DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
@@ -624,11 +667,22 @@ async def _async_setup_themes(
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.Schema(
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_MODE): vol.Any("dark", "light"),
-            }
+        vol.Any(
+            # Legacy schema
+            vol.Schema(
+                {
+                    vol.Required(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MODE): vol.Any("dark", "light"),
+                }
+            ),
+            # Newer schema with two theme selectors
+            vol.All(
+                cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_NAME_DARK): cv.string,
+                },
+            ),
         ),
     )
 
