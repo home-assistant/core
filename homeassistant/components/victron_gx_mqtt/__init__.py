@@ -17,7 +17,6 @@ from .const import DOMAIN
 from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
-_VICTRON_MQTT_LOGGER = logging.getLogger("victron_mqtt")
 
 # Config schema - this integration is config entry only
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -35,16 +34,8 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def _sync_library_logging():
-    """Sync the log level of the library to match integration logging."""
-    lib_level = _LOGGER.getEffectiveLevel()
-    _VICTRON_MQTT_LOGGER.setLevel(lib_level)
-    _VICTRON_MQTT_LOGGER.propagate = True  # Let it go through HA logging
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up victronvenus from a config entry."""
-    _sync_library_logging()
     _LOGGER.debug("async_setup_entry called for entry: %s", entry.entry_id)
 
     hub = Hub(hass, entry)
