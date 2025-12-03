@@ -830,10 +830,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "001E0C*",
     },
     {
-        "domain": "sunricher_dali",
-        "registered_devices": True,
-    },
-    {
         "domain": "tado",
         "hostname": "tado*",
     },

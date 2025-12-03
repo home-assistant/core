@@ -6,7 +6,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "discovery_failed": "Failed to discover Sunricher DALI gateways on the network",
-      "no_devices_found": "No Sunricher DALI gateways found on the network"
+      "no_devices_found": "No Sunricher DALI gateways found on the network",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "select_gateway": {
