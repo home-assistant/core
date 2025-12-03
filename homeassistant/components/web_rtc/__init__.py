@@ -21,11 +21,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 __all__ = [
-    "CONFIG_SCHEMA",
-    "DOMAIN",
     "async_get_ice_servers",
     "async_register_ice_servers",
-    "async_setup",
 ]
 
 DOMAIN = "web_rtc"
