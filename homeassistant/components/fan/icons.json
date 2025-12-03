@@ -47,5 +47,13 @@
     "turn_on": {
       "service": "mdi:fan"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:fan-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:fan"
+    }
   }
 }

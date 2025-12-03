@@ -4,7 +4,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Main brush time left',
+        'friendly_name': 'Roborock S7 MaxV Main brush time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
@@ -17,7 +17,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Side brush time left',
+        'friendly_name': 'Roborock S7 MaxV Side brush time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
@@ -30,7 +30,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Filter time left',
+        'friendly_name': 'Roborock S7 MaxV Filter time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
@@ -69,7 +69,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Sensor time left',
+        'friendly_name': 'Roborock S7 MaxV Sensor time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
@@ -82,7 +82,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Cleaning time',
+        'friendly_name': 'Roborock S7 MaxV Cleaning time',
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
@@ -95,7 +95,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Total cleaning time',
+        'friendly_name': 'Roborock S7 MaxV Total cleaning time',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
@@ -107,7 +107,7 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Roborock S7 2 Total cleaning count',
+        'friendly_name': 'Roborock S7 MaxV Total cleaning count',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'context': <ANY>,
@@ -120,7 +120,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
-        'friendly_name': 'Roborock S7 2 Status',
+        'friendly_name': 'Roborock S7 MaxV Status',
         'options': list([
           'unknown',
           'starting',
@@ -176,7 +176,7 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Roborock S7 2 Cleaning area',
+        'friendly_name': 'Roborock S7 MaxV Cleaning area',
         'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
       'context': <ANY>,
@@ -188,7 +188,7 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Roborock S7 2 Total cleaning area',
+        'friendly_name': 'Roborock S7 MaxV Total cleaning area',
         'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
       'context': <ANY>,
@@ -201,7 +201,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
-        'friendly_name': 'Roborock S7 2 Vacuum error',
+        'friendly_name': 'Roborock S7 MaxV Vacuum error',
         'options': list([
           'none',
           'lidar_blocked',
@@ -268,7 +268,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'battery',
-        'friendly_name': 'Roborock S7 2 Battery',
+        'friendly_name': 'Roborock S7 MaxV Battery',
         'unit_of_measurement': '%',
       }),
       'context': <ANY>,
@@ -281,7 +281,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'timestamp',
-        'friendly_name': 'Roborock S7 2 Last clean begin',
+        'friendly_name': 'Roborock S7 MaxV Last clean begin',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.roborock_s7_maxv_last_clean_begin',
@@ -293,7 +293,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'timestamp',
-        'friendly_name': 'Roborock S7 2 Last clean end',
+        'friendly_name': 'Roborock S7 MaxV Last clean end',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.roborock_s7_maxv_last_clean_end',
@@ -650,7 +650,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
-        'friendly_name': 'Roborock S7 2 Current room',
+        'friendly_name': 'Roborock S7 MaxV Current room',
         'options': list([
           'Example room 1',
           'Example room 2',

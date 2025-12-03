@@ -35,12 +35,12 @@ file-read-backwards==2.0.0
 fnv-hash-fast==1.6.0
 go2rtc-client==0.3.0
 ha-ffmpeg==3.2.2
-habluetooth==5.7.0
-hass-nabucasa==1.5.1
-hassil==3.4.0
+habluetooth==5.8.0
+hass-nabucasa==1.6.2
+hassil==3.5.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20251105.1
-home-assistant-intents==2025.11.7
+home-assistant-frontend==20251202.0
+home-assistant-intents==2025.12.2
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
