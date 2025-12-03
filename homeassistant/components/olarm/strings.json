@@ -37,13 +37,13 @@
   "entity": {
     "binary_sensor": {
       "ac_power": {
-        "name": "AC Power"
+        "name": "AC power"
       },
       "zone": {
         "name": "Zone {zone_number} {zone_label}"
       },
       "zone_bypass": {
-        "name": "Zone {zone_number} Bypass {zone_label}"
+        "name": "Zone {zone_number} Bypassed {zone_label}"
       }
     }
   },
