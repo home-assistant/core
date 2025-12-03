@@ -5,14 +5,15 @@ import logging
 from pyvesync import VeSync
 from pyvesync.utils.errors import VeSyncLoginError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_COORDINATOR, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
@@ -62,8 +63,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+
+    return unload_ok
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up my integration."""
+
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover and add new devices."""
+
+        entries = hass.config_entries.async_entries(DOMAIN)
+        entry = entries[0] if entries else None
+
+        if not entry:
+            raise ServiceValidationError("Entry not found")
+        if entry.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError("Entry not loaded")
         manager = hass.data[DOMAIN][VS_MANAGER]
         known_devices = list(manager.devices)
         await manager.get_devices()
@@ -77,17 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
     )
-
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data.pop(DOMAIN)
-
-    return unload_ok
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
