@@ -9,10 +9,10 @@
         }
       },
       "password": {
-        "title": "Remote Console Authentication",
-        "description": "Basic MQTT connection failed. Please enter the secure profile password for device {host}.",
+        "title": "Secure profile password",
+        "description": "Unsecure MQTT connection failed. Please enter the secure profile password for device {host}.",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "Secure profile password"
         }
       },
       "ssdp_confirm": {
@@ -21,46 +21,22 @@
         "data": {}
       },
       "ssdp_password": {
-        "title": "Remote Console Authentication",
-        "description": "Basic MQTT connection failed for {name} @ {host}. Please enter the secure profile password.",
+        "title": "Secure profile password",
+        "description": "Unsecure MQTT connection for {name} @ {host}. Please enter the secure profile password.",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "ssdp_password_menu": {
-        "title": "Authentication Failed",
-        "description": "Authentication failed for {name} @ {host}. What would you like to do?",
-        "data": {
-          "next_step": "Action"
-        }
-      },
-      "validate": {
-        "data": {
-          "broker": "Host",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "confirm": {
-        "data": {
-          "broker": "Host",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "Secure profile password"
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_host": "Invalid hostname or IP address",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Connection failed. Please check the device is online",
+      "invalid_auth": "Authentication failed. Please check your credentials.",
+      "invalid_host": "Invalid hostname or IP address: {error}",
+      "unknown": "Unexpected error occurred",
       "missing_unique_id": "Device does not have a unique identifier",
       "no_discovery_support": "Device does not support Home Assistant discovery",
+      "no_discovery": "No Home Assistant discovery topics found within 30 seconds",
       "user_cancelled": "Setup cancelled by user"
     }
   }

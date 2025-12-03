@@ -22,6 +22,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
@@ -43,13 +44,6 @@ STEP_PASSWORD_DATA_SCHEMA = vol.Schema(
 )
 
 STEP_SSDP_CONFIRM_SCHEMA = vol.Schema({})
-
-STEP_SSDP_PASSWORD_MENU_SCHEMA = vol.Schema({
-    vol.Required("next_step", default="retry"): vol.In({
-        "retry": "Try again",
-        "cancel": "Cancel setup"
-    })
-})
 
 
 def _generate_ha_device_id() -> str:
@@ -106,6 +100,90 @@ def _create_ssl_context() -> ssl.SSLContext:
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
     return ssl_context
+
+
+async def _detect_discovery_topics(
+    hass: HomeAssistant, broker: str, port: int = 1883, username: str = None, password: str = None, use_ssl: bool = False
+) -> str | None:
+    """Connect to MQTT and wait for Home Assistant discovery topics to detect unique_id."""
+    discovered_unique_id = None
+    connection_success = asyncio.Event()
+    discovery_event = asyncio.Event()
+
+    def on_connect(client, userdata, flags, rc):
+        _LOGGER.info("Discovery MQTT connect with rc=%s", rc)
+        if rc == 0:
+            # Subscribe to Home Assistant discovery topics
+            client.subscribe("homeassistant/device/+/config")
+            connection_success.set()
+        else:
+            _LOGGER.warning("Discovery MQTT connection failed with code %s", rc)
+
+    def on_message(client, userdata, msg):
+        nonlocal discovered_unique_id
+        try:
+            topic = msg.topic
+            _LOGGER.debug("Received discovery topic: %s", topic)
+
+            # Extract unique_id from the topic path
+            # Example: homeassistant/device/28ede02ceff6_charger_277/config
+            # We want to extract "28ede02ceff6" as the unique_id
+            if topic.startswith("homeassistant/device/") and topic.endswith("/config"):
+                # Extract the device identifier part
+                device_part = topic.replace("homeassistant/device/", "").replace("/config", "")
+                _LOGGER.debug("Extracted device part from topic: %s", device_part)
+
+                # Extract the portal ID (first part before underscore)
+                if '_' in device_part:
+                    portal_id = device_part.split('_')[0]
+                    if discovered_unique_id is None:
+                        discovered_unique_id = portal_id
+                        _LOGGER.info("Extracted portal_id from topic: %s", portal_id)
+                        discovery_event.set()
+
+        except (ValueError, IndexError) as e:
+            _LOGGER.debug("Could not extract unique_id from topic: %s", e)
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    try:
+        if username and password:
+            client.username_pw_set(username, password)
+
+        if use_ssl:
+            ssl_context = await hass.async_add_executor_job(_create_ssl_context)
+            client.tls_set_context(ssl_context)
+            client.tls_insecure_set(True)
+
+        await hass.async_add_executor_job(client.connect, broker, port, 60)
+        client.loop_start()
+
+        # Wait for connection
+        try:
+            await asyncio.wait_for(connection_success.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            _LOGGER.warning("MQTT connection timeout")
+            return None
+
+        _LOGGER.info("Connected to MQTT, waiting for discovery topics...")
+
+        # Wait for discovery topics (max 30 seconds)
+        try:
+            await asyncio.wait_for(discovery_event.wait(), timeout=30.0)
+            _LOGGER.info("Discovery completed, unique_id: %s", discovered_unique_id)
+        except asyncio.TimeoutError:
+            _LOGGER.warning("No discovery topics received within 30 seconds")
+
+        return discovered_unique_id
+
+    except Exception as e:
+        _LOGGER.error("Error during MQTT discovery detection: %s", e)
+        return None
+    finally:
+        client.loop_stop()
+        client.disconnect()
 
 async def _generate_victron_token(
     hass: HomeAssistant, broker: str, password: str, ha_device_id: str
@@ -298,101 +376,56 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
 
-    def _log_existing_entries(self, context: str = "") -> list:
-        """Log all existing entries for this domain and return problematic ones."""
-        all_entries = self.hass.config_entries.async_entries()
-        victron_entries = [e for e in all_entries if e.domain == DOMAIN]
-
-        _LOGGER.info("%s: Found %d total entries for domain '%s'", context, len(victron_entries), DOMAIN)
-
-        problematic_entries = []
-        for entry in victron_entries:
-            _LOGGER.info("  Entry %s:", entry.entry_id)
-            _LOGGER.info("    Title: %s", entry.title)
-            _LOGGER.info("    Broker: %s", entry.data.get(CONF_BROKER))
-            _LOGGER.info("    State: %s", entry.state)
-            _LOGGER.info("    Unique ID: %s", entry.unique_id)
-            _LOGGER.info("    Disabled by: %s", entry.disabled_by)
-            _LOGGER.info("    Data: %s", entry.data)
-
-            # Identify problematic states
-            if entry.state in ["failed_unload", "setup_error", "setup_retry"]:
-                _LOGGER.warning("    ⚠️  PROBLEMATIC: Entry is in error state!")
-                problematic_entries.append(entry)
-            elif not entry.data.get(CONF_BROKER):
-                _LOGGER.warning("    ⚠️  PROBLEMATIC: Entry missing broker data!")
-                problematic_entries.append(entry)
-
-        if problematic_entries:
-            _LOGGER.warning("%s: Found %d problematic entries that may need cleanup", context, len(problematic_entries))
-
-        return problematic_entries
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step - ask for host."""
-        _LOGGER.info("VictronConfigFlow.async_step_user called with input: %s", user_input)
-        _LOGGER.info("VictronConfigFlow user step - flow_id: %s, context: %s", self.flow_id, self.context)
-
-        # Always show form first if no input provided
+        """Handle the initial step - ask for broker."""
         if user_input is None:
-            _LOGGER.info("VictronConfigFlow showing initial user form")
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors={}
             )
 
-        # Process user input - for now, just create a basic entry to test
-        _LOGGER.info("VictronConfigFlow processing user input: %s", user_input)
-
-        # Check for existing entries with same broker
         broker = user_input[CONF_BROKER]
-        existing_entries = [
-            entry for entry in self._async_current_entries()
-            if entry.data.get(CONF_BROKER) == broker
-        ]
-        if existing_entries:
-            entry = existing_entries[0]
-            _LOGGER.info("VictronConfigFlow: Found existing entry for broker %s", broker)
-            _LOGGER.info("  Entry ID: %s", entry.entry_id)
-            _LOGGER.info("  Entry title: %s", entry.title)
-            _LOGGER.info("  Entry state: %s", entry.state)
-            _LOGGER.info("  Entry data: %s", entry.data)
-            _LOGGER.info("  Entry unique_id: %s", entry.unique_id)
-            _LOGGER.info("  Entry disabled_by: %s", entry.disabled_by)
-            return self.async_abort(reason="already_configured")
 
-        # Log all existing entries for diagnostics
-        problematic_entries = self._log_existing_entries("USER_FLOW")
-
+        # Validate broker format first
         try:
             info = await validate_input(self.hass, user_input)
-            _LOGGER.info("VictronConfigFlow validation successful: %s", info)
-
-            # For now, just create a simple entry to test the flow
-            _LOGGER.info("VictronConfigFlow creating config entry for broker: %s", broker)
-            return self.async_create_entry(
-                title=f"Victron Energy ({broker})",
-                data={
-                    CONF_BROKER: broker,
-                    CONF_PORT: 1883,
-                }
-            )
-
-        except CannotConnect:
-            _LOGGER.warning("VictronConfigFlow: Cannot connect error")
-            errors = {"base": "cannot_connect"}
-        except InvalidHost:
-            _LOGGER.warning("VictronConfigFlow: Invalid host error")
-            errors = {"base": "invalid_host"}
+        except InvalidHost as ex:
+            return self.async_abort(reason="invalid_host", description_placeholders={"error": str(ex)})
         except Exception as ex:
-            _LOGGER.exception("VictronConfigFlow: Unexpected exception: %s", ex)
-            errors = {"base": "unknown"}
+            _LOGGER.exception("Unexpected exception during validation: %s", ex)
+            return self.async_abort(reason="unknown", description_placeholders={"error": str(ex)})
 
-        _LOGGER.info("VictronConfigFlow showing user form with errors: %s", errors)
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        # Store broker in context for later use
+        self.context["broker"] = broker
+
+        # Try unsecure MQTT connection first (port 1883)
+        _LOGGER.info("Trying unsecure MQTT connection to %s:1883", broker)
+        if await _test_basic_mqtt_connection(self.hass, broker):
+            _LOGGER.info("Unsecure MQTT connection successful, detecting discovery topics")
+
+            # Listen for discovery topics
+            unique_id = await _detect_discovery_topics(self.hass, broker, 1883)
+
+            if unique_id:
+                # Check if already configured - let config flow exceptions propagate
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=f"Victron Energy ({broker})",
+                    data={
+                        CONF_BROKER: broker,
+                        CONF_PORT: 1883,
+                    }
+                )
+
+            _LOGGER.warning("Home assistant discovery topics not found")
+            return self.async_abort(reason="no_discovery")
+
+        _LOGGER.info("Unsecure MQTT connection failed, trying secure connection")
+        # Unsecure failed, ask for password for secure connection
+        return await self.async_step_password()
 
     async def async_step_password(
         self, user_input: dict[str, Any] | None = None
@@ -401,139 +434,128 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         broker = self.context.get("broker")
 
-        if user_input is not None:
-            try:
-                info = await validate_secure_mqtt_connection(
-                    self.hass, broker, user_input[CONF_PASSWORD]
-                )
+        if user_input is None:
+            return self.async_show_form(
+                step_id="password",
+                data_schema=STEP_PASSWORD_DATA_SCHEMA,
+                errors=errors,
+                description_placeholders={"host": broker if broker else "unknown"}
+            )
 
-                # Create entry with secure MQTT config
+        try:
+            # Generate token and test secure connection
+            ha_device_id = _generate_ha_device_id()
+            token = await _generate_victron_token(self.hass, broker, user_input[CONF_PASSWORD], ha_device_id)
+
+            if not await _test_secure_mqtt_connection(self.hass, broker, token, ha_device_id):
+                return self.async_abort(reason="cannot_connect")
+
+            # Listen for discovery topics on secure MQTT
+            username = f"token/homeassistant/{ha_device_id}"
+            unique_id = await _detect_discovery_topics(self.hass, broker, 8883, username, token, True)
+
+            if unique_id:
+                # Check if already configured - let config flow exceptions propagate
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
-                    title=info["title"],
+                    title=f"Victron Energy ({broker})",
                     data={
                         CONF_BROKER: broker,
                         CONF_PORT: 8883,
-                        CONF_USERNAME: f"token/homeassistant/{info['ha_device_id']}",
-                        CONF_TOKEN: info["token"],
-                        "ha_device_id": info["ha_device_id"],
+                        CONF_USERNAME: username,
+                        CONF_TOKEN: token,
+                        "ha_device_id": ha_device_id,
                     }
                 )
 
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            _LOGGER.warning("Home assistant discovery topics not found")
+            return self.async_abort(reason="no_discovery")
 
-        return self.async_show_form(
-            step_id="password",
-            data_schema=STEP_PASSWORD_DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={"host": broker if broker else "unknown"}
-        )
+        except AbortFlow:
+            # Propagate AbortFlow exceptions, for example from _abort_if_unique_id_configured
+            raise
+        except CannotConnect:
+            _LOGGER.warning("Connection failed")
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            _LOGGER.warning("Authentication failed")
+            return self.async_abort(reason="invalid_auth")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
     async def async_step_ssdp_password(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle password step for SSDP discovered device."""
-        errors: dict[str, str] = {}
         broker = self.context.get("broker")
         friendly_name = self.context.get("title_placeholders", {}).get("name", "Victron Energy")
 
-        if user_input is not None:
-            try:
-                info = await validate_secure_mqtt_connection(
-                    self.hass, broker, user_input[CONF_PASSWORD]
-                )
+        if user_input is None:
+            return self.async_show_form(
+                step_id="ssdp_password",
+                data_schema=STEP_PASSWORD_DATA_SCHEMA,
+                description_placeholders=self.context.get("title_placeholders", {})
+            )
 
-                # Create entry with secure MQTT config
-                return self.async_create_entry(
-                    title=friendly_name,
-                    data={
-                        CONF_BROKER: broker,
-                        CONF_PORT: 8883,
-                        CONF_USERNAME: f"token/homeassistant/{info['ha_device_id']}",
-                        CONF_TOKEN: info["token"],
-                        "ha_device_id": info["ha_device_id"],
-                    }
-                )
+        try:
+            info = await validate_secure_mqtt_connection(
+                self.hass, broker, user_input[CONF_PASSWORD]
+            )
 
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            # Create entry with secure MQTT config
+            return self.async_create_entry(
+                title=friendly_name,
+                data={
+                    CONF_BROKER: broker,
+                    CONF_PORT: 8883,
+                    CONF_USERNAME: f"token/homeassistant/{info['ha_device_id']}",
+                    CONF_TOKEN: info["token"],
+                    "ha_device_id": info["ha_device_id"],
+                }
+            )
 
-            # If there are errors, show menu instead of password form again
-            if errors:
-                return await self.async_step_ssdp_password_menu()
-
-        return self.async_show_form(
-            step_id="ssdp_password",
-            data_schema=STEP_PASSWORD_DATA_SCHEMA,
-            errors=errors,
-            description_placeholders=self.context.get("title_placeholders", {})
-        )
-
-    async def async_step_ssdp_password_menu(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle menu after password authentication fails."""
-        if user_input is not None:
-            if user_input["next_step"] == "retry":
-                # Go back to confirmation step
-                return await self.async_step_ssdp_confirm()
-            else:
-                # Cancel the flow but allow re-discovery by not marking unique_id as handled
-                # We reset the unique_id to None first, so it won't be marked as permanently handled
-                original_unique_id = self.unique_id
-                await self.async_set_unique_id(None, raise_on_progress=False)
-                _LOGGER.info("Config flow cancelled by user for device %s, allowing re-discovery", original_unique_id)
-                return self.async_abort(reason="user_cancelled")
-
-        return self.async_show_form(
-            step_id="ssdp_password_menu",
-            data_schema=STEP_SSDP_PASSWORD_MENU_SCHEMA,
-            description_placeholders=self.context.get("title_placeholders", {})
-        )
+        except CannotConnect:
+            _LOGGER.warning("Connection failed")
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            _LOGGER.warning("Authentication failed")
+            return self.async_abort(reason="invalid_auth")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
     async def async_step_ssdp_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user confirmation for SSDP discovered device."""
         _LOGGER.info("ssdp_confirm called with input: %s", user_input)
-        _LOGGER.info("context title_placeholders: %s", self.context.get("title_placeholders"))
 
         broker = self.context.get("broker")
         friendly_name = self.context.get("title_placeholders", {}).get("name", "Victron Energy")
 
-        if user_input is not None:
-            # Now test basic MQTT connection after user confirmation
-            if await _test_basic_mqtt_connection(self.hass, broker):
-                # Basic MQTT works, create entry with simple config
-                return self.async_create_entry(
-                    title=friendly_name,
-                    data={
-                        CONF_BROKER: broker,
-                        CONF_PORT: 1883,
-                    }
-                )
-            else:
-                # Basic MQTT failed, ask for password for token auth
-                return await self.async_step_ssdp_password()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="ssdp_confirm",
+                data_schema=STEP_SSDP_CONFIRM_SCHEMA,
+                description_placeholders=self.context.get("title_placeholders", {})
+            )
 
-        _LOGGER.info("About to show ssdp_confirm form")
-        result = self.async_show_form(
-            step_id="ssdp_confirm",
-            data_schema=STEP_SSDP_CONFIRM_SCHEMA,
-            description_placeholders=self.context.get("title_placeholders", {})
-        )
-        _LOGGER.info("Form result created: %s", result)
-        return result
+        # Now test basic MQTT connection after user confirmation
+        if await _test_basic_mqtt_connection(self.hass, broker):
+            # Basic MQTT works, create entry with simple config
+            return self.async_create_entry(
+                title=friendly_name,
+                data={
+                    CONF_BROKER: broker,
+                    CONF_PORT: 1883,
+                }
+            )
+
+        # Basic MQTT failed, ask for password for token auth
+        return await self.async_step_ssdp_password()
 
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
@@ -541,7 +563,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle SSDP discovery."""
 
         # Debug
-        _LOGGER.info("Discovered SSDP info: %s", discovery_info)
+        _LOGGER.debug("Discovered SSDP info: %s", discovery_info)
 
         host = discovery_info.ssdp_headers.get("_host")
         friendly_name = discovery_info.upnp.get("friendlyName", "Victron Energy GX")
@@ -553,32 +575,14 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_discovery_support")
 
         await self.async_set_unique_id(unique_id)
-        _LOGGER.info("Setting unique_id: %s", unique_id)
-
-        # Check existing entries before unique ID check
-        problematic_entries = self._log_existing_entries("SSDP_FLOW")
 
         # Check if this unique ID is already configured
-        _LOGGER.info("Checking if unique_id %s is already configured", unique_id)
+        _LOGGER.debug("Checking if unique_id %s is already configured", unique_id)
         try:
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_BROKER: host,
-                }
-            )
-            _LOGGER.info("Unique_id %s is not configured, proceeding with flow", unique_id)
+            self._abort_if_unique_id_configured()
+            _LOGGER.debug("Unique_id %s is not configured, proceeding with flow", unique_id)
         except Exception as ex:
-            _LOGGER.info("Unique_id %s already configured, aborting flow: %s", unique_id, ex)
-            # Check if the existing entry is accessible
-            existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, unique_id)
-            if existing_entry:
-                _LOGGER.info("Existing entry details: %s", {
-                    'entry_id': existing_entry.entry_id,
-                    'title': existing_entry.title,
-                    'state': existing_entry.state,
-                    'data': existing_entry.data,
-                    'disabled_by': existing_entry.disabled_by
-                })
+            _LOGGER.debug("Unique_id %s already configured, aborting flow: %s", unique_id, ex)
             raise
 
         self.context["title_placeholders"] = {
@@ -587,16 +591,12 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self.context["broker"] = host
 
-        _LOGGER.info("SSDP confirmation - friendly_name: %s, host: %s", friendly_name, host)
-
         # Show confirmation step first, before testing connection
-        result = self.async_show_form(
+        return self.async_show_form(
             step_id="ssdp_confirm",
             data_schema=STEP_SSDP_CONFIRM_SCHEMA,
             description_placeholders=self.context["title_placeholders"]
         )
-        _LOGGER.info("Form result created: %s", result)
-        return result
 
 
 class CannotConnect(HomeAssistantError):
