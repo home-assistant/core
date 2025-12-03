@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'meter': dict({
+      'get_yesterday_consumption': 50,
+      'latest_read': 50,
+      'serial_number': '**REDACTED**',
+      'yesterday_sewerage_cost': 0.5,
+      'yesterday_water_cost': 0.5,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'anglian_water': dict({
+      'account_config': dict({
+        'meter_type': 'SmartMeter',
+      }),
+      'meters': dict({
+        'TESTSN': dict({
+          'get_yesterday_consumption': 50,
+          'latest_read': 50,
+          'serial_number': '**REDACTED**',
+          'yesterday_sewerage_cost': 0.5,
+          'yesterday_water_cost': 0.5,
+        }),
+      }),
+    }),
+    'config_entry': dict({
+      'access_token': '**REDACTED**',
+      'account_number': '**REDACTED**',
+      'password': '**REDACTED**',
+      'username': '**REDACTED**',
+    }),
+    'metering_data': list([
+    ]),
+    'options': dict({
+    }),
+  })
+# ---

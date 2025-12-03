@@ -38,6 +38,14 @@ def mock_smart_meter() -> SmartMeter:
     mock.latest_read = 50
     mock.yesterday_water_cost = 0.5
     mock.yesterday_sewerage_cost = 0.5
+    # For diagnostic tests
+    mock.to_dict.return_value = {
+        "serial_number": mock.serial_number,
+        "latest_read": mock.latest_read,
+        "get_yesterday_consumption": mock.get_yesterday_consumption,
+        "yesterday_water_cost": mock.yesterday_water_cost,
+        "yesterday_sewerage_cost": mock.yesterday_sewerage_cost,
+    }
     return mock
 
 
@@ -82,6 +90,12 @@ def mock_anglian_water_client(
         mock_client.account_config = {"meter_type": "SmartMeter"}
         mock_client.updated_data_callbacks = []
         mock_client.validate_smart_meter.return_value = None
+        # For diagnostic tests
+        mock_client.get_usages.return_value = []
+        mock_client.to_dict.return_value = {
+            "account_config": mock_client.account_config,
+            "meters": {sn: meter.to_dict() for sn, meter in mock_client.meters.items()},
+        }
         yield mock_client
 
 

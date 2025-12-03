@@ -62,20 +62,15 @@ async def async_get_device_diagnostics(
     device_entry: DeviceEntry,
 ) -> dict[str, Any]:
     """Get diagnostics for a device entry."""
-    if not device_entry.serial_number:
-        return {}
-    smart_meter = config_entry.runtime_data.api.meters.get(
-        device_entry.serial_number, None
-    )
-    if smart_meter is not None:
-        meter = smart_meter.to_dict()
-    else:
-        meter = {}
+    # At this point the device will always be registered with a serial number.
+    # The API always returns a serial number for any type of meter.
+    assert device_entry.serial_number
+    smart_meter = config_entry.runtime_data.api.meters.get(device_entry.serial_number)
+    assert smart_meter
     return async_redact_data(
         {
             "device_entry_id": device_entry.id,
-            "config_entry": device_entry.config_entries,
-            "meter": meter,
+            "meter": smart_meter.to_dict(),
         },
         REDACTED_FIELDS,
     )
