@@ -17,12 +17,13 @@ from homeassistant.components.select import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Router
 from .const import DOMAIN, KEY_NET_NET_MODE
-from .entity import HuaweiLteBaseEntityWithDevice
+from .entity import HuaweiLteBaseInteractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ async def async_setup_entry(
     async_add_entities(selects, True)
 
 
-class HuaweiLteSelectEntity(HuaweiLteBaseEntityWithDevice, SelectEntity):
+class HuaweiLteSelectEntity(HuaweiLteBaseInteractiveEntity, SelectEntity):
     """Huawei LTE select entity."""
 
     entity_description: HuaweiSelectEntityDescription
@@ -95,6 +96,8 @@ class HuaweiLteSelectEntity(HuaweiLteBaseEntityWithDevice, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
+        if self.router.suspended:
+            raise ServiceValidationError("Integration is suspended")
         self.entity_description.setter_fn(option)
 
     @property
