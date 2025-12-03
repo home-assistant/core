@@ -8,6 +8,7 @@ import pytest
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
 
 
@@ -383,17 +384,7 @@ async def test_webhook_query_json_header_no_payload(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test requests with application/json header but no payload."""
-    # Set up fake cloud
-    hass.config.components.add("cloud")
-
-    events = []
-
-    @callback
-    def store_event(event):
-        """Help store events."""
-        events.append(event)
-
-    hass.bus.async_listen("test_success", store_event)
+    events = async_capture_events(hass, "test_success")
 
     assert await async_setup_component(
         hass,
