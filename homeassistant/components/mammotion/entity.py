@@ -1,5 +1,7 @@
 """Base class for entities."""
 
+from typing import cast
+
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -38,7 +40,9 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
                 mower.state.mqtt_properties is not None
                 and mower.state.mqtt_properties.params.items.extMod is not None
             ):
-                model_id = mower.state.mqtt_properties.params.items.extMod.value
+                model_id = cast(
+                    str, mower.state.mqtt_properties.params.items.extMod.value
+                )
 
         nick_name = self.coordinator.device.nick_name
         device_name = (
