@@ -407,8 +407,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return [
             RTCIceServer(
                 urls=[
-                    "stun:stun.home-assistant.io:80",
                     "stun:stun.home-assistant.io:3478",
+                    "stun:stun.home-assistant.io:80",
                 ]
             ),
         ]

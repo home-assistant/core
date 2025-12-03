@@ -205,8 +205,8 @@ async def test_ws_get_client_config(
             "iceServers": [
                 {
                     "urls": [
-                        "stun:stun.home-assistant.io:80",
                         "stun:stun.home-assistant.io:3478",
+                        "stun:stun.home-assistant.io:80",
                     ]
                 },
             ],
@@ -238,8 +238,8 @@ async def test_ws_get_client_config(
             "iceServers": [
                 {
                     "urls": [
-                        "stun:stun.home-assistant.io:80",
                         "stun:stun.home-assistant.io:3478",
+                        "stun:stun.home-assistant.io:80",
                     ]
                 },
                 {
