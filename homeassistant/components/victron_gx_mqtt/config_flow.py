@@ -192,8 +192,8 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
         self.serial = discovery_info.upnp["serialNumber"]
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
-        self.model_name = discovery_info.upnp["model_name"]
-        self.friendly_name = discovery_info.upnp["friendly_name"]
+        self.model_name = discovery_info.upnp["modelName"]
+        self.friendly_name = discovery_info.upnp["friendlyName"]
         _LOGGER.info(
             "SSDP: hostname=%s, serial=%s, installation_id=%s, model_name=%s, friendly_name=%s",
             self.hostname,

@@ -277,7 +277,7 @@ async def test_unregister_add_entities_callback(
     assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
 
     # Unregister the callback
-    hub.unregister_add_entities_callback(MetricKind.SENSOR)
+    hub.unregister_all_add_entities_callback()
 
     # Verify it was removed
     assert MetricKind.SENSOR not in hub.add_entities_map
@@ -394,6 +394,7 @@ async def test_hub_registers_stop_listener(
 
     # Create hub - it should register the stop listener
     _hub = Hub(hass, mock_config_entry)
+    await _hub.start()
 
     # Fire the stop event to verify the listener was registered
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
