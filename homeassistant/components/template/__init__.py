@@ -28,6 +28,9 @@ from homeassistant.helpers import discovery, issue_registry as ir
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
+from homeassistant.helpers.helper_integration import (
+    async_remove_helper_config_entry_from_source_device,
+)
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -116,6 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
+    # This can be removed in HA Core 2026.7
     async_remove_stale_devices_links_keep_current_device(
         hass,
         entry.entry_id,
@@ -152,6 +156,41 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, (entry.options["template_type"],)
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        if config_entry.minor_version < 2:
+            # Remove the template config entry from the source device
+            if source_device_id := config_entry.options.get(CONF_DEVICE_ID):
+                async_remove_helper_config_entry_from_source_device(
+                    hass,
+                    helper_config_entry_id=config_entry.entry_id,
+                    source_device_id=source_device_id,
+                )
+            hass.config_entries.async_update_entry(
+                config_entry, version=1, minor_version=2
+            )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
 
 
 async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
