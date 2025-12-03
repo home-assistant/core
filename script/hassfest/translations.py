@@ -174,6 +174,7 @@ def gen_data_entry_schema(
     flow_title: int,
     require_step_title: bool,
     mandatory_description: str | None = None,
+    subentry_flow: bool = False,
 ) -> vol.All:
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
@@ -206,9 +207,13 @@ def gen_data_entry_schema(
         vol.Optional("abort"): {str: translation_value_validator},
         vol.Optional("progress"): {str: translation_value_validator},
         vol.Optional("create_entry"): {str: translation_value_validator},
-        vol.Optional("initiate_flow"): {str: translation_value_validator},
-        vol.Optional("entry_type"): translation_value_validator,
     }
+    if subentry_flow:
+        schema[vol.Required("entry_type")] = translation_value_validator
+        schema[vol.Required("initiate_flow")] = {
+            vol.Required("user"): translation_value_validator,
+            str: translation_value_validator,
+        }
     if flow_title == REQUIRED:
         schema[vol.Required("title")] = translation_value_validator
     elif flow_title == REMOVED:
@@ -314,6 +319,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     integration=integration,
                     flow_title=REMOVED,
                     require_step_title=False,
+                    subentry_flow=True,
                 ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
@@ -322,6 +328,15 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 integration=integration,
                 flow_title=UNDEFINED,
                 require_step_title=False,
+            ),
+            vol.Optional("preview_features"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Optional("enable_confirmation"): translation_value_validator,
+                    vol.Optional("disable_confirmation"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
             ),
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
@@ -460,7 +475,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
-                    vol.Required("description_configured"): translation_value_validator,
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
@@ -476,7 +490,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
-                    vol.Required("description_configured"): translation_value_validator,
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,

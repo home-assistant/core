@@ -71,6 +71,10 @@
       },
       "title": "The blinker fluid is empty and needs to be refilled"
     },
+    "special_repair": {
+      "description": "This is a special repair created by a preview feature! This demonstrates how lab features can interact with the Home Assistant repair system. You can disable this by turning off the kitchen sink special repair feature in Settings > System > Labs.",
+      "title": "Special repair feature preview"
+    },
     "transmogrifier_deprecated": {
       "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API",
       "title": "The transmogrifier component is deprecated"
@@ -103,16 +107,26 @@
       }
     }
   },
+  "preview_features": {
+    "special_repair": {
+      "description": "Creates a **special repair issue** when enabled.\n\nThis demonstrates how lab features can interact with other Home Assistant integrations.",
+      "disable_confirmation": "This will remove the special repair issue. Don't worry, this is just a demonstration feature.",
+      "enable_confirmation": "This will create a special repair issue to demonstrate Labs preview features. This is just an example and won't affect your actual system.",
+      "name": "Special repair"
+    }
+  },
   "services": {
     "test_service_1": {
-      "description": "Fake action for testing",
+      "description": "Fake action for testing {meep_2}",
       "fields": {
         "field_1": {
-          "description": "Number of seconds",
-          "name": "Field 1"
+          "description": "Number of seconds {meep_4}",
+          "example": "Example: {meep_5}",
+          "name": "Field 1 {meep_3}"
         },
         "field_2": {
           "description": "Mode",
+          "example": "Field 2 example",
           "name": "Field 2"
         },
         "field_3": {
@@ -124,7 +138,7 @@
           "name": "Field 4"
         }
       },
-      "name": "Test action 1",
+      "name": "Test action {meep_1}",
       "sections": {
         "advanced_fields": {
           "description": "Some very advanced things",

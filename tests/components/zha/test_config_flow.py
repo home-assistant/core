@@ -19,6 +19,7 @@ import uuid
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
 from zha.application.const import RadioType
+from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -97,9 +98,11 @@ def mock_multipan_platform():
 @pytest.fixture(autouse=True)
 def mock_app() -> Generator[AsyncMock]:
     """Mock zigpy app interface."""
-    mock_app = AsyncMock()
+    mock_app = create_autospec(ControllerApplication, instance=True)
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+
+    mock_app.state = MagicMock()
     mock_app.state.network_info.extended_pan_id = zigpy.types.EUI64.convert(
         "AABBCCDDEE000000"
     )
@@ -3242,7 +3245,7 @@ async def test_plug_in_new_radio_retry(
             valid_step_ids=("restore_backup",),
         )
 
-        # Prompt user to plug old adapter back in when restore fails
+        # Prompt user to plug new adapter back in when restore fails
         assert result3["type"] is FlowResultType.FORM
         assert result3["step_id"] == "plug_in_new_radio"
         assert result3["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
@@ -3275,7 +3278,7 @@ async def test_plug_in_new_radio_retry(
             valid_step_ids=("restore_backup",),
         )
 
-        # Prompt user to plug old adapter back in again
+        # Prompt user to plug new adapter back in again
         assert result5["type"] is FlowResultType.FORM
         assert result5["step_id"] == "plug_in_new_radio"
         assert result5["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}

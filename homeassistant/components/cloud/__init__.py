@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
 from typing import Any, cast
 
-from hass_nabucasa import Cloud
+from hass_nabucasa import Cloud, NabuCasaBaseError
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
@@ -55,6 +56,7 @@ from .const import (
     CONF_ALIASES,
     CONF_API_SERVER,
     CONF_COGNITO_CLIENT_ID,
+    CONF_DISCOVERY_SERVICE_ACTIONS,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
@@ -76,7 +78,16 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT, Platform.TTS]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.STT,
+    Platform.TTS,
+]
+
+LLM_PLATFORMS = [
+    Platform.AI_TASK,
+    Platform.CONVERSATION,
+]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
@@ -143,6 +154,7 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_MODE): vol.In([MODE_DEV]),
                     vol.Required(CONF_API_SERVER): str,
+                    vol.Optional(CONF_DISCOVERY_SERVICE_ACTIONS): {str: cv.url},
                 }
             ),
             _BASE_CONFIG_SCHEMA.extend(
@@ -423,7 +435,14 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    platforms = PLATFORMS.copy()
+    if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
+        with suppress(NabuCasaBaseError):
+            await cloud.llm.async_ensure_token()
+            platforms += LLM_PLATFORMS
+
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    entry.runtime_data = {"platforms": platforms}
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
@@ -432,7 +451,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry.runtime_data["platforms"]
+    )
 
 
 @callback

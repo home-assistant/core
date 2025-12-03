@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
@@ -40,39 +37,148 @@ from .const import (
     DeviceCategory,
     DPCode,
     DPType,
-    UnitOfMeasurement,
 )
 from .entity import TuyaEntity
-from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
-from .util import get_dptype
+from .models import (
+    DPCodeBase64Wrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeJsonWrapper,
+    DPCodeTypeInformationWrapper,
+    DPCodeWrapper,
+    EnumTypeData,
+)
+from .raw_data_models import ElectricityData
 
-_WIND_DIRECTIONS = {
-    "north": 0.0,
-    "north_north_east": 22.5,
-    "north_east": 45.0,
-    "east_north_east": 67.5,
-    "east": 90.0,
-    "east_south_east": 112.5,
-    "south_east": 135.0,
-    "south_south_east": 157.5,
-    "south": 180.0,
-    "south_south_west": 202.5,
-    "south_west": 225.0,
-    "west_south_west": 247.5,
-    "west": 270.0,
-    "west_north_west": 292.5,
-    "north_west": 315.0,
-    "north_north_west": 337.5,
-}
+
+class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
+    """Custom DPCode Wrapper for converting enum to wind direction."""
+
+    DPTYPE = DPType.ENUM
+
+    _WIND_DIRECTIONS = {
+        "north": 0.0,
+        "north_north_east": 22.5,
+        "north_east": 45.0,
+        "east_north_east": 67.5,
+        "east": 90.0,
+        "east_south_east": 112.5,
+        "south_east": 135.0,
+        "south_south_east": 157.5,
+        "south": 180.0,
+        "south_south_west": 202.5,
+        "south_west": 225.0,
+        "west_south_west": 247.5,
+        "west": 270.0,
+        "west_north_west": 292.5,
+        "north_west": 315.0,
+        "north_north_west": 337.5,
+    }
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (
+            raw_value := self._read_device_status_raw(device)
+        ) in self.type_information.range:
+            return self._WIND_DIRECTIONS.get(raw_value)
+        return None
+
+
+class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
+    """Custom DPCode Wrapper for extracting electricity current from JSON."""
+
+    native_unit = UnitOfElectricCurrent.AMPERE
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_json(device)) is None:
+            return None
+        return raw_value.get("electricCurrent")
+
+
+class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
+    """Custom DPCode Wrapper for extracting electricity power from JSON."""
+
+    native_unit = UnitOfPower.KILO_WATT
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_json(device)) is None:
+            return None
+        return raw_value.get("power")
+
+
+class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
+    """Custom DPCode Wrapper for extracting electricity voltage from JSON."""
+
+    native_unit = UnitOfElectricPotential.VOLT
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_json(device)) is None:
+            return None
+        return raw_value.get("voltage")
+
+
+class _RawElectricityDataWrapper(DPCodeBase64Wrapper):
+    """Custom DPCode Wrapper for extracting ElectricityData from base64."""
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from T."""
+        raise NotImplementedError
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_bytes(device)) is None or (
+            value := ElectricityData.from_bytes(raw_value)
+        ) is None:
+            return None
+        return self._convert(value)
+
+
+class _RawElectricityCurrentWrapper(_RawElectricityDataWrapper):
+    """Custom DPCode Wrapper for extracting electricity current from base64."""
+
+    native_unit = UnitOfElectricCurrent.MILLIAMPERE
+    suggested_unit = UnitOfElectricCurrent.AMPERE
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.current
+
+
+class _RawElectricityPowerWrapper(_RawElectricityDataWrapper):
+    """Custom DPCode Wrapper for extracting electricity power from base64."""
+
+    native_unit = UnitOfPower.WATT
+    suggested_unit = UnitOfPower.KILO_WATT
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.power
+
+
+class _RawElectricityVoltageWrapper(_RawElectricityDataWrapper):
+    """Custom DPCode Wrapper for extracting electricity voltage from base64."""
+
+    native_unit = UnitOfElectricPotential.VOLT
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.voltage
+
+
+CURRENT_WRAPPER = (_RawElectricityCurrentWrapper, _JsonElectricityCurrentWrapper)
+POWER_WRAPPER = (_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper)
+VOLTAGE_WRAPPER = (_RawElectricityVoltageWrapper, _JsonElectricityVoltageWrapper)
 
 
 @dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
-    complex_type: type[ComplexValue] | None = None
-    subkey: str | None = None
-    state_conversion: Callable[[Any], StateType] | None = None
+    dpcode: DPCode | None = None
+    wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -390,85 +496,76 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}electriccurrent",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}power",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityValue,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}voltage",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityValue,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}electriccurrent",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}power",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityValue,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}voltage",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityValue,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}electriccurrent",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}power",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityValue,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}voltage",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityValue,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
@@ -764,10 +861,15 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.EXCRETION_TIME_DAY,
             translation_key="excretion_time_day",
             device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EXCRETION_TIMES_DAY,
             translation_key="excretion_times_day",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.STATUS,
+            translation_key="cat_litter_box_status",
         ),
     ),
     DeviceCategory.MZJ: (
@@ -968,7 +1070,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="wind_direction",
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
-            state_conversion=lambda state: _WIND_DIRECTIONS.get(str(state)),
+            wrapper_class=(_WindDirectionWrapper,),
         ),
         TuyaSensorEntityDescription(
             key=DPCode.DEW_POINT_TEMP,
@@ -1481,12 +1583,11 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.TOTAL_POWER,
+            key=f"{DPCode.TOTAL_POWER}power",
+            dpcode=DPCode.TOTAL_POWER,
             translation_key="total_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SUPPLY_FREQUENCY,
@@ -1496,85 +1597,76 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}electriccurrent",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}power",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityValue,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}voltage",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityValue,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}electriccurrent",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}power",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityValue,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}voltage",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityValue,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}electriccurrent",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityValue,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}power",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityValue,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}voltage",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityValue,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
     ),
     DeviceCategory.ZNNBQ: (
@@ -1635,6 +1727,27 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
 
+def _get_dpcode_wrapper(
+    device: CustomerDevice,
+    description: TuyaSensorEntityDescription,
+) -> DPCodeWrapper | None:
+    """Get DPCode wrapper for an entity description."""
+    dpcode = description.dpcode or description.key
+    wrapper: DPCodeWrapper | None
+
+    if description.wrapper_class:
+        for cls in description.wrapper_class:
+            if wrapper := cls.find_dpcode(device, dpcode):
+                return wrapper
+        return None
+
+    for cls in (DPCodeIntegerWrapper, DPCodeEnumWrapper):
+        if wrapper := cls.find_dpcode(device, dpcode):
+            return wrapper
+
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -1651,9 +1764,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 entities.extend(
-                    TuyaSensorEntity(device, manager, description)
+                    TuyaSensorEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (dpcode_wrapper := _get_dpcode_wrapper(device, description))
                 )
 
         async_add_entities(entities)
@@ -1669,44 +1782,37 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
 
     entity_description: TuyaSensorEntityDescription
-
-    _status_range: DeviceStatusRange | None = None
-    _type: DPType | None = None
-    _type_data: IntegerTypeData | EnumTypeData | None = None
-    _uom: UnitOfMeasurement | None = None
+    _dpcode_wrapper: DPCodeWrapper
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
+        dpcode_wrapper: DPCodeWrapper,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{super().unique_id}{description.key}{description.subkey or ''}"
-        )
+        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
-        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
-            self._type_data = int_type
-            self._type = DPType.INTEGER
-            if description.native_unit_of_measurement is None:
-                self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._type_data = enum_type
-            self._type = DPType.ENUM
-        else:
-            self._type = get_dptype(self.device, DPCode(description.key))
+        if description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
+        if description.suggested_unit_of_measurement is None:
+            self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
+
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in SENSOR_DEVICE_CLASS_UNITS[self.device_class]
@@ -1745,55 +1851,4 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        # Only continue if data type is known
-        if self._type not in (
-            DPType.INTEGER,
-            DPType.STRING,
-            DPType.ENUM,
-            DPType.JSON,
-            DPType.RAW,
-        ):
-            return None
-
-        # Raw value
-        value = self.device.status.get(self.entity_description.key)
-        if value is None:
-            return None
-
-        # Convert value, if required
-        if (convert := self.entity_description.state_conversion) is not None:
-            return convert(value)
-
-        # Scale integer/float value
-        if isinstance(self._type_data, IntegerTypeData):
-            return self._type_data.scale_value(value)
-
-        # Unexpected enum value
-        if (
-            isinstance(self._type_data, EnumTypeData)
-            and value not in self._type_data.range
-        ):
-            return None
-
-        # Get subkey value from Json string.
-        if self._type is DPType.JSON:
-            if (
-                self.entity_description.complex_type is None
-                or self.entity_description.subkey is None
-            ):
-                return None
-            values = self.entity_description.complex_type.from_json(value)
-            return getattr(values, self.entity_description.subkey)
-
-        if self._type is DPType.RAW:
-            if (
-                self.entity_description.complex_type is None
-                or self.entity_description.subkey is None
-                or (raw_values := self.entity_description.complex_type.from_raw(value))
-                is None
-            ):
-                return None
-            return getattr(raw_values, self.entity_description.subkey)
-
-        # Valid string or enum value
-        return value
+        return self._dpcode_wrapper.read_device_status(self.device)

@@ -43,6 +43,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
@@ -67,7 +68,7 @@ BLOCK_RELAY_SWITCHES = {
 BLOCK_SLEEPING_MOTION_SWITCH = {
     ("sensor", "motionActive"): BlockSwitchDescription(
         key="sensor|motionActive",
-        name="Motion detection",
+        translation_key="motion_detection",
         entity_category=EntityCategory.CONFIG,
     )
 }
@@ -99,7 +100,7 @@ RPC_SWITCHES = {
     "boolean_generic": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
+        removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, SWITCH_PLATFORM
         ),
         is_on=lambda status: bool(status["value"]),
@@ -111,6 +112,7 @@ RPC_SWITCHES = {
     "boolean_anti_freeze": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="frost_protection",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -122,6 +124,7 @@ RPC_SWITCHES = {
     "boolean_child_lock": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="child_lock",
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -132,6 +135,7 @@ RPC_SWITCHES = {
     "boolean_enable": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="thermostat_enabled",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -143,7 +147,7 @@ RPC_SWITCHES = {
     "boolean_start_charging": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        name="Charging",
+        translation_key="charging",
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -154,6 +158,7 @@ RPC_SWITCHES = {
     "boolean_state": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="valve_opened",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -165,6 +170,8 @@ RPC_SWITCHES = {
     "boolean_zone0": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="zone_with_number",
+        translation_placeholders={"zone_number": "1"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -176,6 +183,8 @@ RPC_SWITCHES = {
     "boolean_zone1": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="zone_with_number",
+        translation_placeholders={"zone_number": "2"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -187,6 +196,8 @@ RPC_SWITCHES = {
     "boolean_zone2": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="zone_with_number",
+        translation_placeholders={"zone_number": "3"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -198,6 +209,8 @@ RPC_SWITCHES = {
     "boolean_zone3": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="zone_with_number",
+        translation_placeholders={"zone_number": "4"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -209,6 +222,8 @@ RPC_SWITCHES = {
     "boolean_zone4": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="zone_with_number",
+        translation_placeholders={"zone_number": "5"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -220,6 +235,8 @@ RPC_SWITCHES = {
     "boolean_zone5": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        translation_key="zone_with_number",
+        translation_placeholders={"zone_number": "6"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -241,8 +258,7 @@ RPC_SWITCHES = {
     "cury_left": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot",
-        translation_key="cury_slot",
+        translation_key="left_slot",
         is_on=lambda status: bool(status["slots"]["left"]["on"]),
         method_on="cury_set",
         method_off="cury_set",
@@ -254,8 +270,7 @@ RPC_SWITCHES = {
     "cury_left_boost": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot boost",
-        translation_key="cury_boost",
+        translation_key="left_slot_boost",
         is_on=lambda status: status["slots"]["left"]["boost"] is not None,
         method_on="cury_boost",
         method_off="cury_stop_boost",
@@ -267,8 +282,7 @@ RPC_SWITCHES = {
     "cury_right": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot",
-        translation_key="cury_slot",
+        translation_key="right_slot",
         is_on=lambda status: bool(status["slots"]["right"]["on"]),
         method_on="cury_set",
         method_off="cury_set",
@@ -280,8 +294,7 @@ RPC_SWITCHES = {
     "cury_right_boost": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot boost",
-        translation_key="cury_boost",
+        translation_key="right_slot_boost",
         is_on=lambda status: status["slots"]["right"]["boost"] is not None,
         method_on="cury_boost",
         method_off="cury_stop_boost",
@@ -289,6 +302,15 @@ RPC_SWITCHES = {
         entity_registry_enabled_default=True,
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
+    ),
+    "cury_away_mode": RpcSwitchDescription(
+        key="cury",
+        sub_key="away_mode",
+        translation_key="cury_away_mode",
+        is_on=lambda status: status["away_mode"],
+        method_on="cury_set_away_mode",
+        method_off="cury_set_away_mode",
+        method_params_fn=lambda id, value: (id, value),
     ),
 }
 
@@ -389,7 +411,6 @@ class BlockSleepingMotionSwitch(
     """Entity that controls Motion Sensor on Block based Shelly devices."""
 
     entity_description: BlockSwitchDescription
-    _attr_translation_key = "motion_switch"
 
     def __init__(
         self,
@@ -446,6 +467,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         """Initialize relay switch."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property
@@ -477,6 +499,19 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSwitchDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if description.key in ("switch", "script"):
+            self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
     def is_on(self) -> bool:
@@ -514,7 +549,7 @@ class RpcRelaySwitch(RpcSwitch):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcSwitchDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator, key, attribute, description)

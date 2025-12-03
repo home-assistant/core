@@ -21,7 +21,7 @@
       'subentries': list([
       ]),
       'title': 'Firefly III test',
-      'unique_id': 'firefly_iii_test_unique_id_123',
+      'unique_id': 'test_api_key',
       'version': 1,
     }),
     'data': dict({

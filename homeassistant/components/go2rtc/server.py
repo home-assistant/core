@@ -6,24 +6,26 @@ from contextlib import suppress
 import logging
 from tempfile import NamedTemporaryFile
 
+from aiohttp import ClientSession
 from go2rtc_client import Go2RtcRestClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
+from .util import get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 30
 _SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr="
-_LOCALHOST_IP = "127.0.0.1"
 _LOG_BUFFER_SIZE = 512
 _RESPAWN_COOLDOWN = 1
 
 # Default configuration for HA
-# - Api is listening only on localhost
+# - Unix socket for secure local communication
+# - Basic auth enabled, including local connections
+# - HTTP API only enabled when UI is enabled
 # - Enable rtsp for localhost only as ffmpeg needs it
 # - Clear default ice servers
 _GO2RTC_CONFIG_FORMAT = r"""# This file is managed by Home Assistant
@@ -33,8 +35,12 @@ app:
   modules: {app_modules}
 
 api:
-  listen: "{api_ip}:{api_port}"
+  listen: "{listen_config}"
+  unix_listen: "{unix_socket}"
   allow_paths: {api_allow_paths}
+  local_auth: true
+  username: {username}
+  password: {password}
 
 # ffmpeg needs the exec module
 # Restrict execution to only ffmpeg binary
@@ -116,26 +122,36 @@ def _format_list_for_yaml(items: tuple[str, ...]) -> str:
     return f"[{formatted_items}]"
 
 
-def _create_temp_file(enable_ui: bool) -> str:
+def _create_temp_file(
+    enable_ui: bool, username: str, password: str, working_dir: str
+) -> str:
     """Create temporary config file."""
     app_modules: tuple[str, ...] = _APP_MODULES
     api_paths: tuple[str, ...] = _API_ALLOW_PATHS
-    api_ip = _LOCALHOST_IP
+
     if enable_ui:
         app_modules = _UI_APP_MODULES
         api_paths = _UI_API_ALLOW_PATHS
         # Listen on all interfaces for allowing access from all ips
-        api_ip = ""
+        listen_config = f":{HA_MANAGED_API_PORT}"
+    else:
+        # Disable HTTP listening when UI is not enabled
+        # as HA does not use it.
+        listen_config = ""
 
     # Set delete=False to prevent the file from being deleted when the file is closed
     # Linux is clearing tmp folder on reboot, so no need to delete it manually
-    with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
+    with NamedTemporaryFile(
+        prefix="go2rtc_", suffix=".yaml", dir=working_dir, delete=False
+    ) as file:
         file.write(
             _GO2RTC_CONFIG_FORMAT.format(
-                api_ip=api_ip,
-                api_port=HA_MANAGED_API_PORT,
+                listen_config=listen_config,
+                unix_socket=get_go2rtc_unix_socket_path(working_dir),
                 app_modules=_format_list_for_yaml(app_modules),
                 api_allow_paths=_format_list_for_yaml(api_paths),
+                username=username,
+                password=password,
             ).encode()
         )
         return file.name
@@ -145,15 +161,27 @@ class Server:
     """Go2rtc server."""
 
     def __init__(
-        self, hass: HomeAssistant, binary: str, *, enable_ui: bool = False
+        self,
+        hass: HomeAssistant,
+        binary: str,
+        session: ClientSession,
+        *,
+        enable_ui: bool = False,
+        username: str,
+        password: str,
+        working_dir: str,
     ) -> None:
         """Initialize the server."""
         self._hass = hass
         self._binary = binary
+        self._session = session
+        self._enable_ui = enable_ui
+        self._username = username
+        self._password = password
+        self._working_dir = working_dir
         self._log_buffer: deque[str] = deque(maxlen=_LOG_BUFFER_SIZE)
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
-        self._enable_ui = enable_ui
         self._watchdog_task: asyncio.Task | None = None
         self._watchdog_tasks: list[asyncio.Task] = []
 
@@ -168,7 +196,11 @@ class Server:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
         config_file = await self._hass.async_add_executor_job(
-            _create_temp_file, self._enable_ui
+            _create_temp_file,
+            self._enable_ui,
+            self._username,
+            self._password,
+            self._working_dir,
         )
 
         self._startup_complete.clear()
@@ -197,7 +229,7 @@ class Server:
             raise Go2RTCServerStartError from err
 
         # Check the server version
-        client = Go2RtcRestClient(async_get_clientsession(self._hass), HA_MANAGED_URL)
+        client = Go2RtcRestClient(self._session, HA_MANAGED_URL)
         await client.validate_server_version()
 
     async def _log_output(self, process: asyncio.subprocess.Process) -> None:
@@ -269,7 +301,7 @@ class Server:
 
     async def _monitor_api(self) -> None:
         """Raise if the go2rtc process terminates."""
-        client = Go2RtcRestClient(async_get_clientsession(self._hass), HA_MANAGED_URL)
+        client = Go2RtcRestClient(self._session, HA_MANAGED_URL)
 
         _LOGGER.debug("Monitoring go2rtc API")
         try:

@@ -41,9 +41,11 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
     DATA_STORE,
     DOMAIN,
+    SENSOR_TYPES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -75,6 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DEVICES: {},
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
+        DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
 
     hass.http.register_view(RegistrationsView())

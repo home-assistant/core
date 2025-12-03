@@ -103,6 +103,9 @@
       }
     },
     "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
       "display": {
         "name": "Display"
       }
