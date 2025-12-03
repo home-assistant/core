@@ -68,14 +68,14 @@
     "open_url": {
       "service": "mdi:web"
     },
+    "power_command": {
+      "service": "mdi:power"
+    },
     "send_keypress": {
       "service": "mdi:keyboard"
     },
     "send_text": {
       "service": "mdi:keyboard"
-    },
-    "power_command": {
-      "service": "mdi:power"
     }
   }
 }

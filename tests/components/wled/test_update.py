@@ -54,7 +54,7 @@ async def test_update_available(
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
         state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
+        == "https://github.com/wled/WLED/releases/tag/v0.99.0"
     )
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -118,7 +118,7 @@ async def test_no_update_available(
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
         state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
+        == "https://github.com/wled/WLED/releases/tag/v0.99.0"
     )
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -151,7 +151,7 @@ async def test_update_error(
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.state == STATE_UNAVAILABLE
-    assert "Invalid response from API" in caplog.text
+    assert "Invalid response from WLED API" in caplog.text
 
 
 async def test_update_stay_stable(

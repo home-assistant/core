@@ -77,7 +77,7 @@ async def test_set_webhooks(
 
 async def test_webhooks_update_invalid_json(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     mock_generate_secret_token,
 ) -> None:
@@ -95,8 +95,7 @@ async def test_webhooks_update_invalid_json(
 
 async def test_webhooks_unauthorized_network(
     hass: HomeAssistant,
-    webhook_platform,
-    mock_external_calls: None,
+    webhook_bot,
     mock_generate_secret_token,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -121,9 +120,7 @@ async def test_webhooks_unauthorized_network(
 
 async def test_webhooks_deregister_failed(
     hass: HomeAssistant,
-    webhook_platform,
-    mock_external_calls: None,
-    mock_generate_secret_token,
+    webhook_bot,
 ) -> None:
     """Test deregister webhooks."""
 

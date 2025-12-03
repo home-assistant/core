@@ -11,10 +11,13 @@ from pynintendoparental.exceptions import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SESSION_TOKEN, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
+from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -22,6 +25,14 @@ _PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.NUMBER,
 ]
+
+PLATFORM_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nintendo Switch Parental Controls integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(

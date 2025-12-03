@@ -2,63 +2,63 @@
   "selector": {
     "send_message_data": {
       "fields": {
-        "images": {
-          "name": "Images",
-          "description": "One or more image paths to attach to the message."
-        },
         "format": {
-          "name": "Message format",
-          "description": "Format of the message, either 'text' or 'html'."
+          "description": "Format of the message, either 'text' or 'html'.",
+          "name": "Message format"
+        },
+        "images": {
+          "description": "One or more image paths to attach to the message.",
+          "name": "Images"
         },
         "thread_id": {
-          "name": "Thread ID",
-          "description": "An optional parent message ID to thread this message under."
+          "description": "An optional parent message ID to thread this message under.",
+          "name": "Thread ID"
         }
       }
     },
     "send_message_data_format": {
       "options": {
-        "text": "Plain text",
-        "html": "HTML"
+        "html": "HTML",
+        "text": "Plain text"
       }
     }
   },
   "services": {
-    "send_message": {
-      "name": "Send message",
-      "description": "Sends message to target room(s).",
-      "fields": {
-        "message": {
-          "name": "Message",
-          "description": "The message to be sent."
-        },
-        "target": {
-          "name": "Target",
-          "description": "A list of room(s) to send the message to."
-        },
-        "data": {
-          "name": "Data",
-          "description": "Extended information of notification."
-        }
-      }
-    },
     "react": {
-      "name": "React",
       "description": "Sends a reaction to a message.",
       "fields": {
         "message_id": {
-          "name": "Message ID",
-          "description": "The ID of the message to react to."
+          "description": "The ID of the message to react to.",
+          "name": "Message ID"
         },
         "reaction": {
-          "name": "Reaction",
-          "description": "The reaction to send."
+          "description": "The reaction to send.",
+          "name": "Reaction"
         },
         "room": {
-          "name": "Room",
-          "description": "The room to send the reaction to."
+          "description": "The room to send the reaction to.",
+          "name": "Room"
         }
-      }
+      },
+      "name": "React"
+    },
+    "send_message": {
+      "description": "Sends message to target room(s).",
+      "fields": {
+        "data": {
+          "description": "Extended information of notification.",
+          "name": "Data"
+        },
+        "message": {
+          "description": "The message to be sent.",
+          "name": "Message"
+        },
+        "target": {
+          "description": "A list of room(s) to send the message to.",
+          "name": "Target"
+        }
+      },
+      "name": "Send message"
     }
   }
 }

@@ -24,6 +24,7 @@ from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_STATES,
     DOMAIN,
+    BangOlufsenMediaType,
     BangOlufsenSource,
 )
 from homeassistant.components.media_player import (
@@ -205,7 +206,7 @@ async def test_async_update_sources_remote(
     assert mock_mozart_client.get_remote_menu.call_count == 1
 
     # Send the remote menu Websocket event
-    notification_callback(WebsocketNotificationTag(value="remoteMenuChanged"))
+    await notification_callback(WebsocketNotificationTag(value="remoteMenuChanged"))
 
     assert mock_mozart_client.get_available_sources.call_count == 2
     assert mock_mozart_client.get_remote_menu.call_count == 2
@@ -260,6 +261,7 @@ async def test_async_update_playback_metadata(
     assert ATTR_MEDIA_ALBUM_ARTIST not in states.attributes
     assert ATTR_MEDIA_TRACK not in states.attributes
     assert ATTR_MEDIA_CHANNEL not in states.attributes
+    assert ATTR_MEDIA_CONTENT_ID not in states.attributes
 
     # Send the WebSocket event dispatch
     playback_metadata_callback(TEST_PLAYBACK_METADATA)
@@ -276,6 +278,12 @@ async def test_async_update_playback_metadata(
     )
     assert states.attributes[ATTR_MEDIA_TRACK] == TEST_PLAYBACK_METADATA.track
     assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
+    assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
+    assert (
+        states.attributes[ATTR_MEDIA_CONTENT_ID]
+        == TEST_PLAYBACK_METADATA.source_internal_id
+    )
+    assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
 
 
 async def test_async_update_playback_error(
@@ -293,7 +301,7 @@ async def test_async_update_playback_error(
     playback_error_callback(TEST_PLAYBACK_ERROR)
 
     assert (
-        "Exception in _async_update_playback_error when dispatching '11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
+        "Exception in _async_update_playback_error when dispatching 'bang_olufsen_11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
         in caplog.text
     )
 
@@ -342,28 +350,47 @@ async def test_async_update_playback_state(
 
 
 @pytest.mark.parametrize(
-    ("source", "content_type", "progress", "metadata"),
+    ("source", "content_type", "progress", "metadata", "content_id_available"),
     [
-        # Normal source, music mediatype expected
-        (
-            TEST_SOURCE,
-            MediaType.MUSIC,
-            TEST_PLAYBACK_PROGRESS.progress,
-            PlaybackContentMetadata(),
-        ),
         # URI source, url media type expected
         (
             BangOlufsenSource.URI_STREAMER,
             MediaType.URL,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(),
+            False,
         ),
-        # Line-In source,media type expected, progress 0 expected
+        # Line-In source, music media type expected, progress 0 expected
         (
             BangOlufsenSource.LINE_IN,
             MediaType.MUSIC,
             0,
             PlaybackContentMetadata(),
+            False,
+        ),
+        # Tidal source, tidal media type expected, media content id expected
+        (
+            BangOlufsenSource.TIDAL,
+            BangOlufsenMediaType.TIDAL,
+            TEST_PLAYBACK_PROGRESS.progress,
+            PlaybackContentMetadata(source_internal_id="123"),
+            True,
+        ),
+        # Deezer source, deezer media type expected, media content id expected
+        (
+            BangOlufsenSource.DEEZER,
+            BangOlufsenMediaType.DEEZER,
+            TEST_PLAYBACK_PROGRESS.progress,
+            PlaybackContentMetadata(source_internal_id="123"),
+            True,
+        ),
+        # Radio source, radio media type expected, media content id expected
+        (
+            BangOlufsenSource.NET_RADIO,
+            BangOlufsenMediaType.RADIO,
+            TEST_PLAYBACK_PROGRESS.progress,
+            PlaybackContentMetadata(source_internal_id="123"),
+            True,
         ),
     ],
 )
@@ -375,6 +402,7 @@ async def test_async_update_source_change(
     content_type: MediaType,
     progress: int,
     metadata: PlaybackContentMetadata,
+    content_id_available: bool,
 ) -> None:
     """Test _async_update_source_change."""
     playback_progress_callback = (
@@ -402,6 +430,7 @@ async def test_async_update_source_change(
     assert states.attributes[ATTR_INPUT_SOURCE] == source.name
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == content_type
     assert states.attributes[ATTR_MEDIA_POSITION] == progress
+    assert (ATTR_MEDIA_CONTENT_ID in states.attributes) == content_id_available
 
 
 async def test_async_turn_off(
@@ -485,7 +514,7 @@ async def test_async_update_beolink_line_in(
 
     # Set source
     source_change_callback(BangOlufsenSource.LINE_IN)
-    beolink_callback(WebsocketNotificationTag(value="beolinkListeners"))
+    await beolink_callback(WebsocketNotificationTag(value="beolinkListeners"))
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes["group_members"] == []
@@ -561,7 +590,7 @@ async def test_async_update_name_and_beolink(
         mock_mozart_client.get_notification_notifications.call_args[0][0]
     )
     # Trigger callback
-    configuration_callback(WebsocketNotificationTag(value="configuration"))
+    await configuration_callback(WebsocketNotificationTag(value="configuration"))
 
     await hass.async_block_till_done()
 
