@@ -27,12 +27,22 @@ def mock_travel_time() -> Generator[TravelTime]:
 
 
 @pytest.fixture
-def mock_no_auth_travel_time() -> Generator[None]:
+def failed_travel_time_status() -> int:
+    """Return the default status code for failed travel time requests."""
+    return 400
+
+
+@pytest.fixture
+def mock_failed_travel_time(failed_travel_time_status: int) -> Generator[None]:
     """WsdotTravelTimes.get_travel_time is mocked to raise a WsdotTravelError."""
     with patch("wsdot.WsdotTravelTimes", autospec=True) as mock:
         client = mock.return_value
-        client.get_travel_time.side_effect = WsdotTravelError()
-        client.get_all_travel_times.side_effect = WsdotTravelError()
+        client.get_travel_time.side_effect = WsdotTravelError(
+            status=failed_travel_time_status
+        )
+        client.get_all_travel_times.side_effect = WsdotTravelError(
+            status=failed_travel_time_status
+        )
         yield
 
 

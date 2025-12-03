@@ -13,12 +13,7 @@ from homeassistant.components.wsdot.const import (
     SUBENTRY_TRAVEL_TIMES,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_BASE,
-    CONF_ID,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -42,10 +37,10 @@ async def test_create_user_entry(
     """Test that the user step works."""
     # No user data; form is being show for the first time
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={'source': SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result['type'] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result[CONF_STEP_ID] == SOURCE_USER
 
     # User data; the user entered data and hit submit
@@ -54,9 +49,9 @@ async def test_create_user_entry(
         user_input=VALID_USER_CONFIG,
     )
 
-    assert result['type'] is FlowResultType.CREATE_ENTRY
-    assert result['title'] == DOMAIN
-    assert result['data'][CONF_API_KEY] == "abcd-1234"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DOMAIN
+    assert result["data"][CONF_API_KEY] == "abcd-1234"
 
 
 @pytest.mark.parametrize(
@@ -74,22 +69,23 @@ async def test_create_travel_time_subentry(
     """Test that the user step for Travel Time works."""
     # No user data; form is being show for the first time
     result = await hass.config_entries.subentries.async_init(
-        (init_integration.entry_id, SUBENTRY_TRAVEL_TIMES), context={'source': SOURCE_USER}
+        (init_integration.entry_id, SUBENTRY_TRAVEL_TIMES),
+        context={"source": SOURCE_USER},
     )
 
-    assert result['type'] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result[CONF_STEP_ID] == SOURCE_USER
 
     # User data; the user made a choice and hit submit
     result = await hass.config_entries.subentries.async_init(
         (init_integration.entry_id, SUBENTRY_TRAVEL_TIMES),
-        context={'source': SOURCE_USER},
+        context={"source": SOURCE_USER},
         data=VALID_USER_TRAVEL_TIME_CONFIG,
     )
 
-    assert result['type'] is FlowResultType.CREATE_ENTRY
-    assert result['data'][CONF_NAME] == "Seattle-Bellevue via I-90 (EB AM)"
-    assert result['data'][CONF_ID] == 96
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_NAME] == "Seattle-Bellevue via I-90 (EB AM)"
+    assert result["data"][CONF_ID] == 96
 
 
 @pytest.mark.parametrize(
@@ -109,19 +105,18 @@ async def test_create_travel_time_subentry(
 async def test_create_import_entry(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
-    mock_config_data: dict[str, Any],
     import_config: dict[str, str | int],
 ) -> None:
-    """Test that the user step works."""
+    """Test that the yaml import works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={'source': SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data=import_config,
     )
 
-    assert result['type'] is FlowResultType.CREATE_ENTRY
-    assert result['title'] == "wsdot"
-    assert result['data'][CONF_API_KEY] == "abcd-5678"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "wsdot"
+    assert result["data"][CONF_API_KEY] == "abcd-5678"
 
     entry = result["result"]
     assert entry is not None
@@ -133,6 +128,50 @@ async def test_create_import_entry(
     assert subentry.data[CONF_ID] == 96
 
 
+@pytest.mark.parametrize(
+    ("failed_travel_time_status", "abort_reason"),
+    [
+        (400, "invalid_api_key"),
+        (404, "cannot_connect"),
+    ],
+)
+async def test_failed_import_entry(
+    hass: HomeAssistant,
+    mock_failed_travel_time: AsyncMock,
+    mock_config_data: dict[str, Any],
+    failed_travel_time_status: int,
+    abort_reason: str,
+) -> None:
+    """Test the failure modes of a yaml import."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=mock_config_data,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+
+
+async def test_incorrect_import_entry(
+    hass: HomeAssistant,
+    mock_travel_time: AsyncMock,
+    mock_config_data: dict[str, Any],
+) -> None:
+    """Test a yaml import of a non-existent route."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "abcd-5678",
+            CONF_TRAVEL_TIMES: [{CONF_ID: "100001", CONF_NAME: "nowhere"}],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_travel_time_id"
+
+
 async def test_integration_already_exists(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
@@ -142,11 +181,11 @@ async def test_integration_already_exists(
     """Test we only allow one entry per API key."""
     duplicate_config_flow = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={'source': SOURCE_USER},
+        context={"source": SOURCE_USER},
         data=VALID_USER_CONFIG,
     )
 
-    assert duplicate_config_flow['type'] is FlowResultType.ABORT
+    assert duplicate_config_flow["type"] is FlowResultType.ABORT
     assert duplicate_config_flow[CONF_REASON] == "already_configured"
 
 
@@ -159,11 +198,11 @@ async def test_travel_route_already_exists(
     """Test we only allow choosing a travel time route once."""
     duplicate_config_flow = await hass.config_entries.subentries.async_init(
         (init_integration.entry_id, SUBENTRY_TRAVEL_TIMES),
-        context={'source': SOURCE_USER},
+        context={"source": SOURCE_USER},
         data=VALID_USER_TRAVEL_TIME_CONFIG,
     )
 
-    assert duplicate_config_flow['type'] is FlowResultType.ABORT
+    assert duplicate_config_flow["type"] is FlowResultType.ABORT
     assert duplicate_config_flow[CONF_REASON] == "already_configured"
 
 
@@ -180,16 +219,16 @@ async def test_api_not_valid(
         client.get_all_travel_times.side_effect = WsdotTravelError()
         config_flow = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={'source': SOURCE_USER},
+            context={"source": SOURCE_USER},
             data=VALID_USER_CONFIG,
         )
 
-    assert config_flow['type'] is FlowResultType.FORM
+    assert config_flow["type"] is FlowResultType.FORM
     assert config_flow[ATTR_ERRORS][CONF_BASE] == "cannot_connect"
 
     config_flow = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={'source': SOURCE_USER},
+        context={"source": SOURCE_USER},
         data=VALID_USER_CONFIG,
     )
-    assert config_flow['type'] is FlowResultType.CREATE_ENTRY
+    assert config_flow["type"] is FlowResultType.CREATE_ENTRY

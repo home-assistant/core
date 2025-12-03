@@ -117,7 +117,7 @@ async def test_travel_sensor_platform_setup_bad_routes(
 async def test_travel_sensor_setup_no_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_no_auth_travel_time: None,
+    mock_failed_travel_time: None,
 ) -> None:
     """Test the wsdot Travel Time sensor does not create an entry with a bad API key."""
     mock_config_entry.add_to_hass(hass)
