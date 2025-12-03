@@ -3503,6 +3503,11 @@
         "zwave"
       ]
     },
+    "levoit": {
+      "name": "Levoit",
+      "integration_type": "virtual",
+      "supported_by": "vesync"
+    },
     "lg": {
       "name": "LG",
       "integrations": {
