@@ -203,17 +203,26 @@ async def async_setup_entry(
             entry_data.client,
             device,
             description,
-            capability,
+            sensor_capability,
             attribute,
             component,
         )
+        # iterate over all devices for this config entry
         for device in entry_data.devices.values()
-        for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
-        for attribute, description in attribute_map.items()
-        for component in device.status
+        # iterate over components on the device and their reported capabilities
+        for component, device_capabilities in device.status.items()
+        # iterate over all supported SmartThings capability -> sensor mappings
+        for sensor_capability, sensor_attributes in CAPABILITY_TO_SENSORS.items()
+        # only consider capabilities that the device actually reports for this component
+        if sensor_capability in device_capabilities
+        # iterate over attributes and their entity descriptions for the capability
+        for attribute, description in sensor_attributes.items()
+        # apply final filters:
+        #  - component must be the main component or have a translation mapping
+        #  - optional exists_fn must approve the entity for this component/status
+        #  - optional category filter must match the device's main component category
         if (
-            capability in device.status[component]
-            and (
+            (
                 component == MAIN
                 or (
                     description.component_translation_key is not None
