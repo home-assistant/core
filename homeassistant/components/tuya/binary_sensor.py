@@ -372,7 +372,7 @@ class _CustomDPCodeWrapper(DPCodeWrapper):
     _valid_values: set[bool | float | int | str]
 
     def __init__(
-        self, dpcode: DPCode, valid_values: set[bool | float | int | str]
+        self, dpcode: str, valid_values: set[bool | float | int | str]
     ) -> None:
         """Init CustomDPCodeBooleanWrapper."""
         super().__init__(dpcode)
@@ -390,7 +390,7 @@ def _get_dpcode_wrapper(
     description: TuyaBinarySensorEntityDescription,
 ) -> DPCodeWrapper | None:
     """Get DPCode wrapper for an entity description."""
-    dpcode = description.dpcode or DPCode(description.key)
+    dpcode = description.dpcode or description.key
     if description.bitmap_key is not None:
         return DPCodeBitmapBitWrapper.find_dpcode(
             device, dpcode, bitmap_key=description.bitmap_key
@@ -461,4 +461,4 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)

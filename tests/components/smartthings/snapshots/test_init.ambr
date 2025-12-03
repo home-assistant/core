@@ -198,7 +198,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.2.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -214,8 +214,8 @@
     'name': 'Radiator Thermostat II [+M] Wohnzimmer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'sw_version': None,
+    'serial_number': 'D44867FFFEB37584',
+    'sw_version': '2.00.09',
     'via_device_id': None,
   })
 # ---
@@ -591,6 +591,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_hood_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'fa5fca25-fa7a-1807-030a-2f72ee0f7bff',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'AHD-WW-TP1-22-COMMON',
+    'model_id': None,
+    'name': 'Range hood',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AHD-WW-TP1-22-COMMON_40230419',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_microwave_0101x]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -712,6 +743,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP1-20-OVEN-3-CR_40240205',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_walloven_0107x]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '1c77a562-df00-7d6a-ca73-b67f6d4c4607',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'LCD_S905D3_COMBI_PP_US_23K',
+    'model_id': None,
+    'name': 'Four',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '20230413.181729',
     'via_device_id': None,
   })
 # ---
