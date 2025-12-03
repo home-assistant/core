@@ -33,7 +33,6 @@ async def async_setup_entry(
         try:
             scene_details = await scene.read_scene()
             scene_entities.append(DaliCenterScene(scene, scene_details))
-            _LOGGER.warning("Scene %s Scene Details: %s", scene, scene_details)
         except (OSError, ValueError, KeyError):
             _LOGGER.exception(
                 "Failed to read scene details for %s, skipping scene",

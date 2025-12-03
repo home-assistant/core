@@ -157,9 +157,10 @@ async def test_callback_registration(
     assert CallbackEventType.ONLINE_STATUS in event_types
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_scene_read_failure(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
     mock_scenes: list[MagicMock],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -172,8 +173,13 @@ async def test_scene_read_failure(
     failing_scene.read_scene.side_effect = OSError("Connection error")
 
     mock_scenes.append(failing_scene)
+    mock_config_entry.add_to_hass(hass)
 
-    assert "Failed to read scene details" in caplog.text or len(mock_scenes) >= 2
+    with patch("homeassistant.components.sunricher_dali._PLATFORMS", [Platform.SCENE]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "Failed to read scene details" in caplog.text
 
 
 async def test_scene_entity_mapping_with_lights(
