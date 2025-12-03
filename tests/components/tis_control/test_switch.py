@@ -145,6 +145,7 @@ async def test_turn_on_service(
 
     # Verify the API method was called and the state is optimistically updated.
     mock_api.turn_switch_on.assert_awaited_once()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     # Failed turn_on (device offline).
@@ -157,6 +158,7 @@ async def test_turn_on_service(
 
     # Verify the API method was called and state becomes unavailable.
     mock_api.turn_switch_on.assert_awaited_once()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
@@ -174,6 +176,7 @@ async def test_turn_off_service(
     )
 
     mock_api.turn_switch_off.assert_awaited_once()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     # Failed turn_off.
@@ -185,6 +188,7 @@ async def test_turn_off_service(
     )
 
     mock_api.turn_switch_off.assert_awaited_once()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
@@ -207,6 +211,7 @@ async def test_state_updates_from_callback(
     # Trigger the callback to inform Home Assistant.
     callback()
     await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     # Device turns OFF.
@@ -215,6 +220,7 @@ async def test_state_updates_from_callback(
 
     callback()
     await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     # Device goes OFFLINE.
@@ -224,6 +230,7 @@ async def test_state_updates_from_callback(
 
     callback()
     await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     # Device comes back ONLINE (and is now ON).
@@ -233,4 +240,5 @@ async def test_state_updates_from_callback(
 
     callback()
     await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get(ENTITY_ID).state == STATE_ON
