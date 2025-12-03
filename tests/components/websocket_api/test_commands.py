@@ -3665,6 +3665,7 @@ async def test_get_triggers_for_target(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     automation_component: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
 
@@ -3803,7 +3804,9 @@ async def test_get_triggers_for_target(
         await hass.async_block_till_done()
 
         async def assert_command(
-            target: dict[str, list[str]], expected: list[str]
+            target: dict[str, list[str]],
+            expected: list[str],
+            expect_lookup_cache: bool = True,
         ) -> Any:
             """Call the command and assert expected triggers/conditions."""
             await websocket_client.send_json_auto_id(
@@ -3815,8 +3818,15 @@ async def test_get_triggers_for_target(
             assert msg["success"]
             assert sorted(msg["result"]) == sorted(expected)
 
+            assert (
+                "Using cached automation component lookup data" in caplog.text
+            ) == expect_lookup_cache
+            caplog.clear()
+
         # Test entity target - unknown entity
-        await assert_command({"entity_id": ["light.unknown_entity"]}, [])
+        await assert_command(
+            {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+        )
 
         # Test entity target - entity not in registry
         await assert_command(
@@ -3936,6 +3946,7 @@ async def test_get_services_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_services_for_target command with mixed target types."""
 
@@ -4047,7 +4058,11 @@ async def test_get_services_for_target(
     )
     await hass.async_block_till_done()
 
-    async def assert_services(target: dict[str, list[str]], expected: list[str]) -> Any:
+    async def assert_services(
+        target: dict[str, list[str]],
+        expected: list[str],
+        expect_lookup_cache: bool = True,
+    ) -> Any:
         """Call the command and assert expected services."""
         await websocket_client.send_json_auto_id(
             {"type": "get_services_for_target", "target": target}
@@ -4058,8 +4073,15 @@ async def test_get_services_for_target(
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
+        assert (
+            "Using cached automation component lookup data" in caplog.text
+        ) == expect_lookup_cache
+        caplog.clear()
+
     # Test entity target - unknown entity
-    await assert_services({"entity_id": ["light.unknown_entity"]}, [])
+    await assert_services(
+        {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+    )
 
     # Test entity target - entity not in registry
     await assert_services(

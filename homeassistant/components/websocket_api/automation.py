@@ -32,6 +32,10 @@ FLATTENED_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any] | None]]
 ] = HassKey("websocket_automation_flat_service_description_cache")
 
+AUTOMATION_COMPONENT_LOOKUP_CACHE: HassKey[
+    list[tuple[dict[str, Any], _AutomationComponentLookupTable]]
+] = HassKey("websocket_automation_component_lookup_cache")
+
 
 @dataclass(slots=True, kw_only=True)
 class _EntityFilter:
@@ -106,6 +110,14 @@ class _AutomationComponentLookupData:
         )
 
 
+@dataclass(slots=True, kw_only=True)
+class _AutomationComponentLookupTable:
+    """Helper class for looking up automation components."""
+
+    domain_components: dict[str | None, list[_AutomationComponentLookupData]]
+    component_count: int
+
+
 def _get_automation_component_domains(
     target_description: dict[str, Any],
 ) -> set[str | None]:
@@ -137,6 +149,42 @@ def _get_automation_component_domains(
     return domains
 
 
+def _get_automation_component_lookup_table(
+    hass: HomeAssistant, component_descriptions: dict[str, dict[str, Any] | None]
+) -> _AutomationComponentLookupTable:
+    """Get a dict of automation components keyed by domain, along with the total number of components."""
+
+    if AUTOMATION_COMPONENT_LOOKUP_CACHE not in hass.data:
+        hass.data[AUTOMATION_COMPONENT_LOOKUP_CACHE] = []
+
+    cache = hass.data[AUTOMATION_COMPONENT_LOOKUP_CACHE]
+    for cached_descriptions, cached_lookup in cache:
+        if cached_descriptions is component_descriptions:
+            _LOGGER.debug("Using cached automation component lookup data")
+            return cached_lookup
+
+    lookup_table = _AutomationComponentLookupTable(
+        domain_components={}, component_count=0
+    )
+    for component, description in component_descriptions.items():
+        if description is None or CONF_TARGET not in description:
+            _LOGGER.debug("Skipping component %s without target description", component)
+            continue
+        domains = _get_automation_component_domains(description[CONF_TARGET])
+        lookup_data = _AutomationComponentLookupData.create(
+            component, description[CONF_TARGET]
+        )
+        for domain in domains:
+            lookup_table.domain_components.setdefault(domain, []).append(lookup_data)
+        lookup_table.component_count += 1
+
+    cache.append((component_descriptions, lookup_table))
+    if len(cache) > 3:  # Should have a max of 3: triggers, conditions, services
+        cache.pop(0)
+
+    return lookup_table
+
+
 def _async_get_automation_components_for_target(
     hass: HomeAssistant,
     target_selection: ConfigType,
@@ -154,27 +202,15 @@ def _async_get_automation_components_for_target(
     )
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
-    # Build lookup structure: domain -> list of trigger/condition/service lookup data
-    domain_components: dict[str | None, list[_AutomationComponentLookupData]] = {}
-    component_count = 0
-    for component, description in component_descriptions.items():
-        if description is None or CONF_TARGET not in description:
-            _LOGGER.debug("Skipping component %s without target description", component)
-            continue
-        domains = _get_automation_component_domains(description[CONF_TARGET])
-        lookup_data = _AutomationComponentLookupData.create(
-            component, description[CONF_TARGET]
-        )
-        for domain in domains:
-            domain_components.setdefault(domain, []).append(lookup_data)
-        component_count += 1
-
-    _LOGGER.debug("Automation components per domain: %s", domain_components)
+    lookup_table = _get_automation_component_lookup_table(hass, component_descriptions)
+    _LOGGER.debug(
+        "Automation components per domain: %s", lookup_table.domain_components
+    )
 
     entity_infos = entity_sources(hass)
     matched_components: set[str] = set()
     for entity_id in extracted.referenced | extracted.indirectly_referenced:
-        if component_count == len(matched_components):
+        if lookup_table.component_count == len(matched_components):
             # All automation components matched already, so we don't need to iterate further
             break
 
@@ -186,7 +222,7 @@ def _async_get_automation_components_for_target(
         entity_domain = entity_id.split(".")[0]
         entity_integration = entity_info["domain"]
         for domain in (entity_domain, entity_integration, None):
-            for component_data in domain_components.get(domain, []):
+            for component_data in lookup_table.domain_components.get(domain, []):
                 if component_data.component in matched_components:
                     continue
                 if component_data.matches(
