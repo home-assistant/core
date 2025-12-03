@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config
 from homeassistant.components import labs
 from homeassistant.components.template import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
@@ -754,3 +755,80 @@ async def test_config_entry_reload_when_labs_flag_changes(
 
         assert hass.states.get("sensor.hello") is not None
         assert hass.states.get("sensor.hello").state == set_state
+
+
+async def test_migration_1_1(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from v1.1 removes template config entry from device."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+        version=1,
+        minor_version=1,
+    )
+    template_config_entry.add_to_hass(hass)
+
+    # Add the helper config entry to the device
+    device_registry.async_update_device(
+        device_entry.id, add_config_entry_id=template_config_entry.entry_id
+    )
+
+    # Check preconditions
+    device_entry = device_registry.async_get(device_entry.id)
+    assert template_config_entry.entry_id in device_entry.config_entries
+
+    await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert template_config_entry.state is ConfigEntryState.LOADED
+
+    # Check that the helper config entry is removed from the device and the helper
+    # entity is linked to the source device
+    device_entry = device_registry.async_get(device_entry.id)
+    assert template_config_entry.entry_id not in device_entry.config_entries
+    template_entity_entry = entity_registry.async_get("sensor.my_template")
+    assert template_entity_entry.device_id == device_entry.id
+
+    assert template_config_entry.version == 1
+    assert template_config_entry.minor_version == 2
+
+
+async def test_migration_from_future_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from future version."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "hello",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+        },
+        title="My template",
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
