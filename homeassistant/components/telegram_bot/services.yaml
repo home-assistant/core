@@ -690,10 +690,13 @@ send_poll:
       selector:
         text:
     options:
+      example: '["Option 1", "Option 2", "Option 3"]'
       required: true
       selector:
-        object:
+        text:
+          multiple: true
     is_anonymous:
+      default: true
       selector:
         boolean:
     allows_multiple_answers:
@@ -714,10 +717,6 @@ send_poll:
           min: 1
           max: 3600
           unit_of_measurement: seconds
-    message_tag:
-      example: "msg_to_edit"
-      selector:
-        text:
     reply_to_message_id:
       selector:
         number:
