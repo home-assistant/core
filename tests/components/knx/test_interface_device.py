@@ -36,7 +36,7 @@ async def test_diagnostic_entities(
         "sensor.knx_interface_outgoing_telegrams",
         "sensor.knx_interface_outgoing_telegram_errors",
         "sensor.knx_interface_telegrams",
-        "sensor.knx_interface_undecodable_datasecure_telegrams",
+        "sensor.knx_interface_undecodable_data_secure_telegrams",
     ):
         entity = entity_registry.async_get(entity_id)
         assert entity.entity_category is EntityCategory.DIAGNOSTIC
@@ -44,6 +44,7 @@ async def test_diagnostic_entities(
     for entity_id in (
         "sensor.knx_interface_incoming_telegrams",
         "sensor.knx_interface_outgoing_telegrams",
+        "sensor.knx_interface_undecodable_data_secure_telegrams",
     ):
         entity = entity_registry.async_get(entity_id)
         assert entity.disabled is True
@@ -52,14 +53,13 @@ async def test_diagnostic_entities(
     knx.xknx.connection_manager.cemi_count_incoming_error = 1
     knx.xknx.connection_manager.cemi_count_outgoing = 10
     knx.xknx.connection_manager.cemi_count_outgoing_error = 2
-    knx.xknx.connection_manager.undecoded_data_secure = 1
 
     events = async_capture_events(hass, "state_changed")
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(events) == 4  # 6 polled sensors - 2 disabled
+    assert len(events) == 3  # 6 polled sensors - 3 disabled
     events.clear()
 
     for entity_id, test_state in (
@@ -69,7 +69,6 @@ async def test_diagnostic_entities(
         ("sensor.knx_interface_incoming_telegram_errors", "1"),
         ("sensor.knx_interface_outgoing_telegram_errors", "2"),
         ("sensor.knx_interface_telegrams", "31"),
-        ("sensor.knx_interface_undecodable_datasecure_telegrams", "1"),
     ):
         assert hass.states.get(entity_id).state == test_state
 
@@ -86,7 +85,7 @@ async def test_diagnostic_entities(
         connection_type=XknxConnectionType.TUNNEL_UDP,
     )
     await hass.async_block_till_done()
-    assert len(events) == 7  # all diagnostic sensors - counters are reset on connect
+    assert len(events) == 6  # all diagnostic sensors - counters are reset on connect
 
     for entity_id, test_state in (
         ("sensor.knx_interface_individual_address", "1.1.1"),
@@ -95,7 +94,6 @@ async def test_diagnostic_entities(
         ("sensor.knx_interface_incoming_telegram_errors", "0"),
         ("sensor.knx_interface_outgoing_telegram_errors", "0"),
         ("sensor.knx_interface_telegrams", "0"),
-        ("sensor.knx_interface_undecodable_datasecure_telegrams", "0"),
     ):
         assert hass.states.get(entity_id).state == test_state
 

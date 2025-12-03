@@ -15,14 +15,14 @@
       }
     },
     "sensor": {
-      "data_secure_undecodable_count": {
-        "default": "mdi:lock-alert"
-      },
       "individual_address": {
         "default": "mdi:router-network"
       },
       "telegram_count": {
         "default": "mdi:plus-network"
+      },
+      "telegrams_data_secure_undecodable": {
+        "default": "mdi:lock-alert"
       },
       "telegrams_incoming": {
         "default": "mdi:upload-network"

@@ -632,16 +632,16 @@
       "connection_type": {
         "name": "Connection type"
       },
-      "data_secure_undecodable_count": {
-        "name": "Undecodable DataSecure telegrams",
-        "unit_of_measurement": "telegrams"
-      },
       "individual_address": {
         "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
       },
       "telegram_count": {
         "name": "Telegrams",
         "unit_of_measurement": "telegrams"
+      },
+      "telegrams_data_secure_undecodable": {
+        "name": "Undecodable Data Secure telegrams",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegrams_incoming_error::unit_of_measurement%]"
       },
       "telegrams_incoming": {
         "name": "Incoming telegrams",
