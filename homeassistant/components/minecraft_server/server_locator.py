@@ -44,7 +44,7 @@ class MockServerLocator(ServerLocator):
 
 def _get_all_ips(ip: str) -> list[str]:
     net = ".".join(ip.split(".")[:3])
-    return [f"{net}.{x}" for x in range(256)]
+    return [f"{net}.{x}" for x in range(1, 255)]
 
 
 async def _ping_server(ip: str) -> None | str:
