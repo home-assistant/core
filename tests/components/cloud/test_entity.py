@@ -248,6 +248,7 @@ async def test_async_handle_chat_log_service_sets_structured_output_non_strict(
     async def _fake_delta_stream(
         self: conversation.ChatLog,
         agent_id: str,
+        stream,
     ):
         content = conversation.AssistantContent(
             agent_id=agent_id, content='{"value": "ok"}'
