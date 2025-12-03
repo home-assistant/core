@@ -32,14 +32,13 @@ async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -
 
 
 @pytest.mark.parametrize(
-    ("configured_group_address", "should_create_issue"),
-    [("1/2/5", True), ("3/4/6", False)],
+    "configured_group_address",
+    ["1/2/5", "3/4/6"],
 )
 async def test_data_secure_group_key_issue_only_for_configured_group_address(
     hass: HomeAssistant,
     knx: KNXTestKit,
     configured_group_address: str,
-    should_create_issue: bool,
 ) -> None:
     """Test that repair issue is only created for configured group addresses."""
     await knx.setup_integration(
@@ -53,8 +52,9 @@ async def test_data_secure_group_key_issue_only_for_configured_group_address(
 
     issue_registry = ir.async_get(hass)
     assert bool(issue_registry.issues) is False
-    knx.receive_data_secure_issue("1/2/5")  # same as for should_create_issue?
-    assert bool(issue_registry.issues) is should_create_issue
+    # An issue should only be created if this address is configured.
+    knx.receive_data_secure_issue("1/2/5")
+    assert bool(issue_registry.issues) is (configured_group_address == "1/2/5")
 
 
 async def test_data_secure_group_key_issue_repair_flow(

@@ -82,12 +82,12 @@ def _data_secure_group_key_issue_handler(
             current_ias = existing_data[new_ga].split(", ")
             if new_ia in current_ias:
                 return
-            current_ias = sorted([*current_ias, new_ia], key=IndividualAddress)  # type: ignore[arg-type]
+            current_ias = sorted([*current_ias, new_ia], key=IndividualAddress)
             new_data[new_ga] = ", ".join(current_ias)
         new_data_unsorted = existing_data | new_data
         new_data = {
             key: new_data_unsorted[key]
-            for key in sorted(new_data_unsorted, key=GroupAddress)  # type: ignore[arg-type]
+            for key in sorted(new_data_unsorted, key=GroupAddress)
         }
 
     issue_registry.async_get_or_create(
@@ -131,6 +131,7 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
 
         if user_input is not None:
             password = user_input[CONF_KNX_KNXKEY_PASSWORD]
+            keyring = None
             try:
                 keyring = await save_uploaded_knxkeys_file(
                     self.hass,
