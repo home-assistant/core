@@ -674,6 +674,9 @@
   "issues": {
     "data_secure_group_key_issue": {
       "fix_flow": {
+        "error": {
+          "keyfile_invalid_signature": "[%key:component::knx::config::error::keyfile_invalid_signature%]"
+        },
         "step": {
           "secure_knxkeys": {
             "data": {

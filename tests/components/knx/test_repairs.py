@@ -1,6 +1,7 @@
 """Test repair flows for KNX integration."""
 
 import pytest
+from xknx.exceptions.exception import InvalidSecureConfiguration
 
 from homeassistant.components.knx import repairs
 from homeassistant.components.knx.const import (
@@ -99,6 +100,23 @@ async def test_data_secure_group_key_issue_repair_flow(
     assert flow["step_id"] == "secure_knxkeys"
     assert flow["description_placeholders"] == _placeholders
 
+    # test error handling
+    with patch_file_upload(
+        side_effect=InvalidSecureConfiguration(),
+    ):
+        flow = await process_repair_fix_flow(
+            client,
+            flow_id,
+            {
+                repairs.CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
+                CONF_KNX_KNXKEY_PASSWORD: "invalid_password_mocked",
+            },
+        )
+    assert flow["type"] == FlowResultType.FORM
+    assert flow["step_id"] == "secure_knxkeys"
+    assert flow["errors"] == {CONF_KNX_KNXKEY_PASSWORD: "keyfile_invalid_signature"}
+
+    # test successful file upload
     with patch_file_upload():
         flow = await process_repair_fix_flow(
             client,
