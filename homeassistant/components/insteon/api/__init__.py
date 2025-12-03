@@ -1,6 +1,6 @@
 """Insteon API interface for the frontend."""
 
-from insteon_frontend import get_build_id, locate_dir # type: ignore[import-not-found]
+from insteon_frontend import get_build_id, locate_dir  # type: ignore[import-not-found]
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
