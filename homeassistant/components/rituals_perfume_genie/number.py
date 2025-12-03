@@ -30,7 +30,6 @@ ENTITY_DESCRIPTIONS = (
     RitualsNumberEntityDescription(
         key="perfume_amount",
         translation_key="perfume_amount",
-        name="Perfume amount",
         native_min_value=1,
         native_max_value=3,
         value_fn=lambda diffuser: diffuser.perfume_amount,
@@ -72,7 +71,3 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
         await self.entity_description.set_value_fn(
             self.coordinator.diffuser, int(value)
         )
-        self.coordinator.diffuser.hub_data.setdefault("attributes", {})["speedc"] = str(
-            int(value)
-        )
-        self.async_write_ha_state()
