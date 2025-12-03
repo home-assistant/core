@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from PySrDaliGateway import DaliGateway
@@ -22,7 +23,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
-_PLATFORMS: list[Platform] = [Platform.LIGHT]
+_PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SCENE]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -47,7 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         ) from exc
 
     try:
-        devices = await gateway.discover_devices()
+        devices, scenes = await asyncio.gather(
+            gateway.discover_devices(),
+            gateway.discover_scenes(),
+        )
     except DaliGatewayError as exc:
         raise ConfigEntryNotReady(
             "Unable to discover devices from the gateway"
@@ -68,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     entry.runtime_data = DaliCenterData(
         gateway=gateway,
         devices=devices,
+        scenes=scenes,
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

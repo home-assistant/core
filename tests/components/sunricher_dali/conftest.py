@@ -113,8 +113,108 @@ def mock_discovery(mock_gateway: MagicMock) -> Generator[MagicMock]:
         yield mock_discovery
 
 
+def _create_mock_scene(
+    scene_id: int,
+    name: str,
+    unique_id: str,
+    channel: int,
+    area_id: str,
+    devices: list[dict],
+    gw_sn: str = "6A242121110E",
+) -> MagicMock:
+    """Create a mock scene with standard attributes."""
+    scene = MagicMock()
+    scene.scene_id = scene_id
+    scene.name = name
+    scene.unique_id = unique_id
+    scene.gw_sn = gw_sn
+    scene.channel = channel
+    scene.activate = MagicMock()
+
+    scene_details = {
+        "unique_id": unique_id,
+        "id": scene_id,
+        "name": name,
+        "channel": channel,
+        "area_id": area_id,
+        "devices": devices,
+    }
+    scene.read_scene = AsyncMock(return_value=scene_details)
+    scene.register_listener = MagicMock(return_value=lambda: None)
+    return scene
+
+
 @pytest.fixture
-def mock_gateway(mock_devices: list[MagicMock]) -> Generator[MagicMock]:
+def mock_scenes() -> list[MagicMock]:
+    """Return mocked Scene objects."""
+    return [
+        _create_mock_scene(
+            scene_id=1,
+            name="Living Room Evening",
+            unique_id="scene_0001_0000_6A242121110E",
+            channel=0,
+            area_id="1",
+            devices=[
+                {
+                    "dev_type": "0101",
+                    "channel": 0,
+                    "address": 2,
+                    "gw_sn_obj": "",
+                    "property": {
+                        "is_on": True,
+                        "brightness": 128,
+                        "color_temp_kelvin": None,
+                        "hs_color": None,
+                        "rgbw_color": None,
+                        "white_level": None,
+                    },
+                },
+                {
+                    "dev_type": "0102",
+                    "channel": 0,
+                    "address": 3,
+                    "gw_sn_obj": "",
+                    "property": {
+                        "is_on": True,
+                        "brightness": 200,
+                        "color_temp_kelvin": 3000,
+                        "hs_color": None,
+                        "rgbw_color": None,
+                        "white_level": None,
+                    },
+                },
+            ],
+        ),
+        _create_mock_scene(
+            scene_id=2,
+            name="Kitchen Bright",
+            unique_id="scene_0002_0000_6A242121110E",
+            channel=0,
+            area_id="2",
+            devices=[
+                {
+                    "dev_type": "0401",
+                    "channel": 0,
+                    "address": 1,
+                    "gw_sn_obj": "",
+                    "property": {
+                        "is_on": True,
+                        "brightness": 255,
+                        "color_temp_kelvin": None,
+                        "hs_color": None,
+                        "rgbw_color": None,
+                        "white_level": None,
+                    },
+                },
+            ],
+        ),
+    ]
+
+
+@pytest.fixture
+def mock_gateway(
+    mock_devices: list[MagicMock], mock_scenes: list[MagicMock]
+) -> Generator[MagicMock]:
     """Return a mocked DaliGateway."""
     with (
         patch(
@@ -135,6 +235,7 @@ def mock_gateway(mock_devices: list[MagicMock]) -> Generator[MagicMock]:
         mock_gateway.connect = AsyncMock()
         mock_gateway.disconnect = AsyncMock()
         mock_gateway.discover_devices = AsyncMock(return_value=mock_devices)
+        mock_gateway.discover_scenes = AsyncMock(return_value=mock_scenes)
         yield mock_gateway
 
 
