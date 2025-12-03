@@ -120,7 +120,7 @@ def load_zone_sensors(
                 zone_index,
                 zone_state,
                 zone_label,
-                zone_class,
+                zone_class if sensor_type != "zone_bypass" else 0,
             )
             for sensor_type in ("zone", "zone_bypass")
         )
@@ -176,7 +176,7 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         if self.entity_description.key in ("zone", "zone_bypass"):
             self._attr_translation_placeholders = {
                 "zone_number": f"{sensor_index + 1:03}",
-                "zone_label": " - " + sensor_label if sensor_label else "",
+                "zone_label": "(" + sensor_label + ")" if sensor_label else "",
             }
         self._attr_unique_id = self.entity_description.unique_id_fn(
             device_id, sensor_index
