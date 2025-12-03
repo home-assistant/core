@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 REPORT_INTERVAL = timedelta(minutes=1)
 
 
-class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
     """Mammotion DataUpdateCoordinator."""
 
     def __init__(
@@ -65,7 +65,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.update_failures = 0
 
     @abstractmethod
-    def get_coordinator_data(self, device: MammotionMowerDeviceManager) -> _DataT:
+    def get_coordinator_data(self, device: MammotionMowerDeviceManager) -> MowingDevice:
         """Get coordinator data."""
 
     async def async_refresh_login(self) -> None:
@@ -110,7 +110,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         return await self.api.async_send_command(self.device_name, command, **kwargs)
 
 
-class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice]):
+class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator):
     """Class to manage fetching mammotion report data."""
 
     def __init__(
