@@ -110,10 +110,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bo
     """Unload a config entry."""
     mqtt_client = entry.runtime_data.mqtt_client
 
-    # Stop mqtt - be defensive to ensure unload completes
-    try:
-        await mqtt_client.async_stop()
-    except Exception:
-        _LOGGER.exception("Error stopping MQTT client during unload")
+    # Unload platforms first
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    # Only stop MQTT if unload was successful
+    if unload_ok:
+        try:
+            await mqtt_client.async_stop()
+        except Exception:
+            _LOGGER.exception("Error stopping MQTT client during unload")
+
+    return unload_ok
