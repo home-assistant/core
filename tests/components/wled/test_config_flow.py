@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry
         "192.168.1.123",
         "http://192.168.1.123",
         "https://192.168.1.123/settings",
+        "https://192.168.1.123:80/settings",
     ],
 )
 async def test_full_user_flow_implementation(
@@ -38,7 +39,7 @@ async def test_full_user_flow_implementation(
     assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
+        result["flow_id"], user_input={CONF_HOST: host_input}
     )
 
     assert result.get("title") == "WLED RGB Light"

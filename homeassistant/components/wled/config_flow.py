@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+import urllib.parse
 
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
@@ -25,9 +26,12 @@ from .coordinator import WLEDConfigEntry
 
 
 def _normalize_host(host: str) -> str:
-    """Normalize host by removing any scheme."""
+    """Normalize host by extracting hostname if a URL is provided."""
     if "://" in host:
-        host = host.split("://", 1)[1]
+        try:
+            return urllib.parse.urlparse(host).hostname or host
+        except ValueError:
+            pass
     return host
 
 
@@ -75,7 +79,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_update_reload_and_abort(
                         entry,
-                        data_updates=user_input,
+                        data_updates={
+                            CONF_HOST: host,
+                        },
                     )
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
