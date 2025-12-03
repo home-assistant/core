@@ -1090,7 +1090,7 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==9.1.1
+google-nest-sdm==9.1.2
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -2563,7 +2563,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.8.4
+python-roborock==3.9.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
