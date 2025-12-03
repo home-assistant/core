@@ -1281,9 +1281,6 @@ influxdb==5.3.1
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
 
-# homeassistant.components.insteon
-insteon-frontend-home-assistant==0.5.0
-
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
 
@@ -2086,9 +2083,6 @@ pyialarm==2.2.0
 
 # homeassistant.components.icloud
 pyicloud==2.2.0
-
-# homeassistant.components.insteon
-pyinsteon==1.6.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
