@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_current_value_formatting[0_mA]
+  '0.000'
+# ---
+# name: test_current_value_formatting[2000_mA]
+  '2.000'
+# ---
+# name: test_current_value_formatting[2500_mA]
+  '2.500'
+# ---
+# name: test_current_value_formatting[None]
+  '0.000'
+# ---
+# name: test_power_value_formatting[0W]
+  '0.0'
+# ---
+# name: test_power_value_formatting[1500.5W]
+  '1500.5'
+# ---
+# name: test_power_value_formatting[3500W]
+  '3500.0'
+# ---
+# name: test_power_value_formatting[None]
+  '0.0'
+# ---
+# name: test_sensor_attributes[current]
+  dict({
+    'device_class': 'current',
+    'unit': 'A',
+  })
+# ---
+# name: test_sensor_attributes[power]
+  dict({
+    'device_class': 'power',
+    'unit': 'W',
+  })
+# ---
+# name: test_sensor_attributes[status]
+  dict({
+    'device_class': None,
+    'unit': None,
+  })
+# ---
+# name: test_sensor_attributes[voltage]
+  dict({
+    'device_class': 'voltage',
+    'unit': 'V',
+  })
+# ---
+# name: test_sensor_disabled_state
+  dict({
+    'disabled': True,
+    'enabled': True,
+  })
+# ---
+# name: test_sensor_unique_id_generation
+  'current_l1_sensor_l1_EVGC021A2275XXXXXXXXXX'
+# ---
+# name: test_voltage_value_formatting[0V]
+  '0.00'
+# ---
+# name: test_voltage_value_formatting[229.7V]
+  '229.70'
+# ---
+# name: test_voltage_value_formatting[230V]
+  '230.00'
+# ---
+# name: test_voltage_value_formatting[232.5V]
+  '232.50'
+# ---
+# name: test_voltage_value_formatting[None]
+  '0.00'
+# ---
