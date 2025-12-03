@@ -57,14 +57,22 @@ from .const import (
 )
 from .data import UFPConfigEntry, async_last_update_was_successful
 from .discovery import async_start_discovery
-from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
+from .utils import (
+    _async_resolve,
+    _async_short_mac,
+    _async_unifi_mac_from_hass,
+    async_create_api_client,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _build_data_without_credentials_from_existing(
-    entry_data: Mapping[str, Any],
-) -> dict[str, Any]:
+def _filter_empty_credentials(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Filter out empty credential fields to preserve existing values."""
+    return {k: v for k, v in user_input.items() if v not in (None, "")}
+
+
+def _build_data_without_credentials(entry_data: Mapping[str, Any]) -> dict[str, Any]:
     """Build form data from existing config entry, excluding sensitive credentials."""
     return {
         CONF_HOST: entry_data[CONF_HOST],
@@ -74,46 +82,81 @@ def _build_data_without_credentials_from_existing(
     }
 
 
+async def _async_clear_session_if_credentials_changed(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    new_data: Mapping[str, Any],
+) -> None:
+    """Clear stored session if credentials have changed to force fresh authentication."""
+    existing_data = entry.data
+    if existing_data.get(CONF_USERNAME) != new_data.get(
+        CONF_USERNAME
+    ) or existing_data.get(CONF_PASSWORD) != new_data.get(CONF_PASSWORD):
+        _LOGGER.debug("Credentials changed, clearing stored session")
+        protect = async_create_api_client(hass, entry)
+        try:
+            await protect.clear_session()
+        except Exception as ex:  # noqa: BLE001
+            _LOGGER.debug("Failed to clear session, continuing anyway: %s", ex)
+
+
 ENTRY_FAILURE_STATES = (
     ConfigEntryState.SETUP_ERROR,
     ConfigEntryState.SETUP_RETRY,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, min=1, max=65535
-            )
-        ),
-        vol.Required(
-            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-        ): selector.BooleanSelector(),
-        vol.Required(CONF_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-        ),
-        vol.Optional(CONF_API_KEY): selector.TextSelector(),
-    }
+# Selectors
+_TEXT = selector.TextSelector()
+_PASSWORD = selector.TextSelector(
+    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
 )
+_PORT = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        mode=selector.NumberSelectorMode.BOX, min=1, max=65535
+    )
+)
+_BOOL = selector.BooleanSelector()
 
-# For flows where host/port/verify_ssl are pre-filled (reauth, discovery)
-PARTIAL_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST): selector.TextSelector(),
-        vol.Optional(CONF_PORT): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, min=1, max=65535
-            )
-        ),
-        vol.Optional(CONF_VERIFY_SSL): selector.BooleanSelector(),
-        vol.Required(CONF_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-        ),
-        vol.Optional(CONF_API_KEY): selector.TextSelector(),
-    }
+
+def _build_schema(
+    *,
+    include_host: bool = True,
+    include_connection: bool = True,
+    credentials_optional: bool = False,
+) -> vol.Schema:
+    """Build a config flow schema.
+
+    Args:
+        include_host: Include host field (False when host comes from discovery).
+        include_connection: Include port/verify_ssl fields.
+        credentials_optional: Credentials optional (True to keep existing values).
+
+    """
+    req, opt = vol.Required, vol.Optional
+    cred_key = opt if credentials_optional else req
+
+    schema: dict[vol.Marker, selector.Selector] = {}
+    if include_host:
+        schema[req(CONF_HOST)] = _TEXT
+    if include_connection:
+        schema[req(CONF_PORT, default=DEFAULT_PORT)] = _PORT
+        schema[req(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL
+    schema[req(CONF_USERNAME)] = _TEXT
+    schema[cred_key(CONF_PASSWORD)] = _PASSWORD
+    schema[cred_key(CONF_API_KEY)] = _PASSWORD
+    return vol.Schema(schema)
+
+
+# Schemas for different flow contexts
+CONFIG_SCHEMA = _build_schema()  # User flow: all fields
+RECONFIGURE_SCHEMA = _build_schema(
+    credentials_optional=True
+)  # Keep existing credentials
+DISCOVERY_SCHEMA = _build_schema(
+    include_host=False
+)  # Host from discovery, user sets port/ssl
+REAUTH_SCHEMA = _build_schema(
+    include_host=False, include_connection=False, credentials_optional=True
 )
 
 
@@ -279,7 +322,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=self.add_suggested_values_to_schema(PARTIAL_SCHEMA, form_data),
+            data_schema=self.add_suggested_values_to_schema(
+                DISCOVERY_SCHEMA, form_data
+            ),
             errors=errors,
         )
 
@@ -353,14 +398,17 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             auth_user = bootstrap.users.get(bootstrap.auth_user_id)
             if auth_user and auth_user.cloud_account:
                 errors["base"] = "cloud_user"
-        try:
-            await protect.get_meta_info()
-        except NotAuthorized as ex:
-            _LOGGER.debug(ex)
-            errors[CONF_API_KEY] = "invalid_auth"
-        except ClientError as ex:
-            _LOGGER.error(ex)
-            errors["base"] = "cannot_connect"
+
+        # Only validate API key if bootstrap succeeded
+        if nvr_data and not errors:
+            try:
+                await protect.get_meta_info()
+            except NotAuthorized as ex:
+                _LOGGER.debug(ex)
+                errors[CONF_API_KEY] = "invalid_auth"
+            except ClientError as ex:
+                _LOGGER.error(ex)
+                errors["base"] = "cannot_connect"
 
         return nvr_data, errors
 
@@ -376,13 +424,20 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm reauth."""
         errors: dict[str, str] = {}
 
-        # prepopulate fields
         reauth_entry = self._get_reauth_entry()
-        form_data = _build_data_without_credentials_from_existing(reauth_entry.data)
+        form_data = _build_data_without_credentials(reauth_entry.data)
 
         if user_input is not None:
-            # Merge with existing config
-            merged_input = {**reauth_entry.data, **user_input}
+            # Merge with existing config - empty credentials keep existing values
+            merged_input = {
+                **reauth_entry.data,
+                **_filter_empty_credentials(user_input),
+            }
+
+            # Clear stored session if credentials changed to force fresh authentication
+            await _async_clear_session_if_credentials_changed(
+                self.hass, reauth_entry, merged_input
+            )
 
             # validate login data
             _, errors = await self._async_get_nvr_data(merged_input)
@@ -402,7 +457,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=self.add_suggested_values_to_schema(PARTIAL_SCHEMA, form_data),
+            data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, form_data),
             errors=errors,
         )
 
@@ -413,13 +468,19 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         reconfigure_entry = self._get_reconfigure_entry()
-        form_data = _build_data_without_credentials_from_existing(
-            reconfigure_entry.data
-        )
+        form_data = _build_data_without_credentials(reconfigure_entry.data)
 
         if user_input is not None:
-            # Merge with existing config
-            merged_input = {**reconfigure_entry.data, **user_input}
+            # Merge with existing config - empty credentials keep existing values
+            merged_input = {
+                **reconfigure_entry.data,
+                **_filter_empty_credentials(user_input),
+            }
+
+            # Clear stored session if credentials changed to force fresh authentication
+            await _async_clear_session_if_credentials_changed(
+                self.hass, reconfigure_entry, merged_input
+            )
 
             # validate login data
             nvr_data, errors = await self._async_get_nvr_data(merged_input)
@@ -446,7 +507,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, form_data),
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, form_data
+            ),
             errors=errors,
         )
 
