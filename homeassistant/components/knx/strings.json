@@ -632,6 +632,10 @@
       "connection_type": {
         "name": "Connection type"
       },
+      "data_secure_undecodable_count": {
+        "name": "Undecodable DataSecure telegrams",
+        "unit_of_measurement": "telegrams"
+      },
       "individual_address": {
         "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
       },

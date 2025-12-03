@@ -15,6 +15,9 @@
       }
     },
     "sensor": {
+      "data_secure_undecodable_count": {
+        "default": "mdi:lock-alert"
+      },
       "individual_address": {
         "default": "mdi:router-network"
       },

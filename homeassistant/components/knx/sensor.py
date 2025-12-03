@@ -108,6 +108,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
         + knx.xknx.connection_manager.cemi_count_incoming
         + knx.xknx.connection_manager.cemi_count_incoming_error,
     ),
+    KNXSystemEntityDescription(
+        key="data_secure_undecodable_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda knx: knx.xknx.connection_manager.undecoded_data_secure,
+    ),
 )
 
 
