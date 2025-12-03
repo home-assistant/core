@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 from functools import partial
 import logging
@@ -79,7 +78,6 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
-    ACTION_RESPONSE_TIMEOUT,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
@@ -1174,7 +1172,7 @@ async def execute_service(
     if not wait_for_response:
         # Fire and forget - no response expected
         try:
-            entry_data.client.execute_service(service, call.data)
+            await entry_data.client.execute_service(service, call.data)
         except APIConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -1185,15 +1183,8 @@ async def execute_service(
                     "error": str(err),
                 },
             ) from err
-        return None
-
-    # Wait for response
-    loop = asyncio.get_running_loop()
-    future: asyncio.Future[ExecuteServiceResponse] = loop.create_future()
-
-    def on_response(response: ExecuteServiceResponse) -> None:
-        if not future.done():
-            future.set_result(response)
+        else:
+            return None
 
     # Determine if we need response_data from ESPHome
     # ONLY: always need response_data
@@ -1204,10 +1195,11 @@ async def execute_service(
     )
 
     try:
-        entry_data.client.execute_service(
+        response: (
+            ExecuteServiceResponse | None
+        ) = await entry_data.client.execute_service(
             service,
             call.data,
-            on_response=on_response,
             return_response=need_response_data,
         )
     except APIConnectionError as err:
@@ -1220,9 +1212,6 @@ async def execute_service(
                 "error": str(err),
             },
         ) from err
-
-    try:
-        response = await asyncio.wait_for(future, timeout=ACTION_RESPONSE_TIMEOUT)
     except TimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -1232,6 +1221,8 @@ async def execute_service(
                 "device_name": entry_data.name,
             },
         ) from err
+
+    assert response is not None
 
     if not response.success:
         raise HomeAssistantError(

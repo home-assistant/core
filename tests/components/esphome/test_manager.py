@@ -1458,7 +1458,7 @@ async def test_esphome_user_service_fails(
     await hass.async_block_till_done()
     assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
 
-    mock_client.execute_service = Mock(side_effect=APIConnectionError("fail"))
+    mock_client.execute_service = AsyncMock(side_effect=APIConnectionError("fail"))
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN, "with_dash_simple_service", {"arg1": True}, blocking=True
@@ -2828,6 +2828,10 @@ async def test_execute_service_response_type_none(
         args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
         supports_response=SupportsResponseType.NONE,
     )
+
+    # For NONE type, no response is expected
+    mock_client.execute_service = AsyncMock(return_value=None)
+
     await mock_esphome_device(
         mock_client=mock_client,
         user_service=[service],
@@ -2843,12 +2847,12 @@ async def test_execute_service_response_type_none(
     )
     await hass.async_block_till_done()
 
-    # Verify execute_service was called without call_id or on_response
+    # Verify execute_service was called without extra kwargs (fire and forget)
     mock_client.execute_service.assert_called_once()
     call_args = mock_client.execute_service.call_args
     assert call_args[0][1] == {"arg1": True}
-    # Should not have call_id or on_response kwargs for NONE type
-    assert "call_id" not in call_args[1] or call_args[1].get("call_id", 0) == 0
+    # Fire and forget - no return_response or other kwargs
+    assert call_args[1] == {}
 
 
 async def test_execute_service_response_type_status(
@@ -2865,20 +2869,14 @@ async def test_execute_service_response_type_status(
     )
 
     # Set up mock response
-    response = ExecuteServiceResponse(
-        call_id=1,
-        success=True,
-        error_message="",
-        response_data=b"",
+    mock_client.execute_service = AsyncMock(
+        return_value=ExecuteServiceResponse(
+            call_id=1,
+            success=True,
+            error_message="",
+            response_data=b"",
+        )
     )
-
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        if on_response:
-            on_response(response)
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -2913,20 +2911,14 @@ async def test_execute_service_response_type_optional_without_return(
     )
 
     # Set up mock response
-    response = ExecuteServiceResponse(
-        call_id=1,
-        success=True,
-        error_message="",
-        response_data=b'{"result": "data"}',
+    mock_client.execute_service = AsyncMock(
+        return_value=ExecuteServiceResponse(
+            call_id=1,
+            success=True,
+            error_message="",
+            response_data=b'{"result": "data"}',
+        )
     )
-
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        if on_response:
-            on_response(response)
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -2962,20 +2954,14 @@ async def test_execute_service_response_type_optional_with_return(
     )
 
     # Set up mock response with data
-    response = ExecuteServiceResponse(
-        call_id=1,
-        success=True,
-        error_message="",
-        response_data=b'{"result": "data"}',
+    mock_client.execute_service = AsyncMock(
+        return_value=ExecuteServiceResponse(
+            call_id=1,
+            success=True,
+            error_message="",
+            response_data=b'{"result": "data"}',
+        )
     )
-
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        if on_response:
-            on_response(response)
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -3016,20 +3002,14 @@ async def test_execute_service_response_type_only(
     )
 
     # Set up mock response
-    response = ExecuteServiceResponse(
-        call_id=1,
-        success=True,
-        error_message="",
-        response_data=b'{"status": "ok", "value": 42}',
+    mock_client.execute_service = AsyncMock(
+        return_value=ExecuteServiceResponse(
+            call_id=1,
+            success=True,
+            error_message="",
+            response_data=b'{"status": "ok", "value": 42}',
+        )
     )
-
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        if on_response:
-            on_response(response)
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -3064,13 +3044,8 @@ async def test_execute_service_timeout(
         supports_response=SupportsResponseType.STATUS,
     )
 
-    # Don't call on_response to simulate timeout
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        pass  # Never respond
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
+    # Mock execute_service to raise TimeoutError
+    mock_client.execute_service = AsyncMock(side_effect=TimeoutError())
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -3079,14 +3054,7 @@ async def test_execute_service_timeout(
     )
     await hass.async_block_till_done()
 
-    # Patch timeout to be very short for testing
-    with (
-        patch(
-            "homeassistant.components.esphome.manager.asyncio.wait_for",
-            side_effect=TimeoutError(),
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN, "test_slow_service", {"arg1": True}, blocking=True
         )
@@ -3107,7 +3075,7 @@ async def test_execute_service_connection_error(
         supports_response=SupportsResponseType.NONE,
     )
 
-    mock_client.execute_service = Mock(
+    mock_client.execute_service = AsyncMock(
         side_effect=APIConnectionError("Connection lost")
     )
 
@@ -3139,7 +3107,7 @@ async def test_execute_service_connection_error_with_response(
         supports_response=SupportsResponseType.STATUS,  # Uses response path
     )
 
-    mock_client.execute_service = Mock(
+    mock_client.execute_service = AsyncMock(
         side_effect=APIConnectionError("Connection lost")
     )
 
@@ -3172,20 +3140,14 @@ async def test_execute_service_failure_response(
     )
 
     # Set up mock failure response
-    response = ExecuteServiceResponse(
-        call_id=1,
-        success=False,
-        error_message="Device reported error: invalid argument",
-        response_data=b"",
+    mock_client.execute_service = AsyncMock(
+        return_value=ExecuteServiceResponse(
+            call_id=1,
+            success=False,
+            error_message="Device reported error: invalid argument",
+            response_data=b"",
+        )
     )
-
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        if on_response:
-            on_response(response)
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -3216,20 +3178,14 @@ async def test_execute_service_invalid_json_response(
     )
 
     # Set up mock response with invalid JSON
-    response = ExecuteServiceResponse(
-        call_id=1,
-        success=True,
-        error_message="",
-        response_data=b"not valid json {{{",
+    mock_client.execute_service = AsyncMock(
+        return_value=ExecuteServiceResponse(
+            call_id=1,
+            success=True,
+            error_message="",
+            response_data=b"not valid json {{{",
+        )
     )
-
-    def mock_execute_service(
-        svc, data, *, call_id=0, on_response=None, return_response=None
-    ):
-        if on_response:
-            on_response(response)
-
-    mock_client.execute_service = Mock(side_effect=mock_execute_service)
 
     await mock_esphome_device(
         mock_client=mock_client,
