@@ -56,6 +56,7 @@ from .const import (
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime
 from .project import KNXProject
+from .repairs import data_secure_group_key_issue_dispatcher
 from .storage.config_store import KNXConfigStore
 from .telegrams import Telegrams
 
@@ -112,6 +113,7 @@ class KNXModule:
         ] = {}
         self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
+        self.entry.async_on_unload(data_secure_group_key_issue_dispatcher(self))
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
