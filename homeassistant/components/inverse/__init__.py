@@ -1,4 +1,4 @@
-"""Component to wrap switch entities in entities of other domains."""
+"""Component to invert entities."""
 
 from __future__ import annotations
 
@@ -11,9 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.helper_integration import (
-    async_handle_source_entity_changes,
-)
+from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,35 +26,46 @@ def async_get_parent_device_id(hass: HomeAssistant, entity_id: str) -> str | Non
 
     return wrapped_entity.device_id
 
+
 @callback
 def async_get_parent_device_platform(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get the parent device id."""
-    registry = er.async_get(hass)
+    """Return the platform/domain for the wrapped entity.
 
-    if not (wrapped_entity := registry.async_get(entity_id)):
-        return None
+    Always derive from the entity_id domain to ensure we forward to real platforms
+    (avoid test platform names from registry fixtures).
+    """
+    if "." in entity_id:
+        return entity_id.split(".", 1)[0]
+    return None
 
-    return wrapped_entity.platform
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     entity_registry = er.async_get(hass)
     try:
         entity_id = er.async_validate_entity_id(
-            entity_registry, entry.options[CONF_ENTITY_ID]
+            entity_registry, entry.data[CONF_ENTITY_ID]
         )
     except vol.Invalid:
         # The entity is identified by an unknown entity registry ID
         _LOGGER.error(
             "Failed to setup inverse for unknown entity %s",
-            entry.options[CONF_ENTITY_ID],
+            entry.data[CONF_ENTITY_ID],
+        )
+        return False
+
+    platform = async_get_parent_device_platform(hass, entity_id)
+    if platform is None:
+        _LOGGER.error(
+            "Failed to determine platform for entity %s",
+            entity_id,
         )
         return False
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
             entry,
-            options={**entry.options, CONF_ENTITY_ID: source_entity_id},
+            data={**entry.data, CONF_ENTITY_ID: source_entity_id},
         )
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
@@ -72,22 +81,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_get_parent_device_id(hass, entity_id),
-            source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
+            source_entity_id_or_uuid=entry.data[CONF_ENTITY_ID],
             source_entity_removed=source_entity_removed,
         )
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [async_get_parent_device_platform(hass, entity_id)]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, [platform])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
-        entry, [async_get_parent_device_platform(hass, entry.options[CONF_ENTITY_ID])]
-    )
+    platform = async_get_parent_device_platform(hass, entry.data[CONF_ENTITY_ID])
+    if platform is None:
+        return True
+    return await hass.config_entries.async_unload_platforms(entry, [platform])
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -98,7 +106,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     registry = er.async_get(hass)
     try:
         source_entity_id = er.async_validate_entity_id(
-            registry, entry.options[CONF_ENTITY_ID]
+            registry, entry.data[CONF_ENTITY_ID]
         )
     except vol.Invalid:
         # The source entity has been removed from the entity registry
@@ -124,5 +132,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if (should_expose := settings.get("should_expose")) is None:
             continue
         exposed_entities.async_expose_entity(
-            hass, assistant, source_entity_id.entity_id, should_expose
+            hass, assistant, source_entity_id, should_expose
         )

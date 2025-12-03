@@ -1,0 +1,423 @@
+# serializer version: 1
+# name: test_inverse_platforms_snapshot[binary_sensor.inverse_binary_sensor_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.inverse_binary_sensor_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'binary_sensor.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse binary_sensor.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'inverse_binary_sensor_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[binary_sensor.inverse_binary_sensor_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse binary_sensor.sample',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.inverse_binary_sensor_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[cover.inverse_cover_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.inverse_cover_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'cover.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse cover.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'inverse_cover_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[cover.inverse_cover_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse cover.sample',
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.inverse_cover_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[fan.inverse_fan_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.inverse_fan_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'fan.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse fan.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 48>,
+    'translation_key': None,
+    'unique_id': 'inverse_fan_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[fan.inverse_fan_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse fan.sample',
+      'supported_features': <FanEntityFeature: 48>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.inverse_fan_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[light.inverse_light_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.inverse_light_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'light.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse light.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'inverse_light_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[light.inverse_light_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse light.sample',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.inverse_light_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[lock.inverse_lock_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.inverse_lock_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'lock.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse lock.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'inverse_lock_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[lock.inverse_lock_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse lock.sample',
+      'supported_features': <LockEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.inverse_lock_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[siren.inverse_siren_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.inverse_siren_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'siren.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse siren.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <SirenEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'inverse_siren_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[siren.inverse_siren_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse siren.sample',
+      'supported_features': <SirenEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.inverse_siren_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[switch.inverse_switch_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.inverse_switch_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'switch.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse switch.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'inverse_switch_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[switch.inverse_switch_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse switch.sample',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.inverse_switch_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_inverse_platforms_snapshot[valve.inverse_valve_sample-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.inverse_valve_sample',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'valve.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverse valve.sample',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'inverse_valve_sample',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_inverse_platforms_snapshot[valve.inverse_valve_sample-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverse valve.sample',
+      'supported_features': <ValveEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.inverse_valve_sample',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

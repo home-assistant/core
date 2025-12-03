@@ -25,9 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Fan Switch config entry."""
     registry = er.async_get(hass)
-    entity_id = er.async_validate_entity_id(
-        registry, config_entry.options[CONF_ENTITY_ID]
-    )
+    entity_id = er.async_validate_entity_id(registry, config_entry.data[CONF_ENTITY_ID])
 
     async_add_entities(
         [

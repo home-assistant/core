@@ -1,61 +1,62 @@
-"""Config flow for Switch as X integration."""
+"""Config flow for Inverse integration."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaConfigFlowHandler,
-    SchemaFlowFormStep,
     wrapped_entity_config_entry_title,
 )
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
+from .const import DOMAIN
 
-TARGET_DOMAIN_OPTIONS = [
+SUPPORTED_PLATFORMS: list[str] = [
+    Platform.BINARY_SENSOR,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SIREN,
+    Platform.SWITCH,
     Platform.VALVE,
 ]
 
-CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(
-        vol.Schema(
-            {
-                vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=[Platform.BINARY_SENSOR,Platform.COVER,Platform.FAN, Platform.LIGHT, Platform.LOCK, Platform.SIREN, Platform.SWITCH,Platform.VALVE ]),
-                ),
-            }
-        )
-    )
-}
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=SUPPORTED_PLATFORMS),
+        ),
+    }
+)
 
 
-class InverseConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+class InverseConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Inverse."""
-
-    config_flow = CONFIG_FLOW
-    options_flow_reloads = True
 
     VERSION = 1
     MINOR_VERSION = 1
 
-    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title and hide the wrapped entity if registered."""
-        # Hide the wrapped entry if registered
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step with entity selection."""
+        if user_input is None:
+            return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
+
+        entity_id = user_input[CONF_ENTITY_ID]
+
+        # Hide the wrapped entity if registered
         registry = er.async_get(self.hass)
-        entity_entry = registry.async_get(options[CONF_ENTITY_ID])
+        entity_entry = registry.async_get(entity_id)
         if entity_entry is not None and not entity_entry.hidden:
             registry.async_update_entity(
-                options[CONF_ENTITY_ID], hidden_by=er.RegistryEntryHider.INTEGRATION
+                entity_id, hidden_by=er.RegistryEntryHider.INTEGRATION
             )
 
-        return wrapped_entity_config_entry_title(self.hass, options[CONF_ENTITY_ID])
+        title = wrapped_entity_config_entry_title(self.hass, entity_id)
+        return self.async_create_entry(title=title, data={CONF_ENTITY_ID: entity_id})

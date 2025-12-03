@@ -1,22 +1,23 @@
-"""Lock support for inverse entities."""
+"""Switch support for inverse entities."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity, LockState
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import BaseInverseEntity
+from .entity import BaseEntity
 
 
 async def async_setup_entry(
@@ -24,16 +25,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Initialize Lock Inverse config entry."""
+    """Initialize Switch Inverse config entry."""
     registry = er.async_get(hass)
     entity_id = er.async_validate_entity_id(registry, config_entry.data[CONF_ENTITY_ID])
 
     async_add_entities(
         [
-            InverseLock(
+            InverseSwitch(
                 hass,
                 config_entry.title,
-                LOCK_DOMAIN,
+                SWITCH_DOMAIN,
                 entity_id,
                 config_entry.entry_id,
             )
@@ -41,24 +42,24 @@ async def async_setup_entry(
     )
 
 
-class InverseLock(BaseInverseEntity, LockEntity):
-    """Represents an Inverse Lock."""
+class InverseSwitch(BaseEntity, SwitchEntity):
+    """Represents an Inverse Switch."""
 
-    async def async_lock(self, **kwargs: Any) -> None:
-        """Lock the lock (inverted - calls unlock)."""
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on (inverted - calls turn_off)."""
         await self.hass.services.async_call(
             self._source_domain,
-            SERVICE_UNLOCK,
+            SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._source_entity_id},
             blocking=True,
             context=self._context,
         )
 
-    async def async_unlock(self, **kwargs: Any) -> None:
-        """Unlock the lock (inverted - calls lock)."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off (inverted - calls turn_on)."""
         await self.hass.services.async_call(
             self._source_domain,
-            SERVICE_LOCK,
+            SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._source_entity_id},
             blocking=True,
             context=self._context,
@@ -76,4 +77,4 @@ class InverseLock(BaseInverseEntity, LockEntity):
         ):
             return
 
-        self._attr_is_locked = state.state != LockState.LOCKED
+        self._attr_is_on = state.state != STATE_ON
