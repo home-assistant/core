@@ -22,7 +22,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -60,9 +60,13 @@ class VeSyncDeviceUpdate(VeSyncBaseEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Return installed_version."""
-        return self.device.current_firm_version
+        if self.device.current_firm_version is None:
+            return None
+        return str(self.device.current_firm_version)
 
     @property
     def latest_version(self) -> str | None:
         """Return latest_version."""
-        return self.device.latest_firm_version
+        if self.device.latest_firm_version is None:
+            return None
+        return str(self.device.latest_firm_version)
