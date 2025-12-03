@@ -3952,9 +3952,8 @@ REAUTH_SCHEMA = vol.Schema(
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    # Can be bumped to version 2.1 with HA Core 2026.1.0
-    VERSION = CONFIG_ENTRY_VERSION  # 1
-    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 2
+    VERSION = CONFIG_ENTRY_VERSION  # 2
+    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 1
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager

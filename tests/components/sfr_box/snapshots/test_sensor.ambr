@@ -105,7 +105,7 @@
     'state': '20.8',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_counter-entry]
+# name: test_sensors[sensor.sfr_box_dsl_connect_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -118,7 +118,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sfr_box_dsl_counter',
+    'entity_id': 'sensor.sfr_box_dsl_connect_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -130,30 +130,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'DSL counter',
+    'original_name': 'DSL connect count',
     'platform': 'sfr_box',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dsl_counter',
+    'translation_key': 'dsl_connect_count',
     'unique_id': 'e4:5d:51:00:11:22_dsl_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'attempts',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_counter-state]
+# name: test_sensors[sensor.sfr_box_dsl_connect_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box DSL counter',
+      'friendly_name': 'SFR Box DSL connect count',
+      'unit_of_measurement': 'attempts',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_counter',
+    'entity_id': 'sensor.sfr_box_dsl_connect_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_crc-entry]
+# name: test_sensors[sensor.sfr_box_dsl_crc_error_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -166,7 +167,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sfr_box_dsl_crc',
+    'entity_id': 'sensor.sfr_box_dsl_crc_error_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -178,23 +179,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'DSL CRC',
+    'original_name': 'DSL CRC error count',
     'platform': 'sfr_box',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dsl_crc',
+    'translation_key': 'dsl_crc_error_count',
     'unique_id': 'e4:5d:51:00:11:22_dsl_crc',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'errors',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_crc-state]
+# name: test_sensors[sensor.sfr_box_dsl_crc_error_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SFR Box DSL CRC',
+      'friendly_name': 'SFR Box DSL CRC error count',
+      'unit_of_measurement': 'errors',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sfr_box_dsl_crc',
+    'entity_id': 'sensor.sfr_box_dsl_crc_error_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -261,7 +263,6 @@
         'loss_of_signal',
         'loss_of_power',
         'loss_of_signal_quality',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -304,7 +305,6 @@
         'loss_of_signal',
         'loss_of_power',
         'loss_of_signal_quality',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -549,7 +549,6 @@
         'g_993_channel_analysis',
         'g_993_message_exchange',
         'showtime',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -596,7 +595,6 @@
         'g_993_channel_analysis',
         'g_993_message_exchange',
         'showtime',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -617,7 +615,6 @@
         'adsl',
         'ftth',
         'gprs',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -658,7 +655,6 @@
         'adsl',
         'ftth',
         'gprs',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -792,7 +788,6 @@
         'adsl_routed',
         'ftth_routed',
         'grps_ppp',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -834,7 +829,6 @@
         'adsl_routed',
         'ftth_routed',
         'grps_ppp',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
