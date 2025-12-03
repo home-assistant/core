@@ -10,8 +10,6 @@ from aiocomelit.api import (
     ComeliteSerialBridgeApi,
     ComelitSerialBridgeObject,
     ComelitVedoApi,
-    ComelitVedoAreaObject,
-    ComelitVedoZoneObject,
 )
 from aiocomelit.const import (
     BRIDGE,
@@ -32,7 +30,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, ObjectClassType
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
@@ -77,9 +75,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
     def platform_device_info(
         self,
-        object_class: ComelitVedoZoneObject
-        | ComelitVedoAreaObject
-        | ComelitSerialBridgeObject,
+        object_class: ObjectClassType,
         object_type: str,
     ) -> dr.DeviceInfo:
         """Set platform device info."""

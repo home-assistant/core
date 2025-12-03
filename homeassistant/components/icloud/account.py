@@ -13,6 +13,7 @@ from pyicloud.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
+    PyiCloudServiceUnavailable,
 )
 from pyicloud.services.findmyiphone import AppleDevice, FindMyiPhoneServiceManager
 
@@ -144,18 +145,21 @@ class IcloudAccount:
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
+            PyiCloudServiceUnavailable,
         ) as err:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
 
-        if TYPE_CHECKING:
-            assert user_info is not None
+        if user_info is None:
+            raise ConfigEntryNotReady("No user info found in iCloud devices response")
 
-        self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
+        self._owner_fullname = (
+            f"{user_info.get('firstName')} {user_info.get('lastName')}"
+        )
 
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info["membersInfo"].items():
+            for prs_id, member in user_info.get("membersInfo").items():
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )

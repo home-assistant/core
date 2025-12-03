@@ -523,6 +523,13 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.MSP: (
+        SwitchEntityDescription(
+            key=DPCode.AUTO_CLEAN,
+            translation_key="auto_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.MZJ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -939,14 +946,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 entities.extend(
-                    TuyaSwitchEntity(
-                        device,
-                        manager,
-                        description,
-                        DPCodeBooleanWrapper(description.key),
-                    )
+                    TuyaSwitchEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                     and _check_deprecation(
                         hass,
                         device,
@@ -1032,12 +1038,12 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": True}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": False}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)
