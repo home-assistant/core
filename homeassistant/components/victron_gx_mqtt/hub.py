@@ -81,7 +81,6 @@ class Hub:
         self._hub.on_new_metric = self._on_new_metric
         self.add_entities_map: dict[MetricKind, AddEntitiesCallback] = {}
 
-
     async def start(self) -> None:
         """Start the Victron MQTT hub."""
         _LOGGER.info("Starting hub")
@@ -142,10 +141,7 @@ class Hub:
         )
         self.add_entities_map[kind] = async_add_entities
 
-
-    def unregister_add_entities_callback(
-        self, kind: MetricKind
-    ) -> None:
+    def unregister_add_entities_callback(self, kind: MetricKind) -> None:
         """Register a callback to add entities for a specific metric kind."""
         _LOGGER.info("Unregistering AddEntitiesCallback. kind: %s", kind)
         self.add_entities_map.pop(kind)

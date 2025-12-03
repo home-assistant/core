@@ -310,6 +310,7 @@ async def test_create_entity_sensor(
         )
         assert entity == mock_sensor.return_value
 
+
 async def test_create_entity_unsupported(
     hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
 ) -> None:
