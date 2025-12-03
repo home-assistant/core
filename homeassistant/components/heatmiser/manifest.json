@@ -2,7 +2,7 @@
   "domain": "heatmiser",
   "name": "Heatmiser",
   "codeowners": ["@andylockran"],
-  "disabled": "This integration is disabled because it references pyserial-asyncio, which does blocking I/O in asyncio loop and is not maintained.",
+  "disabled": "This integration is disabled because it references pyserial-asyncio, which does blocking I/O in the asyncio loop and is not maintained.",
   "documentation": "https://www.home-assistant.io/integrations/heatmiser",
   "iot_class": "local_polling",
   "loggers": ["heatmiserV3"],
