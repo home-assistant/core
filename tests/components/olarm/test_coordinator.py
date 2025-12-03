@@ -12,7 +12,7 @@ from homeassistant.components.olarm.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import MOCK_DEVICE_RESPONSE
+from .const import MOCK_SYSTEM_RESPONSE
 
 from tests.common import MockConfigEntry
 
@@ -59,12 +59,12 @@ async def test_coordinator_init(coordinator, mock_config_entry) -> None:
 
 async def test_coordinator_update_success(coordinator, mock_olarm_client) -> None:
     """Test successful data update."""
-    mock_olarm_client.get_device.return_value = MOCK_DEVICE_RESPONSE
+    mock_olarm_client.get_device.return_value = MOCK_SYSTEM_RESPONSE
 
     data = await coordinator._async_update_data()
 
     assert isinstance(data, OlarmDeviceData)
-    assert data.device_name == "Test Device"
+    assert data.device_name == "Test System"
     assert data.device_state == {
         "zones": ["a", "c", "b"],
         "powerAC": "ok",
@@ -88,7 +88,7 @@ async def test_coordinator_update_failure(coordinator, mock_olarm_client) -> Non
 async def test_coordinator_update_from_mqtt(coordinator, mock_olarm_client) -> None:
     """Test updating data from MQTT."""
     # First set initial data
-    mock_olarm_client.get_device.return_value = MOCK_DEVICE_RESPONSE
+    mock_olarm_client.get_device.return_value = MOCK_SYSTEM_RESPONSE
     data = await coordinator._async_update_data()
     coordinator.async_set_updated_data(data)
 
@@ -120,13 +120,13 @@ async def test_coordinator_properties(coordinator, mock_olarm_client) -> None:
     assert coordinator.data is None
 
     # Set some data
-    mock_olarm_client.get_device.return_value = MOCK_DEVICE_RESPONSE
+    mock_olarm_client.get_device.return_value = MOCK_SYSTEM_RESPONSE
     data = await coordinator._async_update_data()
     coordinator.async_set_updated_data(data)
 
     # Test data access
     assert coordinator.data is not None
-    assert coordinator.data.device_name == "Test Device"
+    assert coordinator.data.device_name == "Test System"
     assert coordinator.data.device_state == {
         "zones": ["a", "c", "b"],
         "powerAC": "ok",
@@ -152,9 +152,9 @@ async def test_coordinator_mqtt_update_no_data(coordinator) -> None:
 
 async def test_device_data_defaults() -> None:
     """Test OlarmDeviceData with defaults."""
-    data = OlarmDeviceData(device_name="Test Device")
+    data = OlarmDeviceData(device_name="Test System")
 
-    assert data.device_name == "Test Device"
+    assert data.device_name == "Test System"
     assert data.device_state == {}
     assert data.device_links == {}
     assert data.device_io == {}

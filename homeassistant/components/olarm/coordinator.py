@@ -34,7 +34,7 @@ class OlarmDeviceData:
 
 
 class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
-    """Manages data updates for an Olarm device.
+    """Manages data updates for an Olarm system.
 
     The initial state is fetched from the Olarm HTTP API and then subsequent updates
     are received via MQTT.

@@ -3,8 +3,8 @@
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
-# API devices response
-MOCK_DEVICES_RESPONSE = {
+# API systems response (OlarmFlowClient uses "devices" terminology)
+MOCK_SYSTEMS_RESPONSE = {
     "userId": "abcd4ffb-8131-4de0-9416-a89abde63def",
     "page": 1,
     "pageLength": 100,
@@ -24,9 +24,9 @@ MOCK_DEVICES_RESPONSE = {
     ],
 }
 
-# API device response
-MOCK_DEVICE_RESPONSE = {
-    "deviceName": "Test Device",
+# API system response (OlarmFlowClient uses "device" terminology)
+MOCK_SYSTEM_RESPONSE = {
+    "deviceName": "Test System",
     "deviceState": {
         "zones": ["a", "c", "b"],
         "powerAC": "ok",

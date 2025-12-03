@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import MOCK_DEVICES_RESPONSE
+from .const import MOCK_SYSTEMS_RESPONSE
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -57,16 +57,16 @@ async def test_full_flow(
     with patch(
         "homeassistant.components.olarm.config_flow.OlarmFlowClient"
     ) as mock_olarm_client:
-        # Mock the get_devices method to be async
+        # Mock the get_devices method to be async (OlarmFlowClient uses "devices" terminology)
         mock_client_instance = AsyncMock()
-        mock_client_instance.get_devices = AsyncMock(return_value=MOCK_DEVICES_RESPONSE)
+        mock_client_instance.get_devices = AsyncMock(return_value=MOCK_SYSTEMS_RESPONSE)
         mock_olarm_client.return_value = mock_client_instance
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        # Should now be at device selection step
+        # Should now be at system selection step
         assert result2.get("type") is FlowResultType.FORM
-        assert result2.get("step_id") == "device"
+        assert result2.get("step_id") == "system"
 
         # Mock the setup components to prevent network calls during entry creation
         with (
@@ -75,10 +75,10 @@ async def test_full_flow(
             ),
             patch("homeassistant.components.olarm.mqtt.OlarmFlowClientMQTT.init_mqtt"),
         ):
-            # Complete the device selection
+            # Complete the system selection
             result3 = await hass.config_entries.flow.async_configure(
                 result2["flow_id"],
-                {"select_device": "123cf304-1dcf-48c6-b79b-4ce4640e3def"},
+                {"select_system": "123cf304-1dcf-48c6-b79b-4ce4640e3def"},
             )
 
             assert result3.get("type") is FlowResultType.CREATE_ENTRY
@@ -181,12 +181,12 @@ async def test_api_error(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_no_devices_found(
+async def test_no_systems_found(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test when no devices are found."""
+    """Test when no systems are found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -215,7 +215,7 @@ async def test_no_devices_found(
     with patch(
         "homeassistant.components.olarm.config_flow.OlarmFlowClient"
     ) as mock_olarm_client:
-        # Mock empty devices response
+        # Mock empty systems response (OlarmFlowClient uses "devices" terminology)
         mock_client_instance = AsyncMock()
         mock_client_instance.get_devices = AsyncMock(
             return_value={
@@ -227,4 +227,4 @@ async def test_no_devices_found(
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result2.get("type") == FlowResultType.ABORT
-        assert result2.get("reason") == "no_devices_found"
+        assert result2.get("reason") == "no_systems_found"
