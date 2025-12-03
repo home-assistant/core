@@ -1175,9 +1175,6 @@ hassil==3.5.0
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
 
-# homeassistant.components.heatmiser
-heatmiserV3==2.0.3
-
 # homeassistant.components.here_travel_time
 here-routing==1.2.0
 
