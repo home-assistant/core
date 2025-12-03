@@ -413,7 +413,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"Victron Energy ({broker})",
+                    title=f"GX device ({unique_id})",
                     data={
                         CONF_BROKER: broker,
                         CONF_PORT: 1883,
@@ -460,7 +460,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"Victron Energy ({broker})",
+                    title=f"GX device ({unique_id})",
                     data={
                         CONF_BROKER: broker,
                         CONF_PORT: 8883,
