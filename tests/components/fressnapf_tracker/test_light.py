@@ -3,13 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
-from fressnapftracker import (
-    LedActivatable,
-    LedBrightness,
-    Tracker,
-    TrackerFeatures,
-    TrackerSettings,
-)
+from fressnapftracker import Tracker, TrackerFeatures, TrackerSettings
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -54,7 +48,7 @@ async def test_state_entity_device_snapshots(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test sensor entity is created correctly."""
+    """Test light entity is created correctly."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -142,23 +136,11 @@ async def test_turn_off(
 
 
 @pytest.mark.parametrize(
-    ("seen_recently", "nonempty_battery", "not_charging"),
+    "activatable_parameter",
     [
-        (
-            False,
-            True,
-            True,
-        ),
-        (
-            True,
-            False,
-            True,
-        ),
-        (
-            True,
-            True,
-            False,
-        ),
+        "seen_recently",
+        "nonempty_battery",
+        "not_charging",
     ],
 )
 @pytest.mark.usefixtures("mock_auth_client")
@@ -166,30 +148,14 @@ async def test_turn_on_led_not_activatable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: MagicMock,
-    seen_recently: bool,
-    nonempty_battery: bool,
-    not_charging: bool,
+    activatable_parameter: str,
 ) -> None:
     """Test turning on the light when LED is not activatable raises."""
-    tracker = Tracker(
-        name="Fluffy",
-        battery=0,
-        charging=False,
-        position=None,
-        tracker_settings=TrackerSettings(
-            generation="GPS Tracker 2.0",
-            features=TrackerFeatures(flash_light=True, live_tracking=True),
-        ),
-        led_brightness=LedBrightness(value=0),
-        led_activatable=LedActivatable(
-            has_led=True,
-            seen_recently=seen_recently,
-            nonempty_battery=nonempty_battery,
-            not_charging=not_charging,
-            overall=False,
-        ),
+    setattr(
+        mock_api_client.get_tracker.return_value.led_activatable,
+        activatable_parameter,
+        False,
     )
-    mock_api_client.get_tracker.return_value = tracker
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

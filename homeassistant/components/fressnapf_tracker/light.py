@@ -8,6 +8,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,6 +19,7 @@ from .entity import FressnapfTrackerEntity
 
 LIGHT_ENTITY_DESCRIPTION = LightEntityDescription(
     translation_key="led",
+    entity_category=EntityCategory.CONFIG,
     key="led_brightness_value",
 )
 
@@ -41,17 +43,16 @@ async def async_setup_entry(
 class FressnapfTrackerLight(FressnapfTrackerEntity, LightEntity):
     """Fressnapf Tracker light."""
 
-    entity_description: LightEntityDescription
-
     _attr_color_mode: ColorMode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes: set[ColorMode] = {ColorMode.BRIGHTNESS}
 
     @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        if self.coordinator.data.led_brightness_value is not None:
-            return int(round((self.coordinator.data.led_brightness_value / 100) * 255))
-        return None
+        if TYPE_CHECKING:
+            # The entity is not created if led_brightness_value is None
+            assert self.coordinator.data.led_brightness_value is not None
+        return int(round((self.coordinator.data.led_brightness_value / 100) * 255))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
