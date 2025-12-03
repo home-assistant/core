@@ -110,6 +110,7 @@ DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
+DATA_KEY_MOUNTS = "mounts"
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
@@ -126,6 +127,8 @@ ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
+
+ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
@@ -158,6 +161,7 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
     ISSUE_KEY_SYSTEM_FREE_SPACE: {
         "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+        "storage_url": "/config/storage",
     },
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
@@ -174,3 +178,4 @@ class SupervisorEntityModel(StrEnum):
     CORE = "Home Assistant Core"
     SUPERVISOR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
+    MOUNT = "Home Assistant Mount"

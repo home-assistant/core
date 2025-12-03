@@ -17,6 +17,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
     async_register_firmware_info_provider,
 )
+from homeassistant.components.usb import usb_device_from_path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_TYPE,
@@ -134,6 +135,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     Will automatically load components to support devices found on the network.
     """
+
+    # Try to perform an in-place migration if we detect that the device path can be made
+    # unique
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    usb_device = await hass.async_add_executor_job(usb_device_from_path, device_path)
+
+    if usb_device is not None and device_path != usb_device.device:
+        _LOGGER.info(
+            "Migrating ZHA device path from %s to %s", device_path, usb_device.device
+        )
+        new_data = {**config_entry.data}
+        new_data[CONF_DEVICE][CONF_DEVICE_PATH] = usb_device.device
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        device_path = usb_device.device
+
     ha_zha_data: HAZHAData = get_zha_data(hass)
     ha_zha_data.config_entry = config_entry
     zha_lib_data: ZHAData = create_zha_config(hass, ha_zha_data)
@@ -163,7 +179,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
     # Check if firmware update is in progress for this device
-    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
     _raise_if_port_in_use(hass, device_path)
 
     try:
@@ -238,6 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     def update_config(event: Event) -> None:
         """Handle Core config update."""
         zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+        zha_gateway.config.country_code = hass.config.country
 
     config_entry.async_on_unload(
         hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)

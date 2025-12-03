@@ -7,9 +7,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.titlehub.models import Title
-from yarl import URL
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -20,7 +19,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
-from .entity import XboxBaseEntity, XboxBaseEntityDescription, check_deprecated_entity
+from .entity import (
+    XboxBaseEntity,
+    XboxBaseEntityDescription,
+    check_deprecated_entity,
+    profile_pic,
+)
+
+PARALLEL_UPDATES = 0
 
 
 class XboxBinarySensor(StrEnum):
@@ -40,24 +46,6 @@ class XboxBinarySensorEntityDescription(
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[Person], bool | None]
-    deprecated: bool | None = None
-
-
-def profile_pic(person: Person, _: Title | None) -> str | None:
-    """Return the gamer pic."""
-
-    # Xbox sometimes returns a domain that uses a wrong certificate which
-    # creates issues with loading the image.
-    # The correct domain is images-eds-ssl which can just be replaced
-    # to point to the correct image, with the correct domain and certificate.
-    # We need to also remove the 'mode=Padding' query because with it,
-    # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
 
 
 def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
@@ -66,6 +54,7 @@ def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
     attributes["display_name"] = person.display_name
     attributes["real_name"] = person.real_name or None
     attributes["bio"] = person.detail.bio if person.detail else None
+    attributes["location"] = person.detail.location if person.detail else None
     return attributes
 
 
@@ -124,7 +113,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox Live friends."""
     xuids_added: set[str] = set()
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     @callback
     def add_entities() -> None:
@@ -132,16 +121,16 @@ async def async_setup_entry(
 
         current_xuids = set(coordinator.data.presence)
         if new_xuids := current_xuids - xuids_added:
-            for xuid in new_xuids:
-                async_add_entities(
-                    [
-                        XboxBinarySensorEntity(coordinator, xuid, description)
-                        for description in SENSOR_DESCRIPTIONS
-                        if check_deprecated_entity(
-                            hass, xuid, description, BINARY_SENSOR_DOMAIN
-                        )
-                    ]
-                )
+            async_add_entities(
+                [
+                    XboxBinarySensorEntity(coordinator, xuid, description)
+                    for xuid in new_xuids
+                    for description in SENSOR_DESCRIPTIONS
+                    if check_deprecated_entity(
+                        hass, xuid, description, BINARY_SENSOR_DOMAIN
+                    )
+                ]
+            )
             xuids_added |= new_xuids
         xuids_added &= current_xuids
 

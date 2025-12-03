@@ -32,9 +32,14 @@ def cleanup_map_storage():
     return
 
 
+@pytest.fixture(autouse=True)
+def bypass_api_fixture(bypass_api_client_fixture: None) -> None:
+    """Bypass the API calls fixture."""
+    return
+
+
 async def test_config_flow_success(
     hass: HomeAssistant,
-    bypass_api_fixture,
 ) -> None:
     """Handle the config flow and make sure it succeeds."""
     with patch(
@@ -87,7 +92,6 @@ async def test_config_flow_success(
 )
 async def test_config_flow_failures_request_code(
     hass: HomeAssistant,
-    bypass_api_fixture,
     request_code_side_effect: Exception | None,
     request_code_errors: dict[str, str],
 ) -> None:
@@ -149,7 +153,6 @@ async def test_config_flow_failures_request_code(
 )
 async def test_config_flow_failures_code_login(
     hass: HomeAssistant,
-    bypass_api_fixture,
     code_login_side_effect: Exception | None,
     code_login_errors: dict[str, str],
 ) -> None:
@@ -199,7 +202,7 @@ async def test_config_flow_failures_code_login(
 
 
 async def test_options_flow_drawables(
-    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that the options flow works."""
     with patch("homeassistant.components.roborock.roborock_storage"):
@@ -227,7 +230,7 @@ async def test_options_flow_drawables(
 
 
 async def test_reauth_flow(
-    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow."""
     result = await mock_roborock_entry.start_reauth_flow(hass)
@@ -266,7 +269,6 @@ async def test_reauth_flow(
 
 async def test_account_already_configured(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Ensure the same account cannot be setup twice."""
@@ -301,7 +303,6 @@ async def test_account_already_configured(
 
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Ensure that reauthentication must use the same account."""
@@ -336,7 +337,6 @@ async def test_reauth_wrong_account(
 
 async def test_discovery_not_setup(
     hass: HomeAssistant,
-    bypass_api_fixture,
 ) -> None:
     """Handle the config flow and make sure it succeeds."""
     with (
@@ -381,7 +381,6 @@ async def test_discovery_not_setup(
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_discovery_already_setup(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Handle aborting if the device is already setup."""

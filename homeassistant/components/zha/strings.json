@@ -16,6 +16,11 @@
       "invalid_backup_json": "Invalid backup JSON"
     },
     "flow_title": "{name}",
+    "progress": {
+      "form_new_network": "Forming a new Zigbee network.\n\nWe scan for a clear network channel as part of this process, this can take a minute.",
+      "maybe_reset_old_radio": "Resetting old adapter.\n\nYour old adapter has been backed up and is being factory reset.",
+      "restore_backup": "Restoring network settings to new adapter.\n\nThis will take a minute."
+    },
     "step": {
       "choose_automatic_backup": {
         "data": {
@@ -76,8 +81,15 @@
       "confirm": {
         "description": "Do you want to set up {name}?"
       },
-      "confirm_hardware": {
-        "description": "Do you want to set up {name}?"
+      "confirm_ezsp_ieee_overwrite": {
+        "data": {
+          "overwrite_coordinator_ieee": "Permanently replace the adapter IEEE address"
+        },
+        "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
+        "title": "Overwrite adapter IEEE address"
+      },
+      "form_new_network": {
+        "title": "Forming new network"
       },
       "manual_pick_radio_type": {
         "data": {
@@ -100,16 +112,27 @@
         "description": "ZHA was not able to automatically detect serial port settings for your adapter. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
         "title": "Serial port settings"
       },
-      "maybe_confirm_ezsp_restore": {
-        "data": {
-          "overwrite_coordinator_ieee": "Permanently replace the adapter IEEE address"
-        },
-        "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
-        "title": "Overwrite adapter IEEE address"
-      },
       "maybe_reset_old_radio": {
-        "description": "A backup was created earlier and your old adapter is being reset as part of the migration.",
         "title": "Resetting old adapter"
+      },
+      "plug_in_new_radio": {
+        "description": "Your new adapter at `{device_path}` was not found.\nPlease plug it in and click Submit to continue.",
+        "title": "New adapter not found"
+      },
+      "plug_in_old_radio": {
+        "description": "Your old adapter at `{device_path}` was not found. You can retry after plugging it back in, or skip resetting the old adapter.\n\n**Warning:** If you skip resetting the old adapter, ensure it remains permanently disconnected. Plugging it back in later will cause network issues.",
+        "menu_option_descriptions": {
+          "retry_old_radio": "Retry connecting to the old adapter to reset it as part of the migration.",
+          "skip_reset_old_radio": "Skip resetting the old adapter and continue with the migration."
+        },
+        "menu_options": {
+          "retry_old_radio": "Retry",
+          "skip_reset_old_radio": "Skip reset"
+        },
+        "title": "Old adapter not found"
+      },
+      "restore_backup": {
+        "title": "Restoring network to new adapter"
       },
       "upload_manual_backup": {
         "data": {
@@ -166,6 +189,8 @@
       "button_4": "Fourth button",
       "button_5": "Fifth button",
       "button_6": "Sixth button",
+      "button_7": "Seventh button",
+      "button_8": "Eighth button",
       "close": "[%key:common::action::close%]",
       "dim_down": "Dim down",
       "dim_up": "Dim up",
@@ -179,6 +204,7 @@
       "left": "Left",
       "open": "[%key:common::action::open%]",
       "right": "Right",
+      "rotary_knob": "Rotary knob",
       "turn_off": "[%key:common::action::turn_off%]",
       "turn_on": "[%key:common::action::turn_on%]"
     },
@@ -206,7 +232,10 @@
       "remote_button_quintuple_press": "\"{subtype}\" quintuple clicked",
       "remote_button_short_press": "\"{subtype}\" pressed",
       "remote_button_short_release": "\"{subtype}\" released",
-      "remote_button_triple_press": "\"{subtype}\" triple clicked"
+      "remote_button_triple_press": "\"{subtype}\" triple clicked",
+      "rotary_knob_continued_rotating": "Rotary knob continued rotating \"{subtype}\"",
+      "rotary_knob_started_rotating": "Rotary knob started rotating \"{subtype}\"",
+      "rotary_knob_stopped_rotating": "\"{subtype}\" stopped rotating"
     }
   },
   "entity": {
@@ -291,6 +320,9 @@
       "valve_alarm": {
         "name": "Valve alarm"
       },
+      "valve_state": {
+        "name": "Valve state"
+      },
       "water_leak": {
         "name": "Water leak"
       },
@@ -304,6 +336,9 @@
     "button": {
       "calibrate_valve": {
         "name": "Calibrate valve"
+      },
+      "calibrate_z_axis": {
+        "name": "Calibrate Z axis"
       },
       "feed": {
         "name": "Feed"
@@ -322,6 +357,12 @@
       },
       "reset_summation_delivered": {
         "name": "Reset summation delivered"
+      },
+      "reset_summation_delivered_left": {
+        "name": "Reset left summation delivered"
+      },
+      "reset_summation_delivered_right": {
+        "name": "Reset right summation delivered"
       },
       "restart_device": {
         "name": "Restart device"
@@ -463,6 +504,9 @@
       },
       "comfort_temperature_min": {
         "name": "Comfort temperature min"
+      },
+      "compensation_speed": {
+        "name": "Compensation speed"
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
@@ -623,6 +667,9 @@
       "lift_drive_up_time": {
         "name": "Lift drive up time"
       },
+      "limit_position": {
+        "name": "Limit position"
+      },
       "liquid_depth_max": {
         "name": "Height from sensor to liquid level"
       },
@@ -640,6 +687,9 @@
       },
       "max_brightness": {
         "name": "Maximum brightness"
+      },
+      "max_cool_setpoint_limit": {
+        "name": "Max cool setpoint limit"
       },
       "max_heat_setpoint_limit": {
         "name": "Max heat setpoint limit"
@@ -664,6 +714,9 @@
       },
       "min_brightness": {
         "name": "Minimum brightness"
+      },
+      "min_cool_setpoint_limit": {
+        "name": "Min cool setpoint limit"
       },
       "min_heat_setpoint_limit": {
         "name": "Min heat setpoint limit"
@@ -719,6 +772,9 @@
       "on_transition_time": {
         "name": "On transition time"
       },
+      "open_delay_time": {
+        "name": "Open delay time"
+      },
       "open_window_detection_guard_period": {
         "name": "Open window detection guard period"
       },
@@ -730,6 +786,9 @@
       },
       "opening_duration": {
         "name": "Opening duration"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
       },
       "output_time": {
         "name": "Output time"
@@ -745,6 +804,9 @@
       },
       "presence_timeout": {
         "name": "Fade time"
+      },
+      "pulse_configuration": {
+        "name": "Pulse configuration"
       },
       "quantitative_watering": {
         "name": "Quantitative watering"
@@ -854,6 +916,24 @@
       "transmit_power": {
         "name": "Transmit power"
       },
+      "turn_off_delay": {
+        "name": "Turn off delay"
+      },
+      "turn_off_delay_left": {
+        "name": "Turn off delay left"
+      },
+      "turn_off_delay_right": {
+        "name": "Turn off delay right"
+      },
+      "turn_on_delay": {
+        "name": "Turn on delay"
+      },
+      "turn_on_delay_left": {
+        "name": "Turn on delay left"
+      },
+      "turn_on_delay_right": {
+        "name": "Turn on delay right"
+      },
       "up_movement": {
         "name": "Up movement"
       },
@@ -889,6 +969,9 @@
       }
     },
     "select": {
+      "actuator_type": {
+        "name": "Actuator type"
+      },
       "adaptation_run_command": {
         "name": "Adaptation run command"
       },
@@ -994,6 +1077,9 @@
       "heat_transfer_medium": {
         "name": "Heat transfer medium"
       },
+      "heater_type": {
+        "name": "Heater type"
+      },
       "heating_emitter_type": {
         "name": "Heating emitter type"
       },
@@ -1054,6 +1140,9 @@
       "on_led_color": {
         "name": "On LED color"
       },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
       "operation_mode": {
         "name": "Operation mode"
       },
@@ -1087,6 +1176,9 @@
       "screen_orientation": {
         "name": "Screen orientation"
       },
+      "sensor_connection": {
+        "name": "Sensor connection"
+      },
       "sensor_mode": {
         "name": "Sensor mode"
       },
@@ -1117,6 +1209,9 @@
       "switch_type": {
         "name": "Switch type"
       },
+      "temperature_display_mode": {
+        "name": "Temperature display mode"
+      },
       "thermostat_application": {
         "name": "Thermostat application"
       },
@@ -1125,6 +1220,9 @@
       },
       "valve_orientation": {
         "name": "Valve orientation"
+      },
+      "valve_status_led": {
+        "name": "Valve status LED"
       },
       "viewing_direction": {
         "name": "Viewing direction"
@@ -1218,8 +1316,14 @@
       "energy_produced_ph_c": {
         "name": "Energy produced phase C"
       },
+      "error_code": {
+        "name": "Error code"
+      },
       "error_status": {
         "name": "Error status"
+      },
+      "external_temperature": {
+        "name": "External temperature"
       },
       "fault_code": {
         "name": "Fault code"
@@ -1229,6 +1333,9 @@
       },
       "formaldehyde": {
         "name": "Formaldehyde concentration"
+      },
+      "heating_demand": {
+        "name": "Heating demand"
       },
       "hooks_state": {
         "name": "Hooks state"
@@ -1315,6 +1422,9 @@
       },
       "load_estimate": {
         "name": "Load estimate"
+      },
+      "local_temperature": {
+        "name": "Local temperature"
       },
       "local_temperature_floor": {
         "name": "Floor temperature"
@@ -1591,6 +1701,9 @@
       "double_up_full": {
         "name": "Double tap on - full"
       },
+      "enable_pir_mode": {
+        "name": "Enable PIR remote"
+      },
       "enable_siren": {
         "name": "Enable siren"
       },
@@ -1823,6 +1936,11 @@
       "invalid_backup_json": "[%key:component::zha::config::error::invalid_backup_json%]"
     },
     "flow_title": "[%key:component::zha::config::flow_title%]",
+    "progress": {
+      "form_new_network": "[%key:component::zha::config::progress::form_new_network%]",
+      "maybe_reset_old_radio": "[%key:component::zha::config::progress::maybe_reset_old_radio%]",
+      "restore_backup": "[%key:component::zha::config::progress::restore_backup%]"
+    },
     "step": {
       "choose_automatic_backup": {
         "data": {
@@ -1868,6 +1986,16 @@
         "description": "[%key:component::zha::config::step::choose_serial_port::description%]",
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]"
       },
+      "confirm_ezsp_ieee_overwrite": {
+        "data": {
+          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::data::overwrite_coordinator_ieee%]"
+        },
+        "description": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::description%]",
+        "title": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::title%]"
+      },
+      "form_new_network": {
+        "title": "[%key:component::zha::config::step::form_new_network::title%]"
+      },
       "init": {
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?",
         "title": "Reconfigure ZHA"
@@ -1892,12 +2020,24 @@
         "description": "[%key:component::zha::config::step::manual_port_config::description%]",
         "title": "[%key:component::zha::config::step::manual_port_config::title%]"
       },
-      "maybe_confirm_ezsp_restore": {
-        "data": {
-          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::data::overwrite_coordinator_ieee%]"
+      "maybe_reset_old_radio": {
+        "title": "[%key:component::zha::config::step::maybe_reset_old_radio::title%]"
+      },
+      "plug_in_new_radio": {
+        "description": "[%key:component::zha::config::step::plug_in_new_radio::description%]",
+        "title": "[%key:component::zha::config::step::plug_in_new_radio::title%]"
+      },
+      "plug_in_old_radio": {
+        "description": "[%key:component::zha::config::step::plug_in_old_radio::description%]",
+        "menu_option_descriptions": {
+          "retry_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::retry_old_radio%]",
+          "skip_reset_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::skip_reset_old_radio%]"
         },
-        "description": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::description%]",
-        "title": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::title%]"
+        "menu_options": {
+          "retry_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::retry_old_radio%]",
+          "skip_reset_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::skip_reset_old_radio%]"
+        },
+        "title": "[%key:component::zha::config::step::plug_in_old_radio::title%]"
       },
       "prompt_migrate_or_reconfigure": {
         "description": "Are you migrating to a new adapter or re-configuring the current adapter?",
@@ -1910,6 +2050,9 @@
           "intent_reconfigure": "Re-configure the current adapter"
         },
         "title": "Migrate or re-configure"
+      },
+      "restore_backup": {
+        "title": "[%key:component::zha::config::step::restore_backup::title%]"
       },
       "upload_manual_backup": {
         "data": {

@@ -13,6 +13,9 @@ CONF_DPT: Final = "dpt"
 
 CONF_GA_SENSOR: Final = "ga_sensor"
 CONF_GA_SWITCH: Final = "ga_switch"
+CONF_GA_DATE: Final = "ga_date"
+CONF_GA_DATETIME: Final = "ga_datetime"
+CONF_GA_TIME: Final = "ga_time"
 
 # Climate
 CONF_GA_TEMPERATURE_CURRENT: Final = "ga_temperature_current"

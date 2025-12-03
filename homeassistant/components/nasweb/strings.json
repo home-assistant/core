@@ -24,6 +24,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "zone": {
+        "name": "Zone {index}"
+      }
+    },
     "sensor": {
       "sensor_input": {
         "name": "Input {index}",

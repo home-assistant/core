@@ -8,16 +8,26 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from music_assistant_client import MusicAssistantClient
-from music_assistant_client.exceptions import CannotConnect, InvalidServerVersion
+from music_assistant_client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    MusicAssistantClientException,
+)
 from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.enums import EventType
-from music_assistant_models.errors import ActionUnavailable, MusicAssistantError
+from music_assistant_models.errors import (
+    ActionUnavailable,
+    AuthenticationFailed,
+    AuthenticationRequired,
+    InvalidToken,
+    MusicAssistantError,
+)
 from music_assistant_models.player import Player
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -26,8 +36,9 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .actions import get_music_assistant_client, register_actions
-from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, CONF_TOKEN, DOMAIN, LOGGER
+from .helpers import get_music_assistant_client
+from .services import register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -58,6 +69,7 @@ class MusicAssistantEntryData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
     register_actions(hass)
+
     return True
 
 
@@ -67,7 +79,9 @@ async def async_setup_entry(  # noqa: C901
     """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
-    mass = MusicAssistantClient(mass_url, http_session)
+    # Get token from config entry (for schema >= AUTH_SCHEMA_VERSION)
+    token = entry.data.get(CONF_TOKEN)
+    mass = MusicAssistantClient(mass_url, http_session, token=token)
 
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
@@ -86,6 +100,14 @@ async def async_setup_entry(  # noqa: C901
             translation_key="invalid_server_version",
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
+    except (AuthenticationRequired, AuthenticationFailed, InvalidToken) as err:
+        raise ConfigEntryAuthFailed(
+            f"Authentication failed for {mass_url}: {err}"
+        ) from err
+    except MusicAssistantClientException as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to music assistant server {mass_url}: {err}"
+        ) from err
     except MusicAssistantError as err:
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
@@ -238,12 +260,14 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: MusicAssistantConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        mass_entry_data: MusicAssistantEntryData = entry.runtime_data
+        mass_entry_data = entry.runtime_data
         mass_entry_data.listen_task.cancel()
         await mass_entry_data.mass.disconnect()
 
@@ -251,7 +275,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: MusicAssistantConfigEntry,
+    device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     player_id = next(
