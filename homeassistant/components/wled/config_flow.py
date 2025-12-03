@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from typing import Any
-import urllib.parse
 
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
+import yarl
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -29,7 +29,7 @@ def _normalize_host(host: str) -> str:
     """Normalize host by extracting hostname if a URL is provided."""
     if "://" in host:
         try:
-            return urllib.parse.urlparse(host).hostname or host
+            return yarl.URL(host).host or host
         except ValueError:
             pass
     return host
