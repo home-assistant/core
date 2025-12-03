@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -41,14 +39,9 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
         """Initialize the select entity."""
         super().__init__(coordinator)
         self._attr_unique_id = UID_SEPARATOR.join([entry.entry_id, "profile"])
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.data[CONF_NAME],
-            model="OpenRGB SDK Server",
-            manufacturer="OpenRGB",
-            sw_version=coordinator.get_client_protocol_version(),
-            entry_type=DeviceEntryType.SERVICE,
-        )
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+        }
         self._update_attrs()
 
     def _compute_state_hash(self) -> int:
