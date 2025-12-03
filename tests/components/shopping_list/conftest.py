@@ -1,6 +1,8 @@
 """Shopping list test helpers."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from contextlib import suppress
+import os
 
 import pytest
 
@@ -11,13 +13,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_shopping_list_io():
-    """Stub out the persistence."""
-    with (
-        patch("homeassistant.components.shopping_list.ShoppingData.save"),
-        patch("homeassistant.components.shopping_list.ShoppingData.async_load"),
-    ):
+def wipe_shopping_list_store(hass: HomeAssistant) -> Generator[None]:
+    """Wipe shopping list store after test."""
+    try:
         yield
+    finally:
+        with suppress(FileNotFoundError):
+            os.remove(hass.config.path(".shopping_list.json"))
 
 
 @pytest.fixture
@@ -27,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def sl_setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+async def sl_setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Set up the shopping list."""
 
     mock_config_entry.add_to_hass(hass)
