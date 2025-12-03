@@ -2,22 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
-import importlib.metadata
 import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
-from homeassistant.exceptions import HomeAssistantError
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant, ServiceCall
-    from homeassistant.helpers.typing import ConfigType
+    from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_DEVICE_ID, ATTR_METRIC_ID, ATTR_VALUE, DOMAIN, SERVICE_PUBLISH
+from .const import DOMAIN
 from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,4 +76,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hub is not None:
         await hub.stop()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hub.unregister_all_add_entities_callback()
+
+    return True

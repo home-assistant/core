@@ -141,10 +141,10 @@ class Hub:
         )
         self.add_entities_map[kind] = async_add_entities
 
-    def unregister_add_entities_callback(self, kind: MetricKind) -> None:
-        """Register a callback to add entities for a specific metric kind."""
-        _LOGGER.info("Unregistering AddEntitiesCallback. kind: %s", kind)
-        self.add_entities_map.pop(kind)
+    def unregister_all_add_entities_callback(self) -> None:
+        """Unregister all callbacks to add entities for all metric kinds."""
+        _LOGGER.info("Unregistering AddEntitiesCallback")
+        self.add_entities_map.clear()
 
     def create_entity(
         self,
