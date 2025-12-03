@@ -265,8 +265,6 @@ class PlaystationNetworkFriendDataCoordinator(
             trophy_summary = self.user.trophy_summary()
         except PSNAWPForbiddenError:
             trophy_summary = None
-        except PSNAWPError:
-            raise
 
         return PlaystationNetworkData(
             username=self.user.online_id,
