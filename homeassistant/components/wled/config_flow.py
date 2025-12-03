@@ -79,16 +79,12 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_update_reload_and_abort(
                         entry,
-                        data_updates={
-                            CONF_HOST: host,
-                        },
+                        data_updates={CONF_HOST: host},
                     )
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=device.info.name,
-                    data={
-                        CONF_HOST: host,
-                    },
+                    data={CONF_HOST: host},
                 )
         data_schema = vol.Schema({vol.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
