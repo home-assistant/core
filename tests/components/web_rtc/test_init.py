@@ -27,7 +27,7 @@ async def test_async_setup(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_async_setup_custom_ice_servers(hass: HomeAssistant) -> None:
+async def test_async_setup_custom_ice_servers_core(hass: HomeAssistant) -> None:
     """Test setting up web_rtc with custom ICE servers in config."""
     await async_process_ha_core_config(
         hass,
@@ -40,6 +40,86 @@ async def test_async_setup_custom_ice_servers(hass: HomeAssistant) -> None:
     ice_servers = async_get_ice_servers(hass)
     assert len(ice_servers) == 1
     assert ice_servers[0].urls == ["stun:custom_stun_server:3478"]
+
+
+async def test_async_setup_custom_ice_servers_integration(hass: HomeAssistant) -> None:
+    """Test setting up web_rtc with custom ICE servers in config."""
+    assert await async_setup_component(
+        hass,
+        "web_rtc",
+        {
+            "web_rtc": {
+                "ice_servers": [
+                    {"url": "stun:custom_stun_server:3478"},
+                    {
+                        "url": "stun:custom_stun_server:3478",
+                        "credential": "mock-credential",
+                    },
+                    {
+                        "url": "stun:custom_stun_server:3478",
+                        "username": "mock-username",
+                    },
+                    {
+                        "url": "stun:custom_stun_server:3478",
+                        "credential": "mock-credential",
+                        "username": "mock-username",
+                    },
+                ]
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    ice_servers = async_get_ice_servers(hass)
+    assert ice_servers == [
+        RTCIceServer(
+            urls=["stun:custom_stun_server:3478"],
+        ),
+        RTCIceServer(
+            urls=["stun:custom_stun_server:3478"],
+            credential="mock-credential",
+        ),
+        RTCIceServer(
+            urls=["stun:custom_stun_server:3478"],
+            username="mock-username",
+        ),
+        RTCIceServer(
+            urls=["stun:custom_stun_server:3478"],
+            username="mock-username",
+            credential="mock-credential",
+        ),
+    ]
+
+
+async def test_async_setup_custom_ice_servers_core_and_integration(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting up web_rtc with custom ICE servers in config."""
+    await async_process_ha_core_config(
+        hass,
+        {"webrtc": {"ice_servers": [{"url": "stun:custom_stun_server_core:3478"}]}},
+    )
+
+    assert await async_setup_component(
+        hass,
+        "web_rtc",
+        {
+            "web_rtc": {
+                "ice_servers": [{"url": "stun:custom_stun_server_integration:3478"}]
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    ice_servers = async_get_ice_servers(hass)
+    assert ice_servers == [
+        RTCIceServer(
+            urls=["stun:custom_stun_server_core:3478"],
+        ),
+        RTCIceServer(
+            urls=["stun:custom_stun_server_integration:3478"],
+        ),
+    ]
 
 
 async def test_async_register_ice_servers(hass: HomeAssistant) -> None:
