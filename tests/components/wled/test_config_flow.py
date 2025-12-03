@@ -17,7 +17,17 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
-async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "host_input",
+    [
+        "192.168.1.123",
+        "http://192.168.1.123",
+        "https://192.168.1.123/settings",
+    ],
+)
+async def test_full_user_flow_implementation(
+    hass: HomeAssistant, host_input: str
+) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

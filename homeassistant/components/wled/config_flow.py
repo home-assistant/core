@@ -24,6 +24,13 @@ from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
 from .coordinator import WLEDConfigEntry
 
 
+def _normalize_host(host: str) -> str:
+    """Normalize host by removing any scheme."""
+    if "://" in host:
+        host = host.split("://", 1)[1]
+    return host
+
+
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
@@ -46,8 +53,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            host = _normalize_host(user_input[CONF_HOST])
             try:
-                device = await self._async_get_device(user_input[CONF_HOST])
+                device = await self._async_get_device(host)
             except WLEDUnsupportedVersionError:
                 errors["base"] = "unsupported_version"
             except WLEDConnectionError:
@@ -69,13 +77,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                         entry,
                         data_updates=user_input,
                     )
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=device.info.name,
                     data={
-                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_HOST: host,
                     },
                 )
         data_schema = vol.Schema({vol.Required(CONF_HOST): str})
