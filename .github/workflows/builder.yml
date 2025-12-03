@@ -416,9 +416,19 @@ jobs:
           ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
           for arch in $ARCHS; do
             echo "Copying ${arch} image to DockerHub..."
-            docker buildx imagetools create \
-              --tag "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
-              "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+            for attempt in 1 2 3; do
+              if docker buildx imagetools create \
+                --tag "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
+                "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"; then
+                break
+              fi
+              echo "Attempt ${attempt} failed, retrying in 10 seconds..."
+              sleep 10
+              if [ "${attempt}" -eq 3 ]; then
+                echo "Failed after 3 attempts"
+                exit 1
+              fi
+            done
             cosign sign --yes "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
           done
 
