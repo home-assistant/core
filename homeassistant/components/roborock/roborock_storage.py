@@ -63,6 +63,7 @@ class StoreImpl(Store[dict[str, Any]]):
     ) -> dict[str, Any]:
         """Wipe out old caches with the old format."""
         if old_major_version == 1:
+            # No need for migration as version 1 was never in any stable releases
             return {}
         return old_data
 
