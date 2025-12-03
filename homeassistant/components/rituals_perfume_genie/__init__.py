@@ -6,14 +6,14 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from pyrituals import Account, AuthenticationException, Diffuser
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, DOMAIN, PASSWORD, UPDATE_INTERVAL, USERNAME
+from .const import ACCOUNT_HASH, DOMAIN, UPDATE_INTERVAL
 from .coordinator import RitualsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,22 +30,16 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     _LOGGER.debug("async_setup_entry start (entry_id=%s)", entry.entry_id)
-    session = async_create_clientsession(hass)
+    session = async_get_clientsession(hass)
 
-    # Require credentials for runtime; if missing, trigger reauth and stop setup
-    if USERNAME not in entry.data or PASSWORD not in entry.data:
-        await _trigger_reauth(hass, entry)
-        return False
+    # Initiate reauth for old config entries which don't have username / password in the entry data
+    if CONF_USERNAME not in entry.data or CONF_PASSWORD not in entry.data:
+        raise ConfigEntryAuthFailed("Missing credentials")
 
-    email = entry.data[USERNAME]
-    password = entry.data[PASSWORD]
-
-    # ACCOUNT_HASH is kept only for backwards compatibility
     account = Account(
-        email=email,
-        password=password,
+        email=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
         session=session,
-        account_hash=entry.data.get(ACCOUNT_HASH, ""),
     )
 
     try:
@@ -53,13 +47,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await account.authenticate()
         account_devices = await account.get_devices()
 
-    except AuthenticationException:
-        # Credentials invalid/expired → start reauth and stop setup until user completes it
-        await _trigger_reauth(hass, entry)
-        return False
+    except AuthenticationException as err:
+        # Credentials invalid/expired -> raise AuthFailed to trigger reauth flow
+
+        raise ConfigEntryAuthFailed(err) from err
 
     except ClientResponseError as err:
-        _LOGGER.warning(
+        _LOGGER.debug(
             "HTTP error during Rituals setup: status=%s, url=%s, headers=%s",
             getattr(err, "status", "?"),
             getattr(err, "request_info", None),
@@ -68,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     except ClientError as err:
-        _LOGGER.warning("Network error during Rituals setup: %r", err)
         raise ConfigEntryNotReady from err
 
     # Migrate old unique_ids to the new format
@@ -77,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # The API provided by Rituals is currently rate limited to 30 requests
     # per hour per IP address. To avoid hitting this limit, we will adjust
     # the polling interval based on the number of diffusers one has.
-    update_interval = UPDATE_INTERVAL * max(1, len(account_devices))
+    update_interval = UPDATE_INTERVAL * len(account_devices)
 
     # Create a coordinator for each diffuser
     coordinators = {
@@ -147,29 +140,10 @@ def async_migrate_entities_unique_ids(
 
 # Migration helpers for API v2
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate legacy entries (V1 with account_hash) to V2 (credentials)."""
-    data = dict(entry.data)
-    if ACCOUNT_HASH in data and (USERNAME not in data or PASSWORD not in data):
-        await _trigger_reauth(hass, entry)
+    """Migrate config entry to version 2: drop legacy ACCOUNT_HASH and bump version."""
+    if entry.version < 2:
+        data = dict(entry.data)
+        data.pop(ACCOUNT_HASH, None)
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
         return True
     return True
-
-
-async def _trigger_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Start a reauth flow to collect credentials for V2.
-
-    Debounce so we only create one reauth flow per entry.
-    """
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    in_progress: set[str] = domain_data.setdefault("_reauth_in_progress", set())
-    if entry.entry_id in in_progress:
-        return
-    in_progress.add(entry.entry_id)
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data={"unique_id": entry.unique_id or ""},
-        )
-    )
