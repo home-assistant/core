@@ -2089,6 +2089,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "wirelesstag",
     "withings",
     "wiz",
+    "wled",
     "wmspro",
     "wolflink",
     "workday",

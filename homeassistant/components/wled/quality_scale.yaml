@@ -7,9 +7,8 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage:
-    status: done
+    status: todo
     comment: |
-      This should be marked as todo, but linter doesn't like that.
       test_connection_error and test_unsupported_version_error should end in CREATE_ENTRY
   config-flow: done
   dependency-transparency: done
