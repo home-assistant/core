@@ -12,6 +12,7 @@ FLOWS = {
         "group",
         "history_stats",
         "integration",
+        "inverse",
         "min_max",
         "mold_indicator",
         "random",

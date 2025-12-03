@@ -788,6 +788,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/intesishome/ @jnimmo
+/homeassistant/components/inverse/ @home-assistant/core
+/tests/components/inverse/ @home-assistant/core
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
 /homeassistant/components/ios/ @robbiet480

@@ -58,6 +58,13 @@ class BaseEntity(Entity):
         self._source_entity_id = source_entity_id
         self._source_domain = source_entity_id.split(".")[0]
 
+        source_object_id = (
+            source_entity_id.split(".", 1)[1]
+            if "." in source_entity_id
+            else source_entity_id
+        )
+        self._attr_entity_id = f"{domain}.inverse_{source_object_id}"
+
         self._is_new_entity = (
             registry.async_get_entity_id(domain, DOMAIN, unique_id) is None
         )

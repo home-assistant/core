@@ -27,7 +27,9 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -211,6 +213,17 @@ class InverseCover(BaseInverseEntity, CoverEntity):
 
         # Always invert: open becomes closed
         self._attr_is_closed = state.state == STATE_OPEN
+
+        source_state = state.state
+        if source_state == STATE_CLOSING:
+            self._attr_is_opening = True
+            self._attr_is_closing = False
+        elif source_state == STATE_OPENING:
+            self._attr_is_closing = True
+            self._attr_is_opening = False
+        else:
+            self._attr_is_closing = None
+            self._attr_is_opening = None
 
         # Invert position: source 0 -> inverse 100, source 100 -> inverse 0
         if (
