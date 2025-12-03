@@ -5,12 +5,23 @@ from unittest.mock import AsyncMock
 
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
     AirOSDeviceConnectionError,
+    AirOSEndpointError,
     AirOSKeyDataMissingError,
+    AirOSListenerError,
 )
 import pytest
+import voluptuous as vol
 
-from homeassistant.components.airos.const import DOMAIN, SECTION_ADVANCED_SETTINGS
+from homeassistant.components.airos.const import (
+    DEFAULT_USERNAME,
+    DOMAIN,
+    HOSTNAME,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    SECTION_ADVANCED_SETTINGS,
+)
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -28,39 +39,64 @@ NEW_PASSWORD = "new_password"
 REAUTH_STEP = "reauth_confirm"
 RECONFIGURE_STEP = "reconfigure"
 
+MOCK_ADVANCED_SETTINGS = {
+    CONF_SSL: True,
+    CONF_VERIFY_SSL: False,
+}
+
 MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
-    CONF_USERNAME: "ubnt",
+    CONF_USERNAME: DEFAULT_USERNAME,
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: {
-        CONF_SSL: True,
-        CONF_VERIFY_SSL: False,
-    },
+    SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
 }
 MOCK_CONFIG_REAUTH = {
     CONF_HOST: "1.1.1.1",
-    CONF_USERNAME: "ubnt",
+    CONF_USERNAME: DEFAULT_USERNAME,
     CONF_PASSWORD: "wrong-password",
 }
 
+MOCK_DISC_DEV1 = {
+    MAC_ADDRESS: "00:11:22:33:44:55",
+    IP_ADDRESS: "192.168.1.100",
+    HOSTNAME: "Test-Device-1",
+}
+MOCK_DISC_DEV2 = {
+    MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    IP_ADDRESS: "192.168.1.101",
+    HOSTNAME: "Test-Device-2",
+}
+MOCK_DISC_EXISTS = {
+    MAC_ADDRESS: "01:23:45:67:89:AB",
+    IP_ADDRESS: "192.168.1.102",
+    HOSTNAME: "Existing-Device",
+}
 
-async def test_form_creates_entry(
+
+async def test_manual_flow_creates_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_airos_client: AsyncMock,
     ap_fixture: dict[str, Any],
 ) -> None:
-    """Test we get the form and create the appropriate entry."""
+    """Test we get the user form and create the appropriate entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+
+    assert result["type"] is FlowResultType.MENU
+    assert "manual" in result["menu_options"]
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        MOCK_CONFIG,
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -73,22 +109,26 @@ async def test_form_creates_entry(
 async def test_form_duplicate_entry(
     hass: HomeAssistant,
     mock_airos_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the form does not allow duplicate entries."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="01:23:45:67:89:AB",
+        data=MOCK_CONFIG,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
-    assert result["step_id"] == "user"
+    mock_entry.add_to_hass(hass)
+
+    flow_start = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    menu = await hass.config_entries.flow.async_configure(
+        flow_start["flow_id"], {"next_step_id": "manual"}
+    )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        MOCK_CONFIG,
+        menu["flow_id"], MOCK_CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -98,6 +138,8 @@ async def test_form_duplicate_entry(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
+        (AirOSConnectionAuthenticationError, "invalid_auth"),
+        (AirOSConnectionSetupError, "cannot_connect"),
         (AirOSDeviceConnectionError, "cannot_connect"),
         (AirOSKeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
@@ -113,13 +155,17 @@ async def test_form_exception_handling(
     """Test we handle exceptions."""
     mock_airos_client.login.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    flow_start = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    menu = await hass.config_entries.flow.async_configure(
+        flow_start["flow_id"], {"next_step_id": "manual"}
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        MOCK_CONFIG,
+        menu["flow_id"], MOCK_CONFIG
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -402,3 +448,235 @@ async def test_reconfigure_unique_id_mismatch(
         updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL]
         == MOCK_CONFIG[SECTION_ADVANCED_SETTINGS][CONF_SSL]
     )
+
+
+async def test_discover_flow_no_devices_found(
+    hass: HomeAssistant, mock_discovery_method
+) -> None:
+    """Test discovery flow aborts when no devices are found."""
+    mock_discovery_method.return_value = {}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_discover_flow_one_device_found(
+    hass: HomeAssistant, mock_discovery_method, mock_airos_client, mock_setup_entry
+) -> None:
+    """Test discovery flow goes straight to credentials when one device is found."""
+    mock_discovery_method.return_value = {MOCK_DISC_DEV1[MAC_ADDRESS]: MOCK_DISC_DEV1}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # With only one device, the flow should skip the select step and
+    # go directly to configure_device.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_device"
+    assert result["description_placeholders"]["device_name"] == MOCK_DISC_DEV1[HOSTNAME]
+
+    # Provide credentials and complete the flow
+    mock_airos_client.status.return_value.derived.mac = MOCK_DISC_DEV1[MAC_ADDRESS]
+    mock_airos_client.status.return_value.host.hostname = MOCK_DISC_DEV1[HOSTNAME]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: "test-password",
+            SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
+    assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+
+
+async def test_discover_flow_multiple_devices_found(
+    hass: HomeAssistant, mock_discovery_method, mock_airos_client, mock_setup_entry
+) -> None:
+    """Test discovery flow with multiple devices found, requiring a selection step."""
+    mock_discovery_method.return_value = {
+        MOCK_DISC_DEV1[MAC_ADDRESS]: MOCK_DISC_DEV1,
+        MOCK_DISC_DEV2[MAC_ADDRESS]: MOCK_DISC_DEV2,
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert "discovery" in result["menu_options"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_device"
+
+    expected_options = {
+        MOCK_DISC_DEV1[MAC_ADDRESS]: (
+            f"{MOCK_DISC_DEV1[HOSTNAME]} ({MOCK_DISC_DEV1[IP_ADDRESS]})"
+        ),
+        MOCK_DISC_DEV2[MAC_ADDRESS]: (
+            f"{MOCK_DISC_DEV2[HOSTNAME]} ({MOCK_DISC_DEV2[IP_ADDRESS]})"
+        ),
+    }
+    actual_options = result["data_schema"].schema[vol.Required(MAC_ADDRESS)].container
+    assert actual_options == expected_options
+
+    # Select one of the devices
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {MAC_ADDRESS: MOCK_DISC_DEV1[MAC_ADDRESS]}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_device"
+    assert result["description_placeholders"]["device_name"] == MOCK_DISC_DEV1[HOSTNAME]
+
+    # Provide credentials and complete the flow
+    mock_airos_client.status.return_value.derived.mac = MOCK_DISC_DEV1[MAC_ADDRESS]
+    mock_airos_client.status.return_value.host.hostname = MOCK_DISC_DEV1[HOSTNAME]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: "test-password",
+            SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
+    assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+
+
+async def test_discover_flow_with_existing_device(
+    hass: HomeAssistant, mock_discovery_method, mock_airos_client
+) -> None:
+    """Test that discovery ignores devices that are already configured."""
+    # Add a mock config entry for an existing device
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DISC_EXISTS[MAC_ADDRESS],
+        data=MOCK_CONFIG,
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Mock discovery to find both a new device and the existing one
+    mock_discovery_method.return_value = {
+        MOCK_DISC_DEV1[MAC_ADDRESS]: MOCK_DISC_DEV1,
+        MOCK_DISC_EXISTS[MAC_ADDRESS]: MOCK_DISC_EXISTS,
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # The flow should proceed with only the new device
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_device"
+    assert result["description_placeholders"]["device_name"] == MOCK_DISC_DEV1[HOSTNAME]
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (AirOSEndpointError, "detect_error"),
+        (AirOSListenerError, "listen_error"),
+        (Exception, "discovery_failed"),
+    ],
+)
+async def test_discover_flow_discovery_exceptions(
+    hass: HomeAssistant,
+    mock_discovery_method,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test discovery flow aborts on various discovery exceptions."""
+    mock_discovery_method.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_configure_device_flow_exceptions(
+    hass: HomeAssistant, mock_discovery_method, mock_airos_client
+) -> None:
+    """Test configure_device step handles authentication and connection exceptions."""
+    mock_discovery_method.return_value = {MOCK_DISC_DEV1[MAC_ADDRESS]: MOCK_DISC_DEV1}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
+    )
+
+    mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "wrong-user",
+            CONF_PASSWORD: "wrong-password",
+            SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_airos_client.login.side_effect = AirOSDeviceConnectionError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: "some-password",
+            SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
