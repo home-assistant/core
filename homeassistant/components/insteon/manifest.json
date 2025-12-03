@@ -13,7 +13,7 @@
       "registered_devices": true
     }
   ],
-  "disabled": "This integration is disabled because it references pyserial-asyncio, which does blocking I/O in asyncio loop and is not maintained.",
+  "disabled": "This integration is disabled because it references pyserial-asyncio, which does blocking I/O in the asyncio loop and is not maintained.",
   "documentation": "https://www.home-assistant.io/integrations/insteon",
   "iot_class": "local_push",
   "loggers": ["pyinsteon", "pypubsub"],
