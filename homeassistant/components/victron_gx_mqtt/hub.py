@@ -81,7 +81,6 @@ class Hub:
         self._hub.on_new_metric = self._on_new_metric
         self.add_entities_map: dict[MetricKind, AddEntitiesCallback] = {}
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
     async def start(self) -> None:
         """Start the Victron MQTT hub."""
@@ -92,6 +91,7 @@ class Hub:
             raise ConfigEntryNotReady(
                 f"Cannot connect to the hub: {connect_error}"
             ) from connect_error
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
     async def stop(self, event: Event | None = None) -> None:
         """Stop the Victron MQTT hub."""
@@ -142,6 +142,14 @@ class Hub:
         )
         self.add_entities_map[kind] = async_add_entities
 
+
+    def unregister_add_entities_callback(
+        self, kind: MetricKind
+    ) -> None:
+        """Register a callback to add entities for a specific metric kind."""
+        _LOGGER.info("Unregistering AddEntitiesCallback. kind: %s", kind)
+        self.add_entities_map.pop(kind)
+
     def create_entity(
         self,
         device: VictronVenusDevice,
@@ -158,15 +166,3 @@ class Hub:
             # More platforms can be added here in the future
             pass
         raise ValueError(f"Unsupported metric kind: {metric.metric_kind}")
-
-    def publish(
-        self, metric_id: str, device_id: str, value: str | float | None
-    ) -> None:
-        """Publish a message to the Victron MQTT hub."""
-        _LOGGER.info(
-            "Publish service called with: metric_id=%s, device_id=%s, value=%s",
-            metric_id,
-            device_id,
-            value,
-        )
-        self._hub.publish(metric_id, device_id, value)

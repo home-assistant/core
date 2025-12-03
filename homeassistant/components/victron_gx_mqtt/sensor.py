@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import VictronBaseEntity
 
-if TYPE_CHECKING:  # pragma: no cover - type checking only
+if TYPE_CHECKING:
     from .hub import Hub
 
 
@@ -29,11 +29,17 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
+) -> bool:
     """Set up Victron Venus sensors from a config entry."""
     hub: Hub = config_entry.runtime_data
     hub.register_add_entities_callback(async_add_entities, MetricKind.SENSOR)
+    return True
 
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload Victron Venus sensors from a config entry."""
+    hub: Hub = config_entry.runtime_data
+    hub.unregister_add_entities_callback(MetricKind.SENSOR)
+    return True
 
 class VictronSensor(VictronBaseEntity, SensorEntity):
     """Implementation of a Victron Venus sensor."""

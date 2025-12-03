@@ -259,6 +259,30 @@ async def test_register_add_entities_callback(
     assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
 
 
+async def test_unregister_add_entities_callback(
+    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
+) -> None:
+    """Test unregistering add entities callback."""
+    mock_config_entry.data = basic_config
+    mock_config_entry.unique_id = "test_unique_id"
+
+    hub = Hub(hass, mock_config_entry)
+
+    # Register a callback first
+    mock_callback = MagicMock()
+    hub.register_add_entities_callback(mock_callback, MetricKind.SENSOR)
+
+    # Verify it was registered
+    assert MetricKind.SENSOR in hub.add_entities_map
+    assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
+
+    # Unregister the callback
+    hub.unregister_add_entities_callback(MetricKind.SENSOR)
+
+    # Verify it was removed
+    assert MetricKind.SENSOR not in hub.add_entities_map
+
+
 async def test_create_entity_sensor(
     hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
 ) -> None:
@@ -305,20 +329,6 @@ async def test_create_entity_unsupported(
 
     with pytest.raises(ValueError, match="Unsupported metric kind"):
         hub.create_entity(mock_device, mock_metric, mock_device_info, "12345")
-
-
-async def test_publish(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test publish method."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    hub.publish("metric_id", "device_id", 123.45)
-
-    mock_victron_hub.publish.assert_called_once_with("metric_id", "device_id", 123.45)
 
 
 async def test_on_new_metric_sensor(
