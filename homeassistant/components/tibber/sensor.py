@@ -725,6 +725,68 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self.async_write_ha_state()
 
 
+class TibberPhaseImbalanceSensor(
+    TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]
+):
+    """Derived sensor: phase imbalance percentage based on currentL1/L2/L3."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "phase_imbalance_percent"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self,
+        tibber_home: tibber.TibberHome,
+        coordinator: TibberRtDataCoordinator,
+    ) -> None:
+        """Initialize the phase imbalance sensor."""
+        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
+        self._model = "Tibber Pulse"
+        self._device_name = f"{self._model} {self._home_name}"
+        self._attr_unique_id = f"{self._tibber_home.home_id}_rt_phase_imbalance_percent"
+
+    @property
+    def available(self) -> bool:
+        """Return True if realtime subscription is running."""
+        return self._tibber_home.rt_subscription_running
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Recalculate phase imbalance whenever new live data arrives."""
+        if not (live_measurement := self.coordinator.get_live_measurement()):
+            return
+
+        current_l1 = live_measurement.get("currentL1")
+        current_l2 = live_measurement.get("currentL2")
+        current_l3 = live_measurement.get("currentL3")
+
+        currents = [
+            current
+            for current in (current_l1, current_l2, current_l3)
+            if isinstance(current, (int, float))
+        ]
+
+        if len(currents) < 2:
+            return
+
+        valid_currents = [c for c in currents if c >= 0.1]
+
+        if not valid_currents:
+            self._attr_native_value = 0.0
+        else:
+            max_current = max(valid_currents)
+            min_current = min(valid_currents)
+
+            if max_current > 0:
+                imbalance = (max_current - min_current) / max_current * 100.0
+                self._attr_native_value = round(imbalance, 1)
+            else:
+                self._attr_native_value = 0.0
+
+        self.async_write_ha_state()
+
+
 class TibberRtEntityCreator:
     """Create realtime Tibber entities."""
 
@@ -788,7 +850,8 @@ class TibberRtEntityCreator:
         self, coordinator: TibberRtDataCoordinator, live_measurement: Any
     ) -> None:
         """Add sensor."""
-        new_entities = []
+        new_entities: list[SensorEntity] = []
+
         for sensor_description in RT_SENSORS:
             if sensor_description.key in self._added_sensors:
                 continue
@@ -805,6 +868,22 @@ class TibberRtEntityCreator:
             )
             new_entities.append(entity)
             self._added_sensors.add(sensor_description.key)
+
+        if "phase_imbalance_percent" not in self._added_sensors:
+            has_current_data = any(
+                live_measurement.get(key) is not None
+                for key in ("currentL1", "currentL2", "currentL3")
+            )
+
+            if has_current_data:
+                new_entities.append(
+                    TibberPhaseImbalanceSensor(
+                        self._tibber_home,
+                        coordinator,
+                    )
+                )
+                self._added_sensors.add("phase_imbalance_percent")
+
         if new_entities:
             self._async_add_entities(new_entities)
 
