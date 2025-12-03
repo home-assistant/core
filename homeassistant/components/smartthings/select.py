@@ -260,9 +260,8 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         )
         if self.entity_description.options_map:
             options = [
-                self.entity_description.options_map[option]
+                self.entity_description.options_map.get(option, option)
                 for option in options
-                if option in self.entity_description.options_map
             ]
         if self.entity_description.value_is_integer:
             options = [str(option) for option in options]
@@ -274,10 +273,10 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         option = self.get_attribute_value(
             self.entity_description.key, self.entity_description.status_attribute
         )
-        if self.entity_description.value_is_integer and option is not None:
-            option = str(option)
         if self.entity_description.options_map:
             option = self.entity_description.options_map.get(option)
+        if self.entity_description.value_is_integer and option is not None:
+            option = str(option)
         return option
 
     async def async_select_option(self, option: str) -> None:

@@ -53,10 +53,12 @@ async def async_setup_entry(
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
         and Capability.SAMSUNG_CE_HOOD_FAN_SPEED in device.status[MAIN]
-        and device.status[MAIN][Capability.SAMSUNG_CE_HOOD_FAN_SPEED][
-            Attribute.SETTABLE_MIN_FAN_SPEED
-        ].value
-        == 14
+        and (
+            device.status[MAIN][Capability.SAMSUNG_CE_HOOD_FAN_SPEED][
+                Attribute.SETTABLE_MIN_FAN_SPEED
+            ].value
+            == SMART
+        )
     )
     async_add_entities(entities)
 
