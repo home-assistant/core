@@ -754,6 +754,7 @@ async def async_setup_entry(
         definition: MieleSensorDefinition,
         device: MieleDevice,
         unique_id: str,
+        level: MieleFillingLevel,
     ) -> bool:
         """Check if the sensor is enabled."""
         if (
@@ -771,6 +772,13 @@ async def async_setup_entry(
             and definition.description.zone > _get_plate_count(device.tech_type)
         ):
             # don't create plate entity if not expected by the appliance tech type
+            return False
+        if (
+            definition.description.key in ["twin_dos_1_level", "twin_dos_2_level"]
+            and definition.description.level_value_fn is not None
+            and definition.description.level_value_fn(level) is None
+        ):
+            # don't create filling level sensors if not supported by device
             return False
         return True
 
@@ -801,7 +809,12 @@ async def async_setup_entry(
                     continue
 
                 # sensors is not enabled, skip
-                if not _is_sensor_enabled(definition, device, unique_id):
+                if not _is_sensor_enabled(
+                    definition,
+                    device,
+                    unique_id,
+                    coordinator.data.filling_levels[device_id],
+                ):
                     continue
 
                 added_entities.add(unique_id)
