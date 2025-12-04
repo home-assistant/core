@@ -305,13 +305,17 @@ async def test_media_player_state_attribute_trigger_behavior_any(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(hass, eid, initial_state[0], initial_state[1])
+        set_or_remove_state(
+            hass, eid, {"state": initial_state[0], "attributes": initial_state[1]}
+        )
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state, expected_calls in states:
-        set_or_remove_state(hass, entity_id, state[0], state[1])
+        set_or_remove_state(
+            hass, entity_id, {"state": state[0], "attributes": state[1]}
+        )
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
         for service_call in service_calls:
@@ -320,7 +324,9 @@ async def test_media_player_state_attribute_trigger_behavior_any(
 
         # Check if changing other media players also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state[0], state[1])
+            set_or_remove_state(
+                hass, other_entity_id, {"state": state[0], "attributes": state[1]}
+            )
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * expected_calls
         service_calls.clear()
@@ -416,7 +422,9 @@ async def test_media_player_state_attribute_trigger_behavior_first(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(hass, eid, initial_state[0], initial_state[1])
+        set_or_remove_state(
+            hass, eid, {"state": initial_state[0], "attributes": initial_state[1]}
+        )
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -427,7 +435,9 @@ async def test_media_player_state_attribute_trigger_behavior_first(
     )
 
     for state, expected_calls in states:
-        set_or_remove_state(hass, entity_id, state[0], state[1])
+        set_or_remove_state(
+            hass, entity_id, {"state": state[0], "attributes": state[1]}
+        )
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
         for service_call in service_calls:
@@ -436,7 +446,9 @@ async def test_media_player_state_attribute_trigger_behavior_first(
 
         # Triggering other media players should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state[0], state[1])
+            set_or_remove_state(
+                hass, other_entity_id, {"state": state[0], "attributes": state[1]}
+            )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -530,18 +542,24 @@ async def test_media_player_state_attribute_trigger_behavior_last(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(hass, eid, initial_state[0], initial_state[1])
+        set_or_remove_state(
+            hass, eid, {"state": initial_state[0], "attributes": initial_state[1]}
+        )
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state, expected_calls in states:
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state[0], state[1])
+            set_or_remove_state(
+                hass, other_entity_id, {"state": state[0], "attributes": state[1]}
+            )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state[0], state[1])
+        set_or_remove_state(
+            hass, entity_id, {"state": state[0], "attributes": state[1]}
+        )
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
         for service_call in service_calls:
