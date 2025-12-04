@@ -20,7 +20,16 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-type MieleConfigEntry = ConfigEntry[MieleDataUpdateCoordinator]
+@dataclass
+class MieleRuntimeData:
+    """Runtime data for the Miele integration."""
+
+    api: MieleAPI
+    coordinator: MieleDataUpdateCoordinator
+    aux_coordinator: MieleAuxDataUpdateCoordinator
+
+
+type MieleConfigEntry = ConfigEntry[MieleRuntimeData]
 
 
 @dataclass
@@ -32,8 +41,15 @@ class MieleCoordinatorData:
     filling_levels: dict[str, MieleFillingLevel]
 
 
+@dataclass
+class MieleAuxCoordinatorData:
+    """Data class for storing auxiliary coordinator data."""
+
+    filling_levels: dict[str, MieleFillingLevel]
+
+
 class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
-    """Coordinator for Miele data."""
+    """Main coordinator for Miele data."""
 
     config_entry: MieleConfigEntry
     new_device_callbacks: list[Callable[[dict[str, MieleDevice]], None]] = []
@@ -127,3 +143,34 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                 filling_levels=self.data.filling_levels,
             )
         )
+
+
+class MieleAuxDataUpdateCoordinator(DataUpdateCoordinator[MieleAuxCoordinatorData]):
+    """Coordinator for Miele data for slowly polled endpoints."""
+
+    config_entry: MieleConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: MieleConfigEntry,
+        api: MieleAPI,
+    ) -> None:
+        """Initialize the Miele data coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=60),
+        )
+        self.api = api
+
+    async def _async_update_data(self) -> MieleAuxCoordinatorData:
+        """Fetch data from the Miele API."""
+        filling_levels_json = await self.api.get_filling_levels()
+        filling_levels = {
+            record["deviceId"]: MieleFillingLevel(record["fillingLevels"])
+            for record in filling_levels_json
+        }
+        return MieleAuxCoordinatorData(filling_levels=filling_levels)

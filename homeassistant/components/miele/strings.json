@@ -257,6 +257,9 @@
           "plate_step_warm": "Warming"
         }
       },
+      "power_disc_level": {
+        "name": "PowerDisc level"
+      },
       "program_id": {
         "name": "Program",
         "state": {
@@ -1026,6 +1029,12 @@
       },
       "remaining_time": {
         "name": "Remaining time"
+      },
+      "rinse_aid_level": {
+        "name": "Rinse aid level"
+      },
+      "salt_level": {
+        "name": "Salt level"
       },
       "spin_speed": {
         "name": "Spin speed"
