@@ -2,16 +2,28 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from httpx import ConnectTimeout, HTTPStatusError, ProtocolError
 import pytest
+from pythonxbox.api.provider.smartglass.models import SmartglassConsoleStatus
 
+from homeassistant.components.xbox.const import DOMAIN
+from homeassistant.components.xbox.coordinator import (
+    DEFAULT_UPDATE_INTERVAL,
+    FAST_UPDATE_INTERVAL,
+    XboxConfigEntry,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -97,3 +109,39 @@ async def test_coordinator_update_failed(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+@pytest.mark.freeze_time("2025-11-11T00:00:00+00:00")
+async def test_variable_updates(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test variable data updates depending on console power state."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry: XboxConfigEntry | None = hass.config_entries.async_get_entry(
+        config_entry.entry_id
+    )
+    assert entry
+    # console is on, update_interval is set to fast polling interval
+    assert entry.runtime_data.update_interval is FAST_UPDATE_INTERVAL
+
+    xbox_live_client.smartglass.get_console_status.return_value = (
+        SmartglassConsoleStatus(
+            **await async_load_json_object_fixture(
+                hass, "smartglass_console_status_off.json", DOMAIN
+            )  # type: ignore[arg-type]
+        )
+    )
+
+    freezer.tick(FAST_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # revert to default interval when console is off
+    assert entry.runtime_data.update_interval is DEFAULT_UPDATE_INTERVAL
