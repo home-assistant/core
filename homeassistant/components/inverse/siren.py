@@ -21,7 +21,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Initialize Siren Switch config entry."""
+    """Initialize Inverse Siren config entry."""
     registry = er.async_get(hass)
     entity_id = er.async_validate_entity_id(registry, config_entry.data[CONF_ENTITY_ID])
 
