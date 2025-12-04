@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.vacuum import VacuumActivity
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -105,8 +104,6 @@ async def test_vacuum_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
-    await async_setup_component(hass, "vacuum", {})
-
     other_entity_ids = set(target_vacuums) - {entity_id}
 
     # Set all vacuums, including the tested one, to the initial state
@@ -174,8 +171,6 @@ async def test_vacuum_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
-    await async_setup_component(hass, "vacuum", {})
-
     other_entity_ids = set(target_vacuums) - {entity_id}
 
     # Set all vacuums, including the tested one, to the initial state
@@ -242,8 +237,6 @@ async def test_vacuum_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
-    await async_setup_component(hass, "vacuum", {})
-
     other_entity_ids = set(target_vacuums) - {entity_id}
 
     # Set all vacuums, including the tested one, to the initial state

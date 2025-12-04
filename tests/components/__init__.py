@@ -38,8 +38,6 @@ async def target_entities(
     - included: List of entity_ids meant to be targeted.
     - excluded: List of entity_ids not meant to be targeted.
     """
-    await async_setup_component(hass, domain, {})
-
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
