@@ -13,7 +13,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
-    BANG_OLUFSEN_WEBSOCKET_EVENT,
+    BEO_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     DOMAIN,
     WebsocketNotification,
@@ -376,8 +376,8 @@ async def test_on_all_notifications_raw(
 
     mock_event_callback = Mock()
 
-    # Listen to BANG_OLUFSEN_WEBSOCKET_EVENT events
-    hass.bus.async_listen(BANG_OLUFSEN_WEBSOCKET_EVENT, mock_event_callback)
+    # Listen to BEO_WEBSOCKET_EVENT events
+    hass.bus.async_listen(BEO_WEBSOCKET_EVENT, mock_event_callback)
 
     # Trigger the notification
     all_notifications_raw_callback(raw_notification)
@@ -386,5 +386,5 @@ async def test_on_all_notifications_raw(
     assert str(raw_notification_full) in caplog.text
 
     mocked_call = mock_event_callback.call_args[0][0].as_dict()
-    assert mocked_call["event_type"] == BANG_OLUFSEN_WEBSOCKET_EVENT
+    assert mocked_call["event_type"] == BEO_WEBSOCKET_EVENT
     assert mocked_call["data"] == raw_notification_full

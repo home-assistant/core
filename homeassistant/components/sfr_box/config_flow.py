@@ -10,7 +10,12 @@ from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -63,12 +68,19 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     assert system_info is not None
                 await self.async_set_unique_id(system_info.mac_addr)
-                self._abort_if_unique_id_configured()
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                else:
+                    self._abort_if_unique_id_configured()
                 self._box = box
                 self._config.update(user_input)
                 return await self.async_step_choose_auth()
 
-        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+        suggested_values: Mapping[str, Any] | None = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = self._get_reconfigure_entry().data
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, suggested_values)
+
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
@@ -107,11 +119,18 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                         self._get_reauth_entry(), data_updates=user_input
                     )
                 self._config.update(user_input)
+                if self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data=self._config
+                    )
                 return self.async_create_entry(title="SFR Box", data=self._config)
 
         suggested_values: Mapping[str, Any] | None = user_input
-        if self.source == SOURCE_REAUTH and not suggested_values:
-            suggested_values = self._get_reauth_entry().data
+        if suggested_values is None:
+            if self.source == SOURCE_REAUTH:
+                suggested_values = self._get_reauth_entry().data
+            elif self.source == SOURCE_RECONFIGURE:
+                suggested_values = self._get_reconfigure_entry().data
 
         data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, suggested_values)
         return self.async_show_form(
@@ -122,6 +141,10 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Skip authentication."""
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=self._config
+            )
         return self.async_create_entry(title="SFR Box", data=self._config)
 
     async def async_step_reauth(
@@ -132,3 +155,9 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
             ip=entry_data[CONF_HOST], client=async_get_clientsession(self.hass)
         )
         return await self.async_step_auth()
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()

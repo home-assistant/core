@@ -1041,6 +1041,7 @@ async def test_supervisor_issues_free_space(
         fixable=False,
         placeholders={
             "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+            "storage_url": "/config/storage",
             "free_space": "1.6",
         },
     )
@@ -1090,6 +1091,7 @@ async def test_supervisor_issues_free_space_host_info_fail(
         fixable=False,
         placeholders={
             "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+            "storage_url": "/config/storage",
             "free_space": "<2",
         },
     )

@@ -29,7 +29,7 @@ from homeassistant.components.bang_olufsen.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     CONF_BEOLINK_JID,
-    BangOlufsenSource,
+    BeoSource,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -148,7 +148,7 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
 TEST_SOURCE = Source(
     name="Tidal", id="tidal", is_seekable=True, is_enabled=True, is_playable=True
 )
-TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BangOlufsenSource.LINE_IN.name]
+TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BeoSource.LINE_IN.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [
