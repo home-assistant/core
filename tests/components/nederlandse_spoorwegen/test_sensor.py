@@ -169,6 +169,21 @@ async def test_sensor_with_api_no_data_received_error(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_invalid_status(
+    hass: HomeAssistant,
+    mock_single_trip_fallback_status_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     ("time_input", "route_name", "description"),
     [

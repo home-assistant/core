@@ -52,12 +52,11 @@ def get_departure_time(trip: Trip | None) -> datetime | None:
 
 def _get_enum_value(enum_member: Enum | str | None) -> str | None:
     """Get the value of an Enum member or return the string itself."""
-    if enum_member is None:
-        return None
-    if isinstance(enum_member, Enum):
+    if enum_member is not None and isinstance(enum_member, Enum):
         return enum_member.value.lower()
     if isinstance(enum_member, str):
-        return enum_member.lower()
+        unexpectedValueLogMessage = f"Expected {type(enum_member).__name__} but got unexpected value: {enum_member}"
+        _LOGGER.warning(unexpectedValueLogMessage)
     return None
 
 
