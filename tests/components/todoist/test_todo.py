@@ -93,7 +93,12 @@ async def test_todo_item_state(
             {},
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
             {"content": "Soda", "due_string": "no date", "description": ""},
-            {"uid": "task-id-1", "summary": "Soda", "status": "needs_action"},
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+                "priority": "Low",
+            },
         ),
         (
             [],
@@ -112,6 +117,7 @@ async def test_todo_item_state(
                 "summary": "Soda",
                 "status": "needs_action",
                 "due": "2023-11-18",
+                "priority": "Low",
             },
         ),
         (
@@ -140,6 +146,7 @@ async def test_todo_item_state(
                 "summary": "Soda",
                 "status": "needs_action",
                 "due": "2023-11-18",
+                "priority": "Low",
             },
         ),
         (
@@ -159,6 +166,7 @@ async def test_todo_item_state(
                 "summary": "Soda",
                 "status": "needs_action",
                 "description": "6-pack",
+                "priority": "Low",
             },
         ),
     ],
@@ -306,6 +314,7 @@ async def test_update_todo_item_status(
                 "summary": "Milk",
                 "status": "needs_action",
                 "description": "desc",
+                "priority": "Low",
             },
         ),
         (
@@ -330,6 +339,7 @@ async def test_update_todo_item_status(
                 "summary": "Soda",
                 "status": "needs_action",
                 "due": "2023-11-18",
+                "priority": "Low",
             },
         ),
         (
@@ -343,7 +353,6 @@ async def test_update_todo_item_status(
                     due=Due(
                         date="2023-11-18",
                         is_recurring=False,
-                        # datetime="2023-11-18T12:30:00.000000Z",
                         string="today",
                     ),
                 )
@@ -351,19 +360,17 @@ async def test_update_todo_item_status(
             {
                 "task_id": "task-id-1",
                 "content": "Soda",
-                # "due_datetime": "2023-11-18T06:30:00-06:00",
                 "due_datetime": datetime.datetime(
                     2023, 11, 18, 6, 30, tzinfo=zoneinfo.ZoneInfo("America/Regina")
-                ),  # changed from string to datetime
+                ),
                 "description": "",
             },
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
                 "status": "needs_action",
-                # "due": "2023-11-18T06:30:00-06:00",
                 "due": "2023-11-18",
-                # "due": datetime.datetime(2023, 11, 18, 6, 30, tzinfo=zoneinfo.ZoneInfo("America/Regina")),
+                "priority": "Low",
             },
         ),
         (
@@ -388,6 +395,7 @@ async def test_update_todo_item_status(
                 "summary": "Soda",
                 "status": "needs_action",
                 "description": "6-pack",
+                "priority": "Low",
             },
         ),
         (
@@ -418,6 +426,7 @@ async def test_update_todo_item_status(
                 "uid": "task-id-1",
                 "summary": "Soda",
                 "status": "needs_action",
+                "priority": "Low",
             },
         ),
         (
@@ -453,6 +462,7 @@ async def test_update_todo_item_status(
                 "status": "needs_action",
                 "description": "6-pack",
                 "due": "2024-02-01",
+                "priority": "Low",
             },
         ),
     ],
