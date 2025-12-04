@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -46,6 +47,7 @@ from .const import (
     CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
     DOMAIN,
+    PLATFORMS,
 )
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
@@ -234,6 +236,8 @@ def create_legacy_template_issue(
     hass: HomeAssistant, config: ConfigType, domain: str
 ) -> None:
     """Create a repair for legacy template entities."""
+    if domain not in PLATFORMS:
+        return
 
     breadcrumb = "Template Entity"
     # Default entity id should be in most legacy configuration because
@@ -254,6 +258,7 @@ def create_legacy_template_issue(
     deprecation_list.append(issue_id)
 
     try:
+        config.pop(CONF_PLATFORM, None)
         modified_yaml = format_migration_config(config)
         yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
         # Format to show up properly in a numbered bullet on the repair.
