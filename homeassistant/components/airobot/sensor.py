@@ -36,6 +36,7 @@ class AirobotSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[ThermostatStatus], StateType]
     available_fn: Callable[[ThermostatStatus], bool] = lambda _: True
+    supported_fn: Callable[[ThermostatStatus], bool] = lambda _: True
 
 
 SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
@@ -62,6 +63,7 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.temp_floor,
         available_fn=lambda status: status.has_floor_sensor,
+        supported_fn=lambda status: status.has_floor_sensor,
     ),
     AirobotSensorEntityDescription(
         key="co2",
@@ -70,6 +72,7 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.co2,
         available_fn=lambda status: status.has_co2_sensor,
+        supported_fn=lambda status: status.has_co2_sensor,
     ),
     AirobotSensorEntityDescription(
         key="air_quality_index",
@@ -77,6 +80,7 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.aqi,
         available_fn=lambda status: status.has_co2_sensor,
+        supported_fn=lambda status: status.has_co2_sensor,
     ),
     AirobotSensorEntityDescription(
         key="device_uptime",
@@ -118,7 +122,9 @@ async def async_setup_entry(
     """Set up Airobot sensor platform."""
     coordinator = entry.runtime_data
     async_add_entities(
-        AirobotSensor(coordinator, description) for description in SENSOR_TYPES
+        AirobotSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.supported_fn(coordinator.data.status)
     )
 
 

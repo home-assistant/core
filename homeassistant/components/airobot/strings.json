@@ -52,7 +52,7 @@
         "name": "Device uptime"
       },
       "errors": {
-        "name": "Errors"
+        "name": "Error count"
       },
       "floor_temperature": {
         "name": "Floor temperature"

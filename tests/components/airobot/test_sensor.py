@@ -31,16 +31,8 @@ async def test_sensors(
 async def test_sensor_availability_without_optional_sensors(
     hass: HomeAssistant,
 ) -> None:
-    """Test sensors are unavailable when optional hardware is not present."""
-    # Default mock has no floor sensor, CO2, or AQI - they should be unavailable
-    state = hass.states.get("sensor.test_thermostat_floor_temperature")
-    assert state
-    assert state.state == "unavailable"
-
-    state = hass.states.get("sensor.test_thermostat_carbon_dioxide")
-    assert state
-    assert state.state == "unavailable"
-
-    state = hass.states.get("sensor.test_thermostat_air_quality_index")
-    assert state
-    assert state.state == "unavailable"
+    """Test sensors are not created when optional hardware is not present."""
+    # Default mock has no floor sensor, CO2, or AQI - they should not be created
+    assert hass.states.get("sensor.test_thermostat_floor_temperature") is None
+    assert hass.states.get("sensor.test_thermostat_carbon_dioxide") is None
+    assert hass.states.get("sensor.test_thermostat_air_quality_index") is None
