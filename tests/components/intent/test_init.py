@@ -610,8 +610,8 @@ async def test_intents_respond_intent(hass: HomeAssistant) -> None:
     assert response.speech["plain"]["speech"] == "Hello World"
 
 
-async def test_stop_valve_position(hass: HomeAssistant) -> None:
-    """Test HassStopPosition intent for valves."""
+async def test_stop_moving_valve(hass: HomeAssistant) -> None:
+    """Test HassStopMoving intent for valves."""
     assert await async_setup_component(hass, "intent", {})
 
     entity_id = f"{VALVE_DOMAIN}.test_valve"
@@ -619,7 +619,7 @@ async def test_stop_valve_position(hass: HomeAssistant) -> None:
     calls = async_mock_service(hass, VALVE_DOMAIN, SERVICE_STOP_VALVE)
 
     response = await intent.async_handle(
-        hass, "test", intent.INTENT_STOP_POSITION, {"name": {"value": "test valve"}}
+        hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test valve"}}
     )
     await hass.async_block_till_done()
 
@@ -638,8 +638,8 @@ async def test_stop_valve_position(hass: HomeAssistant) -> None:
         ({"device_class": {"value": "shade"}}),
     ],
 )
-async def test_stop_cover_position(hass: HomeAssistant, slots: dict[str, Any]) -> None:
-    """Test HassStopPosition intent for covers."""
+async def test_stop_moving_cover(hass: HomeAssistant, slots: dict[str, Any]) -> None:
+    """Test HassStopMoving intent for covers."""
     assert await async_setup_component(hass, "intent", {})
 
     entity_id = f"{COVER_DOMAIN}.test_cover"
@@ -648,9 +648,7 @@ async def test_stop_cover_position(hass: HomeAssistant, slots: dict[str, Any]) -
     )
     calls = async_mock_service(hass, COVER_DOMAIN, SERVICE_STOP_COVER)
 
-    response = await intent.async_handle(
-        hass, "test", intent.INTENT_STOP_POSITION, slots
-    )
+    response = await intent.async_handle(hass, "test", intent.INTENT_STOP_MOVING, slots)
     await hass.async_block_till_done()
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -661,8 +659,8 @@ async def test_stop_cover_position(hass: HomeAssistant, slots: dict[str, Any]) -
     assert call.data == {"entity_id": entity_id}
 
 
-async def test_stop_position_intent_unsupported_domain(hass: HomeAssistant) -> None:
-    """Test that HassStopPosition intent fails with unsupported domain."""
+async def test_stop_moving_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassStopMoving intent fails with unsupported domain."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
 
@@ -671,5 +669,5 @@ async def test_stop_position_intent_unsupported_domain(hass: HomeAssistant) -> N
 
     with pytest.raises(intent.IntentHandleError):
         await intent.async_handle(
-            hass, "test", intent.INTENT_STOP_POSITION, {"name": {"value": "test light"}}
+            hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test light"}}
         )
