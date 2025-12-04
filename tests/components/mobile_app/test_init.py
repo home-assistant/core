@@ -68,7 +68,9 @@ async def _test_create_cloud_hook(
     hass_admin_user: MockUser,
     additional_config: dict[str, Any],
     async_active_subscription_return_value: bool,
-    additional_steps: Callable[[ConfigEntry, Mock, str], Awaitable[None]],
+    additional_steps: Callable[
+        [ConfigEntry, Mock, str, Callable[[Any], None]], Awaitable[None]
+    ],
 ) -> None:
     config_entry = MockConfigEntry(
         data={
@@ -84,6 +86,24 @@ async def _test_create_cloud_hook(
     )
     config_entry.add_to_hass(hass)
 
+    cloudhook_change_callback = None
+
+    def mock_listen_cloudhook_change(
+        _: HomeAssistant, _webhook_id: str, callback: Callable[[Any], None]
+    ):
+        """Mock the cloudhook change listener."""
+        nonlocal cloudhook_change_callback
+        cloudhook_change_callback = callback
+        return lambda: None  # Return unsubscribe function
+
+    cloud_hook = "https://hook-url"
+
+    async def mock_get_or_create_cloudhook(_hass: HomeAssistant, _webhook_id: str):
+        """Mock creating a cloudhook and trigger the change callback."""
+        assert cloudhook_change_callback is not None
+        cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
+        return cloud_hook
+
     with (
         patch(
             "homeassistant.components.cloud.async_active_subscription",
@@ -93,17 +113,24 @@ async def _test_create_cloud_hook(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch(
             "homeassistant.components.cloud.async_get_or_create_cloudhook",
-            autospec=True,
+            side_effect=mock_get_or_create_cloudhook,
         ) as mock_async_get_or_create_cloudhook,
+        patch(
+            "homeassistant.components.cloud.async_listen_cloudhook_change",
+            side_effect=mock_listen_cloudhook_change,
+        ),
     ):
-        cloud_hook = "https://hook-url"
-        mock_async_get_or_create_cloudhook.return_value = cloud_hook
-
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
+
+        assert cloudhook_change_callback is not None
+
         await additional_steps(
-            config_entry, mock_async_get_or_create_cloudhook, cloud_hook
+            config_entry,
+            mock_async_get_or_create_cloudhook,
+            cloud_hook,
+            cloudhook_change_callback,
         )
 
 
@@ -114,7 +141,10 @@ async def test_create_cloud_hook_on_setup(
     """Test creating a cloud hook during setup."""
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        cloud_hook: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_called_once_with(
@@ -134,7 +164,10 @@ async def test_remove_cloudhook(
     """Test removing a cloud hook when config entry is removed."""
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        cloud_hook: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         webhook_id = config_entry.data[CONF_WEBHOOK_ID]
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
@@ -158,7 +191,10 @@ async def test_create_cloud_hook_aleady_exists(
     cloud_hook = "https://hook-url-already-exists"
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, _: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        _: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_not_called()
@@ -175,13 +211,21 @@ async def test_create_cloud_hook_after_connection(
     """Test creating a cloud hook when connected to the cloud."""
 
     async def additional_steps(
-        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+        config_entry: ConfigEntry,
+        mock_create_cloudhook: Mock,
+        cloud_hook: str,
+        cloudhook_change_callback: Callable[[Any], None],
     ) -> None:
         assert CONF_CLOUDHOOK_URL not in config_entry.data
         mock_create_cloudhook.assert_not_called()
 
         async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
+
+        # Simulate cloudhook creation by calling the callback
+        cloudhook_change_callback({CONF_CLOUDHOOK_URL: cloud_hook})
+        await hass.async_block_till_done()
+
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_called_once_with(
             hass, config_entry.data[CONF_WEBHOOK_ID]
@@ -260,3 +304,236 @@ async def test_remove_entry_on_user_remove(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 0
+
+
+async def test_cloudhook_cleanup_on_disconnect_and_logout(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test cloudhook is cleaned up when cloud disconnects and user is logged out."""
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: "test-webhook-id",
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_is_logged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_is_connected",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        # Cloudhook should still exist
+        assert CONF_CLOUDHOOK_URL in config_entry.data
+
+    # Simulate cloud disconnect and logout
+    with patch(
+        "homeassistant.components.cloud.async_is_logged_in",
+        return_value=False,
+    ):
+        async_mock_cloud_connection_status(hass, False)
+        await hass.async_block_till_done()
+
+        # Cloudhook should be removed from config entry
+        assert CONF_CLOUDHOOK_URL not in config_entry.data
+
+
+async def test_cloudhook_persists_on_disconnect_when_logged_in(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test cloudhook persists when cloud disconnects but user is still logged in."""
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: "test-webhook-id",
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_is_logged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_is_connected",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        # Cloudhook should exist
+        assert CONF_CLOUDHOOK_URL in config_entry.data
+
+        # Simulate cloud disconnect while still logged in
+        async_mock_cloud_connection_status(hass, False)
+        await hass.async_block_till_done()
+
+        # Cloudhook should still exist because user is still logged in
+        assert CONF_CLOUDHOOK_URL in config_entry.data
+
+
+async def test_cloudhook_change_listener_deletion(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test cloudhook change listener removes cloudhook from config entry on deletion."""
+    webhook_id = "test-webhook-id"
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    cloudhook_change_callback = None
+
+    def mock_listen_cloudhook_change(
+        _: HomeAssistant, _webhook_id: str, callback: Callable[[Any], None]
+    ):
+        """Mock the cloudhook change listener."""
+        nonlocal cloudhook_change_callback
+        cloudhook_change_callback = callback
+        return lambda: None  # Return unsubscribe function
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_is_logged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_listen_cloudhook_change",
+            side_effect=mock_listen_cloudhook_change,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        # Cloudhook should exist
+        assert CONF_CLOUDHOOK_URL in config_entry.data
+        # Change listener should have been registered
+        assert cloudhook_change_callback is not None
+
+        # Simulate cloudhook deletion by calling the callback with None
+        cloudhook_change_callback(None)
+        await hass.async_block_till_done()
+
+        # Cloudhook should be removed from config entry
+        assert CONF_CLOUDHOOK_URL not in config_entry.data
+
+
+async def test_cloudhook_change_listener_update(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test cloudhook change listener updates cloudhook URL in config entry."""
+    webhook_id = "test-webhook-id"
+    original_url = "https://hook-url"
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: original_url,
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    cloudhook_change_callback = None
+
+    def mock_listen_cloudhook_change(hass_instance, wh_id: str, callback):
+        """Mock the cloudhook change listener."""
+        nonlocal cloudhook_change_callback
+        cloudhook_change_callback = callback
+        return lambda: None  # Return unsubscribe function
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_is_logged_in",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_listen_cloudhook_change",
+            side_effect=mock_listen_cloudhook_change,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        # Cloudhook should exist with original URL
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == original_url
+        # Change listener should have been registered
+        assert cloudhook_change_callback is not None
+
+        # Simulate cloudhook URL change
+        new_url = "https://new-hook-url"
+        cloudhook_change_callback({CONF_CLOUDHOOK_URL: new_url})
+        await hass.async_block_till_done()
+
+        # Cloudhook URL should be updated in config entry
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == new_url
+
+        # Simulate same URL update (should not trigger update)
+        cloudhook_change_callback({CONF_CLOUDHOOK_URL: new_url})
+        await hass.async_block_till_done()
+
+        # URL should remain the same
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == new_url

@@ -16,14 +16,12 @@ from ha_silabs_firmware_client import (
 import pytest
 from yarl import URL
 
+from homeassistant.components.homeassistant_hardware.const import Z2M_EMBER_DOCS_URL
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
     BaseFirmwareConfigFlow,
     BaseFirmwareOptionsFlow,
-)
-from homeassistant.components.homeassistant_hardware.helpers import (
-    async_firmware_update_context,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -203,11 +201,6 @@ async def mock_test_firmware_platform(
         yield
 
 
-@pytest.fixture(autouse=True)
-async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
-    """Mock supervisor client in tests."""
-
-
 def delayed_side_effect() -> Callable[..., Awaitable[None]]:
     """Slows down eager tasks by delaying for an event loop tick."""
 
@@ -306,21 +299,18 @@ def mock_firmware_info(
         bootloader_reset_methods: Sequence[ResetTarget] = (),
         application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
         progress_callback: Callable[[int, int], None] | None = None,
-        *,
-        domain: str = "homeassistant_hardware",
     ) -> FirmwareInfo:
-        async with async_firmware_update_context(hass, device, domain):
-            await asyncio.sleep(0)
-            progress_callback(0, 100)
-            await asyncio.sleep(0)
-            progress_callback(50, 100)
-            await asyncio.sleep(0)
-            progress_callback(100, 100)
+        await asyncio.sleep(0)
+        progress_callback(0, 100)
+        await asyncio.sleep(0)
+        progress_callback(50, 100)
+        await asyncio.sleep(0)
+        progress_callback(100, 100)
 
-            if flashed_firmware_info is None:
-                raise HomeAssistantError("Failed to probe the firmware after flashing")
+        if flashed_firmware_info is None:
+            raise HomeAssistantError("Failed to probe the firmware after flashing")
 
-            return flashed_firmware_info
+        return flashed_firmware_info
 
     with (
         patch(
@@ -372,6 +362,7 @@ async def consume_progress_flow(
     return result
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_recommended(hass: HomeAssistant) -> None:
     """Test flow with recommended Zigbee installation type."""
     init_result = await hass.config_entries.flow.async_init(
@@ -446,6 +437,7 @@ async def test_config_flow_zigbee_recommended(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_custom_zha(hass: HomeAssistant) -> None:
     """Test flow with custom Zigbee installation type and ZHA selected."""
     init_result = await hass.config_entries.flow.async_init(
@@ -538,6 +530,7 @@ async def test_config_flow_zigbee_custom_zha(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
     """Test flow with custom Zigbee installation type and Other selected."""
     init_result = await hass.config_entries.flow.async_init(
@@ -577,10 +570,24 @@ async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
         assert pick_result["progress_action"] == "install_firmware"
         assert pick_result["step_id"] == "install_zigbee_firmware"
 
-        create_result = await consume_progress_flow(
+        show_z2m_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=("install_zigbee_firmware",),
+        )
+
+        # After firmware installation, Z2M docs link is shown
+        assert show_z2m_result["type"] is FlowResultType.FORM
+        assert show_z2m_result["step_id"] == "show_z2m_docs_url"
+        assert (
+            show_z2m_result["description_placeholders"]["z2m_docs_url"]
+            == Z2M_EMBER_DOCS_URL
+        )
+
+        # Submit the form to complete the flow
+        create_result = await hass.config_entries.flow.async_configure(
+            show_z2m_result["flow_id"],
+            user_input={},
         )
 
         assert create_result["type"] is FlowResultType.CREATE_ENTRY
@@ -596,6 +603,7 @@ async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
     assert flows == []
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_index_download_fails_but_not_required(
     hass: HomeAssistant,
 ) -> None:
@@ -632,6 +640,7 @@ async def test_config_flow_firmware_index_download_fails_but_not_required(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_download_fails_but_not_required(
     hass: HomeAssistant,
 ) -> None:
@@ -667,6 +676,7 @@ async def test_config_flow_firmware_download_fails_but_not_required(
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_doesnt_downgrade(
     hass: HomeAssistant,
 ) -> None:
@@ -705,6 +715,7 @@ async def test_config_flow_doesnt_downgrade(
         assert len(mock_async_flash_silabs_firmware.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) -> None:
     """Test skip installing the firmware if not needed."""
     result = await hass.config_entries.flow.async_init(
