@@ -80,7 +80,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
         """Get the number of speeds supported by the fan."""
         return len(self.type_information.range)
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
