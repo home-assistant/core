@@ -9,7 +9,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from ns_api import Trip
+from ns_api import Trip, TripStatus
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -180,6 +180,8 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
     NSSensorEntityDescription(
         key="status",
         translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.value.lower() for status in TripStatus],
         value_fn=lambda trip: _get_enum_value(trip.status) if trip else None,
         entity_registry_enabled_default=False,
     ),
