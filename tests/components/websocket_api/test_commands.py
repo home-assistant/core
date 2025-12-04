@@ -3660,7 +3660,7 @@ async def test_extract_from_target_validation_error(
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions", "target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
-async def test_get_triggers_for_target(
+async def test_get_triggers_conditions_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,

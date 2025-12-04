@@ -239,6 +239,7 @@ FLOWS = {
         "gdacs",
         "generic",
         "geniushub",
+        "gentex_homelink",
         "geo_json_events",
         "geocaching",
         "geofency",

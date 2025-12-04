@@ -46,12 +46,12 @@ from .models import (
     DPCodeJsonWrapper,
     DPCodeTypeInformationWrapper,
     DPCodeWrapper,
-    EnumTypeData,
 )
 from .raw_data_models import ElectricityData
+from .type_information import EnumTypeInformation
 
 
-class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
+class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Custom DPCode Wrapper for converting enum to wind direction."""
 
     DPTYPE = DPType.ENUM
