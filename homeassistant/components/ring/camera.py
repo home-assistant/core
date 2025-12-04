@@ -96,6 +96,8 @@ async def async_setup_entry(
 class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
+    entity_description: RingCameraEntityDescription
+
     def __init__(
         self,
         device: RingDoorBell,
@@ -128,6 +130,13 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )
+
+        # Live stream entities only process recording history if device has
+        # subscription to avoid repeated warning logs from ring_doorbell library
+        if self.entity_description.live_stream and not self._device.has_subscription:
+            self.async_write_ha_state()
+            return
+
         history_data = self._device.last_history
         if history_data:
             self._last_event = history_data[0]
