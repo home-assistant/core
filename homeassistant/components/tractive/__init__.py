@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     # Send initial health overview data to sensors after platforms are set up
     for item in filtered_trackables:
         if item.health_overview:
-            tractive._send_health_overview_update(item.health_overview)
+            tractive.send_health_overview_update(item.health_overview)
 
     async def cancel_listen_task(_: Event) -> None:
         await tractive.unsubscribe()
@@ -256,7 +256,7 @@ class TractiveClient:
                         self._send_wellness_update(event)
                         continue
                     if event["message"] == "health_overview":
-                        self._send_health_overview_update(event)
+                        self.send_health_overview_update(event)
                         continue
                     if (
                         "hardware" in event
@@ -346,14 +346,11 @@ class TractiveClient:
             TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload
         )
 
-    def _send_health_overview_update(self, event: dict[str, Any]) -> None:
+    def send_health_overview_update(self, event: dict[str, Any]) -> None:
         """Handle health_overview events (replaces wellness_overview)."""
         # The health_overview response can be at root level or wrapped in 'content'
         # Handle both structures for compatibility
-        if "content" in event:
-            data = event["content"]
-        else:
-            data = event
+        data = event.get("content", event)
 
         activity = data.get("activity", {})
         sleep = data.get("sleep")
