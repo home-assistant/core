@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+import aiofiles
 from aiontfy import Message
 from aiontfy.exceptions import (
     NtfyException,
@@ -14,6 +15,9 @@ from aiontfy.exceptions import (
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.components import camera
+from homeassistant.components.image import DATA_COMPONENT as IMAGE_DATA_COMPONENT
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -25,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.selector import MediaSelector
 
 from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
@@ -43,6 +48,8 @@ ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
+ATTR_ATTACH_FILE = "attach_file"
+ATTR_FILENAME = "filename"
 
 SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
     {
@@ -60,6 +67,8 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_EMAIL): vol.Email(),
         vol.Optional(ATTR_CALL): cv.string,
         vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+        vol.Optional(ATTR_ATTACH_FILE): MediaSelector({"accept": ["*/*"]}),
+        vol.Optional(ATTR_FILENAME): cv.string,
     }
 )
 
@@ -103,7 +112,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
 
     async def publish(self, **kwargs: Any) -> None:
         """Publish a message to a topic."""
-
+        attachment = None
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
         if delay:
@@ -118,10 +127,44 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="delay_no_call",
                 )
+        if file := params.pop(ATTR_ATTACH_FILE, None):
+            if params.get(ATTR_ATTACH) is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="attach_url_xor_local",
+                )
+            media_content_id: str = file["media_content_id"]
+            if media_content_id.startswith("media-source://camera/"):
+                entity_id = media_content_id.removeprefix("media-source://camera/")
+                img = await camera.async_get_image(self.hass, entity_id)
+                attachment = img.content
+            elif media_content_id.startswith("media-source://image/"):
+                entity_id = media_content_id.removeprefix("media-source://image/")
+                if (
+                    entity := self.hass.data[IMAGE_DATA_COMPONENT].get_entity(entity_id)
+                ) is None:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="image_source_not_found",
+                    )
+                attachment = await entity.async_image()
+            else:
+                media = await async_resolve_media(
+                    self.hass, file["media_content_id"], None
+                )
+
+                if media.path is None:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="media_source_not_supported",
+                    )
+                async with aiofiles.open(media.path, mode="rb") as f:
+                    attachment = await f.read()
+                params.setdefault(ATTR_FILENAME, media.path.name)
 
         msg = Message(topic=self.topic, **params)
         try:
-            await self.ntfy.publish(msg)
+            await self.ntfy.publish(msg, attachment)
         except NtfyUnauthorizedAuthenticationError as e:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(

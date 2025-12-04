@@ -258,6 +258,9 @@ aioesphomeapi==42.10.0
 # homeassistant.components.slack
 aiofiles==24.1.0
 
+# homeassistant.components.ntfy
+aiofiles==24.1.0
+
 # homeassistant.components.flo
 aioflo==2021.11.0
 
