@@ -120,6 +120,7 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+    TWO_WAY_AUDIO = 4
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -560,6 +561,26 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if self._webrtc_provider:
             await self._webrtc_provider.async_handle_async_webrtc_offer(
+                self, offer_sdp, session_id, send_message
+            )
+            return
+
+        raise HomeAssistantError("Camera does not support WebRTC")
+
+    async def async_handle_async_webrtc_re_offer(
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
+        """Handle the async WebRTC offer on renegotiations.
+
+        Async means that it could take some time to process the offer and responses/message
+        will be sent with the send_message callback provided during the initial offer.
+        This method is used by cameras with CameraEntityFeature.STREAM.
+        An integration overriding this method must also implement async_on_webrtc_candidate.
+
+        Integrations can override with a native WebRTC implementation.
+        """
+        if self._webrtc_provider:
+            await self._webrtc_provider.async_handle_async_webrtc_re_offer(
                 self, offer_sdp, session_id, send_message
             )
             return
