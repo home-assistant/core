@@ -146,7 +146,7 @@ async def test_service_request_media(
         return_response=True,
     )
 
-    assert response == {"request": {"media_type": MediaType.TV, "tmdb_id": 123456789}}
+    assert response == {"request": {"media_type": MediaType.TV, "tmdb_id": "123456789"}}
 
 
 @pytest.mark.parametrize(
@@ -204,7 +204,7 @@ async def test_services_connection_error(
         (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test", ATTR_LIMIT: 3}),
         (
             SERVICE_REQUEST_MEDIA,
-            {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: 123456789, ATTR_SEASONS: "1"},
+            {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: "123456789", ATTR_SEASONS: "1"},
         ),
         (SERVICE_SEARCH_AND_REQUEST, {ATTR_QUERY: "test", ATTR_SEASONS: "1"}),
     ],
