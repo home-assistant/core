@@ -315,7 +315,7 @@ async def test_config_flow_import_already_configured(
         (HTTPError("Invalid API key"), "invalid_auth"),
         (Timeout("Cannot connect"), "cannot_connect"),
         (RequestsConnectionError("Cannot connect"), "cannot_connect"),
-        (NoDataReceivedError("Unexpected error"), "unknown"),
+        (NoDataReceivedError("Unexpected error"), "no_data"),
         (Exception("Unexpected error"), "unknown"),
     ],
 )

@@ -173,7 +173,7 @@ async def test_sensor_with_api_no_data_received_error(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_with_invalid_status(
     hass: HomeAssistant,
-    mock_single_trip_fallback_status_nsapi: AsyncMock,
+    mock_single_trip_invalid_status_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,

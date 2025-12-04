@@ -54,11 +54,6 @@ def _get_enum_value(enum_member: Enum | str | None) -> str | None:
     """Get the value of an Enum member or return the string itself."""
     if enum_member is not None and isinstance(enum_member, Enum):
         return enum_member.value.lower()
-    if isinstance(enum_member, str):
-        if enum_member not in _logged_values:
-            unexpectedValueLogMessage = f"Expected {type(enum_member).__name__} but got unexpected value: {enum_member}"
-            _LOGGER.warning(unexpectedValueLogMessage)
-            _logged_values.add(enum_member)
     return None
 
 
@@ -79,9 +74,6 @@ def _get_route(trip: Trip | None) -> list[str]:
 
 
 _LOGGER = logging.getLogger(__name__)
-_logged_values: set[str] = (
-    set()
-)  # to track logging of unexpected enum values and to prevent log flooding
 
 PARALLEL_UPDATES = 0  # since we use coordinator pattern
 
