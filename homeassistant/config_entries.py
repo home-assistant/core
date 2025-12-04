@@ -312,8 +312,8 @@ class FlowType(StrEnum):
     """Flow type."""
 
     CONFIG_FLOW = "config_flow"
-    # Add other flow types here as needed in the future,
-    # if we want to support them in the `next_flow` parameter.
+    OPTIONS_FLOW = "options_flow"
+    CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
@@ -1566,6 +1566,26 @@ class ConfigEntriesFlowManager(
                 issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
+    def _async_validate_next_flow(
+        self,
+        result: ConfigFlowResult,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if (next_flow := result.get("next_flow")) is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type not in FlowType:
+            raise HomeAssistantError("Invalid next_flow type")
+        if flow_type == FlowType.CONFIG_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+        if flow_type == FlowType.OPTIONS_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.options.async_get(flow_id)
+        if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.subentries.async_get(flow_id)
+
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -1614,6 +1634,8 @@ class ConfigEntriesFlowManager(
                 self.config_entries.async_update_entry(
                     entry, discovery_keys=new_discovery_keys
                 )
+
+            self._async_validate_next_flow(result)
             return result
 
         # Mark the step as done.
@@ -1728,6 +1750,10 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
+        if not existing_entry:
+            result = await flow.async_on_create_entry(result)
+            self._async_validate_next_flow(result)
+
         return result
 
     async def async_create_flow(
@@ -3191,21 +3217,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    def _async_set_next_flow_if_valid(
-        self,
-        result: ConfigFlowResult,
-        next_flow: tuple[FlowType, str] | None,
-    ) -> None:
-        """Validate and set next_flow in result if provided."""
-        if next_flow is None:
-            return
-        flow_type, flow_id = next_flow
-        if flow_type != FlowType.CONFIG_FLOW:
-            raise HomeAssistantError("Invalid next_flow type")
-        # Raises UnknownFlow if the flow does not exist.
-        self.hass.config_entries.flow.async_get(flow_id)
-        result["next_flow"] = next_flow
-
     @callback
     def async_abort(
         self,
@@ -3219,7 +3230,17 @@ class ConfigFlow(ConfigEntryBaseFlow):
             reason=reason,
             description_placeholders=description_placeholders,
         )
-        self._async_set_next_flow_if_valid(result, next_flow)
+        if next_flow:
+            result["next_flow"] = next_flow
+        return result
+
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Runs after a config flow has created a config entry.
+
+        Can be overwritten by integrations to add additional data to the result.
+        Example: creating next flow entries to the result which needs a
+        config entry created before it can start.
+        """
         return result
 
     @callback
@@ -3249,7 +3270,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
-        self._async_set_next_flow_if_valid(result, next_flow)
+        if next_flow:
+            result["next_flow"] = next_flow
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
