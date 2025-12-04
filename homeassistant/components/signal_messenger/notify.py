@@ -19,18 +19,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    ATTR_FILENAMES,
+    ATTR_TEXTMODE,
+    ATTR_URLS,
+    ATTR_VERIFY_SSL,
+    CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
+    CONF_RECP_NR,
+    CONF_SENDER_NR,
+    CONF_SIGNAL_CLI_REST_API,
+    TEXTMODE_OPTIONS,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SENDER_NR = "number"
-CONF_RECP_NR = "recipients"
-CONF_SIGNAL_CLI_REST_API = "url"
-CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
-ATTR_FILENAMES = "attachments"
-ATTR_URLS = "urls"
-ATTR_VERIFY_SSL = "verify_ssl"
-ATTR_TEXTMODE = "text_mode"
-
-TEXTMODE_OPTIONS = ["normal", "styled"]
 
 DATA_FILENAMES_SCHEMA = vol.Schema(
     {
@@ -62,25 +63,46 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER_NR): cv.string,
         vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
-        vol.Required(CONF_RECP_NR): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_RECP_NR): cv.string,
     }
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SignalNotificationService:
+) -> SignalNotificationService | None:
     """Get the SignalMessenger notification service."""
 
-    sender_nr = config[CONF_SENDER_NR]
-    recp_nrs = config[CONF_RECP_NR]
-    signal_cli_rest_api_url = config[CONF_SIGNAL_CLI_REST_API]
+    if discovery_info is None:
+        return None
 
-    signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
+    entry_id = discovery_info.get("entry_id")
+
+    if entry_id is None:
+        return None
+
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    if entry is None:
+        return None
+
+    recp_str = entry.data[CONF_RECP_NR]
+
+    recp_nrs = recp_str.split(",")
+
+    signal_cli_rest_api = get_api(entry.data.copy())
 
     return SignalNotificationService(hass, recp_nrs, signal_cli_rest_api)
+
+
+def get_api(data: dict[str, Any]) -> SignalCliRestApi:
+    """Get the Signal CLI REST API instance from a config entry."""
+    sender_nr = data[CONF_SENDER_NR]
+    signal_cli_rest_api_url = data[CONF_SIGNAL_CLI_REST_API]
+
+    return SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
 
 
 class SignalNotificationService(BaseNotificationService):
@@ -101,9 +123,9 @@ class SignalNotificationService(BaseNotificationService):
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to one or more recipients. Additionally a file can be attached."""
 
-        _LOGGER.debug("Sending signal message")
-
         recipients: list[str] = kwargs.get(ATTR_TARGET) or self._recp_nrs
+
+        _LOGGER.debug("Sending signal message to %s", recipients)
 
         data = kwargs.get(ATTR_DATA)
 
