@@ -36,9 +36,6 @@
     "request_media": {
       "service": "mdi:download"
     },
-    "search_and_request": {
-      "service": "mdi:download"
-    },
     "search_media": {
       "service": "mdi:magnify"
     }

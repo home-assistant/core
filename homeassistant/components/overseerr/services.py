@@ -1,7 +1,8 @@
 """Define services for the Overseerr integration."""
 
+import ast
 from dataclasses import asdict
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
@@ -137,7 +138,6 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     limit = call.data.get(ATTR_LIMIT)
     try:
         LOGGER.debug("Searching for '%s'", query)
-        # URL encode the query to handle spaces and special characters
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
         LOGGER.info("Error searching for '%s': %s", query, str(err))
@@ -165,11 +165,7 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     client = entry.runtime_data.client
     media_type = call.data[ATTR_MEDIA_TYPE]
     tmdb_id = call.data[ATTR_TMDB_ID]
-    seasons = call.data.get(ATTR_SEASONS)
-
-    # Convert single integer to list for seasons
-    if isinstance(seasons, int):
-        seasons = [seasons]
+    seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
 
     try:
         LOGGER.debug(
@@ -178,6 +174,7 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
             tmdb_id,
             seasons or "none",
         )
+        # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, tmdb_id, seasons)
     except OverseerrConnectionError as err:
         LOGGER.error(
@@ -193,6 +190,22 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
         ) from err
 
     return {"request": cast(JsonValueType, asdict(request))}
+
+
+def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]:
+    """Parse all possible inputs to "all" or a list of integers."""
+    seasons_input = str(seasons_input).strip()
+    if seasons_input == "":
+        return "all"
+
+    try:
+        parsed = ast.literal_eval(seasons_input)
+        if isinstance(parsed, int):
+            return [parsed]
+        return list(parsed)
+    except ValueError, SyntaxError:
+        LOGGER.error("Unable to cast input to a list '%s'", seasons_input)
+        return "all"
 
 
 @callback
