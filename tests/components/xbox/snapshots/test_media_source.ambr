@@ -577,7 +577,7 @@
         'media_class': <MediaClass.GAME: 'game'>,
         'media_content_id': 'media-source://xbox/271958441785640/1297287135',
         'media_content_type': <MediaClass.GAME: 'game'>,
-        'thumbnail': 'http://store-images.s-microsoft.com/image/apps.64736.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6491fb2f-52e7-4129-bcbd-d23a67117ae0',
+        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.64736.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6491fb2f-52e7-4129-bcbd-d23a67117ae0',
         'title': 'Blue Dragon',
       }),
       dict({
@@ -588,7 +588,7 @@
         'media_class': <MediaClass.GAME: 'game'>,
         'media_content_id': 'media-source://xbox/271958441785640/1560034050',
         'media_content_type': <MediaClass.GAME: 'game'>,
-        'thumbnail': 'http://store-images.s-microsoft.com/image/apps.46246.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.c976135a-831a-4cf6-a39b-f01c633567bc',
+        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.46246.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.c976135a-831a-4cf6-a39b-f01c633567bc',
         'title': "Assassin's Creed® Syndicate",
       }),
     ]),
