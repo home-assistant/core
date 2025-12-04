@@ -16,6 +16,8 @@ from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_SCENE_1_ENTITY_ID = "scene.test_gateway_living_room_evening"
 TEST_SCENE_2_ENTITY_ID = "scene.test_gateway_kitchen_bright"
+TEST_DIMMER_ENTITY_ID = "light.dimmer_0000_02"
+TEST_CCT_ENTITY_ID = "light.cct_0000_03"
 
 
 def _trigger_availability_callback(scene: MagicMock, available: bool) -> None:
@@ -73,16 +75,8 @@ async def test_entities(
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
     assert state is not None
-    assert state.attributes.get("gateway_sn") == "6A242121110E"
-    assert state.attributes.get("scene_id") == 1
-    assert state.attributes.get("area_id") == "1"
-    assert state.attributes.get("channel") == 0
+    # Only entity_id mapping is kept in extra state attributes
     assert "entity_id" in state.attributes
-
-    mock_scenes[0].register_listener.assert_called()
-    calls = mock_scenes[0].register_listener.call_args_list
-    event_types = [call[0][0] for call in calls]
-    assert CallbackEventType.ONLINE_STATUS in event_types
 
 
 async def test_activate_scenes(
@@ -114,47 +108,24 @@ async def test_scene_availability(
     init_integration: MockConfigEntry,
     mock_scenes: list[MagicMock],
 ) -> None:
-    """Test scene availability changes."""
+    """Test scene availability changes when gateway goes offline."""
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
     assert state is not None
     assert state.state != "unavailable"
 
+    # Simulate gateway going offline
     _trigger_availability_callback(mock_scenes[0], False)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
     assert state.state == "unavailable"
 
+    # Simulate gateway coming back online
     _trigger_availability_callback(mock_scenes[0], True)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
     assert state.state != "unavailable"
-
-
-async def test_scene_read_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    mock_scenes: list[MagicMock],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test handling of scene read failures during setup."""
-    failing_scene = MagicMock()
-    failing_scene.scene_id = 99
-    failing_scene.name = "Failing Scene"
-    failing_scene.unique_id = "scene_0099_0000_6A242121110E"
-    failing_scene.gw_sn = "6A242121110E"
-    failing_scene.read_scene.side_effect = OSError("Connection error")
-
-    mock_scenes.append(failing_scene)
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.sunricher_dali._PLATFORMS", [Platform.SCENE]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert "Failed to read scene details" in caplog.text
 
 
 async def test_scene_entity_mapping(
@@ -176,17 +147,8 @@ async def test_scene_entity_mapping(
 
     state = hass.states.get(TEST_SCENE_1_ENTITY_ID)
     assert state is not None
-    entity_ids = state.attributes.get("entity_id", [])
-    assert isinstance(entity_ids, list)
+    assert isinstance(state.attributes.get("entity_id", []), list)
 
     state = hass.states.get(TEST_SCENE_2_ENTITY_ID)
     assert state is not None
-    assert state.attributes.get("scene_id") == 2
-
-    await hass.services.async_call(
-        SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SCENE_2_ENTITY_ID},
-        blocking=True,
-    )
-    mock_scenes[1].activate.assert_called_once()
+    assert isinstance(state.attributes.get("entity_id", []), list)

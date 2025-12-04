@@ -4,6 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from PySrDaliGateway.helper import gen_device_unique_id, gen_group_unique_id
 import pytest
 
 from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
@@ -140,6 +141,21 @@ def _create_mock_scene(
     gw_sn: str = GATEWAY_SERIAL,
 ) -> MagicMock:
     """Create a mock scene with standard attributes."""
+    devices_with_ids: list[dict[str, Any]] = []
+    for device in devices:
+        device_with_id = dict(device)
+        device_with_id["unique_id"] = (
+            gen_group_unique_id(device["address"], device["channel"], gw_sn)
+            if device["dev_type"] == "0401"
+            else gen_device_unique_id(
+                device["dev_type"],
+                device["channel"],
+                device["address"],
+                gw_sn,
+            )
+        )
+        devices_with_ids.append(device_with_id)
+
     scene = MagicMock()
     scene.scene_id = scene_id
     scene.name = name
@@ -147,14 +163,15 @@ def _create_mock_scene(
     scene.gw_sn = gw_sn
     scene.channel = channel
     scene.activate = MagicMock()
+    scene.devices = devices_with_ids
 
-    scene_details = {
+    scene_details: dict[str, Any] = {
         "unique_id": unique_id,
         "id": scene_id,
         "name": name,
         "channel": channel,
         "area_id": area_id,
-        "devices": devices,
+        "devices": devices_with_ids,
     }
     scene.read_scene = AsyncMock(return_value=scene_details)
     scene.register_listener = MagicMock(return_value=lambda: None)
