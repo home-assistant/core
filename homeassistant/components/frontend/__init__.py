@@ -26,7 +26,7 @@ from homeassistant.const import (
     EVENT_THEMES_UPDATED,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
@@ -576,8 +576,7 @@ async def _async_setup_themes(
             name not in (DEFAULT_THEME, VALUE_NO_THEME)
             and name not in hass.data[DATA_THEMES]
         ):
-            _LOGGER.warning("Theme %s not found", name)
-            return
+            raise ServiceValidationError(f"Theme {name} not found")
 
         light_mode = mode == "light"
 
@@ -610,19 +609,17 @@ async def _async_setup_themes(
         name_dark = call.data.get(CONF_NAME_DARK)
 
         if (
-            name
+            name is not None
             and name not in (DEFAULT_THEME, VALUE_NO_THEME)
             and name not in hass.data[DATA_THEMES]
         ):
-            _LOGGER.warning("Theme %s not found", name)
-            return
+            raise ServiceValidationError(f"Theme {name} not found")
         if (
-            name_dark
+            name_dark is not None
             and name_dark not in (DEFAULT_THEME, VALUE_NO_THEME)
             and name_dark not in hass.data[DATA_THEMES]
         ):
-            _LOGGER.warning("Theme %s not found", name_dark)
-            return
+            raise ServiceValidationError(f"Theme {name_dark} not found")
 
         if name:
             hass.data[DATA_DEFAULT_THEME] = (

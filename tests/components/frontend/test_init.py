@@ -27,7 +27,7 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -342,9 +342,13 @@ async def test_themes_set_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with wrong name."""
 
-    await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
-    )
+    with pytest.raises(
+        ServiceValidationError,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(
+            DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
+        )
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -442,7 +446,11 @@ async def test_themes_set_dark_theme_wrong_name(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket, schema
 ) -> None:
     """Test frontend.set_theme service called with mode dark and wrong name."""
-    await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
+    with pytest.raises(
+        ServiceValidationError,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -461,9 +469,13 @@ async def test_themes_reload_themes(
         "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
-        await hass.services.async_call(
-            DOMAIN, "set_theme", {"name": "happy"}, blocking=True
-        )
+        with pytest.raises(
+            ServiceValidationError,
+            match="Theme happy not found",
+        ):
+            await hass.services.async_call(
+                DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+            )
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
