@@ -1,4 +1,4 @@
-"""Tuya Home Assistant type information classes."""
+"""Type information classes for the Tuya integration."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ class EnumTypeInformation(TypeInformation):
 
     @classmethod
     def from_json(cls, dpcode: str, type_data: str) -> Self | None:
-        """Load JSON string and return a EnumTypeInformation object."""
+        """Load JSON string and return an EnumTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
             return None
         return cls(
@@ -120,7 +120,7 @@ class IntegerTypeInformation(TypeInformation):
 
     @classmethod
     def from_json(cls, dpcode: str, type_data: str) -> Self | None:
-        """Load JSON string and return a IntegerTypeInformation object."""
+        """Load JSON string and return an IntegerTypeInformation object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
 
