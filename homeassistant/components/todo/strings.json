@@ -67,6 +67,10 @@
       },
       "name": "Remove item"
     },
+    "reset_items": {
+      "description": "Reset all to-do list items to needed.",
+      "name": "Reset items"
+    },
     "update_item": {
       "description": "Updates an existing to-do list item based on its name or UID.",
       "fields": {
