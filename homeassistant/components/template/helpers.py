@@ -261,8 +261,6 @@ def create_legacy_template_issue(
         config.pop(CONF_PLATFORM, None)
         modified_yaml = format_migration_config(config)
         yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
-        # Format to show up properly in a numbered bullet on the repair.
-        yaml_config = "    ```\n    " + yaml_config.replace("\n", "\n    ") + "```"
     except RecursionError:
         yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
 
