@@ -10,12 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     MediaPlayerState,
 )
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -69,149 +64,50 @@ async def test_media_player_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-def parametrize_muted_unmuted_trigger_states(
-    trigger: str,
-    target_state: tuple[str, dict],
-    other_state: tuple[str, dict],
-) -> list[
-    tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
-]:
-    """Parametrize states and expected service call counts.
-
-    Returns a list of tuples with (trigger, initial_state, list of states), where
-    states is a list of tuples
-    (state to set, expected service call count).
-    """
-    return [
-        # Initial state None
-        (
-            trigger,
-            (None, {}),
-            [
-                (target_state, 0),
-                (other_state, 0),
-                (target_state, 1),
-            ],
-        ),
-        # Initial state different from target state
-        (
-            trigger,
-            other_state,
-            [
-                (target_state, 1),
-                (other_state, 0),
-                (target_state, 1),
-            ],
-        ),
-        # Initial state same as target state
-        (
-            trigger,
-            target_state,
-            [
-                (target_state, 0),
-                (other_state, 0),
-                (target_state, 1),
-            ],
-        ),
-        # Initial state unavailable / unknown
-        (
-            trigger,
-            (STATE_UNAVAILABLE, {}),
-            [
-                (target_state, 0),
-                (other_state, 0),
-                (target_state, 1),
-            ],
-        ),
-        (
-            trigger,
-            (STATE_UNKNOWN, {}),
-            [
-                (target_state, 0),
-                (other_state, 0),
-                (target_state, 1),
-            ],
-        ),
-    ]
-
-
-def parametrize_muted_trigger_states() -> list[
-    tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
-]:
+def parametrize_muted_trigger_states() -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
     Returns a list of tuples with (trigger, initial_state, list of states), where
     states is a list of tuples (state to set, expected service call count).
     """
     trigger = "media_player.muted"
-    return [
-        # States with muted attribute
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
+    return parametrize_trigger_states(
+        trigger=trigger,
+        target_states=[
+            # States with muted attribute
             (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
-        ),
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: None}),
-        ),
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
-            (MediaPlayerState.PLAYING, {}),  # Missing attribute
-        ),
-        # States with volume attribute
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
+            # States with volume attribute
             (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
-        ),
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: None}),
-        ),
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
-            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
-            (MediaPlayerState.PLAYING, {}),  # Missing attribute
-        ),
-        # States with muted and volume attribute
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
+            # States with muted and volume attribute
             (
                 MediaPlayerState.PLAYING,
                 {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: True},
             ),
             (
                 MediaPlayerState.PLAYING,
-                {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
-            ),
-        ),
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
-            (
-                MediaPlayerState.PLAYING,
                 {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: False},
             ),
             (
                 MediaPlayerState.PLAYING,
-                {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
-            ),
-        ),
-        *parametrize_muted_unmuted_trigger_states(
-            trigger,
-            (
-                MediaPlayerState.PLAYING,
                 {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: True},
             ),
+        ],
+        other_states=[
+            # States with muted attribute
+            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
+            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: None}),
+            (MediaPlayerState.PLAYING, {}),  # Missing attribute
+            # States with volume attribute
+            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
+            (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: None}),
+            (MediaPlayerState.PLAYING, {}),  # Missing attribute
+            # States with muted and volume attribute
             (
                 MediaPlayerState.PLAYING,
                 {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
             ),
-        ),
-    ]
+        ],
+    )
 
 
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
@@ -282,7 +178,7 @@ async def test_media_player_state_trigger_behavior_any(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_muted_trigger_states(),
     ],
@@ -295,8 +191,7 @@ async def test_media_player_state_attribute_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: tuple[str | None, dict],
-    states: list[tuple[tuple[str, dict], int]],
+    states: list[StateDescription],
 ) -> None:
     """Test that the media player state trigger fires when any media player state changes to a specific state."""
     await async_setup_component(hass, "media player", {})
@@ -305,30 +200,25 @@ async def test_media_player_state_attribute_trigger_behavior_any(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(
-            hass, eid, {"state": initial_state[0], "attributes": initial_state[1]}
-        )
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
-    for state, expected_calls in states:
-        set_or_remove_state(
-            hass, entity_id, {"state": state[0], "attributes": state[1]}
-        )
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == expected_calls
+        assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
         # Check if changing other media players also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, {"state": state[0], "attributes": state[1]}
-            )
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * expected_calls
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
 
 
@@ -399,7 +289,7 @@ async def test_media_player_state_trigger_behavior_first(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_muted_trigger_states(),
     ],
@@ -412,8 +302,7 @@ async def test_media_player_state_attribute_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: tuple[str | None, dict],
-    states: list[tuple[tuple[str, dict], int]],
+    states: list[StateDescription],
 ) -> None:
     """Test that the media player state trigger fires when the first media player state changes to a specific state."""
     await async_setup_component(hass, "media_player", {})
@@ -422,9 +311,7 @@ async def test_media_player_state_attribute_trigger_behavior_first(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(
-            hass, eid, {"state": initial_state[0], "attributes": initial_state[1]}
-        )
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(
@@ -434,21 +321,18 @@ async def test_media_player_state_attribute_trigger_behavior_first(
         trigger_target_config,
     )
 
-    for state, expected_calls in states:
-        set_or_remove_state(
-            hass, entity_id, {"state": state[0], "attributes": state[1]}
-        )
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == expected_calls
+        assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
         # Triggering other media players should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, {"state": state[0], "attributes": state[1]}
-            )
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -519,7 +403,7 @@ async def test_media_player_state_trigger_behavior_last(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "initial_state", "states"),
+    ("trigger", "states"),
     [
         *parametrize_muted_trigger_states(),
     ],
@@ -532,8 +416,7 @@ async def test_media_player_state_attribute_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: tuple[str | None, dict],
-    states: list[tuple[tuple[str, dict], int]],
+    states: list[StateDescription],
 ) -> None:
     """Test that the media player state trigger fires when the last media player state changes to a specific state."""
     await async_setup_component(hass, "media_player", {})
@@ -542,26 +425,21 @@ async def test_media_player_state_attribute_trigger_behavior_last(
 
     # Set all media players, including the tested media player, to the initial state
     for eid in target_media_players:
-        set_or_remove_state(
-            hass, eid, {"state": initial_state[0], "attributes": initial_state[1]}
-        )
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
-    for state, expected_calls in states:
+    for state in states[1:]:
+        included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(
-                hass, other_entity_id, {"state": state[0], "attributes": state[1]}
-            )
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(
-            hass, entity_id, {"state": state[0], "attributes": state[1]}
-        )
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == expected_calls
+        assert len(service_calls) == state["count"]
         for service_call in service_calls:
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
