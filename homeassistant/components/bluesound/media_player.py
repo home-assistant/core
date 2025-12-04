@@ -479,15 +479,14 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
     async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
-        if self._sync_status.leader is None:
-            return
+        if self._sync_status.leader is not None:
+            leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
+            async_dispatcher_send(
+                self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
+            )
 
-        leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
-
-        _LOGGER.debug("Trying to unjoin player: %s", self.id)
-        async_dispatcher_send(
-            self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
-        )
+        if self._sync_status.followers is not None:
+            await self._player.remove_follower(self.host, self.port)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
