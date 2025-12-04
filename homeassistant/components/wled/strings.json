@@ -148,16 +148,6 @@
       "message": "The WLED device's firmware version is not supported: {error}"
     }
   },
-  "issues": {
-    "config_entry_unique_id_collision": {
-      "description": "There are multiple WLED config entries with the same device MAC address.\nThe config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
-      "title": "Multiple WLED config entries with same device MAC address"
-    },
-    "config_entry_unique_id_collision_many": {
-      "description": "There are multiple ({number_of_entries}) WLED config entries with the same device MAC address.\nThe first {title_limit} config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
-      "title": "[%key:component::wled::issues::config_entry_unique_id_collision::title%]"
-    }
-  },
   "options": {
     "step": {
       "init": {
