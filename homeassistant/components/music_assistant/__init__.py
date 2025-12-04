@@ -18,6 +18,7 @@ from music_assistant_models.enums import EventType
 from music_assistant_models.errors import (
     ActionUnavailable,
     AuthenticationFailed,
+    AuthenticationRequired,
     InvalidToken,
     MusicAssistantError,
 )
@@ -99,7 +100,7 @@ async def async_setup_entry(  # noqa: C901
             translation_key="invalid_server_version",
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-    except (AuthenticationFailed, InvalidToken) as err:
+    except (AuthenticationRequired, AuthenticationFailed, InvalidToken) as err:
         raise ConfigEntryAuthFailed(
             f"Authentication failed for {mass_url}: {err}"
         ) from err

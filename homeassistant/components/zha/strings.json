@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "cannot_form_network": "Could not form a new Zigbee network.\n\nError: {error}",
       "cannot_resolve_path": "Could not resolve device path: {path}",
       "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
       "cannot_restore_backup_no_ieee_confirm": "The adapter you are restoring to has outdated firmware and cannot write the adapter IEEE address multiple times. Please upgrade the firmware or confirm permanent overwrite in the previous step.",
@@ -1923,6 +1924,7 @@
   },
   "options": {
     "abort": {
+      "cannot_form_network": "[%key:component::zha::config::abort::cannot_form_network%]",
       "cannot_resolve_path": "[%key:component::zha::config::abort::cannot_resolve_path%]",
       "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
       "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]",
