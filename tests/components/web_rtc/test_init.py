@@ -22,8 +22,8 @@ async def test_async_setup(hass: HomeAssistant) -> None:
     ice_servers = async_get_ice_servers(hass)
     assert len(ice_servers) == 1
     assert ice_servers[0].urls == [
-        "stun:stun.home-assistant.io:80",
         "stun:stun.home-assistant.io:3478",
+        "stun:stun.home-assistant.io:80",
     ]
 
 
@@ -238,8 +238,8 @@ async def test_ws_ice_servers_with_registered_servers(
     assert msg["result"] == [
         {
             "urls": [
-                "stun:stun.home-assistant.io:80",
                 "stun:stun.home-assistant.io:3478",
+                "stun:stun.home-assistant.io:80",
             ]
         },
         {

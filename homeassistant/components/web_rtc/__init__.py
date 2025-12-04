@@ -110,8 +110,8 @@ def async_get_ice_servers(hass: HomeAssistant) -> list[RTCIceServer]:
         servers = [
             RTCIceServer(
                 urls=[
-                    "stun:stun.home-assistant.io:80",
                     "stun:stun.home-assistant.io:3478",
+                    "stun:stun.home-assistant.io:80",
                 ]
             ),
         ]
