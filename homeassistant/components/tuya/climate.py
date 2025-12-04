@@ -208,6 +208,18 @@ def _get_temperature_wrappers(
         device, DPCode.TEMP_SET_F, prefer_function=True
     )
 
+    # If there is a temp unit convert dpcode, override empty units
+    if (
+        temp_unit_convert := DPCodeEnumWrapper.find_dpcode(
+            device, DPCode.TEMP_UNIT_CONVERT
+        )
+    ) is not None:
+        for wrapper in (temp_current, temp_current_f, temp_set, temp_set_f):
+            if wrapper is not None and not wrapper.type_information.unit:
+                wrapper.type_information.unit = temp_unit_convert.read_device_status(
+                    device
+                )
+
     # Get wrappers for celsius and fahrenheit
     # We need to check the unit of measurement
     current_celsius = _get_temperature_wrapper(
