@@ -367,67 +367,6 @@ async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None
     assert result2["title"] == "Kiosker 192.168.1.100"
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test reauth flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_PORT: 8081, "api_token": "old_token"},
-        unique_id="test-device-123",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.kiosker.config_flow.validate_input"
-    ) as mock_validate:
-        mock_validate.return_value = {"title": "Kiosker test-device-123"}
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"api_token": "new_token"},
-        )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
-    assert entry.data["api_token"] == "new_token"
-
-
-async def test_reauth_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test reauth flow with connection error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_PORT: 8081, "api_token": "old_token"},
-        unique_id="test-device-123",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
-
-    with patch(
-        "homeassistant.components.kiosker.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"api_token": "invalid_token"},
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
 async def test_validate_input_success(
     hass: HomeAssistant,
     mock_kiosker_api: Mock,

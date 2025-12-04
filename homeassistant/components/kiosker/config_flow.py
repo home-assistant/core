@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -73,7 +72,6 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
-    CONNECTION_CLASS = "local_polling"
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -239,61 +237,6 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
             errors=errors,
         )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
-            )
-
-        # Get the config entry that's being re-authenticated
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if entry is None:
-            return self.async_abort(reason="reauth_failed")
-
-        # Create new config data with updated token
-        new_data = entry.data.copy()
-        new_data[CONF_API_TOKEN] = user_input[CONF_API_TOKEN]
-
-        # Validate the new token
-        try:
-            await validate_input(self.hass, new_data)
-        except CannotConnect:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
-                errors={"base": "invalid_auth"},
-            )
-        except (ValueError, TypeError) as exc:
-            _LOGGER.error("Invalid reauth data: %s", exc)
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
-                errors={"base": "invalid_auth"},
-            )
-        except (ValueError, TypeError, AttributeError) as exc:
-            _LOGGER.error("Invalid reauth data: %s", exc)
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
-                errors={"base": "unknown"},
-            )
-
-        # Update the config entry with new token
-        self.hass.config_entries.async_update_entry(entry, data=new_data)
-        await self.hass.config_entries.async_reload(entry.entry_id)
-
-        return self.async_abort(reason="reauth_successful")
 
 
 class CannotConnect(HomeAssistantError):
