@@ -11,7 +11,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
 from .models import AmcrestConfiguredDevice
 
 # Define button types
@@ -33,8 +32,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Amcrest buttons for a config entry."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.coordinator
     entities = [
         AmcrestCoordinatedButton(device.name, device, coordinator, description)
         for description in BUTTON_TYPES

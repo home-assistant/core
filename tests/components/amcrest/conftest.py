@@ -87,6 +87,7 @@ def mock_amcrest_api():
     mock_device.async_is_record_on_motion_detection = AsyncMock(return_value=True)
     mock_device.async_event_channels_happened = AsyncMock(return_value=False)
 
+    mock_device.get_base_url = MagicMock(return_value="http://192.168.1.100")
     # Synchronous properties
     mock_device.available = True
     mock_device.serial_number = MagicMock(return_value="ABCD1234567890")

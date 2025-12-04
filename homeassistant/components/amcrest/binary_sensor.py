@@ -35,7 +35,6 @@ from .const import (
     BINARY_SENSOR_SCAN_INTERVAL_SECS,
     DATA_AMCREST,
     DEVICES,
-    DOMAIN,
     SERVICE_EVENT,
     SERVICE_UPDATE,
 )
@@ -302,8 +301,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a binary sensor for an Amcrest IP Camera."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.coordinator
 
     # Only create coordinated binary sensors that should poll
     entities = [
