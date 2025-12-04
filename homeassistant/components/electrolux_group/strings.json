@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Electrolux account is already configured.",
+      "wrong_account": "The account is wrong.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "missing_id": "The appliance id is missing.",
+      "added_to_existing_entry": "The appliance is added."
+    },
+    "error": {
+      "auth_failed": "Authentication failed. Please check your credentials.",
+      "cannot_connect": "Unable to connect to the Electrolux API. Please check credentials and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "refresh_token": "Refresh token"
+        },
+        "data_description": {
+          "access_token": "The access token from Electrolux Group for Developer.",
+          "api_key": "Your Electrolux Group for Developer API key.",
+          "refresh_token": "The refresh token used to renew your access token."
+        },
+        "title": "Configure your Electrolux Group account",
+        "description": "Please [click here]({portal_link}) to generate new access and refresh tokens, then paste them below."
+      },
+      "discovery_confirm": {
+        "title": "New {brand} appliance found",
+        "description": "A new appliance \"{device}\" has been discovered. Do you want to add it to Home Assistant?"
+      }
+    }
+  }
+}
