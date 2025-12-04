@@ -32,6 +32,11 @@ from .const import (
 type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 
+def normalize_mac_address(mac: str) -> str:
+    """Normalize a MAC address to lowercase without separators."""
+    return mac.lower().replace(":", "").replace("-", "").replace(".", "")
+
+
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
@@ -50,6 +55,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
+
+        assert entry.unique_id
+        self.config_mac_address = entry.unique_id
 
         super().__init__(
             hass,
@@ -131,7 +139,8 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 translation_placeholders={"error": str(error)},
             ) from error
 
-        if device.info.mac_address != self.config_entry.unique_id:
+        device_mac_address = normalize_mac_address(device.info.mac_address)
+        if device_mac_address != self.config_mac_address:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="mac_address_mismatch",
