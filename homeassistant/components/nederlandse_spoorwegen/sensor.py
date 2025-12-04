@@ -79,7 +79,9 @@ def _get_route(trip: Trip | None) -> list[str]:
 
 
 _LOGGER = logging.getLogger(__name__)
-_logged_values: set[str] = set() # to track logging of unexpected enum values and to prevent log flooding
+_logged_values: set[str] = (
+    set()
+)  # to track logging of unexpected enum values and to prevent log flooding
 
 PARALLEL_UPDATES = 0  # since we use coordinator pattern
 
