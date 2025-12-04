@@ -84,6 +84,9 @@ class LocalFile(Camera):
         ):
             raise ServiceValidationError(f"Path {file_path} is not accessible")
         self._file_path = file_path
+        content, _ = mimetypes.guess_type(file_path)
+        if content is not None:
+            self.content_type = content
         self.schedule_update_ha_state()
 
     @property

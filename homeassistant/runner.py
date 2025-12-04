@@ -8,7 +8,10 @@ from contextlib import contextmanager
 import dataclasses
 from datetime import datetime
 import errno
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # type: ignore[assignment]
 from io import TextIOWrapper
 import json
 import logging
@@ -135,7 +138,8 @@ def ensure_single_execution(config_dir: str) -> Generator[SingleExecutionLock]:
         # Try to acquire an exclusive, non-blocking lock
         # This will raise BlockingIOError if lock is already held
         try:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if fcntl:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             # Another instance is already running
             _report_existing_instance(lock_file_path, config_dir)

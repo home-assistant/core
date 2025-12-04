@@ -130,6 +130,7 @@ async def test_camera_content_type(
     assert body == image
 
 
+@pytest.mark.enable_socket
 @pytest.mark.parametrize(
     "get_config",
     [
@@ -209,3 +210,55 @@ async def test_update_file_path(
             service_data,
             blocking=True,
         )
+
+
+@pytest.mark.enable_socket
+async def test_update_file_path_updates_content_type(
+    hass: HomeAssistant,
+) -> None:
+    """Test that update_file_path updates the content_type."""
+    config = {
+        "name": "test_camera",
+        "file_path": "/path/to/image.jpg",
+    }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        options=config,
+        entry_id="1",
+    )
+
+    config_entry.add_to_hass(hass)
+    with (
+        patch("os.path.isfile", Mock(return_value=True)),
+        patch("os.access", Mock(return_value=True)),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("camera.test_camera")
+    assert state is not None
+
+    component = hass.data["camera"]
+    entity = component.get_entity("camera.test_camera")
+    assert entity.content_type == "image/jpeg"
+
+    # Update to a PNG file
+    service_data = {
+        ATTR_ENTITY_ID: "camera.test_camera",
+        CONF_FILE_PATH: "/path/to/image.png",
+    }
+
+    with (
+        patch("os.path.isfile", Mock(return_value=True)),
+        patch("os.access", Mock(return_value=True)),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_FILE_PATH,
+            service_data,
+            blocking=True,
+        )
+
+    assert entity.content_type == "image/png"
