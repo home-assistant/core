@@ -9,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["google_drive_api"],
-  "quality_scale": "platinum",
+  "quality_scale": "silver",
   "requirements": ["python-google-drive-api==0.1.0"]
 }
