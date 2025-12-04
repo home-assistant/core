@@ -17,6 +17,7 @@ from roborock import (
 from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import UserParams, create_device_manager
+from roborock.map.map_parser import MapParserConfig
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -24,7 +25,16 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
+from .const import (
+    CONF_BASE_URL,
+    CONF_SHOW_BACKGROUND,
+    CONF_USER_DATA,
+    DEFAULT_DRAWABLES,
+    DOMAIN,
+    DRAWABLES,
+    MAP_SCALE,
+    PLATFORMS,
+)
 from .coordinator import (
     RoborockConfigEntry,
     RoborockCoordinators,
@@ -56,6 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             user_params,
             cache=cache,
             session=async_get_clientsession(hass),
+            map_parser_config=MapParserConfig(
+                drawables=[
+                    drawable
+                    for drawable, default_value in DEFAULT_DRAWABLES.items()
+                    if entry.options.get(DRAWABLES, {}).get(drawable, default_value)
+                ],
+                show_background=entry.options.get(CONF_SHOW_BACKGROUND, False),
+                map_scale=MAP_SCALE,
+            ),
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
