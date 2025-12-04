@@ -244,9 +244,7 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda oven, cavity: (
-            temp if (temp := oven.get_temp(cavity)) != 0 else None
-        ),
+        value_fn=lambda oven, cavity: oven.get_temp(cavity),
     ),
     WhirlpoolOvenCavitySensorEntityDescription(
         key="oven_target_temperature",
@@ -254,9 +252,7 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda oven, cavity: (
-            temp if (temp := oven.get_target_temp(cavity)) != 0 else None
-        ),
+        value_fn=lambda oven, cavity: oven.get_target_temp(cavity),
     ),
 )
 
