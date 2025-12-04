@@ -795,7 +795,6 @@ async def async_setup_entry(
         definition: MieleSensorDefinition,
         device: MieleDevice,
         unique_id: str,
-        level: MieleFillingLevel,
     ) -> bool:
         """Check if the sensor is enabled."""
         if (
@@ -857,7 +856,6 @@ async def async_setup_entry(
                     definition,
                     device,
                     unique_id,
-                    coordinator.data.filling_levels[device_id],
                 ):
                     continue
 

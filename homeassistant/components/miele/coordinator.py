@@ -38,7 +38,6 @@ class MieleCoordinatorData:
 
     devices: dict[str, MieleDevice]
     actions: dict[str, MieleAction]
-    filling_levels: dict[str, MieleFillingLevel]
 
 
 @dataclass
@@ -82,11 +81,6 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                 for device_id, device in devices_json.items()
             }
             self.devices = devices
-            filling_levels_json = await self.api.get_filling_levels()
-            filling_levels = {
-                record["deviceId"]: MieleFillingLevel(record["fillingLevels"])
-                for record in filling_levels_json
-            }
             actions = {}
 
             for device_id in devices:
@@ -107,9 +101,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                     )
                     actions_json = {}
                 actions[device_id] = MieleAction(actions_json)
-            return MieleCoordinatorData(
-                devices=devices, actions=actions, filling_levels=filling_levels
-            )
+            return MieleCoordinatorData(devices=devices, actions=actions)
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""
@@ -124,11 +116,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             device_id: MieleDevice(device) for device_id, device in devices_json.items()
         }
         self.async_set_updated_data(
-            MieleCoordinatorData(
-                devices=devices,
-                actions=self.data.actions,
-                filling_levels=self.data.filling_levels,
-            )
+            MieleCoordinatorData(devices=devices, actions=self.data.actions)
         )
 
     async def callback_update_actions(self, actions_json: dict[str, dict]) -> None:
@@ -137,11 +125,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             device_id: MieleAction(action) for device_id, action in actions_json.items()
         }
         self.async_set_updated_data(
-            MieleCoordinatorData(
-                devices=self.data.devices,
-                actions=actions,
-                filling_levels=self.data.filling_levels,
-            )
+            MieleCoordinatorData(devices=self.data.devices, actions=actions)
         )
 
 
