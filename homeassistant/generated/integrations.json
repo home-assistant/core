@@ -1482,6 +1482,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "duosida_ev": {
+      "name": "Duosida EV Charger",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "duotecno": {
       "name": "Duotecno",
       "integration_type": "hub",

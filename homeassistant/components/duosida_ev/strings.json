@@ -1,0 +1,99 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Duosida EV Charger Setup",
+        "description": "Choose how to add your charger",
+        "data": {
+          "discovery": "Auto-discover chargers on network"
+        },
+        "data_description": {
+          "discovery": "Enable to automatically find chargers on your local network"
+        }
+      },
+      "discovery": {
+        "title": "Select Charger",
+        "description": "Select your charger from the list",
+        "data": {
+          "device": "Charger"
+        },
+        "data_description": {
+          "device": "Select the charger you want to add"
+        }
+      },
+      "manual": {
+        "title": "Manual Configuration",
+        "description": "Enter your charger details",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "device_id": "Device ID (optional)"
+        },
+        "data_description": {
+          "host": "The IP address of your Duosida charger",
+          "port": "The TCP port (default: 9988)",
+          "device_id": "19-digit device ID starting with 03 (auto-detected if not provided)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "No chargers found on network"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "available": "Available",
+          "preparing": "Preparing",
+          "charging": "Charging",
+          "cooling": "Cooling",
+          "suspended_ev": "Suspended EV",
+          "finished": "Finished",
+          "holiday": "Holiday"
+        }
+      },
+      "cp_voltage": {
+        "name": "CP voltage"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_time": {
+        "name": "Session time"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      }
+    }
+  }
+}

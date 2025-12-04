@@ -1,0 +1,12 @@
+{
+  "domain": "duosida_ev",
+  "name": "Duosida EV Charger",
+  "codeowners": ["@americodias"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/duosida_ev",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["duosida_ev"],
+  "quality_scale": "bronze",
+  "requirements": ["duosida-ev==0.1.3"]
+}
