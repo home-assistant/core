@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import timeout
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
@@ -22,17 +23,27 @@ from androidtv.setup_async import (
     FireTVAsync,
     setup as async_androidtv_setup,
 )
+from androidtvremote2 import (
+    AndroidTVRemote,
+    CannotConnect,
+    ConnectionClosed,
+    InvalidAuth,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -43,8 +54,11 @@ from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
+    CONF_CONNECTION_TYPE,
     CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
+    CONNECTION_TYPE_ADB,
+    CONNECTION_TYPE_REMOTE,
     DEFAULT_ADB_SERVER_PORT,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
@@ -53,6 +67,7 @@ from .const import (
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
+from .helpers import create_remote_api, get_enable_ime
 from .services import async_setup_services
 
 ADB_PYTHON_EXCEPTIONS: tuple = (
@@ -69,7 +84,7 @@ ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
@@ -78,13 +93,23 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class AndroidTVRuntimeData:
-    """Runtime data definition."""
+class AndroidTVADBRuntimeData:
+    """Runtime data definition for ADB connection."""
 
     aftv: AndroidTVAsync | FireTVAsync
     dev_opt: dict[str, Any]
 
 
+@dataclass
+class AndroidTVRemoteRuntimeData:
+    """Runtime data definition for Remote protocol connection."""
+
+    api: AndroidTVRemote
+    dev_opt: dict[str, Any]
+
+
+# Union type for runtime data
+type AndroidTVRuntimeData = AndroidTVADBRuntimeData | AndroidTVRemoteRuntimeData
 AndroidTVConfigEntry = ConfigEntry[AndroidTVRuntimeData]
 
 
@@ -131,9 +156,9 @@ async def async_connect_androidtv(
     config: Mapping[str, Any],
     *,
     state_detection_rules: dict[str, Any] | None = None,
-    timeout: float = 30.0,
+    timeout_seconds: float = 30.0,
 ) -> tuple[AndroidTVAsync | FireTVAsync | None, str | None]:
-    """Connect to Android device."""
+    """Connect to Android device via ADB."""
     address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
     adbkey, signer, adb_log = await hass.async_add_executor_job(
@@ -148,7 +173,7 @@ async def async_connect_androidtv(
         adb_server_port=config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
         state_detection_rules=state_detection_rules,
         device_class=config[CONF_DEVICE_CLASS],
-        auth_timeout_s=timeout,
+        auth_timeout_s=timeout_seconds,
         signer=signer,
         log_errors=False,
     )
@@ -195,14 +220,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Android TV / Fire TV integration."""
+    """Set up the Android TV integration."""
     async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
-    """Set up Android Debug Bridge platform."""
-
+async def _async_setup_adb_entry(
+    hass: HomeAssistant, entry: AndroidTVConfigEntry
+) -> bool:
+    """Set up Android TV via ADB connection."""
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     if CONF_ADB_SERVER_IP not in entry.data:
         exceptions = ADB_PYTHON_EXCEPTIONS
@@ -228,36 +254,120 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
     )
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    entry.runtime_data = AndroidTVRuntimeData(aftv, entry.options.copy())
+    entry.runtime_data = AndroidTVADBRuntimeData(aftv, entry.options.copy())
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
+async def _async_setup_remote_entry(
+    hass: HomeAssistant, entry: AndroidTVConfigEntry
+) -> bool:
+    """Set up Android TV via Remote protocol connection."""
+    _LOGGER.debug("async_setup_entry (remote): %s", entry.data)
+    api = create_remote_api(
+        hass, entry.data[CONF_HOST], get_enable_ime(entry.options)
+    )
+
+    @callback
+    def is_available_updated(is_available: bool) -> None:
+        _LOGGER.info(
+            "%s %s at %s",
+            "Reconnected to" if is_available else "Disconnected from",
+            entry.data[CONF_NAME],
+            entry.data[CONF_HOST],
+        )
+
+    api.add_is_available_updated_callback(is_available_updated)
+
+    try:
+        async with timeout(5.0):
+            await api.async_connect()
+    except InvalidAuth as exc:
+        # The Android TV is hard reset or the certificate and key files were deleted.
+        raise ConfigEntryAuthFailed from exc
+    except (CannotConnect, ConnectionClosed, TimeoutError) as exc:
+        # The Android TV is network unreachable. Raise exception and let Home Assistant retry
+        # later. If device gets a new IP address the zeroconf flow will update the config.
+        raise ConfigEntryNotReady from exc
+
+    def reauth_needed() -> None:
+        """Start a reauth flow if Android TV is hard reset while reconnecting."""
+        entry.async_start_reauth(hass)
+
+    # Start a task (canceled in disconnect) to keep reconnecting if device becomes
+    # network unreachable. If device gets a new IP address the zeroconf flow will
+    # update the config entry data and reload the config entry.
+    api.keep_reconnecting(reauth_needed)
+
+    entry.runtime_data = AndroidTVRemoteRuntimeData(api, entry.options.copy())
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def on_hass_stop(event: Event) -> None:
+        """Stop push updates when hass stops."""
+        api.disconnect()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
+    entry.async_on_unload(api.disconnect)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
+    """Set up Android TV from a config entry."""
+    connection_type = entry.data.get(CONF_CONNECTION_TYPE, CONNECTION_TYPE_ADB)
+
+    if connection_type == CONNECTION_TYPE_REMOTE:
+        return await _async_setup_remote_entry(hass, entry)
+    return await _async_setup_adb_entry(hass, entry)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
     """Unload a config entry."""
+    connection_type = entry.data.get(CONF_CONNECTION_TYPE, CONNECTION_TYPE_ADB)
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        aftv = entry.runtime_data.aftv
-        await aftv.adb_close()
+        if connection_type == CONNECTION_TYPE_REMOTE:
+            # Remote protocol - disconnect is handled by async_on_unload
+            pass
+        else:
+            # ADB connection
+            runtime_data = entry.runtime_data
+            if isinstance(runtime_data, AndroidTVADBRuntimeData):
+                await runtime_data.aftv.adb_close()
 
     return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Update when config_entry options update."""
-    reload_opt = False
-    old_options = entry.runtime_data.dev_opt
-    for opt_key, opt_val in entry.options.items():
-        if opt_key in RELOAD_OPTIONS:
-            old_val = old_options.get(opt_key)
-            if old_val is None or old_val != opt_val:
-                reload_opt = True
-                break
+    connection_type = entry.data.get(CONF_CONNECTION_TYPE, CONNECTION_TYPE_ADB)
+    runtime_data = entry.runtime_data
 
-    if reload_opt:
+    if connection_type == CONNECTION_TYPE_ADB and isinstance(
+        runtime_data, AndroidTVADBRuntimeData
+    ):
+        reload_opt = False
+        old_options = runtime_data.dev_opt
+        for opt_key, opt_val in entry.options.items():
+            if opt_key in RELOAD_OPTIONS:
+                old_val = old_options.get(opt_key)
+                if old_val is None or old_val != opt_val:
+                    reload_opt = True
+                    break
+
+        if reload_opt:
+            await hass.config_entries.async_reload(entry.entry_id)
+            return
+
+        runtime_data.dev_opt = entry.options.copy()
+        async_dispatcher_send(hass, f"{SIGNAL_CONFIG_ENTITY}_{entry.entry_id}")
+    else:
+        # For remote protocol, always reload on options change
         await hass.config_entries.async_reload(entry.entry_id)
-        return
-
-    entry.runtime_data.dev_opt = entry.options.copy()
-    async_dispatcher_send(hass, f"{SIGNAL_CONFIG_ENTITY}_{entry.entry_id}")

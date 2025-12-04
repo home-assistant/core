@@ -2,41 +2,55 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import hashlib
 import logging
+from typing import Any
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
+from androidtvremote2 import AndroidTVRemote, ConnectionClosed, VolumeInfo
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import AndroidTVConfigEntry
+from . import AndroidTVADBRuntimeData, AndroidTVConfigEntry, AndroidTVRemoteRuntimeData
 from .const import (
+    CONF_APP_ICON,
+    CONF_APP_NAME,
     CONF_APPS,
+    CONF_CONNECTION_TYPE,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
     CONF_SCREENCAP_INTERVAL,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
+    CONNECTION_TYPE_REMOTE,
     DEFAULT_EXCLUDE_UNNAMED_APPS,
     DEFAULT_GET_SOURCES,
     DEFAULT_SCREENCAP_INTERVAL,
     DEVICE_ANDROIDTV,
+    DOMAIN,
     SIGNAL_CONFIG_ENTITY,
 )
-from .entity import AndroidTVEntity, adb_decorator
+from .entity import AndroidTVADBEntity, AndroidTVRemoteEntity, adb_decorator
 from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT, SERVICE_LEARN_SENDEVENT
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,19 +69,244 @@ async def async_setup_entry(
     entry: AndroidTVConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Android Debug Bridge entity."""
-    device_class = entry.runtime_data.aftv.DEVICE_CLASS
-    async_add_entities(
-        [
-            AndroidTVDevice(entry)
-            if device_class == DEVICE_ANDROIDTV
-            else FireTVDevice(entry)
-        ]
+    """Set up the Android TV media player entity."""
+    connection_type = entry.data.get(CONF_CONNECTION_TYPE)
+
+    if connection_type == CONNECTION_TYPE_REMOTE:
+        # Remote protocol connection
+        runtime_data = entry.runtime_data
+        assert isinstance(runtime_data, AndroidTVRemoteRuntimeData)
+        async_add_entities([AndroidTVRemoteMediaPlayerEntity(runtime_data.api, entry)])
+    else:
+        # ADB connection
+        runtime_data = entry.runtime_data
+        assert isinstance(runtime_data, AndroidTVADBRuntimeData)
+        device_class = runtime_data.aftv.DEVICE_CLASS
+        async_add_entities(
+            [
+                AndroidTVDevice(entry)
+                if device_class == DEVICE_ANDROIDTV
+                else FireTVDevice(entry)
+            ]
+        )
+
+
+# =============================================================================
+# Remote Protocol Media Player Entity
+# =============================================================================
+
+
+class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteEntity, MediaPlayerEntity):
+    """Android TV Remote Media Player Entity."""
+
+    _attr_assumed_state = True
+    _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
+    def __init__(
+        self, api: AndroidTVRemote, config_entry: AndroidTVConfigEntry
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(api, config_entry)
 
-class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
-    """Representation of an Android or Fire TV device."""
+        # This task is needed to create a job that sends a key press
+        # sequence that can be canceled if concurrency occurs
+        self._channel_set_task: asyncio.Task | None = None
+
+    def _update_current_app(self, current_app: str) -> None:
+        """Update current app info."""
+        self._attr_app_id = current_app
+        self._attr_app_name = (
+            self._apps[current_app].get(CONF_APP_NAME, current_app)
+            if current_app in self._apps
+            else current_app
+        )
+
+    def _update_volume_info(self, volume_info: VolumeInfo) -> None:
+        """Update volume info."""
+        if volume_info.get("max"):
+            self._attr_volume_level = volume_info["level"] / volume_info["max"]
+            self._attr_is_volume_muted = volume_info["muted"]
+        else:
+            self._attr_volume_level = None
+            self._attr_is_volume_muted = None
+
+    @callback
+    def _current_app_updated(self, current_app: str) -> None:
+        """Update the state when the current app changes."""
+        self._update_current_app(current_app)
+        self.async_write_ha_state()
+
+    @callback
+    def _volume_info_updated(self, volume_info: VolumeInfo) -> None:
+        """Update the state when the volume info changes."""
+        self._update_volume_info(volume_info)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        if self._api.current_app is not None:
+            self._update_current_app(self._api.current_app)
+        if self._api.volume_info is not None:
+            self._update_volume_info(self._api.volume_info)
+
+        self._api.add_current_app_updated_callback(self._current_app_updated)
+        self._api.add_volume_info_updated_callback(self._volume_info_updated)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        await super().async_will_remove_from_hass()
+
+        self._api.remove_current_app_updated_callback(self._current_app_updated)
+        self._api.remove_volume_info_updated_callback(self._volume_info_updated)
+
+    @property
+    def state(self) -> MediaPlayerState:
+        """Return the state of the device."""
+        if self._attr_is_on:
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
+
+    async def async_turn_on(self) -> None:
+        """Turn the Android TV on."""
+        if not self._attr_is_on:
+            self._send_key_command("POWER")
+
+    async def async_turn_off(self) -> None:
+        """Turn the Android TV off."""
+        if self._attr_is_on:
+            self._send_key_command("POWER")
+
+    async def async_volume_up(self) -> None:
+        """Turn volume up for media player."""
+        self._send_key_command("VOLUME_UP")
+
+    async def async_volume_down(self) -> None:
+        """Turn volume down for media player."""
+        self._send_key_command("VOLUME_DOWN")
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the volume."""
+        if mute != self.is_volume_muted:
+            self._send_key_command("VOLUME_MUTE")
+
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        self._send_key_command("MEDIA_PLAY")
+
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        self._send_key_command("MEDIA_PAUSE")
+
+    async def async_media_play_pause(self) -> None:
+        """Send play/pause command."""
+        self._send_key_command("MEDIA_PLAY_PAUSE")
+
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        self._send_key_command("MEDIA_STOP")
+
+    async def async_media_previous_track(self) -> None:
+        """Send previous track command."""
+        self._send_key_command("MEDIA_PREVIOUS")
+
+    async def async_media_next_track(self) -> None:
+        """Send next track command."""
+        self._send_key_command("MEDIA_NEXT")
+
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play a piece of media."""
+        if media_type == MediaType.CHANNEL:
+            if not media_id.isnumeric():
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_channel",
+                    translation_placeholders={"media_id": media_id},
+                )
+            if self._channel_set_task:
+                self._channel_set_task.cancel()
+            self._channel_set_task = asyncio.create_task(
+                self._send_key_commands(list(media_id))
+            )
+            await self._channel_set_task
+            return
+
+        if media_type in [MediaType.URL, MediaType.APP]:
+            self._send_launch_app_command(media_id)
+            return
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_media_type",
+            translation_placeholders={"media_type": media_type},
+        )
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse apps."""
+        children = [
+            BrowseMedia(
+                media_class=MediaClass.APP,
+                media_content_type=MediaType.APP,
+                media_content_id=app_id,
+                title=app.get(CONF_APP_NAME, ""),
+                thumbnail=app.get(CONF_APP_ICON, ""),
+                can_play=False,
+                can_expand=False,
+            )
+            for app_id, app in self._apps.items()
+        ]
+        return BrowseMedia(
+            title="Applications",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="apps",
+            media_content_type=MediaType.APPS,
+            children_media_class=MediaClass.APP,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    async def _send_key_commands(
+        self, key_codes: list[str], delay_secs: float = 0.1
+    ) -> None:
+        """Send a key press sequence to Android TV."""
+        try:
+            for key_code in key_codes:
+                self._api.send_key_command(key_code)
+                await asyncio.sleep(delay_secs)
+        except ConnectionClosed as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="connection_closed"
+            ) from exc
+
+
+# =============================================================================
+# ADB Media Player Entities
+# =============================================================================
+
+
+class ADBDevice(AndroidTVADBEntity, MediaPlayerEntity):
+    """Representation of an Android or Fire TV device via ADB."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_name = None
@@ -225,11 +464,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def async_select_source(self, source: str) -> None:
-        """Select input source.
-
-        If the source starts with a '!', then it will close the app instead of
-        opening it.
-        """
+        """Select input source."""
         if isinstance(source, str):
             if not source.startswith("!"):
                 await self.aftv.launch_app(self._app_name_to_id.get(source, source))
@@ -283,7 +518,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def service_download(self, device_path: str, local_path: str) -> None:
-        """Download a file from your Android / Fire TV device to your Home Assistant instance."""
+        """Download a file from your Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -292,7 +527,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def service_upload(self, device_path: str, local_path: str) -> None:
-        """Upload a file from your Home Assistant instance to an Android / Fire TV device."""
+        """Upload a file to an Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -301,7 +536,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
 
 class AndroidTVDevice(ADBDevice):
-    """Representation of an Android device."""
+    """Representation of an Android device via ADB."""
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -397,7 +632,7 @@ class AndroidTVDevice(ADBDevice):
 
 
 class FireTVDevice(ADBDevice):
-    """Representation of a Fire TV device."""
+    """Representation of a Fire TV device via ADB."""
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
