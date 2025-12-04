@@ -81,6 +81,7 @@ async def async_setup_entry(
                 for description in IMAGE_DESCRIPTIONS
                 if subentry.unique_id
                 and subentry.unique_id in coordinator.data.presence
+                and subentry.subentry_type == "friend"
             ],
             config_subentry_id=subentry_id,
         )

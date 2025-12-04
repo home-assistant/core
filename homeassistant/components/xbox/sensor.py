@@ -275,6 +275,7 @@ async def async_setup_entry(
                     hass, subentry.unique_id, description, SENSOR_DOMAIN
                 )
                 and subentry.unique_id in coordinator.data.presence
+                and subentry.subentry_type == "friend"
             ],
             config_subentry_id=subentry_id,
         )
