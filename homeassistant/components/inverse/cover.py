@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -203,8 +204,9 @@ class InverseCover(BaseInverseEntity, CoverEntity):
     def async_state_changed_listener(
         self, event: Event[EventStateChangedData] | None = None
     ) -> None:
-        """Handle child updates."""
+        """Handle state changes from the source entity."""
         super().async_state_changed_listener(event)
+
         if (
             not self.available
             or (state := self.hass.states.get(self._source_entity_id)) is None

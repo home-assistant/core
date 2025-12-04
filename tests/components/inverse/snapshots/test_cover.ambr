@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_cover_snapshot[cover.cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.cover',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'cover.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '01KBM828PXCD010B3XEA0B2S6H',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_snapshot[cover.cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 50,
+      'friendly_name': 'Cover',
+      'supported_features': <CoverEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

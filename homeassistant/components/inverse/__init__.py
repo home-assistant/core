@@ -8,12 +8,23 @@ import voluptuous as vol
 
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 @callback

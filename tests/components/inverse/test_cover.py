@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from tests.common import MockConfigEntry
+from tests.common import Generator, MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def mock_cover_platform() -> Generator:
+    """Limit the platform to cover."""
+    with patch(
+        "homeassistant.components.inverse.config_flow.PLATFORMS", [Platform.COVER]
+    ) as mock_platform:
+        yield mock_platform
 
 
 @pytest.mark.asyncio
@@ -72,3 +85,21 @@ async def test_inverse_cover_state_inversion(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == "open"  # Inverted from "closed"
     assert state.attributes.get("current_position") == 100  # Inverted from 0
+
+
+@pytest.mark.asyncio
+async def test_cover_snapshot(
+    hass: HomeAssistant, entity_registry: EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Snapshot test for cover platform."""
+    hass.states.async_set("cover.sample", "open", {"current_position": 50})
+
+    entry = MockConfigEntry(
+        domain="inverse", data={"entity_id": "cover.sample"}, title="Cover"
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

@@ -29,7 +29,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            FanSwitch(
+            InverseFan(
                 hass,
                 config_entry.title,
                 FAN_DOMAIN,
@@ -40,8 +40,8 @@ async def async_setup_entry(
     )
 
 
-class FanSwitch(BaseToggleEntity, FanEntity):
-    """Represents an Inverse Fan."""
+class InverseFan(BaseToggleEntity, FanEntity):
+    """Represents an inverse fan."""
 
     _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
@@ -63,7 +63,7 @@ class FanSwitch(BaseToggleEntity, FanEntity):
     ) -> None:
         """Turn on the fan.
 
-        Arguments of the turn_on methods fan entity differ,
-        thus we need to override them here.
+        Arguments of the fan entity turn_on method differ,
+        thus we need to override it here.
         """
         await super().async_turn_on()

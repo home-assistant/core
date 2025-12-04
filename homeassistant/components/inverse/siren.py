@@ -1,4 +1,4 @@
-"""Siren support for switch entities."""
+"""Siren support for inverse entities."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            SirenSwitch(
+            InverseSiren(
                 hass,
                 config_entry.title,
                 SIREN_DOMAIN,
@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class SirenSwitch(BaseToggleEntity, SirenEntity):
-    """Represents an Inverse Siren."""
+class InverseSiren(BaseToggleEntity, SirenEntity):
+    """Represents an inverse siren."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF

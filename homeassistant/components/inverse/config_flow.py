@@ -13,23 +13,17 @@ from homeassistant.helpers.schema_config_entry_flow import (
     wrapped_entity_config_entry_title,
 )
 
+from . import PLATFORMS
 from .const import DOMAIN
-
-SUPPORTED_PLATFORMS: list[str] = [
-    Platform.BINARY_SENSOR,
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.VALVE,
-]
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SUPPORTED_PLATFORMS),
+            selector.EntitySelectorConfig(
+                domain=[
+                    platform.value for platform in Platform if platform in PLATFORMS
+                ]
+            ),
         ),
     }
 )

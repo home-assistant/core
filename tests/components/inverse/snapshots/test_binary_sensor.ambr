@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_binary_sensor_snapshot[binary_sensor.binary_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.binary_sensor',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'inverse': dict({
+        'entity_id': 'binary_sensor.sample',
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Binary Sensor',
+    'platform': 'inverse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01KBM66D0WQFQYVJZD0JF49PEQ',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.binary_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Binary Sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.binary_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

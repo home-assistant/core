@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from tests.common import MockConfigEntry
+from tests.common import Generator, MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def mock_siren_platform() -> Generator:
+    """Limit the platform to siren."""
+    with patch(
+        "homeassistant.components.inverse.config_flow.PLATFORMS", [Platform.SIREN]
+    ) as mock_platform:
+        yield mock_platform
 
 
 @pytest.mark.asyncio
@@ -32,3 +45,21 @@ async def test_inverse_siren_toggle(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get(inv_id) is not None
+
+
+@pytest.mark.asyncio
+async def test_siren_snapshot(
+    hass: HomeAssistant, entity_registry: EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Snapshot test for siren platform."""
+    hass.states.async_set("siren.sample", "off")
+
+    entry = MockConfigEntry(
+        domain="inverse", data={"entity_id": "siren.sample"}, title="Siren"
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

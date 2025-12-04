@@ -1,4 +1,4 @@
-"""Light support for switch entities."""
+"""Light support for inverse entities."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            LightSwitch(
+            InverseLight(
                 hass,
                 config_entry.title,
                 LIGHT_DOMAIN,
@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class LightSwitch(BaseToggleEntity, LightEntity):
+class InverseLight(BaseToggleEntity, LightEntity):
     """Represents an Inverse Light."""
 
     _attr_color_mode = ColorMode.ONOFF
