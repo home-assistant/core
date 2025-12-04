@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any, Self
@@ -29,7 +30,7 @@ from homeassistant.util.hass_dict import HassKey
 _LOGGER = logging.getLogger(__name__)
 
 FLATTENED_SERVICE_DESCRIPTIONS_CACHE: HassKey[
-    tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any] | None]]
+    tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]
 ] = HassKey("websocket_automation_flat_service_description_cache")
 
 
@@ -141,7 +142,7 @@ def _async_get_automation_components_for_target(
     hass: HomeAssistant,
     target_selection: ConfigType,
     expand_group: bool,
-    component_descriptions: dict[str, dict[str, Any] | None],
+    component_descriptions: Mapping[str, Mapping[str, Any] | None],
 ) -> set[str]:
     """Get automation components (triggers/conditions/services) for a target.
 
@@ -223,7 +224,7 @@ async def async_get_services_for_target(
     """Get services for a target."""
     descriptions = await async_get_all_service_descriptions(hass)
 
-    def get_flattened_service_descriptions() -> dict[str, dict[str, Any] | None]:
+    def get_flattened_service_descriptions() -> dict[str, dict[str, Any]]:
         """Get flattened service descriptions, with caching."""
         if FLATTENED_SERVICE_DESCRIPTIONS_CACHE in hass.data:
             cached_descriptions, cached_flattened_descriptions = hass.data[
