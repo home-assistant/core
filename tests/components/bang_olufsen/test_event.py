@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
+from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
@@ -18,10 +19,17 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from .conftest import mock_websocket_connection
 from .const import (
     TEST_BUTTON_EVENT_ENTITY_ID,
+    TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
     TEST_SERIAL_NUMBER_3,
+    TEST_SERIAL_NUMBER_4,
 )
-from .util import get_button_entity_ids, get_remote_entity_ids
+from .util import (
+    get_a5_entity_ids,
+    get_balance_entity_ids,
+    get_premiere_entity_ids,
+    get_remote_entity_ids,
+)
 
 from tests.common import MockConfigEntry
 
@@ -35,7 +43,7 @@ async def test_button_event_creation_balance(
     """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
 
     # Add Button Event entity ids
-    entity_ids: list[str] = [*get_button_entity_ids(), *get_remote_entity_ids()]
+    entity_ids: list[str] = [*get_balance_entity_ids(), *get_remote_entity_ids()]
 
     # Check that the entities are available
     for entity_id in entity_ids:
@@ -44,13 +52,13 @@ async def test_button_event_creation_balance(
     # Check number of entities
     # The media_player entity and all of the button event entities should be the only available
     entity_ids_available = list(entity_registry.entities.keys())
-    assert len(entity_ids_available) == 1 + len(entity_ids)
+    assert entity_ids_available == unordered(entity_ids)
 
     # Check snapshot
     assert entity_ids_available == snapshot
 
 
-async def test_no_button_and_remote_key_event_creation(
+async def test_no_button_and_remote_key_event_creation_core(
     hass: HomeAssistant,
     mock_config_entry_core: MockConfigEntry,
     mock_mozart_client: AsyncMock,
@@ -70,20 +78,20 @@ async def test_no_button_and_remote_key_event_creation(
     # Check number of entities
     # The media_player entity should be the only available
     entity_ids_available = list(entity_registry.entities.keys())
-    assert len(entity_ids_available) == 1
+    assert entity_ids_available == [TEST_MEDIA_PLAYER_ENTITY_ID_2]
 
     # Check snapshot
     assert entity_ids_available == snapshot
 
 
-async def test_button_event_creation_beosound_premiere(
+async def test_button_event_creation_premiere(
     hass: HomeAssistant,
     mock_config_entry_premiere: MockConfigEntry,
     mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test Bluetooth button event entity is not created when using a Beosound Premiere."""
+    """Test Bluetooth and Microphone button event entity are not created when using a Beosound Premiere."""
 
     # Load entry
     mock_config_entry_premiere.add_to_hass(hass)
@@ -92,19 +100,50 @@ async def test_button_event_creation_beosound_premiere(
 
     # Add Button Event entity ids
     entity_ids = [
-        *get_button_entity_ids("beosound_premiere_33333333"),
+        *get_premiere_entity_ids(),
         *get_remote_entity_ids(device_serial=TEST_SERIAL_NUMBER_3),
     ]
-    entity_ids.remove("event.beosound_premiere_33333333_bluetooth")
 
     # Check that the entities are available
     for entity_id in entity_ids:
         assert entity_registry.async_get(entity_id)
 
     # Check number of entities
-    # The media_player entity and all of the button event entities (except Bluetooth) should be the only available
+    # The media_player entity and all of the button event entities (except Bluetooth and Microphone) should be the only available
     entity_ids_available = list(entity_registry.entities.keys())
-    assert len(entity_ids_available) == 1 + len(entity_ids)
+    assert entity_ids_available == unordered(entity_ids)
+
+    assert entity_ids_available == snapshot
+
+
+async def test_button_event_creation_a5(
+    hass: HomeAssistant,
+    mock_config_entry_a5: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Microphone button event entity is not created when using a Beosound A5."""
+
+    # Load entry
+    mock_config_entry_a5.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_a5.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
+
+    # Add Button Event entity ids
+    entity_ids = [
+        *get_a5_entity_ids(),
+        *get_remote_entity_ids(device_serial=TEST_SERIAL_NUMBER_4),
+    ]
+
+    # Check that the entities are available
+    for entity_id in entity_ids:
+        assert entity_registry.async_get(entity_id)
+
+    # Check number of entities
+    # The media_player entity and all of the button event entities (except Bluetooth and Microphone) should be the only available
+    entity_ids_available = list(entity_registry.entities.keys())
+    assert entity_ids_available == unordered(entity_ids)
 
     assert entity_ids_available == snapshot
 
