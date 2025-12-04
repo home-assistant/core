@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 from wled import WLEDConnectionError, WLEDError
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -51,13 +52,15 @@ async def test_button_restart(
 
     # Test with WLED error
     mock_wled.reset.side_effect = WLEDError
-    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+    with pytest.raises(HomeAssistantError) as ex:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
             blocking=True,
         )
+    assert ex.value.translation_domain == DOMAIN
+    assert ex.value.translation_key == "invalid_response_wled_error"
 
     # Ensure this didn't made the entity unavailable
     assert (state := hass.states.get("button.wled_rgb_light_restart"))
@@ -65,13 +68,16 @@ async def test_button_restart(
 
     # Test with WLED connection error
     mock_wled.reset.side_effect = WLEDConnectionError
-    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+    with pytest.raises(HomeAssistantError) as ex:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
             blocking=True,
         )
+
+    assert ex.value.translation_domain == DOMAIN
+    assert ex.value.translation_key == "connection_error"
 
     # Ensure this made the entity unavailable
     assert (state := hass.states.get("button.wled_rgb_light_restart"))

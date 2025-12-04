@@ -14,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
     ConnectionRefused,
+    ConnectionReset,
     ConnectionTimeout,
     ResolveFailed,
     ValidationFailure,
@@ -49,6 +50,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             self._errors[CONF_HOST] = "connection_timeout"
         except ConnectionRefused:
             self._errors[CONF_HOST] = "connection_refused"
+        except ConnectionReset:
+            self._errors[CONF_HOST] = "connection_reset"
         except ValidationFailure:
             return True
         else:

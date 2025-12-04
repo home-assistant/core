@@ -14,7 +14,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import Item, ItemUpdate
+from onedrive_personal_sdk.models.items import ItemUpdate
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -22,6 +22,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -189,7 +190,13 @@ async def _get_onedrive_client(
     hass: HomeAssistant, entry: OneDriveConfigEntry
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
 
     async def get_access_token() -> str:
@@ -202,9 +209,7 @@ async def _get_onedrive_client(
     )
 
 
-async def _handle_item_operation(
-    func: Callable[[], Awaitable[Item]], folder: str
-) -> Item:
+async def _handle_item_operation[T](func: Callable[[], Awaitable[T]], folder: str) -> T:
     try:
         return await func()
     except NotFoundError:

@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_notify_platform[notify.test_user_party_chat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'notify',
+    'entity_category': None,
+    'entity_id': 'notify.test_user_party_chat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Party chat',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaNotify.PARTY_CHAT: 'party_chat'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_party_chat',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_notify_platform[notify.test_user_party_chat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Party chat',
+      'supported_features': <NotifyEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'notify.test_user_party_chat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_notify_platform[notify.test_user_private_message_test_partymember_displayname-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'notify',
+    'entity_category': None,
+    'entity_id': 'notify.test_user_private_message_test_partymember_displayname',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Private message: test-partymember-displayname',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaNotify.PRIVATE_MESSAGE: 'private_message'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_ffce870c-3ff3-4fa4-bad1-87612e52b8e7_private_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_notify_platform[notify.test_user_private_message_test_partymember_displayname-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Private message: test-partymember-displayname',
+      'supported_features': <NotifyEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'notify.test_user_private_message_test_partymember_displayname',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

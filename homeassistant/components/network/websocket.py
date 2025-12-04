@@ -68,7 +68,6 @@ async def websocket_network_adapters_configure(
 
 
 @callback
-@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "network/url",

@@ -10,9 +10,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
+from .entity import APCUPSdEntity
 
 PARALLEL_UPDATES = 0
 
@@ -40,10 +40,8 @@ async def async_setup_entry(
     async_add_entities([OnlineStatus(coordinator, _DESCRIPTION)])
 
 
-class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
+class OnlineStatus(APCUPSdEntity, BinarySensorEntity):
     """Representation of a UPS online status."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -51,11 +49,7 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the APCUPSd binary device."""
-        super().__init__(coordinator, context=description.key.upper())
-
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
+        super().__init__(coordinator, description)
 
     @property
     def is_on(self) -> bool | None:

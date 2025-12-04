@@ -11,6 +11,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNKNOWN
 from homeassistant.core import CoreState, HomeAssistant
 
+from . import MOCK_DATA
+
 from tests.common import MockConfigEntry
 
 
@@ -24,7 +26,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
+        return_value=MOCK_DATA,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -59,13 +62,13 @@ async def test_delayed_speedtest_during_startup(
     assert state.state is STATE_UNKNOWN
 
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
+        return_value=MOCK_DATA,
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fast_com_download")
     assert state is not None
-    assert state.state == "5.0"
-
+    assert state.state == "100.0"
     assert config_entry.state is ConfigEntryState.LOADED

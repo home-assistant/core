@@ -1,0 +1,200 @@
+{
+  "config": {
+    "ble": {
+      "enable": false,
+      "rpc": {
+        "enable": false
+      }
+    },
+    "bthome": {},
+    "cct:0": {
+      "auto_off": false,
+      "auto_off_delay": 60.0,
+      "auto_on": false,
+      "auto_on_delay": 60.0,
+      "fade_rate": 3,
+      "id": 0,
+      "initial_state": "restore_last",
+      "min_brightness_on_toggle": 3,
+      "name": "Living room lamp",
+      "night_mode": {
+        "active_between": [],
+        "brightness": 50,
+        "ct": 4600,
+        "enable": false
+      },
+      "range_map": [0, 100],
+      "transition_duration": 5.0
+    },
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "mqtt": {
+      "client_id": "shellyduobulbg3-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": true,
+      "topic_prefix": "shellies-gen3/shelly-duo-bulb-gen3-aabbccdd",
+      "use_client_cert": false,
+      "user": "mqtt_user"
+    },
+    "sys": {
+      "cfg_rev": 23,
+      "debug": {
+        "file_level": null,
+        "file_log": {
+          "enable": false
+        },
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": "35.205.173.252:8910"
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "enhanced_security": false,
+        "fw_id": "20251027-130302/g6395960",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "tls_check_cert_validity_time": true
+      },
+      "location": {
+        "lat": 52.2201,
+        "lon": 21.0121,
+        "tz": "Europe/Warsaw"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {}
+    },
+    "wifi": {
+      "ap": {
+        "enable": false,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "ShellyDuoBulbG3-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "DuoBulbG3",
+    "auth_domain": null,
+    "auth_en": false,
+    "fw_id": "20251027-130302/g6395960",
+    "gen": 3,
+    "id": "shellyduobulbg3-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "model": "S3BL-D010009AEU",
+    "name": "Test Name",
+    "slot": 0,
+    "ver": "1.8.99-dev144333"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {
+      "errors": ["bluetooth_disabled"]
+    },
+    "cct:0": {
+      "aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1762085640,
+        "total": 200.589
+      },
+      "apower": 0.0,
+      "brightness": 5,
+      "ct": 2700,
+      "id": 0,
+      "output": false,
+      "source": "transition",
+      "tag": null
+    },
+    "cloud": {
+      "connected": false
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "sys": {
+      "available_updates": {},
+      "backup": {},
+      "bthc_rev": 0,
+      "btrelay_rev": 0,
+      "cfg_rev": 23,
+      "fs_free": 610304,
+      "fs_size": 1048576,
+      "kvs_rev": 0,
+      "last_sync_ts": 1762085398,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 141492,
+      "ram_min_free": 122644,
+      "ram_size": 267376,
+      "reset_reason": 3,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "13:14",
+      "unixtime": 1762085681,
+      "uptime": 221631,
+      "utc_offset": 3600,
+      "webhook_rev": 0
+    },
+    "wifi": {
+      "bssid": "11:22:33:44:55:66",
+      "rssi": -50,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.211",
+      "sta_ip6": ["fe80::2233:aabb:ccdd:eeff"],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

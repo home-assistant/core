@@ -1,5 +1,16 @@
 {
   "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -7,17 +18,6 @@
         },
         "description": "Please enter your API token from your [Todoist Settings page]({settings_url})"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "exceptions": {
@@ -30,62 +30,62 @@
   },
   "services": {
     "new_task": {
-      "name": "New task",
       "description": "Creates a new task and add it to a project.",
       "fields": {
+        "assignee": {
+          "description": "The username of a shared project's member to assign this task to.",
+          "name": "Assignee"
+        },
         "content": {
-          "name": "Content",
-          "description": "The name of the task."
+          "description": "The name of the task.",
+          "name": "Content"
         },
         "description": {
-          "name": "Description",
-          "description": "A description for the task."
-        },
-        "project": {
-          "name": "Project",
-          "description": "The name of the project this task should belong to."
-        },
-        "section": {
-          "name": "Section",
-          "description": "The name of a section within the project to add the task to."
-        },
-        "labels": {
-          "name": "Labels",
-          "description": "Any labels that you want to apply to this task, separated by a comma."
-        },
-        "assignee": {
-          "name": "Assignee",
-          "description": "The username of a shared project's member to assign this task to."
-        },
-        "priority": {
-          "name": "Priority",
-          "description": "The priority of this task, from 1 (normal) to 4 (urgent)."
-        },
-        "due_date_string": {
-          "name": "Due date string",
-          "description": "The time this task is due, in natural language."
-        },
-        "due_date_lang": {
-          "name": "Due date language",
-          "description": "The language of 'Due date string'."
+          "description": "A description for the task.",
+          "name": "Description"
         },
         "due_date": {
-          "name": "Due date",
-          "description": "The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+          "description": "The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone.",
+          "name": "Due date"
         },
-        "reminder_date_string": {
-          "name": "Reminder date string",
-          "description": "When the user should be reminded of this task, in natural language."
+        "due_date_lang": {
+          "description": "The language of 'Due date string'.",
+          "name": "Due date language"
         },
-        "reminder_date_lang": {
-          "name": "Reminder date language",
-          "description": "The language of 'Reminder date string'."
+        "due_date_string": {
+          "description": "The time this task is due, in natural language.",
+          "name": "Due date string"
+        },
+        "labels": {
+          "description": "Any labels that you want to apply to this task, separated by a comma.",
+          "name": "Labels"
+        },
+        "priority": {
+          "description": "The priority of this task, from 1 (normal) to 4 (urgent).",
+          "name": "Priority"
+        },
+        "project": {
+          "description": "The name of the project this task should belong to.",
+          "name": "Project"
         },
         "reminder_date": {
-          "name": "Reminder date",
-          "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+          "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone.",
+          "name": "Reminder date"
+        },
+        "reminder_date_lang": {
+          "description": "The language of 'Reminder date string'.",
+          "name": "Reminder date language"
+        },
+        "reminder_date_string": {
+          "description": "When the user should be reminded of this task, in natural language.",
+          "name": "Reminder date string"
+        },
+        "section": {
+          "description": "The name of a section within the project to add the task to.",
+          "name": "Section"
         }
-      }
+      },
+      "name": "New task"
     }
   }
 }

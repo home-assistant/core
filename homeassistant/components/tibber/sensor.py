@@ -377,7 +377,6 @@ class TibberSensorElPrice(TibberSensor):
             "app_nickname": None,
             "grid_company": None,
             "estimated_annual_consumption": None,
-            "price_level": None,
             "max_price": None,
             "avg_price": None,
             "min_price": None,
@@ -405,16 +404,16 @@ class TibberSensorElPrice(TibberSensor):
             await self._fetch_data()
 
         elif (
-            self._tibber_home.current_price_total
+            self._tibber_home.price_total
             and self._last_updated
             and self._last_updated.hour == now.hour
+            and now - self._last_updated < timedelta(minutes=15)
             and self._tibber_home.last_data_timestamp
         ):
             return
 
         res = self._tibber_home.current_price_data()
-        self._attr_native_value, price_level, self._last_updated, price_rank = res
-        self._attr_extra_state_attributes["price_level"] = price_level
+        self._attr_native_value, self._last_updated, price_rank = res
         self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
 
         attrs = self._tibber_home.current_attributes()

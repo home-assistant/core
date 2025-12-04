@@ -53,7 +53,7 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        await self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255))
+        await self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""

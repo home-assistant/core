@@ -3,50 +3,50 @@
   "name": "ThermoBeacon",
   "bluetooth": [
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 16,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 17,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 20,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 21,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 24,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 27,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 48,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "local_name": "ThermoBeacon",
-      "connectable": false
+      "connectable": false,
+      "local_name": "ThermoBeacon"
     }
   ],
   "codeowners": ["@bdraco"],

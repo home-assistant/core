@@ -71,7 +71,7 @@ class HomeDoorbellAccessory(HomeAccessory):
         self.async_update_doorbell_state(None, state)
 
     @ha_callback
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def run(self) -> None:
         """Handle doorbell event."""
         if self._char_doorbell_detected:

@@ -3,8 +3,8 @@
     "_": {
       "default": "mdi:calendar",
       "state": {
-        "on": "mdi:calendar-check",
-        "off": "mdi:calendar-blank"
+        "off": "mdi:calendar-blank",
+        "on": "mdi:calendar-check"
       }
     }
   },

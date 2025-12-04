@@ -164,13 +164,40 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
     ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
+            key="food_dispensed_today",
+            translation_key="food_dispensed_today",
+            state_class=SensorStateClass.TOTAL,
+            last_reset_fn=dt_util.start_of_local_day,
+            value_fn=(
+                lambda robot: (
+                    robot.get_food_dispensed_since(dt_util.start_of_local_day())
+                )
+            ),
+        ),
+        RobotSensorEntityDescription[FeederRobot](
             key="food_level",
             translation_key="food_level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.food_level,
-        )
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="last_feeding",
+            translation_key="last_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=(
+                lambda robot: (
+                    robot.last_feeding["timestamp"] if robot.last_feeding else None
+                )
+            ),
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="next_feeding",
+            translation_key="next_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=lambda robot: robot.next_feeding,
+        ),
     ],
 }
 

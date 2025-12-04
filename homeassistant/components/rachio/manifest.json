@@ -28,8 +28,8 @@
   "requirements": ["RachioPy==1.1.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "rachio*"
+      "name": "rachio*",
+      "type": "_http._tcp.local."
     }
   ]
 }

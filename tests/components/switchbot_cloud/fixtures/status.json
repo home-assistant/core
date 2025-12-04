@@ -1,0 +1,67 @@
+[
+  {},
+  {
+    "version": "V3.3",
+    "temperature": 21.8,
+    "battery": 100,
+    "humidity": 32,
+    "deviceId": "meter-id-1",
+    "deviceType": "Meter",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.7",
+    "battery": 60,
+    "moveDetected": true,
+    "brightness": "bright",
+    "openState": "timeOutNotClose",
+    "deviceId": "contact-sensor-id",
+    "deviceType": "Contact Sensor",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.3-0.8-0.1",
+    "temperature": 26.5,
+    "lightLevel": 10,
+    "humidity": 55,
+    "moveDetected": false,
+    "deviceId": "hub3-id",
+    "deviceType": "Hub 3",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.9",
+    "battery": 20,
+    "moveDetected": false,
+    "deviceId": "motion-sensor-id",
+    "deviceType": "Motion Sensor",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.7",
+    "battery": 90,
+    "status": 1,
+    "deviceId": "water-detector-id",
+    "deviceType": "Water Detector",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.8",
+    "power": "on",
+    "auto": false,
+    "humidity": 50,
+    "temperature": 24.3,
+    "deviceId": "test-id-1",
+    "deviceType": "Humidifier",
+    "hubDeviceId": "test-hub-id"
+  },
+  {
+    "version": "V1.0",
+    "power": "on",
+    "mode": 1,
+    "humidity": 50,
+    "deviceId": "test-id-1",
+    "deviceType": "Humidifier2",
+    "hubDeviceId": "test-hub-id"
+  }
+]

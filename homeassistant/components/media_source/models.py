@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.translation import async_get_cached_translations
 
 from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
 
@@ -62,12 +63,15 @@ class MediaSourceItem:
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
         if self.domain is None:
+            title = async_get_cached_translations(
+                self.hass, self.hass.config.language, "common", "media_source"
+            ).get("component.media_source.common.sources_default", "Media Sources")
             base = BrowseMediaSource(
                 domain=None,
                 identifier=None,
                 media_class=MediaClass.APP,
                 media_content_type=MediaType.APPS,
-                title="Media Sources",
+                title=title,
                 can_play=False,
                 can_expand=True,
                 children_media_class=MediaClass.APP,

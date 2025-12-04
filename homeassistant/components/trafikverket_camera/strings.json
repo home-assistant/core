@@ -12,20 +12,11 @@
       "more_locations": "Found multiple camera locations with the specified name"
     },
     "step": {
-      "user": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "location": "[%key:common::config_flow::data::location%]"
-        },
-        "data_description": {
-          "location": "Equal or part of name, description or camera ID. Be as specific as possible to avoid getting multiple cameras as result"
-        }
-      },
       "multiple_cameras": {
-        "description": "Result came back with multiple cameras",
         "data": {
           "id": "Choose camera"
-        }
+        },
+        "description": "Result came back with multiple cameras"
       },
       "reauth_confirm": {
         "data": {
@@ -40,10 +31,24 @@
         "data_description": {
           "location": "[%key:component::trafikverket_camera::config::step::user::data_description::location%]"
         }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Equal or part of name, description or camera ID. Be as specific as possible to avoid getting multiple cameras as result"
+        }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      }
+    },
     "camera": {
       "tv_camera": {
         "state_attributes": {
@@ -71,12 +76,10 @@
         }
       }
     },
-    "binary_sensor": {
-      "active": {
-        "name": "Active"
-      }
-    },
     "sensor": {
+      "camera_type": {
+        "name": "Camera type"
+      },
       "direction": {
         "name": "Direction"
       },
@@ -91,9 +94,6 @@
       },
       "status": {
         "name": "Status"
-      },
-      "camera_type": {
-        "name": "Camera type"
       }
     }
   }

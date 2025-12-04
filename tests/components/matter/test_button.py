@@ -80,3 +80,30 @@ async def test_operational_state_buttons(
         endpoint_id=1,
         command=clusters.OperationalState.Commands.Pause(),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["smoke_detector"])
+async def test_smoke_detector_self_test(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test button entity is created for a Matter SmokeCoAlarm Cluster."""
+    state = hass.states.get("button.smoke_sensor_self_test")
+    assert state
+    assert state.attributes["friendly_name"] == "Smoke sensor Self-test"
+    # test press action
+    await hass.services.async_call(
+        "button",
+        "press",
+        {
+            "entity_id": "button.smoke_sensor_self_test",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.SmokeCoAlarm.Commands.SelfTestRequest(),
+    )

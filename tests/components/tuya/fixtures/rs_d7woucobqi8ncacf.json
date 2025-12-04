@@ -1,0 +1,57 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Geti Solar PV Water Heater",
+  "category": "rs",
+  "product_id": "d7woucobqi8ncacf",
+  "product_name": "Geti Solar PV Water Heater",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-08-16T10:03:14+00:00",
+  "create_time": "2025-08-16T10:03:14+00:00",
+  "update_time": "2025-08-16T10:03:14+00:00",
+  "function": {},
+  "status_range": {
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "power_consumption": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 10000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "bitmap",
+      "value": {
+        "label": [
+          "pv_voltage_high",
+          "ac_voltage_high",
+          "water_temp_high",
+          "water_temp_unknown"
+        ]
+      }
+    }
+  },
+  "status": {
+    "temp_current": 60,
+    "power_consumption": 86,
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

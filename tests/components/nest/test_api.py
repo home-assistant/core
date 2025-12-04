@@ -71,9 +71,9 @@ async def test_auth(
     # Verify API requests are made with the correct credentials
     calls = aioclient_mock.mock_calls
     assert len(calls) == 2
-    (method, url, data, headers) = calls[0]
+    (_method, _url, _data, headers) = calls[0]
     assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
-    (method, url, data, headers) = calls[1]
+    (_method, _url, _data, headers) = calls[1]
     assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
 
     # Verify the subscriber was created with the correct credentials

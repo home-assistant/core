@@ -27,6 +27,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/ring",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["ring_doorbell"],
   "quality_scale": "bronze",

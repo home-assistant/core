@@ -4,13 +4,16 @@ from datetime import timedelta
 from math import sin
 import random
 from typing import Any
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
 
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
+    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfPower,
@@ -31,6 +34,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    get_fixture_path,
     mock_restore_cache_with_extra_data,
 )
 
@@ -332,8 +336,8 @@ async def test_data_moving_average_with_zeroes(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert len(events[2:]) == len(times)
-    for time, event in zip(times, events[2:], strict=True):
+    assert len(events[1:]) == len(times)
+    for time, event in zip(times, events[1:], strict=True):
         state = event.data["new_state"]
         derivative = round(float(state.state), config["sensor"]["round"])
 
@@ -717,7 +721,7 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     expected_times = [0, 20, 30, 35, 50, 60]
     expected_values = ["0.00", "0.50", "2.00", "2.00", "1.00", "3.00"]
 
-    config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
+    _config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
 
     base_time = dt_util.utcnow()
     actual_times = []
@@ -882,12 +886,12 @@ async def test_unavailable_boot(
                     "sensor.power",
                     restore_state,
                     {
-                        "unit_of_measurement": "W",
+                        "unit_of_measurement": "kWh/s",
                     },
                 ),
                 {
                     "native_value": restore_state,
-                    "native_unit_of_measurement": "W",
+                    "native_unit_of_measurement": "kWh/s",
                 },
             ),
         ],
@@ -903,7 +907,7 @@ async def test_unavailable_boot(
 
     config = {"sensor": config}
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {"unit_of_measurement": "kWh"})
     await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "sensor", config)
@@ -917,7 +921,7 @@ async def test_unavailable_boot(
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
         freezer.move_to(base + timedelta(seconds=1))
-        hass.states.async_set(entity_id, 10, {})
+        hass.states.async_set(entity_id, 10, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
@@ -927,10 +931,156 @@ async def test_unavailable_boot(
         assert state.state == restore_state
 
         freezer.move_to(base + timedelta(seconds=2))
-        hass.states.async_set(entity_id, 15, {})
+        hass.states.async_set(entity_id, 15, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
         assert state is not None
         # Now that the source sensor has two valid datapoints, we can calculate derivative
         assert state.state == "5.00"
+        assert state.attributes.get("unit_of_measurement") == "kWh/s"
+
+
+async def test_source_unit_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test how derivative responds when the source sensor changes unit."""
+    source_id = "sensor.source"
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": source_id,
+            "unit_time": "s",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    entity_id = "sensor.derivative"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("unit_of_measurement") is None
+
+    time = dt_util.utcnow()
+    with freeze_time(time) as freezer:
+        # First state update of the source.
+        # Derivative does not learn the UoM yet.
+        hass.states.async_set(source_id, "5", {"unit_of_measurement": "cats"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "0.000"
+        assert state.attributes.get("unit_of_measurement") == "cats/s"
+
+        # Second state update of the source.
+        time += timedelta(seconds=1)
+        freezer.move_to(time)
+        hass.states.async_set(source_id, "7", {"unit_of_measurement": "cats"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "2.000"
+        assert state.attributes.get("unit_of_measurement") == "cats/s"
+
+        # Third state update of the source, source unit changes to dogs.
+        # Derivative switches to dogs/s, and resets state to zero, as we
+        # don't want to generate bogus data from the change.
+        time += timedelta(seconds=1)
+        freezer.move_to(time)
+        hass.states.async_set(source_id, "12", {"unit_of_measurement": "dogs"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "0.000"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"
+
+        # Fourth state update of the source, still dogs.
+        # Now correctly updating derivative as dogs/s.
+        time += timedelta(seconds=1)
+        freezer.move_to(time)
+        hass.states.async_set(source_id, "20", {"unit_of_measurement": "dogs"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "8.000"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"
+
+
+async def test_reload(hass: HomeAssistant) -> None:
+    """Test hot-reloading derivative YAML sensors."""
+    hass.state = ha.CoreState.not_running
+    hass.states.async_set("sensor.energy", "0.0")
+
+    config = {
+        "sensor": [
+            {
+                "platform": "derivative",
+                "name": "derivative",
+                "source": "sensor.energy",
+                "unit": "kW",
+            },
+            {
+                "platform": "derivative",
+                "name": "derivative_remove",
+                "source": "sensor.energy",
+                "unit": "kW",
+            },
+        ]
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+    state = hass.states.get("sensor.derivative")
+    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "kW"
+    assert hass.states.get("sensor.derivative_remove")
+
+    yaml_path = get_fixture_path("configuration.yaml", "derivative")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    # Check that we can change the unit of an existing sensor
+    state = hass.states.get("sensor.derivative")
+    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "W"
+
+    # Check that we can remove a derivative sensor
+    assert hass.states.get("sensor.derivative_remove") is None
+
+    # Check that we can add a new derivative sensor
+    assert hass.states.get("sensor.derivative_new")
+
+
+async def test_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test YAML-based derivative with unique id."""
+    source_id = "sensor.source"
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": source_id,
+            "unique_id": "my unique id",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    entity_id = "sensor.derivative"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "my unique id"

@@ -104,20 +104,30 @@ class Dialect:
             return (-1, 0)
 
         is_exact_language = self.language == dialect.language
+        is_exact_language_and_code = is_exact_language and (self.code == dialect.code)
 
         if (self.region is None) and (dialect.region is None):
             # Weak match with no region constraint
             # Prefer exact language match
-            return (2 if is_exact_language else 1, 0)
+            if is_exact_language_and_code:
+                return (3, 0)
+
+            if is_exact_language:
+                return (2, 0)
+
+            return (1, 0)
 
         if (self.region is not None) and (dialect.region is not None):
             if self.region == dialect.region:
                 # Same language + region match
                 # Prefer exact language match
-                return (
-                    math.inf,
-                    1 if is_exact_language else 0,
-                )
+                if is_exact_language_and_code:
+                    return (math.inf, 2)
+
+                if is_exact_language:
+                    return (math.inf, 1)
+
+                return (math.inf, 0)
 
             # Regions are both set, but don't match
             return (0, 0)
@@ -139,8 +149,8 @@ class Dialect:
                 region_idx = pref_regions.index(dialect.region)
 
             # More preferred regions are at the front.
-            # Add 1 to boost above a weak match where no regions are set.
-            return (1 + (len(pref_regions) - region_idx), 0)
+            # Add 2 to boost above a weak match where no regions are set.
+            return (2 + (len(pref_regions) - region_idx), 0)
         except ValueError:
             # Region was not in preferred list
             pass

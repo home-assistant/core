@@ -421,13 +421,6 @@ async def test_attributes(
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
-    # Group member has set assumed_state
-    hass.states.async_set(DEMO_TILT, CoverState.CLOSED, {ATTR_ASSUMED_STATE: True})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(COVER_GROUP)
-    assert ATTR_ASSUMED_STATE not in state.attributes
-
     # Test entity registry integration
     entry = entity_registry.async_get(COVER_GROUP)
     assert entry
@@ -857,6 +850,61 @@ async def test_is_opening_closing(hass: HomeAssistant) -> None:
     assert hass.states.get(DEMO_COVER_TILT).state == CoverState.OPENING
     assert hass.states.get(DEMO_COVER_POS).state == CoverState.OPEN
     assert hass.states.get(COVER_GROUP).state == CoverState.OPENING
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
+@pytest.mark.usefixtures("setup_comp")
+async def test_assumed_state(hass: HomeAssistant) -> None:
+    """Test assumed_state attribute behavior."""
+    # No members with assumed_state -> group doesn't have assumed_state in attributes
+    hass.states.async_set(DEMO_COVER, CoverState.OPEN, {})
+    hass.states.async_set(DEMO_COVER_POS, CoverState.OPEN, {})
+    hass.states.async_set(DEMO_COVER_TILT, CoverState.CLOSED, {})
+    hass.states.async_set(DEMO_TILT, CoverState.CLOSED, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+    # One member with assumed_state=True -> group has assumed_state=True
+    hass.states.async_set(DEMO_COVER, CoverState.OPEN, {ATTR_ASSUMED_STATE: True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes.get(ATTR_ASSUMED_STATE) is True
+
+    # Multiple members with assumed_state=True -> group has assumed_state=True
+    hass.states.async_set(
+        DEMO_COVER_TILT, CoverState.CLOSED, {ATTR_ASSUMED_STATE: True}
+    )
+    hass.states.async_set(DEMO_TILT, CoverState.CLOSED, {ATTR_ASSUMED_STATE: True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes.get(ATTR_ASSUMED_STATE) is True
+
+    # Unavailable member with assumed_state=True -> group has assumed_state=True
+    hass.states.async_set(DEMO_COVER, CoverState.OPEN, {})
+    hass.states.async_set(DEMO_COVER_TILT, CoverState.CLOSED, {})
+    hass.states.async_set(DEMO_TILT, STATE_UNAVAILABLE, {ATTR_ASSUMED_STATE: True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes.get(ATTR_ASSUMED_STATE) is True
+
+    # Unknown member with assumed_state=True -> group has assumed_state=True
+    hass.states.async_set(DEMO_TILT, STATE_UNKNOWN, {ATTR_ASSUMED_STATE: True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes.get(ATTR_ASSUMED_STATE) is True
+
+    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    hass.states.async_set(DEMO_TILT, CoverState.CLOSED, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
 
 async def test_nested_group(hass: HomeAssistant) -> None:

@@ -9,12 +9,15 @@ from wled import (
     WLEDConnectionClosedError,
     WLEDError,
     WLEDReleases,
+    WLEDUnsupportedVersionError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -26,18 +29,20 @@ from .const import (
     SCAN_INTERVAL,
 )
 
+type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_main_light: bool
-    config_entry: ConfigEntry
+    config_entry: WLEDConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: WLEDConfigEntry,
     ) -> None:
         """Initialize global WLED data updater."""
         self.keep_main_light = entry.options.get(
@@ -111,8 +116,30 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         """Fetch data from WLED."""
         try:
             device = await self.wled.update()
+        except WLEDUnsupportedVersionError as error:
+            # Error message from WLED library contains version info
+            # better to show that to user, but it is not translatable.
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_version",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_wled_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+        if device.info.mac_address != self.config_entry.unique_id:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="mac_address_mismatch",
+                translation_placeholders={
+                    "expected_mac": format_mac(self.config_entry.unique_id).upper(),
+                    "actual_mac": format_mac(device.info.mac_address).upper(),
+                },
+            )
 
         # If the device supports a WebSocket, try activating it.
         if (
@@ -144,4 +171,8 @@ class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
         try:
             return await self.wled.releases()
         except WLEDError as error:
-            raise UpdateFailed(f"Invalid response from GitHub API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_github_error",
+                translation_placeholders={"error": str(error)},
+            ) from error

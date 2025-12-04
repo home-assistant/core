@@ -31,7 +31,12 @@ MOCK_SNOO_DEVICES = [
         "name": "Test Snoo",
         "presence": {},
         "presenceIoT": {},
-        "awsIoT": {},
+        "awsIoT": {
+            "awsRegion": "us-east-1",
+            "clientEndpoint": "z00023244d7fia4appr4b-ats.iot.us-east-1.amazonaws.com",
+            "clientReady": True,
+            "thingName": "676cbbe74529f85038b2e623_5831231335004715141_prod",
+        },
         "lastSSID": {},
         "provisionedAt": "random_time",
     }

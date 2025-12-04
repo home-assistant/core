@@ -17,6 +17,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_SIP_PORT, DOMAIN
 from .devices import VoIPDevices
+from .store import VoipStore
 from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
@@ -35,6 +36,8 @@ __all__ = [
     "async_unload_entry",
 ]
 
+type VoipConfigEntry = ConfigEntry[VoipStore]
+
 
 @dataclass
 class DomainData:
@@ -45,7 +48,7 @@ class DomainData:
     devices: VoIPDevices
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool:
     """Set up VoIP integration from a config entry."""
     # Make sure there is a valid user ID for VoIP in the config entry
     if (
@@ -59,9 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, "user": voip_user.id}
         )
 
+    entry.runtime_data = VoipStore(hass, entry.entry_id)
     sip_port = entry.options.get(CONF_SIP_PORT, SIP_PORT)
     devices = VoIPDevices(hass, entry)
-    devices.async_setup()
+    await devices.async_setup()
     transport, protocol = await _create_sip_server(
         hass,
         lambda: HassVoipDatagramProtocol(hass, devices),
@@ -102,7 +106,7 @@ async def _create_sip_server(
     return transport, protocol
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool:
     """Unload VoIP."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         _LOGGER.debug("Shutting down VoIP server")
@@ -121,9 +125,11 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> None:
     """Remove VoIP entry."""
     if "user" in entry.data and (
         user := await hass.auth.async_get_user(entry.data["user"])
     ):
         await hass.auth.async_remove_user(user)
+
+    await entry.runtime_data.async_remove()

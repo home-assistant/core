@@ -79,14 +79,16 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         system_info = await self.client.get_system_info()
         cid = system_info[ATTR_CID].lower()
-        title = system_info[ATTR_MODEL]
 
         self.device_config[CONF_MAC] = system_info[ATTR_MAC]
 
         await self.async_set_unique_id(cid)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=title, data=self.device_config)
+        return self.async_create_entry(
+            title=f"{system_info['name']} {system_info[ATTR_MODEL]}",
+            data=self.device_config,
+        )
 
     async def async_reauth_device(self) -> ConfigFlowResult:
         """Reauthorize Bravia TV device from config."""

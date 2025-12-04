@@ -35,6 +35,7 @@ SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_START_LOG_OBJECT_SOURCES = "start_log_object_sources"
 SERVICE_STOP_LOG_OBJECT_SOURCES = "stop_log_object_sources"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+SERVICE_DUMP_SOCKETS = "dump_sockets"
 SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
@@ -231,6 +232,15 @@ async def async_setup_entry(  # noqa: C901
             notification_id="profile_lru_stats",
         )
 
+    def _dump_sockets(call: ServiceCall) -> None:
+        """Dump list of all currently existing sockets to the log."""
+        import objgraph  # noqa: PLC0415
+
+        _LOGGER.critical(
+            "Sockets used by Home Assistant:\n%s",
+            "\n".join(repr(sock) for sock in objgraph.by_type("socket")),
+        )
+
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
         """Log all thread frames."""
         frames = sys._current_frames()  # noqa: SLF001
@@ -349,6 +359,13 @@ async def async_setup_entry(  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
+        SERVICE_DUMP_SOCKETS,
+        _dump_sockets,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
         SERVICE_LRU_STATS,
         _lru_stats,
     )
@@ -436,6 +453,10 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
+    if sys.version_info >= (3, 14):
+        raise HomeAssistantError(
+            "Memory profiling is not supported on Python 3.14. Please use Python 3.13."
+        )
     from guppy import hpy  # noqa: PLC0415
 
     start_time = int(time.time() * 1000000)

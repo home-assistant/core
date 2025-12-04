@@ -1,0 +1,74 @@
+{
+  "dhw_time_program_monday": {
+    "name": "DHW time program Monday",
+    "error": 0,
+    "value": "06:00-07:30 18:00-22:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_tuesday": {
+    "name": "DHW time program Tuesday",
+    "error": 0,
+    "value": "06:00-07:30 18:00-22:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_wednesday": {
+    "name": "DHW time program Wednesday",
+    "error": 0,
+    "value": "06:00-07:30 18:00-22:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_thursday": {
+    "name": "DHW time program Thursday",
+    "error": 0,
+    "value": "06:00-07:30 18:00-22:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_friday": {
+    "name": "DHW time program Friday",
+    "error": 0,
+    "value": "06:00-07:30 18:00-22:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_saturday": {
+    "name": "DHW time program Saturday",
+    "error": 0,
+    "value": "08:00-09:00 19:00-23:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_sunday": {
+    "name": "DHW time program Sunday",
+    "error": 0,
+    "value": "08:00-09:00 19:00-23:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_time_program_standard_values": {
+    "name": "DHW time program standard values",
+    "error": 0,
+    "value": "06:00-22:00",
+    "desc": "",
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
+  }
+}

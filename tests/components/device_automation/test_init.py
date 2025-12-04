@@ -1,6 +1,6 @@
 """The test for light device automation."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import attr
 import pytest
@@ -293,7 +293,9 @@ async def test_websocket_get_action_capabilities(
     )
     expected_capabilities = {
         "turn_on": {
-            "extra_fields": [{"type": "string", "name": "code", "optional": True}]
+            "extra_fields": [
+                {"type": "string", "name": "code", "optional": True, "required": False}
+            ]
         },
         "turn_off": {"extra_fields": []},
         "toggle": {"extra_fields": []},
@@ -452,7 +454,12 @@ async def test_websocket_get_condition_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
 
@@ -745,7 +752,12 @@ async def test_websocket_get_trigger_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
 
@@ -1076,7 +1088,7 @@ async def test_automation_with_dynamically_validated_condition(
 
     module_cache = hass.data[loader.DATA_COMPONENTS]
     module = module_cache["fake_integration.device_condition"]
-    module.async_validate_condition_config = AsyncMock()
+    module.async_validate_condition_config = AsyncMock(return_value=MagicMock())
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.mock_state(hass, ConfigEntryState.LOADED)

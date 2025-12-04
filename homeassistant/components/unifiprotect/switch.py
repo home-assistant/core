@@ -36,6 +36,7 @@ from .entity import (
 
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

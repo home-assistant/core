@@ -241,7 +241,7 @@ async def test_hmip_notification_light_2_turn_off(
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["BSL2"])
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    _ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 

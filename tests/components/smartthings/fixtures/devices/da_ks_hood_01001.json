@@ -1,0 +1,225 @@
+{
+  "items": [
+    {
+      "deviceId": "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+      "name": "Samsung-Hood",
+      "label": "Range hood",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-KS-HOOD-01001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "fc29474a-ba92-4546-8a2f-84face5ac40a",
+      "ownerId": "f62b520c-1d89-98c3-dd01-e13dd45dae2b",
+      "roomId": "0c1464ad-b0a9-4fb7-86af-a05c2973dc43",
+      "deviceTypeName": "x.com.st.d.hood",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "airQualitySensor",
+              "version": 1
+            },
+            {
+              "id": "odorSensor",
+              "version": 1
+            },
+            {
+              "id": "dustSensor",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustSensor",
+              "version": 1
+            },
+            {
+              "id": "dustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "fineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.hoodFanSpeed",
+              "version": 1
+            },
+            {
+              "id": "samsungce.hoodFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.autoVentilation",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.periodicSensing",
+              "version": 1
+            },
+            {
+              "id": "custom.doNotDisturbMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "KitchenHood",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "lamp",
+          "label": "lamp",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "cookinglight",
+          "label": "cookinglight",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "edgelight",
+          "label": "edgelight",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.hoodLampAutomation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2024-03-09T00:58:54.969Z",
+      "profile": {
+        "id": "485d6d42-a64d-36cb-9ef9-16c45b2c5c87"
+      },
+      "ocf": {
+        "ocfDeviceType": "x.com.st.d.hood",
+        "name": "Samsung-Hood",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "AHD-WW-TP1-22-COMMON|20136141|7800006B001713C44D00090001030000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "AHD-WW-TP1-22-COMMON_40230419",
+        "vendorId": "DA-KS-HOOD-01001",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.220727",
+        "lastSignupTime": "2024-03-09T00:58:54.825986Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

@@ -34,10 +34,10 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     TEST_BC_PORT,
+    TEST_CAM_NAME,
     TEST_HOST2,
     TEST_HOST_MODEL,
     TEST_MAC2,
-    TEST_NVR_NAME,
     TEST_NVR_NAME2,
     TEST_PASSWORD2,
     TEST_PORT,
@@ -61,7 +61,6 @@ TEST_FILE_NAME = f"{TEST_START}00"
 TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
-TEST_CAM_NAME = "Cam new name"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
 TEST_MIME_TYPE_MP4 = "video/mp4"
@@ -172,7 +171,7 @@ async def test_browsing(
     browse_res_AT_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_sub"
     browse_res_AT_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_main"
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0"
+    assert browse.title == f"{TEST_CAM_NAME} lens 0"
     assert browse.identifier == browse_resolution_id
     assert browse.children[0].identifier == browse_res_sub_id
     assert browse.children[1].identifier == browse_res_main_id
@@ -188,19 +187,19 @@ async def test_browsing(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0 Low res."
+    assert browse.title == f"{TEST_CAM_NAME} lens 0 Low res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_sub_id}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0 Telephoto low res."
+    assert browse.title == f"{TEST_CAM_NAME} lens 0 Telephoto low res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_main_id}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0 Telephoto high res."
+    assert browse.title == f"{TEST_CAM_NAME} lens 0 Telephoto high res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"
@@ -210,7 +209,7 @@ async def test_browsing(
     browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
     browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0 High res."
+    assert browse.title == f"{TEST_CAM_NAME} lens 0 High res."
     assert browse.identifier == browse_days_id
     assert browse.children[0].identifier == browse_day_0_id
     assert browse.children[1].identifier == browse_day_1_id
@@ -232,7 +231,7 @@ async def test_browsing(
     assert browse.domain == DOMAIN
     assert (
         browse.title
-        == f"{TEST_NVR_NAME} lens 0 High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY}"
+        == f"{TEST_CAM_NAME} lens 0 High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY}"
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
@@ -261,7 +260,7 @@ async def test_browsing(
     assert browse.domain == DOMAIN
     assert (
         browse.title
-        == f"{TEST_NVR_NAME} High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY} Person"
+        == f"{TEST_CAM_NAME} High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY} Person"
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
@@ -306,7 +305,7 @@ async def test_browsing_h265_encoding(
     browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
 
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME}"
+    assert browse.title == f"{TEST_CAM_NAME}"
     assert browse.identifier == browse_resolution_id
     assert browse.children[0].identifier == browse_res_sub_id
     assert browse.children[1].identifier == browse_res_main_id
@@ -321,7 +320,7 @@ async def test_browsing_h265_encoding(
         f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} Low res."
+    assert browse.title == f"{TEST_CAM_NAME} Low res."
     assert browse.identifier == browse_days_id
     assert browse.children[0].identifier == browse_day_0_id
     assert browse.children[1].identifier == browse_day_1_id

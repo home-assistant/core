@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SENSORS,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -25,8 +26,15 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .const import _LOGGER, CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
-from .entity import BaseStructPlatform
+from .const import (
+    _LOGGER,
+    CONF_SCALE,
+    CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
+)
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -56,7 +64,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
+class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -73,9 +81,15 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._coordinator: DataUpdateCoordinator[list[float | None] | None] | None = (
             None
         )
+        self._scale = entry.get(CONF_SCALE, DEFAULT_SCALE)
+        self._offset = entry.get(CONF_OFFSET, DEFAULT_OFFSET)
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
+        if self._precision > 0 or self._scale != int(self._scale):
+            self._value_is_int = False
+        if self._precision > 0 and self._data_type not in ["string", "custom"]:
+            self._attr_suggested_display_precision = self._precision
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
@@ -106,11 +120,8 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
-        self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
-            self._slave, self._address, self._count, self._input_type
+            self._device_address, self._address, self._count, self._input_type
         )
         if raw_result is None:
             self._attr_available = False
@@ -120,7 +131,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             self.async_write_ha_state()
             return
         self._attr_available = True
-        result = self.unpack_structure_result(raw_result.registers)
+        result = self.unpack_structure_result(
+            raw_result.registers, self._scale, self._offset
+        )
         if self._coordinator:
             result_array: list[float | None] = []
             if result:
@@ -184,6 +197,10 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_native_value = result[self._idx] if result else None
-        self._attr_available = result is not None
+        if not result or self._idx >= len(result):
+            self._attr_native_value = None
+            self._attr_available = False
+        else:
+            self._attr_native_value = result[self._idx]
+            self._attr_available = True
         super()._handle_coordinator_update()

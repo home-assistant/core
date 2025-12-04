@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,6 +15,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for accessing your SFR box's web interface, the default is the WiFi security key found on the device label",
+          "username": "The username for accessing your SFR box's web interface, the default is 'admin'"
         }
       },
       "choose_auth": {
@@ -27,7 +33,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname, IP address, or full URL of your SFR device. e.g.: '192.168.1.1' or 'https://sfrbox.example.com'"
+          "host": "The hostname, IP address, or full URL of your SFR device. e.g.: `{sample_ip}` or `{sample_url}`"
         },
         "description": "Setting the credentials is optional, but enables additional functionality."
       }
@@ -52,25 +58,26 @@
       "dsl_attenuation_up": {
         "name": "DSL attenuation up"
       },
-      "dsl_crc": {
-        "name": "DSL CRC"
+      "dsl_connect_count": {
+        "name": "DSL connect count",
+        "unit_of_measurement": "attempts"
       },
-      "dsl_counter": {
-        "name": "DSL counter"
-      },
-      "dsl_linemode": {
-        "name": "DSL line mode"
+      "dsl_crc_error_count": {
+        "name": "DSL CRC error count",
+        "unit_of_measurement": "errors"
       },
       "dsl_line_status": {
         "name": "DSL line status",
         "state": {
-          "no_defect": "No defect",
           "loss_of_frame": "Loss of frame",
-          "loss_of_signal": "Loss of signal",
           "loss_of_power": "Loss of power",
+          "loss_of_signal": "Loss of signal",
           "loss_of_signal_quality": "Loss of signal quality",
-          "unknown": "Unknown"
+          "no_defect": "No defect"
         }
+      },
+      "dsl_linemode": {
+        "name": "DSL line mode"
       },
       "dsl_noise_down": {
         "name": "DSL noise down"
@@ -87,16 +94,15 @@
       "dsl_training": {
         "name": "DSL training",
         "state": {
-          "idle": "[%key:common::state::idle%]",
-          "g_994_training": "G.994 Training",
-          "g_992_started": "G.992 Started",
           "g_922_channel_analysis": "G.922 Channel Analysis",
           "g_992_message_exchange": "G.992 Message Exchange",
-          "g_993_started": "G.993 Started",
+          "g_992_started": "G.992 Started",
           "g_993_channel_analysis": "G.993 Channel Analysis",
           "g_993_message_exchange": "G.993 Message Exchange",
-          "showtime": "Showtime",
-          "unknown": "Unknown"
+          "g_993_started": "G.993 Started",
+          "g_994_training": "G.994 Training",
+          "idle": "[%key:common::state::idle%]",
+          "showtime": "Showtime"
         }
       },
       "net_infra": {
@@ -104,8 +110,7 @@
         "state": {
           "adsl": "ADSL",
           "ftth": "FTTH",
-          "gprs": "GPRS",
-          "unknown": "Unknown"
+          "gprs": "GPRS"
         }
       },
       "wan_mode": {
@@ -114,10 +119,20 @@
           "adsl_ppp": "ADSL (PPP)",
           "adsl_routed": "ADSL (Routed)",
           "ftth_routed": "FTTH (Routed)",
-          "grps_ppp": "GPRS (PPP)",
-          "unknown": "Unknown"
+          "grps_ppp": "GPRS (PPP)"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "The provided credentials are invalid."
+    },
+    "no_data": {
+      "message": "No data received from the SFR box."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the SFR box: {error}"
     }
   }
 }

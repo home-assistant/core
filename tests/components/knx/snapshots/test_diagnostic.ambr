@@ -9,7 +9,10 @@
       'rate_limit': 0,
       'state_updater': True,
     }),
-    'configuration_error': "extra keys not allowed @ data['knx']['wrong_key']",
+    'config_store': dict({
+      'entities': dict({
+      }),
+    }),
     'configuration_yaml': dict({
       'wrong_key': dict({
       }),
@@ -19,6 +22,7 @@
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': "extra keys not allowed @ data['knx']['wrong_key']",
   })
 # ---
 # name: test_diagnostic_redact[hass_config0]
@@ -35,13 +39,17 @@
       'state_updater': True,
       'user_password': '**REDACTED**',
     }),
-    'configuration_error': None,
+    'config_store': dict({
+      'entities': dict({
+      }),
+    }),
     'configuration_yaml': None,
     'project_info': None,
     'xknx': dict({
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': None,
   })
 # ---
 # name: test_diagnostics[hass_config0]
@@ -54,13 +62,17 @@
       'rate_limit': 0,
       'state_updater': True,
     }),
-    'configuration_error': None,
+    'config_store': dict({
+      'entities': dict({
+      }),
+    }),
     'configuration_yaml': None,
     'project_info': None,
     'xknx': dict({
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': None,
   })
 # ---
 # name: test_diagnostics_project[hass_config0]
@@ -73,7 +85,50 @@
       'rate_limit': 0,
       'state_updater': True,
     }),
-    'configuration_error': None,
+    'config_store': dict({
+      'entities': dict({
+        'light': dict({
+          'knx_es_01J85ZKTFHSZNG4X9DYBE592TF': dict({
+            'entity': dict({
+              'device_info': None,
+              'entity_category': 'config',
+              'name': 'test',
+            }),
+            'knx': dict({
+              'color_temp_max': 6000,
+              'color_temp_min': 2700,
+              'ga_switch': dict({
+                'passive': list([
+                ]),
+                'state': '1/0/21',
+                'write': '1/1/21',
+              }),
+              'sync_state': True,
+            }),
+          }),
+        }),
+        'switch': dict({
+          'knx_es_9d97829f47f1a2a3176a7c5b4216070c': dict({
+            'entity': dict({
+              'device_info': 'knx_vdev_4c80a564f5fe5da701ed293966d6384d',
+              'entity_category': None,
+              'name': 'test',
+            }),
+            'knx': dict({
+              'ga_switch': dict({
+                'passive': list([
+                ]),
+                'state': '1/0/45',
+                'write': '1/1/45',
+              }),
+              'invert': False,
+              'respond_to_read': False,
+              'sync_state': True,
+            }),
+          }),
+        }),
+      }),
+    }),
     'configuration_yaml': None,
     'project_info': dict({
       'created_by': 'ETS5',
@@ -91,5 +146,6 @@
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': None,
   })
 # ---

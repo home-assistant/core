@@ -215,12 +215,12 @@ class LovelaceYAML(LovelaceConfig):
 
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
-        config, json = await self._async_load_or_cached(force)
+        config, _json = await self._async_load_or_cached(force)
         return config
 
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
-        config, json = await self._async_load_or_cached(force)
+        _config, json = await self._async_load_or_cached(force)
         return json
 
     async def _async_load_or_cached(
@@ -287,7 +287,11 @@ class DashboardsCollection(collection.DictStorageCollection):
             raise vol.Invalid("Url path needs to contain a hyphen (-)")
 
         if url_path in self.hass.data[DATA_PANELS]:
-            raise vol.Invalid("Panel url path needs to be unique")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="url_already_exists",
+                translation_placeholders={"url": url_path},
+            )
 
         return self.CREATE_SCHEMA(data)  # type: ignore[no-any-return]
 

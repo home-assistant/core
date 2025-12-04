@@ -57,9 +57,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: missing implementation
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: no config or diagnostic entities
@@ -72,9 +70,7 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: missing implementation
+  stale-devices: done
 
   # Platinum
   async-dependency: done

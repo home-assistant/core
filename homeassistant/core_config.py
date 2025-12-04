@@ -249,7 +249,7 @@ def _validate_currency(data: Any) -> Any:
         raise
 
 
-def _validate_stun_or_turn_url(value: Any) -> str:
+def validate_stun_or_turn_url(value: Any) -> str:
     """Validate an URL."""
     url_in = str(value)
     url = urlparse(url_in)
@@ -331,7 +331,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                             vol.Schema(
                                 {
                                     vol.Required(CONF_URL): vol.All(
-                                        cv.ensure_list, [_validate_stun_or_turn_url]
+                                        cv.ensure_list, [validate_stun_or_turn_url]
                                     ),
                                     vol.Optional(CONF_USERNAME): cv.string,
                                     vol.Optional(CONF_CREDENTIAL): cv.string,
@@ -570,12 +570,11 @@ class Config:
         self.skip_pip_packages: list[str] = []
 
         # Set of loaded top level components
-        # This set is updated by _ComponentSet
-        # and should not be modified directly
+        # This set is updated by _ComponentSet and should not be modified directly.
         self.top_level_components: set[str] = set()
 
-        # Set of all loaded components including platform
-        # based components
+        # Set of all loaded components including platform based components
+        # This set is updated by _ComponentSet and should not be modified directly.
         self.all_components: set[str] = set()
 
         # Set of loaded components

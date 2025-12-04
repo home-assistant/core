@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["melissa"],
   "quality_scale": "legacy",
-  "requirements": ["py-melissa-climate==2.1.4"]
+  "requirements": ["py-melissa-climate==3.0.2"]
 }

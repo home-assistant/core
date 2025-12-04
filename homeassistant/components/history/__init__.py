@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     hass.http.register_view(HistoryPeriodView())
-    frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
+    frontend.async_register_built_in_panel(hass, "history", "history", "mdi:chart-box")
     websocket_api.async_setup(hass)
     return True
 

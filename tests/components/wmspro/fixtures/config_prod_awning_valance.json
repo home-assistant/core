@@ -1,0 +1,46 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 58717,
+      "animationType": 1,
+      "names": ["Markise", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 0,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 2,
+          "actionType": 0,
+          "actionDescription": 1,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 62571,
+      "name": "Raum 0",
+      "destinations": [58717],
+      "scenes": []
+    }
+  ],
+  "scenes": []
+}

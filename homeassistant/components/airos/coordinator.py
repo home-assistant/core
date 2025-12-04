@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from airos.airos8 import AirOS, AirOSData
+from airos.airos8 import AirOS8, AirOS8Data
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
     AirOSConnectionSetupError,
@@ -14,7 +14,7 @@ from airos.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -24,13 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 type AirOSConfigEntry = ConfigEntry[AirOSDataUpdateCoordinator]
 
 
-class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
+class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOS8Data]):
     """Class to manage fetching AirOS data from single endpoint."""
 
     config_entry: AirOSConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: AirOSConfigEntry, airos_device: AirOS
+        self, hass: HomeAssistant, config_entry: AirOSConfigEntry, airos_device: AirOS8
     ) -> None:
         """Initialize the coordinator."""
         self.airos_device = airos_device
@@ -42,14 +42,14 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> AirOSData:
+    async def _async_update_data(self) -> AirOS8Data:
         """Fetch data from AirOS."""
         try:
             await self.airos_device.login()
             return await self.airos_device.status()
-        except (AirOSConnectionAuthenticationError,) as err:
+        except AirOSConnectionAuthenticationError as err:
             _LOGGER.exception("Error authenticating with airOS device")
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except (

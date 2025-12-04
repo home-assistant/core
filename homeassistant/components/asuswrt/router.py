@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from pyasuswrt import AsusWrtError
+from asusrouter import AsusRouterError
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -176,7 +176,7 @@ class AsusWrtRouter:
 
         self._on_close: list[Callable] = []
 
-        self._options: dict[str, Any] = {
+        self._options: dict[str, str | bool | int] = {
             CONF_DNSMASQ: DEFAULT_DNSMASQ,
             CONF_INTERFACE: DEFAULT_INTERFACE,
             CONF_REQUIRE_IP: True,
@@ -229,7 +229,7 @@ class AsusWrtRouter:
         """Set up a AsusWrt router."""
         try:
             await self._api.async_connect()
-        except (AsusWrtError, OSError) as exc:
+        except (AsusRouterError, OSError) as exc:
             raise ConfigEntryNotReady from exc
         if not self._api.is_connected:
             raise ConfigEntryNotReady
@@ -284,7 +284,7 @@ class AsusWrtRouter:
         _LOGGER.debug("Checking devices for ASUS router %s", self.host)
         try:
             wrt_devices = await self._api.async_get_connected_devices()
-        except (OSError, AsusWrtError) as exc:
+        except (OSError, AsusRouterError) as exc:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.error(
@@ -299,12 +299,10 @@ class AsusWrtRouter:
             _LOGGER.warning("Reconnected to ASUS router %s", self.host)
 
         self._connected_devices = len(wrt_devices)
-        consider_home: int = self._options.get(
-            CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+        consider_home = int(
+            self._options.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds())
         )
-        track_unknown: bool = self._options.get(
-            CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN
-        )
+        track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
         for device_mac, device in self._devices.items():
             dev_info = wrt_devices.pop(device_mac, None)
@@ -388,11 +386,13 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         info = DeviceInfo(
+            configuration_url=self._api.configuration_url,
             identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",
+            model_id=self._api.model_id,
+            serial_number=self._api.serial_number,
             manufacturer="Asus",
-            configuration_url=f"http://{self.host}",
         )
         if self._api.firmware:
             info["sw_version"] = self._api.firmware

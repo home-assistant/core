@@ -5,9 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 import re
-from typing import Generic, TypeVar, cast
+from typing import cast
 
-from qbusmqttapi.discovery import QbusMqttOutput
+from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 from qbusmqttapi.state import QbusMqttState
 
@@ -19,8 +19,6 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import QbusControllerCoordinator
 
 _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
-
-StateT = TypeVar("StateT", bound=QbusMqttState)
 
 
 def create_new_entities(
@@ -44,11 +42,15 @@ def determine_new_outputs(
 
     added_ref_ids = {k.ref_id for k in added_outputs}
 
-    new_outputs = [
-        output
-        for output in coordinator.data
-        if filter_fn(output) and output.ref_id not in added_ref_ids
-    ]
+    new_outputs = (
+        [
+            output
+            for output in coordinator.data.outputs
+            if filter_fn(output) and output.ref_id not in added_ref_ids
+        ]
+        if coordinator.data
+        else []
+    )
 
     if new_outputs:
         added_outputs.extend(new_outputs)
@@ -64,12 +66,17 @@ def format_ref_id(ref_id: str) -> str | None:
     return None
 
 
-def create_main_device_identifier(mqtt_output: QbusMqttOutput) -> tuple[str, str]:
-    """Create the identifier referring to the main device this output belongs to."""
-    return (DOMAIN, format_mac(mqtt_output.device.mac))
+def create_device_identifier(mqtt_device: QbusMqttDevice) -> tuple[str, str]:
+    """Create the device identifier."""
+    return (DOMAIN, format_mac(mqtt_device.mac))
 
 
-class QbusEntity(Entity, Generic[StateT], ABC):
+def create_unique_id(serial_number: str, suffix: str) -> str:
+    """Create the unique id."""
+    return f"ctd_{serial_number}_{suffix}"
+
+
+class QbusEntity[StateT: QbusMqttState](Entity, ABC):
     """Representation of a Qbus entity."""
 
     _state_cls: type[StateT] = cast(type[StateT], QbusMqttState)
@@ -95,16 +102,18 @@ class QbusEntity(Entity, Generic[StateT], ABC):
         )
 
         ref_id = format_ref_id(mqtt_output.ref_id)
-        unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
+        suffix = ref_id or ""
 
         if id_suffix:
-            unique_id += f"_{id_suffix}"
+            suffix += f"_{id_suffix}"
 
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = create_unique_id(
+            mqtt_output.device.serial_number, suffix
+        )
 
         if link_to_main_device:
             self._attr_device_info = DeviceInfo(
-                identifiers={create_main_device_identifier(mqtt_output)}
+                identifiers={create_device_identifier(mqtt_output.device)}
             )
         else:
             self._attr_device_info = DeviceInfo(
@@ -112,7 +121,7 @@ class QbusEntity(Entity, Generic[StateT], ABC):
                 manufacturer=MANUFACTURER,
                 identifiers={(DOMAIN, f"{mqtt_output.device.serial_number}_{ref_id}")},
                 suggested_area=mqtt_output.location.title(),
-                via_device=create_main_device_identifier(mqtt_output),
+                via_device=create_device_identifier(mqtt_output.device),
             )
 
     async def async_added_to_hass(self) -> None:

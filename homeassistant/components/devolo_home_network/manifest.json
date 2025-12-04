@@ -12,10 +12,10 @@
   "requirements": ["devolo-plc-api==1.5.1"],
   "zeroconf": [
     {
-      "type": "_dvl-deviceapi._tcp.local.",
       "properties": {
         "MT": "*"
-      }
+      },
+      "type": "_dvl-deviceapi._tcp.local."
     }
   ]
 }

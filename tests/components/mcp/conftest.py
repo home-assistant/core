@@ -13,6 +13,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.mcp.const import (
     CONF_ACCESS_TOKEN,
     CONF_AUTHORIZATION_URL,
+    CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
@@ -100,6 +101,7 @@ def mock_config_entry_with_auth(
                 "refresh_token": "test-refresh-token",
                 "expires_at": config_entry_token_expiration.timestamp(),
             },
+            CONF_SCOPE: ["read", "write"],
         },
         title=TEST_API_NAME,
     )

@@ -1,0 +1,256 @@
+{
+  "node_id": 20,
+  "date_commissioned": "2025-02-05T17:31:08.969773",
+  "last_interview": "2025-10-17T07:43:55.215739",
+  "interview_version": 6,
+  "available": true,
+  "is_bridge": false,
+  "attributes": {
+    "0/29/65533": 1,
+    "0/29/0": [
+      {
+        "0": 22,
+        "1": 1
+      }
+    ],
+    "0/29/1": [29, 31, 40, 48, 49, 51, 60, 62, 63, 54, 42],
+    "0/29/2": [41],
+    "0/29/3": [1],
+    "0/29/65532": 0,
+    "0/29/65528": [],
+    "0/29/65529": [],
+    "0/29/65531": [65528, 65529, 65531, 65533, 0, 1, 2, 3, 65532],
+    "0/31/65533": 1,
+    "0/31/0": [
+      {
+        "254": 1
+      },
+      {
+        "254": 1
+      },
+      {
+        "254": 2
+      },
+      {
+        "1": 5,
+        "2": 2,
+        "3": [112233],
+        "4": null,
+        "254": 3
+      }
+    ],
+    "0/31/2": 4,
+    "0/31/4": 4,
+    "0/31/3": 3,
+    "0/31/65532": 0,
+    "0/31/65528": [],
+    "0/31/65529": [],
+    "0/31/65531": [65528, 65529, 65531, 65533, 0, 2, 4, 3, 65532],
+    "0/40/65532": 0,
+    "0/40/0": 1,
+    "0/40/6": "**REDACTED**",
+    "0/40/1": "EBERLE Controls GmbH",
+    "0/40/2": 5219,
+    "0/40/3": "Connected Thermostat UTE 3000",
+    "0/40/4": 1,
+    "0/40/7": 1,
+    "0/40/8": "V1.0",
+    "0/40/9": 285249536,
+    "0/40/10": "1.7.144.0",
+    "0/40/19": {
+      "0": 3,
+      "1": 3
+    },
+    "0/40/65533": 1,
+    "0/40/5": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+    "0/40/65528": [],
+    "0/40/65529": [],
+    "0/40/65531": [
+      65528, 65529, 65531, 65532, 0, 6, 1, 2, 3, 4, 7, 8, 9, 10, 19, 65533, 5
+    ],
+    "0/48/65532": 0,
+    "0/48/2": 0,
+    "0/48/3": 0,
+    "0/48/1": {
+      "0": 60,
+      "1": 900
+    },
+    "0/48/4": true,
+    "0/48/65533": 1,
+    "0/48/0": 0,
+    "0/48/65528": [1, 3, 5],
+    "0/48/65529": [0, 2, 4],
+    "0/48/65531": [65528, 65529, 65531, 65532, 2, 3, 1, 4, 65533, 0],
+    "0/49/0": 1,
+    "0/49/1": [
+      {
+        "0": "d2VAaG9tZQ==",
+        "1": true
+      }
+    ],
+    "0/49/2": 10,
+    "0/49/3": 30,
+    "0/49/4": true,
+    "0/49/5": 0,
+    "0/49/6": "d2VAaG9tZQ==",
+    "0/49/7": null,
+    "0/49/65532": 1,
+    "0/49/65533": 1,
+    "0/49/65528": [1, 5, 7],
+    "0/49/65529": [0, 2, 4, 6, 8],
+    "0/49/65531": [0, 1, 2, 3, 4, 5, 6, 7, 65528, 65529, 65531, 65532, 65533],
+    "0/51/0": [
+      {
+        "0": "WIFI_STA_DEF",
+        "1": true,
+        "2": null,
+        "3": null,
+        "4": "SMpDMzDc",
+        "5": ["Cv+yOw=="],
+        "6": ["/oAAAAAAAABKykP//jMw3A==", "/ZD8ujbsB0FKykP//jMw3A=="],
+        "7": 1
+      }
+    ],
+    "0/51/1": 14,
+    "0/51/8": false,
+    "0/51/65532": 0,
+    "0/51/65533": 1,
+    "0/51/65528": [],
+    "0/51/65529": [0],
+    "0/51/65531": [0, 1, 8, 65528, 65529, 65531, 65532, 65533],
+    "0/60/65532": 0,
+    "0/60/0": 0,
+    "0/60/1": null,
+    "0/60/2": null,
+    "0/60/65533": 1,
+    "0/60/65528": [],
+    "0/60/65529": [0, 1, 2],
+    "0/60/65531": [65528, 65529, 65531, 65532, 0, 1, 2, 65533],
+    "0/62/65532": 0,
+    "0/62/0": [
+      {
+        "254": 1
+      },
+      {
+        "254": 2
+      },
+      {
+        "1": "FTABAQEkAgE3AyQTAhgmBIAigScmBYAlTTo3BiQVAiQRFBgkBwEkCAEwCUEEZ0w6mkHTNp5p8Mpdwim7pMvWvikSM3Pj61NFSlE4TE14lFtWM4gjPjgStLoIPZDu931yJ3ixXVmRbSKoUKX+FzcKNQEoARgkAgE2AwQCBAEYMAQUFOFJpjKve6wb7QWGHHBNr56tq5UwBRSDAxnt9OVh4D7HavQAl5go/ax2tBgwC0B1NgwIKX3mcyJQ4Xp7Sn/OMiTlsQe2UO4ioJH2os6PE8s3NbyJNoiGZVI1LQZpsw0MFiKlvSRus6xgLUPN8WmIGA==",
+        "2": "FTABAQEkAgE3AyQUARgmBIAigScmBYAlTTo3BiQTAhgkBwEkCAEwCUEEVfW9YXAmV8MUOVR/Uoktjm5n2OjRn7V4/6h/FyHERageygyLGrb/4t0mSnk3wDZ0ihC5tumk6gbt50RL77SOizcKNQEpARgkAmAwBBSDAxnt9OVh4D7HavQAl5go/ax2tDAFFFSZpoqxN0SLhYbAXDO9h1Lo0H3nGDALQKONIw1GhtI7k3QavE/9lrxkrqzLzbqSc51k44gvyvRdm6o8bKUoXd14vwHtzh4X/RJHZDElgz/N/2O417GwxygY",
+        "254": 3
+      }
+    ],
+    "0/62/2": 5,
+    "0/62/3": 3,
+    "0/62/1": [
+      {
+        "1": "BNK8FRPwvuy0k3dIHa1LdOWXrYXlIuARXN9DVYk/g+wKuIz2X5DiTDz8NCqyMGYUMZfOzSN2XrZG7oPHiK34ICk=",
+        "2": 4937,
+        "3": 1574089007,
+        "4": 957385991,
+        "5": "RaMa",
+        "254": 1
+      },
+      {
+        "1": "BG2Z0+Kyh70D+fr3TMQQhYzRSvsqhWaimpvCrBW/o/aalEks4kOePHQ4A/zfiKPXV84o6VrFUeN2e6sU+tNaPio=",
+        "2": 4996,
+        "3": 1,
+        "4": 493504042,
+        "5": "",
+        "254": 2
+      },
+      {
+        "1": "BO13DF1A/bQsFvEHaeuaj+31c2NPA5GC/lARAwKOYvY8GNfPNWtiLcbCeJXrfLFCnaP8u87aNap8DobsrKm5Dfk=",
+        "2": 4939,
+        "3": 2,
+        "4": 20,
+        "5": "Home",
+        "254": 3
+      }
+    ],
+    "0/62/4": [
+      "FTABAQAkAgE3AyYUCd83BCYVL7HSXRgmBAAcNywkBQA3BiYUCd83BCYVL7HSXRgkBwEkCAEwCUEE0rwVE/C+7LSTd0gdrUt05ZetheUi4BFc30NViT+D7Aq4jPZfkOJMPPw0KrIwZhQxl87NI3Zetkbug8eIrfggKTcKNQEpARgkAmAwBBSXr/Rhe4RZjjaFYDFs53d/5Hm2GjAFFJev9GF7hFmONoVgMWznd3/kebYaGDALQCUHVuqvkTH1NCq74knaVrISzAMjXIbjZbCJnF0zIga8xl/RQdaNiT++0xMi+vD2Tck0A5PsI3O/vuTWUbsuvXAY",
+      "FTABAQAkAgE3AycU1cDXQ1a4Ma0kFQEYJgQeHDcsJgWeTxguNwYnFNXA10NWuDGtJBUBGCQHASQIATAJQQRtmdPisoe9A/n690zEEIWM0Ur7KoVmopqbwqwVv6P2mpRJLOJDnjx0OAP834ij11fOKOlaxVHjdnurFPrTWj4qNwo1ASkBGCQCYDAEFGyyLPv0Vs7zwInjquHu34d2ZHI/MAUUbLIs+/RWzvPAieOq4e7fh3Zkcj8YMAtA8E0wSRMy64ICKLvdwX2egenx4KNHM3j77Rn/RcOQ+PaT6zVtRjA1bN+gTLC+z84TdnF7+xbDzwJ5CocwBDNGRxg=",
+      "FTABAQEkAgE3AyQUARgmBIAigScmBYAlTTo3BiQUARgkBwEkCAEwCUEE7XcMXUD9tCwW8Qdp65qP7fVzY08DkYL+UBEDAo5i9jwY1881a2ItxsJ4let8sUKdo/y7zto1qnwOhuysqbkN+TcKNQEpARgkAmAwBBRUmaaKsTdEi4WGwFwzvYdS6NB95zAFFFSZpoqxN0SLhYbAXDO9h1Lo0H3nGDALQGN23+E4U4tLfRJJpLTC1k6IG4fkt0mXMocO9kPQkmTAOkerpFFYpTL8bvqUtCErTEliePLL2ZayUDoWJoslKTUY"
+    ],
+    "0/62/5": 3,
+    "0/62/65533": 1,
+    "0/62/65528": [1, 3, 5, 8],
+    "0/62/65529": [0, 2, 4, 6, 7, 9, 10, 11],
+    "0/62/65531": [65528, 65529, 65531, 65532, 0, 2, 3, 1, 4, 5, 65533],
+    "0/63/65532": 0,
+    "0/63/65533": 1,
+    "0/63/0": [],
+    "0/63/1": [],
+    "0/63/2": 4,
+    "0/63/3": 3,
+    "0/63/65528": [2, 5],
+    "0/63/65529": [0, 1, 3, 4],
+    "0/63/65531": [65528, 65529, 65531, 65532, 65533, 0, 1, 2, 3],
+    "0/54/65532": 0,
+    "0/54/0": "PDcSRuzP",
+    "0/54/1": 4,
+    "0/54/2": 3,
+    "0/54/3": 11,
+    "0/54/4": -53,
+    "0/54/65533": 1,
+    "0/54/65528": [],
+    "0/54/65529": [],
+    "0/54/65531": [65528, 65529, 65531, 65532, 0, 1, 2, 3, 4, 65533],
+    "0/42/65532": 0,
+    "0/42/0": [
+      {
+        "1": 3512032450,
+        "2": 0,
+        "254": 1
+      }
+    ],
+    "0/42/65533": 1,
+    "0/42/1": true,
+    "0/42/2": 1,
+    "0/42/3": null,
+    "0/42/65528": [],
+    "0/42/65529": [0],
+    "0/42/65531": [65528, 65529, 65531, 65532, 0, 65533, 1, 2, 3],
+    "1/29/65533": 1,
+    "1/29/0": [
+      {
+        "0": 769,
+        "1": 2
+      }
+    ],
+    "1/29/1": [29, 3, 513, 4],
+    "1/29/2": [],
+    "1/29/3": [],
+    "1/29/65532": 0,
+    "1/29/65528": [],
+    "1/29/65529": [],
+    "1/29/65531": [65528, 65529, 65531, 65533, 0, 1, 2, 3, 65532],
+    "1/3/65532": 0,
+    "1/3/65533": 4,
+    "1/3/0": 0,
+    "1/3/1": 2,
+    "1/3/65528": [],
+    "1/3/65529": [0],
+    "1/3/65531": [65528, 65529, 65531, 65532, 65533, 0, 1],
+    "1/513/65532": 1,
+    "1/513/65533": 6,
+    "1/513/0": 2250,
+    "1/513/27": 2,
+    "1/513/28": 4,
+    "1/513/3": 500,
+    "1/513/4": 3000,
+    "1/513/8": 100,
+    "1/513/18": 2250,
+    "1/513/65528": [],
+    "1/513/65529": [0],
+    "1/513/65531": [65528, 65529, 65531, 65532, 65533, 0, 27, 28, 3, 4, 8, 18],
+    "1/4/65532": 1,
+    "1/4/65533": 4,
+    "1/4/0": 128,
+    "1/4/65528": [0, 1, 2, 3],
+    "1/4/65529": [0, 1, 2, 3, 4, 5],
+    "1/4/65531": [65528, 65529, 65531, 65532, 65533, 0]
+  },
+  "attribute_subscriptions": []
+}

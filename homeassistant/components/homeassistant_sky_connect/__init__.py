@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import os.path
 
+from homeassistant.components.homeassistant_hardware.coordinator import (
+    FirmwareUpdateCoordinator,
+)
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.components.usb import (
     USBDevice,
@@ -15,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -24,6 +29,7 @@ from .const import (
     FIRMWARE,
     FIRMWARE_VERSION,
     MANUFACTURER,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
     PID,
     PRODUCT,
     SERIAL_NUMBER,
@@ -31,6 +37,16 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type HomeAssistantSkyConnectConfigEntry = ConfigEntry[HomeAssistantSkyConnectData]
+
+
+@dataclass
+class HomeAssistantSkyConnectData:
+    """Runtime data definition."""
+
+    coordinator: FirmwareUpdateCoordinator
+
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -65,7 +81,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
+) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
 
     # Postpone loading the config entry if the device is missing
@@ -76,18 +94,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="device_disconnected",
         )
 
-    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+    # Create and store the firmware update coordinator in runtime_data
+    session = async_get_clientsession(hass)
+    coordinator = FirmwareUpdateCoordinator(
+        hass,
+        entry,
+        session,
+        NABU_CASA_FIRMWARE_RELEASES_URL,
+    )
+    entry.runtime_data = HomeAssistantSkyConnectData(coordinator)
+
+    await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, ["update"])
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: HomeAssistantSkyConnectConfigEntry
+) -> bool:
     """Migrate old entry."""
 
     _LOGGER.debug(

@@ -3,8 +3,8 @@
     "binary_sensor": {
       "uncalibrated": {
         "state": {
-          "on": "mdi:sync-alert",
-          "off": "mdi:sync"
+          "off": "mdi:sync",
+          "on": "mdi:sync-alert"
         }
       }
     },

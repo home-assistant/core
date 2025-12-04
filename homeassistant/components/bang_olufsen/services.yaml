@@ -3,16 +3,12 @@ beolink_allstandby:
     entity:
       integration: bang_olufsen
       domain: media_player
-    device:
-      integration: bang_olufsen
 
 beolink_expand:
   target:
     entity:
       integration: bang_olufsen
       domain: media_player
-    device:
-      integration: bang_olufsen
   fields:
     all_discovered:
       required: false
@@ -37,8 +33,6 @@ beolink_join:
     entity:
       integration: bang_olufsen
       domain: media_player
-    device:
-      integration: bang_olufsen
   fields:
     jid_options:
       collapsed: false
@@ -71,16 +65,12 @@ beolink_leave:
     entity:
       integration: bang_olufsen
       domain: media_player
-    device:
-      integration: bang_olufsen
 
 beolink_unexpand:
   target:
     entity:
       integration: bang_olufsen
       domain: media_player
-    device:
-      integration: bang_olufsen
   fields:
     jid_options:
       collapsed: false

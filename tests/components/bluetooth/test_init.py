@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import time
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -19,6 +19,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
     HaBluetoothConnector,
+    async_clear_address_from_match_history,
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
@@ -140,7 +141,6 @@ async def test_setup_and_stop_passive(
         "adapter": "hci0",
         "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
         "scanning_mode": "passive",
-        "detection_callback": ANY,
     }
 
 
@@ -190,7 +190,6 @@ async def test_setup_and_stop_old_bluez(
     assert init_kwargs == {
         "adapter": "hci0",
         "scanning_mode": "active",
-        "detection_callback": ANY,
     }
 
 
@@ -705,6 +704,67 @@ async def test_discovery_match_by_local_name(
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_discovery_match_by_service_uuid_when_name_changes_from_mac(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """Test bluetooth discovery still matches when name changes from MAC address to real name."""
+    mock_bt = [
+        {
+            "domain": "improv_ble",
+            "service_uuid": "00467768-6228-2272-4663-277478268000",
+        }
+    ]
+    with (
+        patch(
+            "homeassistant.components.bluetooth.async_get_bluetooth",
+            return_value=mock_bt,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        # First advertisement: name is MAC address, with service UUID
+        # This should trigger discovery
+        device_mac_name = generate_ble_device("64:E8:33:7E:0D:9E", "64:E8:33:7E:0D:9E")
+        adv_mac_name = generate_advertisement_data(
+            local_name="64:E8:33:7E:0D:9E",
+            service_uuids=["00467768-6228-2272-4663-277478268000"],
+            service_data={
+                "00004677-0000-1000-8000-00805f9b34fb": b"\x02\x00\x00\x00\x00\x00"
+            },
+        )
+
+        inject_advertisement(hass, device_mac_name, adv_mac_name)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "improv_ble"
+        mock_config_flow.reset_mock()
+
+        # Second advertisement: name changes to real name, same service UUID
+        # This should trigger discovery again because the name changed
+        device_real_name = generate_ble_device("64:E8:33:7E:0D:9E", "improvtest")
+        adv_real_name = generate_advertisement_data(
+            local_name="improvtest",
+            service_uuids=["00467768-6228-2272-4663-277478268000"],
+            service_data={
+                "00004677-0000-1000-8000-00805f9b34fb": b"\x02\x00\x00\x00\x00\x00"
+            },
+        )
+
+        inject_advertisement(hass, device_real_name, adv_real_name)
+        await hass.async_block_till_done()
+
+        # Should still match improv_ble even though name changed
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "improv_ble"
+
+
 @pytest.mark.usefixtures("macos_adapter")
 async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
@@ -1174,6 +1234,61 @@ async def test_rediscovery(
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 3
+        assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_clear_address_from_match_history(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """Test clearing match history without re-triggering discovery."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with (
+        patch(
+            "homeassistant.components.bluetooth.async_get_bluetooth",
+            return_value=mock_bt,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+        switchbot_adv = generate_advertisement_data(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+        switchbot_adv_2 = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={1: b"\x01"},
+        )
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+        # Clear match history - should NOT trigger immediate rediscovery
+        async_clear_address_from_match_history(hass, "44:44:33:11:23:45")
+        await hass.async_block_till_done()
+
+        # No new discovery should have been triggered
+        assert len(mock_config_flow.mock_calls) == 1
+
+        # But when we inject new advertisement with different data, it should be discovered
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+        await hass.async_block_till_done()
+
+        # Now discovery should happen because history was cleared and data changed
+        assert len(mock_config_flow.mock_calls) == 2
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
 
 

@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.mastodon.const import (
     ATTR_CONTENT_WARNING,
+    ATTR_IDEMPOTENCY_KEY,
+    ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_STATUS,
@@ -34,6 +36,8 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": None,
                 "visibility": None,
+                "idempotency_key": None,
+                "language": None,
                 "media_ids": None,
                 "sensitive": None,
             },
@@ -44,6 +48,8 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": None,
                 "visibility": "private",
+                "idempotency_key": None,
+                "language": None,
                 "media_ids": None,
                 "sensitive": None,
             },
@@ -58,6 +64,8 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": "private",
+                "idempotency_key": None,
+                "language": None,
                 "media_ids": None,
                 "sensitive": None,
             },
@@ -66,12 +74,15 @@ from tests.common import MockConfigEntry
             {
                 ATTR_STATUS: "test toot",
                 ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_LANGUAGE: "nl",
                 ATTR_MEDIA: "/image.jpg",
             },
             {
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "idempotency_key": None,
+                "language": "nl",
                 "media_ids": "1",
                 "sensitive": None,
             },
@@ -80,6 +91,7 @@ from tests.common import MockConfigEntry
             {
                 ATTR_STATUS: "test toot",
                 ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_LANGUAGE: "en",
                 ATTR_MEDIA: "/image.jpg",
                 ATTR_MEDIA_DESCRIPTION: "A test image",
             },
@@ -87,7 +99,36 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "idempotency_key": None,
+                "language": "en",
                 "media_ids": "1",
+                "sensitive": None,
+            },
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_LANGUAGE: "invalid-lang"},
+            {
+                "status": "test toot",
+                "language": "invalid-lang",
+                "spoiler_text": None,
+                "visibility": None,
+                "idempotency_key": None,
+                "media_ids": None,
+                "sensitive": None,
+            },
+        ),
+        (
+            {
+                ATTR_STATUS: "test toot\nwith idempotency",
+                ATTR_IDEMPOTENCY_KEY: "post_once_only",
+            },
+            {
+                "status": "test toot\nwith idempotency",
+                "idempotency_key": "post_once_only",
+                "language": None,
+                "spoiler_text": None,
+                "visibility": None,
+                "media_ids": None,
                 "sensitive": None,
             },
         ),
@@ -145,6 +186,7 @@ async def test_service_post(
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "idempotency_key": None,
                 "media_ids": "1",
                 "media_description": None,
                 "sensitive": None,
@@ -220,6 +262,31 @@ async def test_post_path_not_whitelisted(
 
     with pytest.raises(
         HomeAssistantError, match="/fail.jpg is not a whitelisted directory"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            blocking=True,
+            return_response=False,
+        )
+
+
+async def test_idempotency_key_too_short(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the post service raising an error because the idempotency key is too short."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = {"status": "test toot", "idempotency_key": "abc"}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Idempotency key must be at least 4 characters long",
     ):
         await hass.services.async_call(
             DOMAIN,

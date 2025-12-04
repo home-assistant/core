@@ -1,6 +1,7 @@
 """The tests for Home Assistant frontend."""
 
 from collections.abc import Generator
+from contextlib import nullcontext
 from http import HTTPStatus
 from pathlib import Path
 import re
@@ -410,8 +411,72 @@ async def test_themes_reload_themes(
 
 
 @pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("invalid_theme", "error", "log"),
+    [
+        (
+            {
+                "invalid0": "blue",
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid1": {
+                    "primary-color": "black",
+                    "modes": "light:{} dark:{}",
+                }
+            },
+            None,
+            "expected a dictionary",
+        ),
+        (
+            {
+                "invalid2": None,
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid3": {
+                    "primary-color": "black",
+                    "modes": {},
+                }
+            },
+            None,
+            "must contain at least one of light, dark",
+        ),
+        (
+            {
+                "invalid4": {
+                    "primary-color": "black",
+                    "modes": None,
+                }
+            },
+            "string value is None for dictionary value",
+            None,
+        ),
+        (
+            {
+                "invalid5": {
+                    "primary-color": "black",
+                    "modes": {"light": {}, "dank": {}},
+                }
+            },
+            "extra keys not allowed.*dank",
+            None,
+        ),
+    ],
+)
 async def test_themes_reload_invalid(
-    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    themes_ws_client: MockHAClientWebSocket,
+    invalid_theme: dict,
+    error: str | None,
+    log: str | None,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test frontend.reload_themes service with an invalid theme."""
 
@@ -424,17 +489,26 @@ async def test_themes_reload_invalid(
     with (
         patch(
             "homeassistant.components.frontend.async_hass_config_yaml",
-            return_value={DOMAIN: {CONF_THEMES: {"sad": "blue"}}},
+            return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
         ),
-        pytest.raises(HomeAssistantError, match="Failed to reload themes"),
+        pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
+        if error is not None
+        else nullcontext(),
     ):
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    if log is not None:
+        assert log in caplog.text
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
     msg = await themes_ws_client.receive_json()
 
-    assert msg["result"]["themes"] == {"happy": {"primary-color": "pink"}}
+    expected_themes = {"happy": {"primary-color": "pink"}}
+    if error is None:
+        expected_themes = {}
+
+    assert msg["result"]["themes"] == expected_themes
     assert msg["result"]["default_theme"] == "default"
 
 
@@ -571,6 +645,7 @@ async def test_get_panels(
     assert msg["result"]["map"]["icon"] == "mdi:tooltip-account"
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
+    assert msg["result"]["map"]["default_visible"] is True
 
     async_remove_panel(hass, "map")
 
@@ -609,6 +684,45 @@ async def test_get_panels_non_admin(
     assert msg["success"]
     assert "history" in msg["result"]
     assert "map" not in msg["result"]
+
+
+async def test_panel_sidebar_default_visible(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client: TestClient,
+) -> None:
+    """Test sidebar_default_visible property in panels."""
+    async_register_built_in_panel(
+        hass,
+        "default_panel",
+        "Default Panel",
+    )
+    async_register_built_in_panel(
+        hass,
+        "visible_panel",
+        "Visible Panel",
+        "mdi:eye",
+        sidebar_default_visible=True,
+    )
+    async_register_built_in_panel(
+        hass,
+        "hidden_panel",
+        "Hidden Panel",
+        "mdi:eye-off",
+        sidebar_default_visible=False,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "get_panels"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["default_panel"]["default_visible"] is True
+    assert msg["result"]["visible_panel"]["default_visible"] is True
+    assert msg["result"]["hidden_panel"]["default_visible"] is False
 
 
 async def test_get_translations(ws_client: MockHAClientWebSocket) -> None:

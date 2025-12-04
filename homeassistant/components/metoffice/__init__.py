@@ -5,9 +5,8 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import datapoint
-import datapoint.Forecast
-import datapoint.Manager
+from datapoint.Forecast import Forecast
+from datapoint.Manager import Manager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,19 +47,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinates = f"{latitude}_{longitude}"
 
-    connection = datapoint.Manager.Manager(api_key=api_key)
+    connection = Manager(api_key=api_key)
 
-    async def async_update_hourly() -> datapoint.Forecast:
+    async def async_update_hourly() -> Forecast:
         return await hass.async_add_executor_job(
             fetch_data, connection, latitude, longitude, "hourly"
         )
 
-    async def async_update_daily() -> datapoint.Forecast:
+    async def async_update_daily() -> Forecast:
         return await hass.async_add_executor_job(
             fetch_data, connection, latitude, longitude, "daily"
         )
 
-    async def async_update_twice_daily() -> datapoint.Forecast:
+    async def async_update_twice_daily() -> Forecast:
         return await hass.async_add_executor_job(
             fetch_data, connection, latitude, longitude, "twice-daily"
         )

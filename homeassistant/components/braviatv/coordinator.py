@@ -81,6 +81,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
         self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
         self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.system_info: dict[str, str] = {}
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
@@ -149,6 +150,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
             self.skipped_updates = 0
+
+            if not self.system_info:
+                self.system_info = await self.client.get_system_info()
 
             if self.is_on is False:
                 return

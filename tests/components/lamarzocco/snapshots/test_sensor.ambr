@@ -45,7 +45,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-05-07T18:04:20+00:00',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.gs012345_coffee_boiler_ready_time-entry]

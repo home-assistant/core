@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_time[time.home_assistant_test_bedtime_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': None,
+    'entity_id': 'time.home_assistant_test_bedtime_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bedtime alarm',
+    'platform': 'nintendo_parental_controls',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NintendoParentalControlsTime.BEDTIME_ALARM: 'bedtime_alarm'>,
+    'unique_id': 'testdevid_bedtime_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_time[time.home_assistant_test_bedtime_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Home Assistant Test Bedtime alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.home_assistant_test_bedtime_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19:00:00',
+  })
+# ---

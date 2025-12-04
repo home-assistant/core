@@ -2,18 +2,23 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    SERVICE_DISABLE_MOTION,
+    SERVICE_ENABLE_MOTION,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import DEVICE_MOCKS, initialize_entry
+from . import initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -28,22 +33,18 @@ def mock_getrandbits():
         yield
 
 
-@pytest.mark.parametrize(
-    "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.CAMERA in v],
-)
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.CAMERA])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
 
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(
         hass,
@@ -53,21 +54,46 @@ async def test_platform_setup_and_discovery(
     )
 
 
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.CAMERA])
 @pytest.mark.parametrize(
     "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.CAMERA not in v],
+    ["sp_rudejjigkywujjvs"],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.CAMERA])
-async def test_platform_setup_no_discovery(
+@pytest.mark.parametrize(
+    ("service", "expected_command"),
+    [
+        (
+            SERVICE_DISABLE_MOTION,
+            {"code": "motion_switch", "value": False},
+        ),
+        (
+            SERVICE_ENABLE_MOTION,
+            {"code": "motion_switch", "value": True},
+        ),
+    ],
+)
+async def test_action(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    entity_registry: er.EntityRegistry,
+    service: str,
+    expected_command: dict[str, Any],
 ) -> None:
-    """Test platform setup without discovery."""
+    """Test camera action."""
+    entity_id = "camera.burocam"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        CAMERA_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [expected_command]
     )

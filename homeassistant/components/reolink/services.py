@@ -46,7 +46,7 @@ async def _async_play_chime(service_call: ServiceCall) -> None:
                 translation_placeholders={"service_name": "play_chime"},
             )
         host: ReolinkHost = config_entry.runtime_data.host
-        (device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
+        (_device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
         chime: Chime | None = host.api.chime(chime_id)
         if not is_chime or chime is None:
             raise ServiceValidationError(

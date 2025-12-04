@@ -8,7 +8,7 @@ from pysma.const import (
     GENERIC_SENSORS,
     OPTIMIZERS_VIA_INVERTER,
 )
-from pysma.definitions import sensor_map
+from pysma.definitions.webconnect import sensor_map
 from pysma.sensor import Sensors
 import pytest
 
@@ -26,8 +26,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
     return MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_DEVICE["name"],
-        unique_id=str(MOCK_DEVICE["serial"]),
+        title=MOCK_DEVICE.name,
+        unique_id=str(MOCK_DEVICE.serial),
         data=MOCK_USER_INPUT,
         minor_version=2,
         entry_id="sma_entry_123",
@@ -46,13 +46,19 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_sma_client() -> Generator[MagicMock]:
     """Mock the SMA client."""
-    with patch("homeassistant.components.sma.pysma.SMA", autospec=True) as client:
-        client.return_value.device_info.return_value = MOCK_DEVICE
-        client.new_session.return_value = True
-        client.return_value.get_sensors.return_value = Sensors(
-            sensor_map[GENERIC_SENSORS]
-            + sensor_map[OPTIMIZERS_VIA_INVERTER]
-            + sensor_map[ENERGY_METER_VIA_INVERTER]
+    with patch(
+        "homeassistant.components.sma.coordinator.SMAWebConnect", autospec=True
+    ) as sma_cls:
+        sma_instance: MagicMock = sma_cls.return_value
+        sma_instance.device_info = AsyncMock(return_value=MOCK_DEVICE)
+        sma_instance.new_session = AsyncMock(return_value=True)
+        sma_instance.close_session = AsyncMock(return_value=True)
+        sma_instance.get_sensors = AsyncMock(
+            return_value=Sensors(
+                sensor_map[GENERIC_SENSORS]
+                + sensor_map[OPTIMIZERS_VIA_INVERTER]
+                + sensor_map[ENERGY_METER_VIA_INVERTER]
+            )
         )
 
         default_sensor_values = {
@@ -65,12 +71,20 @@ def mock_sma_client() -> Generator[MagicMock]:
             "6100_00499700": 1000,
         }
 
-        def mock_read(sensors):
+        async def _async_mock_read(sensors) -> bool:
             for sensor in sensors:
                 if sensor.key in default_sensor_values:
                     sensor.value = default_sensor_values[sensor.key]
             return True
 
-        client.return_value.read.side_effect = mock_read
+        sma_instance.read = AsyncMock(side_effect=_async_mock_read)
 
-        yield client
+        with (
+            patch(
+                "homeassistant.components.sma.config_flow.SMAWebConnect",
+                new=sma_cls,
+            ),
+            patch("homeassistant.components.sma.SMAWebConnect", new=sma_cls),
+            patch("pysma.SMAWebConnect", new=sma_cls),
+        ):
+            yield sma_instance

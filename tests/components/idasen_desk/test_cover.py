@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from bleak.exc import BleakError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cover import (
@@ -22,12 +23,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import init_integration
+from . import UPDATE_DEBOUNCE_TIME, init_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_cover_available(
-    hass: HomeAssistant,
-    mock_desk_api: MagicMock,
+    hass: HomeAssistant, mock_desk_api: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test cover available property."""
     entity_id = "cover.test"
@@ -41,6 +43,9 @@ async def test_cover_available(
     mock_desk_api.connect = AsyncMock()
     mock_desk_api.is_connected = False
     mock_desk_api.trigger_update_callback(None)
+
+    freezer.tick(UPDATE_DEBOUNCE_TIME)
+    async_fire_time_changed(hass)
 
     state = hass.states.get(entity_id)
     assert state
@@ -64,6 +69,7 @@ async def test_cover_services(
     service_data: dict[str, Any],
     expected_state: str,
     expected_position: int,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cover services."""
     entity_id = "cover.test"
@@ -78,7 +84,9 @@ async def test_cover_services(
         {"entity_id": entity_id, **service_data},
         blocking=True,
     )
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_DEBOUNCE_TIME)
+    async_fire_time_changed(hass)
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
@@ -113,4 +121,3 @@ async def test_cover_services_exception(
             {"entity_id": entity_id, **service_data},
             blocking=True,
         )
-    await hass.async_block_till_done()

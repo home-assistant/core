@@ -274,7 +274,7 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
-    async def _telnet_callback(self, zone: str, event: str, parameter: str) -> None:
+    def _telnet_callback(self, zone: str, event: str, parameter: str) -> None:
         """Process a telnet command callback."""
         # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
         if zone not in (self._receiver.zone, ALL_ZONES):

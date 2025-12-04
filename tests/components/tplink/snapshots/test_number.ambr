@@ -347,7 +347,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'tplink',
@@ -362,6 +362,7 @@
 # name: test_states[number.my_device_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature_delta',
       'friendly_name': 'my_device Temperature offset',
       'max': 10,
       'min': -10,

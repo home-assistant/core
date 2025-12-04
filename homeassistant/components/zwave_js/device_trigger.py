@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -16,10 +17,11 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -434,12 +436,13 @@ async def async_attach_trigger(
 
     if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
         zwave_js_config = {
-            state.CONF_PLATFORM: trigger_platform,
-            CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+            CONF_OPTIONS: {
+                CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+            },
         }
         copy_available_params(
             config,
-            zwave_js_config,
+            zwave_js_config[CONF_OPTIONS],
             [
                 ATTR_COMMAND_CLASS,
                 ATTR_PROPERTY,
@@ -452,8 +455,28 @@ async def async_attach_trigger(
         zwave_js_config = await validate_value_updated_trigger_config(
             hass, zwave_js_config
         )
+
+        @callback
+        def run_action(
+            extra_trigger_payload: dict[str, Any],
+            description: str,
+            context: Context | None = None,
+        ) -> asyncio.Task[Any]:
+            """Run action with trigger variables."""
+
+            payload = {
+                "trigger": {
+                    **trigger_info["trigger_data"],
+                    CONF_PLATFORM: VALUE_UPDATED_PLATFORM_TYPE,
+                    "description": description,
+                    **extra_trigger_payload,
+                }
+            }
+
+            return hass.async_create_task(action(payload, context))
+
         return await attach_value_updated_trigger(
-            hass, zwave_js_config, action, trigger_info
+            hass, zwave_js_config[CONF_OPTIONS], run_action
         )
 
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")

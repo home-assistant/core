@@ -5,9 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 from pylitterbot import LitterRobot4
 import pytest
 
+from homeassistant.components.litterrobot.update import RELEASE_URL
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_RELEASE_URL,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_INSTALL,
     UpdateDeviceClass,
@@ -47,6 +49,7 @@ async def test_robot_with_no_update(
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
     assert state.attributes[ATTR_INSTALLED_VERSION] == OLD_FIRMWARE
     assert state.attributes[ATTR_LATEST_VERSION] == OLD_FIRMWARE
+    assert state.attributes[ATTR_RELEASE_URL] == RELEASE_URL
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -68,6 +71,7 @@ async def test_robot_with_update(
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
     assert state.attributes[ATTR_INSTALLED_VERSION] == OLD_FIRMWARE
     assert state.attributes[ATTR_LATEST_VERSION] == NEW_FIRMWARE
+    assert state.attributes[ATTR_RELEASE_URL] == RELEASE_URL
 
     robot.update_firmware = AsyncMock(return_value=False)
 
@@ -106,6 +110,7 @@ async def test_robot_with_update_already_in_progress(
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
     assert state.attributes[ATTR_INSTALLED_VERSION] == OLD_FIRMWARE
     assert state.attributes[ATTR_LATEST_VERSION] is None
+    assert state.attributes[ATTR_RELEASE_URL] == RELEASE_URL
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -12,9 +12,9 @@ from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
-    "relay_count": 1,
-    "input_count": 1,
-    "is_old": False,
+    "relays": 1,
+    "inputs": 1,
+    "temps": False,
 }
 
 

@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "quality_scale": "platinum",
   "requirements": ["peblar==0.4.0"],
-  "zeroconf": [{ "type": "_http._tcp.local.", "name": "pblr-*" }]
+  "zeroconf": [{ "name": "pblr-*", "type": "_http._tcp.local." }]
 }

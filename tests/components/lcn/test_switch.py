@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import (
     ModStatusKeyLocks,
     ModStatusOutput,
@@ -10,9 +11,11 @@ from pypck.inputs import (
 )
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import KeyLockStateModifier, RelayStateModifier, Var, VarValue
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
+from homeassistant.components.lcn.switch import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,9 +29,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 SWITCH_OUTPUT1 = "switch.testmodule_switch_output1"
 SWITCH_OUTPUT2 = "switch.testmodule_switch_output2"
@@ -55,7 +58,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the output switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
+    with patch.object(MockDeviceConnection, "dim_output") as dim_output:
         # command failed
         dim_output.return_value = False
 
@@ -92,9 +95,13 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the output switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
-        state = hass.states.get(SWITCH_OUTPUT1)
-        state.state = STATE_ON
+    with patch.object(MockDeviceConnection, "dim_output") as dim_output:
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_OUTPUT1},
+            blocking=True,
+        )
 
         # command failed
         dim_output.return_value = False
@@ -132,7 +139,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
     """Test the relay switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.ON
 
@@ -172,12 +179,16 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the relay switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.OFF
 
-        state = hass.states.get(SWITCH_RELAY1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_RELAY1},
+            blocking=True,
+        )
 
         # command failed
         control_relays.return_value = False
@@ -217,7 +228,7 @@ async def test_regulatorlock_turn_on(
     """Test the regulator lock switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         # command failed
         lock_regulator.return_value = False
 
@@ -256,9 +267,13 @@ async def test_regulatorlock_turn_off(
     """Test the regulator lock switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
-        state = hass.states.get(SWITCH_REGULATOR1)
-        state.state = STATE_ON
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_REGULATOR1},
+            blocking=True,
+        )
 
         # command failed
         lock_regulator.return_value = False
@@ -296,7 +311,7 @@ async def test_keylock_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the keylock switch turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
+    with patch.object(MockDeviceConnection, "lock_keys") as lock_keys:
         states = [KeyLockStateModifier.NOCHANGE] * 8
         states[0] = KeyLockStateModifier.ON
 
@@ -336,12 +351,16 @@ async def test_keylock_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> 
     """Test the keylock switch turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
+    with patch.object(MockDeviceConnection, "lock_keys") as lock_keys:
         states = [KeyLockStateModifier.NOCHANGE] * 8
         states[0] = KeyLockStateModifier.OFF
 
-        state = hass.states.get(SWITCH_KEYLOCKK1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_KEYLOCKK1},
+            blocking=True,
+        )
 
         # command failed
         lock_keys.return_value = False
@@ -486,6 +505,71 @@ async def test_pushed_keylock_status_change(
 
     state = hass.states.get(SWITCH_KEYLOCKK1)
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_method", "return_value"),
+    [
+        (
+            SWITCH_OUTPUT1,
+            "request_status_output",
+            ModStatusOutput(LcnAddr(0, 7, False), 0, 0),
+        ),
+        (
+            SWITCH_RELAY1,
+            "request_status_relays",
+            ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),
+        ),
+        (
+            SWITCH_REGULATOR1,
+            "request_status_variable",
+            ModStatusVar(LcnAddr(0, 7, False), Var.R1VARSETPOINT, VarValue(0x8000)),
+        ),
+        (
+            SWITCH_KEYLOCKK1,
+            "request_status_locked_keys",
+            ModStatusKeyLocks(LcnAddr(0, 7, False), [[False] * 8 for i in range(4)]),
+        ),
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entry: MockConfigEntry,
+    entity_id: str,
+    request_method: str,
+    return_value: ModStatusOutput | ModStatusRelays,
+) -> None:
+    """Test the availability of switch entity."""
+    await init_integration(hass, entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # no response from device -> unavailable
+    with patch.object(MockDeviceConnection, request_method, return_value=None):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # response from device -> available
+    with patch.object(
+        MockDeviceConnection,
+        request_method,
+        return_value=return_value,
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

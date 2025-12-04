@@ -321,8 +321,14 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
-        sources = [x.text for x in self._inputs]
-        sources += [x.name for x in self._presets]
+        sources = [x.name for x in self._presets]
+
+        # ignore if both id and text are None
+        for input_ in self._inputs:
+            if input_.text is not None:
+                sources.append(input_.text)
+            elif input_.id is not None:
+                sources.append(input_.id)
 
         return sources
 
@@ -340,7 +346,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                     input_.id == self._status.input_id
                     or input_.url == self._status.stream_url
                 ):
-                    return input_.text
+                    return input_.text if input_.text is not None else input_.id
 
         for preset in self._presets:
             if preset.url == self._status.stream_url:
@@ -537,7 +543,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         # presets and inputs might have the same name; presets have priority
         for input_ in self._inputs:
-            if input_.text == source:
+            if source in (input_.text, input_.id):
                 await self._player.play_url(input_.url)
                 return
         for preset in self._presets:

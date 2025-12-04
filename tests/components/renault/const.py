@@ -31,6 +31,7 @@ MOCK_VEHICLES = {
             "location": "location.json",
             "lock_status": "lock_status.1.json",
             "res_state": "res_state.1.json",
+            "pressure": "pressure.1.json",
         },
     },
     "captur_phev": {
@@ -58,6 +59,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.3.json",
             "location": "location.json",
+            "pressure": "pressure.1.json",
         },
     },
 }

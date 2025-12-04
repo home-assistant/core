@@ -3,29 +3,10 @@
   list([
     dict({
       'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-start',
-    }),
-    dict({
-      'data': dict({
-        'text': 'Hello world',
-      }),
-      'payload': None,
-      'type': 'synthesize-chunk',
-    }),
-    dict({
-      'data': dict({
         'text': 'Hello world',
       }),
       'payload': None,
       'type': 'synthesize',
-    }),
-    dict({
-      'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-stop',
     }),
   ])
 # ---
@@ -33,29 +14,10 @@
   list([
     dict({
       'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-start',
-    }),
-    dict({
-      'data': dict({
-        'text': 'Hello world',
-      }),
-      'payload': None,
-      'type': 'synthesize-chunk',
-    }),
-    dict({
-      'data': dict({
         'text': 'Hello world',
       }),
       'payload': None,
       'type': 'synthesize',
-    }),
-    dict({
-      'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-stop',
     }),
   ])
 # ---
@@ -63,29 +25,10 @@
   list([
     dict({
       'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-start',
-    }),
-    dict({
-      'data': dict({
-        'text': 'Hello world',
-      }),
-      'payload': None,
-      'type': 'synthesize-chunk',
-    }),
-    dict({
-      'data': dict({
         'text': 'Hello world',
       }),
       'payload': None,
       'type': 'synthesize',
-    }),
-    dict({
-      'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-stop',
     }),
   ])
 # ---
@@ -130,23 +73,6 @@
   list([
     dict({
       'data': dict({
-        'voice': dict({
-          'name': 'voice1',
-          'speaker': 'speaker1',
-        }),
-      }),
-      'payload': None,
-      'type': 'synthesize-start',
-    }),
-    dict({
-      'data': dict({
-        'text': 'Hello world',
-      }),
-      'payload': None,
-      'type': 'synthesize-chunk',
-    }),
-    dict({
-      'data': dict({
         'text': 'Hello world',
         'voice': dict({
           'name': 'voice1',
@@ -155,12 +81,6 @@
       }),
       'payload': None,
       'type': 'synthesize',
-    }),
-    dict({
-      'data': dict({
-      }),
-      'payload': None,
-      'type': 'synthesize-stop',
     }),
   ])
 # ---

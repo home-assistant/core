@@ -1,5 +1,6 @@
 """Base class for IOmeter entities."""
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,4 +22,5 @@ class IOmeterEntity(CoordinatorEntity[IOMeterCoordinator]):
             manufacturer="IOmeter GmbH",
             model="IOmeter",
             sw_version=coordinator.current_fw_version,
+            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}/",
         )

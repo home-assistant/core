@@ -104,41 +104,6 @@ class VacuumEntityFeature(IntFlag):
     START = 8192
 
 
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the VacuumEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_ON, "2025.10"
-)
-_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_OFF, "2025.10"
-)
-_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(VacuumEntityFeature.PAUSE, "2025.10")
-_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(VacuumEntityFeature.STOP, "2025.10")
-_DEPRECATED_SUPPORT_RETURN_HOME = DeprecatedConstantEnum(
-    VacuumEntityFeature.RETURN_HOME, "2025.10"
-)
-_DEPRECATED_SUPPORT_FAN_SPEED = DeprecatedConstantEnum(
-    VacuumEntityFeature.FAN_SPEED, "2025.10"
-)
-_DEPRECATED_SUPPORT_BATTERY = DeprecatedConstantEnum(
-    VacuumEntityFeature.BATTERY, "2025.10"
-)
-_DEPRECATED_SUPPORT_STATUS = DeprecatedConstantEnum(
-    VacuumEntityFeature.STATUS, "2025.10"
-)
-_DEPRECATED_SUPPORT_SEND_COMMAND = DeprecatedConstantEnum(
-    VacuumEntityFeature.SEND_COMMAND, "2025.10"
-)
-_DEPRECATED_SUPPORT_LOCATE = DeprecatedConstantEnum(
-    VacuumEntityFeature.LOCATE, "2025.10"
-)
-_DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
-    VacuumEntityFeature.CLEAN_SPOT, "2025.10"
-)
-_DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
-_DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
-_DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
-
 # mypy: disallow-any-generics
 
 

@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    FAN_MEDIUM,
     PRESET_NONE,
     SWING_OFF,
     SWING_ON,
@@ -63,6 +64,12 @@ STR_TO_SWING = {
 }
 
 SWING_TO_STR = {v: k for k, v in STR_TO_SWING.items()}
+
+STR_TO_HA_FAN: dict[str, str] = {
+    "mid": FAN_MEDIUM,
+}
+
+HA_FAN_TO_STR = {v: k for k, v in STR_TO_HA_FAN.items()}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +131,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                 self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
         # Set up fan modes.
-        self._attr_fan_modes = self.data.fan_modes
+        self._attr_fan_modes = [
+            STR_TO_HA_FAN.get(fan, fan) for fan in self.data.fan_modes
+        ]
         if self.fan_modes:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
@@ -148,7 +157,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # Update fan, hvac and preset mode.
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
-            self._attr_fan_mode = self.data.fan_mode
+            self._attr_fan_mode = STR_TO_HA_FAN.get(
+                self.data.fan_mode, self.data.fan_mode
+            )
         if self.supported_features & ClimateEntityFeature.SWING_MODE:
             self._attr_swing_mode = STR_TO_SWING.get(self.data.swing_mode)
         if self.supported_features & ClimateEntityFeature.SWING_HORIZONTAL_MODE:
@@ -266,7 +277,10 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             fan_mode,
         )
         await self.async_call_api(
-            self.coordinator.api.async_set_fan_mode(self.property_id, fan_mode)
+            self.coordinator.api.async_set_fan_mode(
+                self.property_id,
+                HA_FAN_TO_STR.get(fan_mode, fan_mode),
+            )
         )
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:

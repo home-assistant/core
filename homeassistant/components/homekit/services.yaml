@@ -2,10 +2,18 @@
 
 reload:
 reset_accessory:
-  target:
-    entity: {}
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          multiple: true
 
 unpair:
-  target:
-    device:
-      integration: homekit
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          multiple: true
+          integration: homekit

@@ -1,0 +1,110 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: has no actions
+  appropriate-polling:
+    status: exempt
+    comment: does not poll
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: done
+    comment: uses webhook flow helper, already covered
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: no dependencies
+  docs-actions:
+    status: exempt
+    comment: no actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: has no runtime data
+  test-before-configure:
+    status: exempt
+    comment: nothing to test
+  test-before-setup:
+    status: exempt
+    comment: nothing to test
+  unique-config-entry:
+    status: exempt
+    comment: only 1 webhook can be configured per device. It's not possible to prevent different devices from using the same webhook
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: no actions
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: integration has no options
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: only state-less entities
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: only state-less entities
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: no authentication required
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: no discovery
+  discovery:
+    status: exempt
+    comment: cannot be discovered
+  docs-data-update:
+    status: exempt
+    comment: does not poll
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: has no devices
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: has no devices
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: does not raise exceptions
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: webhook config flow helper does not implement reconfigure
+  repair-issues:
+    status: exempt
+    comment: has no repairs
+  stale-devices:
+    status: exempt
+    comment: has no stale devices
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: has no external dependencies
+  inject-websession:
+    status: exempt
+    comment: does not do http requests
+  strict-typing: done

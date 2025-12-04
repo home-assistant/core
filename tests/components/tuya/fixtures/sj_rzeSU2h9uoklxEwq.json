@@ -1,0 +1,41 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Inondation",
+  "category": "sj",
+  "product_id": "rzeSU2h9uoklxEwq",
+  "product_name": "WATER SENSOR",
+  "online": false,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-08-13T16:05:44+00:00",
+  "create_time": "2025-08-13T16:05:44+00:00",
+  "update_time": "2025-08-13T16:05:44+00:00",
+  "function": {},
+  "status_range": {
+    "watersensor_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "watersensor_state": 2,
+    "battery_percentage": 100
+  },
+  "set_up": true,
+  "support_local": true
+}

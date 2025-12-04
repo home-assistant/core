@@ -18,9 +18,6 @@
       },
       "sps30_caqi_level": {
         "default": "mdi:air-filter"
-      },
-      "sps30_pm4": {
-        "default": "mdi:molecule"
       }
     }
   }

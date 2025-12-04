@@ -607,6 +607,42 @@ async def test_optimistic(hass: HomeAssistant) -> None:
         (
             1,
             {
+                "state": "{{ states('select.test_state') }}",
+                "optimistic": False,
+                "options": "{{ ['test', 'yes', 'no'] }}",
+                "select_option": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_select")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    # Ensure Trigger template entities update the options list
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "test"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
                 "options": "{{ ['test', 'yes', 'no'] }}",
                 "select_option": [],
                 "state": "{{ states('select.test_state') }}",

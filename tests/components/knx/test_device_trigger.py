@@ -6,8 +6,8 @@ import pytest
 import voluptuous_serialize
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.knx import DOMAIN, device_trigger
@@ -301,6 +301,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "destination",
             "optional": True,
+            "required": False,
             "selector": {
                 "select": {
                     "custom_value": True,
@@ -314,6 +315,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "group_value_write",
             "optional": True,
+            "required": False,
             "default": True,
             "selector": {
                 "boolean": {},
@@ -322,6 +324,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "group_value_response",
             "optional": True,
+            "required": False,
             "default": True,
             "selector": {
                 "boolean": {},
@@ -330,6 +333,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "group_value_read",
             "optional": True,
+            "required": False,
             "default": True,
             "selector": {
                 "boolean": {},
@@ -338,6 +342,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "incoming",
             "optional": True,
+            "required": False,
             "default": True,
             "selector": {
                 "boolean": {},
@@ -346,6 +351,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "outgoing",
             "optional": True,
+            "required": False,
             "default": True,
             "selector": {
                 "boolean": {},

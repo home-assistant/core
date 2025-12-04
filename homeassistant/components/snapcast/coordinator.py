@@ -39,6 +39,8 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
         self._server.set_on_connect_callback(self._on_connect)
         self._server.set_on_disconnect_callback(self._on_disconnect)
 
+        self._host_id = f"{host}:{port}"
+
     def _on_update(self) -> None:
         """Snapserver on_update callback."""
         # Assume availability if an update is received.
@@ -77,3 +79,8 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
     def server(self) -> Snapserver:
         """Get the Snapserver object."""
         return self._server
+
+    @property
+    def host_id(self) -> str:
+        """Get the host ID."""
+        return self._host_id

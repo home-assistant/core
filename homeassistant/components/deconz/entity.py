@@ -177,7 +177,7 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
         """Return a device description for device registry."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._group_identifier)},
-            manufacturer="Dresden Elektronik",
+            manufacturer="dresden elektronik",
             model="deCONZ group",
             name=self.group.name,
             via_device=(DOMAIN, self.hub.api.config.bridge_id),

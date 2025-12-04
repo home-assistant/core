@@ -10,8 +10,8 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.zwave_js import DOMAIN, device_trigger
@@ -201,10 +201,15 @@ async def test_get_trigger_capabilities_notification_notification(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == unordered(
         [
-            {"name": "type.", "optional": True, "type": "string"},
-            {"name": "label", "optional": True, "type": "string"},
-            {"name": "event", "optional": True, "type": "string"},
-            {"name": "event_label", "optional": True, "type": "string"},
+            {"name": "type.", "optional": True, "required": False, "type": "string"},
+            {"name": "label", "optional": True, "required": False, "type": "string"},
+            {"name": "event", "optional": True, "required": False, "type": "string"},
+            {
+                "name": "event_label",
+                "optional": True,
+                "required": False,
+                "type": "string",
+            },
         ]
     )
 
@@ -336,8 +341,18 @@ async def test_get_trigger_capabilities_entry_control_notification(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == unordered(
         [
-            {"name": "event_type", "optional": True, "type": "string"},
-            {"name": "data_type", "optional": True, "type": "string"},
+            {
+                "name": "event_type",
+                "optional": True,
+                "required": False,
+                "type": "string",
+            },
+            {
+                "name": "data_type",
+                "optional": True,
+                "required": False,
+                "type": "string",
+            },
         ]
     )
 
@@ -580,6 +595,7 @@ async def test_get_trigger_capabilities_node_status(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "options": [
                 ("asleep", "asleep"),
                 ("awake", "awake"),
@@ -591,6 +607,7 @@ async def test_get_trigger_capabilities_node_status(
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "options": [
                 ("asleep", "asleep"),
                 ("awake", "awake"),
@@ -599,7 +616,12 @@ async def test_get_trigger_capabilities_node_status(
             ],
             "type": "select",
         },
-        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        },
     ]
 
 
@@ -781,6 +803,7 @@ async def test_get_trigger_capabilities_basic_value_notification(
         {
             "name": "value",
             "optional": True,
+            "required": False,
             "type": "integer",
             "valueMin": 0,
             "valueMax": 255,
@@ -972,6 +995,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
         {
             "name": "value",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [(0, "KeyPressed"), (1, "KeyReleased"), (2, "KeyHeldDown")],
         },
@@ -1156,6 +1180,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
         {
             "name": "value",
             "optional": True,
+            "required": False,
             "type": "integer",
             "valueMin": 1,
             "valueMax": 255,
@@ -1406,10 +1431,10 @@ async def test_get_trigger_capabilities_value_updated_value(
             ],
         },
         {"name": "property", "required": True, "type": "string"},
-        {"name": "property_key", "optional": True, "type": "string"},
-        {"name": "endpoint", "optional": True, "type": "string"},
-        {"name": "from", "optional": True, "type": "string"},
-        {"name": "to", "optional": True, "type": "string"},
+        {"name": "property_key", "optional": True, "required": False, "type": "string"},
+        {"name": "endpoint", "optional": True, "required": False, "type": "string"},
+        {"name": "from", "optional": True, "required": False, "type": "string"},
+        {"name": "to", "optional": True, "required": False, "type": "string"},
     ]
 
 
@@ -1552,6 +1577,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "valueMin": 0,
             "valueMax": 255,
             "type": "integer",
@@ -1559,6 +1585,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "valueMin": 0,
             "valueMax": 255,
             "type": "integer",
@@ -1600,12 +1627,14 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "options": [(0, "Disable Beeper"), (255, "Enable Beeper")],
             "type": "select",
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "options": [(0, "Disable Beeper"), (255, "Enable Beeper")],
             "type": "select",
         },

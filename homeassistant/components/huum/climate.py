@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONFIG_DEFAULT_MAX_TEMP, CONFIG_DEFAULT_MIN_TEMP
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
 
@@ -55,12 +56,12 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
     @property
     def min_temp(self) -> int:
         """Return configured minimal temperature."""
-        return self.coordinator.data.sauna_config.min_temp
+        return self.coordinator.data.sauna_config.min_temp or CONFIG_DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> int:
         """Return configured maximum temperature."""
-        return self.coordinator.data.sauna_config.max_temp
+        return self.coordinator.data.sauna_config.max_temp or CONFIG_DEFAULT_MAX_TEMP
 
     @property
     def hvac_mode(self) -> HVACMode:

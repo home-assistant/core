@@ -37,28 +37,28 @@
   ],
   "zeroconf": [
     {
-      "type": "_axis-video._tcp.local.",
       "properties": {
         "macaddress": "00408c*"
-      }
+      },
+      "type": "_axis-video._tcp.local."
     },
     {
-      "type": "_axis-video._tcp.local.",
       "properties": {
         "macaddress": "accc8e*"
-      }
+      },
+      "type": "_axis-video._tcp.local."
     },
     {
-      "type": "_axis-video._tcp.local.",
       "properties": {
         "macaddress": "b8a44f*"
-      }
+      },
+      "type": "_axis-video._tcp.local."
     },
     {
-      "type": "_axis-video._tcp.local.",
       "properties": {
         "macaddress": "e82725*"
-      }
+      },
+      "type": "_axis-video._tcp.local."
     }
   ]
 }

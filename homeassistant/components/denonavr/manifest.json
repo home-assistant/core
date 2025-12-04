@@ -6,55 +6,55 @@
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
   "iot_class": "local_push",
   "loggers": ["denonavr"],
-  "requirements": ["denonavr==1.1.2"],
+  "requirements": ["denonavr==1.2.0"],
   "ssdp": [
     {
-      "manufacturer": "Denon",
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "Denon"
     },
     {
-      "manufacturer": "DENON",
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "DENON"
     },
     {
-      "manufacturer": "DENON PROFESSIONAL",
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "DENON PROFESSIONAL"
     },
     {
-      "manufacturer": "Marantz",
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "Marantz"
     },
     {
-      "manufacturer": "Denon",
-      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+      "manufacturer": "Denon"
     },
     {
-      "manufacturer": "DENON",
-      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+      "manufacturer": "DENON"
     },
     {
-      "manufacturer": "DENON PROFESSIONAL",
-      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+      "manufacturer": "DENON PROFESSIONAL"
     },
     {
-      "manufacturer": "Marantz",
-      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+      "manufacturer": "Marantz"
     },
     {
-      "manufacturer": "Denon",
-      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+      "manufacturer": "Denon"
     },
     {
-      "manufacturer": "DENON",
-      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+      "manufacturer": "DENON"
     },
     {
-      "manufacturer": "DENON PROFESSIONAL",
-      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+      "manufacturer": "DENON PROFESSIONAL"
     },
     {
-      "manufacturer": "Marantz",
-      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1"
+      "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+      "manufacturer": "Marantz"
     }
   ]
 }

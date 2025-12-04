@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 from webio_api import Output as NASwebOutput
+from webio_api.const import STATE_ENTITY_UNAVAILABLE, STATE_OUTPUT_OFF, STATE_OUTPUT_ON
 
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -24,6 +25,12 @@ from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .coordinator import NASwebCoordinator
 
 OUTPUT_TRANSLATION_KEY = "switch_output"
+
+NASWEB_STATE_TO_HA_STATE = {
+    STATE_ENTITY_UNAVAILABLE: None,
+    STATE_OUTPUT_ON: True,
+    STATE_OUTPUT_OFF: False,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +112,7 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self._output.state
+        self._attr_is_on = NASWEB_STATE_TO_HA_STATE[self._output.state]
         if (
             self.coordinator.last_update is None
             or time.time() - self._output.last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL

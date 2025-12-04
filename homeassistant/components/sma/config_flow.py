@@ -6,7 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import pysma
+import attrs
+from pysma import (
+    SmaAuthenticationException,
+    SmaConnectionException,
+    SmaReadException,
+    SMAWebConnect,
+)
 import voluptuous as vol
 from yarl import URL
 
@@ -42,7 +48,7 @@ async def validate_input(
     host = data[CONF_HOST] if data is not None else user_input[CONF_HOST]
     url = URL.build(scheme=protocol, host=host)
 
-    sma = pysma.SMA(
+    sma = SMAWebConnect(
         session, str(url), user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
     )
 
@@ -51,7 +57,7 @@ async def validate_input(
     device_info = await sma.device_info()
     await sma.close_session()
 
-    return device_info
+    return attrs.asdict(device_info)
 
 
 class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,11 +96,11 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             device_info = await validate_input(
                 self.hass, user_input=user_input, data=self._data
             )
-        except pysma.exceptions.SmaConnectionException:
+        except SmaConnectionException:
             errors["base"] = "cannot_connect"
-        except pysma.exceptions.SmaAuthenticationException:
+        except SmaAuthenticationException:
             errors["base"] = "invalid_auth"
-        except pysma.exceptions.SmaReadException:
+        except SmaReadException:
             errors["base"] = "cannot_retrieve_device_info"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -151,7 +157,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
-            errors, device_info = await self._handle_user_input(
+            errors, _device_info = await self._handle_user_input(
                 user_input={
                     **reauth_entry.data,
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -224,7 +230,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors, device_info = await self._handle_user_input(
+            errors, _device_info = await self._handle_user_input(
                 user_input=user_input, discovery=True
             )
 

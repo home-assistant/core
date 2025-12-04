@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_has_entity_registry_updated_listeners
 
 from .core import Recorder
+from .statistics import async_update_statistics_metadata
 from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,8 +28,8 @@ def async_setup(hass: HomeAssistant) -> None:
             assert event.data["action"] == "update" and "old_entity_id" in event.data
         old_entity_id = event.data["old_entity_id"]
         new_entity_id = event.data["entity_id"]
-        instance.async_update_statistics_metadata(
-            old_entity_id, new_statistic_id=new_entity_id
+        async_update_statistics_metadata(
+            hass, old_entity_id, new_statistic_id=new_entity_id
         )
         instance.async_update_states_metadata(
             old_entity_id, new_entity_id=new_entity_id
@@ -61,15 +62,6 @@ def update_states_metadata(
 ) -> None:
     """Update the states metadata table when an entity is renamed."""
     states_meta_manager = instance.states_meta_manager
-    if not states_meta_manager.active:
-        _LOGGER.warning(
-            "Cannot rename entity_id `%s` to `%s` "
-            "because the states meta manager is not yet active",
-            entity_id,
-            new_entity_id,
-        )
-        return
-
     with session_scope(
         session=instance.get_session(),
         exception_filter=filter_unique_constraint_integrity_error(instance, "state"),

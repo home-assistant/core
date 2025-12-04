@@ -137,6 +137,8 @@ TEST_PARAMS = [
             "attr": {
                 "hebrew_year": "5779",
                 "hebrew_month_name": "מרחשוון",
+                "hebrew_month_standard_order": "2",
+                "hebrew_month_biblical_order": "8",
                 "hebrew_day": "6",
                 "friendly_name": "Jewish Calendar Date",
             },

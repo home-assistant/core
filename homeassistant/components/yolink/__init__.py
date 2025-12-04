@@ -19,14 +19,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
-    config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
+)
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import ATTR_LORA_INFO, DOMAIN, YOLINK_EVENT
+from .const import ATTR_LORA_INFO, DOMAIN, SUPPORTED_REMOTERS, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_setup_services
@@ -43,6 +47,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -119,13 +124,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up yolink from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    session = OAuth2Session(hass, entry, implementation)
 
     auth_mgr = api.ConfigEntryAuth(
         hass, aiohttp_client.async_get_clientsession(hass), session
@@ -150,6 +157,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_pairing_mapping[parent_id] = device.device_id
 
     for device in yolink_home.get_devices():
+        if (
+            device.device_type == ATTR_DEVICE_SMART_REMOTER
+            and device.device_model_name not in SUPPORTED_REMOTERS
+        ):
+            continue
         paried_device: YoLinkDevice | None = None
         if (
             paried_device_id := device_pairing_mapping.get(device.device_id)

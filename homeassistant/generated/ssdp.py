@@ -400,6 +400,16 @@ SSDP = {
             "manufacturer": "All Automacao Ltda",
         },
     ],
+    "xbox": [
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox 360",
+        },
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox One",
+        },
+    ],
     "yamaha_musiccast": [
         {
             "manufacturer": "Yamaha Corporation",

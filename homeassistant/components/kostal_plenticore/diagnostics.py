@@ -34,6 +34,29 @@ async def async_get_config_entry_diagnostics(
         },
     }
 
+    # Add important information how the inverter is configured
+    string_count_setting = await plenticore.client.get_setting_values(
+        "devices:local", "Properties:StringCnt"
+    )
+    try:
+        string_count = int(
+            string_count_setting["devices:local"]["Properties:StringCnt"]
+        )
+    except ValueError:
+        string_count = 0
+
+    configuration_settings = await plenticore.client.get_setting_values(
+        "devices:local",
+        (
+            "Properties:StringCnt",
+            *(f"Properties:String{idx}Features" for idx in range(string_count)),
+        ),
+    )
+
+    data["configuration"] = {
+        **configuration_settings,
+    }
+
     device_info = {**plenticore.device_info}
     device_info[ATTR_IDENTIFIERS] = REDACTED  # contains serial number
     data["device"] = device_info

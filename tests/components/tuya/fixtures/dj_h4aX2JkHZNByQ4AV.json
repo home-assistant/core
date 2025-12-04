@@ -1,0 +1,54 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Entry Stairs",
+  "category": "dj",
+  "product_id": "h4aX2JkHZNByQ4AV",
+  "product_name": "Smart Dimmer Switch",
+  "online": false,
+  "sub": false,
+  "time_zone": "-05:00",
+  "active_time": "2023-04-25T13:21:00+00:00",
+  "create_time": "2023-04-25T13:21:00+00:00",
+  "update_time": "2023-04-25T13:21:00+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "bright_value": 64
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -271,6 +271,34 @@ def mock_smile_anna(chosen_env: str, cooling_present: bool) -> Generator[MagicMo
 
 
 @pytest.fixture
+def mock_smile_anna_p1() -> Generator[MagicMock]:
+    """Create a Mock Anna-P1 type for testing."""
+    chosen_env = "anna_p1"
+    data = _read_json(chosen_env, "data")
+    with patch(
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+    ) as api_mock:
+        api = api_mock.return_value
+
+        api.async_update.return_value = data
+        api.connect.return_value = Version("4.4.4")
+        api.cooling_present = False
+        api.gateway_id = "53130847be2f436cb946b78dedb9053a"
+        api.heater_id = "36b937e44ad145bab165fa0fe99d742d"
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_thermo",
+            name="Smile Anna P1",
+            type="thermostat",
+            version="4.4.4",
+        )
+
+        yield api
+
+
+@pytest.fixture
 def mock_smile_p1(chosen_env: str, gateway_id: str) -> Generator[MagicMock]:
     """Create a base Mock P1 type for testing with different datasets and gateway-ids."""
     data = _read_json(chosen_env, "data")

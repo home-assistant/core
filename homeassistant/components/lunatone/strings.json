@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Failed to connect. Check the URL and if the device is connected to power",
+      "missing_device_info": "Failed to read device information. Check the network connection of the device"
+    },
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
+        },
+        "description": "Update the URL."
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL of the Lunatone gateway device."
+        },
+        "description": "Connect to the API of your Lunatone DALI IoT Gateway."
+      }
+    }
+  }
+}

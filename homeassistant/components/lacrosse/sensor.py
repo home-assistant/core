@@ -152,7 +152,7 @@ class LaCrosseSensor(SensorEntity):
         self._attr_name = name
 
         lacrosse.register_callback(
-            int(self._config["id"]), self._callback_lacrosse, None
+            int(self._config[CONF_ID]), self._callback_lacrosse, None
         )
 
     @property

@@ -48,6 +48,27 @@ from tests.common import MockConfigEntry, load_fixture
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 
+# Define lock capabilities for specific locks
+_LOCK_CAPABILITIES = {
+    "online_with_unlatch": {
+        "unlatch": True,
+        "doorSense": True,
+        "batteryType": "AA",
+    },
+    "68895DD075A1444FAD4C00B273EEEF28": {  # Also online_with_unlatch
+        "unlatch": True,
+        "doorSense": True,
+        "batteryType": "AA",
+    },
+}
+
+# Default capabilities for locks not in the dict
+_DEFAULT_CAPABILITIES = {
+    "unlatch": False,
+    "doorSense": True,
+    "batteryType": "AA",
+}
+
 
 def _mock_get_config(
     brand: Brand = Brand.YALE_GLOBAL, jwt: str | None = None
@@ -116,9 +137,7 @@ def patch_yale_setup():
         patch.object(_RateLimitChecker, "register_wakeup") as authenticate_mock,
         patch("yalexs.manager.data.SocketIORunner") as socketio_mock,
         patch.object(socketio_mock, "run"),
-        patch(
-            "homeassistant.components.yale.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ),
+        patch("homeassistant.components.yale.async_get_config_entry_implementation"),
     ):
         yield api_mock, authenticate_mock, socketio_mock
 
@@ -339,6 +358,16 @@ async def make_mock_api(
     api_instance.async_unlatch_async = AsyncMock()
     api_instance.async_unlatch = AsyncMock()
     api_instance.async_add_websocket_subscription = AsyncMock()
+
+    # Mock capabilities endpoint
+    async def mock_get_lock_capabilities(token, serial_number):
+        """Mock the capabilities endpoint response."""
+        capabilities = _LOCK_CAPABILITIES.get(serial_number, _DEFAULT_CAPABILITIES)
+        return {"lock": capabilities}
+
+    api_instance.async_get_lock_capabilities = AsyncMock(
+        side_effect=mock_get_lock_capabilities
+    )
 
     return api_instance
 

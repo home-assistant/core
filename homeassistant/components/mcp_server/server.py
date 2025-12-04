@@ -59,7 +59,7 @@ async def create_server(
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
 
-    @server.list_prompts()  # type: ignore[no-untyped-call, misc]
+    @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
         llm_api = await get_api_instance()
         return [
@@ -69,7 +69,7 @@ async def create_server(
             )
         ]
 
-    @server.get_prompt()  # type: ignore[no-untyped-call, misc]
+    @server.get_prompt()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_get_prompt(
         name: str, arguments: dict[str, str] | None
     ) -> types.GetPromptResult:
@@ -90,13 +90,13 @@ async def create_server(
             ],
         )
 
-    @server.list_tools()  # type: ignore[no-untyped-call, misc]
+    @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available time tools."""
         llm_api = await get_api_instance()
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
-    @server.call_tool()  # type: ignore[no-untyped-call, misc]
+    @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
         llm_api = await get_api_instance()

@@ -5,7 +5,7 @@ from __future__ import annotations
 from aioambient.util import get_public_device_id
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -37,6 +37,7 @@ class AmbientWeatherEntity(Entity):
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
             name=station_name.capitalize(),
+            connections={(CONNECTION_NETWORK_MAC, mac_address)},
         )
 
         self._attr_unique_id = f"{mac_address}_{description.key}"

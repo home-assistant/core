@@ -1,0 +1,33 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Signal repeater",
+  "category": "cz",
+  "product_id": "piuensvr",
+  "product_name": "Signal repeater",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-16T17:52:11+00:00",
+  "create_time": "2025-07-16T17:52:11+00:00",
+  "update_time": "2025-07-16T17:52:11+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false
+  },
+  "set_up": true,
+  "support_local": true
+}
