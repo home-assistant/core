@@ -46,6 +46,7 @@ from .const import (  # noqa: F401
 )
 from .core import Recorder
 from .services import async_setup_services
+from .storage import RecorderExclusionsStore
 from .tasks import AddRecorderPlatformTask
 from .util import get_instance
 
@@ -169,6 +170,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_event_types=exclude_event_types,
     )
+
+    # Initialize storage-based exclusions
+    exclusions_store = RecorderExclusionsStore(hass)
+    await exclusions_store.async_load()
+    instance.exclusions_store = exclusions_store
+
     get_instance.cache_clear()
     entity_registry.async_setup(hass)
     instance.async_initialize()

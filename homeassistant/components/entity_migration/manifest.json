@@ -1,0 +1,9 @@
+{
+  "domain": "entity_migration",
+  "name": "Entity Migration",
+  "codeowners": ["@xvanov"],
+  "dependencies": ["automation", "script", "scene", "group", "person", "lovelace", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/entity_migration",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

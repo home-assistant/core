@@ -80,6 +80,7 @@ from .db_schema import (
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
+from .storage import RecorderExclusionsStore
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.recorder_runs import RecorderRunsManager
@@ -198,6 +199,9 @@ class Recorder(threading.Thread):
         self.entity_filter = entity_filter
         self.exclude_event_types = exclude_event_types
 
+        # Storage-based exclusions (managed via UI/API)
+        self.exclusions_store: RecorderExclusionsStore | None = None
+
         self.schema_version = 0
         self._commits_without_expire = 0
         self._event_session_has_pending_writes = False
@@ -288,7 +292,18 @@ class Recorder(threading.Thread):
         """Initialize the recorder."""
         entity_filter = self.entity_filter
         exclude_event_types = self.exclude_event_types
+        exclusions_store = self.exclusions_store
         queue_put = self._queue.put_nowait
+
+        def _is_entity_excluded(entity_id: str) -> bool:
+            """Check if entity should be excluded from recording."""
+            # Check storage exclusions first (hot-reloadable)
+            if exclusions_store and exclusions_store.is_excluded(entity_id):
+                return True
+            # Then check YAML filter
+            if entity_filter is not None and not entity_filter(entity_id):
+                return True
+            return False
 
         @callback
         def _event_listener(event: Event) -> None:
@@ -296,20 +311,19 @@ class Recorder(threading.Thread):
             if event.event_type in exclude_event_types:
                 return
 
-            if entity_filter is None or not (
-                entity_id := event.data.get(ATTR_ENTITY_ID)
-            ):
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+            if not entity_id:
                 queue_put(event)
                 return
 
             if isinstance(entity_id, str):
-                if entity_filter(entity_id):
+                if not _is_entity_excluded(entity_id):
                     queue_put(event)
                 return
 
             if isinstance(entity_id, list):
                 for eid in entity_id:
-                    if entity_filter(eid):
+                    if not _is_entity_excluded(eid):
                         queue_put(event)
                         return
                 return

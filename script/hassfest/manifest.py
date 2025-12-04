@@ -71,6 +71,7 @@ NO_IOT_CLASS = [
     "device_tracker",
     "diagnostics",
     "downloader",
+    "entity_migration",
     "ffmpeg",
     "file_upload",
     "frontend",

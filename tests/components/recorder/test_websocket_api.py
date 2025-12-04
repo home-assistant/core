@@ -4754,3 +4754,316 @@ async def test_import_statistics_with_last_reset(
             },
         ]
     }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_entity_disk_usage(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting entity disk usage statistics."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Set up some entity states
+    hass.states.async_set("sensor.test1", "10", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.test2", "20", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.test3", "30", {"unit_of_measurement": "°C"})
+
+    # Add more states to test2 to make it larger
+    for i in range(5):
+        hass.states.async_set(
+            "sensor.test2", str(20 + i), {"unit_of_measurement": "°C"}
+        )
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/get_entity_disk_usage"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+
+    # Should have 3 entities
+    assert len(result) == 3
+
+    # Results should be sorted by estimated_bytes descending
+    # sensor.test2 should be first (has most states)
+    entity_ids = [r["entity_id"] for r in result]
+    assert "sensor.test2" in entity_ids
+
+    # Each result should have the expected keys
+    for item in result:
+        assert "entity_id" in item
+        assert "state_count" in item
+        assert "estimated_bytes" in item
+        assert isinstance(item["state_count"], int)
+        assert isinstance(item["estimated_bytes"], int)
+        assert item["state_count"] >= 1
+        assert item["estimated_bytes"] >= 0
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_entity_disk_usage_with_limit(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting entity disk usage with limit parameter."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Set up some entity states
+    for i in range(5):
+        hass.states.async_set(f"sensor.test{i}", str(i * 10))
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "recorder/get_entity_disk_usage", "limit": 2}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+
+    # Should only have 2 entities due to limit
+    assert len(result) == 2
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_entity_disk_usage_empty_database(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting entity disk usage with empty database."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/get_entity_disk_usage"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+
+    # Should return empty list for empty database
+    assert result == []
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_entity_disk_usage_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user,
+) -> None:
+    """Test that get_entity_disk_usage requires admin access."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Remove admin from user
+    hass_admin_user.groups = []
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/get_entity_disk_usage"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
+# Entity exclusion tests
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_entity_exclusions_empty(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting entity exclusions when empty."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/get_entity_exclusions"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert result["exclusions"] == {}
+    assert result["storage_exclusions"] == []
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_entity_exclusions_add(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test adding entity exclusions."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    # Add exclusions
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+            "add": ["sensor.test1", "sensor.test2"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert set(result["added"]) == {"sensor.test1", "sensor.test2"}
+    assert result["removed"] == []
+    assert set(result["current_exclusions"]) == {"sensor.test1", "sensor.test2"}
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_entity_exclusions_remove(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test removing entity exclusions."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    # First add some exclusions
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+            "add": ["sensor.test1", "sensor.test2"],
+        }
+    )
+    await client.receive_json()
+
+    # Then remove one
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+            "remove": ["sensor.test1"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert result["added"] == []
+    assert result["removed"] == ["sensor.test1"]
+    assert result["current_exclusions"] == ["sensor.test2"]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_entity_exclusions_invalid_entity_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test adding invalid entity IDs."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    # Try to add invalid entity ID
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+            "add": ["invalid_entity"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_entity_id"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_entity_exclusions_no_changes(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test calling update with no add or remove."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_request"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_entity_exclusions_nonexistent_warning(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test warning for non-existent entities."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    # Add non-existent entity (should succeed with warning)
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+            "add": ["sensor.nonexistent"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert "sensor.nonexistent" in result["added"]
+    assert len(result["warnings"]) == 1
+    assert "does not exist" in result["warnings"][0]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_entity_exclusions_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user,
+) -> None:
+    """Test that get_entity_exclusions requires admin access."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Remove admin from user
+    hass_admin_user.groups = []
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/get_entity_exclusions"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_entity_exclusions_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user,
+) -> None:
+    """Test that update_entity_exclusions requires admin access."""
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Remove admin from user
+    hass_admin_user.groups = []
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/update_entity_exclusions",
+            "add": ["sensor.test1"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
