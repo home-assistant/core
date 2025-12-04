@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -19,7 +19,7 @@ def mock_config_entry(unique_id: str, entry_id: str = "an_entry_id") -> MockConf
         title="name@example.com",
         unique_id=unique_id,
         data={
-            CONF_USERNAME: "test@rituals.com",
+            CONF_EMAIL: "test@rituals.com",
             CONF_PASSWORD: "test-password",
         },
         version=2,

@@ -7,13 +7,13 @@ from pyrituals import AuthenticationException
 
 from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-TEST_USERNAME = "test@rituals.com"
+TEST_EMAIL = "test@rituals.com"
 TEST_PASSWORD = "test-password"
 
 
@@ -37,21 +37,21 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         mock_account = mock_account_cls.return_value
         mock_account.authenticate = AsyncMock()
         mock_account.account_hash = "mock_hash"
-        mock_account.email = TEST_USERNAME
+        mock_account.email = TEST_EMAIL
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: TEST_USERNAME,
+                CONF_EMAIL: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_USERNAME
+    assert result2["title"] == TEST_EMAIL
     assert result2["data"] == {
-        CONF_USERNAME: TEST_USERNAME,
+        CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
     }
     assert ACCOUNT_HASH not in result2["data"]
@@ -73,7 +73,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: TEST_USERNAME,
+                CONF_EMAIL: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
         )
@@ -97,7 +97,7 @@ async def test_user_flow_connection_error(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: TEST_USERNAME,
+                CONF_EMAIL: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
         )
@@ -112,7 +112,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="mock_hash",
         data={
-            CONF_USERNAME: TEST_USERNAME,
+            CONF_EMAIL: TEST_EMAIL,
             CONF_PASSWORD: "wrong_password",
             ACCOUNT_HASH: "old_hash_should_be_removed",
         },
@@ -149,7 +149,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_PASSWORD: "new_correct_password",
-                CONF_USERNAME: TEST_USERNAME,
+                CONF_EMAIL: TEST_EMAIL,
             },
         )
         await hass.async_block_till_done()
@@ -166,7 +166,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
     """Test reauth flow with authentication error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: "old"},
+        data={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: "old"},
     )
     entry.add_to_hass(hass)
 
@@ -190,7 +190,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_PASSWORD: "still_wrong_password",
-                CONF_USERNAME: TEST_USERNAME,
+                CONF_EMAIL: TEST_EMAIL,
             },
         )
 

@@ -6,7 +6,7 @@ import aiohttp
 
 from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -27,7 +27,7 @@ async def test_migration_v1_to_v2(hass: HomeAssistant) -> None:
         unique_id="old_entry",
         data={
             ACCOUNT_HASH: "old_hash_123",
-            CONF_USERNAME: "test@rituals.com",
+            CONF_EMAIL: "test@rituals.com",
             CONF_PASSWORD: "test-password",
         },
         version=1,
