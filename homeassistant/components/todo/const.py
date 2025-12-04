@@ -22,6 +22,8 @@ ATTR_DESCRIPTION = "description"
 ATTR_ITEM = "item"
 ATTR_RENAME = "rename"
 ATTR_STATUS = "status"
+ATTR_QUANTITY = "quantity"
+ATTR_STORE = "store"
 
 
 class TodoServices(StrEnum):
@@ -44,6 +46,8 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
+    SET_QUANTITY_ON_ITEM = 128
+    SET_STORE_ON_ITEM = 256
 
 
 class TodoItemStatus(StrEnum):

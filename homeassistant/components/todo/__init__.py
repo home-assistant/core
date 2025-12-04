@@ -36,8 +36,10 @@ from .const import (
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
+    ATTR_QUANTITY,
     ATTR_RENAME,
     ATTR_STATUS,
+    ATTR_STORE,
     DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
@@ -88,6 +90,18 @@ TODO_ITEM_FIELDS = [
         validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_QUANTITY,
+        validation=vol.Any(vol.Coerce(int), None),
+        todo_item_field=ATTR_QUANTITY,
+        required_feature=TodoListEntityFeature.SET_QUANTITY_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_STORE,
+        validation=vol.Any(cv.string, None),
+        todo_item_field=ATTR_STORE,
+        required_feature=TodoListEntityFeature.SET_STORE_ON_ITEM,
     ),
 ]
 
@@ -226,6 +240,12 @@ class TodoItem:
 
     description: str | None = None
     """A more complete description than that provided by the summary."""
+
+    quantity: int | None = None
+    """The quantity of the item."""
+
+    store: str | None = None
+    """The store where the item can be purchased."""
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

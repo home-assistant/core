@@ -39,6 +39,8 @@ class ShoppingTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.SET_QUANTITY_ON_ITEM
+        | TodoListEntityFeature.SET_STORE_ON_ITEM
     )
 
     def __init__(self, data: ShoppingData, unique_id: str) -> None:
@@ -49,15 +51,24 @@ class ShoppingTodoListEntity(TodoListEntity):
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         await self._data.async_add(
-            item.summary, complete=(item.status == TodoItemStatus.COMPLETED)
+            item.summary,
+            complete=(item.status == TodoItemStatus.COMPLETED),
+            quantity=item.quantity,
+            store=item.store,
         )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
-        data = {
+        data: dict[str, bool | str | int | None] = {
             "name": item.summary,
             "complete": item.status == TodoItemStatus.COMPLETED,
         }
+
+        if item.quantity is not None:
+            data["quantity"] = item.quantity
+        if item.store is not None:
+            data["store"] = item.store
+
         try:
             await self._data.async_update(item.uid, data)
         except NoMatchingShoppingListItem as err:
@@ -97,11 +108,15 @@ class ShoppingTodoListEntity(TodoListEntity):
                 status = TodoItemStatus.COMPLETED
             else:
                 status = TodoItemStatus.NEEDS_ACTION
+
             results.append(
                 TodoItem(
                     summary=cast(str, item["name"]),
                     uid=cast(str, item["id"]),
                     status=status,
+                    description=cast(str | None, item.get("description")),
+                    quantity=cast(int | None, item.get("quantity")),
+                    store=cast(str | None, item.get("store")),
                 )
             )
         return results

@@ -171,12 +171,12 @@ async def test_bulk_remove(
 ) -> None:
     """Test removing a todo item."""
 
-    for _i in range(5):
+    for i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {
-                ATTR_ITEM: "soda",
+                ATTR_ITEM: f"item_{i}",
             },
             target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,

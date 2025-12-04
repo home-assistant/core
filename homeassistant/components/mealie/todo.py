@@ -130,7 +130,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             list_id=self._shopping_list_id,
             note=item.summary.strip() if item.summary else item.summary,
             position=position,
-            quantity=0.0,
+            quantity=0,
         )
         try:
             await self.coordinator.client.add_shopping_item(new_shopping_item)
@@ -178,7 +178,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             if update_shopping_item.is_food is not None:
                 update_shopping_item.is_food = False
             update_shopping_item.food_id = None
-            update_shopping_item.quantity = 0.0
+            update_shopping_item.quantity = 0
             update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
 
         try:

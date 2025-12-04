@@ -40,10 +40,19 @@ from .const import (
 PLATFORMS = [Platform.TODO]
 
 ATTR_COMPLETE = "complete"
+ATTR_QUANTITY = "quantity"
+ATTR_STORE = "store"
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
-ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
+ITEM_UPDATE_SCHEMA = vol.Schema(
+    {
+        ATTR_COMPLETE: bool,
+        ATTR_NAME: str,
+        vol.Optional(ATTR_QUANTITY): vol.Any(int, None),
+        vol.Optional(ATTR_STORE): vol.Any(str, None),
+    }
+)
 PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
@@ -199,7 +208,12 @@ class ShoppingData:
         self._listeners: list[Callable[[], None]] = []
 
     async def async_add(
-        self, name: str | None, complete: bool = False, context: Context | None = None
+        self,
+        name: str | None,
+        complete: bool = False,
+        quantity: int | None = None,
+        store: str | None = None,
+        context: Context | None = None,
     ) -> dict[str, JsonValueType]:
         """Add a shopping list item.
 
@@ -244,6 +258,10 @@ class ShoppingData:
             "id": uuid.uuid4().hex,
             "complete": complete,
         }
+        if quantity is not None:
+            item["quantity"] = quantity
+        if store is not None:
+            item["store"] = store
         self.items.append(item)
         await self.hass.async_add_executor_job(self.save)
         self._async_notify()
@@ -502,11 +520,23 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = "/api/shopping_list/item"
     name = "api:shopping_list:item"
 
-    @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
-    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("name"): str,
+                vol.Optional("quantity"): vol.Any(int, None),
+                vol.Optional("store"): vol.Any(str, None),
+            }
+        )
+    )
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Create a new shopping list item."""
         hass = request.app[http.KEY_HASS]
-        item = await hass.data[DOMAIN].async_add(data["name"])
+        item = await hass.data[DOMAIN].async_add(
+            data["name"],
+            quantity=data.get("quantity"),
+            store=data.get("store"),
+        )
         return self.json(item)
 
 
@@ -537,7 +567,12 @@ def websocket_handle_items(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/add", vol.Required("name"): str}
+    {
+        vol.Required("type"): "shopping_list/items/add",
+        vol.Required("name"): str,
+        vol.Optional("quantity"): vol.Any(int, None),
+        vol.Optional("store"): vol.Any(str, None),
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_add(
@@ -547,7 +582,10 @@ async def websocket_handle_add(
 ) -> None:
     """Handle adding item to shopping_list."""
     item = await hass.data[DOMAIN].async_add(
-        msg["name"], context=connection.context(msg)
+        msg["name"],
+        quantity=msg.get("quantity"),
+        store=msg.get("store"),
+        context=connection.context(msg),
     )
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
@@ -583,6 +621,8 @@ async def websocket_handle_remove(
         vol.Required("item_id"): str,
         vol.Optional("name"): str,
         vol.Optional("complete"): bool,
+        vol.Optional("quantity"): vol.Any(int, None),
+        vol.Optional("store"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
