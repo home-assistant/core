@@ -18,6 +18,8 @@ from . import MammotionConfigEntry, MammotionReportUpdateCoordinator
 from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
 from .entity import MammotionBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 def get_entity_attribute(
     hass: HomeAssistant, entity_id: str, attribute_name: str
