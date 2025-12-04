@@ -171,7 +171,9 @@ async def _generate_trackables(
             trackable["_id"],
         )
 
-    return Trackables(tracker, trackable, tracker_details, hw_info, pos_report, health_overview)
+    return Trackables(
+        tracker, trackable, tracker_details, hw_info, pos_report, health_overview
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
@@ -224,7 +226,9 @@ class TractiveClient:
         """Get tracker by id."""
         return self._client.tracker(tracker_id)
 
-    def trackable_object(self, trackable_id: str) -> aiotractive.trackable_object.TrackableObject:
+    def trackable_object(
+        self, trackable_id: str
+    ) -> aiotractive.trackable_object.TrackableObject:
         """Get trackable object by id."""
         return self._client.trackable_object(trackable_id)
 
@@ -350,20 +354,20 @@ class TractiveClient:
             data = event["content"]
         else:
             data = event
-        
+
         activity = data.get("activity", {})
         sleep = data.get("sleep")
-        
+
         sleep_day = None
         sleep_night = None
         minutes_rest = None
-        
+
         if isinstance(sleep, dict):
             sleep_day = sleep.get("minutesDaySleep")
             sleep_night = sleep.get("minutesNightSleep")
             # Calm minutes can be used as rest indicator
             minutes_rest = sleep.get("minutesCalm")
-        
+
         payload = {
             ATTR_ACTIVITY_LABEL: None,  # Not available in new API
             ATTR_CALORIES: None,  # Calories no longer provided
