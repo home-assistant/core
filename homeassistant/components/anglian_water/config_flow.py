@@ -30,6 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
+        vol.Required(CONF_ACCOUNT_NUMBER): selector.TextSelector(),
     }
 )
 
@@ -68,33 +69,18 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass,
                         cookie_jar=CookieJar(quote_cookie=False),
                     ),
-                    account_number=user_input.get(CONF_ACCOUNT_NUMBER),
+                    account_number=user_input[CONF_ACCOUNT_NUMBER],
                 )
             )
             if isinstance(validation_response, BaseAuth):
-                account_number = (
-                    user_input.get(CONF_ACCOUNT_NUMBER)
-                    or validation_response.account_number
-                )
-                await self.async_set_unique_id(account_number)
+                await self.async_set_unique_id(user_input[CONF_ACCOUNT_NUMBER])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=account_number,
+                    title=user_input[CONF_ACCOUNT_NUMBER],
                     data={
                         **user_input,
                         CONF_ACCESS_TOKEN: validation_response.refresh_token,
-                        CONF_ACCOUNT_NUMBER: account_number,
                     },
-                )
-            if validation_response == "smart_meter_unavailable":
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=STEP_USER_DATA_SCHEMA.extend(
-                        {
-                            vol.Required(CONF_ACCOUNT_NUMBER): selector.TextSelector(),
-                        }
-                    ),
-                    errors={"base": validation_response},
                 )
             errors["base"] = validation_response
 
