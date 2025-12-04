@@ -80,6 +80,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoSelectEntityDescription(
         key="prebrew_infusion_select",
@@ -128,7 +129,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        LaMarzoccoSelectEntity(coordinator, description)
+        LaMarzoccoSelectEntity(
+            coordinator, description, entry.runtime_data.bluetooth_coordinator
+        )
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )

@@ -30,14 +30,17 @@ def mock_growatt_v1_api():
     - plant_energy_overview: Called by total coordinator during first refresh
 
     Methods mocked for MIN device coordinator refresh:
-    - min_detail: Provides device state (e.g., acChargeEnable for switches)
+    - min_detail: Provides device state (e.g., acChargeEnable, chargePowerCommand)
     - min_settings: Provides settings (e.g. TOU periods)
-    - min_energy: Provides energy data (empty for switch tests, sensors need real data)
+    - min_energy: Provides energy data (empty for switch/number tests, sensors need real data)
 
-    Methods mocked for switch operations:
-    - min_write_parameter: Called by switch entities to change settings
+    Methods mocked for switch and number operations:
+    - min_write_parameter: Called by switch/number entities to change settings
     """
-    with patch("growattServer.OpenApiV1", autospec=True) as mock_v1_api_class:
+    with patch(
+        "homeassistant.components.growatt_server.config_flow.growattServer.OpenApiV1",
+        autospec=True,
+    ) as mock_v1_api_class:
         mock_v1_api = mock_v1_api_class.return_value
 
         # Called during setup to discover devices
@@ -54,11 +57,15 @@ def mock_growatt_v1_api():
         mock_v1_api.min_detail.return_value = {
             "deviceSn": "MIN123456",
             "acChargeEnable": 1,  # AC charge enabled - read by switch entity
+            "chargePowerCommand": 50,  # 50% charge power - read by number entity
+            "wchargeSOCLowLimit": 10,  # 10% charge stop SOC - read by number entity
+            "disChargePowerCommand": 80,  # 80% discharge power - read by number entity
+            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC - read by number entity
         }
 
         # Called by MIN device coordinator during refresh
         mock_v1_api.min_settings.return_value = {
-            # Forced charge time segments (not used by switch, but coordinator fetches it)
+            # Forced charge time segments (not used by switch/number, but coordinator fetches it)
             "forcedTimeStart1": "06:00",
             "forcedTimeStop1": "08:00",
             "forcedChargeBatMode1": 1,
@@ -91,7 +98,7 @@ def mock_growatt_v1_api():
             "current_power": 2500,
         }
 
-        # Called by switch entities during turn_on/turn_off
+        # Called by switch/number entities during turn_on/turn_off/set_value
         mock_v1_api.min_write_parameter.return_value = None
 
         yield mock_v1_api
@@ -115,7 +122,10 @@ def mock_growatt_classic_api():
     Methods mocked for device-specific tests:
     - tlx_detail: Provides TLX device data (kept for potential future tests)
     """
-    with patch("growattServer.GrowattApi", autospec=True) as mock_classic_api_class:
+    with patch(
+        "homeassistant.components.growatt_server.config_flow.growattServer.GrowattApi",
+        autospec=True,
+    ) as mock_classic_api_class:
         # Use the autospec'd mock instance instead of creating a new Mock()
         mock_classic_api = mock_classic_api_class.return_value
 
@@ -163,10 +173,10 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TOKEN: "test_token_123",
             CONF_URL: DEFAULT_URL,
             "user_id": "12345",
-            CONF_PLANT_ID: "plant_123",
+            CONF_PLANT_ID: "123456",
             "name": "Test Plant",
         },
-        unique_id="plant_123",
+        unique_id="123456",
     )
 
 
@@ -184,10 +194,10 @@ def mock_config_entry_classic() -> MockConfigEntry:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
             CONF_URL: DEFAULT_URL,
-            CONF_PLANT_ID: "12345",
+            CONF_PLANT_ID: "123456",
             "name": "Test Plant",
         },
-        unique_id="12345",
+        unique_id="123456",
     )
 
 
@@ -211,3 +221,13 @@ async def init_integration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock async_setup_entry to prevent actual setup during config flow tests."""
+    with patch(
+        "homeassistant.components.growatt_server.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock

@@ -1,4 +1,7 @@
 {
+  "common": {
+    "sources_default": "Media sources"
+  },
   "exceptions": {
     "browse_media_failed": {
       "message": "Failed to browse media with content id {media_content_id}: {error}"
@@ -9,8 +12,5 @@
     "unknown_media_source": {
       "message": "Unknown media source: {domain}"
     }
-  },
-  "common": {
-    "sources_default": "Media sources"
   }
 }

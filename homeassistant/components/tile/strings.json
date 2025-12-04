@@ -1,36 +1,26 @@
 {
   "config": {
-    "step": {
-      "reauth_confirm": {
-        "title": "Re-authenticate Tile",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "user": {
-        "title": "Configure Tile",
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "options": {
     "step": {
-      "init": {
-        "title": "[%key:component::tile::config::step::user::title%]",
+      "reauth_confirm": {
         "data": {
-          "show_inactive": "Show inactive Tiles"
-        }
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "title": "Re-authenticate Tile"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "title": "Configure Tile"
       }
     }
   },
@@ -38,6 +28,16 @@
     "binary_sensor": {
       "lost": {
         "name": "Lost"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_inactive": "Show inactive Tiles"
+        },
+        "title": "[%key:component::tile::config::step::user::title%]"
       }
     }
   }

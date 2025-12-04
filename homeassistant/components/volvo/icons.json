@@ -181,30 +181,6 @@
           "on": "mdi:car-door-lock-open"
         }
       },
-      "turn_indication_front_left_warning": {
-        "default": "mdi:arrow-left-top",
-        "state": {
-          "on": "mdi:car-light-alert"
-        }
-      },
-      "turn_indication_front_right_warning": {
-        "default": "mdi:arrow-right-top",
-        "state": {
-          "on": "mdi:car-light-alert"
-        }
-      },
-      "turn_indication_rear_left_warning": {
-        "default": "mdi:arrow-left-top",
-        "state": {
-          "on": "mdi:car-light-alert"
-        }
-      },
-      "turn_indication_rear_right_warning": {
-        "default": "mdi:arrow-right-top",
-        "state": {
-          "on": "mdi:car-light-alert"
-        }
-      },
       "tire_front_left": {
         "default": "mdi:tire",
         "state": {
@@ -227,6 +203,30 @@
         "default": "mdi:tire",
         "state": {
           "on": "mdi:car-tire-alert"
+        }
+      },
+      "turn_indication_front_left_warning": {
+        "default": "mdi:arrow-left-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "turn_indication_front_right_warning": {
+        "default": "mdi:arrow-right-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "turn_indication_rear_left_warning": {
+        "default": "mdi:arrow-left-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "turn_indication_rear_right_warning": {
+        "default": "mdi:arrow-right-top",
+        "state": {
+          "on": "mdi:car-light-alert"
         }
       },
       "washer_fluid_level_warning": {
@@ -281,6 +281,17 @@
       },
       "honk_flash": {
         "default": "mdi:alarm-light"
+      },
+      "lock_reduced_guard": {
+        "default": "mdi:lock-minus"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:car",
+        "state": {
+          "not_home": "mdi:car-arrow-right"
+        }
       }
     },
     "sensor": {

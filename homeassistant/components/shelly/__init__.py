@@ -60,6 +60,7 @@ from .coordinator import (
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
+    async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
 )
 from .utils import (
@@ -98,6 +99,7 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 ]
 RPC_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.UPDATE,
 ]
@@ -168,9 +170,6 @@ async def _async_setup_block_entry(
         device_entry = dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -281,9 +280,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         device_entry = dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -346,6 +342,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             hass,
             entry,
         )
+        async_manage_open_wifi_ap_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

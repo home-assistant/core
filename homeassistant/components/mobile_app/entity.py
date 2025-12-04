@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
+import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, CONF_NAME, CONF_UNIQUE_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -18,9 +24,14 @@ from .const import (
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_STATE_CLASS,
+    ATTR_SENSOR_TYPE,
+    DATA_PENDING_UPDATES,
+    DOMAIN,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import device_info
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MobileAppEntity(RestoreEntity):
@@ -56,10 +67,13 @@ class MobileAppEntity(RestoreEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_SENSOR_UPDATE}-{self._attr_unique_id}",
+                f"{SIGNAL_SENSOR_UPDATE}-{self._config[ATTR_SENSOR_TYPE]}-{self._attr_unique_id}",
                 self._handle_update,
             )
         )
+
+        # Apply any pending updates
+        self._handle_update()
 
         if (state := await self.async_get_last_state()) is None:
             return
@@ -69,13 +83,16 @@ class MobileAppEntity(RestoreEntity):
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         config = self._config
-        config[ATTR_SENSOR_STATE] = last_state.state
-        config[ATTR_SENSOR_ATTRIBUTES] = {
-            **last_state.attributes,
-            **self._config[ATTR_SENSOR_ATTRIBUTES],
-        }
-        if ATTR_ICON in last_state.attributes:
-            config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
+
+        # Only restore state if we don't have one already, since it can be set by a pending update
+        if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
+            config[ATTR_SENSOR_STATE] = last_state.state
+            config[ATTR_SENSOR_ATTRIBUTES] = {
+                **last_state.attributes,
+                **self._config[ATTR_SENSOR_ATTRIBUTES],
+            }
+            if ATTR_ICON in last_state.attributes:
+                config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
 
     @property
     def device_info(self):
@@ -83,8 +100,21 @@ class MobileAppEntity(RestoreEntity):
         return device_info(self._registration)
 
     @callback
-    def _handle_update(self, data: dict[str, Any]) -> None:
+    def _handle_update(self) -> None:
         """Handle async event updates."""
-        self._config.update(data)
+        self._apply_pending_update()
         self._async_update_attr_from_config()
         self.async_write_ha_state()
+
+    def _apply_pending_update(self) -> None:
+        """Restore any pending update for this entity."""
+        entity_type = self._config[ATTR_SENSOR_TYPE]
+        pending_updates = self.hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type]
+        if update := pending_updates.pop(self._attr_unique_id, None):
+            _LOGGER.debug(
+                "Applying pending update for %s: %s",
+                self._attr_unique_id,
+                update,
+            )
+            # Apply the pending update
+            self._config.update(update)

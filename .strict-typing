@@ -107,6 +107,7 @@ homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.azure_storage.*
+homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
@@ -119,7 +120,6 @@ homeassistant.components.blueprint.*
 homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
-homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.bosch_alarm.*
@@ -187,6 +187,7 @@ homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energenie_power_sockets.*
 homeassistant.components.energy.*
+homeassistant.components.energyid.*
 homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
@@ -230,6 +231,7 @@ homeassistant.components.google_cloud.*
 homeassistant.components.google_drive.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
+homeassistant.components.google_weather.*
 homeassistant.components.govee_ble.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
@@ -395,7 +397,6 @@ homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
-homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
@@ -578,6 +579,7 @@ homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.workday.*
 homeassistant.components.worldclock.*
+homeassistant.components.xbox.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*

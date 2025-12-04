@@ -19,7 +19,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
-    CONF_APP_TYPE,
     CONF_ENDPOINT,
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
@@ -45,13 +44,9 @@ class HomeAssistantTuyaData(NamedTuple):
     listener: SharingDeviceListener
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
-    """Async setup hass config entry."""
-    if CONF_APP_TYPE in entry.data:
-        raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
-
-    token_listener = TokenListener(hass, entry)
-    manager = Manager(
+def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
+    """Create a Tuya Manager instance."""
+    return Manager(
         TUYA_CLIENT_ID,
         entry.data[CONF_USER_CODE],
         entry.data[CONF_TERMINAL_ID],
@@ -59,6 +54,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         entry.data[CONF_TOKEN_INFO],
         token_listener,
     )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
+    """Async setup hass config entry."""
+    token_listener = TokenListener(hass, entry)
+
+    # Move to executor as it makes blocking call to import_module
+    # with args ('.system', 'urllib3.contrib.resolver')
+    manager = await hass.async_add_executor_job(_create_manager, entry, token_listener)
 
     listener = DeviceListener(hass, manager)
     manager.add_device_listener(listener)
