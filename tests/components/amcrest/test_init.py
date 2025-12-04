@@ -118,6 +118,8 @@ async def test_device_registry_creation_no_serial(
         mock_api.async_is_record_on_motion_detection = AsyncMock(return_value=True)
         mock_api.async_event_channels_happened = AsyncMock(return_value=False)
 
+        mock_api.get_base_url = MagicMock(return_value="http://192.168.1.100")
+
         # Synchronous properties
         mock_api.available = True
         mock_api.serial_number = MagicMock(return_value="")  # Empty serial number

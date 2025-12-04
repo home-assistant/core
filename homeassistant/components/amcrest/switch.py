@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_AMCREST, DEVICES, DOMAIN
+from .const import DATA_AMCREST, DEVICES
 from .models import AmcrestConfiguredDevice
 
 if TYPE_CHECKING:
@@ -86,8 +86,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Amcrest switches for a config entry."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.coordinator
     entities = [
         AmcrestCoordinatedSwitch(device.name, device, coordinator, description)
         for description in SWITCH_TYPES

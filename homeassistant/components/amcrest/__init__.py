@@ -611,6 +611,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, device.serial_number)},
         serial_number=device.serial_number,
+        manufacturer="Amcrest",
+        configuration_url=device.api.get_base_url(),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

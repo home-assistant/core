@@ -42,7 +42,6 @@ from .const import (
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
-    DOMAIN,
     RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
@@ -158,8 +157,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up an Amcrest IP Camera."""
 
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.coordinator
     name = f"{device.name} Camera"
     entity = AmcrestCoordinatedCamera(
         name, device, coordinator, get_ffmpeg_manager(hass)
