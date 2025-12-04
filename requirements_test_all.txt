@@ -582,7 +582,7 @@ bleak-esphome==3.4.0
 bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
-bleak==1.0.1
+bleak==2.0.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.5.0
@@ -884,7 +884,7 @@ forecast-solar==4.2.0
 freebox-api==1.2.2
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.1.2
+fressnapftracker==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -1065,10 +1065,13 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251202.0
+home-assistant-frontend==20251203.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
+
+# homeassistant.components.gentex_homelink
+homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.4.0
@@ -2147,7 +2150,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.9.2
+python-roborock==3.9.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2283,7 +2286,7 @@ renault-api==0.5.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.6
+reolink-aio==0.17.1
 
 # homeassistant.components.rflink
 rflink==0.0.67
