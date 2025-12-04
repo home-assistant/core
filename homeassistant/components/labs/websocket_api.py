@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.backup import async_get_manager
 from homeassistant.const import EVENT_LABS_UPDATED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import LABS_DATA
 from .models import EventLabsUpdatedData
@@ -20,6 +20,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the number websocket API."""
     websocket_api.async_register_command(hass, websocket_list_preview_features)
     websocket_api.async_register_command(hass, websocket_update_preview_feature)
+    websocket_api.async_register_command(hass, websocket_subscribe_feature)
 
 
 @callback
@@ -108,3 +109,57 @@ async def websocket_update_preview_feature(
     hass.bus.async_fire(EVENT_LABS_UPDATED, event_data)
 
     connection.send_result(msg["id"])
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "labs/subscribe",
+        vol.Required("domain"): str,
+        vol.Required("preview_feature"): str,
+    }
+)
+def websocket_subscribe_feature(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to a specific lab preview feature updates."""
+    domain = msg["domain"]
+    preview_feature_key = msg["preview_feature"]
+    labs_data = hass.data[LABS_DATA]
+
+    preview_feature_id = f"{domain}.{preview_feature_key}"
+
+    if preview_feature_id not in labs_data.preview_features:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            f"Preview feature {preview_feature_id} not found",
+        )
+        return
+
+    preview_feature = labs_data.preview_features[preview_feature_id]
+
+    @callback
+    def async_handle_event(event: Event[EventLabsUpdatedData]) -> None:
+        """Handle labs updated event."""
+        if (
+            event.data["domain"] != domain
+            or event.data["preview_feature"] != preview_feature_key
+        ):
+            return
+        enabled = (domain, preview_feature_key) in labs_data.data.preview_feature_status
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                preview_feature.to_dict(enabled=enabled),
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = hass.bus.async_listen(
+        EVENT_LABS_UPDATED, async_handle_event
+    )
+
+    enabled = (domain, preview_feature_key) in labs_data.data.preview_feature_status
+    connection.send_result(msg["id"], preview_feature.to_dict(enabled=enabled))
