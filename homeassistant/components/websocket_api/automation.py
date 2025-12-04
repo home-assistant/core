@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any, Self
@@ -29,11 +30,11 @@ from homeassistant.util.hass_dict import HassKey
 _LOGGER = logging.getLogger(__name__)
 
 FLATTENED_SERVICE_DESCRIPTIONS_CACHE: HassKey[
-    tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any] | None]]
+    tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]
 ] = HassKey("websocket_automation_flat_service_description_cache")
 
 AUTOMATION_COMPONENT_LOOKUP_CACHE: HassKey[
-    list[tuple[dict[str, Any], _AutomationComponentLookupTable]]
+    list[tuple[Mapping[str, Any], _AutomationComponentLookupTable]]
 ] = HassKey("websocket_automation_component_lookup_cache")
 
 
@@ -150,7 +151,7 @@ def _get_automation_component_domains(
 
 
 def _get_automation_component_lookup_table(
-    hass: HomeAssistant, component_descriptions: dict[str, dict[str, Any] | None]
+    hass: HomeAssistant, component_descriptions: Mapping[str, Mapping[str, Any] | None]
 ) -> _AutomationComponentLookupTable:
     """Get a dict of automation components keyed by domain, along with the total number of components."""
 
@@ -189,7 +190,7 @@ def _async_get_automation_components_for_target(
     hass: HomeAssistant,
     target_selection: ConfigType,
     expand_group: bool,
-    component_descriptions: dict[str, dict[str, Any] | None],
+    component_descriptions: Mapping[str, Mapping[str, Any] | None],
 ) -> set[str]:
     """Get automation components (triggers/conditions/services) for a target.
 
@@ -259,27 +260,27 @@ async def async_get_services_for_target(
     """Get services for a target."""
     descriptions = await async_get_all_service_descriptions(hass)
 
-    def get_flattened_service_descriptions() -> dict[str, dict[str, Any] | None]:
+    def get_flattened_service_descriptions() -> dict[str, dict[str, Any]]:
         """Get flattened service descriptions, with caching."""
         if FLATTENED_SERVICE_DESCRIPTIONS_CACHE in hass.data:
-            cached_descriptions, cached_flat_descriptions = hass.data[
+            cached_descriptions, cached_flattened_descriptions = hass.data[
                 FLATTENED_SERVICE_DESCRIPTIONS_CACHE
             ]
             # If the descriptions are the same, return the cached flattened version
             if cached_descriptions is descriptions:
-                return cached_flat_descriptions
+                return cached_flattened_descriptions
 
         # Flatten dicts to be keyed by domain.name to match trigger/condition format
-        flat_descriptions = {
+        flattened_descriptions = {
             f"{domain}.{service_name}": desc
             for domain, services in descriptions.items()
             for service_name, desc in services.items()
         }
         hass.data[FLATTENED_SERVICE_DESCRIPTIONS_CACHE] = (
             descriptions,
-            flat_descriptions,
+            flattened_descriptions,
         )
-        return flat_descriptions
+        return flattened_descriptions
 
     return _async_get_automation_components_for_target(
         hass, target_selector, expand_group, get_flattened_service_descriptions()

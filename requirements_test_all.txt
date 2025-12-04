@@ -325,7 +325,7 @@ aiontfy==0.6.1
 aionut==4.3.4
 
 # homeassistant.components.onkyo
-aioonkyo==0.3.0
+aioonkyo==0.4.0
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -579,7 +579,7 @@ bleak-esphome==3.4.0
 bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
-bleak==1.0.1
+bleak==2.0.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.5.0
@@ -691,7 +691,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==16.4.0
+deebot-client==17.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -881,7 +881,7 @@ forecast-solar==4.2.0
 freebox-api==1.2.2
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.1.2
+fressnapftracker==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -1033,7 +1033,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.6
 
 # homeassistant.components.cloud
-hass-nabucasa==1.6.2
+hass-nabucasa==1.7.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1062,10 +1062,13 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251202.0
+home-assistant-frontend==20251203.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
+
+# homeassistant.components.gentex_homelink
+homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.4.0
@@ -1134,7 +1137,7 @@ insteon-frontend-home-assistant==0.5.0
 intellifire4py==4.2.1
 
 # homeassistant.components.iometer
-iometer==0.2.0
+iometer==0.3.0
 
 # homeassistant.components.iotty
 iottycloud==0.3.0
@@ -2144,7 +2147,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.9.2
+python-roborock==3.9.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2280,7 +2283,7 @@ renault-api==0.5.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.6
+reolink-aio==0.17.1
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2658,7 +2661,7 @@ wyoming==1.7.2
 xiaomi-ble==1.2.0
 
 # homeassistant.components.knx
-xknx==3.11.0
+xknx==3.12.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
