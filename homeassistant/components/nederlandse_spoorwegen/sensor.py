@@ -57,10 +57,6 @@ def _get_enum_value(enum_member: Enum | str | None) -> str | None:
     if isinstance(enum_member, Enum):
         return enum_member.value.lower()
     if isinstance(enum_member, str):
-        _LOGGER.warning(
-            "Status is a string value not in the Enum, please report this: %s",
-            enum_member,
-        )
         return enum_member.lower()
     return None
 
@@ -107,7 +103,7 @@ class NSSensorEntityDescription(SensorEntityDescription):
     """Describes Nederlandse Spoorwegen sensor entity."""
 
     is_next: bool = False
-    value_fn: Callable[[Trip], Enum | datetime | str | int | None]
+    value_fn: Callable[[Trip], datetime | str | int | None]
     entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
 
 
@@ -300,7 +296,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType | Enum | datetime:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         data = (
             self.coordinator.data.first_trip
