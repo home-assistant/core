@@ -5518,9 +5518,10 @@
     },
     "rejseplanen": {
       "name": "Rejseplanen",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
