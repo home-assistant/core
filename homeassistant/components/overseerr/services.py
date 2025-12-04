@@ -1,5 +1,6 @@
 """Define services for the Overseerr integration."""
 
+import ast
 from dataclasses import asdict
 from typing import Any, Literal, cast
 
@@ -153,7 +154,6 @@ async def _search_media(
     """Search for media in Overseerr."""
     try:
         LOGGER.debug("Searching for '%s'", query)
-        # URL encode the query to handle spaces and special characters
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
         LOGGER.info("Error searching for '%s': %s", query, str(err))
@@ -189,13 +189,9 @@ async def _request_media(
     client: OverseerrClient,
     media_type: MediaType,
     tmdb_id: int,
-    seasons: int | list[int] | Literal["all"] | None = None,
+    seasons: list[int] | Literal["all"],
 ) -> Any:
     """Request media in Overseerr."""
-    # Convert single integer to list for seasons
-    if isinstance(seasons, int):
-        seasons = [seasons]
-
     try:
         LOGGER.debug(
             "Requesting %s with TMDB ID %s (seasons: %s)",
@@ -203,6 +199,7 @@ async def _request_media(
             tmdb_id,
             seasons if seasons else "none",
         )
+        # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, tmdb_id, seasons)
     except OverseerrConnectionError as err:
         LOGGER.error(
@@ -226,7 +223,7 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     client = entry.runtime_data.client
     media_type = MediaType(call.data[ATTR_MEDIA_TYPE])
     tmdb_id = call.data[ATTR_TMDB_ID]
-    seasons = call.data.get(ATTR_SEASONS)
+    seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
 
     request = await _request_media(client, media_type, tmdb_id, seasons)
 
@@ -238,7 +235,7 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
     entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
     client = entry.runtime_data.client
     query = call.data[ATTR_QUERY]
-    seasons = call.data.get(ATTR_SEASONS)
+    requested_seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
 
     search_results = await _search_media(client, query)
 
@@ -255,12 +252,7 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
     media_type = first_result.media_type
     tmdb_id = first_result.id
 
-    # Only use seasons parameter if it's a TV show
-    request_seasons = None
-    if media_type == "tv" and seasons:
-        request_seasons = seasons
-
-    request = await _request_media(client, media_type, tmdb_id, request_seasons)
+    request = await _request_media(client, media_type, tmdb_id, requested_seasons)
 
     return {
         "request": cast(JsonValueType, asdict(request)),
@@ -272,6 +264,22 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
             else getattr(first_result, "name", "Unknown"),
         },
     }
+
+
+def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]:
+    """Parse all possible inputs to "all" or a list of integers."""
+    seasons_input = str(seasons_input).strip()
+    if seasons_input == "":
+        return "all"
+
+    try:
+        parsed = ast.literal_eval(seasons_input)
+        if isinstance(parsed, int):
+            return [parsed]
+        return list(parsed)
+    except (ValueError, SyntaxError):
+        LOGGER.error("Unable to cast input to a list '%s'", seasons_input)
+        return "all"
 
 
 @callback

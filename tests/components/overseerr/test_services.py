@@ -16,6 +16,7 @@ from homeassistant.components.overseerr.services import (
     ATTR_QUERY,
     SERVICE_GET_REQUESTS,
     SERVICE_SEARCH_MEDIA,
+    parse_seasons_input,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
@@ -119,7 +120,7 @@ async def test_service_search_media(
         return_response=True,
     )
     assert response == {"results": []}
-    mock_overseerr_client.search.assert_called_once_with("test%20query%20with%20spaces")
+    mock_overseerr_client.search.assert_called_once_with("test query with spaces")
 
 
 @pytest.mark.parametrize(
@@ -210,3 +211,24 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("seasons_input", "expected_seasons"),
+    [
+        ("1", [1]),
+        ("1,2,3", [1, 2, 3]),
+        ("1, 2, 3", [1, 2, 3]),
+        (" 1 ,     2,  3    ", [1, 2, 3]),
+        ("[1]", [1]),
+        ("[1,2,3]", [1, 2, 3]),
+        ("[  1  , 2 ,    3]", [1, 2, 3]),
+        ("", "all"),
+        ("  ", "all"),
+        ("Not a valid input", "all"),
+        ("-", "all"),
+    ],
+)
+def test_parse_seasons_input(seasons_input, expected_seasons) -> None:
+    """Test that all inputs are parsed correctly."""
+    assert expected_seasons == parse_seasons_input(seasons_input)
