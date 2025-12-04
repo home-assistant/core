@@ -340,7 +340,7 @@ aiontfy==0.6.1
 aionut==4.3.4
 
 # homeassistant.components.onkyo
-aioonkyo==0.3.0
+aioonkyo==0.4.0
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -642,7 +642,7 @@ bleak-esphome==3.4.0
 bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
-bleak==1.0.1
+bleak==2.0.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.5.0
@@ -782,7 +782,7 @@ debugpy==1.8.17
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==16.4.0
+deebot-client==17.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1002,7 +1002,7 @@ freebox-api==1.2.2
 freesms==0.2.0
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.1.2
+fressnapftracker==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -1090,7 +1090,7 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==9.1.1
+google-nest-sdm==9.1.2
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1157,20 +1157,20 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.7.0
+habluetooth==5.8.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.6
 
 # homeassistant.components.cloud
-hass-nabucasa==1.6.2
+hass-nabucasa==1.7.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.4.0
+hassil==3.5.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1204,10 +1204,13 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251201.0
+home-assistant-frontend==20251203.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.11.24
+home-assistant-intents==2025.12.2
+
+# homeassistant.components.gentex_homelink
+homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.4.0
@@ -1288,7 +1291,7 @@ insteon-frontend-home-assistant==0.5.0
 intellifire4py==4.2.1
 
 # homeassistant.components.iometer
-iometer==0.2.0
+iometer==0.3.0
 
 # homeassistant.components.iotty
 iottycloud==0.3.0
@@ -1370,7 +1373,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.6.3
+letpot==0.6.4
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
@@ -2563,7 +2566,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.8.4
+python-roborock==3.9.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2723,7 +2726,7 @@ renault-api==0.5.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.6
+reolink-aio==0.17.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3191,7 +3194,7 @@ wyoming==1.7.2
 xiaomi-ble==1.2.0
 
 # homeassistant.components.knx
-xknx==3.11.0
+xknx==3.12.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
