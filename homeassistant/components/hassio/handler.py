@@ -199,6 +199,7 @@ class HassIO:
         return_text: bool = False,
         *,
         source: str = "core.handler",
+        params: dict[str, Any] | None = None,
     ) -> Any:
         """Send API command to Hass.io.
 
@@ -218,8 +219,8 @@ class HassIO:
             response = await self.websession.request(
                 method,
                 joined_url,
-                params=payload if method.lower() == "get" else None,
-                json=payload if method.lower() != "get" else None,
+                params=params,
+                json=payload,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
