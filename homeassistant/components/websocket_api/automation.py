@@ -226,24 +226,24 @@ async def async_get_services_for_target(
     def get_flattened_service_descriptions() -> dict[str, dict[str, Any] | None]:
         """Get flattened service descriptions, with caching."""
         if FLATTENED_SERVICE_DESCRIPTIONS_CACHE in hass.data:
-            cached_descriptions, cached_flat_descriptions = hass.data[
+            cached_descriptions, cached_flattened_descriptions = hass.data[
                 FLATTENED_SERVICE_DESCRIPTIONS_CACHE
             ]
             # If the descriptions are the same, return the cached flattened version
             if cached_descriptions is descriptions:
-                return cached_flat_descriptions
+                return cached_flattened_descriptions
 
         # Flatten dicts to be keyed by domain.name to match trigger/condition format
-        flat_descriptions = {
+        flattened_descriptions = {
             f"{domain}.{service_name}": desc
             for domain, services in descriptions.items()
             for service_name, desc in services.items()
         }
         hass.data[FLATTENED_SERVICE_DESCRIPTIONS_CACHE] = (
             descriptions,
-            flat_descriptions,
+            flattened_descriptions,
         )
-        return flat_descriptions
+        return flattened_descriptions
 
     return _async_get_automation_components_for_target(
         hass, target_selector, expand_group, get_flattened_service_descriptions()
