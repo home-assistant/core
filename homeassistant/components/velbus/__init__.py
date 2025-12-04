@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_VLP_FILE, DOMAIN
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,8 +98,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Establish connection with velbus."""
     controller = Velbus(
-        entry.data[CONF_PORT],
+        dsn=entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+        vlp_file=entry.data.get(CONF_VLP_FILE, None),
     )
     try:
         await controller.connect()
