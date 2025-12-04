@@ -15,7 +15,7 @@
   dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
 # ---
 # name: test_setup[h157546]
-  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
 # ---
 # name: test_setup[minimal]
   dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
