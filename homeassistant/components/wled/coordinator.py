@@ -34,7 +34,7 @@ type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 def normalize_mac_address(mac: str) -> str:
     """Normalize a MAC address to lowercase without separators."""
-    return mac.lower().replace(":", "").replace("-", "").replace(".", "")
+    return mac.lower().replace(":", "").replace("-", "").replace(".", "").strip()
 
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):

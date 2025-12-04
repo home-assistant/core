@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -57,7 +58,9 @@ def _find_all_entries_with_duplicated_mac(
     return [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.unique_id and normalize_mac_address(entry.unique_id) == normalized_mac
+        if entry.unique_id
+        and normalize_mac_address(entry.unique_id) == normalized_mac
+        and entry.source != SOURCE_IGNORE
     ]
 
 
