@@ -75,6 +75,9 @@
   },
   "services": {
     "publish": {
+      "sections": {
+        "actions": "mdi:gesture-tap-button"
+      },
       "service": "mdi:send"
     }
   }
