@@ -1,6 +1,9 @@
 """Support for Switchbot devices."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import switchbot
 
@@ -19,10 +22,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     ENCRYPTED_MODELS,
@@ -148,6 +153,7 @@ CLASS_BY_DEVICE = {
 
 
 _LOGGER = logging.getLogger(__name__)
+_OLD_CURTAIN_SLOW_MODE_OPTION = "curtain_slow_mode"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
@@ -162,12 +168,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_ADDRESS: mac},
-        )
-
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
@@ -195,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
                 device=ble_device,
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
-                retry_count=entry.options[CONF_RETRY_COUNT],
+                retry_count=entry.options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
                 model=switchbot_model,
             )
         except ValueError as error:
@@ -208,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         device = cls(
             device=ble_device,
             password=entry.data.get(CONF_PASSWORD),
-            retry_count=entry.options[CONF_RETRY_COUNT],
+            retry_count=entry.options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
         )
 
     coordinator = entry.runtime_data = SwitchbotDataUpdateCoordinator(
@@ -220,6 +220,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         entry.data.get(CONF_NAME, entry.title),
         connectable,
         switchbot_model,
+        entry,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
@@ -233,6 +234,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
+    """Migrate SwitchBot config entries to the latest format."""
+
+    version = entry.version
+    minor_version = entry.minor_version
+    _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
+
+    if version > 1:
+        return False
+
+    new_data: dict[str, Any] = {**entry.data}
+
+    if version == 1 and minor_version == 1:
+        if CONF_RETRY_COUNT not in new_data:
+            new_data[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
+
+        if CONF_CURTAIN_SPEED not in new_data:
+            new_data[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+
+            hass.config_entries.async_update_entry(
+                entry,
+                minor_version=2,
+                version=version,
+            )
+
+        _LOGGER.debug("Migration to version %s.%s successful", version, 2)
 
     return True
 

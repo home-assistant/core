@@ -36,14 +36,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    CURTAIN_SPEED_MAX,
+    CURTAIN_SPEED_MIN,
+    DEFAULT_CURTAIN_SPEED,
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
@@ -77,6 +82,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -464,6 +470,27 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                             CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
                         ),
                     ): bool
+                }
+            )
+        if (
+            CONF_SENSOR_TYPE in self.config_entry.data
+            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.CURTAIN
+        ):
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_CURTAIN_SPEED,
+                        default=self.config_entry.options.get(
+                            CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+                        ),
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=CURTAIN_SPEED_MIN,
+                            max=CURTAIN_SPEED_MAX,
+                            step=1,
+                            mode=selector.NumberSelectorMode.SLIDER,
+                        )
+                    )
                 }
             )
 
