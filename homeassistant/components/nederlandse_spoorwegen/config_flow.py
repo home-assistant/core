@@ -64,7 +64,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except NoDataReceivedError:
             _LOGGER.exception(
-                "No data received. This could mean that there was an issue with consuming the API."
+                "No data received. This could mean that there was an issue with consuming the API"
             )
             errors["base"] = "no_data"
         except Exception:
@@ -151,7 +151,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except NoDataReceivedError:
             _LOGGER.exception(
-                "No data received. This could mean that there was an issue with consuming the API."
+                "No data received. This could mean that there was an issue with consuming the API"
             )
             return self.async_abort(reason="no_data")
         except Exception:
