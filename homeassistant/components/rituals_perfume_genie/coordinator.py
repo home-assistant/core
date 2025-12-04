@@ -66,7 +66,7 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 raise ConfigEntryAuthFailed from err2
             except ClientResponseError as err2:
                 # Still HTTP auth errors after refresh → trigger HA reauth
-                if getattr(err2, "status", None) in (401, 403):
+                if err2.status in (401, 403):
                     raise ConfigEntryAuthFailed from err2
                 raise UpdateFailed(f"HTTP {getattr(err2, 'status', '?')}") from err2
         except ClientError as err:
