@@ -29,24 +29,26 @@
       },
       "reconfigure": {
         "data": {
-          "account_name": "Mammotion email or account number",
-          "password": "Mammotion account password",
-          "use_wifi": "Use Wi-Fi"
+          "account_name": "[%key:component::mammotion::config::step::wifi::data::account_name%]",
+          "password": "[%key:component::mammotion::config::step::wifi::data::password%]",
+          "use_wifi": "[%key:component::mammotion::config::step::wifi::data::use_wifi%]"
         },
         "data_description": {
-          "account_name": "Mammotion email or account number for your shared mammotion account.",
-          "password": "Mammotion shared account password",
-          "use_wifi": "Connect using the cloud, can also connect over Bluetooth as well (deselect to only use Bluetooth)"
-        }
+          "account_name": "[%key:component::mammotion::config::step::wifi::data_description::account_name%]",
+          "password": "[%key:component::mammotion::config::step::wifi::data_description::password%]",
+          "use_wifi": "[%key:component::mammotion::config::step::wifi::data_description::use_wifi%]"
+        },
+        "description": "Enter your Mammotion account email or ID and password",
+        "title": "Connect to Wi-Fi"
       },
       "user": {
         "data": {
           "address": "Device",
-          "stay_connected_bluetooth": "Keep Bluetooth connected"
+          "stay_connected_bluetooth": "[%key:component::mammotion::config::step::bluetooth_confirm::data::stay_connected_bluetooth%]"
         },
         "data_description": {
           "address": "Bluetooth address of the mower",
-          "stay_connected_bluetooth": "If you select this option, the integration will not disconnect from Bluetooth preventing any other device from connecting to the mower."
+          "stay_connected_bluetooth": "[%key:component::mammotion::config::step::bluetooth_confirm::data_description::stay_connected_bluetooth%]"
         },
         "description": "Select your mower"
       },
@@ -60,9 +62,7 @@
           "account_name": "Mammotion email or account number for your shared mammotion account.",
           "password": "Mammotion shared account password",
           "use_wifi": "Connect using the cloud, can also connect over Bluetooth as well (deselect to only use Bluetooth)"
-        },
-        "description": "Enter your Mammotion account email or ID and password",
-        "title": "Connect to Wi-Fi"
+        }
       }
     }
   },
@@ -94,11 +94,11 @@
     "step": {
       "init": {
         "data": {
-          "stay_connected_bluetooth": "Keep Bluetooth connected",
+          "stay_connected_bluetooth": "[%key:component::mammotion::config::step::bluetooth_confirm::data::stay_connected_bluetooth%]",
           "title": "Update configuration"
         },
         "data_description": {
-          "stay_connected_bluetooth": "If you select this option, the integration will not disconnect from Bluetooth preventing any other device from connecting to the mower."
+          "stay_connected_bluetooth": "[%key:component::mammotion::config::step::bluetooth_confirm::data_description::stay_connected_bluetooth%]"
         }
       }
     }
