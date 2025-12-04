@@ -60,6 +60,7 @@ class AmcrestConfiguredDevice(AmcrestDevice):
         self.config_entry = config_entry
         self.name = name
         self.serial_number = ""
+        self.manufacturer = "Amcrest"
 
     @property
     def device_info(self) -> DeviceInfo:
