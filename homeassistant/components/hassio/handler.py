@@ -198,8 +198,8 @@ class HassIO:
         timeout: int | None = 10,
         return_text: bool = False,
         *,
-        source: str = "core.handler",
         params: dict[str, Any] | None = None,
+        source: str = "core.handler",
     ) -> Any:
         """Send API command to Hass.io.
 
