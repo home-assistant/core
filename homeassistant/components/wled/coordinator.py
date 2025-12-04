@@ -57,7 +57,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         self.unsub: CALLBACK_TYPE | None = None
 
         assert entry.unique_id
-        self.config_mac_address = entry.unique_id
+        self.config_mac_address = normalize_mac_address(entry.unique_id)
 
         super().__init__(
             hass,
