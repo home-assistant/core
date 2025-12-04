@@ -61,6 +61,12 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
     return item_data
 
 
+def define_priority_level(priority: int) -> str:
+    """Define priority level based on Todoist priority integer."""
+    priority_mapping = {1: "Low", 2: "Medium", 3: "High", 4: "Urgent"}
+    return priority_mapping.get(priority, "Unknown")
+
+
 class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntity):
     """A Todoist TodoListEntity."""
 
@@ -135,6 +141,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                     status=status,
                     due=due,
                     description=task.description or None,
+                    priority=define_priority_level(task.priority),
                 )
             )
 
