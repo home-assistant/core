@@ -315,7 +315,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Marstek sensors based on a config entry."""
     # Use shared coordinator and device_info from __init__.py (mik-laj feedback)
-    _udp_client, coordinator, device_info = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
+    device_info = config_entry.runtime_data.device_info
     device_ip = device_info["ip"]
     _LOGGER.info("Setting up Marstek sensors: %s", device_ip)
 

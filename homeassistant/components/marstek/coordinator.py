@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_UDP_PORT, DOMAIN
@@ -37,9 +36,6 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.config_entry = config_entry
         # Use initial IP, but will read from config_entry.data dynamically
         self._initial_device_ip = device_ip
-        # Track consecutive failures to trigger rediscovery
-        self._consecutive_failures = 0
-        self._last_successful_ip: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -83,7 +79,7 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 port=DEFAULT_UDP_PORT,
                 timeout=2.5,
                 include_pv=True,
-                delay_between_requests=2.0,
+                delay_between_requests=5.0,
             )
 
             # Check if we actually got valid data
@@ -109,128 +105,27 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     battery_soc,
                     battery_power,
                 )
-                # Abstract raise to satisfy ruff TRY301
                 error_msg = f"No valid data received from device at {current_ip}"
-                raise TimeoutError(error_msg) from None
-            else:
-                # Connection successful, reset failure counter
-                self._consecutive_failures = 0
-                self._last_successful_ip = current_ip
-                _LOGGER.debug(
-                    "Device %s poll done: SOC %s%%, Power %sW, Mode %s, Status %s",
-                    current_ip,
-                    device_status.get("battery_soc"),
-                    device_status.get("battery_power"),
-                    device_status.get("device_mode"),
-                    device_status.get("battery_status"),
-                )
-                return device_status
-        except (TimeoutError, OSError, ValueError) as err:
-            self._consecutive_failures += 1
-            _LOGGER.warning(
-                "Device %s status request failed (failure #%d): %s",
+                # Raise will be caught by outer except block
+                raise TimeoutError(error_msg) from None  # noqa: TRY301
+            _LOGGER.debug(
+                "Device %s poll done: SOC %s%%, Power %sW, Mode %s, Status %s",
                 current_ip,
-                self._consecutive_failures,
+                device_status.get("battery_soc"),
+                device_status.get("battery_power"),
+                device_status.get("device_mode"),
+                device_status.get("battery_status"),
+            )
+            return device_status  # noqa: TRY300
+        except (TimeoutError, OSError, ValueError) as err:
+            # Connection failed - Scanner will detect IP changes and update config entry
+            # Coordinator only returns previous data, no discovery here (mik-laj feedback)
+            _LOGGER.warning(
+                "Device %s status request failed: %s. "
+                "Scanner will detect IP changes automatically",
+                current_ip,
                 err,
             )
-
-            # If connection fails multiple times, IP might have changed
-            # Try to rediscover device and update IP if found
-            if not self.config_entry:
-                return self.data or {}
-            
-            stored_mac = (
-                self.config_entry.data.get("ble_mac")
-                or self.config_entry.data.get("mac")
-                or self.config_entry.data.get("wifi_mac")
-            )
-
-            # Trigger rediscovery if:
-            # 1. We have a MAC address to match
-            # 2. We've failed multiple times (avoid rediscovery on temporary network issues)
-            # Strategy:
-            #   - After 2 consecutive failures: first rediscovery attempt (IP might have changed)
-            #   - After 5 consecutive failures: second rediscovery attempt (device might be back online)
-            #   - Then every 5 failures: periodic rediscovery (in case IP changed while device was offline)
-            should_rediscover = stored_mac and (
-                self._consecutive_failures in (2, 5)
-                or (
-                    self._consecutive_failures > 5
-                    and self._consecutive_failures % 5 == 0
-                )
-            )
-
-            if not should_rediscover:
-                return self.data or {}
-
-            _LOGGER.info(
-                "Connection failed %d time(s), attempting to rediscover device %s via broadcast",
-                self._consecutive_failures,
-                stored_mac,
-            )
-            try:
-                devices = await self.udp_client.discover_devices(use_cache=False)
-
-                found_device = False
-                for device in devices:
-                    device_mac = (
-                        device.get("ble_mac")
-                        or device.get("mac")
-                        or device.get("wifi_mac")
-                    )
-                    if device_mac and format_mac(device_mac) == format_mac(stored_mac):
-                        found_device = True
-                        new_ip = device.get("ip")
-                        if new_ip and new_ip != current_ip:
-                            _LOGGER.info(
-                                "Device IP changed from %s to %s, updating config entry",
-                                current_ip,
-                                new_ip,
-                            )
-                            self.hass.config_entries.async_update_entry(
-                                self.config_entry,
-                                data={
-                                    **self.config_entry.data,
-                                    CONF_HOST: new_ip,
-                                },
-                            )
-                            # Entity names will be updated automatically via config entry update listener
-                            # Retry with new IP immediately
-                            try:
-                                device_status = await self.udp_client.get_device_status(
-                                    new_ip,
-                                    port=DEFAULT_UDP_PORT,
-                                    timeout=2.5,
-                                    include_pv=True,
-                                    delay_between_requests=2.0,
-                                )
-                                _LOGGER.info(
-                                    "Successfully connected to device at new IP: %s",
-                                    new_ip,
-                                )
-                                self._consecutive_failures = 0
-                                self._last_successful_ip = new_ip
-                                return device_status
-                            except (
-                                TimeoutError,
-                                OSError,
-                                ValueError,
-                            ) as retry_err:
-                                _LOGGER.error(
-                                    "Still failed with new IP %s: %s",
-                                    new_ip,
-                                    retry_err,
-                                )
-                        break
-
-                if not found_device:
-                    _LOGGER.warning(
-                        "Device with MAC %s not found during rediscovery",
-                        stored_mac,
-                    )
-            except (TimeoutError, OSError, ValueError) as discover_err:
-                _LOGGER.debug("Rediscovery failed: %s", discover_err)
-
             # Return previous data on error
             return self.data or {}
 
