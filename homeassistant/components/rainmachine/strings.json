@@ -128,7 +128,7 @@
       "name": "Push flow meter data"
     },
     "push_weather_data": {
-      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integration.\nSee details of RainMachine API here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
+      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integration.\nSee details of RainMachine API here: {api_url}",
       "fields": {
         "condition": {
           "description": "Current weather condition code (WNUM).",
