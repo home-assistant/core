@@ -105,7 +105,7 @@ class BooleanTypeInformation(TypeInformation[bool]):
 
 @dataclass(kw_only=True)
 class EnumTypeInformation(TypeInformation[str]):
-    """Enum Type Data."""
+    """Enum type information."""
 
     range: list[str]
 
@@ -134,7 +134,7 @@ class EnumTypeInformation(TypeInformation[str]):
 
     @classmethod
     def from_json(cls, dpcode: str, type_data: str) -> Self | None:
-        """Load JSON string and return a EnumTypeInformation object."""
+        """Load JSON string and return an EnumTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
             return None
         return cls(
@@ -146,7 +146,7 @@ class EnumTypeInformation(TypeInformation[str]):
 
 @dataclass(kw_only=True)
 class IntegerTypeInformation(TypeInformation[float]):
-    """Integer Type Data."""
+    """Integer type information."""
 
     min: int
     max: int
