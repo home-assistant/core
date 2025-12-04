@@ -39,6 +39,6 @@ async def async_setup_entry(
 
 
 class SirenSwitch(BaseToggleEntity, SirenEntity):
-    """Represents a Switch as a Siren."""
+    """Represents an Inverse Siren."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
