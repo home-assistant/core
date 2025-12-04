@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from momonga import MomongaError
+from momonga import MomongaError, MomongaResponseNotPossible
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.route_b_smart_meter.const import DEFAULT_SCAN_INTERVAL
@@ -53,3 +53,30 @@ async def test_route_b_smart_meter_sensor_no_update(
 
     entity = hass.states.get(entity_id)
     assert entity.state is STATE_UNAVAILABLE
+
+
+async def test_route_b_smart_meter_sensor_export_not_supported(
+    hass: HomeAssistant,
+    mock_momonga: Mock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the BRouteUpdateCoordinator when export is not supported."""
+
+    def get_measured_cumulative_energy_side_effect(reverse=False):
+        if reverse:
+            raise MomongaResponseNotPossible
+        return 4
+
+    mock_momonga.return_value.get_measured_cumulative_energy.side_effect = (
+        get_measured_cumulative_energy_side_effect
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

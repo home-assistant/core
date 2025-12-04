@@ -8,5 +8,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 ATTR_API_INSTANTANEOUS_POWER = "instantaneous_power"
 ATTR_API_TOTAL_CONSUMPTION = "total_consumption"
+ATTR_API_TOTAL_EXPORTED = "total_exported"
 ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE = "instantaneous_current_t_phase"
 ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE = "instantaneous_current_r_phase"

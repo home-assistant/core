@@ -36,6 +36,9 @@
       },
       "total_consumption": {
         "name": "Total consumption"
+      },
+      "total_exported": {
+        "name": "Total exported"
       }
     }
   }
