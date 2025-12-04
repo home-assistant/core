@@ -33,7 +33,10 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 3
 
     SUGGESTED_SERVERS: list[str] = []
+    SUGGESTED_SERVERS_DATA: list[Any] = []
+
     in_progress_suggested_servers: Coroutine[None, Any, list[str]]
+    in_progress_suggested_server_data: Any
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -90,8 +93,35 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         schema_entries: dict[vol.Marker, Any] = {}
 
         self.SUGGESTED_SERVERS = await self.in_progress_suggested_servers
+
         if len(self.SUGGESTED_SERVERS) <= 0:
             self.SUGGESTED_SERVERS.append(NO_SERVERS_FOUND_MESSAGE)
+
+        else:
+            self.in_progress_suggested_server_data = [
+                MinecraftServer(
+                    server_type=MinecraftServerType.JAVA_EDITION,
+                    address=server,
+                    hass=self.hass,
+                )
+                for server in self.SUGGESTED_SERVERS
+            ]
+            for server in self.in_progress_suggested_server_data:
+                await server.async_initialise()
+
+            self.in_progress_suggested_server_data = [
+                await server.async_get_data()
+                for server in self.in_progress_suggested_server_data
+            ]
+
+            self.SUGGESTED_SERVERS_DATA = [
+                {"value": address, "label": data.motd}
+                for (data, address) in zip(
+                    self.in_progress_suggested_server_data,
+                    self.SUGGESTED_SERVERS,
+                    strict=True,
+                )
+            ]
 
         schema_entries[
             vol.Required(
@@ -101,7 +131,11 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         ] = selector(
             {
                 "select": {
-                    "options": self.SUGGESTED_SERVERS,
+                    "options": (
+                        self.SUGGESTED_SERVERS_DATA
+                        if len(self.SUGGESTED_SERVERS_DATA) <= 0
+                        else self.SUGGESTED_SERVERS
+                    ),  # self.SUGGESTED_SERVERS,  # Can change this to {value:str,label:str}
                     "custom_value": True,
                 }
             }
