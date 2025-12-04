@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from http import HTTPStatus
+from typing import Any
 
 from doorbirdpy import DoorBirdScheduleEntry
 import pytest
@@ -10,6 +11,88 @@ from homeassistant.components.doorbird.const import CONF_EVENTS
 from homeassistant.core import HomeAssistant
 
 from .conftest import DoorbirdMockerType
+
+
+@pytest.fixture
+def doorbird_favorites_with_stale() -> dict[str, dict[str, Any]]:
+    """Return favorites fixture with stale favorites from another HA instance.
+
+    Creates favorites where identifier "2" has the same event name as "0"
+    (mydoorbird_doorbell) but points to a different HA instance URL.
+    These stale favorites should be filtered out.
+    """
+    return {
+        "http": {
+            "0": {
+                "title": "Home Assistant (mydoorbird_doorbell)",
+                "value": "http://127.0.0.1:8123/api/doorbird/mydoorbird_doorbell?token=test-token",
+            },
+            # Stale favorite from a different HA instance - should be filtered out
+            "2": {
+                "title": "Home Assistant (mydoorbird_doorbell)",
+                "value": "http://old-ha-instance:8123/api/doorbird/mydoorbird_doorbell?token=old-token",
+            },
+            "5": {
+                "title": "Home Assistant (mydoorbird_motion)",
+                "value": "http://127.0.0.1:8123/api/doorbird/mydoorbird_motion?token=test-token",
+            },
+        }
+    }
+
+
+@pytest.fixture
+def doorbird_schedule_with_stale() -> list[DoorBirdScheduleEntry]:
+    """Return schedule fixture with outputs referencing stale favorites.
+
+    Both param "0" and "2" map to doorbell input, but "2" is a stale favorite.
+    """
+    schedule_data = [
+        {
+            "input": "doorbell",
+            "param": "1",
+            "output": [
+                {
+                    "event": "http",
+                    "param": "0",
+                    "schedule": {"weekdays": [{"to": "107999", "from": "108000"}]},
+                },
+                {
+                    "event": "http",
+                    "param": "2",
+                    "schedule": {"weekdays": [{"to": "107999", "from": "108000"}]},
+                },
+            ],
+        },
+        {
+            "input": "motion",
+            "param": "",
+            "output": [
+                {
+                    "event": "http",
+                    "param": "5",
+                    "schedule": {"weekdays": [{"to": "107999", "from": "108000"}]},
+                },
+            ],
+        },
+    ]
+    return DoorBirdScheduleEntry.parse_all(schedule_data)
+
+
+async def test_stale_favorites_filtered_by_url(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    doorbird_favorites_with_stale: dict[str, dict[str, Any]],
+    doorbird_schedule_with_stale: list[DoorBirdScheduleEntry],
+) -> None:
+    """Test that stale favorites from other HA instances are filtered out."""
+    await doorbird_mocker(
+        favorites=doorbird_favorites_with_stale,
+        schedule=doorbird_schedule_with_stale,
+    )
+    # Should have 2 event entities - stale favorite "2" is filtered out
+    # because its URL doesn't match the current HA instance
+    event_entities = hass.states.async_all("event")
+    assert len(event_entities) == 2
 
 
 async def test_no_configured_events(

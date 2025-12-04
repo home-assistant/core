@@ -107,12 +107,18 @@ class ConfiguredDoorBird:
         if not self.door_station_events:
             # The config entry might not have any events configured yet
             return
-        http_fav = await self._async_register_events()
-        event_config = await self._async_get_event_config(http_fav)
+        # Override url if another is specified in the configuration
+        if custom_url := self.custom_url:
+            hass_url = custom_url
+        else:
+            # Get the URL of this server
+            hass_url = get_url(self._hass, prefer_external=False)
+        http_fav = await self._async_register_events(hass_url)
+        event_config = await self._async_get_event_config(http_fav, hass_url)
         _LOGGER.debug("%s: Event config: %s", self.name, event_config)
         if event_config.unconfigured_favorites:
             await self._configure_unconfigured_favorites(event_config)
-            event_config = await self._async_get_event_config(http_fav)
+            event_config = await self._async_get_event_config(http_fav, hass_url)
         self.event_descriptions = event_config.events
 
     async def _configure_unconfigured_favorites(
@@ -144,15 +150,8 @@ class ConfiguredDoorBird:
                         code,
                     )
 
-    async def _async_register_events(self) -> dict[str, Any]:
+    async def _async_register_events(self, hass_url: str) -> dict[str, Any]:
         """Register events on device."""
-        # Override url if another is specified in the configuration
-        if custom_url := self.custom_url:
-            hass_url = custom_url
-        else:
-            # Get the URL of this server
-            hass_url = get_url(self._hass, prefer_external=False)
-
         http_fav = await self._async_get_http_favorites()
         if any(
             # Note that a list comp is used here to ensure all
@@ -168,7 +167,7 @@ class ConfiguredDoorBird:
         return http_fav
 
     async def _async_get_event_config(
-        self, http_fav: dict[str, dict[str, Any]]
+        self, http_fav: dict[str, dict[str, Any]], hass_url: str
     ) -> DoorbirdEventConfig:
         """Get events and unconfigured favorites from http favorites."""
         device = self.device
@@ -195,6 +194,9 @@ class ConfiguredDoorBird:
             title: str | None = data.get("title")
             if not title or not title.startswith("Home Assistant"):
                 continue
+            value: str | None = data.get("value")
+            if not value or not value.startswith(hass_url):
+                continue  # Not our favorite - different HA instance or stale
             event = title.partition("(")[2].strip(")")
             if input_type := favorite_input_type.get(identifier):
                 events.append(DoorbirdEvent(event, input_type))
