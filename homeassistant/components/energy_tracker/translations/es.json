@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurar Energy Tracker",
+        "description": "Ingrese su token de acceso personal para conectarse a su cuenta de Energy Tracker.",
+        "data": {
+          "api_token": "Token de acceso personal"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar Energy Tracker",
+        "description": "Actualice el token de su cuenta de Energy Tracker. Deje el campo del token vacío para mantener el token existente.",
+        "data": {
+          "api_token": "Token de acceso personal (dejar vacío para mantener el existente)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "El token de acceso personal no puede estar vacío."
+    },
+    "abort": {
+      "already_configured": "Este token de acceso personal ya está configurado. Cada token solo se puede usar una vez.",
+      "entry_not_found": "Entrada de configuración no encontrada.",
+      "reconfigure_successful": "Configuración actualizada correctamente."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Fallo en la autenticación con Energy Tracker",
+      "description": "El token de acceso personal configurado no es válido o ha caducado. Por favor, crea un nuevo token en tu cuenta de Energy Tracker y actualiza el token en la configuración de la integración."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Permisos insuficientes para Energy Tracker",
+      "description": "El token de acceso personal configurado no tiene los permisos necesarios. Por favor, crea un nuevo token con los permisos necesarios en tu cuenta de Energy Tracker y actualiza el token en la configuración de esta integración."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Tiempo de espera agotado. Por favor, verifica la conexión de red e inténtalo de nuevo."
+    },
+    "network_error": {
+      "message": "Error de red durante la solicitud. Por favor, verifica la conexión a Internet e inténtalo de nuevo."
+    },
+    "bad_request": {
+      "message": "Entrada no válida. Por favor, verifica los datos de entrada. ({error})"
+    },
+    "auth_failed": {
+      "message": "Fallo en la autenticación. Por favor, verifica tu token de acceso personal en la configuración de la integración."
+    },
+    "device_not_found": {
+      "message": "Dispositivo de medición estándar no encontrado. Por favor, verifica el ID del dispositivo."
+    },
+    "rate_limit": {
+      "message": "Demasiadas solicitudes. Por favor, inténtalo de nuevo en {retry_after} segundos."
+    },
+    "rate_limit_no_time": {
+      "message": "Demasiadas solicitudes. Por favor, inténtalo de nuevo más tarde."
+    },
+    "server_error": {
+      "message": "Ha ocurrido un error del servidor. Por favor, inténtalo de nuevo más tarde. ({error})"
+    },
+    "unknown_error": {
+      "message": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Se requiere el ID del dispositivo de medición estándar."
+    },
+    "entity_not_found": {
+      "message": "Entidad {entity_id} no encontrada."
+    },
+    "entity_unavailable": {
+      "message": "La entidad {entity_id} está {state}."
+    },
+    "invalid_number": {
+      "message": "El valor '{state}' de la entidad {entity_id} no es un número."
+    },
+    "missing_timestamp": {
+      "message": "La entidad {entity_id} no tiene marca de tiempo."
+    },
+    "no_api_token": {
+      "message": "No hay token de acceso personal configurado. Verifica la configuración de la cuenta."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Enviar lectura del contador",
+      "description": "Envía el valor actual de un sensor a Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Cuenta",
+          "description": "Tu cuenta de Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID del dispositivo de medición estándar",
+          "description": "ID del dispositivo de medición estándar en tu cuenta de Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor que proporciona la lectura del contador"
+        },
+        "allow_rounding": {
+          "name": "Permitir redondeo",
+          "description": "Redondear valor para coincidir con la precisión del contador"
+        }
+      }
+    }
+  }
+}

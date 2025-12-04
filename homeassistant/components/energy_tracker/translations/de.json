@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Energy Tracker einrichten",
+        "description": "Geben Sie Ihren persönlichen Zugriffstoken ein, um sich mit Ihrem Energy Tracker-Konto zu verbinden.",
+        "data": {
+          "api_token": "Persönlicher Zugriffstoken"
+        }
+      },
+      "reconfigure": {
+        "title": "Energy Tracker neu konfigurieren",
+        "description": "Aktualisieren Sie Ihren Energy Tracker-Konto-Token. Lassen Sie das Token-Feld leer, um den bestehenden Token zu behalten.",
+        "data": {
+          "api_token": "Persönlicher Zugriffstoken (leer lassen, um bestehenden zu behalten)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Persönlicher Zugriffstoken darf nicht leer sein."
+    },
+    "abort": {
+      "already_configured": "Dieser Persönliche Zugriffstoken ist bereits konfiguriert. Jeder Token kann nur einmal verwendet werden.",
+      "entry_not_found": "Konfigurationseintrag nicht gefunden.",
+      "reconfigure_successful": "Konfiguration erfolgreich aktualisiert."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Anmeldung bei Energy Tracker fehlgeschlagen",
+      "description": "Der konfigurierte persönliche Zugriffstoken ist ungültig oder abgelaufen. Bitte erstellen Sie in Ihrem Energy Tracker-Konto einen neuen Token und aktualisieren Sie den Token in den Einstellungen dieser Integration."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Unzureichende Berechtigungen für Energy Tracker",
+      "description": "Der konfigurierte persönliche Zugriffstoken verfügt nicht über die erforderlichen Berechtigungen. Bitte erstellen Sie in Ihrem Energy Tracker-Konto einen neuen Token mit den nötigen Rechten und aktualisieren Sie den Token in den Einstellungen dieser Integration."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Zeitüberschreitung bei Anfrage. Bitte Netzwerkverbindung prüfen und erneut versuchen."
+    },
+    "network_error": {
+      "message": "Netzwerkfehler bei Anfrage. Bitte Internetverbindung prüfen und erneut versuchen."
+    },
+    "bad_request": {
+      "message": "Ungültige Eingabe. Bitte Eingabedaten prüfen. ({error})"
+    },
+    "auth_failed": {
+      "message": "Authentifizierung fehlgeschlagen. Bitte Ihren Persönlichen Zugriffstoken in den Integrationseinstellungen prüfen."
+    },
+    "device_not_found": {
+      "message": "Standardmessgerät nicht gefunden. Bitte Geräte-ID prüfen."
+    },
+    "rate_limit": {
+      "message": "Zu viele Anfragen. Bitte in {retry_after} Sekunden erneut versuchen."
+    },
+    "rate_limit_no_time": {
+      "message": "Zu viele Anfragen. Bitte später erneut versuchen."
+    },
+    "server_error": {
+      "message": "Es ist ein Serverfehler aufgetreten. Bitte versuchen Sie es später erneut. ({error})"
+    },
+    "unknown_error": {
+      "message": "Es ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut. ({error})"
+    },
+    "device_id_empty": {
+      "message": "ID des Standardmessgeräts ist erforderlich."
+    },
+    "entity_not_found": {
+      "message": "Entität {entity_id} nicht gefunden."
+    },
+    "entity_unavailable": {
+      "message": "Entität {entity_id} ist {state}."
+    },
+    "invalid_number": {
+      "message": "Wert '{state}' von Entität {entity_id} ist keine Zahl."
+    },
+    "missing_timestamp": {
+      "message": "Entität {entity_id} hat keinen Zeitstempel."
+    },
+    "no_api_token": {
+      "message": "Kein Persönlicher Zugriffstoken konfiguriert. Kontoeinstellungen prüfen."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Zählerstand senden",
+      "description": "Sendet den aktuellen Wert eines Sensors an Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Konto",
+          "description": "Ihr Energy Tracker-Konto"
+        },
+        "device_id": {
+          "name": "ID des Standardmessgeräts",
+          "description": "ID des Standardmessgeräts in Ihrem Energy Tracker-Konto"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor, der den Zählerstand bereitstellt"
+        },
+        "allow_rounding": {
+          "name": "Rundung erlauben",
+          "description": "Wert auf die Genauigkeit des Zählers runden"
+        }
+      }
+    }
+  }
+}

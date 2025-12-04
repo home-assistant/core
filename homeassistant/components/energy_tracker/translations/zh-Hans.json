@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "设置 Energy Tracker",
+        "description": "输入您的个人访问令牌以连接到您的 Energy Tracker 账户。",
+        "data": {
+          "api_token": "个人访问令牌"
+        }
+      },
+      "reconfigure": {
+        "title": "重新配置 Energy Tracker",
+        "description": "更新您的 Energy Tracker 账户令牌。将令牌字段留空以保留现有令牌。",
+        "data": {
+          "api_token": "个人访问令牌(留空以保留现有令牌)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "个人访问令牌不能为空。"
+    },
+    "abort": {
+      "already_configured": "此个人访问令牌已配置。每个令牌只能使用一次。",
+      "entry_not_found": "未找到配置条目。",
+      "reconfigure_successful": "配置已成功更新。"
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Energy Tracker 身份验证失败",
+      "description": "配置的个人访问令牌无效或已过期。请在您的 Energy Tracker 账户中创建新令牌,并在集成设置中更新令牌。"
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Energy Tracker 权限不足",
+      "description": "配置的个人访问令牌没有所需权限。请在您的 Energy Tracker 账户中创建具有所需权限的新令牌,并在此集成的设置中更新令牌。"
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "请求超时。请检查网络连接并重试。"
+    },
+    "network_error": {
+      "message": "请求期间发生网络错误。请检查互联网连接并重试。"
+    },
+    "bad_request": {
+      "message": "输入无效。请检查输入数据。({error})"
+    },
+    "auth_failed": {
+      "message": "身份验证失败。请在集成设置中检查您的个人访问令牌。"
+    },
+    "device_not_found": {
+      "message": "未找到标准测量设备。请检查设备 ID。"
+    },
+    "rate_limit": {
+      "message": "请求过多。请在 {retry_after} 秒后重试。"
+    },
+    "rate_limit_no_time": {
+      "message": "请求过多。请稍后重试。"
+    },
+    "server_error": {
+      "message": "发生服务器错误。请稍后重试。({error})"
+    },
+    "unknown_error": {
+      "message": "发生意外错误。请稍后重试。({error})"
+    },
+    "device_id_empty": {
+      "message": "需要标准测量设备 ID。"
+    },
+    "entity_not_found": {
+      "message": "未找到实体 {entity_id}。"
+    },
+    "entity_unavailable": {
+      "message": "实体 {entity_id} 处于 {state} 状态。"
+    },
+    "invalid_number": {
+      "message": "实体 {entity_id} 的值 '{state}' 不是数字。"
+    },
+    "missing_timestamp": {
+      "message": "实体 {entity_id} 没有时间戳。"
+    },
+    "no_api_token": {
+      "message": "未配置个人访问令牌。请检查账户设置。"
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "发送计量读数",
+      "description": "将传感器的当前值发送到 Energy Tracker。",
+      "fields": {
+        "entry_id": {
+          "name": "账户",
+          "description": "您的 Energy Tracker 账户"
+        },
+        "device_id": {
+          "name": "标准测量设备 ID",
+          "description": "您的 Energy Tracker 账户中的标准测量设备 ID"
+        },
+        "source_entity_id": {
+          "name": "传感器",
+          "description": "提供计量读数的传感器"
+        },
+        "allow_rounding": {
+          "name": "允许舍入",
+          "description": "舍入值以匹配计量精度"
+        }
+      }
+    }
+  }
+}

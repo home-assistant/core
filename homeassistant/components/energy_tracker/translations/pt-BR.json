@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurar Energy Tracker",
+        "description": "Insira seu token de acesso pessoal para se conectar à sua conta Energy Tracker.",
+        "data": {
+          "api_token": "Token de acesso pessoal"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar Energy Tracker",
+        "description": "Atualize o token da sua conta Energy Tracker. Deixe o campo do token vazio para manter o token existente.",
+        "data": {
+          "api_token": "Token de acesso pessoal (deixe vazio para manter o existente)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "O token de acesso pessoal não pode estar vazio."
+    },
+    "abort": {
+      "already_configured": "Este token de acesso pessoal já está configurado. Cada token só pode ser usado uma vez.",
+      "entry_not_found": "Entrada de configuração não encontrada.",
+      "reconfigure_successful": "Configuração atualizada com sucesso."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Falha na autenticação com o Energy Tracker",
+      "description": "O token de acesso pessoal configurado é inválido ou expirou. Crie um novo token na sua conta Energy Tracker e atualize o token nas configurações da integração."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Permissões insuficientes para o Energy Tracker",
+      "description": "O token de acesso pessoal configurado não tem as permissões necessárias. Crie um novo token com as permissões necessárias na sua conta Energy Tracker e atualize o token nas configurações desta integração."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Tempo limite da solicitação. Verifique a conexão de rede e tente novamente."
+    },
+    "network_error": {
+      "message": "Erro de rede durante a solicitação. Verifique a conexão com a internet e tente novamente."
+    },
+    "bad_request": {
+      "message": "Entrada inválida. Verifique os dados de entrada. ({error})"
+    },
+    "auth_failed": {
+      "message": "Falha na autenticação. Verifique o seu token de acesso pessoal nas configurações da integração."
+    },
+    "device_not_found": {
+      "message": "Dispositivo de medição padrão não encontrado. Verifique o ID do dispositivo."
+    },
+    "rate_limit": {
+      "message": "Muitas solicitações. Tente novamente em {retry_after} segundos."
+    },
+    "rate_limit_no_time": {
+      "message": "Muitas solicitações. Tente novamente mais tarde."
+    },
+    "server_error": {
+      "message": "Ocorreu um erro no servidor. Tente novamente mais tarde. ({error})"
+    },
+    "unknown_error": {
+      "message": "Ocorreu um erro inesperado. Tente novamente mais tarde. ({error})"
+    },
+    "device_id_empty": {
+      "message": "É necessário o ID do dispositivo de medição padrão."
+    },
+    "entity_not_found": {
+      "message": "Entidade {entity_id} não encontrada."
+    },
+    "entity_unavailable": {
+      "message": "A entidade {entity_id} está {state}."
+    },
+    "invalid_number": {
+      "message": "O valor '{state}' da entidade {entity_id} não é um número."
+    },
+    "missing_timestamp": {
+      "message": "A entidade {entity_id} não tem um carimbo de data/hora."
+    },
+    "no_api_token": {
+      "message": "Nenhum token de acesso pessoal configurado. Verifique as configurações da conta."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Enviar leitura do medidor",
+      "description": "Envia o valor atual de um sensor para o Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Conta",
+          "description": "Sua conta Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID do dispositivo de medição padrão",
+          "description": "ID do dispositivo de medição padrão na sua conta Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor que fornece a leitura do medidor"
+        },
+        "allow_rounding": {
+          "name": "Permitir arredondamento",
+          "description": "Arredondar o valor para corresponder à precisão do medidor"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Energy Tracker instellen",
+        "description": "Voer uw persoonlijke toegangstoken in om verbinding te maken met uw Energy Tracker-account.",
+        "data": {
+          "api_token": "Persoonlijk toegangstoken"
+        }
+      },
+      "reconfigure": {
+        "title": "Energy Tracker opnieuw configureren",
+        "description": "Werk uw Energy Tracker-accounttoken bij. Laat het tokenveld leeg om het bestaande token te behouden.",
+        "data": {
+          "api_token": "Persoonlijk toegangstoken (leeg laten om bestaande te behouden)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Persoonlijk toegangstoken mag niet leeg zijn."
+    },
+    "abort": {
+      "already_configured": "Dit persoonlijke toegangstoken is al geconfigureerd. Elk token kan slechts één keer worden gebruikt.",
+      "entry_not_found": "Configuratie-invoer niet gevonden.",
+      "reconfigure_successful": "Configuratie succesvol bijgewerkt."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Authenticatie met Energy Tracker mislukt",
+      "description": "Het geconfigureerde persoonlijke toegangstoken is ongeldig of verlopen. Maak een nieuw token aan in je Energy Tracker-account en werk het token bij in de integratie-instellingen."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Onvoldoende rechten voor Energy Tracker",
+      "description": "Het geconfigureerde persoonlijke toegangstoken heeft niet de benodigde rechten. Maak een nieuw token aan met de benodigde rechten in je Energy Tracker-account en werk het token bij in de instellingen van deze integratie."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Time-out van verzoek. Controleer de netwerkverbinding en probeer opnieuw."
+    },
+    "network_error": {
+      "message": "Netwerkfout tijdens verzoek. Controleer de internetverbinding en probeer opnieuw."
+    },
+    "bad_request": {
+      "message": "Ongeldige invoer. Controleer de invoergegevens. ({error})"
+    },
+    "auth_failed": {
+      "message": "Authenticatie mislukt. Controleer je persoonlijke toegangstoken in de integratie-instellingen."
+    },
+    "device_not_found": {
+      "message": "Standaard meetapparaat niet gevonden. Controleer de apparaat-ID."
+    },
+    "rate_limit": {
+      "message": "Te veel verzoeken. Probeer opnieuw over {retry_after} seconden."
+    },
+    "rate_limit_no_time": {
+      "message": "Te veel verzoeken. Probeer later opnieuw."
+    },
+    "server_error": {
+      "message": "Er is een serverfout opgetreden. Probeer later opnieuw. ({error})"
+    },
+    "unknown_error": {
+      "message": "Er is een onverwachte fout opgetreden. Probeer later opnieuw. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standaard meetapparaat-ID is vereist."
+    },
+    "entity_not_found": {
+      "message": "Entiteit {entity_id} niet gevonden."
+    },
+    "entity_unavailable": {
+      "message": "Entiteit {entity_id} is {state}."
+    },
+    "invalid_number": {
+      "message": "Waarde '{state}' van entiteit {entity_id} is geen getal."
+    },
+    "missing_timestamp": {
+      "message": "Entiteit {entity_id} heeft geen tijdstempel."
+    },
+    "no_api_token": {
+      "message": "Geen persoonlijk toegangstoken geconfigureerd. Controleer accountinstellingen."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Meterstand verzenden",
+      "description": "Stuurt de huidige waarde van een sensor naar Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Account",
+          "description": "Je Energy Tracker-account"
+        },
+        "device_id": {
+          "name": "Standaard meetapparaat-ID",
+          "description": "ID van het standaard meetapparaat in je Energy Tracker-account"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor die de meterstand levert"
+        },
+        "allow_rounding": {
+          "name": "Afronden toestaan",
+          "description": "Waarde afronden om overeen te komen met meterprecisie"
+        }
+      }
+    }
+  }
+}

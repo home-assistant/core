@@ -1,0 +1,36 @@
+# Quality scale definition for Energy Tracker integration
+# https://developers.home-assistant.io/docs/integration_quality_scale_index/
+
+integration_type: service
+
+rules:
+  # Bronze tier (mandatory)
+  action-setup:
+    status: exempt
+    comment: Integration provides services but does not register custom actions.
+
+  async-dependency: done
+  brands: done
+  config-flow: done
+  config-flow-test-coverage: done
+
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not create entities.
+
+  entity-unique-id:
+    status: exempt
+    comment: Integration does not create entities.
+
+  exception-translations: done
+
+  has-entity-name:
+    status: exempt
+    comment: Integration does not create entities.
+
+  integration-owner: done
+  iot-class-set: done
+  logged-errors: done
+  runtime-data: done
+  test-coverage: done
+  unique-config-entry: done

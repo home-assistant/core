@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Skonfiguruj Energy Tracker",
+        "description": "Wprowadź swój osobisty token dostępu, aby połączyć się z kontem Energy Tracker.",
+        "data": {
+          "api_token": "Osobisty token dostępu"
+        }
+      },
+      "reconfigure": {
+        "title": "Przekonfiguruj Energy Tracker",
+        "description": "Zaktualizuj token konta Energy Tracker. Pozostaw pole tokenu puste, aby zachować istniejący token.",
+        "data": {
+          "api_token": "Osobisty token dostępu (pozostaw puste, aby zachować istniejący)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Osobisty token dostępu nie może być pusty."
+    },
+    "abort": {
+      "already_configured": "Ten osobisty token dostępu jest już skonfigurowany. Każdy token może być użyty tylko raz.",
+      "entry_not_found": "Wpis konfiguracji nie został znaleziony.",
+      "reconfigure_successful": "Konfiguracja została pomyślnie zaktualizowana."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Uwierzytelnianie z Energy Tracker nie powiodło się",
+      "description": "Skonfigurowany osobisty token dostępu jest nieprawidłowy lub wygasł. Utwórz nowy token na swoim koncie Energy Tracker i zaktualizuj token w ustawieniach integracji."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Niewystarczające uprawnienia dla Energy Tracker",
+      "description": "Skonfigurowany osobisty token dostępu nie ma wymaganych uprawnień. Utwórz nowy token z wymaganymi uprawnieniami na swoim koncie Energy Tracker i zaktualizuj token w ustawieniach tej integracji."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Limit czasu żądania. Sprawdź połączenie sieciowe i spróbuj ponownie."
+    },
+    "network_error": {
+      "message": "Błąd sieci podczas żądania. Sprawdź połączenie internetowe i spróbuj ponownie."
+    },
+    "bad_request": {
+      "message": "Nieprawidłowe dane wejściowe. Sprawdź dane wejściowe. ({error})"
+    },
+    "auth_failed": {
+      "message": "Uwierzytelnianie nie powiodło się. Sprawdź swój osobisty token dostępu w ustawieniach integracji."
+    },
+    "device_not_found": {
+      "message": "Standardowe urządzenie pomiarowe nie zostało znalezione. Sprawdź identyfikator urządzenia."
+    },
+    "rate_limit": {
+      "message": "Zbyt wiele żądań. Spróbuj ponownie za {retry_after} sekund."
+    },
+    "rate_limit_no_time": {
+      "message": "Zbyt wiele żądań. Spróbuj ponownie później."
+    },
+    "server_error": {
+      "message": "Wystąpił błąd serwera. Spróbuj ponownie później. ({error})"
+    },
+    "unknown_error": {
+      "message": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Identyfikator standardowego urządzenia pomiarowego jest wymagany."
+    },
+    "entity_not_found": {
+      "message": "Encja {entity_id} nie została znaleziona."
+    },
+    "entity_unavailable": {
+      "message": "Encja {entity_id} jest {state}."
+    },
+    "invalid_number": {
+      "message": "Wartość '{state}' encji {entity_id} nie jest liczbą."
+    },
+    "missing_timestamp": {
+      "message": "Encja {entity_id} nie ma znacznika czasu."
+    },
+    "no_api_token": {
+      "message": "Nie skonfigurowano osobistego tokena dostępu. Sprawdź ustawienia konta."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Wyślij odczyt licznika",
+      "description": "Wysyła bieżącą wartość czujnika do Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Konto",
+          "description": "Twoje konto Energy Tracker"
+        },
+        "device_id": {
+          "name": "Identyfikator standardowego urządzenia pomiarowego",
+          "description": "Identyfikator standardowego urządzenia pomiarowego na Twoim koncie Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Czujnik",
+          "description": "Czujnik dostarczający odczyt licznika"
+        },
+        "allow_rounding": {
+          "name": "Zezwalaj na zaokrąglanie",
+          "description": "Zaokrąglij wartość, aby dopasować do precyzji licznika"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Energy Tracker'ı Kur",
+        "description": "Energy Tracker hesabınıza bağlanmak için kişisel erişim belirtecinizi girin.",
+        "data": {
+          "api_token": "Kişisel erişim belirteci"
+        }
+      },
+      "reconfigure": {
+        "title": "Energy Tracker'ı Yeniden Yapılandır",
+        "description": "Energy Tracker hesap belirtecinizi güncelleyin. Mevcut belirteci korumak için belirteç alanını boş bırakın.",
+        "data": {
+          "api_token": "Kişisel erişim jetonu (mevcut olanı korumak için boş bırakın)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Kişisel erişim jetonu boş olamaz."
+    },
+    "abort": {
+      "already_configured": "Bu kişisel erişim jetonu zaten yapılandırılmış. Her jeton yalnızca bir kez kullanılabilir.",
+      "entry_not_found": "Yapılandırma girdisi bulunamadı.",
+      "reconfigure_successful": "Yapılandırma başarıyla güncellendi."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Energy Tracker kimlik doğrulaması başarısız oldu",
+      "description": "Yapılandırılan kişisel erişim jetonu geçersiz veya süresi dolmuş. Energy Tracker hesabınızda yeni bir jeton oluşturun ve entegrasyon ayarlarında jetonu güncelleyin."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Energy Tracker için yetersiz izinler",
+      "description": "Yapılandırılan kişisel erişim jetonunun gerekli izinleri yok. Energy Tracker hesabınızda gerekli izinlere sahip yeni bir jeton oluşturun ve bu entegrasyonun ayarlarında jetonu güncelleyin."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "İstek zaman aşımına uğradı. Ağ bağlantısını kontrol edin ve tekrar deneyin."
+    },
+    "network_error": {
+      "message": "İstek sırasında ağ hatası oluştu. İnternet bağlantısını kontrol edin ve tekrar deneyin."
+    },
+    "bad_request": {
+      "message": "Geçersiz giriş. Giriş verilerini kontrol edin. ({error})"
+    },
+    "auth_failed": {
+      "message": "Kimlik doğrulama başarısız oldu. Entegrasyon ayarlarında kişisel erişim jetonunuzu kontrol edin."
+    },
+    "device_not_found": {
+      "message": "Standart ölçüm cihazı bulunamadı. Cihaz kimliğini kontrol edin."
+    },
+    "rate_limit": {
+      "message": "Çok fazla istek. {retry_after} saniye sonra tekrar deneyin."
+    },
+    "rate_limit_no_time": {
+      "message": "Çok fazla istek. Daha sonra tekrar deneyin."
+    },
+    "server_error": {
+      "message": "Bir sunucu hatası oluştu. Daha sonra tekrar deneyin. ({error})"
+    },
+    "unknown_error": {
+      "message": "Beklenmeyen bir hata oluştu. Daha sonra tekrar deneyin. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standart ölçüm cihazı kimliği gereklidir."
+    },
+    "entity_not_found": {
+      "message": "Varlık {entity_id} bulunamadı."
+    },
+    "entity_unavailable": {
+      "message": "Varlık {entity_id} durumu {state}."
+    },
+    "invalid_number": {
+      "message": "Varlık {entity_id} için '{state}' değeri bir sayı değil."
+    },
+    "missing_timestamp": {
+      "message": "Varlık {entity_id} için zaman damgası yok."
+    },
+    "no_api_token": {
+      "message": "Kişisel erişim jetonu yapılandırılmamış. Hesap ayarlarını kontrol edin."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Sayaç okuması gönder",
+      "description": "Bir sensörün geçerli değerini Energy Tracker'a gönderir.",
+      "fields": {
+        "entry_id": {
+          "name": "Hesap",
+          "description": "Energy Tracker hesabınız"
+        },
+        "device_id": {
+          "name": "Standart ölçüm cihazı kimliği",
+          "description": "Energy Tracker hesabınızdaki standart ölçüm cihazının kimliği"
+        },
+        "source_entity_id": {
+          "name": "Sensör",
+          "description": "Sayaç okumasını sağlayan sensör"
+        },
+        "allow_rounding": {
+          "name": "Yuvarlama izni ver",
+          "description": "Sayaç hassasiyetine uyacak şekilde değeri yuvarla"
+        }
+      }
+    }
+  }
+}
