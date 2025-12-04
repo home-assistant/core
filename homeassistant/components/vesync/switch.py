@@ -77,7 +77,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -93,9 +93,9 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Check if device is online and add entity."""
     async_add_entities(
         VeSyncSwitchEntity(dev, description, coordinator)
