@@ -1,7 +1,9 @@
 """Unit tests for the Todoist todo platform."""
 
+import datetime
 from typing import Any
 from unittest.mock import AsyncMock
+import zoneinfo
 
 import pytest
 from todoist_api_python.models import Due, Task
@@ -104,7 +106,7 @@ async def test_todo_item_state(
                     due=Due(is_recurring=False, date="2023-11-18", string="today"),
                 )
             ],
-            {"description": "", "due_date": "2023-11-18"},
+            {"description": "", "due_date": datetime.date(2023, 11, 18)},
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
@@ -123,20 +125,21 @@ async def test_todo_item_state(
                     due=Due(
                         date="2023-11-18",
                         is_recurring=False,
-                        datetime="2023-11-18T12:30:00.000000Z",
                         string="today",
                     ),
                 )
             ],
             {
                 "description": "",
-                "due_datetime": "2023-11-18T06:30:00-06:00",
+                "due_datetime": datetime.datetime(
+                    2023, 11, 18, 6, 30, tzinfo=zoneinfo.ZoneInfo("America/Regina")
+                ),
             },
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
                 "status": "needs_action",
-                "due": "2023-11-18T06:30:00-06:00",
+                "due": "2023-11-18",
             },
         ),
         (
@@ -177,8 +180,11 @@ async def test_add_todo_list_item(
     assert state.state == "0"
 
     api.add_task = AsyncMock()
-    # Fake API response when state is refreshed after create
-    api.get_tasks.return_value = tasks_after_update
+
+    async def fake_gen():
+        yield tasks_after_update
+
+    api.get_tasks.side_effect = fake_gen
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -192,7 +198,6 @@ async def test_add_todo_list_item(
     assert args
     assert args.kwargs == {"project_id": PROJECT_ID, "content": "Soda", **add_kwargs}
 
-    # Verify state is refreshed
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "1"
@@ -222,13 +227,13 @@ async def test_update_todo_item_status(
     assert state
     assert state.state == "1"
 
-    api.close_task = AsyncMock()
-    api.reopen_task = AsyncMock()
+    api.complete_task = AsyncMock()
+    api.uncomplete_task = AsyncMock()
 
-    # Fake API response when state is refreshed after close
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=True)
-    ]
+    async def fake_get_tasks():
+        yield [make_api_task(id="task-id-1", content="Soda", is_completed=True)]
+
+    api.get_tasks.side_effect = fake_get_tasks
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -237,21 +242,20 @@ async def test_update_todo_item_status(
         target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
-    assert api.close_task.called
-    args = api.close_task.call_args
+    assert api.complete_task.called
+    args = api.complete_task.call_args
     assert args
     assert args.kwargs.get("task_id") == "task-id-1"
-    assert not api.reopen_task.called
+    assert not api.uncomplete_task.called
 
-    # Verify state is refreshed
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "0"
 
-    # Fake API response when state is refreshed after reopen
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=False)
-    ]
+    async def fake_get_tasks2():
+        yield [make_api_task(id="task-id-1", content="Soda", is_completed=False)]
+
+    api.get_tasks.side_effect = fake_get_tasks2
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -260,12 +264,11 @@ async def test_update_todo_item_status(
         target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
-    assert api.reopen_task.called
-    args = api.reopen_task.call_args
+    assert api.uncomplete_task.called
+    args = api.uncomplete_task.call_args
     assert args
     assert args.kwargs.get("task_id") == "task-id-1"
 
-    # Verify state is refreshed
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "1"
@@ -319,7 +322,7 @@ async def test_update_todo_item_status(
             {
                 "task_id": "task-id-1",
                 "content": "Soda",
-                "due_date": "2023-11-18",
+                "due_date": datetime.date(2023, 11, 18),
                 "description": "",
             },
             {
@@ -340,7 +343,7 @@ async def test_update_todo_item_status(
                     due=Due(
                         date="2023-11-18",
                         is_recurring=False,
-                        datetime="2023-11-18T12:30:00.000000Z",
+                        # datetime="2023-11-18T12:30:00.000000Z",
                         string="today",
                     ),
                 )
@@ -348,14 +351,19 @@ async def test_update_todo_item_status(
             {
                 "task_id": "task-id-1",
                 "content": "Soda",
-                "due_datetime": "2023-11-18T06:30:00-06:00",
+                # "due_datetime": "2023-11-18T06:30:00-06:00",
+                "due_datetime": datetime.datetime(
+                    2023, 11, 18, 6, 30, tzinfo=zoneinfo.ZoneInfo("America/Regina")
+                ),  # changed from string to datetime
                 "description": "",
             },
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
                 "status": "needs_action",
-                "due": "2023-11-18T06:30:00-06:00",
+                # "due": "2023-11-18T06:30:00-06:00",
+                "due": "2023-11-18",
+                # "due": datetime.datetime(2023, 11, 18, 6, 30, tzinfo=zoneinfo.ZoneInfo("America/Regina")),
             },
         ),
         (
@@ -419,8 +427,6 @@ async def test_update_todo_item_status(
                     content="Soda",
                     description="6-pack",
                     is_completed=False,
-                    # Create a mock task with a string value in the Due object and verify it
-                    # gets preserved when verifying the kwargs to update below
                     due=Due(date="2024-01-01", is_recurring=True, string="every day"),
                 )
             ],
@@ -438,7 +444,7 @@ async def test_update_todo_item_status(
                 "task_id": "task-id-1",
                 "content": "Soda",
                 "description": "6-pack",
-                "due_date": "2024-02-01",
+                "due_date": datetime.date(2024, 2, 1),
                 "due_string": "every day",
             },
             {
@@ -476,8 +482,10 @@ async def test_update_todo_items(
 
     api.update_task = AsyncMock()
 
-    # Fake API response when state is refreshed after close
-    api.get_tasks.return_value = tasks_after_update
+    async def fake_gen():
+        yield tasks_after_update
+
+    api.get_tasks.side_effect = fake_gen
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -523,8 +531,11 @@ async def test_remove_todo_item(
     assert state.state == "2"
 
     api.delete_task = AsyncMock()
-    # Fake API response when state is refreshed after close
-    api.get_tasks.return_value = []
+
+    async def fake_get_tasks_empty():
+        yield []
+
+    api.get_tasks.side_effect = fake_get_tasks_empty
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -578,10 +589,11 @@ async def test_subscribe(
     assert items[0]["status"] == "needs_action"
     assert items[0]["uid"]
 
-    # Fake API response when state is refreshed
-    api.get_tasks.return_value = [
-        make_api_task(id="test-id-1", content="Wine", is_completed=False)
-    ]
+    async def fake_get_tasks():
+        yield [make_api_task(id="test-id-1", content="Wine", is_completed=False)]
+
+    api.get_tasks.side_effect = fake_get_tasks
+
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,

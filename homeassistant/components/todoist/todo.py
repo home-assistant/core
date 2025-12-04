@@ -90,7 +90,8 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        if not self.coordinator.data:
+        # if not self.coordinator.data:
+        if self.coordinator.data is None:
             self._attr_todo_items = None
             super()._handle_coordinator_update()
             return
