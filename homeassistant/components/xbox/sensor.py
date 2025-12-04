@@ -34,6 +34,7 @@ from .entity import (
     XboxBaseEntity,
     XboxBaseEntityDescription,
     check_deprecated_entity,
+    to_https,
 )
 
 PARALLEL_UPDATES = 0
@@ -142,8 +143,8 @@ def title_logo(_: Person, title: Title | None) -> str | None:
     """Get the game logo."""
 
     return (
-        next((i.url for i in title.images if i.type == "Tile"), None)
-        or next((i.url for i in title.images if i.type == "Logo"), None)
+        next((to_https(i.url) for i in title.images if i.type == "Tile"), None)
+        or next((to_https(i.url) for i in title.images if i.type == "Logo"), None)
         if title and title.images
         else None
     )
