@@ -50,16 +50,6 @@
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
         }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate Kiosker",
-        "description": "Authentication failed. This may be caused by an invalid API token or changed IP filtering settings. Please update the API token, or the IP filter in the Kiosker App.",
-        "data": {
-          "api_token": "API Token"
-        },
-        "data_description": {
-          "api_token": "Enter the new API token for the Kiosker App. This can be generated in the app API settings."
-        }
       }
     },
     "error": {
@@ -70,17 +60,10 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "Reauthentication was successful",
-      "reauth_failed": "Reauthentication failed"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   },
   "entity": {
-    "switch": {
-      "disable_screensaver": {
-        "name": "Disable screensaver"
-      }
-    },
     "sensor": {
       "battery_level": {
         "name": "Battery level"
@@ -119,190 +102,6 @@
           "hidden": "Hidden"
         }
       }
-    }
-  },
-  "services": {
-    "navigate_url": {
-      "name": "Navigate to URL",
-      "description": "Navigate to a specific URL",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        },
-        "url": {
-          "name": "URL",
-          "description": "The URL to navigate to"
-        }
-      }
-    },
-    "navigate_refresh": {
-      "name": "Refresh",
-      "description": "Refresh the current page",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "navigate_home": {
-      "name": "Navigate home",
-      "description": "Navigate to the home page",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "navigate_backward": {
-      "name": "Navigate backward",
-      "description": "Navigate to the previous page in history",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "navigate_forward": {
-      "name": "Navigate forward",
-      "description": "Navigate to the next page in history",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "print": {
-      "name": "Print",
-      "description": "Print the current page",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "clear_cookies": {
-      "name": "Clear cookies",
-      "description": "Clear all cookies",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "clear_cache": {
-      "name": "Clear cache",
-      "description": "Clear the browser cache",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "screensaver_interact": {
-      "name": "Screensaver interact",
-      "description": "Interact with the screensaver",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "blackout_set": {
-      "name": "Set blackout",
-      "description": "Set blackout screen with custom message",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        },
-        "visible": {
-          "name": "Visible",
-          "description": "Whether the blackout is visible"
-        },
-        "text": {
-          "name": "Text",
-          "description": "Text to display on blackout screen"
-        },
-        "background": {
-          "name": "Background color",
-          "description": "Background color in hex format"
-        },
-        "foreground": {
-          "name": "Foreground color",
-          "description": "Text color in hex format"
-        },
-        "icon": {
-          "name": "Icon",
-          "description": "Icon to display (SF Symbols name)"
-        },
-        "expire": {
-          "name": "Expire time",
-          "description": "Time in seconds before the blackout expires"
-        },
-        "dismissible": {
-          "name": "Dismissible",
-          "description": "Whether the blackout can be dismissed by user interaction"
-        },
-        "button_background": {
-          "name": "Button background color",
-          "description": "Background color of the dismiss button in hex format"
-        },
-        "button_foreground": {
-          "name": "Button foreground color",
-          "description": "Text color of the dismiss button in hex format"
-        },
-        "button_text": {
-          "name": "Button text",
-          "description": "Text to display on the dismiss button"
-        },
-        "sound": {
-          "name": "Sound",
-          "description": "Sound to play when blackout is displayed (SystemSoundID, e.g., 1007)"
-        }
-      }
-    },
-    "blackout_clear": {
-      "name": "Clear blackout",
-      "description": "Clear the blackout screen",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    },
-    "update": {
-      "name": "Update",
-      "description": "Force an immediate update of device status",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Kiosker device to control"
-        }
-      }
-    }
-  },
-  "exceptions": {
-    "no_target_devices": {
-      "message": "No target devices specified for Kiosker service call."
-    },
-    "invalid_url_format": {
-      "message": "Invalid URL format: {url}. URL must include a scheme."
-    },
-    "invalid_http_url": {
-      "message": "Invalid URL format: {url}. HTTP/HTTPS URLs must include domain."
-    },
-    "failed_to_parse_url": {
-      "message": "Failed to parse URL {url}: {error}"
     }
   }
 }
