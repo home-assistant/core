@@ -20,7 +20,7 @@ DEVICE_WARNINGS: dict[str, set[str]] = {}
 def _should_log_warning(device_id: str, warning_key: str) -> bool:
     """Check if a warning has already been logged for a device and add it if not.
 
-    Returns: False if the warning was already logged, True if it was added.
+    Returns: True if the warning should be logged, False if it was already logged.
     """
     if (device_warnings := DEVICE_WARNINGS.get(device_id)) is None:
         device_warnings = set()
