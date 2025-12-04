@@ -1805,6 +1805,8 @@ build.json @home-assistant/supervisor
 /tests/components/weatherflow_cloud/ @jeeftor
 /homeassistant/components/weatherkit/ @tjhorner
 /tests/components/weatherkit/ @tjhorner
+/homeassistant/components/web_rtc/ @home-assistant/core
+/tests/components/web_rtc/ @home-assistant/core
 /homeassistant/components/webdav/ @jpbede
 /tests/components/webdav/ @jpbede
 /homeassistant/components/webhook/ @home-assistant/core
