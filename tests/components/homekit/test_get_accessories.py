@@ -425,3 +425,94 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("type_name", "entity_id", "state", "attrs"),
+    [
+        # Basic climate without fan/swing support -> Thermostat
+        ("Thermostat", "climate.basic", "heat", {}),
+        # Climate with only FAN_MODE feature but no fan_modes -> Thermostat
+        (
+            "Thermostat",
+            "climate.fan_feature_only",
+            "heat",
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE},
+        ),
+        # Climate with only SWING_MODE feature but no swing_modes -> Thermostat
+        (
+            "Thermostat",
+            "climate.swing_feature_only",
+            "heat",
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE},
+        ),
+        # Climate with FAN_MODE feature and fan_modes list -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.with_fan",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["low", "medium", "high"],
+            },
+        ),
+        # Climate with SWING_MODE feature and swing_modes list -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.with_swing",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": ["on", "off"],
+            },
+        ),
+        # Climate with both FAN_MODE and SWING_MODE features and modes -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.with_fan_and_swing",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.SWING_MODE,
+                "fan_modes": ["low", "high"],
+                "swing_modes": ["on", "off"],
+            },
+        ),
+        # Climate with FAN_MODE feature and empty fan_modes list -> Thermostat
+        (
+            "Thermostat",
+            "climate.empty_fan_modes",
+            "heat",
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE, "fan_modes": []},
+        ),
+        # Climate with SWING_MODE feature and empty swing_modes list -> Thermostat
+        (
+            "Thermostat",
+            "climate.empty_swing_modes",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": [],
+            },
+        ),
+        # Climate with other features but no fan/swing -> Thermostat
+        (
+            "Thermostat",
+            "climate.other_features",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    ClimateEntityFeature.TARGET_TEMPERATURE
+                    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                )
+            },
+        ),
+    ],
+)
+def test_climate_accessory_selection(type_name, entity_id, state, attrs) -> None:
+    """Test that climate entities are correctly mapped to HeaterCooler vs Thermostat based on fan/swing support."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
