@@ -1,7 +1,8 @@
 """Config flow for the Fressnapf Tracker integration."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fressnapftracker import (
     AuthClient,
@@ -10,7 +11,7 @@ from fressnapftracker import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -39,6 +40,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init Config Flow."""
         self._context: dict[str, Any] = {}
         self._auth_client: AuthClient | None = None
+        self._existing_entry: ConfigEntry | None = None
 
     @property
     def auth_client(self) -> AuthClient:
@@ -136,19 +138,30 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self._existing_entry = self._get_reauth_entry()
+        return await self.async_step_reconfigure()
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
+        if self._existing_entry is None:
+            self._existing_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             errors, success = await self._async_request_sms_code(
                 user_input[CONF_PHONE_NUMBER]
             )
             if success:
-                if reconfigure_entry.data[CONF_USER_ID] != self._context[CONF_USER_ID]:
+                if (
+                    self._existing_entry.data[CONF_USER_ID]
+                    != self._context[CONF_USER_ID]
+                ):
                     errors["base"] = "account_change_not_allowed"
                 else:
                     return await self.async_step_reconfigure_sms_code()
@@ -159,7 +172,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_PHONE_NUMBER,
-                        default=reconfigure_entry.data.get(CONF_PHONE_NUMBER),
+                        default=self._existing_entry.data.get(CONF_PHONE_NUMBER),
                     ): str,
                 }
             ),
@@ -171,6 +184,8 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the SMS code step during reconfiguration."""
         errors: dict[str, str] = {}
+        if TYPE_CHECKING:
+            assert self._existing_entry is not None
 
         if user_input is not None:
             errors, access_token = await self._async_verify_sms_code(
@@ -178,7 +193,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if access_token:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
+                    self._existing_entry,
                     data={
                         CONF_PHONE_NUMBER: self._context[CONF_PHONE_NUMBER],
                         CONF_USER_ID: self._context[CONF_USER_ID],

@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
@@ -61,6 +62,9 @@
   "exceptions": {
     "charging": {
       "message": "The flashlight cannot be activated while charging."
+    },
+    "invalid_auth": {
+      "message": "Your authentication with the Fressnapf Tracker API expired. Please re-authenticate to refresh your credentials."
     },
     "low_battery": {
       "message": "The flashlight cannot be activated due to low battery."

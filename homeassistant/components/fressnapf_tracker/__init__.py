@@ -1,12 +1,13 @@
 """The Fressnapf Tracker integration."""
 
-from fressnapftracker import AuthClient
+from fressnapftracker import AuthClient, FressnapfTrackerAuthenticationError
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_USER_ID
+from .const import CONF_USER_ID, DOMAIN
 from .coordinator import (
     FressnapfTrackerConfigEntry,
     FressnapfTrackerDataUpdateCoordinator,
@@ -26,10 +27,16 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Fressnapf Tracker from a config entry."""
     auth_client = AuthClient(client=get_async_client(hass))
-    devices = await auth_client.get_devices(
-        user_id=entry.data[CONF_USER_ID],
-        user_access_token=entry.data[CONF_ACCESS_TOKEN],
-    )
+    try:
+        devices = await auth_client.get_devices(
+            user_id=entry.data[CONF_USER_ID],
+            user_access_token=entry.data[CONF_ACCESS_TOKEN],
+        )
+    except FressnapfTrackerAuthenticationError as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from exception
 
     coordinators: list[FressnapfTrackerDataUpdateCoordinator] = []
     for device in devices:
