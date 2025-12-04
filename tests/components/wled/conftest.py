@@ -22,7 +22,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.123"},
         unique_id="aabbccddeeff",
-        title="Main WLED",
     )
 
 
