@@ -1,13 +1,13 @@
-"""Common fixtures for the todoist tests."""
+"""Common fixtures for the todoist tests (v3-compatible, object-style mocks)."""
 
 from collections.abc import Generator
 from http import HTTPStatus
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests.exceptions import HTTPError
 from requests.models import Response
-from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
 from homeassistant.components.todoist import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
@@ -24,6 +24,69 @@ TOKEN = "some-token"
 TODAY = dt_util.now().strftime("%Y-%m-%d")
 
 
+def _make_due(date=None, datetime=None, string=None, is_recurring=False, lang="en"):
+    """Return an object that mimics the Todoist Due model.
+
+    Accepts old kwargs (datetime/timezone) but will store only fields we need.
+    Tests may pass a real todoist_api_python.models.Due instance — we preserve it.
+    """
+    return SimpleNamespace(
+        date=date,
+        datetime=datetime,
+        string=string,
+        is_recurring=is_recurring,
+        lang=lang,
+    )
+
+
+def _make_task(
+    id="1",
+    content=None,
+    is_completed=False,
+    due=None,
+    project_id=PROJECT_ID,
+    description=None,
+    parent_id=None,
+):
+    """Return an object that mimics a Todoist Task with attribute access."""
+    return SimpleNamespace(
+        id=id,
+        content=content or SUMMARY,
+        is_completed=is_completed,
+        description=description,
+        project_id=project_id,
+        parent_id=parent_id,
+        due=due,
+        labels=["Label1"],
+        created_at="2025-01-01T00:00:00Z",
+        url="https://todoist.com",
+    )
+
+
+def _make_project(id=PROJECT_ID, name="Name", color="blue"):
+    return SimpleNamespace(id=id, name=name, color=color)
+
+
+def _make_section(id=SECTION_ID, project_id=PROJECT_ID, name="Section Name"):
+    return SimpleNamespace(id=id, project_id=project_id, name=name)
+
+
+def _make_label(id="1", name="Label1", color="1"):
+    return SimpleNamespace(id=id, name=name, color=color)
+
+
+def _make_collaborator(id="1", name="user", email="user@gmail.com"):
+    return SimpleNamespace(id=id, name=name, email=email)
+
+
+async def async_gen_single_page(page):
+    """Yield a single page as an async generator.
+
+    Used to mock paginated Todoist API responses that return only one page.
+    """
+    yield page
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -34,88 +97,62 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="due")
-def mock_due() -> Due:
-    """Mock a todoist Task Due date/time."""
-    return Due(
-        is_recurring=False, date=dt_util.now().strftime("%Y-%m-%d"), string="today"
-    )
+def mock_due():
+    """Mock a todoist Task Due-like object."""
+    return _make_due(date=TODAY, string="today")
 
 
 def make_api_task(
     id: str | None = None,
     content: str | None = None,
     is_completed: bool = False,
-    due: Due | None = None,
+    due: object | None = None,
     project_id: str | None = None,
     description: str | None = None,
     parent_id: str | None = None,
-) -> Task:
-    """Mock a todoist Task instance."""
-    return Task(
-        assignee_id="1",
-        assigner_id="1",
-        comment_count=0,
-        is_completed=is_completed,
-        content=content or SUMMARY,
-        created_at="2021-10-01T00:00:00",
-        creator_id="1",
-        description=description,
-        due=due,
+    labels: list[str] | None = None,
+):
+    """Factory function used by tests that want Task-like objects."""
+    description = description or ""
+    task = _make_task(
         id=id or "1",
-        labels=["Label1"],
-        order=1,
-        parent_id=parent_id,
-        priority=1,
+        content=content or SUMMARY,
+        is_completed=is_completed,
+        due=due,
         project_id=project_id or PROJECT_ID,
-        section_id=None,
-        url="https://todoist.com",
-        sync_id=None,
-        duration=None,
+        description=description,
+        parent_id=parent_id,
     )
+    task.labels = labels if labels is not None else ["Label1"]
+    return task
 
 
 @pytest.fixture(name="tasks")
-def mock_tasks(due: Due) -> list[Task]:
-    """Mock a todoist Task instance."""
+def mock_tasks(due) -> list:
+    """Return a list of Task-like objects (single page)."""
     return [make_api_task(due=due)]
 
 
 @pytest.fixture(name="api")
-def mock_api(tasks: list[Task]) -> AsyncMock:
-    """Mock the api state."""
+def mock_api(tasks: list):
+    """Mock the Todoist v3 Async API returning object-like items and async generators."""
     api = AsyncMock()
-    api.get_projects.return_value = [
-        Project(
-            id=PROJECT_ID,
-            color="blue",
-            comment_count=0,
-            is_favorite=False,
-            name="Name",
-            is_shared=False,
-            url="",
-            is_inbox_project=False,
-            is_team_inbox=False,
-            can_assign_tasks=False,
-            order=1,
-            parent_id=None,
-            view_style="list",
-        )
-    ]
-    api.get_sections.return_value = [
-        Section(
-            id=SECTION_ID,
-            project_id=PROJECT_ID,
-            name="Section Name",
-            order=1,
-        )
-    ]
-    api.get_labels.return_value = [
-        Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
-    ]
-    api.get_collaborators.return_value = [
-        Collaborator(email="user@gmail.com", id="1", name="user")
-    ]
-    api.get_tasks.return_value = tasks
+
+    api.get_projects.return_value = async_gen_single_page([_make_project()])
+    api.get_sections.return_value = async_gen_single_page([_make_section()])
+    api.get_labels.return_value = async_gen_single_page([_make_label()])
+    api.get_collaborators.return_value = async_gen_single_page([_make_collaborator()])
+
+    api.get_tasks.return_value = async_gen_single_page(tasks)
+
+    api.get_completed_tasks_by_due_date.return_value = async_gen_single_page([])
+
+    api.add_task = AsyncMock()
+    api.update_task = AsyncMock()
+    api.complete_task = AsyncMock()
+    api.uncomplete_task = AsyncMock()
+    api.delete_task = AsyncMock()
+
     return api
 
 
@@ -126,10 +163,8 @@ def mock_api_status() -> HTTPStatus | None:
 
 
 @pytest.fixture(autouse=True)
-def mock_api_side_effect(
-    api: AsyncMock, todoist_api_status: HTTPStatus | None
-) -> MockConfigEntry:
-    """Mock todoist configuration."""
+def mock_api_side_effect(api: AsyncMock, todoist_api_status: HTTPStatus | None):
+    """Inject HTTPError on get_tasks if requested by a test fixture."""
     if todoist_api_status:
         response = Response()
         response.status_code = todoist_api_status
@@ -138,19 +173,19 @@ def mock_api_side_effect(
 
 @pytest.fixture(name="todoist_config_entry")
 def mock_todoist_config_entry() -> MockConfigEntry:
-    """Mock todoist configuration."""
+    """Mock todoist configuration entry fixture."""
     return MockConfigEntry(domain=DOMAIN, unique_id=TOKEN, data={CONF_TOKEN: TOKEN})
 
 
 @pytest.fixture(name="todoist_domain")
 def mock_todoist_domain() -> str:
-    """Mock todoist configuration."""
+    """Fixture returning the Todoist domain."""
     return DOMAIN
 
 
 @pytest.fixture(autouse=True)
 def platforms() -> list[Platform]:
-    """Fixture to specify platforms to test."""
+    """Override platforms default (tests set per-module)."""
     return []
 
 
@@ -161,7 +196,7 @@ async def mock_setup_integration(
     api: AsyncMock,
     todoist_config_entry: MockConfigEntry | None,
 ) -> None:
-    """Mock setup of the todoist integration."""
+    """Mock setup of the todoist integration (uses patched TodoistAPIAsync)."""
     if todoist_config_entry is not None:
         todoist_config_entry.add_to_hass(hass)
     with (
