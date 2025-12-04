@@ -124,7 +124,7 @@ async def test_handle_device_conflict_creates_issue_for_duplicates(
     # Two titles should be listed in "titles"
     titles = placeholders["titles"]
     assert "'Main WLED'" in titles
-    assert "Duplicate WLED #1" in titles
+    assert "`Duplicate WLED #1`" in titles
 
     # When there is a conflict, we do not change the unique_id
     assert mock_config_entry.unique_id == "aabbccddeeff"
