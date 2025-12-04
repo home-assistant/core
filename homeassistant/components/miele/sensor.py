@@ -820,8 +820,7 @@ async def async_setup_entry(
     ) -> bool:
         """Check if aux sensors are enabled."""
         return not (
-            definition.description.key in ["twin_dos_1_level", "twin_dos_2_level"]
-            and definition.description.level_value_fn is not None
+            definition.description.level_value_fn is not None
             and definition.description.level_value_fn(level) is None
         )
 
