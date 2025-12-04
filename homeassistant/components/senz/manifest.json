@@ -6,5 +6,6 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/senz",
   "iot_class": "cloud_polling",
+  "loggers": ["aiosenz"],
   "requirements": ["aiosenz==1.0.0"]
 }
