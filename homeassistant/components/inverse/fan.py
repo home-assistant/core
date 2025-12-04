@@ -1,4 +1,4 @@
-"""Fan support for switch entities."""
+"""Fan support for inverse entities."""
 
 from __future__ import annotations
 
