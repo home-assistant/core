@@ -1,4 +1,63 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "This Ness alarm panel is already configured",
+      "cannot_connect": "Failed to connect to the IP232 module during import"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the IP232 module",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error occurred"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "infer_arming_state": "Infer Arming State",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the IP232 module on your network",
+          "infer_arming_state": "Infer the disarmed arming state only via system status events. This works around a bug with some panels (version less than 5.8) which emit empty status updates when they are armed",
+          "port": "The port on which the IP232 module listens for clients"
+        },
+        "description": "Set up your alarm panel. The integration will automatically detect your panel model and configure the appropriate number of zones.",
+        "title": "Connect to Ness Alarm"
+      }
+    }
+  },
+  "issues": {
+    "yaml_config_duplicate": {
+      "description": "Ness Alarm is already configured through the UI, but YAML configuration was also found.\n\n**Current UI Configuration:**\n- Host: {host}\n- Port: {port}\n\nThe YAML configuration is being ignored. Please remove the following section from your `configuration.yaml` file:\n\n```yaml\n{yaml_example}\n```\n\nRestart Home Assistant after removing the YAML configuration to clear this issue.",
+      "title": "Remove Duplicate YAML Configuration"
+    },
+    "yaml_config_imported": {
+      "description": "The Ness Alarm integration has been successfully imported from your YAML configuration and is now managed through the UI.\n\n**Imported Configuration:**\n- Host: {host}\n- Port: {port}\n- Panel: {panel_model} (v{panel_version})\n- Zones: {zone_count} configured\n\n**Next Steps:**\n1. Remove the `ness_alarm:` section from your `configuration.yaml` file\n2. Restart Home Assistant to complete the migration\n\nYou can manage this integration at **Settings → Devices & Services → Ness Alarm**",
+      "title": "YAML Configuration Successfully Imported"
+    },
+    "yaml_import_failed": {
+      "description": "Failed to import Ness Alarm from YAML configuration due to connection error.\\n\\n**Failed Configuration:**\\n- Host: {host}\\n- Port: {port}\\n\\n**Action Required:**\\nEither fix the connection issue or remove the following from your `configuration.yaml`:\\n\\n```yaml\\n{yaml_example}\\n```",
+      "title": "YAML Import Failed - Connection Error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enabled_zones": "Number of Active Zones",
+          "infer_arming_state": "Infer Arming State",
+          "support_home_arm": "Support Home Arm"
+        },
+        "data_description": {
+          "enabled_zones": "Number of zones to enable. Zones beyond this number will be disabled but can be manually re-enabled. Use this to override auto-detection or if you have zone expanders.",
+          "infer_arming_state": "Infer the disarmed arming state only via system status events. This works around a bug with some panels (version less than 5.8) which emit empty status updates when they are armed",
+          "support_home_arm": "Enable support for Home arming (ARM_HOME)"
+        },
+        "description": "Adjust settings for your Ness alarm panel.",
+        "title": "Ness Alarm Options"
+      }
+    }
+  },
   "services": {
     "aux": {
       "description": "Changes the state of an aux output.",
