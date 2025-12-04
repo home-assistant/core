@@ -278,6 +278,7 @@ def create_legacy_template_issue(
             "domain": domain,
             "breadcrumb": breadcrumb,
             "config": yaml_config,
+            "filename": "<filename>",
         },
     )
 
