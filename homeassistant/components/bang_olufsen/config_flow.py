@@ -47,7 +47,7 @@ _exception_map = {
 }
 
 
-class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     _beolink_jid = ""

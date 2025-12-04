@@ -71,6 +71,7 @@ class CloudClient(Interface):
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
         self._cloud_ice_servers_listener: Callable[[], None] | None = None
+        self._ice_servers: list[RTCIceServer] = []
 
     @property
     def base_path(self) -> Path:
@@ -116,6 +117,11 @@ class CloudClient(Interface):
     def relayer_region(self) -> str | None:
         """Return the connected relayer region."""
         return self._relayer_region
+
+    @property
+    def ice_servers(self) -> list[RTCIceServer]:
+        """Return the current ICE servers."""
+        return self._ice_servers
 
     async def get_alexa_config(self) -> alexa_config.CloudAlexaConfig:
         """Return Alexa config."""
@@ -203,11 +209,8 @@ class CloudClient(Interface):
                 ice_servers: list[RTCIceServer],
             ) -> Callable[[], None]:
                 """Register cloud ice server."""
-
-                def get_ice_servers() -> list[RTCIceServer]:
-                    return ice_servers
-
-                return async_register_ice_servers(self._hass, get_ice_servers)
+                self._ice_servers = ice_servers
+                return async_register_ice_servers(self._hass, lambda: self._ice_servers)
 
             async def async_register_cloud_ice_servers_listener(
                 prefs: CloudPreferences,
@@ -268,6 +271,7 @@ class CloudClient(Interface):
 
     async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
+        self._ice_servers = []
         await self.prefs.async_set_username(None)
 
         if self._alexa_config:

@@ -68,6 +68,35 @@
         }
       }
     },
+    "number": {
+      "cl_target": {
+        "default": "mdi:pool"
+      },
+      "ofa_cl_lower": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ofa_cl_upper": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "ofa_orp_lower": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ofa_orp_upper": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "ofa_ph_lower": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ofa_ph_upper": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "orp_target": {
+        "default": "mdi:water-check"
+      },
+      "ph_target": {
+        "default": "mdi:ph"
+      }
+    },
     "sensor": {
       "cl": {
         "default": "mdi:pool"
@@ -119,6 +148,9 @@
       },
       "ph_type_dosing": {
         "default": "mdi:beaker"
+      },
+      "water_meter_total_permanent": {
+        "default": "mdi:counter"
       }
     },
     "switch": {
