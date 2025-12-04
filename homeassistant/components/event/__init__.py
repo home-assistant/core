@@ -11,6 +11,7 @@ from typing import Any, Self, final
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_RESTORED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
@@ -120,6 +121,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     __last_event_triggered: datetime | None = None
     __last_event_type: str | None = None
     __last_event_attributes: dict[str, Any] | None = None
+    __state_restored: bool = False
 
     @cached_property
     def device_class(self) -> EventDeviceClass | None:
@@ -152,6 +154,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         self.__last_event_triggered = dt_util.utcnow()
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
+        self.__state_restored = False  # Reset flag when real event occurs
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
@@ -180,9 +183,11 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
+        attributes: dict[str, Any] = {ATTR_EVENT_TYPE: self.__last_event_type}
         if last_event_attributes := self.__last_event_attributes:
             attributes |= last_event_attributes
+        if self.__state_restored:
+            attributes[ATTR_RESTORED] = True
         return attributes
 
     @final
@@ -197,6 +202,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             self.__last_event_triggered = dt_util.parse_datetime(state.state)
             self.__last_event_type = event_data.last_event_type
             self.__last_event_attributes = event_data.last_event_attributes
+            self.__state_restored = True
 
     @property
     def extra_restore_state_data(self) -> EventExtraStoredData:

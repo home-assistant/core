@@ -15,7 +15,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_RESTORED, CONF_PLATFORM, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -137,6 +137,92 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
     assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
     assert state.attributes["hello"] == "world"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
+async def test_restore_state_sets_restored_flag(hass: HomeAssistant) -> None:
+    """Test restored state has the restored flag set."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123+00:00",
+                ),
+                {
+                    "last_event_type": "double_press",
+                    "last_event_attributes": {
+                        "hello": "world",
+                    },
+                },
+            ),
+        ),
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.state == "2021-01-01T23:59:59.123+00:00"
+    assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
+    assert state.attributes["hello"] == "world"
+    # Verify the restored flag is present
+    assert state.attributes.get(ATTR_RESTORED) is True
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
+async def test_restored_flag_removed_on_real_event(hass: HomeAssistant) -> None:
+    """Test restored flag is removed when a real event occurs."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123+00:00",
+                ),
+                {
+                    "last_event_type": "double_press",
+                    "last_event_attributes": {
+                        "hello": "world",
+                    },
+                },
+            ),
+        ),
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    # Verify initial restored state has the flag
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.attributes.get(ATTR_RESTORED) is True
+
+    # Get the entity from the entity component
+    component = hass.data[DOMAIN]
+    event_entity = None
+    for entity in component.entities:
+        if entity.entity_id == "event.doorbell":
+            event_entity = entity
+            break
+
+    assert event_entity is not None
+
+    # Trigger a real event
+    event_entity._trigger_event("short_press", {"new": "event"})
+    event_entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    # Verify the restored flag is now removed
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.attributes[ATTR_EVENT_TYPE] == "short_press"
+    assert state.attributes["new"] == "event"
+    # The restored flag should be gone
+    assert ATTR_RESTORED not in state.attributes
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
