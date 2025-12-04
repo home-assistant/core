@@ -41,7 +41,7 @@ async def async_setup_entry(
 
 
 class FanSwitch(BaseToggleEntity, FanEntity):
-    """Represents a Switch as a Fan."""
+    """Represents an Inverse Fan."""
 
     _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
