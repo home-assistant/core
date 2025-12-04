@@ -47,6 +47,7 @@ def _make_task(
     project_id=PROJECT_ID,
     description=None,
     parent_id=None,
+    priority=1,
 ):
     """Return an object that mimics a Todoist Task with attribute access."""
     return SimpleNamespace(
@@ -60,6 +61,7 @@ def _make_task(
         labels=["Label1"],
         created_at="2025-01-01T00:00:00Z",
         url="https://todoist.com",
+        priority=priority,
     )
 
 
@@ -111,6 +113,7 @@ def make_api_task(
     description: str | None = None,
     parent_id: str | None = None,
     labels: list[str] | None = None,
+    priority: int = 1,
 ):
     """Factory function used by tests that want Task-like objects."""
     description = description or ""
@@ -122,6 +125,7 @@ def make_api_task(
         project_id=project_id or PROJECT_ID,
         description=description,
         parent_id=parent_id,
+        priority=priority,
     )
     task.labels = labels if labels is not None else ["Label1"]
     return task

@@ -227,6 +227,9 @@ class TodoItem:
     description: str | None = None
     """A more complete description than that provided by the summary."""
 
+    priority: str | None = None
+    """The priority of the To-do item."""
+
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
