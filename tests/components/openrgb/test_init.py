@@ -246,8 +246,7 @@ async def test_reconnection_on_update_failure(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that disconnect and connect were called (reconnection happened)
     mock_openrgb_client.disconnect.assert_called_once()
@@ -295,9 +294,7 @@ async def test_reconnection_fails_second_attempt(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that the light became unavailable after failed reconnection
     state = hass.states.get("light.ene_dram")
@@ -340,8 +337,7 @@ async def test_normal_update_without_errors(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that disconnect and connect were NOT called (no reconnection needed)
     mock_openrgb_client.disconnect.assert_not_called()

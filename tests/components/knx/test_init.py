@@ -290,14 +290,12 @@ async def _init_switch_and_wait_for_first_state_updater_run(
 
     freezer.tick(timedelta(minutes=59))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await knx.assert_no_telegram()
 
     freezer.tick(timedelta(minutes=1))  # 60 minutes passed
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_default_state_updater_enabled(
