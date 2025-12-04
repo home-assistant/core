@@ -1813,6 +1813,36 @@ async def test_formation_strategy_form_initial_network(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_formation_strategy_form_initial_network_failure(
+    advanced_pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test forming a new network that fails with an exception."""
+    # Mock form_network to raise an exception
+    mock_app.form_network.side_effect = DelayedAsyncMock(
+        side_effect=Exception("Network formation failed")
+    )
+
+    result = await advanced_pick_radio(RadioType.ezsp)
+    result_form = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_FORM_NEW_NETWORK},
+    )
+
+    result2 = await consume_progress_flow(
+        hass,
+        flow_id=result_form["flow_id"],
+        valid_step_ids=("form_new_network",),
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_form_network"
+    assert "Network formation failed" in result2["description_placeholders"]["error"]
+
+    # Verify form_network was called
+    mock_app.form_network.assert_called_once()
+
+
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_onboarding_auto_formation_new_hardware(

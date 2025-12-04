@@ -680,6 +680,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         try:
             await self._form_network_task
+        except Exception as exc:
+            _LOGGER.exception("Failed to form new network")
+            self._progress_error = AbortFlow(
+                reason="cannot_form_network",
+                description_placeholders={"error": str(exc)},
+            )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self._form_network_task = None
 
