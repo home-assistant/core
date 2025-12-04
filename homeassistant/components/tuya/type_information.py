@@ -210,8 +210,8 @@ class IntegerTypeInformation(TypeInformation[float]):
             ):
                 LOGGER.warning(
                     "Found invalid integer value `%s` for datapoint `%s` in product "
-                    "id `%s`, expected value between %s and %s; please report this "
-                    "defect to Tuya support",
+                    "id `%s`, expected integer value between %s and %s; please report "
+                    "this defect to Tuya support",
                     raw_value,
                     self.dpcode,
                     device.product_id,
