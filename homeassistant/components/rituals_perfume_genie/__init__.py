@@ -7,7 +7,7 @@ from aiohttp import ClientError, ClientResponseError
 from pyrituals import Account, AuthenticationException, Diffuser
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -29,15 +29,14 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
-    _LOGGER.debug("async_setup_entry start (entry_id=%s)", entry.entry_id)
     session = async_get_clientsession(hass)
 
     # Initiate reauth for old config entries which don't have username / password in the entry data
-    if CONF_USERNAME not in entry.data or CONF_PASSWORD not in entry.data:
+    if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
         raise ConfigEntryAuthFailed("Missing credentials")
 
     account = Account(
-        email=entry.data[CONF_USERNAME],
+        email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
         session=session,
     )

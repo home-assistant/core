@@ -10,14 +10,14 @@ from pyrituals import Account, AuthenticationException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_EMAIL): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
@@ -36,7 +36,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             account = Account(
-                email=user_input[CONF_USERNAME],
+                email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
@@ -48,10 +48,10 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(account.account_hash)
+                await self.async_set_unique_id(user_input[CONF_EMAIL])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
+                    title=user_input[CONF_EMAIL],
                     data=user_input,
                 )
 
@@ -76,7 +76,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             session = async_get_clientsession(self.hass)
             account = Account(
-                email=user_input[CONF_USERNAME],
+                email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
@@ -88,12 +88,12 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(account.account_hash)
+                await self.async_set_unique_id(user_input[CONF_EMAIL])
 
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
