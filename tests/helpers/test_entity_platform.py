@@ -1619,7 +1619,9 @@ async def test_platform_with_no_setup_custom_component_hint(
 ) -> None:
     """Test setting up a custom integration platform without setup logs extra warning."""
     platform_mod = types.ModuleType("custom_components.mock_integration.mock_platform")
-    platform_mod.__file__ = "/config/custom_components/mock_integration/mock_platform.py"
+    platform_mod.__file__ = (
+        "/config/custom_components/mock_integration/mock_platform.py"
+    )
 
     entity_platform = MockEntityPlatform(
         hass,
@@ -1632,8 +1634,7 @@ async def test_platform_with_no_setup_custom_component_hint(
 
     assert (
         "The mock-platform platform module for the mock-integration custom integration "
-        "does not implement async_setup_platform or setup_platform."
-        in caplog.text
+        "does not implement async_setup_platform or setup_platform." in caplog.text
     )
 
 
