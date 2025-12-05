@@ -73,7 +73,7 @@ async def test_setup_backoff(
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup fails if first update fails."""
+    """Test update fails with backoffs and recovers."""
     aioclient_mock.get(
         UPDATE_URL,
         params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
