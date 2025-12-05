@@ -10,7 +10,7 @@ from typing import Any
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.smartglass.models import SmartglassConsole, StorageDevice
-from pythonxbox.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.titlehub.models import Title, TitleHubResponse
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -28,7 +28,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import XboxConfigEntry, XboxConsolesCoordinator
+from .coordinator import (
+    XboxConfigEntry,
+    XboxConsolesCoordinator,
+    XboxTitleHistoryCoordinator,
+)
 from .entity import (
     MAP_MODEL,
     XboxBaseEntity,
@@ -60,6 +64,7 @@ class XboxSensor(StrEnum):
     JOIN_RESTRICTIONS = "join_restrictions"
     TOTAL_STORAGE = "total_storage"
     FREE_STORAGE = "free_storage"
+    RECENTLY_PLAYED_GAMES = "recently_played_games"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -76,6 +81,14 @@ class XboxStorageDeviceSensorEntityDescription(
     """Xbox console sensor description."""
 
     value_fn: Callable[[StorageDevice], StateType]
+
+
+@dataclass(kw_only=True, frozen=True)
+class XboxTitleHistorySensorEntityDescription(SensorEntityDescription):
+    """Xbox title history sensor description."""
+
+    value_fn: Callable[[TitleHubResponse | None], StateType]
+    attributes_fn: Callable[[TitleHubResponse | None], dict[str, Any]] | None = None
 
 
 def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
@@ -147,6 +160,41 @@ def title_logo(_: Person, title: Title | None) -> str | None:
         if title and title.images
         else None
     )
+
+
+def recently_played_games_attributes(
+    title_history: TitleHubResponse | None,
+) -> dict[str, Any]:
+    """Build attributes for recently played games."""
+    games_list = []
+    if title_history and title_history.titles:
+        for game in title_history.titles:
+            game_data: dict[str, Any] = {
+                "title": game.name,
+                "title_id": game.title_id,
+            }
+
+            if game.title_history:
+                game_data["last_played"] = (
+                    game.title_history.last_time_played.replace(tzinfo=UTC)
+                    if game.title_history.last_time_played
+                    else None
+                )
+
+            if game.achievement:
+                game_data.update(
+                    {
+                        "achievements_earned": game.achievement.current_achievements,
+                        "achievements_total": game.achievement.total_achievements,
+                        "gamerscore_earned": game.achievement.current_gamerscore,
+                        "gamerscore_total": game.achievement.total_gamerscore,
+                        "achievement_progress": f"{int(game.achievement.progress_percentage)}%",
+                    }
+                )
+
+            games_list.append(game_data)
+
+    return {"games": games_list}
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
@@ -245,6 +293,17 @@ STORAGE_SENSOR_DESCRIPTIONS: tuple[XboxStorageDeviceSensorEntityDescription, ...
     ),
 )
 
+TITLE_HISTORY_SENSOR_DESCRIPTIONS: tuple[
+    XboxTitleHistorySensorEntityDescription, ...
+] = (
+    XboxTitleHistorySensorEntityDescription(
+        key=XboxSensor.RECENTLY_PLAYED_GAMES,
+        translation_key=XboxSensor.RECENTLY_PLAYED_GAMES,
+        value_fn=lambda x: len(x.titles) if x and x.titles else 0,
+        attributes_fn=recently_played_games_attributes,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -286,6 +345,17 @@ async def async_setup_entry(
             for console in coordinator.consoles.result
             if console.storage_devices
             for storage_device in console.storage_devices
+        ]
+    )
+
+    title_history_coordinator = config_entry.runtime_data.title_history
+
+    async_add_entities(
+        [
+            XboxTitleHistorySensorEntity(
+                title_history_coordinator, config_entry, description
+            )
+            for description in TITLE_HISTORY_SENSOR_DESCRIPTIONS
         ]
     )
 
@@ -358,3 +428,41 @@ class XboxStorageDeviceSensorEntity(
         """Return the state of the requested attribute."""
 
         return self.entity_description.value_fn(self.data) if self.data else None
+
+
+class XboxTitleHistorySensorEntity(
+    CoordinatorEntity[XboxTitleHistoryCoordinator], SensorEntity
+):
+    """Title history sensor for the Xbox integration."""
+
+    _attr_has_entity_name = True
+    entity_description: XboxTitleHistorySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: XboxTitleHistoryCoordinator,
+        config_entry: XboxConfigEntry,
+        entity_description: XboxTitleHistorySensorEntityDescription,
+    ) -> None:
+        """Initialize the Xbox title history sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{config_entry.unique_id}_{entity_description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.unique_id)},
+            name=config_entry.title,
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return additional attributes."""
+        if self.entity_description.attributes_fn:
+            return self.entity_description.attributes_fn(self.coordinator.data)
+        return None
