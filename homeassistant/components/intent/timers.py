@@ -852,7 +852,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if conversation_command and not await self._validate_conversation_command(
             intent_obj, conversation_command
         ):
-            raise NoIntentMatchError(conversation_command)
+            raise NoTimerCommandError(conversation_command)
 
         name: str | None = None
         if "name" in slots:
