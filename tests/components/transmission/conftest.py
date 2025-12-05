@@ -101,3 +101,10 @@ def mock_torrent():
         return Torrent(fields=torrent_data)
 
     return _create_mock_torrent
+
+
+@pytest.fixture(autouse=True)
+def patch_sleep() -> Generator[None]:
+    """Fixture to remove sleep in tests."""
+    with patch("homeassistant.components.transmission.switch.AFTER_WRITE_SLEEP", 0):
+        yield
