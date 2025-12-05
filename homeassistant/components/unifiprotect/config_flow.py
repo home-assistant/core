@@ -110,17 +110,17 @@ ENTRY_FAILURE_STATES = (
     ConfigEntryState.SETUP_RETRY,
 )
 
-# Selectors
-_TEXT = selector.TextSelector()
-_PASSWORD = selector.TextSelector(
+# Selectors for config flow form fields
+_TEXT_SELECTOR = selector.TextSelector()
+_PASSWORD_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
 )
-_PORT = selector.NumberSelector(
+_PORT_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(
         mode=selector.NumberSelectorMode.BOX, min=1, max=65535
     )
 )
-_BOOL = selector.BooleanSelector()
+_BOOL_SELECTOR = selector.BooleanSelector()
 
 
 def _build_schema(
@@ -142,13 +142,13 @@ def _build_schema(
 
     schema: dict[vol.Marker, selector.Selector] = {}
     if include_host:
-        schema[req(CONF_HOST)] = _TEXT
+        schema[req(CONF_HOST)] = _TEXT_SELECTOR
     if include_connection:
-        schema[req(CONF_PORT, default=DEFAULT_PORT)] = _PORT
-        schema[req(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL
-    schema[req(CONF_USERNAME)] = _TEXT
-    schema[cred_key(CONF_PASSWORD)] = _PASSWORD
-    schema[cred_key(CONF_API_KEY)] = _PASSWORD
+        schema[req(CONF_PORT, default=DEFAULT_PORT)] = _PORT_SELECTOR
+        schema[req(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL_SELECTOR
+    schema[req(CONF_USERNAME)] = _TEXT_SELECTOR
+    schema[cred_key(CONF_PASSWORD)] = _PASSWORD_SELECTOR
+    schema[cred_key(CONF_API_KEY)] = _PASSWORD_SELECTOR
     return vol.Schema(schema)
 
 
