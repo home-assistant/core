@@ -1,7 +1,7 @@
 """Test fixtures for Prowl."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -27,7 +27,7 @@ BAD_API_RESPONSE = {"base": "bad_api_response"}
 
 @pytest.fixture
 async def configure_prowl_through_yaml(
-    hass: HomeAssistant, mock_prowlpy: Generator[Mock]
+    hass: HomeAssistant, mock_prowlpy: Generator[AsyncMock]
 ) -> Generator[None]:
     """Configure the notify domain with YAML for the Prowl platform."""
     await async_setup_component(
@@ -48,7 +48,9 @@ async def configure_prowl_through_yaml(
 
 @pytest.fixture
 async def prowl_notification_entity(
-    hass: HomeAssistant, mock_prowlpy: Mock, mock_prowlpy_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_prowlpy: AsyncMock,
+    mock_prowlpy_config_entry: MockConfigEntry,
 ) -> Generator[MockConfigEntry]:
     """Configure a Prowl Notification Entity."""
     mock_prowlpy.verify_key.return_value = True
@@ -61,11 +63,24 @@ async def prowl_notification_entity(
 
 
 @pytest.fixture
-def mock_prowlpy() -> Generator[Mock]:
+def mock_prowlpy() -> Generator[AsyncMock]:
     """Mock the prowlpy library."""
+    mock_instance = AsyncMock()
 
-    with patch("homeassistant.components.prowl.notify.prowlpy.Prowl") as MockProwl:
-        mock_instance = MockProwl.return_value
+    with (
+        patch(
+            "homeassistant.components.prowl.notify.prowlpy.AsyncProwl",
+            return_value=mock_instance,
+        ),
+        patch(
+            "homeassistant.components.prowl.helpers.prowlpy.AsyncProwl",
+            return_value=mock_instance,
+        ),
+        patch(
+            "homeassistant.components.prowl.__init__.prowlpy.AsyncProwl",
+            return_value=mock_instance,
+        ),
+    ):
         yield mock_instance
 
 

@@ -1,6 +1,6 @@
 """Test Prowl config flow."""
 
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
 import prowlpy
 
@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import BAD_API_RESPONSE, CONF_INPUT, INVALID_API_KEY_ERROR, TIMEOUT_ERROR
 
 
-async def test_flow_user(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
+async def test_flow_user(hass: HomeAssistant, mock_prowlpy: AsyncMock) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -30,7 +30,9 @@ async def test_flow_user(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
     assert result["data"] == {CONF_API_KEY: CONF_INPUT[CONF_API_KEY]}
 
 
-async def test_flow_duplicate_api_key(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
+async def test_flow_duplicate_api_key(
+    hass: HomeAssistant, mock_prowlpy: AsyncMock
+) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -52,7 +54,7 @@ async def test_flow_duplicate_api_key(hass: HomeAssistant, mock_prowlpy: Mock) -
     assert result["type"] is FlowResultType.ABORT
 
 
-async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
+async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: AsyncMock) -> None:
     """Test user submitting a bad API key."""
     mock_prowlpy.verify_key.side_effect = prowlpy.APIError("Invalid API key")
 
@@ -70,7 +72,9 @@ async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: Mock) -> Non
     assert result["errors"] == INVALID_API_KEY_ERROR
 
 
-async def test_flow_user_prowl_timeout(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
+async def test_flow_user_prowl_timeout(
+    hass: HomeAssistant, mock_prowlpy: AsyncMock
+) -> None:
     """Test Prowl API timeout."""
     mock_prowlpy.verify_key.side_effect = TimeoutError
 
@@ -88,7 +92,7 @@ async def test_flow_user_prowl_timeout(hass: HomeAssistant, mock_prowlpy: Mock) 
     assert result["errors"] == TIMEOUT_ERROR
 
 
-async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
+async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) -> None:
     """Test Prowl API failure."""
     mock_prowlpy.verify_key.side_effect = prowlpy.APIError(BAD_API_RESPONSE)
 

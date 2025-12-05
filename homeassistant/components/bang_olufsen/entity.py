@@ -24,8 +24,8 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class BangOlufsenBase:
-    """Base class for BangOlufsen Home Assistant objects."""
+class BeoBase:
+    """Base class for Bang & Olufsen Home Assistant objects."""
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
@@ -51,8 +51,8 @@ class BangOlufsenBase:
         )
 
 
-class BangOlufsenEntity(Entity, BangOlufsenBase):
-    """Base Entity for BangOlufsen entities."""
+class BeoEntity(Entity, BeoBase):
+    """Base Entity for Bang & Olufsen entities."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False

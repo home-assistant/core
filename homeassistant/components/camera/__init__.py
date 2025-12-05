@@ -20,7 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceCandidateInit, RTCIceServer
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -37,6 +37,7 @@ from homeassistant.components.stream import (
     Stream,
     create_stream,
 )
+from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -74,14 +75,16 @@ from .const import (
     StreamType,
 )
 from .helper import get_camera_from_entity_id
-from .img_util import scale_jpeg_camera_image
+from .img_util import (
+    TurboJPEGSingleton,  # noqa: F401
+    scale_jpeg_camera_image,
+)
 from .prefs import (
     CameraPreferences,
     DynamicStreamSettings,  # noqa: F401
     get_dynamic_camera_stream_settings,
 )
 from .webrtc import (
-    DATA_ICE_SERVERS,
     CameraWebRTCProvider,
     WebRTCAnswer,  # noqa: F401
     WebRTCCandidate,  # noqa: F401
@@ -90,7 +93,6 @@ from .webrtc import (
     WebRTCMessage,  # noqa: F401
     WebRTCSendMessage,
     async_get_supported_provider,
-    async_register_ice_servers,
     async_register_webrtc_provider,  # noqa: F401
     async_register_ws,
 )
@@ -397,20 +399,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
-    @callback
-    def get_ice_servers() -> list[RTCIceServer]:
-        if hass.config.webrtc.ice_servers:
-            return hass.config.webrtc.ice_servers
-        return [
-            RTCIceServer(
-                urls=[
-                    "stun:stun.home-assistant.io:80",
-                    "stun:stun.home-assistant.io:3478",
-                ]
-            ),
-        ]
-
-    async_register_ice_servers(hass, get_ice_servers)
     return True
 
 
@@ -728,11 +716,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = self._async_get_webrtc_client_configuration()
 
-        ice_servers = [
-            server
-            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
-            for server in servers()
-        ]
+        ice_servers = async_get_ice_servers(self.hass)
         config.configuration.ice_servers.extend(ice_servers)
 
         return config

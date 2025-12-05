@@ -14,6 +14,11 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
+
+
 @pytest.mark.usefixtures("mock_portainer_client")
 async def test_all_entities(
     hass: HomeAssistant,
@@ -28,5 +33,8 @@ async def test_all_entities(
     ):
         await setup_integration(hass, mock_config_entry)
         await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
+            hass,
+            entity_registry,
+            snapshot,
+            mock_config_entry.entry_id,
         )
