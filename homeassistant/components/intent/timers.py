@@ -210,8 +210,8 @@ class NoTimerCommandError(intent.IntentHandleError):
     def __init__(self, command: str) -> None:
         """Initialize error."""
         super().__init__(
-            f"No intent was matched for the provided command: {command}",
-            NO_INTENT_MATCH_RESPONSE,
+            f"Timer command was not recognized: {command}",
+            NO_TIMER_COMMAND_RESPONSE,
         )
 
 
