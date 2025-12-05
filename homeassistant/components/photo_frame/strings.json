@@ -1,0 +1,29 @@
+{
+  "config": {
+    "error": {
+      "failed_browse": "Failed to browse media: {error}",
+      "invalid_media_selected": "The selected media has no usable images, please select a media directory with images."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "media": "Media",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "media": "The media directory where images will be retrieved from.",
+          "name": "Name for the image entity."
+        },
+        "description": "The Photo Frame integration creates a single image entity, by selecting an image from the selected media folder.",
+        "submit": "Create"
+      }
+    }
+  },
+  "services": {
+    "shuffle": {
+      "description": "Update the image entity with a new random image from the configured media.",
+      "name": "Shuffle"
+    }
+  },
+  "title": "Photo Frame"
+}
