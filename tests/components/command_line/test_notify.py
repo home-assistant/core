@@ -14,9 +14,12 @@ from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+async def test_setup_platform_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setting up the platform with platform yaml."""
     await setup.async_setup_component(
         hass,
@@ -32,6 +35,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    issue = issue_registry.async_get_issue(DOMAIN, "notify_platform_yaml_not_supported")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"platform": NOTIFY_DOMAIN}
 
 
 @pytest.mark.parametrize(

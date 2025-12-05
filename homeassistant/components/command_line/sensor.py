@@ -10,6 +10,7 @@ from typing import Any
 
 from jsonpath import jsonpath
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -34,7 +35,11 @@ from .const import (
     LOGGER,
     TRIGGER_ENTITY_OPTIONS,
 )
-from .utils import async_check_output_or_log, render_template_args
+from .utils import (
+    async_check_output_or_log,
+    create_platform_yaml_not_supported_issue,
+    render_template_args,
+)
 
 DEFAULT_NAME = "Command Sensor"
 
@@ -49,6 +54,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command Sensor."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, SENSOR_DOMAIN)
         return
 
     sensor_config = discovery_info

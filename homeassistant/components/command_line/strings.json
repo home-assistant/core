@@ -4,5 +4,11 @@
       "description": "Reloads command line configuration from the YAML-configuration.",
       "name": "[%key:common::action::reload%]"
     }
+  },
+  "issues": {
+    "platform_yaml_not_supported": {
+      "title": "Platform YAML is not supported in Command Line",
+      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to using the `command_line:` key directly in configuration.yaml.\nTo see the detailed documentation, select Learn more."
+    }
   }
 }
