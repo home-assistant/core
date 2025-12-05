@@ -63,37 +63,6 @@ async def _validate_device_and_get_info(
                 "No UPnP location provided for %s, attempting HTTP validation.",
                 actual_host,
             )
-            # session = ClientSession(connector=TCPConnector(ssl=False))
-            # temp_http_api = WiimApiEndpoint(
-            #     protocol="https", port=443, endpoint=actual_host, session=session
-            # )
-            # try:
-            #     status = await temp_http_api.json_request(WiimHttpCommand.DEVICE_STATUS)
-            #     await session.close()
-            #     udn = status.get(SDKDeviceAttribute.UUID)
-            #     name = status.get(SDKDeviceAttribute.DEVICE_NAME, DEFAULT_DEVICE_NAME)
-            #     if not udn:
-            #         raise CannotConnect(
-            #             f"Could not retrieve UDN from {actual_host} via HTTP. Response: {status}"
-            #         )
-            #     device_info_from_http = {
-            #         CONF_UDN: udn,
-            #         CONF_NAME: name,
-            #         "model": status.get(SDKDeviceAttribute.PROJECT, "WiiM Device"),
-            #         CONF_HOST: actual_host,
-            #         CONF_UPNP_LOCATION: None,
-            #     }
-            #     SDK_LOGGER.info(
-            #         "HTTP validation successful for %s: UDN %s", actual_host, udn
-            #     )
-            # except Exception as e:
-            #     SDK_LOGGER.error(
-            #         "Error validating host %s via HTTP: %s", actual_host, e
-            #     )
-            #     await session.close()
-            #     raise CannotConnect(
-            #         f"Failed to connect or get info from {actual_host} via HTTP: {e}"
-            #     ) from e
 
         if upnp_device:
             return {

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from html import unescape
 import json
@@ -105,12 +104,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiiM media player from a config entry."""
-    # Ensure WiimData is initialized in hass.data
-    # Initialize entities_by_entity_id as an empty dictionary here
-    # if DOMAIN not in hass.data:
-    #     hass.data[DOMAIN] = WiimData(
-    #         controller=None, entity_id_to_udn_map={}, entities_by_entity_id={}
-    #     )
 
     device: WiimDevice = entry.runtime_data
     if not isinstance(device, WiimDevice):
@@ -187,11 +180,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if modes_flag is None:
             return None
 
-        # source_list: list[str] = []
-        # for mode in InputMode:
-        #     if modes_flag & mode.value:
-        #         source_list.append(mode.display_name)  # type: ignore[attr-defined]
-        # return source_list
         return [mode.display_name for mode in InputMode if modes_flag & mode.value]  # type: ignore[attr-defined]
 
     def _generate_output_list(self) -> list[str] | None:
@@ -203,11 +191,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if modes_flag is None:
             return None
 
-        # output_list: list[str] = []
-        # for mode in AudioOutputHwMode:
-        #     if modes_flag & mode.value:
-        #         output_list.append(mode.display_name)  # type: ignore[attr-defined]
-        # return output_list
         return [
             mode.display_name  # type: ignore[attr-defined]
             for mode in AudioOutputHwMode
@@ -438,7 +421,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.IDLE
 
         # Update the group_members attribute
-        self._update_group_members_attribute()
         self._update_supported_features()
 
         # Always write HA state for this entity
@@ -555,16 +537,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         # Final HA state write for this follower
         self.async_write_ha_state()
 
-    async def _aysnc_handle_group_status(self) -> None:
-        """Handle general update group status."""
-        SDK_LOGGER.debug(
-            "Device %s: Handle general update group status.", self.entity_id
-        )
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-        if wiim_data and wiim_data.controller:
-            controller = wiim_data.controller
-            await controller.async_update_all_multiroom_status()
-
     async def _update_output_mode(self) -> None:
         if self._device._http_api:  # noqa: SLF001
             try:
@@ -636,7 +608,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     await self._device._renew_subscriptions()  # noqa: SLF001
                 await self._update_output_mode()
                 self._update_ha_state_from_sdk_cache()
-                await self._aysnc_handle_group_status()
 
             self.hass.async_create_task(_wrapped())
 
@@ -874,99 +845,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         self._update_ha_state_from_sdk_cache()
 
-    async def _async_process_rendering_control_event(self, last_change_sv: str) -> None:
-        # New: Handle Slave action="add" and Slave action="del" events
-        raw_xml_value = last_change_sv
-        try:
-            root = ET.fromstring(raw_xml_value)
-            rcs_ns = {"rcs": "urn:schemas-upnp-org:metadata-1-0/RCS/"}
-            instance_id_elem = root.find(".//rcs:InstanceID", namespaces=rcs_ns)
-
-            if instance_id_elem:
-                slave_elements = instance_id_elem.findall(
-                    ".//rcs:Slave", namespaces=rcs_ns
-                )
-                for slave_elem in slave_elements:
-                    action = slave_elem.get("action")
-                    slave_udn = slave_elem.get("val")
-
-                    if action and slave_udn:
-                        SDK_LOGGER.debug(
-                            f"Device {self.entity_id}: Detected Slave action='{action}' for UDN='{slave_udn}'"
-                        )
-
-                        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-                        if not wiim_data or not wiim_data.controller:
-                            SDK_LOGGER.warning(
-                                "WiimData or controller not available to handle Slave action."
-                            )
-                            self._update_ha_state_from_sdk_cache()
-                            return
-
-                        controller = wiim_data.controller
-
-                        SDK_LOGGER.debug(
-                            f"Triggering controller multiroom status update for device {self._device.udn} and slave {slave_udn}"
-                        )
-
-                        await asyncio.sleep(1)
-                        await controller.async_update_multiroom_status(self._device)
-
-                        def restore_uuid(cleaned):
-                            prefix = cleaned[:8]
-                            part1 = cleaned[0:8]
-                            part2 = cleaned[8:12]
-                            part3 = cleaned[12:16]
-                            part4 = cleaned[16:20]
-                            part5 = cleaned[20:] + prefix
-                            return f"uuid:{part1}-{part2}-{part3}-{part4}-{part5}"
-
-                        slave_ha_entity = self._get_entity_for_udn(
-                            restore_uuid(slave_udn)
-                        )
-                        if slave_ha_entity and slave_ha_entity != self:
-                            if action == "rm":
-                                SDK_LOGGER.debug(
-                                    f"Slave {slave_ha_entity.entity_id} removed from group, clearing metadata."
-                                )
-
-                                slave_ha_entity._attr_state = MediaPlayerState.IDLE  # noqa: SLF001
-                                slave_ha_entity._attr_media_title = None  # noqa: SLF001
-                                slave_ha_entity._attr_media_artist = None  # noqa: SLF001
-                                slave_ha_entity._attr_media_album_name = None  # noqa: SLF001
-                                slave_ha_entity._attr_media_image_url = None  # noqa: SLF001
-                                slave_ha_entity._attr_media_content_id = None  # noqa: SLF001
-                                slave_ha_entity._attr_media_content_type = None  # noqa: SLF001
-                                # slave_ha_entity._attr_media_duration = None
-                                # slave_ha_entity._attr_media_position = None
-                                # slave_ha_entity._attr_media_position_updated_at = None
-                                slave_ha_entity.async_write_ha_state()  # Write state immediately
-                            elif action == "add":
-                                SDK_LOGGER.debug(
-                                    f"Slave {slave_ha_entity.entity_id} added to group, triggering full state update for it."
-                                )
-
-                                async def _wrapped() -> None:
-                                    await self._aysnc_handle_group_status()
-                                    self._update_ha_state_from_sdk_cache()
-
-                                self.hass.async_create_task(_wrapped())
-                        elif slave_ha_entity == self:
-                            SDK_LOGGER.debug(
-                                f"Slave entity {slave_udn} is the current entity. State will be updated by current entity's _update_ha_state_from_sdk_cache call."
-                            )
-
-        except ET.ParseError as xml_e:
-            SDK_LOGGER.warning(
-                f"Device {self.entity_id}: Failed to parse XML for Slave action in RenderingControl event: {xml_e}"
-            )
-        except Exception as general_e:
-            SDK_LOGGER.error(
-                f"Device {self.entity_id}: Unexpected error processing Slave action in RenderingControl event: {general_e}",
-                exc_info=True,
-            )
-            raise
-
     @callback
     def _handle_sdk_rendering_control_event(
         self, service: UpnpService, state_variables: list[UpnpStateVariable]
@@ -998,12 +876,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 exc_info=True,
             )
             raise
-
-        if not any(key in event_data for key in ("Volume", "Mute", "commonevent")):
-            self.hass.async_create_task(
-                self._async_process_rendering_control_event(str(last_change_sv.value))
-            )
-            return
 
         # Update _device's internal state
         if "Volume" in event_data:
@@ -1408,88 +1280,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     def _update_supported_features(self) -> None:
         """Update supported features based on current state."""
         self.hass.async_create_task(self._from_device_update_supported_features())
-
-    @callback
-    def _update_group_members_attribute(self) -> None:
-        """Helper to update the group_members attribute.
-
-        Also determines if the current entity is a leader or follower.
-        """
-        if not self.hass:
-            return
-
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-        if not wiim_data or not wiim_data.controller:
-            current_member_id = self.entity_id if self.entity_id else self._device.udn
-            self._attr_group_members = [current_member_id]
-            self._is_group_leader = True
-            return
-
-        controller = wiim_data.controller
-
-        group_info = controller.get_device_group_info(self._device.udn)
-
-        resolved_group_members = []
-        current_role = "standalone"
-
-        if group_info:
-            current_role = group_info.get("role", "standalone")
-            leader_udn = group_info.get("leader_udn")
-
-            if current_role == "leader":
-                group_devices = controller.get_group_members(self._device.udn)
-                for sdk_device in group_devices:
-                    found_entity_id = None
-                    for entity_id, mapped_udn in wiim_data.entity_id_to_udn_map.items():
-                        if mapped_udn == sdk_device.udn:
-                            found_entity_id = entity_id
-                            break
-                    if found_entity_id:
-                        resolved_group_members.append(found_entity_id)
-                    else:
-                        SDK_LOGGER.warning(
-                            "Could not find HA entity_id for UDN %s in group led by %s.",
-                            sdk_device.udn,
-                            self.entity_id,
-                        )
-                        resolved_group_members.append(sdk_device.udn)
-
-            elif current_role == "follower":
-                # If this device is a follower, its group members are determined by its leader's group
-                if leader_udn:
-                    leader_entity = self._get_entity_for_udn(leader_udn)
-                    if leader_entity and leader_entity._attr_group_members:  # noqa: SLF001
-                        # Follower's group_members should mirror the leader's group_members
-                        resolved_group_members = list(leader_entity._attr_group_members)  # noqa: SLF001
-                    else:
-                        # Fallback: if leader entity not found or its group_members not yet set,
-                        # just include self.
-                        resolved_group_members = [self.entity_id]
-                else:
-                    resolved_group_members = [self.entity_id]
-
-            # Ensure the current entity_id is always in its own group_members
-            if self.entity_id and self.entity_id not in resolved_group_members:
-                resolved_group_members.append(self.entity_id)
-
-        else:  # Not part of any group (standalone)
-            resolved_group_members = [self.entity_id]
-
-        # Update leader status
-        self._is_group_leader = current_role == "leader"
-
-        # Only update if the list content actually changed to avoid unnecessary state writes
-        # Use set comparison for order-independent check
-        if self._attr_group_members is None or set(self._attr_group_members) != set(
-            resolved_group_members
-        ):
-            self._attr_group_members = resolved_group_members
-            SDK_LOGGER.debug(
-                "Device %s: Group members updated to %s. Is leader: %s",
-                self.entity_id,
-                self._attr_group_members,
-                self._is_group_leader,
-            )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
@@ -2350,145 +2140,3 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id,
         )
         raise BrowseError(f"Invalid browse path: {media_content_id}")
-
-    @exception_wrap
-    async def async_join_players(self, group_members: list[str]) -> None:
-        """Join group_members (entity_ids) to the group led by the current player."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-        if not wiim_data or not wiim_data.controller:
-            raise HomeAssistantError("WiiM controller not available.")
-
-        controller = wiim_data.controller
-        current_player_udn = self._device.udn
-
-        follower_udns_to_join: list[str] = []
-        for member_entity_id in group_members:
-            if member_entity_id == self.entity_id:
-                SDK_LOGGER.debug("Skipping joining self to group: %s", member_entity_id)
-                continue
-
-            follower_udn = wiim_data.entity_id_to_udn_map.get(member_entity_id)
-            if not follower_udn:
-                SDK_LOGGER.info(
-                    "Could not find UDN for entity_id %s in map. Cannot join to group.",
-                    member_entity_id,
-                )
-                continue
-            if follower_udn == current_player_udn:
-                SDK_LOGGER.debug(
-                    "Follower %s is already the leader, skipping join.",
-                    member_entity_id,
-                )
-                continue
-
-            # Check if already in the group or part of another group
-            follower_group_info = controller.get_device_group_info(follower_udn)
-            if (
-                follower_group_info
-                and follower_group_info.get("role") == "follower"
-                and follower_group_info.get("leader_udn") == current_player_udn
-            ):
-                SDK_LOGGER.debug(
-                    "Follower %s is already in this group, skipping join.",
-                    member_entity_id,
-                )
-                continue
-
-            # If follower is a leader of its own group, it needs to unjoin first
-            if follower_group_info and follower_group_info.get("role") == "leader":
-                SDK_LOGGER.info(
-                    "Follower %s is currently a leader, unjoining it first.",
-                    member_entity_id,
-                )
-                try:
-                    await controller.async_ungroup_device(follower_udn)
-                    await asyncio.sleep(0.5)
-                except WiimException as e:
-                    SDK_LOGGER.error(
-                        "Failed to unjoin existing group for %s before joining new group: %s",
-                        member_entity_id,
-                        e,
-                    )
-                    continue
-
-            follower_udns_to_join.append(follower_udn)
-
-        if not follower_udns_to_join:
-            SDK_LOGGER.info(
-                "No valid new followers to join for leader %s (UDN: %s)",
-                self.entity_id,
-                current_player_udn,
-            )
-            return
-
-        SDK_LOGGER.info(
-            "Player %s (leader UDN %s) attempting to group with followers (UDNs: %s)",
-            self.entity_id,
-            current_player_udn,
-            follower_udns_to_join,
-        )
-
-        current_leader_info = controller.get_device_group_info(current_player_udn)
-        if not current_leader_info or current_leader_info.get("role") != "leader":
-            SDK_LOGGER.info(
-                "Player %s is not currently a leader. Attempting to make it a leader by ungrouping it first.",
-                self.entity_id,
-            )
-            try:
-                await controller.async_ungroup_device(current_player_udn)
-                await asyncio.sleep(0.5)
-            except WiimException as e:
-                SDK_LOGGER.error(
-                    "Failed to ungroup self %s before leading a new group: %s",
-                    self.entity_id,
-                    e,
-                )
-                raise HomeAssistantError(
-                    f"Failed to prepare {self.entity_id} to be a leader."
-                ) from e
-
-        for follower_udn in follower_udns_to_join:
-            try:
-                await controller.async_join_group(current_player_udn, follower_udn)
-                SDK_LOGGER.debug(
-                    "Successfully sent join command for follower UDN %s to group of leader UDN %s",
-                    follower_udn,
-                    current_player_udn,
-                )
-            except WiimException as e:
-                SDK_LOGGER.error(
-                    "Failed to join follower UDN %s to group of leader UDN %s: %s",
-                    follower_udn,
-                    current_player_udn,
-                    e,
-                )
-
-        await asyncio.sleep(2)
-        await controller.async_update_multiroom_status(self._device)
-
-        if self.hass:
-            self.async_write_ha_state()
-
-    @exception_wrap
-    async def async_unjoin_player(self) -> None:
-        """Remove this player from any group it is currently in."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-        if not wiim_data or not wiim_data.controller:
-            raise HomeAssistantError("WiiM controller not available.")
-
-        controller = wiim_data.controller
-        try:
-            SDK_LOGGER.info(
-                "Player %s (UDN %s) attempting to unjoin from group.",
-                self.entity_id,
-                self._device.udn,
-            )
-            await controller.async_ungroup_device(self._device.udn)
-        except WiimException as e:
-            SDK_LOGGER.error("Failed to unjoin %s: %s", self._device.name, e)
-
-        await asyncio.sleep(1)
-        await controller.async_update_all_multiroom_status()
-
-        if self.hass:
-            self.async_write_ha_state()

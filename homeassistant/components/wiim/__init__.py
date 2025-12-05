@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import socket
-from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp import ClientSession, TCPConnector
@@ -12,7 +11,6 @@ from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
-import voluptuous as vol
 from wiim.consts import (
     MANUFACTURER_WIIM,
     UPNP_DEVICE_TYPE as SDK_UPNP_ST_MEDIA_RENDERER,
@@ -22,18 +20,13 @@ from wiim.endpoint import WiimApiEndpoint
 from wiim.exceptions import WiimDeviceException, WiimRequestException
 from wiim.wiim_device import WiimDevice
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import CannotConnect, NotWiimDevice, _validate_device_and_get_info
 from .const import (
-    CONF_DEVICES,
-    CONF_NAME,
     CONF_UDN,
     CONF_UPNP_LOCATION,
     DEFAULT_AVAILABILITY_POLLING_INTERVAL,
@@ -45,147 +38,6 @@ from .const import (
 )
 
 type WiimConfigEntry = ConfigEntry
-
-# Schema for individual devices in YAML
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-    }
-)
-
-# Schema for the wiim domain in configuration.yaml
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the WiiM component."""
-    # Ensure hass.data[DOMAIN] is initialized with the WiimData object
-    if DOMAIN not in hass.data:
-        session = async_get_clientsession(hass)
-        wiim_controller = WiimController(session, event_callback=None)
-        hass.data[DOMAIN] = WiimData(
-            controller=wiim_controller,
-            entity_id_to_udn_map={},
-            entities_by_entity_id={},
-        )
-        SDK_LOGGER.debug(
-            "Initialized hass.data[%s] with WiimData and controller.", DOMAIN
-        )
-
-    if config.get(DOMAIN):
-        if isinstance(config[DOMAIN], dict):
-            yaml_config = config[DOMAIN]
-            devices_config = yaml_config.get(CONF_DEVICES, [])
-
-            if devices_config:
-                SDK_LOGGER.debug(
-                    "Async_setup for WiiM integration with YAML config: %s",
-                    config.get(DOMAIN),
-                )
-
-                for device_conf in devices_config:
-                    host = device_conf.get(CONF_HOST)
-                    if not host:
-                        SDK_LOGGER.warning(
-                            "YAML device configuration missing 'host'. Skipping entry: %s",
-                            device_conf,
-                        )
-                        continue
-
-                    constructed_location = f"http://{host}:49152/description.xml"
-
-                    async def _import_device_from_yaml(
-                        host_to_import: str,
-                        location_to_import: str,
-                        raw_device_conf: dict[str, Any],
-                    ):
-                        """Helper to handle single device import asynchronously."""
-                        try:
-                            device_info = await _validate_device_and_get_info(
-                                hass, host_to_import, location=location_to_import
-                            )
-                            udn = device_info[CONF_UDN]
-                            name = device_info[CONF_NAME]
-                            upnp_location_yaml = device_info.get(CONF_UPNP_LOCATION)
-
-                            entries = hass.config_entries.async_entries(DOMAIN)
-                            existing_entry = next(
-                                (entry for entry in entries if entry.unique_id == udn),
-                                None,
-                            )
-                            if existing_entry:
-                                SDK_LOGGER.info(
-                                    "Config entry for WiiM device %s (UDN: %s) already exists. YAML entry for host %s will be ignored.",
-                                    existing_entry.title,
-                                    udn,
-                                    host_to_import,
-                                )
-                                # Optional: update existing entry if host changed in YAML
-                                # if existing_entry.data.get(CONF_HOST) != host_to_import:
-                                #     hass.config_entries.async_update_entry(
-                                #         existing_entry, data={**existing_entry.data, CONF_HOST: host_to_import}
-                                #     )
-                                return
-
-                            SDK_LOGGER.info(
-                                "Creating new config entry for WiiM device %s (UDN: %s) from YAML.",
-                                name,
-                                udn,
-                            )
-                            await hass.config_entries.flow.async_init(
-                                DOMAIN,
-                                context={"source": SOURCE_IMPORT},
-                                data={
-                                    CONF_HOST: host_to_import,
-                                    CONF_UDN: udn,
-                                    CONF_NAME: name,
-                                    CONF_UPNP_LOCATION: upnp_location_yaml,
-                                },
-                            )
-                        except CannotConnect:
-                            SDK_LOGGER.warning(
-                                "Cannot connect to WiiM device %s specified in YAML. Skipping.",
-                                host_to_import,
-                            )
-                        except NotWiimDevice:
-                            SDK_LOGGER.warning(
-                                "Device %s from YAML is not a WiiM device. Skipping.",
-                                host_to_import,
-                            )
-                        except Exception as e:
-                            SDK_LOGGER.exception(
-                                "Error processing YAML device %s: %s", host_to_import, e
-                            )
-                            raise
-
-                    hass.async_create_task(
-                        _import_device_from_yaml(
-                            host, constructed_location, device_conf
-                        )
-                    )
-            else:
-                SDK_LOGGER.debug(
-                    "YAML configuration for WiiM integration found but 'devices' list is empty."
-                )
-        else:
-            SDK_LOGGER.warning(
-                "YAML configuration for WiiM integration is not a dictionary. Skipping import."
-            )
-    else:
-        SDK_LOGGER.debug(
-            "No 'wiim' domain found in YAML configuration. Relying on UI configuration."
-        )
-
-    return True
 
 
 def _get_local_ip() -> str | None:
@@ -202,7 +54,6 @@ class MinimalUpnpShell(UpnpDevice):
 
     def __init__(self, _udn, _host, _name, _requester):
         """Initialize the MinimalUpnpShell.
-        # pylint: disable=super-init-not-called
 
         Args:
             _udn (str): Unique Device Name (UDN).
@@ -210,6 +61,8 @@ class MinimalUpnpShell(UpnpDevice):
             _name (str): Friendly name of the device.
             _requester (AiohttpRequester): HTTP requester used for UPnP communication.
         """
+
+        # pylint: disable=super-init-not-called
         self.udn = _udn
         self.friendly_name = _name or DEFAULT_DEVICE_NAME
         self.manufacturer = MANUFACTURER_WIIM
