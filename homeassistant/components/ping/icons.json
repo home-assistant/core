@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "loss": {
+        "default": "mdi:information-outline"
+      }
+    }
+  }
+}
