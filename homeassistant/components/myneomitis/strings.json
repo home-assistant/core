@@ -11,8 +11,8 @@
     "step": {
       "user": {
         "data": {
-          "email": "Email address",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "Your email address used for your MyNeomitis account",
@@ -25,20 +25,60 @@
   },
   "entity": {
     "select": {
-      "select_myneomitis": {
+      "pilote": {
         "state": {
           "antifrost": "Frost protection",
           "auto": "Auto",
           "boost": "Boost",
           "comfort": "Comfort",
-          "cooling": "Cooling",
           "eco": "Eco",
           "eco_1": "Eco -1",
           "eco_2": "Eco -2",
-          "heating": "Heating",
-          "off": "Off",
-          "on": "On",
           "standby": "Standby"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "antifrost": "mdi:snowflake",
+              "auto": "mdi:refresh-auto",
+              "boost": "mdi:rocket-launch",
+              "comfort": "mdi:fire",
+              "eco": "mdi:leaf",
+              "eco_1": "mdi:leaf",
+              "eco_2": "mdi:leaf",
+              "standby": "mdi:toggle-switch-off-outline"
+            }
+          }
+        }
+      },
+      "relais": {
+        "state": {
+          "auto": "Auto",
+          "off": "Off",
+          "on": "On"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "auto": "mdi:refresh-auto",
+              "off": "mdi:toggle-switch-off-outline",
+              "on": "mdi:toggle-switch"
+            }
+          }
+        }
+      },
+      "ufh": {
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "cooling": "mdi:snowflake",
+              "heating": "mdi:fire"
+            }
+          }
         }
       }
     }

@@ -9,12 +9,10 @@ from typing import Any
 import pyaxencoapi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .const import DATA_EMAIL, DATA_PASSWORD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
     """Set up MyNeomitis from a config entry."""
     session = async_get_clientsession(hass)
 
-    email: str = entry.data[DATA_EMAIL]
-    password: str = entry.data[DATA_PASSWORD]
+    email: str = entry.data[CONF_EMAIL]
+    password: str = entry.data[CONF_PASSWORD]
 
     api = pyaxencoapi.PyAxencoAPI(session)
     try:

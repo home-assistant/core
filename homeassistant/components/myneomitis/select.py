@@ -14,38 +14,47 @@ from pyaxencoapi import PyAxencoAPI
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MyNeomitisConfigEntry
+from .const import DOMAIN
 from .logger import log_ws_update
-from .utils import (
-    PRESET_MODE_MAP,
-    PRESET_MODE_MAP_RELAIS,
-    PRESET_MODE_MAP_UFH,
-    REVERSE_PRESET_MODE_MAP,
-    REVERSE_PRESET_MODE_MAP_RELAIS,
-    REVERSE_PRESET_MODE_MAP_UFH,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
 MODELES = ["EWS"]
 SUB_MODELES = ["UFH"]
 
-PRESET_OPTIONS = {
-    "relais": ["on", "off", "auto"],
-    "pilote": [
-        "boost",
-        "auto",
-        "comfort",
-        "eco_2",
-        "eco_1",
-        "eco",
-        "antifrost",
-        "standby",
-    ],
-    "UFH": ["cooling", "heating"],
+PRESET_MODE_MAP = {
+    "comfort": 1,
+    "eco": 2,
+    "antifrost": 3,
+    "standby": 4,
+    "boost": 6,
+    "setpoint": 8,
+    "comfort_plus": 20,
+    "eco_1": 40,
+    "eco_2": 41,
+    "auto": 60,
 }
+
+PRESET_MODE_MAP_RELAIS = {
+    "on": 1,
+    "off": 2,
+    "auto": 60,
+}
+
+PRESET_MODE_MAP_UFH = {
+    "heating": 0,
+    "cooling": 1,
+}
+
+REVERSE_PRESET_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
+
+REVERSE_PRESET_MODE_MAP_RELAIS = {v: k for k, v in PRESET_MODE_MAP_RELAIS.items()}
+
+REVERSE_PRESET_MODE_MAP_UFH = {v: k for k, v in PRESET_MODE_MAP_UFH.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,24 +69,24 @@ class MyNeoSelectEntityDescription(SelectEntityDescription):
 SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
     "relais": MyNeoSelectEntityDescription(
         key="relais",
-        translation_key="select_myneomitis",
-        options=PRESET_OPTIONS["relais"],
+        translation_key="relais",
+        options=list(PRESET_MODE_MAP_RELAIS),
         preset_mode_map=PRESET_MODE_MAP_RELAIS,
         reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP_RELAIS,
         state_key="targetMode",
     ),
     "pilote": MyNeoSelectEntityDescription(
         key="pilote",
-        translation_key="select_myneomitis",
-        options=PRESET_OPTIONS["pilote"],
+        translation_key="pilote",
+        options=list(PRESET_MODE_MAP),
         preset_mode_map=PRESET_MODE_MAP,
         reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP,
         state_key="targetMode",
     ),
     "UFH": MyNeoSelectEntityDescription(
-        key="UFH",
-        translation_key="select_myneomitis",
-        options=PRESET_OPTIONS["UFH"],
+        key="ufh",
+        translation_key="ufh",
+        options=list(PRESET_MODE_MAP_UFH),
         preset_mode_map=PRESET_MODE_MAP_UFH,
         reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP_UFH,
         state_key="changeOverUser",
@@ -90,48 +99,27 @@ async def async_setup_entry(
     config_entry: MyNeomitisConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Select entities from a config entry.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant instance.
-        config_entry (MyNeomitisConfigEntry): The configuration entry.
-        async_add_entities (AddEntitiesCallback): Callback to add entities.
-
-    """
+    """Set up Select entities from a config entry."""
     api = config_entry.runtime_data.api
     devices = config_entry.runtime_data.devices
 
-    def _get_entity_description(device: dict) -> MyNeoSelectEntityDescription | None:
-        """Determine the appropriate entity description for a device."""
+    def _create_entity(device: dict) -> MyNeoSelect:
+        """Create a select entity for a device."""
         if device["model"] == "EWS":
             # Check if device has relayMode to determine if it's a relais or pilote
             if "relayMode" in device.get("state", {}):
-                return SELECT_TYPES["relais"]
-            return SELECT_TYPES["pilote"]
-        if device["model"] == "UFH":
-            return SELECT_TYPES["UFH"]
-        return None
+                description = SELECT_TYPES["relais"]
+            else:
+                description = SELECT_TYPES["pilote"]
+        else:  # UFH
+            description = SELECT_TYPES["UFH"]
 
-    def _create_entity(device: dict) -> MyNeoSelect | None:
-        """Create a select entity for a device.
-
-        Args:
-            device: The device data dictionary.
-
-        Returns:
-            A MyNeoSelect entity or None if the device is not supported.
-
-        """
-        description = _get_entity_description(device)
-        if description is None:
-            return None
-        return MyNeoSelect(api, device, devices, description)
+        return MyNeoSelect(api, device, description)
 
     select_entities = [
-        entity
+        _create_entity(device)
         for device in devices
         if device["model"] in MODELES or device["model"] in SUB_MODELES
-        if (entity := _create_entity(device)) is not None
     ]
 
     async_add_entities(select_entities)
@@ -141,32 +129,26 @@ class MyNeoSelect(SelectEntity):
     """Select entity for MyNeomitis devices."""
 
     entity_description: MyNeoSelectEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         api: PyAxencoAPI,
         device: dict[str, Any],
-        devices: list[dict[str, Any]],
         description: MyNeoSelectEntityDescription,
     ) -> None:
-        """Initialize the MyNeoSelect entity.
-
-        Args:
-            api: The API instance to communicate with the device.
-            device: The device data dictionary.
-            devices: A list of all devices managed by the integration.
-            description: The entity description for this select entity.
-
-        """
-        super().__init__()
+        """Initialize the MyNeoSelect entity."""
         self.entity_description = description
         self._api = api
         self._device = device
-        self._attr_name = f"MyNeo {device['name']}"
-        self._attr_unique_id = f"myneo_{device['_id']}"
+        self._attr_unique_id = f"{device['_id']}"
         self._attr_available = device["connected"]
-        self._is_sub_device = device["model"] in SUB_MODELES
-
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, device["_id"])},
+            name=device["name"],
+            manufacturer="Axenco",
+            model=device["model"],
+        )
         # Set current option based on device state
         current_mode = device.get("state", {}).get(description.state_key)
         self._attr_current_option = description.reverse_preset_mode_map.get(
@@ -175,86 +157,49 @@ class MyNeoSelect(SelectEntity):
 
         self._program = device.get("program", {}).get("data", {})
 
-        api.register_listener(device["_id"], self.handle_ws_update)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        if self._attr_current_option in {"off", "standby"}:
-            return "mdi:toggle-switch-off-outline"
-        if self._attr_current_option in {"eco", "eco_1", "eco_2"}:
-            return "mdi:leaf"
-        if self._attr_current_option in {"comfort", "heating"}:
-            return "mdi:fire"
-        if self._attr_current_option in {"antifrost", "cooling"}:
-            return "mdi:snowflake"
-        if self._attr_current_option == "boost":
-            return "mdi:rocket-launch"
-        if self._attr_current_option == "auto":
-            return "mdi:refresh-auto"
-        return "mdi:toggle-switch"
+    async def async_added_to_hass(self) -> None:
+        """Register listener when entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._api.register_listener(self._device["_id"], self.handle_ws_update)
+        )
 
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
-        """Handle WebSocket updates for the device.
-
-        Args:
-            new_state: The new state data received from the WebSocket.
-
-        """
-        state = new_state
-        if not state:
+        """Handle WebSocket updates for the device."""
+        if not new_state:
             return
 
-        if "connected" in state:
-            self._attr_available = state["connected"]
+        if "connected" in new_state:
+            self._attr_available = new_state["connected"]
 
-        if "program" in state:
-            new_data = state["program"].get("data", {})
+        if "program" in new_state:
+            new_data = new_state["program"].get("data", {})
             self._program.update(new_data)
-
-        if "name" in state:
-            self._attr_name = state["name"]
 
         # Check for state updates using the description's state_key
         state_key = self.entity_description.state_key
-        if state_key in state:
-            mode = state.get(state_key)
+        if state_key in new_state:
+            mode = new_state.get(state_key)
             if mode is not None:
                 self._attr_current_option = (
                     self.entity_description.reverse_preset_mode_map.get(
                         mode, STATE_UNKNOWN
                     )
                 )
-                log_ws_update(str(self._attr_name), state)
+                # Log with device name from original device dict
+                device_name: str = self._device["name"]
+                log_ws_update(device_name, new_state)
 
         self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
-        """Send the new mode via the API.
-
-        Args:
-            option: The selected option to set.
-
-        """
+        """Send the new mode via the API."""
         mode_code = self.entity_description.preset_mode_map.get(option)
 
         if mode_code is None:
             _LOGGER.warning("MyNeomitis : Unknown mode selected: %s", option)
             return
 
-        await self.set_api_device_mode(option)
+        await self._api.set_device_mode(self._device["_id"], mode_code)
         self._attr_current_option = option
         self.async_write_ha_state()
-
-    async def set_api_device_mode(self, mode: str) -> Any:
-        """Set the device mode.
-
-        Args:
-            mode: The desired mode to set for the device.
-
-        Returns:
-            The result of the API call to set the device mode.
-
-        """
-        mode_code = self.entity_description.preset_mode_map[mode]
-        return await self._api.set_device_mode(self._device["_id"], mode_code)

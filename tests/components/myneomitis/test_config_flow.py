@@ -88,20 +88,41 @@ async def test_abort_if_already_configured(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test abort when entry already exists."""
-    monkeypatch.setattr(
-        hass.config_entries,
-        "async_entries",
-        lambda *args, **kwargs: [object()],
-    )
-
+    # Create an existing config entry using hass.config_entries
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
-    hass.config_entries.async_entries = lambda *args, **kwargs: []
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api.login = AsyncMock()
+        mock_api.user_id = "test_user_id"
+        mock_api.token = "test_token"
+        mock_api.refresh_token = "test_refresh"
+
+        # First entry - should succeed
+        result1 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
+        )
+        assert result1["type"] == "create_entry"
+        await hass.async_block_till_done()
+
+        # Second entry with same user_id - should abort
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
+        )
+        assert result3["type"] == "abort"
+        assert result3["reason"] == "already_configured"
 
 
 def make_client_response_error(status: int) -> ClientResponseError:

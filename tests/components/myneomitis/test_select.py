@@ -33,12 +33,12 @@ async def test_myneo_relay_select_basic_behavior(hass: HomeAssistant) -> None:
     mock_api.set_device_mode = AsyncMock()
 
     description = SELECT_TYPES["relais"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
-    assert select.name == "MyNeo Relais Salon"
+    assert select.has_entity_name is True
+    assert select._attr_device_info["name"] == "Relais Salon"
     assert select.entity_description.options == ["on", "off", "auto"]
     assert select.current_option == "off"
-    assert select.icon == "mdi:toggle-switch-off-outline"
 
     select.hass = hass
     select.entity_id = "select.myneo_relais_salon"
@@ -75,9 +75,10 @@ async def test_myneo_select_preset_modes(hass: HomeAssistant) -> None:
     mock_api.set_device_mode = AsyncMock()
 
     description = SELECT_TYPES["pilote"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
-    assert select.name == "MyNeo Thermostat Salon"
+    assert select.has_entity_name is True
+    assert select._attr_device_info["name"] == "Thermostat Salon"
     assert "comfort" in select.entity_description.options
     assert select.current_option == "comfort"
 
@@ -102,10 +103,11 @@ async def test_myneo_select_ufh_modes(hass: HomeAssistant) -> None:
     mock_api.set_device_mode = AsyncMock()
 
     description = SELECT_TYPES["UFH"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
-    assert select.name == "MyNeo UFH Salon"
-    assert select.entity_description.options == ["cooling", "heating"]
+    assert select.has_entity_name is True
+    assert select._attr_device_info["name"] == "UFH Salon"
+    assert select.entity_description.options == ["heating", "cooling"]
     assert select.current_option == "heating"
 
     select.current_option = "cooling"
@@ -127,7 +129,7 @@ async def test_select_option_with_invalid_option(hass: HomeAssistant) -> None:
     mock_api = Mock()
     mock_api.sio.connected = True
     description = SELECT_TYPES["relais"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
     with patch(
         "homeassistant.components.myneomitis.select._LOGGER.warning"
@@ -159,75 +161,14 @@ async def test_ufh_handle_ws_update_and_sub_device(hass: HomeAssistant) -> None:
     mock_api.register_listener = Mock()
 
     description = SELECT_TYPES["UFH"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
-    ws_state = {"changeOverUser": 1, "connected": True, "name": "UFH Salon"}
+    ws_state = {"changeOverUser": 1, "connected": True}
     with patch.object(select, "async_write_ha_state") as mock_write:
         select.handle_ws_update(ws_state)
         mock_write.assert_called()
         assert select.current_option in ["cooling", "heating"]
-        assert select.name == "UFH Salon"
         assert select.available is True
-
-
-@pytest.mark.asyncio
-async def test_icon_for_all_options(hass: HomeAssistant) -> None:
-    """Test icon property for all special options."""
-    options_map = {
-        "off": "mdi:toggle-switch-off-outline",
-        "standby": "mdi:toggle-switch-off-outline",
-        "eco": "mdi:leaf",
-        "eco_1": "mdi:leaf",
-        "eco_2": "mdi:leaf",
-        "comfort": "mdi:fire",
-        "heating": "mdi:fire",
-        "antifrost": "mdi:snowflake",
-        "cooling": "mdi:snowflake",
-        "boost": "mdi:rocket-launch",
-        "auto": "mdi:refresh-auto",
-        "unknown": "mdi:toggle-switch",
-    }
-
-    for opt, icon in options_map.items():
-        device = {
-            "_id": "dev_icon",
-            "name": "Icon Test",
-            "model": "EWS",
-            "state": {"targetMode": 0, "relayMode": 1},
-            "connected": True,
-            "program": {"data": {}},
-        }
-        mock_api = Mock()
-        mock_api.sio.connected = True
-        description = SELECT_TYPES["relais"]
-        select = MyNeoSelect(mock_api, device, [device], description)
-        select._attr_current_option = opt
-        assert select.icon == icon
-
-
-@pytest.mark.asyncio
-async def test_normal_device_set_api_device_mode(hass: HomeAssistant) -> None:
-    """Test set_api_device_mode for a normal device (not sub-device)."""
-    device = {
-        "_id": "dev_normal",
-        "name": "Normal Device",
-        "model": "EWS",
-        "state": {"targetMode": 1},
-        "connected": True,
-        "program": {"data": {}},
-    }
-
-    mock_api = Mock()
-    mock_api.sio = Mock()
-    mock_api.sio.connected = True
-    mock_api.set_device_mode = AsyncMock()
-
-    description = SELECT_TYPES["pilote"]
-    select = MyNeoSelect(mock_api, device, [device], description)
-    select._is_sub_device = False
-
-    await select.set_api_device_mode("comfort")
-    mock_api.set_device_mode.assert_awaited_once_with("dev_normal", 1)
 
 
 @pytest.mark.asyncio
@@ -279,7 +220,7 @@ async def test_setup_entry_filters_unsupported_devices(hass: HomeAssistant) -> N
 
     # Only 1 entity should be added (the supported EWS device)
     assert len(added_entities) == 1
-    assert added_entities[0].unique_id == "myneo_supported1"
+    assert added_entities[0].unique_id == "supported1"
 
 
 @pytest.mark.asyncio
@@ -297,7 +238,7 @@ async def test_handle_ws_update_empty_state(hass: HomeAssistant) -> None:
     mock_api = Mock()
     mock_api.register_listener = Mock()
     description = SELECT_TYPES["pilote"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
     initial_option = select.current_option
 
@@ -324,7 +265,7 @@ async def test_handle_ws_update_with_program_update(hass: HomeAssistant) -> None
     mock_api = Mock()
     mock_api.register_listener = Mock()
     description = SELECT_TYPES["pilote"]
-    select = MyNeoSelect(mock_api, device, [device], description)
+    select = MyNeoSelect(mock_api, device, description)
 
     new_program = {"TUE": [1, 2, 3]}
     ws_state = {"program": {"data": new_program}}
@@ -334,3 +275,126 @@ async def test_handle_ws_update_with_program_update(hass: HomeAssistant) -> None
         mock_write.assert_called_once()
 
     assert select._program["TUE"] == [1, 2, 3]
+
+
+@pytest.mark.asyncio
+async def test_create_entity_with_pilote_device(hass: HomeAssistant) -> None:
+    """Test that EWS device without relayMode creates pilote entity."""
+    device = {
+        "_id": "pilote1",
+        "name": "Pilote Device",
+        "model": "EWS",
+        "state": {"targetMode": 1},  # No relayMode
+        "connected": True,
+        "program": {"data": {}},
+    }
+
+    mock_api = Mock()
+    mock_api.register_listener = Mock()
+
+    entry = ConfigEntry(
+        version=1,
+        minor_version=1,
+        entry_id="test-entry",
+        domain="myneomitis",
+        title="MyNeomitis",
+        data={"email": "test@test.com", "password": "secret"},
+        options={},
+        source="user",
+        unique_id="uid",
+        discovery_keys=[],
+        subentries_data={},
+    )
+    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=[device])
+
+    added_entities = []
+
+    def fake_add(entities):
+        added_entities.extend(entities)
+
+    await async_setup_entry(hass, entry, fake_add)
+
+    assert len(added_entities) == 1
+    assert added_entities[0].entity_description.key == "pilote"
+
+
+@pytest.mark.asyncio
+async def test_create_entity_with_ufh_device(hass: HomeAssistant) -> None:
+    """Test that UFH device creates UFH entity."""
+    device = {
+        "_id": "ufh1",
+        "name": "UFH Device",
+        "model": "UFH",
+        "state": {"changeOverUser": 0},
+        "connected": True,
+        "program": {"data": {}},
+    }
+
+    mock_api = Mock()
+    mock_api.register_listener = Mock()
+
+    entry = ConfigEntry(
+        version=1,
+        minor_version=1,
+        entry_id="test-entry",
+        domain="myneomitis",
+        title="MyNeomitis",
+        data={"email": "test@test.com", "password": "secret"},
+        options={},
+        source="user",
+        unique_id="uid",
+        discovery_keys=[],
+        subentries_data={},
+    )
+    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=[device])
+
+    added_entities = []
+
+    def fake_add(entities):
+        added_entities.extend(entities)
+
+    await async_setup_entry(hass, entry, fake_add)
+
+    assert len(added_entities) == 1
+    assert added_entities[0].entity_description.key == "ufh"
+
+
+@pytest.mark.asyncio
+async def test_create_entity_with_relais_device(hass: HomeAssistant) -> None:
+    """Test that EWS device with relayMode creates relais entity."""
+    device = {
+        "_id": "relais1",
+        "name": "Relais Device",
+        "model": "EWS",
+        "state": {"relayMode": 1, "targetMode": 2},  # Has relayMode
+        "connected": True,
+        "program": {"data": {}},
+    }
+
+    mock_api = Mock()
+    mock_api.register_listener = Mock()
+
+    entry = ConfigEntry(
+        version=1,
+        minor_version=1,
+        entry_id="test-entry",
+        domain="myneomitis",
+        title="MyNeomitis",
+        data={"email": "test@test.com", "password": "secret"},
+        options={},
+        source="user",
+        unique_id="uid",
+        discovery_keys=[],
+        subentries_data={},
+    )
+    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=[device])
+
+    added_entities = []
+
+    def fake_add(entities):
+        added_entities.extend(entities)
+
+    await async_setup_entry(hass, entry, fake_add)
+
+    assert len(added_entities) == 1
+    assert added_entities[0].entity_description.key == "relais"
