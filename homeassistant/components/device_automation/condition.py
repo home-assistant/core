@@ -56,7 +56,6 @@ class DeviceAutomationConditionProtocol(Protocol):
 class DeviceCondition(Condition):
     """Device condition."""
 
-    _hass: HomeAssistant
     _config: ConfigType
 
     @classmethod
@@ -87,7 +86,7 @@ class DeviceCondition(Condition):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
-        self._hass = hass
+        super().__init__(hass, config)
         assert config.options is not None
         self._config = config.options
 
