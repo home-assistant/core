@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any
 
 from simplipy import API
 from simplipy.errors import (
@@ -194,6 +194,8 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
+type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
+
 
 @callback
 def _async_get_system_for_service_call(
@@ -225,23 +227,26 @@ def _async_get_system_for_service_call(
     system_id = int(system_id_str)
 
     for entry_id in base_station_device_entry.config_entries:
-        if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
-            continue
-        return cast(SystemType, simplisafe.systems[system_id])
+        config_entry: SimpliSafeConfigEntry | None = (
+            hass.config_entries.async_get_entry(entry_id)
+        )
+        if config_entry is not None and system_id in config_entry.runtime_data.systems:
+            return config_entry.runtime_data.systems[system_id]
 
     raise ValueError(f"No system for device ID: {device_id}")
 
 
 @callback
 def _async_register_base_station(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemType
+    hass: HomeAssistant, entry: SimpliSafeConfigEntry, system: SystemType
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
+    system_id = str(system.system_id)
 
     base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(system.system_id))},
+        identifiers={(DOMAIN, system_id)},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
@@ -249,7 +254,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+        identifiers={(DOMAIN, system_id)}
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:
@@ -263,7 +268,9 @@ def _async_register_base_station(
 
 
 @callback
-def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_standardize_config_entry(
+    hass: HomeAssistant, entry: SimpliSafeConfigEntry
+) -> None:
     """Bring a config entry up to current standards."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -287,7 +294,7 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
@@ -311,8 +318,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = simplisafe
+    entry.runtime_data = simplisafe
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -375,7 +381,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     current_options = {**entry.options}
 
-    async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
+    async def async_reload_entry(
+        _: HomeAssistant, updated_entry: SimpliSafeConfigEntry
+    ) -> None:
         """Handle an options update.
 
         This method will get called in two scenarios:
@@ -397,25 +405,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # If this is the last loaded instance of SimpliSafe, deregister any services
-        # defined during integration setup:
-        for service_name in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: API) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: SimpliSafeConfigEntry, api: API
+    ) -> None:
         """Initialize."""
         self._api = api
         self._hass = hass

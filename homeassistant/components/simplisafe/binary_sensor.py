@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
@@ -10,13 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe
-from .const import DOMAIN, LOGGER
+from . import SimpliSafe, SimpliSafeConfigEntry
+from .const import LOGGER
 from .entity import SimpliSafeEntity
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
@@ -58,11 +59,11 @@ TRIGGERED_SENSOR_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SimpliSafeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe binary sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
 
     sensors: list[BatteryBinarySensor | TriggeredBinarySensor] = []
 
@@ -71,7 +72,10 @@ async def async_setup_entry(
             LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
+        system = cast(SystemV3, system)
+
         for sensor in system.sensors.values():
+            sensor = cast(SensorV3, sensor)
             if sensor.type in TRIGGERED_SENSOR_TYPES:
                 sensors.append(
                     TriggeredBinarySensor(
