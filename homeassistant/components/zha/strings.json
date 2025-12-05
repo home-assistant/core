@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "cannot_form_network": "Could not form a new Zigbee network.\n\nError: {error}",
       "cannot_resolve_path": "Could not resolve device path: {path}",
       "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
       "cannot_restore_backup_no_ieee_confirm": "The adapter you are restoring to has outdated firmware and cannot write the adapter IEEE address multiple times. Please upgrade the firmware or confirm permanent overwrite in the previous step.",
@@ -1913,16 +1914,17 @@
       "title": "Zigbee network settings have changed"
     },
     "wrong_silabs_firmware_installed_nabucasa": {
-      "description": "Your Zigbee adapter was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}).\n\nTo run your adapter exclusively with ZHA, you need to install the Zigbee firmware:\n - Go to Settings > System > Hardware, select the device and select Configure.\n - Select the 'Migrate Zigbee to a new adapter' option and follow the instructions.",
-      "title": "Zigbee adapter with multiprotocol firmware detected"
+      "description": "Your Zigbee adapter is currently in an incorrect state: {firmware_type}.\n\nThe device may have Thread or multiprotocol firmware installed, or it may be stuck in the bootloader. To resolve this, try to unplug the adapter temporarily.\n\nIf the issue persists and you need to install Zigbee firmware:\n - Go to Settings > System > Hardware, select the device and select Configure.\n - Select the 'Migrate Zigbee to a new adapter' option and follow the instructions.",
+      "title": "Zigbee adapter in incorrect state"
     },
     "wrong_silabs_firmware_installed_other": {
-      "description": "Your Zigbee adapter was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}).\n\nTo run your adapter exclusively with ZHA, you need to install Zigbee firmware. Follow your Zigbee adapter manufacturer's instructions for how to do this.",
+      "description": "Your Zigbee adapter is currently in an incorrect state: {firmware_type}.\n\nThe device may have Thread or multiprotocol firmware installed, or it may be stuck in the bootloader. To resolve this, try to unplug the adapter temporarily.\n\nIf the issue persists and you need to install Zigbee firmware, follow your Zigbee adapter manufacturer's instructions for how to do this.",
       "title": "[%key:component::zha::issues::wrong_silabs_firmware_installed_nabucasa::title%]"
     }
   },
   "options": {
     "abort": {
+      "cannot_form_network": "[%key:component::zha::config::abort::cannot_form_network%]",
       "cannot_resolve_path": "[%key:component::zha::config::abort::cannot_resolve_path%]",
       "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
       "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]",

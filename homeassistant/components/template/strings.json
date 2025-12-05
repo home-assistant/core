@@ -529,7 +529,7 @@
       "title": "Deprecated battery level option in {entity_name}"
     },
     "deprecated_legacy_templates": {
-      "description": "The legacy `platform: template` syntax for `{domain}` is being removed. Please migrate `{breadcrumb}` to the modern template syntax.\n\n1. Remove existing template definition.\n2. Add new template definition:\n{config}\n3. Restart Home Assistant or reload template entities.",
+      "description": "The legacy `platform: template` syntax for `{domain}` is being removed. Please migrate `{breadcrumb}` to the modern template syntax.\n#### Step 1 - Remove legacy configuration\nRemove the `{breadcrumb}` template definition from the `configuration.yaml` `{domain}:` section.\n\n**Note:** If you are using `{domain}: !include {filename}.yaml` in `configuration.yaml`, remove the {domain} definition from the included `{filename}.yaml`.\n#### Step 2 -  Add the modern configuration\nAdd new template definition inside `configuration.yaml`:\n{config}\n**Note:** If there are any existing `template:` sections in your configuration, make sure to omit the `template:` line from the yaml above.  There can only be 1 `template:` section in `configuration.yaml`.  Also, ensure the indentation is aligned with the existing entities within the `template:` section.\n#### Step 3 - Restart Home Assistant or reload template entities",
       "title": "Legacy {domain} template deprecation"
     }
   },

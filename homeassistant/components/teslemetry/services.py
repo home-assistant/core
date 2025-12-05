@@ -325,6 +325,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required(ATTR_TOU_SETTINGS): dict,
             }
         ),
+        description_placeholders={
+            "time_of_use_url": "https://developer.tesla.com/docs/fleet-api#time_of_use_settings"
+        },
     )
 
     async def add_charge_schedule(call: ServiceCall) -> None:

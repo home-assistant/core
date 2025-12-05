@@ -2345,19 +2345,20 @@ async def test_effect_template(
     ],
 )
 @pytest.mark.parametrize(
-    ("expected_min_mireds", "attribute_template"),
+    ("expected_min_mireds", "expected_max_kelvin", "attribute_template"),
     [
-        (118, "{{118}}"),
-        (153, "{{x - 12}}"),
-        (153, "None"),
-        (153, "{{ none }}"),
-        (153, ""),
-        (153, "{{ 'a' }}"),
+        (118, 8474, "{{118}}"),
+        (153, 6535, "{{x - 12}}"),
+        (153, 6535, "None"),
+        (153, 6535, "{{ none }}"),
+        (153, 6535, ""),
+        (153, 6535, "{{ 'a' }}"),
     ],
 )
 async def test_min_mireds_template(
     hass: HomeAssistant,
-    expected_min_mireds,
+    expected_min_mireds: int,
+    expected_max_kelvin: int,
     style: ConfigurationStyle,
     setup_light_with_mireds,
 ) -> None:
@@ -2369,6 +2370,7 @@ async def test_min_mireds_template(
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("min_mireds") == expected_min_mireds
+    assert state.attributes.get("max_color_temp_kelvin") == expected_max_kelvin
 
 
 @pytest.mark.parametrize("count", [1])
@@ -2381,19 +2383,20 @@ async def test_min_mireds_template(
     ],
 )
 @pytest.mark.parametrize(
-    ("expected_max_mireds", "attribute_template"),
+    ("expected_max_mireds", "expected_min_kelvin", "attribute_template"),
     [
-        (488, "{{488}}"),
-        (500, "{{x - 12}}"),
-        (500, "None"),
-        (500, "{{ none }}"),
-        (500, ""),
-        (500, "{{ 'a' }}"),
+        (488, 2049, "{{488}}"),
+        (500, 2000, "{{x - 12}}"),
+        (500, 2000, "None"),
+        (500, 2000, "{{ none }}"),
+        (500, 2000, ""),
+        (500, 2000, "{{ 'a' }}"),
     ],
 )
 async def test_max_mireds_template(
     hass: HomeAssistant,
-    expected_max_mireds,
+    expected_max_mireds: int,
+    expected_min_kelvin: int,
     style: ConfigurationStyle,
     setup_light_with_mireds,
 ) -> None:
@@ -2405,6 +2408,7 @@ async def test_max_mireds_template(
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("max_mireds") == expected_max_mireds
+    assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
 
 
 @pytest.mark.parametrize(
