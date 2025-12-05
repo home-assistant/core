@@ -74,6 +74,3 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except ClientError as err:
             # Network issues (timeouts, DNS, etc.)
             raise UpdateFailed(f"Network error: {err!r}") from err
-        except Exception as err:
-            # Unexpected errors
-            raise UpdateFailed(str(err)) from err
