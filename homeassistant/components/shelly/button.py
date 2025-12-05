@@ -80,6 +80,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
+        supported=lambda coordinator: coordinator.sleep_period == 0,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
