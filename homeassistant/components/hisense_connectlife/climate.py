@@ -12,6 +12,10 @@ from connectlife_cloud.mode_converter import (
     get_ha_mode_string,
 )
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -30,10 +34,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    FAN_AUTO,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
     FAN_ULTRA_HIGH,
     FAN_ULTRA_LOW,
     MAX_TEMP,
@@ -47,6 +47,31 @@ from .models import DeviceInfo as HisenseDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
+# Fan mode mapping: HA string format to HA constant
+# This ensures consistent mapping throughout the code
+HA_FAN_STR_TO_CONST = {
+    "auto": FAN_AUTO,
+    "low": FAN_LOW,
+    "medium": FAN_MEDIUM,
+    "high": FAN_HIGH,
+    "ultra_low": SFAN_ULTRA_LOW,
+    "medium_low": SFAN_ULTRA_LOW,
+    "ultra_high": SFAN_ULTRA_HIGH,
+    "medium_high": SFAN_ULTRA_HIGH,
+}
+
+# Reverse mapping: HA constant to string format
+HA_FAN_CONST_TO_STR = {
+    FAN_AUTO: "auto",
+    FAN_LOW: "low",
+    FAN_MEDIUM: "medium",
+    FAN_HIGH: "high",
+    FAN_ULTRA_LOW: "ultra_low",
+    SFAN_ULTRA_LOW: "ultra_low",
+    FAN_ULTRA_HIGH: "ultra_high",
+    SFAN_ULTRA_HIGH: "ultra_high",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -56,58 +81,30 @@ async def async_setup_entry(
     """Set up the Hisense AC climate platform."""
     coordinator: HisenseACPluginDataUpdateCoordinator = config_entry.runtime_data
 
-    try:
-        # Trigger initial data update
-        await coordinator.async_config_entry_first_refresh()
+    # Get devices from coordinator (already refreshed in __init__.py)
+    devices = coordinator.data
 
-        # Get devices from coordinator
-        devices = coordinator.data
-        _LOGGER.debug("Coordinator data after refresh: %s", devices)
+    if not devices:
+        _LOGGER.debug("No devices found in coordinator data")
+        return
 
-        if not devices:
-            _LOGGER.warning("No devices found in coordinator data")
-            return
+    entities = [
+        HisenseClimate(coordinator, device)
+        for device in devices.values()
+        if isinstance(device, HisenseDeviceInfo) and device.is_supported()
+    ]
 
-        entities = []
-        for device in devices.values():
-            _LOGGER.debug("Processing device: %s", device.to_dict())
-            if isinstance(device, HisenseDeviceInfo) and device.is_supported():
-                _LOGGER.info(
-                    "Adding climate entity for device: %s (type: %s-%s)",
-                    device.name,
-                    device.type_code,
-                    device.feature_code,
-                )
-                entity = HisenseClimate(coordinator, device)
-                entities.append(entity)
-            else:
-                _LOGGER.warning(
-                    "Skipping unsupported device: %s-%s (%s)",
-                    getattr(device, "type_code", None),
-                    getattr(device, "feature_code", None),
-                    getattr(device, "name", None),
-                )
-
-        if not entities:
-            _LOGGER.warning("No supported devices found")
-            return
-
-        _LOGGER.info("Adding %d climate entities", len(entities))
+    if entities:
+        _LOGGER.debug("Setting up %d climate entities", len(entities))
         async_add_entities(entities)
-
-    except Exception as err:
-        _LOGGER.error("Failed to set up climate platform: %s", err)
-        raise
+    else:
+        _LOGGER.debug("No supported climate devices found")
 
 
 class HisenseClimate(CoordinatorEntity, ClimateEntity):
     """Hisense AC climate entity."""
 
     _attr_has_entity_name = False
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = MIN_TEMP
-    _attr_max_temp = MAX_TEMP
-    _attr_target_temperature_step = 1
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -126,6 +123,18 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._device_id = device.puid
         self._attr_unique_id = f"{device.device_id}_climate"
         self._attr_name = device.name
+
+        # Set device-specific attributes
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_target_temperature_step = (
+            0.5 if device.feature_code == "19901" else 1.0
+        )
+
+        # Initialize default temperature range (will be updated based on device capabilities)
+        self._attr_min_temp = MIN_TEMP
+        self._attr_max_temp = MAX_TEMP
+
+        # State tracking
         self.hasAuto = False
         self._last_command_time = 0
         self.wait_time = 3
@@ -133,99 +142,72 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_hvac_mode = HVACMode.OFF
         self._cached_fan_mode = None
         self._cached_swing_mode = SWING_OFF
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.name,
             manufacturer="Hisense",
             model=f"{device.type_name} ({device.feature_name})",
         )
-        if device.feature_code == "19901":
-            self._attr_target_temperature_step = 0.5
+        # Initialize parser and type codes to default values
+        self._parser = None
+        self.static_data = None
+        self._current_type_code = device.type_code
+        self._current_feature_code = device.feature_code
+
         # Get device parser to determine available modes and options
         device_type = device.get_device_type()
         if device_type:
-            try:
-                self._parser = coordinator.api_client.parsers.get(device.device_id)
-                self.static_data = coordinator.api_client.static_data.get(
-                    device.device_id
-                )
+            self._parser = coordinator.api_client.parsers.get(device.device_id)
+            self.static_data = coordinator.api_client.static_data.get(device.device_id)
+            self._current_type_code = device_type.type_code
+            self._current_feature_code = device_type.feature_code
+
+            if self._parser:
                 _LOGGER.debug(
-                    "Using parser for device type %s-%s:%s",
+                    "Using parser for device type %s-%s",
                     device_type.type_code,
                     device_type.feature_code,
-                    self._parser,
                 )
-                # Save device_type's type_code and feature_code for later use
-                self._current_type_code = device_type.type_code
-                self._current_feature_code = device_type.feature_code
-                # Set available modes based on device capabilities
                 self._setup_hvac_modes()
                 self._setup_fan_modes()
                 self._setup_swing_modes()
-            except Exception as err:  # noqa: BLE001  # noqa: BLE001
-                _LOGGER.error("Failed to get device parser: %s", err)
-                self._parser = None
-        else:
-            self._parser = None
 
         # Only OFF mode if parser not available (don't assume device supports all modes)
         if not hasattr(self, "_attr_hvac_modes"):
             self._attr_hvac_modes = [HVACMode.OFF]
 
-        # Get target_temp attribute
-        target_temp_attr = (
-            self._parser.attributes.get(StatusKey.TARGET_TEMP) if self._parser else None
-        )
+        # Configure temperature range based on device capabilities
+        if self._parser:
+            target_temp_attr = self._parser.attributes.get(StatusKey.TARGET_TEMP)
+            temp_type_attr = device.status.get(StatusKey.T_TEMP_TYPE)
 
-        # Parse propertyValueList to get temperature range
-        def parse_temperature_range(property_value_list):
-            ranges = []
-            for item in property_value_list.split(","):
-                item = item.strip()
-                if "~" in item:
-                    lower, upper = map(int, item.split("~"))
-                    ranges.append((lower, upper))
-            return ranges
+            # Parse temperature ranges from device
+            temperature_ranges = []
+            if target_temp_attr and target_temp_attr.value_range:
+                for item in target_temp_attr.value_range.split(","):
+                    item = item.strip()
+                    if "~" in item:
+                        lower, upper = map(int, item.split("~"))
+                        temperature_ranges.append((lower, upper))
 
-        # Get parsed temperature range
-        if target_temp_attr and target_temp_attr.value_range:
-            temperature_ranges = parse_temperature_range(target_temp_attr.value_range)
-        else:
-            _LOGGER.warning(
-                "Target temperature attribute or value range not found, using default range."
-            )
-            temperature_ranges = [(MIN_TEMP, MAX_TEMP)]
-
-        # Get temp_type attribute
-        temp_type_attr = device.status.get(StatusKey.T_TEMP_TYPE)
-
-        # Select appropriate temperature range based on temp_type
-        if temp_type_attr != "1":
-            # Use first range (Celsius)
+            # Apply ranges if available
             if temperature_ranges:
-                min_temp, max_temp = temperature_ranges[0]
-            else:
-                min_temp = MIN_TEMP
-                max_temp = MAX_TEMP
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        else:
-            # Use second range (Fahrenheit)
-            if len(temperature_ranges) > 1:
-                min_temp, max_temp = temperature_ranges[1]
-            else:
-                min_temp = MIN_TEMP
-                max_temp = MAX_TEMP
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-        # Set attributes
-        self._attr_min_temp = min_temp
-        self._attr_max_temp = max_temp
-        _LOGGER.debug(
-            "Setting temperature limits %s-%s:%s:%s",
-            device_type.type_code,
-            device_type.feature_code,
-            self._attr_min_temp,
-            self._attr_max_temp,
-        )
+                # Use second range for Fahrenheit, first range for Celsius
+                if temp_type_attr == "1" and len(temperature_ranges) > 1:
+                    self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+                    self._attr_min_temp, self._attr_max_temp = temperature_ranges[1]
+                else:
+                    self._attr_min_temp, self._attr_max_temp = temperature_ranges[0]
+
+            _LOGGER.debug(
+                "Temperature config for %s-%s: unit=%s, range=%s-%s",
+                device_type.type_code,
+                device_type.feature_code,
+                self._attr_temperature_unit,
+                self._attr_min_temp,
+                self._attr_max_temp,
+            )
         if not hasattr(self, "_attr_fan_modes"):
             self._attr_fan_modes = [
                 FAN_AUTO,
@@ -242,6 +224,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
     def _setup_hvac_modes(self):
         """Set up available HVAC modes based on device capabilities."""
         if not self._parser:
+            self._attr_hvac_modes = [HVACMode.OFF]
             return
 
         # Always include OFF mode
@@ -284,34 +267,23 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         """Set up available fan modes based on device capabilities."""
         if not self._parser:
             return
+
         position6_damper_control = "9"
         if self.static_data:
             position6_damper_control = self.static_data.get("Wind_speed_gear_selection")
+
         fan_modes = []
         fan_speed_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
         if fan_speed_attr and fan_speed_attr.value_map:
-            # Use library function to convert fan mode strings
+            # Use library function to convert fan mode strings and map to HA constants
             for key in fan_speed_attr.value_map:
                 ha_fan_mode_str = get_ha_fan_mode_string(fan_speed_attr.value_map, key)
-                if ha_fan_mode_str:
-                    # Map HA fan mode strings to const values
-                    if ha_fan_mode_str == "auto":
-                        fan_modes.append(FAN_AUTO)
-                        self.hasAuto = True
-                    elif ha_fan_mode_str == "ultra_low":
-                        fan_modes.append(SFAN_ULTRA_LOW)
-                    elif ha_fan_mode_str == "low":
-                        fan_modes.append(FAN_LOW)
-                    elif ha_fan_mode_str == "medium":
-                        fan_modes.append(FAN_MEDIUM)
-                    elif ha_fan_mode_str == "high":
-                        fan_modes.append(FAN_HIGH)
-                    elif ha_fan_mode_str == "ultra_high":
-                        fan_modes.append(SFAN_ULTRA_HIGH)
-                    elif ha_fan_mode_str == "medium_low":
-                        fan_modes.append(SFAN_ULTRA_LOW)
-                    elif ha_fan_mode_str == "medium_high":
-                        fan_modes.append(SFAN_ULTRA_HIGH)
+                if ha_fan_mode_str and ha_fan_mode_str in HA_FAN_STR_TO_CONST:
+                    ha_fan_const = HA_FAN_STR_TO_CONST[ha_fan_mode_str]
+                    if ha_fan_const not in fan_modes:
+                        fan_modes.append(ha_fan_const)
+                        if ha_fan_const == FAN_AUTO:
+                            self.hasAuto = True
 
         if fan_modes:
             # Filter modes based on position6_damper_control
@@ -399,7 +371,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         """Return hvac operation mode."""
         if time.time() - self._last_command_time < self.wait_time:
             return self._cached_hvac_mode
-        """Return hvac operation mode."""
         if not self._device:
             return HVACMode.OFF
 
@@ -441,7 +412,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             and self._cached_fan_mode is not None
         ):
             return self._cached_fan_mode
-        """Return the fan setting."""
         if not self._device:
             return None
 
@@ -454,24 +424,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             fan_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
             if fan_attr and fan_attr.value_map:
                 ha_fan_mode_str = get_ha_fan_mode_string(fan_attr.value_map, fan_mode)
-                if ha_fan_mode_str:
-                    # Map HA fan mode strings to const values
-                    if ha_fan_mode_str == "auto":
-                        return FAN_AUTO
-                    if ha_fan_mode_str == "ultra_low":
-                        return SFAN_ULTRA_LOW
-                    if ha_fan_mode_str == "low":
-                        return FAN_LOW
-                    if ha_fan_mode_str == "medium":
-                        return FAN_MEDIUM
-                    if ha_fan_mode_str == "high":
-                        return FAN_HIGH
-                    if ha_fan_mode_str == "ultra_high":
-                        return SFAN_ULTRA_HIGH
-                    if ha_fan_mode_str == "medium_low":
-                        return SFAN_ULTRA_LOW
-                    if ha_fan_mode_str == "medium_high":
-                        return SFAN_ULTRA_HIGH
+                if ha_fan_mode_str and ha_fan_mode_str in HA_FAN_STR_TO_CONST:
+                    return HA_FAN_STR_TO_CONST[ha_fan_mode_str]
 
         # Fallback to the raw value
         return fan_mode
@@ -495,7 +449,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             and self._cached_swing_mode is not None
         ):
             return self._cached_swing_mode
-        """Return the swing setting."""
         if not self._device:
             return None
         _LOGGER.debug(
@@ -587,7 +540,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_target_temp = self.target_temperature
         self._last_command_time = time.time()
         self.async_write_ha_state()
-        """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
             return
@@ -650,18 +602,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
         try:
-            # Map HA fan mode constant to standard string
-            fan_mode_map = {
-                FAN_AUTO: "auto",
-                FAN_LOW: "low",
-                FAN_MEDIUM: "medium",
-                FAN_HIGH: "high",
-                FAN_ULTRA_LOW: "ultra_low",
-                SFAN_ULTRA_LOW: "ultra_low",
-                FAN_ULTRA_HIGH: "ultra_high",
-                SFAN_ULTRA_HIGH: "ultra_high",
-            }
-            ha_fan_mode_str = fan_mode_map.get(
+            # Map HA fan mode constant to standard string using the global mapping
+            ha_fan_mode_str = HA_FAN_CONST_TO_STR.get(
                 fan_mode, fan_mode.lower().replace("_", "")
             )
 
@@ -697,7 +639,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_target_temp = self.target_temperature
         self._last_command_time = time.time()
         self.async_write_ha_state()
-        """Set new target swing operation."""
         try:
             properties = {}
 

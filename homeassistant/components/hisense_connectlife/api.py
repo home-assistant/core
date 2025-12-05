@@ -6,6 +6,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
+import aiohttp
+
 from connectlife_cloud import ConnectLifeCloudClient, ConnectLifeWebSocket
 from connectlife_cloud.devices.base import BaseDeviceParser
 from homeassistant.core import HomeAssistant
@@ -18,7 +20,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HisenseApiClient:
-    """Home Assistant adapter for ConnectLife Cloud API client."""
+    """Home Assistant adapter for ConnectLife Cloud API client.
+
+    This wrapper serves several purposes:
+    1. OAuth2 Token Management: Automatically refreshes tokens via OAuth2Session
+    2. Data Transformation: Converts connectlife_cloud device objects to
+       Home Assistant-specific HisenseDeviceInfo dataclass
+    3. WebSocket Lifecycle: Manages persistent WebSocket connection for real-time updates
+    4. Device Caching: Maintains device state across coordinator updates
+    """
 
     def __init__(
         self,
@@ -63,19 +73,18 @@ class HisenseApiClient:
                 if "f_power_consumption" in parser.attributes:
                     try:
                         await self.client.update_power_consumption(device, access_token)
-                    except Exception as power_err:  # noqa: BLE001
-                        _LOGGER.warning(
-                            "Failed to update power consumption for device %s: %s",
+                    except (TimeoutError, aiohttp.ClientError) as power_err:
+                        _LOGGER.debug(
+                            "Network error updating power consumption for %s: %s",
                             device_id,
                             power_err,
                         )
 
-                # Update failed data (self-check)
                 try:
                     await self.client.update_self_check_data(device, access_token)
-                except Exception as self_check_err:  # noqa: BLE001
-                    _LOGGER.warning(
-                        "Failed to update self-check data for device %s: %s",
+                except (TimeoutError, aiohttp.ClientError) as self_check_err:
+                    _LOGGER.debug(
+                        "Network error updating self-check data for %s: %s",
                         device_id,
                         self_check_err,
                     )

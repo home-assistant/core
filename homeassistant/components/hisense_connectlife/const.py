@@ -182,13 +182,11 @@ MODE_ECO = "eco"
 MODE_BOOST = "boost"
 OPERATION_MODE_ECO = "eco"
 OPERATION_MODE_VACATION = "vacation"
-# Fan Modes
-FAN_AUTO = "auto"
+
+# Custom Fan Modes (not in climate.const)
+# Standard fan modes (auto, low, medium, high) should be imported from homeassistant.components.climate
 FAN_ULTRA_LOW = "ultra_low"
 SFAN_ULTRA_LOW = "medium_low"
-FAN_LOW = "low"
-FAN_MEDIUM = "medium"
-FAN_HIGH = "high"
 FAN_ULTRA_HIGH = "ultra_high"
 SFAN_ULTRA_HIGH = "medium_high"
 

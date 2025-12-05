@@ -1,13 +1,13 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup: pending
   appropriate-polling:
     status: done
     comment: |
       Uses WebSocket for real-time updates with 30-second polling fallback
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: pending
   config-flow: done
   dependency-transparency: done
   docs-actions: not_relevant
@@ -16,33 +16,32 @@ rules:
   docs-removal-instructions: pending
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name: done
+  has-entity-name: pending
   runtime-data: done
-  test-before-configure: done
-  test-before-setup: done
+  test-before-configure: pending
+  test-before-setup: pending
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions: pending
   config-entry-unloading: done
   docs-configuration-parameters: pending
   docs-installation-parameters: pending
   entity-unavailable: done
-  integration-owner: done
+  integration-owner: pending
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: pending
     comment: |
-      Reauth flow will return in a follow-up PR
-  test-coverage: done
-
+      Reauth flow will be added in a follow-up PR
+  test-coverage: pending
   # Gold
   devices: done
   diagnostics:
     status: pending
     comment: |
-      Diagnostics support will return in a follow-up PR
+      Diagnostics support will be added in a follow-up PR
   discovery-update-info: not_relevant
   discovery: not_relevant
   docs-data-update: pending
@@ -53,17 +52,17 @@ rules:
   docs-troubleshooting: pending
   docs-use-cases: pending
   dynamic-devices: done
-  entity-category: done
-  entity-device-class: done
+  entity-category: pending
+  entity-device-class: pending
   entity-disabled-by-default: not_relevant
-  entity-translations: done
+  entity-translations: pending
   exception-translations: pending
-  icon-translations: done
+  icon-translations: pending
   reconfiguration-flow: not_relevant
   repair-issues: not_relevant
-  stale-devices: done
+  stale-devices: pending
 
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing: pending

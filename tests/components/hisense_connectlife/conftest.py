@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.hisense_connectlife.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
@@ -21,6 +21,10 @@ def mock_hass():
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     hass.config_entries.async_update_entry = AsyncMock()
     hass.config_entries.async_reload = AsyncMock()
+    hass.config_entries.async_entries = MagicMock(return_value=[])
+    hass.config_entries.options = MagicMock()
+    hass.config_entries.options.async_init = AsyncMock()
+    hass.config_entries.options.async_configure = AsyncMock()
     hass.loop = MagicMock()
     hass.loop.call_soon_threadsafe = MagicMock()
     return hass
@@ -46,10 +50,12 @@ def mock_config_entry():
     entry.options = {}
     entry.pref_disable_new_entities = False
     entry.pref_disable_polling = False
-    entry.state = MagicMock()
-    entry.state.value = "loaded"
+    entry.state = ConfigEntryState.LOADED
     entry.source = "user"
     entry.version = 1
+    entry.add_to_hass = MagicMock()
+    entry.setup_lock = MagicMock()
+    entry.setup_lock.locked = MagicMock(return_value=False)
     return entry
 
 
@@ -71,8 +77,7 @@ def mock_legacy_config_entry():
     entry.options = {}
     entry.pref_disable_new_entities = False
     entry.pref_disable_polling = False
-    entry.state = MagicMock()
-    entry.state.value = "loaded"
+    entry.state = ConfigEntryState.LOADED
     entry.source = "user"
     entry.version = 1
     return entry

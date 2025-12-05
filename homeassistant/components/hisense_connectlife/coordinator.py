@@ -55,7 +55,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
 
             # Set up WebSocket connection through the API client
             await self.api_client.async_setup_websocket(self._handle_ws_message)
-            _LOGGER.info("WebSocket connection established")
+            _LOGGER.debug("WebSocket connection established")
 
             # Update initial device statuses
             await self._async_update_data()
@@ -79,7 +79,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             # Update coordinator data
             self._devices = devices
             self.data = devices
-            _LOGGER.info("Successfully updated %d devices", len(devices))
+            _LOGGER.debug("Successfully updated %d devices", len(devices))
 
         except Exception as error:
             _LOGGER.error("Error updating device data: %s", error)
@@ -102,7 +102,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                 self._devices = devices
                 self.data = devices
                 self.async_set_updated_data(self._devices)
-                _LOGGER.info("Manually refreshed device %s", device_id)
+                _LOGGER.debug("Manually refreshed device %s", device_id)
             else:
                 _LOGGER.warning("Device %s not found in update response", device_id)
 
@@ -118,7 +118,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                 self._devices = devices
                 self.data = devices
                 self.async_set_updated_data(self._devices)
-                _LOGGER.info("Successfully refreshed %d devices", len(devices))
+                _LOGGER.debug("Successfully refreshed %d devices", len(devices))
             else:
                 _LOGGER.warning("No devices found during refresh")
 
@@ -139,7 +139,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             # Refresh device status immediately after control
             # await self.async_refresh_device(puid)
 
-            _LOGGER.info("Successfully controlled device %s: %s", puid, result)
+            _LOGGER.debug("Successfully controlled device %s: %s", puid, result)
         except Exception as error:
             _LOGGER.error("Error controlling device %s: %s", puid, error)
             raise UpdateFailed(error) from error
@@ -290,7 +290,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                     self.hass.loop.call_soon_threadsafe(
                         self.async_set_updated_data, self._devices
                     )
-                    _LOGGER.info("Device %s updated via WebSocket", device_id)
+                    _LOGGER.debug("Device %s updated via WebSocket", device_id)
                 else:
                     _LOGGER.debug(
                         "Device with puid %s not found in devices list", device_id

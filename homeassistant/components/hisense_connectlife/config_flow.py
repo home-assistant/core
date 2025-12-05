@@ -21,10 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 class HisenseOptionsFlowHandler(OptionsFlow):
     """Handle Hisense AC options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -36,58 +32,66 @@ class HisenseOptionsFlowHandler(OptionsFlow):
             coordinator = self.config_entry.runtime_data
 
             if user_input.get("refresh_devices", False):
-                try:
-                    # Re-fetch device list
-                    devices = await coordinator.api_client.async_get_devices
-                    coordinator._devices = devices  # noqa: SLF001
-                    # Force update state once
-                    await coordinator.async_refresh()
-                    description_placeholders["message"] = (
-                        "Device list has been refreshed"
-                    )
-                except Exception as err:  # noqa: BLE001  # noqa: BLE001
-                    _LOGGER.error("Failed to refresh device list: %s", err)
-                    errors["base"] = "refresh_failed"
+                if coordinator is None:
+                    errors["base"] = "no_coordinator"
+                else:
+                    try:
+                        # Re-fetch device list
+                        devices = await coordinator.api_client.async_get_devices
+                        coordinator._devices = devices  # noqa: SLF001
+                        # Force update state once
+                        await coordinator.async_refresh()
+                        description_placeholders["message"] = (
+                            "Device list has been refreshed"
+                        )
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.error("Failed to refresh device list: %s", err)
+                        errors["base"] = "refresh_failed"
 
             if user_input.get("refresh_token", False):
-                try:
-                    # Record token before refresh
-                    old_token = coordinator.api_client.oauth_session.token.get(
-                        "access_token", ""
-                    )[-10:]
-                    _LOGGER.debug("Token before refresh: ...%s", old_token)
+                if coordinator is None:
+                    errors["base"] = "no_coordinator"
+                else:
+                    try:
+                        # Record token before refresh
+                        old_token = coordinator.api_client.oauth_session.token.get(
+                            "access_token", ""
+                        )[-10:]
+                        _LOGGER.debug("Token before refresh: ...%s", old_token)
 
-                    # Force token refresh
-                    _LOGGER.debug("Forcing token refresh...")
-                    token_data = coordinator.api_client.oauth_session.token
+                        # Force token refresh
+                        _LOGGER.debug("Forcing token refresh...")
+                        token_data = coordinator.api_client.oauth_session.token
 
-                    # Use our own OAuth2 implementation to refresh token
-                    implementation = HisenseOAuth2Implementation(self.hass)
-                    new_token = await implementation.async_refresh_token(token_data)
+                        # Use our own OAuth2 implementation to refresh token
+                        implementation = HisenseOAuth2Implementation(self.hass)
+                        new_token = await implementation.async_refresh_token(token_data)
 
-                    if new_token:
-                        _LOGGER.debug(
-                            "Token after refresh: ...%s",
-                            new_token.get("access_token", "")[-10:],
-                        )
-                        # Update token in coordinator
-                        coordinator.api_client.oauth_session.token = new_token
-                        # Force update config entry data
-                        self.hass.config_entries.async_update_entry(
-                            self.config_entry,
-                            data={**self.config_entry.data, "token": new_token},
-                        )
-                        _LOGGER.info("Token refreshed successfully")
-                        description_placeholders["message"] = "Token has been refreshed"
-                    else:
-                        _LOGGER.warning("No new token received after refresh")
+                        if new_token:
+                            _LOGGER.debug(
+                                "Token after refresh: ...%s",
+                                new_token.get("access_token", "")[-10:],
+                            )
+                            # Update token in coordinator
+                            coordinator.api_client.oauth_session.token = new_token
+                            # Force update config entry data
+                            self.hass.config_entries.async_update_entry(
+                                self.config_entry,
+                                data={**self.config_entry.data, "token": new_token},
+                            )
+                            _LOGGER.debug("Token refreshed successfully")
+                            description_placeholders["message"] = (
+                                "Token has been refreshed"
+                            )
+                        else:
+                            _LOGGER.debug("No new token received after refresh")
+                            errors["base"] = "token_refresh_failed"
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.error("Failed to refresh token: %s", err)
                         errors["base"] = "token_refresh_failed"
-                except Exception as err:  # noqa: BLE001  # noqa: BLE001
-                    _LOGGER.error("Failed to refresh token: %s", err)
-                    errors["base"] = "token_refresh_failed"
 
-            if not errors:
-                return self.async_create_entry(title="", data=user_input)
+            # Always create entry, even if there were errors (errors are shown in description_placeholders)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -198,4 +202,4 @@ class OAuth2FlowHandler(
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> HisenseOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HisenseOptionsFlowHandler(config_entry)
+        return HisenseOptionsFlowHandler()

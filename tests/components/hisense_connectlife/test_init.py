@@ -16,13 +16,38 @@ from homeassistant.core import HomeAssistant
 @pytest.mark.asyncio
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test async_setup_entry."""
-
-    with patch(
-        "homeassistant.components.hisense_connectlife.HisenseACPluginDataUpdateCoordinator"
-    ) as mock_coord_class:
+    with (
+        patch(
+            "homeassistant.components.hisense_connectlife.HisenseACPluginDataUpdateCoordinator"
+        ) as mock_coord_class,
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
+        ) as mock_get_impl,
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
+        ) as mock_oauth2_session_class,
+        patch("aiohttp.ClientSession") as mock_client_session,
+    ):
         mock_coordinator = AsyncMock()
         mock_coordinator.async_setup = AsyncMock(return_value=True)
         mock_coord_class.return_value = mock_coordinator
+        mock_get_impl.return_value = MagicMock()
+
+        # Mock HA's OAuth2Session
+        mock_ha_oauth2_session = MagicMock()
+        mock_ha_oauth2_session.async_ensure_token_valid = AsyncMock(
+            return_value={
+                "access_token": "test_token",
+                "refresh_token": "test_refresh",
+                "expires_in": 3600,
+            }
+        )
+        mock_oauth2_session_class.return_value = mock_ha_oauth2_session
+
+        # Mock aiohttp.ClientSession to prevent unclosed session warning
+        mock_session = AsyncMock()
+        mock_session.close = AsyncMock()
+        mock_client_session.return_value = mock_session
 
         result = await async_setup_entry(hass, mock_config_entry)
 
@@ -33,14 +58,15 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigE
 @pytest.mark.asyncio
 async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test async_unload_entry."""
-
     # Mock coordinator in entry.runtime_data
     mock_coordinator = AsyncMock()
     mock_coordinator.api_client.oauth_session.close = AsyncMock()
     mock_config_entry.runtime_data = mock_coordinator
 
-    with patch(
-        "homeassistant.config_entries.async_unload_platforms", return_value=True
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        return_value=True,
     ) as mock_unload:
         result = await async_unload_entry(hass, mock_config_entry)
 
