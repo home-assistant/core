@@ -31,7 +31,7 @@ BACKOFF_INTERVALS = (
 )
 
 
-class DuckDnsUpdateCoordinator(DataUpdateCoordinator[bool]):
+class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
     """Duck DNS update coordinator."""
 
     config_entry: DuckDnsConfigEntry
@@ -48,7 +48,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[bool]):
         self.session = async_get_clientsession(hass)
         self.failed = 0
 
-    async def _async_update_data(self) -> bool:
+    async def _async_update_data(self) -> None:
         """Update Duck DNS."""
 
         retry_after = BACKOFF_INTERVALS[
@@ -81,5 +81,3 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[bool]):
                 retry_after=retry_after,
             ) from e
         self.failed = 0
-
-        return True
