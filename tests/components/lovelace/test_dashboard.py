@@ -315,12 +315,13 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     # Panel should still be registered for backwards compatibility
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
 
-    # Repair issue should be created
+    # Repair issue should be created with 6-month deadline
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("lovelace", "yaml_mode_deprecated")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.is_fixable is False
+    assert issue.breaks_in_ha_version == "2026.6.0"
 
 
 @pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])

@@ -141,6 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
+    # Deprecated - Remove in 2026.6
     # For YAML mode, register the default panel (temporary until user migrates)
     if mode == MODE_YAML:
         frontend.async_register_built_in_panel(
@@ -152,6 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             sidebar_default_visible=False,
         )
         _async_create_yaml_mode_repair(hass)
+    # End deprecation
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
@@ -447,6 +449,7 @@ async def _async_migrate_default_config(
     _LOGGER.info("Successfully migrated default lovelace config to dashboard entry")
 
 
+# Deprecated - Remove in 2026.6
 @callback
 def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
     """Create repair issue for YAML mode migration."""
@@ -454,8 +457,12 @@ def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "yaml_mode_deprecated",
+        breaks_in_ha_version="2026.6.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="yaml_mode_deprecated",
         translation_placeholders={"config_file": LOVELACE_CONFIG_FILE},
     )
+
+
+# End deprecation
