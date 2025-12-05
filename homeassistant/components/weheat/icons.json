@@ -36,8 +36,29 @@
       "dhw_flow_volume": {
         "default": "mdi:pump"
       },
-      "electricity_used": {
+      "electricity_used_cooling": {
         "default": "mdi:flash"
+      },
+      "electricity_used_defrost": {
+        "default": "mdi:flash"
+      },
+      "electricity_used_dhw": {
+        "default": "mdi:flash"
+      },
+      "electricity_used_heating": {
+        "default": "mdi:flash"
+      },
+      "energy_output_cooling": {
+        "default": "mdi:snowflake"
+      },
+      "energy_output_defrost": {
+        "default": "mdi:snowflake"
+      },
+      "energy_output_dhw": {
+        "default": "mdi:heat-wave"
+      },
+      "energy_output_heating": {
+        "default": "mdi:heat-wave"
       },
       "heat_pump_state": {
         "default": "mdi:state-machine"
