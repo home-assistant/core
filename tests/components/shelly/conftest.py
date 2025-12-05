@@ -576,6 +576,9 @@ def _mock_rpc_device(version: str | None = None):
         zigbee_enabled=False,
         zigbee_firmware=False,
         ip_address="10.10.10.10",
+        wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        shutdown=AsyncMock(),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

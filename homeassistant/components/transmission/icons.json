@@ -1,4 +1,43 @@
 {
+  "entity": {
+    "sensor": {
+      "active_torrents": {
+        "default": "mdi:counter"
+      },
+      "completed_torrents": {
+        "default": "mdi:counter"
+      },
+      "download_speed": {
+        "default": "mdi:cloud-download"
+      },
+      "paused_torrents": {
+        "default": "mdi:counter"
+      },
+      "started_torrents": {
+        "default": "mdi:counter"
+      },
+      "total_torrents": {
+        "default": "mdi:counter"
+      },
+      "transmission_status": {
+        "default": "mdi:information-outline"
+      },
+      "upload_speed": {
+        "default": "mdi:cloud-upload"
+      }
+    },
+    "switch": {
+      "on_off": {
+        "default": "mdi:cloud",
+        "state": {
+          "off": "mdi:cloud-off"
+        }
+      },
+      "turtle_mode": {
+        "default": "mdi:tortoise"
+      }
+    }
+  },
   "services": {
     "add_torrent": {
       "service": "mdi:download"

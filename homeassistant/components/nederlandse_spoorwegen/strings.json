@@ -75,6 +75,57 @@
       "is_going": {
         "name": "Going"
       }
+    },
+    "sensor": {
+      "arrival_platform_actual": {
+        "name": "Actual arrival platform"
+      },
+      "arrival_platform_planned": {
+        "name": "Planned arrival platform"
+      },
+      "arrival_time_actual": {
+        "name": "Actual arrival time"
+      },
+      "arrival_time_planned": {
+        "name": "Planned arrival time"
+      },
+      "departure": {
+        "name": "Departure"
+      },
+      "departure_platform_actual": {
+        "name": "Actual departure platform"
+      },
+      "departure_platform_planned": {
+        "name": "Planned departure platform"
+      },
+      "departure_time_actual": {
+        "name": "Actual departure time"
+      },
+      "departure_time_planned": {
+        "name": "Planned departure time"
+      },
+      "next_departure_time": {
+        "name": "Next departure"
+      },
+      "route": {
+        "name": "Route"
+      },
+      "route_from": {
+        "name": "Route from"
+      },
+      "route_to": {
+        "name": "Route to"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "cancelled": "Cancelled",
+          "normal": "Normal"
+        }
+      },
+      "transfers": {
+        "name": "Transfers"
+      }
     }
   },
   "issues": {

@@ -778,7 +778,7 @@ class ManifestJSONView(HomeAssistantView):
     {
         "type": "frontend/get_icons",
         vol.Required("category"): vol.In(
-            {"entity", "entity_component", "services", "triggers", "conditions"}
+            {"conditions", "entity", "entity_component", "services", "triggers"}
         ),
         vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
     }

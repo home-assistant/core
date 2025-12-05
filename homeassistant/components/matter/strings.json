@@ -246,6 +246,16 @@
       "device_energy_management_mode": {
         "name": "Energy management mode"
       },
+      "door_lock_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "no_remote_lock_unlock": "No remote lock/unlock",
+          "normal": "Normal",
+          "passage": "Passage",
+          "privacy": "Privacy",
+          "vacation": "Vacation"
+        }
+      },
       "door_lock_sound_volume": {
         "name": "Sound volume",
         "state": {
@@ -364,6 +374,12 @@
       },
       "current_phase": {
         "name": "Current phase"
+      },
+      "door_closed_events": {
+        "name": "Door closed events"
+      },
+      "door_open_events": {
+        "name": "Door open events"
       },
       "energy_exported": {
         "name": "Energy exported"

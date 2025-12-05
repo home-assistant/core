@@ -1,9 +1,11 @@
 """The Growatt server PV inverter sensor integration."""
 
 from collections.abc import Mapping
+from json import JSONDecodeError
 import logging
 
 import growattServer
+from requests import RequestException
 
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -35,9 +37,7 @@ def get_device_list_classic(
     # Log in to api and fetch first plant if no plant id is defined.
     try:
         login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-        # DEBUG: Log the actual response structure
-    except Exception as ex:
-        _LOGGER.error("DEBUG - Login response: %s", login_response)
+    except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
             f"Error communicating with Growatt API during login: {ex}"
         ) from ex
@@ -54,7 +54,7 @@ def get_device_list_classic(
     if plant_id == DEFAULT_PLANT_ID:
         try:
             plant_info = api.plant_list(user_id)
-        except Exception as ex:
+        except (RequestException, JSONDecodeError) as ex:
             raise ConfigEntryError(
                 f"Error communicating with Growatt API during plant list: {ex}"
             ) from ex
@@ -65,7 +65,7 @@ def get_device_list_classic(
     # Get a list of devices for specified plant to add sensors for.
     try:
         devices = api.device_list(plant_id)
-    except Exception as ex:
+    except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
             f"Error communicating with Growatt API during device list: {ex}"
         ) from ex

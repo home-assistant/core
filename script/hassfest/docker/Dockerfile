@@ -29,10 +29,9 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.9.6,source=/uv,target=/bin/uv \
         tqdm==4.67.1 \
         ruff==0.13.0 \
         PyTurboJPEG==1.8.0 \
-        go2rtc-client==0.2.1 \
         ha-ffmpeg==3.2.2 \
-        hassil==3.4.0 \
-        home-assistant-intents==2025.11.7 \
+        hassil==3.5.0 \
+        home-assistant-intents==2025.12.2 \
         mutagen==1.47.0 \
         pymicro-vad==1.0.1 \
         pyspeex-noise==1.0.2

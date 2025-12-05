@@ -28,9 +28,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
         try:
             await box.authenticate(username=username, password=password)
         except SFRBoxAuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SFRBoxError as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         platforms = PLATFORMS_WITH_AUTH
 
     data = SFRRuntimeData(
@@ -65,9 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, system_info.mac_addr)},
         identifiers={(DOMAIN, system_info.mac_addr)},
         name="SFR Box",
-        model=system_info.product_id,
+        model=None,
         model_id=system_info.product_id,
         sw_version=system_info.version_mainfirmware,
         configuration_url=f"http://{entry.data[CONF_HOST]}",

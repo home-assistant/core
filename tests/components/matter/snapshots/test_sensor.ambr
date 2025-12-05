@@ -3786,6 +3786,279 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': '2BAVS-AB6031X-44PE Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery_charge_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'not_charging',
+        'charging',
+        'full_charge',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_battery_charge_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery charge state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_charge_state',
+    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-PowerSourceBatChargeState-47-26',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery_charge_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '2BAVS-AB6031X-44PE Battery charge state',
+      'options': list([
+        'not_charging',
+        'charging',
+        'full_charge',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_battery_charge_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'full_charge',
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_error',
+        'unable_to_start_or_resume',
+        'unable_to_complete_operation',
+        'command_invalid_in_state',
+        'failed_to_find_charging_dock',
+        'stuck',
+        'dust_bin_missing',
+        'dust_bin_full',
+        'water_tank_empty',
+        'water_tank_missing',
+        'water_tank_lid_open',
+        'mop_cleaning_pad_missing',
+        'low_battery',
+        'cannot_reach_target_area',
+        'dirty_water_tank_full',
+        'dirty_water_tank_missing',
+        'wheels_jammed',
+        'brush_jammed',
+        'navigation_sensor_obscured',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_operational_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational error',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_error',
+    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-RvcOperationalStateOperationalError-97-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '2BAVS-AB6031X-44PE Operational error',
+      'options': list([
+        'no_error',
+        'unable_to_start_or_resume',
+        'unable_to_complete_operation',
+        'command_invalid_in_state',
+        'failed_to_find_charging_dock',
+        'stuck',
+        'dust_bin_missing',
+        'dust_bin_full',
+        'water_tank_empty',
+        'water_tank_missing',
+        'water_tank_lid_open',
+        'mop_cleaning_pad_missing',
+        'low_battery',
+        'cannot_reach_target_area',
+        'dirty_water_tank_full',
+        'dirty_water_tank_missing',
+        'wheels_jammed',
+        'brush_jammed',
+        'navigation_sensor_obscured',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_operational_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+        'seeking_charger',
+        'charging',
+        'docked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_operational_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_state',
+    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-RvcOperationalState-97-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '2BAVS-AB6031X-44PE Operational state',
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+        'seeking_charger',
+        'charging',
+        'docked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.2bavs_ab6031x_44pe_operational_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stopped',
+  })
+# ---
 # name: test_sensors[eve_contact_sensor][sensor.eve_door_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7257,6 +7530,108 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stopped',
+  })
+# ---
+# name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_lock_door_closed_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Door closed events',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_closed_events',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockDoorClosedEvents-257-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Door closed events',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_lock_door_closed_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[mock_lock][sensor.mock_lock_door_open_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_lock_door_open_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Door open events',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_open_events',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockDoorOpenEvents-257-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_lock][sensor.mock_lock_door_open_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Door open events',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_lock_door_open_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
   })
 # ---
 # name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]

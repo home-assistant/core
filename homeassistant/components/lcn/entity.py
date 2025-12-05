@@ -35,7 +35,7 @@ class LcnEntity(Entity):
         self.config = config
         self.config_entry = config_entry
         self.address: AddressType = config[CONF_ADDRESS]
-        self._unregister_for_inputs: Callable | None = None
+        self._unregister_for_inputs: Callable[[], None] | None = None
         self._name: str = config[CONF_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={

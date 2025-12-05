@@ -26,6 +26,8 @@ from .entity import (
     profile_pic,
 )
 
+PARALLEL_UPDATES = 0
+
 
 class XboxBinarySensor(StrEnum):
     """Xbox binary sensor."""

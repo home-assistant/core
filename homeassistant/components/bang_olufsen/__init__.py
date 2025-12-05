@@ -21,29 +21,29 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
-from .websocket import BangOlufsenWebsocket
+from .websocket import BeoWebsocket
 
 
 @dataclass
-class BangOlufsenData:
+class BeoData:
     """Dataclass for API client and WebSocket client."""
 
-    websocket: BangOlufsenWebsocket
+    websocket: BeoWebsocket
     client: MozartClient
 
 
-type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
+type BeoConfigEntry = ConfigEntry[BeoData]
 
 PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     """Set up from a config entry."""
 
     # Remove casts to str
     assert entry.unique_id
 
-    # Create device now as BangOlufsenWebsocket needs a device for debug logging, firing events etc.
+    # Create device now as BeoWebsocket needs a device for debug logging, firing events etc.
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -68,10 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) 
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
-    websocket = BangOlufsenWebsocket(hass, entry, client)
+    websocket = BeoWebsocket(hass, entry, client)
 
     # Add the websocket and API client
-    entry.runtime_data = BangOlufsenData(websocket, client)
+    entry.runtime_data = BeoData(websocket, client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -82,9 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: BangOlufsenConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     """Unload a config entry."""
     # Close the API client and WebSocket notification listener
     entry.runtime_data.client.disconnect_notifications()

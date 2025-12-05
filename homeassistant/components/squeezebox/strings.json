@@ -41,6 +41,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "alarm_active": {
+        "name": "Alarm active"
+      },
+      "alarm_snooze": {
+        "name": "Alarm snoozed"
+      },
+      "alarm_upcoming": {
+        "name": "Alarm upcoming"
+      },
       "needsrestart": {
         "name": "Needs restart"
       },
