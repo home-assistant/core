@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This integration has already been configured",
+      "reauth_successful": "Reauthentication successful",
+      "single_instance_allowed": "Already configured. Only one instance is allowed."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to DayBetter service, please check network connection",
+      "invalid_code": "User code is invalid, please check and retry",
+      "unknown": "Unknown error, please check logs"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "user_code": "User Code"
+        },
+        "data_description": {
+          "user_code": "Enter the DayBetter user code associated with this integration."
+        },
+        "description": "Your DayBetter authentication has expired. Please enter your DayBetter user code to restore the connection.",
+        "title": "Reauthenticate DayBetter Services"
+      },
+      "user": {
+        "data": {
+          "user_code": "User Code"
+        },
+        "data_description": {
+          "user_code": "Enter the DayBetter user code used to generate access tokens."
+        },
+        "description": "Please enter your DayBetter user code to create the integration.\n\nThe integration will automatically:\n1. Create connection and obtain access token\n2. Fetch your device list\n3. Fetch device type information (PIDs)\n4. Periodically sync temperature and humidity sensor status",
+        "title": "Set up DayBetter Services"
+      }
+    }
+  }
+}

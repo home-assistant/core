@@ -1,0 +1,90 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration exposes no actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration exposes no actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: The integration does not create events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration exposes no actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no configuration options.
+  docs-installation-parameters:
+    status: exempt
+    comment: Setup requires only the user code entered during the flow.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Improve logging when the API becomes unavailable.
+  parallel-updates:
+    status: done
+    comment: DataUpdateCoordinator serialises updates per entry.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: The integration represents cloud sensors without additional devices metadata beyond entities.
+  diagnostics:
+    status: todo
+    comment: Provide diagnostics with last API response details.
+  discovery:
+    status: exempt
+    comment: The DayBetter service does not support discovery.
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: Add troubleshooting section detailing API connectivity issues.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Map additional library exceptions to translations when needed.
+  icon-translations:
+    status: todo
+    comment: Add icon translation overrides if new sensors are introduced.
+  reconfiguration-flow:
+    status: exempt
+    comment: The integration has no additional configuration.
+  repair-issues:
+    status: exempt
+    comment: No repairs are defined for this integration.
+  stale-devices:
+    status: todo
+    comment: Evaluate periodic removal of stale device entries.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: Evaluate exposing the underlying session for advanced usage.
+  strict-typing: done
