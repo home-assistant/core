@@ -72,15 +72,21 @@ _TIME_TRIGGER_SCHEMA = vol.Any(
     ),
 )
 
+_WEEKDAY_SCHEMA = vol.Any(
+    vol.In(WEEKDAYS),
+    vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
+    cv.entity_domain(["input_weekday"]),
+    msg=(
+        "Expected a weekday (mon, tue, wed, thu, fri, sat, sun), "
+        "a list of weekdays, or an Entity ID with domain 'input_weekday'"
+    ),
+)
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "time",
         vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
-        vol.Optional(CONF_WEEKDAY): vol.Any(
-            vol.In(WEEKDAYS),
-            vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
-        ),
+        vol.Optional(CONF_WEEKDAY): _WEEKDAY_SCHEMA,
     }
 )
 
@@ -117,7 +123,14 @@ async def async_attach_trigger(  # noqa: C901
 
             # Check if current weekday matches the configuration
             if isinstance(weekday_config, str):
-                if current_weekday != weekday_config:
+                # Could be a single weekday string or an entity_id
+                if weekday_config.startswith("input_weekday."):
+                    if (weekday_state := hass.states.get(weekday_config)) is None:
+                        return
+                    entity_weekdays = weekday_state.attributes.get("weekdays", [])
+                    if current_weekday not in entity_weekdays:
+                        return
+                elif current_weekday != weekday_config:
                     return
             elif current_weekday not in weekday_config:
                 return

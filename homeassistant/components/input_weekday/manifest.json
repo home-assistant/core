@@ -1,0 +1,8 @@
+{
+  "domain": "input_weekday",
+  "name": "Input Weekday",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/input_weekday",
+  "integration_type": "helper",
+  "quality_scale": "internal"
+}

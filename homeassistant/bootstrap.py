@@ -234,6 +234,7 @@ DEFAULT_INTEGRATIONS = {
     "input_datetime",
     "input_number",
     "input_select",
+    "input_weekday",
     "input_text",
     "schedule",
     "timer",

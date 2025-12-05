@@ -91,6 +91,7 @@ NO_IOT_CLASS = [
     "input_number",
     "input_select",
     "input_text",
+    "input_weekday",
     "intent_script",
     "intent",
     "logbook",

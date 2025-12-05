@@ -843,7 +843,10 @@ def time_zone(value: str) -> str:
     )
 
 
-weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
+weekdays = vol.Any(
+    vol.All(ensure_list, [vol.In(WEEKDAYS)]),
+    entity_domain(["input_weekday"]),
+)
 
 
 def socket_timeout(value: Any | None) -> object:
