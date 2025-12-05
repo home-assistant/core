@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from ns_api import NoDataReceivedError
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from syrupy.assertion import SnapshotAssertion
@@ -146,6 +147,41 @@ async def test_sensor_with_api_connection_error(
     # Sensors should not be created at all if initial API call fails
     sensor_states = hass.states.async_all("sensor")
     assert len(sensor_states) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_api_no_data_received_error(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor behavior when API returns no data."""
+    # Make API calls fail from the start
+    mock_nsapi.get_trips.side_effect = NoDataReceivedError("Connection failed")
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    sensor_states = hass.states.async_all("sensor")
+    assert len(sensor_states) == 26
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_invalid_status(
+    hass: HomeAssistant,
+    mock_single_trip_invalid_status_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

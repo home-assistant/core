@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 
-from ns_api import NSAPI, Trip
+from ns_api import NSAPI, NoDataReceivedError, Trip
 from requests.exceptions import ConnectionError, HTTPError, Timeout
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -126,17 +126,20 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
 
         # Convert time to full date-time string if needed and default to Dutch local time if not provided
         time_str = self._get_time_from_route(departure_time)
-
-        trips = await self.hass.async_add_executor_job(
-            self.nsapi.get_trips,
-            time_str,  # trip_time
-            departure,  # departure
-            via,  # via
-            destination,  # destination
-            True,  # exclude_high_speed
-            0,  # year_card
-            2,  # max_number_of_transfers
-        )
+        try:
+            trips = await self.hass.async_add_executor_job(
+                self.nsapi.get_trips,
+                time_str,  # trip_time
+                departure,  # departure
+                via,  # via
+                destination,  # destination
+                True,  # exclude_high_speed
+                0,  # year_card
+                2,  # max_number_of_transfers
+            )
+        except NoDataReceivedError as e:
+            _LOGGER.debug("No data received from NS API: %s", e)
+            return []
 
         if not trips:
             return []

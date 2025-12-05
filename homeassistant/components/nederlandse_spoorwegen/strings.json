@@ -8,6 +8,7 @@
       "already_configured": "This API key is already configured for another entry.",
       "cannot_connect": "Could not connect to NS API. Check your API key.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+      "no_data": "No data received. This could mean that there was an issue with consuming the API.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
