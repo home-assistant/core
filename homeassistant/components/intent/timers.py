@@ -204,7 +204,7 @@ class TimersNotSupportedError(intent.IntentHandleError):
         )
 
 
-class NoIntentMatchError(intent.IntentHandleError):
+class NoTimerCommandError(intent.IntentHandleError):
     """Error when a conversation command does not match any intent."""
 
     def __init__(self, command: str) -> None:
