@@ -4,6 +4,12 @@
       "message": "The URL \"{url}\" is already in use. Please choose a different one."
     }
   },
+  "issues": {
+    "yaml_mode_deprecated": {
+      "description": "The default Lovelace dashboard is moving to the dashboard system. To migrate:\n\n1. Remove `mode: yaml` from `lovelace:` in your `configuration.yaml`\n2. Rename `{config_file}` to a new filename (e.g., `my-dashboard.yaml`)\n3. Add a dashboard entry in your `configuration.yaml`:\n\n```yaml\nlovelace:\n  dashboards:\n    lovelace:\n      mode: yaml\n      filename: my-dashboard.yaml\n      title: Overview\n      icon: mdi:view-dashboard\n      show_in_sidebar: true\n```\n\n4. Restart Home Assistant",
+      "title": "Lovelace YAML mode migration required"
+    }
+  },
   "services": {
     "reload_resources": {
       "description": "Reloads dashboard resources from the YAML-configuration.",
