@@ -56,6 +56,10 @@ MOCK_CAT_FLAP = {
         "signal": {"device_rssi": 65, "hub_rssi": 64},
         "online": True,
     },
+    # id: tag ID (matches pet's tag_id), profile: 3 = indoor only (HA switch ON)
+    "tags": [
+        {"id": 246801, "profile": 3},
+    ],
 }
 
 MOCK_PET_FLAP = {
@@ -71,10 +75,15 @@ MOCK_PET_FLAP = {
         "signal": {"device_rssi": 70, "hub_rssi": 65},
         "online": True,
     },
+    # id: tag ID (matches pet's tag_id), profile: 2 = outdoor (HA switch OFF)
+    "tags": [
+        {"id": 246801, "profile": 2},
+    ],
 }
 
 MOCK_PET = {
     "id": 24680,
+    "tag_id": 246801,  # Tag ID used to match against flap tags
     "household_id": HOUSEHOLD_ID,
     "name": "Pet",
     "position": {"since": "2020-08-23T23:10:50", "where": 1},

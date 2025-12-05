@@ -25,6 +25,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "indoor_mode": {
+        "name": "{pet_name} indoor only mode"
+      }
+    }
+  },
   "services": {
     "set_lock_state": {
       "description": "Sets lock state.",
