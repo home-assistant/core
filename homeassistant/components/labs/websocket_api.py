@@ -9,9 +9,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.backup import async_get_manager
 from homeassistant.const import EVENT_LABS_UPDATED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import LABS_DATA
+from .helpers import async_is_preview_feature_enabled, async_listen
 from .models import EventLabsUpdatedData
 
 
@@ -144,7 +145,7 @@ def websocket_subscribe_feature(
     @callback
     def send_event() -> None:
         """Send feature state to client."""
-        enabled = (domain, preview_feature_key) in labs_data.data.preview_feature_status
+        enabled = async_is_preview_feature_enabled(hass, domain, preview_feature_key)
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
@@ -152,18 +153,8 @@ def websocket_subscribe_feature(
             )
         )
 
-    @callback
-    def async_handle_event(event: Event[EventLabsUpdatedData]) -> None:
-        """Handle labs updated event."""
-        if (
-            event.data["domain"] != domain
-            or event.data["preview_feature"] != preview_feature_key
-        ):
-            return
-        send_event()
-
-    connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        EVENT_LABS_UPDATED, async_handle_event
+    connection.subscriptions[msg["id"]] = async_listen(
+        hass, domain, preview_feature_key, send_event
     )
 
     connection.send_result(msg["id"])
