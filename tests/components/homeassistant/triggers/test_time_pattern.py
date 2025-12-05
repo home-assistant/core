@@ -312,6 +312,251 @@ async def test_if_fires_periodic_hours(
     assert len(service_calls) == 1
 
 
+async def test_if_fires_range_seconds(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "*",
+                    "minutes": "*",
+                    "seconds": "10-30",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=0, minute=0, second=10)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
+async def test_if_fires_range_minutes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "*",
+                    "minutes": "20-40",
+                    "seconds": "*",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=0, minute=33, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
+async def test_if_fires_range_hours(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "3-5",
+                    "minutes": "*",
+                    "seconds": "*",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=5, minute=0, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
+async def test_if_fires_set_of_seconds(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "*",
+                    "minutes": "*",
+                    "seconds": "5,3,10",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=0, minute=0, second=3)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
+async def test_if_fires_set_of_minutes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "*",
+                    "minutes": "10,25",
+                    "seconds": "*",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=0, minute=10, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
+async def test_if_fires_set_of_hours(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "7,11,17",
+                    "minutes": "*",
+                    "seconds": "*",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=17, minute=0, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
+async def test_if_fires_set_of_ranges(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing periodically every second."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, day=1, second=1
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    "hours": "7-9,11-17",
+                    "minutes": "*",
+                    "seconds": "*",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, day=1, hour=14, minute=0, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(service_calls) >= 1
+
+
 async def test_default_values(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
