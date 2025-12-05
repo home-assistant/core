@@ -130,6 +130,7 @@ class MyNeoSelect(SelectEntity):
 
     entity_description: MyNeoSelectEntityDescription
     _attr_has_entity_name = True
+    _attr_name = None  # Entity represents the device itself
 
     def __init__(
         self,
