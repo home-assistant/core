@@ -214,7 +214,7 @@ async def async_setup_entry(
 
     # Remove the 'restart' button for sleeping devices as it was mistakenly
     # added in https://github.com/home-assistant/core/pull/154673
-    if coordinator.sleep_period == 0:
+    if coordinator.sleep_period > 0:
         async_remove_shelly_entity(hass, BUTTON_PLATFORM, f"{coordinator.mac}-reboot")
 
     entities: list[ShellyButton] = []
