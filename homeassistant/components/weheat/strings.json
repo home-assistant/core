@@ -80,11 +80,29 @@
       "dhw_top_temperature": {
         "name": "DHW top temperature"
       },
-      "electricity_used": {
-        "name": "Electricity used"
+      "electricity_used_cooling": {
+        "name": "Electricity used cooling"
       },
-      "energy_output": {
-        "name": "Total energy output"
+      "electricity_used_defrost": {
+        "name": "Electricity used defrost"
+      },
+      "electricity_used_dhw": {
+        "name": "Electricity used DHW"
+      },
+      "electricity_used_heating": {
+        "name": "Electricity used heating"
+      },
+      "energy_output_cooling": {
+        "name": "Energy output cooling"
+      },
+      "energy_output_defrost": {
+        "name": "Energy output defrost"
+      },
+      "energy_output_dhw": {
+        "name": "Energy output DHW"
+      },
+      "energy_output_heating": {
+        "name": "Energy output heating"
       },
       "heat_pump_state": {
         "state": {
