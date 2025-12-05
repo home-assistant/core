@@ -42,14 +42,25 @@ async def get_remotes(client: MozartClient) -> list[PairedRemote]:
 
 def get_device_buttons(model: BeoModel) -> list[str]:
     """Get supported buttons for a given model."""
+    # Beoconnect Core does not have any buttons
+    if model == BeoModel.BEOCONNECT_CORE:
+        return []
+
     buttons = DEVICE_BUTTONS.copy()
 
-    # Beosound Premiere does not have a bluetooth button
-    if model == BeoModel.BEOSOUND_PREMIERE:
-        buttons.remove(BeoButtons.BLUETOOTH)
+    # Models that don't have a microphone button
+    if model in (
+        BeoModel.BEOSOUND_A5,
+        BeoModel.BEOSOUND_A9,
+        BeoModel.BEOSOUND_PREMIERE,
+    ):
+        buttons.remove(BeoButtons.MICROPHONE)
 
-    # Beoconnect Core does not have any buttons
-    elif model == BeoModel.BEOCONNECT_CORE:
-        buttons = []
+    # Models that don't have a Bluetooth button
+    if model in (
+        BeoModel.BEOSOUND_A9,
+        BeoModel.BEOSOUND_PREMIERE,
+    ):
+        buttons.remove(BeoButtons.BLUETOOTH)
 
     return buttons
