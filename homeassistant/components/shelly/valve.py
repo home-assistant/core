@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLOCK_GENERATIONS, MODEL_GAS
+from aioshelly.const import MODEL_GAS, RPC_GENERATIONS
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -17,7 +17,11 @@ from homeassistant.components.valve import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import MODEL_FRANKEVER_WATER_VALVE, MODEL_NEO_WATER_VALVE
+from .const import (
+    MODEL_FRANKEVER_IRRIGATION_CONTROLLER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    MODEL_NEO_WATER_VALVE,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -27,7 +31,7 @@ from .entity import (
     async_setup_block_attribute_entities,
     async_setup_entry_rpc,
 )
-from .utils import async_remove_shelly_entity, get_device_entry_gen
+from .utils import get_device_entry_gen
 
 PARALLEL_UPDATES = 0
 
@@ -42,12 +46,15 @@ class RpcValveDescription(RpcEntityDescription, ValveEntityDescription):
     """Class to describe a RPC virtual valve."""
 
 
-GAS_VALVE = BlockValveDescription(
-    key="valve|valve",
-    name="Valve",
-    available=lambda block: block.valve not in ("failure", "checking"),
-    removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
-)
+BLOCK_VALVES: dict[tuple[str, str], BlockValveDescription] = {
+    ("valve", "valve"): BlockValveDescription(
+        key="valve|valve",
+        translation_key="gas_valve",
+        available=lambda block: block.valve not in ("failure", "checking"),
+        removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+        models={MODEL_GAS},
+    ),
+}
 
 
 class RpcShellyBaseWaterValve(ShellyRpcAttributeEntity, ValveEntity):
@@ -89,8 +96,8 @@ class RpcShellyWaterValve(RpcShellyBaseWaterValve):
         await self.coordinator.device.number_set(self._id, position)
 
 
-class RpcShellyNeoWaterValve(RpcShellyBaseWaterValve):
-    """Entity that controls a valve on RPC Shelly NEO Water Valve."""
+class RpcShellySimpleWaterValve(RpcShellyBaseWaterValve):
+    """Entity that controls a valve on RPC Shelly Open/Close Water Valve."""
 
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_reports_position = False
@@ -121,8 +128,50 @@ RPC_VALVES: dict[str, RpcValveDescription] = {
         key="boolean",
         sub_key="value",
         role="state",
-        entity_class=RpcShellyNeoWaterValve,
+        entity_class=RpcShellySimpleWaterValve,
         models={MODEL_NEO_WATER_VALVE},
+    ),
+    "boolean_zone0": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="zone0",
+        entity_class=RpcShellySimpleWaterValve,
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone1": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="zone1",
+        entity_class=RpcShellySimpleWaterValve,
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone2": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="zone2",
+        entity_class=RpcShellySimpleWaterValve,
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone3": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="zone3",
+        entity_class=RpcShellySimpleWaterValve,
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone4": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="zone4",
+        entity_class=RpcShellySimpleWaterValve,
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone5": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="zone5",
+        entity_class=RpcShellySimpleWaterValve,
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
 }
 
@@ -132,15 +181,34 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up valves for device."""
-    if get_device_entry_gen(config_entry) in BLOCK_GENERATIONS:
-        return async_setup_block_entry(hass, config_entry, async_add_entities)
+    """Set up valve entities."""
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
+    coordinator = config_entry.runtime_data.block
+    assert coordinator
+
+    async_setup_block_attribute_entities(
+        hass,
+        async_add_entities,
+        coordinator,
+        BLOCK_VALVES,
+        BlockShellyValve,
+    )
+
+
+@callback
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -152,29 +220,6 @@ def async_setup_rpc_entry(
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_VALVES, RpcShellyWaterValve
     )
-
-
-@callback
-def async_setup_block_entry(
-    hass: HomeAssistant,
-    config_entry: ShellyConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up valve for device."""
-    coordinator = config_entry.runtime_data.block
-    assert coordinator and coordinator.device.blocks
-
-    if coordinator.model == MODEL_GAS:
-        async_setup_block_attribute_entities(
-            hass,
-            async_add_entities,
-            coordinator,
-            {("valve", "valve"): GAS_VALVE},
-            BlockShellyValve,
-        )
-        # Remove deprecated switch entity for gas valve
-        unique_id = f"{coordinator.mac}-valve_0-valve"
-        async_remove_shelly_entity(hass, "switch", unique_id)
 
 
 class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):

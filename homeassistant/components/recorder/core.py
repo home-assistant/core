@@ -78,13 +78,7 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
-    DatabaseEngine,
-    StatisticData,
-    StatisticMeanType,
-    StatisticMetaData,
-    UnsupportedDialect,
-)
+from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
@@ -574,13 +568,18 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
+        new_unit_class: str | None | UndefinedType = UNDEFINED,
         new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
         self.queue_task(
             UpdateStatisticsMetadataTask(
-                on_done, statistic_id, new_statistic_id, new_unit_of_measurement
+                on_done,
+                statistic_id,
+                new_statistic_id,
+                new_unit_class,
+                new_unit_of_measurement,
             )
         )
 
@@ -616,17 +615,6 @@ class Recorder(threading.Thread):
         table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
-        if "mean_type" not in metadata:
-            # Backwards compatibility for old metadata format
-            # Can be removed after 2026.4
-            metadata["mean_type"] = (  # type: ignore[unreachable]
-                StatisticMeanType.ARITHMETIC
-                if metadata.get("has_mean")
-                else StatisticMeanType.NONE
-            )
-        # Remove deprecated has_mean as it's not needed anymore in core
-        metadata.pop("has_mean", None)
-
         self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback

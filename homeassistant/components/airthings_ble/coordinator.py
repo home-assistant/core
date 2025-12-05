@@ -16,7 +16,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_MODEL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +39,18 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         self.airthings = AirthingsBluetoothDeviceData(
             _LOGGER, hass.config.units is METRIC_SYSTEM
         )
+
+        device_model = entry.data.get(DEVICE_MODEL)
+        interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            device_model, DEFAULT_SCAN_INTERVAL
+        )
+
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=interval),
         )
 
     async def _async_setup(self) -> None:
@@ -58,11 +69,29 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             )
         self.ble_device = ble_device
 
+        if DEVICE_MODEL not in self.config_entry.data:
+            _LOGGER.debug("Fetching device info for migration")
+            try:
+                data = await self.airthings.update_device(self.ble_device)
+            except Exception as err:
+                raise UpdateFailed(
+                    f"Unable to fetch data for migration: {err}"
+                ) from err
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, DEVICE_MODEL: data.model.value},
+            )
+            self.update_interval = timedelta(
+                seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+                    data.model.value, DEFAULT_SCAN_INTERVAL
+                )
+            )
+
     async def _async_update_data(self) -> AirthingsDevice:
         """Get data from Airthings BLE."""
         try:
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
-
         return data

@@ -1,9 +1,10 @@
 """The tests for the hassio update entities."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 from aiohasupervisor import (
     SupervisorBadRequestError,
@@ -12,6 +13,8 @@ from aiohasupervisor import (
 )
 from aiohasupervisor.models import (
     HomeAssistantUpdateOptions,
+    Job,
+    JobsInfo,
     OSUpdate,
     StoreAddonUpdate,
 )
@@ -44,6 +47,7 @@ def mock_all(
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
+    jobs_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -241,6 +245,131 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
         )
     mock_create_backup.assert_not_called()
     update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
+
+
+async def test_update_addon_progress(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test progress reporting for addon update."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    message_id = 0
+    job_uuid = uuid4().hex
+
+    def make_job_message(progress: float, done: bool | None):
+        nonlocal message_id
+        message_id += 1
+        return {
+            "id": message_id,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "uuid": job_uuid,
+                    "created": "2025-09-29T00:00:00.000000+00:00",
+                    "name": "addon_manager_update",
+                    "reference": "test",
+                    "progress": progress,
+                    "done": done,
+                    "stage": None,
+                    "extra": {"total": 1234567890} if progress > 0 else None,
+                    "errors": [],
+                },
+            },
+        }
+
+    await client.send_json(make_job_message(progress=0, done=None))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is False
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage")
+        is None
+    )
+
+    await client.send_json(make_job_message(progress=5, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is True
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage") == 5
+    )
+
+    await client.send_json(make_job_message(progress=50, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is True
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage") == 50
+    )
+
+    await client.send_json(make_job_message(progress=100, done=True))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is False
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage")
+        is None
+    )
+
+
+async def test_addon_update_progress_startup(
+    hass: HomeAssistant, jobs_info: AsyncMock
+) -> None:
+    """Test addon update in progress during home assistant startup."""
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="addon_manager_update",
+                reference="test",
+                uuid=uuid4().hex,
+                progress=50,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),
+                child_jobs=[],
+                extra={"total": 1234567890},
+            )
+        ],
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is True
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage") == 50
+    )
 
 
 async def setup_backup_integration(hass: HomeAssistant) -> None:
@@ -627,6 +756,186 @@ async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) ->
     mock_create_backup.assert_not_called()
     supervisor_client.homeassistant.update.assert_called_once_with(
         HomeAssistantUpdateOptions(version=None, backup=False)
+    )
+
+
+async def test_update_core_progress(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test progress reporting for core update."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    message_id = 0
+    job_uuid = uuid4().hex
+
+    def make_job_message(
+        progress: float, done: bool | None, errors: list[dict[str, str]] | None = None
+    ):
+        nonlocal message_id
+        message_id += 1
+        return {
+            "id": message_id,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "uuid": job_uuid,
+                    "created": "2025-09-29T00:00:00.000000+00:00",
+                    "name": "home_assistant_core_update",
+                    "reference": None,
+                    "progress": progress,
+                    "done": done,
+                    "stage": None,
+                    "extra": {"total": 1234567890} if progress > 0 else None,
+                    "errors": errors if errors else [],
+                },
+            },
+        }
+
+    await client.send_json(make_job_message(progress=0, done=None))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is False
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        is None
+    )
+
+    await client.send_json(make_job_message(progress=5, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is True
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        == 5
+    )
+
+    await client.send_json(make_job_message(progress=50, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is True
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        == 50
+    )
+
+    # During a successful update Home Assistant is stopped before the update job
+    # reaches the end. An error ends it early so we use that for test
+    await client.send_json(
+        make_job_message(
+            progress=70,
+            done=True,
+            errors=[
+                {"type": "HomeAssistantUpdateError", "message": "bad", "stage": None}
+            ],
+        )
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is False
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        is None
+    )
+
+
+async def test_core_update_progress_startup(
+    hass: HomeAssistant, jobs_info: AsyncMock
+) -> None:
+    """Test core update in progress during home assistant startup.
+
+    This is an odd test, it's very unlikely core will be starting during an update.
+    It is technically possible though as core isn't stopped until the docker portion
+    is complete and updates can be started from CLI.
+    """
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="home_assistant_core_update",
+                reference=None,
+                uuid=uuid4().hex,
+                progress=50,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),
+                child_jobs=[],
+                extra={"total": 1234567890},
+            )
+        ],
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is True
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        == 50
     )
 
 

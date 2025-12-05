@@ -46,7 +46,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
         set_value_fn=lambda device, value: device.set_mist_level(value),
-        value_fn=lambda device: device.state.mist_level,
+        value_fn=lambda device: device.state.mist_virtual_level,
     )
 ]
 
@@ -61,7 +61,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -79,7 +79,7 @@ def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Add number entities."""
 
     async_add_entities(

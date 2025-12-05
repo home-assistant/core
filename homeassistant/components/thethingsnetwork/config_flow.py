@@ -82,7 +82,14 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             user_input,
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "instructions_url": "https://www.thethingsindustries.com/docs/integrations/adding-applications/"
+            },
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

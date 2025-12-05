@@ -15,11 +15,12 @@
       }
     },
     "button": {
-      "test_alarm": {
-        "default": "mdi:bell-alert"
+      "charging_contacts_reset": {},
+      "filter_reset": {
+        "default": "mdi:air-filter"
       },
-      "stop_alarm": {
-        "default": "mdi:bell-cancel"
+      "main_brush_reset": {
+        "default": "mdi:brush"
       },
       "pan_left": {
         "default": "mdi:chevron-left"
@@ -27,47 +28,115 @@
       "pan_right": {
         "default": "mdi:chevron-right"
       },
-      "tilt_up": {
-        "default": "mdi:chevron-up"
-      },
-      "tilt_down": {
-        "default": "mdi:chevron-down"
-      },
-      "main_brush_reset": {
-        "default": "mdi:brush"
+      "sensor_reset": {
+        "default": "mdi:eye-outline"
       },
       "side_brush_reset": {
         "default": "mdi:brush"
       },
-      "sensor_reset": {
-        "default": "mdi:eye-outline"
+      "stop_alarm": {
+        "default": "mdi:bell-cancel"
       },
-      "filter_reset": {
-        "default": "mdi:air-filter"
+      "test_alarm": {
+        "default": "mdi:bell-alert"
       },
-      "charging_contacts_reset": {}
+      "tilt_down": {
+        "default": "mdi:chevron-down"
+      },
+      "tilt_up": {
+        "default": "mdi:chevron-up"
+      }
+    },
+    "number": {
+      "auto_off_minutes": {
+        "default": "mdi:sleep"
+      },
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "pan_step": {
+        "default": "mdi:unfold-more-vertical"
+      },
+      "smooth_transition_off": {
+        "default": "mdi:weather-sunset-down"
+      },
+      "smooth_transition_on": {
+        "default": "mdi:weather-sunset-up"
+      },
+      "temperature_offset": {
+        "default": "mdi:contrast"
+      },
+      "tilt_step": {
+        "default": "mdi:unfold-more-horizontal"
+      }
     },
     "select": {
-      "light_preset": {
-        "default": "mdi:sign-direction"
-      },
       "alarm_sound": {
         "default": "mdi:music-note"
       },
       "alarm_volume": {
         "default": "mdi:volume-medium",
         "state": {
+          "high": "mdi:volume-high",
           "low": "mdi:volume-low",
-          "medium": "mdi:volume-medium",
-          "high": "mdi:volume-high"
+          "medium": "mdi:volume-medium"
         }
+      },
+      "light_preset": {
+        "default": "mdi:sign-direction"
+      }
+    },
+    "sensor": {
+      "alarm_source": {
+        "default": "mdi:bell"
+      },
+      "charging_contacts_remaining": {},
+      "charging_contacts_used": {},
+      "filter_remaining": {
+        "default": "mdi:air-filter"
+      },
+      "filter_used": {
+        "default": "mdi:air-filter"
+      },
+      "main_brush_remaining": {
+        "default": "mdi:brush"
+      },
+      "main_brush_used": {
+        "default": "mdi:brush"
+      },
+      "on_since": {
+        "default": "mdi:clock"
+      },
+      "sensor_remaining": {
+        "default": "mdi:eye-outline"
+      },
+      "sensor_used": {
+        "default": "mdi:eye-outline"
+      },
+      "side_brush_remaining": {
+        "default": "mdi:brush"
+      },
+      "side_brush_used": {
+        "default": "mdi:brush"
+      },
+      "signal_level": {
+        "default": "mdi:signal"
+      },
+      "ssid": {
+        "default": "mdi:wifi"
+      },
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
+      },
+      "water_alert_timestamp": {
+        "default": "mdi:clock-alert-outline"
       }
     },
     "switch": {
-      "led": {
-        "default": "mdi:led-off",
+      "auto_off_enabled": {
+        "default": "mdi:sleep-off",
         "state": {
-          "on": "mdi:led-on"
+          "on": "mdi:sleep"
         }
       },
       "auto_update_enabled": {
@@ -76,17 +145,17 @@
           "on": "mdi:autorenew"
         }
       },
-      "auto_off_enabled": {
-        "default": "mdi:sleep-off",
+      "baby_cry_detection": {
+        "default": "mdi:baby-face-outline",
         "state": {
-          "on": "mdi:sleep"
+          "on": "mdi:baby-face"
         }
       },
-      "smooth_transitions": {
-        "default": "mdi:transition-masked",
-        "state": {
-          "on": "mdi:transition"
-        }
+      "carpet_boost": {
+        "default": "mdi:rug"
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
       },
       "fan_sleep_mode": {
         "default": "mdi:sleep-off",
@@ -94,13 +163,10 @@
           "on": "mdi:sleep"
         }
       },
-      "child_lock": {
-        "default": "mdi:account-lock"
-      },
-      "pir_enabled": {
-        "default": "mdi:motion-sensor-off",
+      "led": {
+        "default": "mdi:led-off",
         "state": {
-          "on": "mdi:motion-sensor"
+          "on": "mdi:led-on"
         }
       },
       "motion_detection": {
@@ -115,98 +181,32 @@
           "on": "mdi:account"
         }
       },
+      "pir_enabled": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      },
+      "smooth_transitions": {
+        "default": "mdi:transition-masked",
+        "state": {
+          "on": "mdi:transition"
+        }
+      },
       "tamper_detection": {
         "default": "mdi:shield-off",
         "state": {
           "on": "mdi:shield"
         }
-      },
-      "baby_cry_detection": {
-        "default": "mdi:baby-face-outline",
-        "state": {
-          "on": "mdi:baby-face"
-        }
-      },
-      "carpet_boost": {
-        "default": "mdi:rug"
-      }
-    },
-    "sensor": {
-      "on_since": {
-        "default": "mdi:clock"
-      },
-      "ssid": {
-        "default": "mdi:wifi"
-      },
-      "signal_level": {
-        "default": "mdi:signal"
-      },
-      "alarm_source": {
-        "default": "mdi:bell"
-      },
-      "water_alert_timestamp": {
-        "default": "mdi:clock-alert-outline"
-      },
-      "main_brush_remaining": {
-        "default": "mdi:brush"
-      },
-      "main_brush_used": {
-        "default": "mdi:brush"
-      },
-      "side_brush_remaining": {
-        "default": "mdi:brush"
-      },
-      "side_brush_used": {
-        "default": "mdi:brush"
-      },
-      "filter_remaining": {
-        "default": "mdi:air-filter"
-      },
-      "filter_used": {
-        "default": "mdi:air-filter"
-      },
-      "sensor_remaining": {
-        "default": "mdi:eye-outline"
-      },
-      "sensor_used": {
-        "default": "mdi:eye-outline"
-      },
-      "charging_contacts_remaining": {},
-      "charging_contacts_used": {},
-      "vacuum_error": {
-        "default": "mdi:alert-circle"
-      }
-    },
-    "number": {
-      "smooth_transition_off": {
-        "default": "mdi:weather-sunset-down"
-      },
-      "smooth_transition_on": {
-        "default": "mdi:weather-sunset-up"
-      },
-      "auto_off_minutes": {
-        "default": "mdi:sleep"
-      },
-      "temperature_offset": {
-        "default": "mdi:contrast"
-      },
-      "pan_step": {
-        "default": "mdi:unfold-more-vertical"
-      },
-      "tilt_step": {
-        "default": "mdi:unfold-more-horizontal"
-      },
-      "clean_count": {
-        "default": "mdi:counter"
       }
     }
   },
   "services": {
-    "sequence_effect": {
-      "service": "mdi:playlist-play"
-    },
     "random_effect": {
       "service": "mdi:shuffle-variant"
+    },
+    "sequence_effect": {
+      "service": "mdi:playlist-play"
     }
   }
 }

@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
+from homeassistant.components.text import DOMAIN as DOMAIN_TEXT
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
@@ -18,15 +19,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import trigger
+from homeassistant.helpers import config_validation as cv, trigger
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
     Trigger,
-    TriggerActionType,
-    TriggerConfig,
-    TriggerInfo,
+    TriggerActionRunner,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -37,6 +36,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+from tests.typing import WebSocketGenerator
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -449,7 +449,31 @@ async def test_pluggable_action(
     assert not plug_2
 
 
-async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
+class TriggerActionFunctionTypeHelper:
+    """Helper for testing different trigger action function types."""
+
+    def __init__(self) -> None:
+        """Init helper."""
+        self.action_calls = []
+
+    @callback
+    def cb_action(self, *args):
+        """Callback action."""
+        self.action_calls.append([*args])
+
+    def sync_action(self, *args):
+        """Sync action."""
+        self.action_calls.append([*args])
+
+    async def async_action(self, *args):
+        """Async action."""
+        self.action_calls.append([*args])
+
+
+@pytest.mark.parametrize("action_method", ["cb_action", "sync_action", "async_action"])
+async def test_platform_multiple_triggers(
+    hass: HomeAssistant, action_method: str
+) -> None:
     """Test a trigger platform with multiple trigger."""
 
     class MockTrigger(Trigger):
@@ -462,30 +486,23 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-            """Initialize trigger."""
-
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
 
-        async def async_attach(
-            self,
-            action: TriggerActionType,
-            trigger_info: TriggerInfo,
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            action({"trigger": "test_trigger_1"})
+            run_action({"extra": "test_trigger_1"}, "trigger 1 desc")
 
     class MockTrigger2(MockTrigger):
         """Mock trigger 2."""
 
-        async def async_attach(
-            self,
-            action: TriggerActionType,
-            trigger_info: TriggerInfo,
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            action({"trigger": "test_trigger_2"})
+            run_action({"extra": "test_trigger_2"}, "trigger 2 desc")
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
@@ -508,22 +525,41 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
 
     log_cb = MagicMock()
 
-    action_calls = []
+    action_helper = TriggerActionFunctionTypeHelper()
+    action_method = getattr(action_helper, action_method)
 
-    @callback
-    def cb_action(*args):
-        action_calls.append([*args])
+    await async_initialize_triggers(hass, config_1, action_method, "test", "", log_cb)
+    assert len(action_helper.action_calls) == 1
+    assert action_helper.action_calls[0][0] == {
+        "trigger": {
+            "alias": None,
+            "description": "trigger 1 desc",
+            "extra": "test_trigger_1",
+            "id": "0",
+            "idx": "0",
+            "platform": "test",
+        }
+    }
+    action_helper.action_calls.clear()
 
-    await async_initialize_triggers(hass, config_1, cb_action, "test", "", log_cb)
-    assert action_calls == [[{"trigger": "test_trigger_1"}]]
-    action_calls.clear()
-
-    await async_initialize_triggers(hass, config_2, cb_action, "test", "", log_cb)
-    assert action_calls == [[{"trigger": "test_trigger_2"}]]
-    action_calls.clear()
+    await async_initialize_triggers(hass, config_2, action_method, "test", "", log_cb)
+    assert len(action_helper.action_calls) == 1
+    assert action_helper.action_calls[0][0] == {
+        "trigger": {
+            "alias": None,
+            "description": "trigger 2 desc",
+            "extra": "test_trigger_2",
+            "id": "0",
+            "idx": "0",
+            "platform": "test.trig_2",
+        }
+    }
+    action_helper.action_calls.clear()
 
     with pytest.raises(KeyError):
-        await async_initialize_triggers(hass, config_3, cb_action, "test", "", log_cb)
+        await async_initialize_triggers(
+            hass, config_3, action_method, "test", "", log_cb
+        )
 
 
 async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
@@ -573,6 +609,35 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
     assert await async_validate_trigger_config(hass, config_4) == config_4
 
 
+async def test_platform_backwards_compatibility_for_new_style_configs(
+    hass: HomeAssistant,
+) -> None:
+    """Test backwards compatibility for old-style triggers with new-style configs."""
+
+    class MockTriggerPlatform:
+        """Mock trigger platform."""
+
+        TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required("option_1"): str,
+                vol.Optional("option_2"): int,
+            }
+        )
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", MockTriggerPlatform())
+
+    config_old_style = [{"platform": "test", "option_1": "value_1", "option_2": 2}]
+    result = await async_validate_trigger_config(hass, config_old_style)
+    assert result == config_old_style
+
+    config_new_style = [
+        {"platform": "test", "options": {"option_1": "value_1", "option_2": 2}}
+    ]
+    result = await async_validate_trigger_config(hass, config_new_style)
+    assert result == config_old_style
+
+
 @pytest.mark.parametrize(
     "sun_trigger_descriptions",
     [
@@ -607,21 +672,32 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
         """,
     ],
 )
+# Patch out binary sensor triggers, because loading sun triggers also loads
+# binary sensor triggers and those are irrelevant for this test
+@patch(
+    "homeassistant.components.binary_sensor.trigger.async_get_triggers",
+    new=AsyncMock(return_value={}),
+)
 async def test_async_get_all_descriptions(
-    hass: HomeAssistant, sun_trigger_descriptions: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    sun_trigger_descriptions: str,
 ) -> None:
     """Test async_get_all_descriptions."""
     tag_trigger_descriptions = """
         _:
-          fields:
+          target:
             entity:
-              selector:
-                entity:
-                  filter:
-                    domain: alarm_control_panel
-                    supported_features:
-                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+              domain: alarm_control_panel
         """
+    text_trigger_descriptions = """
+        changed:
+          target:
+            entity:
+              domain: text
+        """
+
+    ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
     assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
@@ -632,6 +708,8 @@ async def test_async_get_all_descriptions(
             trigger_descriptions = sun_trigger_descriptions
         elif fname.endswith("tag/triggers.yaml"):
             trigger_descriptions = tag_trigger_descriptions
+        elif fname.endswith("text/triggers.yaml"):
+            trigger_descriptions = text_trigger_descriptions
         with io.StringIO(trigger_descriptions) as file:
             return parse_yaml(file)
 
@@ -657,7 +735,7 @@ async def test_async_get_all_descriptions(
     )
 
     # system_health does not have triggers and should not be in descriptions
-    assert descriptions == {
+    expected_descriptions = {
         "sun": {
             "fields": {
                 "event": {
@@ -676,6 +754,8 @@ async def test_async_get_all_descriptions(
         }
     }
 
+    assert descriptions == expected_descriptions
+
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is descriptions
 
@@ -692,42 +772,115 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await trigger.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    assert new_descriptions == {
-        "sun": {
-            "fields": {
-                "event": {
-                    "example": "sunrise",
-                    "selector": {
-                        "select": {
-                            "custom_value": False,
-                            "multiple": False,
-                            "options": ["sunrise", "sunset"],
-                            "sort": False,
-                        }
-                    },
-                },
-                "offset": {"selector": {"time": {}}},
-            }
-        },
+    # The tag trigger should now be present
+    expected_descriptions |= {
         "tag": {
-            "fields": {
-                "entity": {
-                    "selector": {
-                        "entity": {
-                            "filter": [
-                                {
-                                    "domain": ["alarm_control_panel"],
-                                    "supported_features": [1],
-                                }
-                            ],
-                            "multiple": False,
-                            "reorder": False,
-                        },
-                    },
-                },
-            }
+            "target": {
+                "entity": [
+                    {
+                        "domain": ["alarm_control_panel"],
+                    }
+                ],
+            },
+            "fields": {},
         },
     }
+    assert new_descriptions == expected_descriptions
+
+    # Verify the cache returns the same object
+    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
+
+    # Load the text integration and check a new cache object is created
+    assert await async_setup_component(hass, DOMAIN_TEXT, {})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        new_descriptions = await trigger.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    # No text triggers added, they are gated by the automation.new_triggers_conditions
+    # labs flag
+    assert new_descriptions == expected_descriptions
+
+    # Verify the cache returns the same object
+    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
+
+    # Enable the new_triggers_conditions flag and verify text triggers are loaded
+    assert await async_setup_component(hass, "labs", {})
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        new_descriptions = await trigger.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    # The text triggers should now be present
+    assert new_descriptions == expected_descriptions | {
+        "text.changed": {
+            "fields": {},
+            "target": {
+                "entity": [
+                    {
+                        "domain": [
+                            "text",
+                        ],
+                    },
+                ],
+            },
+        },
+    }
+
+    # Verify the cache returns the same object
+    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
+
+    # Disable the new_triggers_conditions flag and verify text triggers are removed
+    assert await async_setup_component(hass, "labs", {})
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": False,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        new_descriptions = await trigger.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    # The text triggers should no longer be present
+    assert new_descriptions == expected_descriptions
 
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
@@ -857,6 +1010,124 @@ async def test_subscribe_triggers(
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
     assert await async_setup_component(hass, "sun", {})
-
     assert trigger_events == [{"sun"}]
     assert "Error while notifying trigger platform listener" in caplog.text
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+@pytest.mark.parametrize(
+    ("new_triggers_conditions_enabled", "expected_events"),
+    [
+        (True, [{"light.turned_off", "light.turned_on"}]),
+        (False, []),
+    ],
+)
+async def test_subscribe_triggers_experimental_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    new_triggers_conditions_enabled: bool,
+    expected_events: list[set[str]],
+) -> None:
+    """Test trigger.async_subscribe_platform_events doesn't send events for disabled triggers."""
+    # Return empty triggers.yaml for light integration, the actual trigger descriptions
+    # are irrelevant for this test
+    light_trigger_descriptions = ""
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/triggers.yaml"):
+            trigger_descriptions = light_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    trigger_events = []
+
+    async def good_subscriber(new_triggers: set[str]):
+        """Simulate a working subscriber."""
+        trigger_events.append(new_triggers)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": new_triggers_conditions_enabled,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    trigger.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert trigger_events == expected_events
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+@patch(
+    "homeassistant.components.light.trigger.async_get_triggers",
+    new=AsyncMock(return_value={}),
+)
+async def test_subscribe_triggers_no_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger.async_subscribe_platform_events doesn't send events for platforms without triggers."""
+    # Return empty triggers.yaml for light integration, the actual trigger descriptions
+    # are irrelevant for this test
+    light_trigger_descriptions = ""
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/triggers.yaml"):
+            trigger_descriptions = light_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    trigger_events = []
+
+    async def good_subscriber(new_triggers: set[str]):
+        """Simulate a working subscriber."""
+        trigger_events.append(new_triggers)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    trigger.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert trigger_events == []
