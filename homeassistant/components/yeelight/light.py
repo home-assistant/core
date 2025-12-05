@@ -380,7 +380,12 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SET_MODE, SERVICE_SCHEMA_SET_MODE, "async_set_mode"
     )
     platform.async_register_entity_service(
-        SERVICE_START_FLOW, SERVICE_SCHEMA_START_FLOW, _async_start_flow
+        SERVICE_START_FLOW,
+        SERVICE_SCHEMA_START_FLOW,
+        _async_start_flow,
+        description_placeholders={
+            "flow_objects_urls": "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects"
+        },
     )
     platform.async_register_entity_service(
         SERVICE_SET_COLOR_SCENE, SERVICE_SCHEMA_SET_COLOR_SCENE, _async_set_color_scene
@@ -397,6 +402,9 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SET_COLOR_FLOW_SCENE,
         SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE,
         _async_set_color_flow_scene,
+        description_placeholders={
+            "examples_url": "https://yeelight.readthedocs.io/en/stable/flow.html"
+        },
     )
     platform.async_register_entity_service(
         SERVICE_SET_AUTO_DELAY_OFF_SCENE,
