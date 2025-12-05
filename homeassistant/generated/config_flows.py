@@ -185,6 +185,7 @@ FLOWS = {
         "emoncms",
         "emonitor",
         "emulated_roku",
+        "energenie_mi_home",
         "energenie_power_sockets",
         "energyid",
         "energyzero",
