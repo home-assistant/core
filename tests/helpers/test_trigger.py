@@ -672,6 +672,12 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
         """,
     ],
 )
+# Patch out binary sensor triggers, because loading sun triggers also loads
+# binary sensor triggers and those are irrelevant for this test
+@patch(
+    "homeassistant.components.binary_sensor.trigger.async_get_triggers",
+    new=AsyncMock(return_value={}),
+)
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1006,3 +1012,122 @@ async def test_subscribe_triggers(
     assert await async_setup_component(hass, "sun", {})
     assert trigger_events == [{"sun"}]
     assert "Error while notifying trigger platform listener" in caplog.text
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+@pytest.mark.parametrize(
+    ("new_triggers_conditions_enabled", "expected_events"),
+    [
+        (True, [{"light.turned_off", "light.turned_on"}]),
+        (False, []),
+    ],
+)
+async def test_subscribe_triggers_experimental_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    new_triggers_conditions_enabled: bool,
+    expected_events: list[set[str]],
+) -> None:
+    """Test trigger.async_subscribe_platform_events doesn't send events for disabled triggers."""
+    # Return empty triggers.yaml for light integration, the actual trigger descriptions
+    # are irrelevant for this test
+    light_trigger_descriptions = ""
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/triggers.yaml"):
+            trigger_descriptions = light_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    trigger_events = []
+
+    async def good_subscriber(new_triggers: set[str]):
+        """Simulate a working subscriber."""
+        trigger_events.append(new_triggers)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": new_triggers_conditions_enabled,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    trigger.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert trigger_events == expected_events
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+@patch(
+    "homeassistant.components.light.trigger.async_get_triggers",
+    new=AsyncMock(return_value={}),
+)
+async def test_subscribe_triggers_no_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger.async_subscribe_platform_events doesn't send events for platforms without triggers."""
+    # Return empty triggers.yaml for light integration, the actual trigger descriptions
+    # are irrelevant for this test
+    light_trigger_descriptions = ""
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("light/triggers.yaml"):
+            trigger_descriptions = light_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    trigger_events = []
+
+    async def good_subscriber(new_triggers: set[str]):
+        """Simulate a working subscriber."""
+        trigger_events.append(new_triggers)
+
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(hass, "labs", {})
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    trigger.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "light", {})
+    await hass.async_block_till_done()
+    assert trigger_events == []

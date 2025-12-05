@@ -176,6 +176,10 @@
               "state_address": "State address",
               "valid_dpts": "Valid DPTs"
             },
+            "respond_to_read": {
+              "description": "Respond to GroupValueRead telegrams received to the configured send address.",
+              "label": "Respond to read"
+            },
             "sync_state": {
               "description": "Actively request state updates from KNX bus for state addresses.",
               "options": {
@@ -438,6 +442,24 @@
             }
           }
         },
+        "date": {
+          "description": "The KNX date platform is used as an interface to date objects.",
+          "knx": {
+            "ga_date": {
+              "description": "The group address of the date object.",
+              "label": "Date"
+            }
+          }
+        },
+        "datetime": {
+          "description": "The KNX datetime platform is used as an interface to date and time objects.",
+          "knx": {
+            "ga_datetime": {
+              "description": "The group address of the date and time object.",
+              "label": "Date and time"
+            }
+          }
+        },
         "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
@@ -546,10 +568,15 @@
             "invert": {
               "description": "Invert payloads before processing or sending.",
               "label": "Invert"
-            },
-            "respond_to_read": {
-              "description": "Respond to GroupValueRead telegrams received to the configured send address.",
-              "label": "Respond to read"
+            }
+          }
+        },
+        "time": {
+          "description": "The KNX time platform is used as an interface to time objects.",
+          "knx": {
+            "ga_time": {
+              "description": "The group address of the time object.",
+              "label": "Time"
             }
           }
         },

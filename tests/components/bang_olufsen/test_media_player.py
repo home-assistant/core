@@ -21,11 +21,11 @@ from syrupy.filters import props
 from voluptuous import Invalid, MultipleInvalid
 
 from homeassistant.components.bang_olufsen.const import (
-    BANG_OLUFSEN_REPEAT_FROM_HA,
-    BANG_OLUFSEN_STATES,
+    BEO_REPEAT_FROM_HA,
+    BEO_STATES,
     DOMAIN,
-    BangOlufsenMediaType,
-    BangOlufsenSource,
+    BeoMediaType,
+    BeoSource,
 )
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -354,7 +354,7 @@ async def test_async_update_playback_state(
     [
         # URI source, url media type expected
         (
-            BangOlufsenSource.URI_STREAMER,
+            BeoSource.URI_STREAMER,
             MediaType.URL,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(),
@@ -362,7 +362,7 @@ async def test_async_update_playback_state(
         ),
         # Line-In source, music media type expected, progress 0 expected
         (
-            BangOlufsenSource.LINE_IN,
+            BeoSource.LINE_IN,
             MediaType.MUSIC,
             0,
             PlaybackContentMetadata(),
@@ -370,24 +370,24 @@ async def test_async_update_playback_state(
         ),
         # Tidal source, tidal media type expected, media content id expected
         (
-            BangOlufsenSource.TIDAL,
-            BangOlufsenMediaType.TIDAL,
+            BeoSource.TIDAL,
+            BeoMediaType.TIDAL,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(source_internal_id="123"),
             True,
         ),
         # Deezer source, deezer media type expected, media content id expected
         (
-            BangOlufsenSource.DEEZER,
-            BangOlufsenMediaType.DEEZER,
+            BeoSource.DEEZER,
+            BeoMediaType.DEEZER,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(source_internal_id="123"),
             True,
         ),
         # Radio source, radio media type expected, media content id expected
         (
-            BangOlufsenSource.NET_RADIO,
-            BangOlufsenMediaType.RADIO,
+            BeoSource.NET_RADIO,
+            BeoMediaType.RADIO,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(source_internal_id="123"),
             True,
@@ -454,7 +454,7 @@ async def test_async_turn_off(
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert TEST_PLAYBACK_STATE_TURN_OFF.value
-    assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_TURN_OFF.value]
+    assert states.state == BEO_STATES[TEST_PLAYBACK_STATE_TURN_OFF.value]
 
     # Check API call
     mock_mozart_client.post_standby.assert_called_once()
@@ -513,7 +513,7 @@ async def test_async_update_beolink_line_in(
     beolink_callback = mock_mozart_client.get_notification_notifications.call_args[0][0]
 
     # Set source
-    source_change_callback(BangOlufsenSource.LINE_IN)
+    source_change_callback(BeoSource.LINE_IN)
     await beolink_callback(WebsocketNotificationTag(value="beolinkListeners"))
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
@@ -669,7 +669,7 @@ async def test_async_media_play_pause(
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert initial_state.value
-    assert states.state == BANG_OLUFSEN_STATES[initial_state.value]
+    assert states.state == BEO_STATES[initial_state.value]
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -696,7 +696,7 @@ async def test_async_media_stop(
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert TEST_PLAYBACK_STATE_PLAYING.value
-    assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
+    assert states.state == BEO_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -731,7 +731,7 @@ async def test_async_media_next_track(
         # Seekable source, seek expected
         (TEST_SOURCE, does_not_raise(), 1),
         # Non seekable source, seek shouldn't work
-        (BangOlufsenSource.LINE_IN, pytest.raises(HomeAssistantError), 0),
+        (BeoSource.LINE_IN, pytest.raises(HomeAssistantError), 0),
         # Malformed source, seek shouldn't work
         (Source(), pytest.raises(HomeAssistantError), 0),
     ],
@@ -1331,7 +1331,7 @@ async def test_async_join_players(
     [
         # Invalid source
         (
-            BangOlufsenSource.LINE_IN,
+            BeoSource.LINE_IN,
             [TEST_MEDIA_PLAYER_ENTITY_ID_2],
             pytest.raises(ServiceValidationError),
             "invalid_source",
@@ -1653,7 +1653,7 @@ async def test_async_set_repeat(
 
     # Set the return value of the repeat endpoint to match service call
     mock_mozart_client.get_settings_queue.return_value = PlayQueueSettings(
-        repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
+        repeat=BEO_REPEAT_FROM_HA[repeat]
     )
 
     await hass.services.async_call(
@@ -1666,12 +1666,10 @@ async def test_async_set_repeat(
         blocking=True,
     )
     mock_mozart_client.set_settings_queue.assert_called_once_with(
-        play_queue_settings=PlayQueueSettings(
-            repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
-        )
+        play_queue_settings=PlayQueueSettings(repeat=BEO_REPEAT_FROM_HA[repeat])
     )
 
-    # Test the BANG_OLUFSEN_REPEAT_TO_HA dict by checking property value
+    # Test the BEO_REPEAT_TO_HA dict by checking property value
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_MEDIA_REPEAT] == repeat
 
