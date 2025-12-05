@@ -269,7 +269,9 @@ def create_legacy_template_issue(
     try:
         config.pop(CONF_PLATFORM, None)
         modified_yaml = format_migration_config(config)
-        yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
+        yaml_config = (
+            f"```\n{yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})}\n```"
+        )
     except RecursionError:
         yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
 
