@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Sequence
+from datetime import timedelta
 import io
 import logging
 from ssl import SSLContext
@@ -33,7 +34,9 @@ from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
+from yarl import URL as YarlURL
 
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -45,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -91,6 +95,7 @@ from .const import (
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
     EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
@@ -1062,6 +1067,25 @@ async def load_data(
 ) -> io.BytesIO:
     """Load data into ByteIO/File container from a source."""
     if url is not None:
+        # Store original URL for logging (signed URLs contain auth tokens)
+        log_url = url
+
+        # Parse URL once and check if it's internal
+        try:
+            parsed = YarlURL(url)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_url",
+                translation_placeholders={"url": url},
+            ) from err
+
+        # Only treat as internal URL if:
+        # 1. It's a relative path starting with / (e.g., /api/camera_proxy/...)
+        # 2. It's an absolute URL pointing to this Home Assistant instance
+        if (not parsed.is_absolute() and url.startswith("/")) or is_hass_url(hass, url):
+            url = _prepare_internal_url(hass, parsed)
+
         # Load data from URL
         params: dict[str, Any] = {}
         headers: dict[str, str] = {}
@@ -1094,15 +1118,17 @@ async def load_data(
                         "Status code %s (retry #%s) loading %s",
                         req.status_code,
                         retry_num + 1,
-                        url,
+                        log_url,
                     )
                 else:
                     data = io.BytesIO(req.content)
                     if data.read():
                         data.seek(0)
-                        data.name = url
+                        data.name = log_url
                         return data
-                    _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
+                    _LOGGER.warning(
+                        "Empty data (retry #%s) in %s", retry_num + 1, log_url
+                    )
                 retry_num += 1
                 if retry_num < num_retries:
                     await asyncio.sleep(
@@ -1130,6 +1156,57 @@ async def load_data(
             translation_key="missing_input",
             translation_placeholders={"field": "URL or File"},
         )
+
+
+def _prepare_internal_url(hass: HomeAssistant, parsed: YarlURL) -> str:
+    """Prepare internal Home Assistant URL with signed path.
+
+    Converts internal URLs (relative paths or HA instance URLs) to signed
+    internal URLs for authenticated access.
+
+    Args:
+        hass: Home Assistant instance.
+        parsed: Pre-parsed yarl URL object.
+
+    Returns:
+        Fully qualified internal URL with authentication signature.
+
+    Raises:
+        HomeAssistantError: If Home Assistant URL cannot be determined.
+
+    """
+    # Determine path - use relative() for absolute URLs, or the full URL string for relative
+    if parsed.is_absolute():
+        path = str(parsed.relative())
+    else:
+        path = str(parsed)
+
+    # Sign the path for authentication
+    signed_path = async_sign_path(
+        hass, path, timedelta(seconds=CONTENT_AUTH_EXPIRY_TIME), use_content_user=True
+    )
+
+    try:
+        internal_url = get_url(
+            hass,
+            allow_internal=True,
+            allow_ip=True,
+            prefer_external=False,
+            # Don't require SSL - internal URLs may use HTTP and we want
+            # to support both local network access without valid certificates
+            require_ssl=False,
+        )
+    except NoURLAvailableError as err:
+        msg = "Unable to determine Home Assistant URL"
+        if (
+            hass.config.api
+            and hass.config.api.use_ssl
+            and (not hass.config.external_url or not hass.config.internal_url)
+        ):
+            msg += ". Configure internal and external URL in general settings."
+        raise HomeAssistantError(msg) from err
+
+    return f"{internal_url}{signed_path}"
 
 
 def _validate_credentials_input(
