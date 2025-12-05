@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 
+PARALLEL_UPDATES = 1
+
 SWITCH_ENTITY_DESCRIPTION = SwitchEntityDescription(
     translation_key="energy_saving",
     entity_category=EntityCategory.CONFIG,
