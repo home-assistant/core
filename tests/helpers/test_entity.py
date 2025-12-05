@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import threading
-from typing import Any
+from typing import Any, final
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -1878,6 +1879,7 @@ async def test_change_entity_id(
             self.remove_calls = []
 
         async def async_added_to_hass(self):
+            await super().async_added_to_hass()
             self.added_calls.append(None)
             self.async_on_remove(lambda: result.append(1))
 
@@ -2960,3 +2962,103 @@ async def test_platform_state_write_from_init_unique_id(
     # The early attempt to write is interpreted as a unique ID collision
     assert "Platform test_platform does not generate unique IDs." in caplog.text
     assert "Entity id already exists - ignoring: test.test" not in caplog.text
+
+
+async def test_included_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test included entities are exposed via the entity_id attribute."""
+
+    entity_registry.async_get_or_create(
+        domain="hello",
+        platform="test",
+        unique_id="very_unique_oceans",
+        suggested_object_id="oceans",
+    )
+    entity_registry.async_get_or_create(
+        domain="hello",
+        platform="test",
+        unique_id="very_unique_continents",
+        suggested_object_id="continents",
+    )
+    entity_registry.async_get_or_create(
+        domain="hello",
+        platform="test",
+        unique_id="very_unique_moon",
+        suggested_object_id="moon",
+    )
+
+    class MockHelloBaseClass(entity.Entity):
+        """Domain base entity platform domain Hello."""
+
+        @final
+        @property
+        def state_attributes(self) -> dict[str, Any]:
+            """Return the state attributes."""
+            return {"extra": "beer"}
+
+    class MockHelloIncludedEntitiesClass(MockHelloBaseClass, entity.Entity):
+        """Mock hello grouped entity class for a test integration."""
+
+    platform = MockEntityPlatform(hass, domain="hello", platform_name="test")
+    mock_entity = MockHelloIncludedEntitiesClass()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "hello.universe"
+    mock_entity.unique_id = "very_unique_universe"
+    mock_entity._attr_included_unique_ids = [
+        "very_unique_continents",
+        "very_unique_oceans",
+    ]
+
+    await platform.async_add_entities([mock_entity])
+
+    # Initiate mock grouped entity for hello domain
+    mock_entity.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["hello.continents", "hello.oceans"]
+
+    # Add an entity to the group of included entities
+    mock_entity._attr_included_unique_ids = [
+        "very_unique_continents",
+        "very_unique_moon",
+        "very_unique_oceans",
+    ]
+    mock_entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get("extra") == "beer"
+    assert state.attributes.get(ATTR_ENTITY_ID) == [
+        "hello.continents",
+        "hello.moon",
+        "hello.oceans",
+    ]
+
+    # Remove an entity from the group of included entities
+    mock_entity._attr_included_unique_ids = ["very_unique_moon", "very_unique_oceans"]
+
+    mock_entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["hello.moon", "hello.oceans"]
+
+    # Rename an included entity via the registry entity
+    entity_registry.async_update_entity(
+        entity_id="hello.moon", new_entity_id="hello.moon_light"
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["hello.moon_light", "hello.oceans"]
+
+    # Remove an included entity from the registry entity
+    entity_registry.async_remove(entity_id="hello.oceans")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["hello.moon_light"]
