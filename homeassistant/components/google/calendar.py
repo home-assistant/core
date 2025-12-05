@@ -7,6 +7,7 @@ import dataclasses
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
+from urllib.request import pathname2url
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
@@ -38,7 +39,7 @@ from homeassistant.components.calendar import (
     is_offset_reached,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
@@ -356,6 +357,8 @@ class GoogleCalendarEntity(
         self._ignore_availability = entity_description.ignore_availability
         self._offset = entity_description.offset
         self._event: CalendarEvent | None = None
+        self._event_color_id: str | None = None
+        self._current_event_id: str | None = None
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
@@ -365,9 +368,12 @@ class GoogleCalendarEntity(
             )
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        return {"offset_reached": self.offset_reached}
+        attributes: dict[str, Any] = {"offset_reached": self.offset_reached}
+        if self._event_color_id is not None:
+            attributes["event_color_id"] = self._event_color_id
+        return attributes
 
     @property
     def offset_reached(self) -> bool:
@@ -420,6 +426,39 @@ class GoogleCalendarEntity(
             "google.calendar-refresh",
         )
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+
+        # Fetch color ID for the current event in the background
+        # Note: _event_with_offset updates _current_event_id as a side effect
+        (event, _) = self._event_with_offset()
+        if event and self._current_event_id:
+            self.coordinator.config_entry.async_create_background_task(
+                self.hass,
+                self._async_update_event_color(self._current_event_id),
+                "google.calendar-color-fetch",
+            )
+
+    async def _async_update_event_color(self, event_id: str) -> None:
+        """Update the color ID for the current event."""
+        try:
+            # Use the service's internal auth to fetch raw event data with colorId
+            # The gcal_sync Event model doesn't expose colorId, so we fetch it directly
+            calendar_service = self.coordinator.config_entry.runtime_data.service
+            # Access the auth directly to get raw JSON with colorId field
+            raw_event_data = await calendar_service._auth.get_json(  # noqa: SLF001
+                f"calendars/{pathname2url(self.calendar_id)}/events/{pathname2url(event_id)}",
+                params={"fields": "colorId"},
+            )
+            color_id = raw_event_data.get("colorId")
+            if color_id != self._event_color_id:
+                self._event_color_id = color_id
+                self.async_write_ha_state()
+        except (ApiException, KeyError, ValueError) as err:
+            _LOGGER.debug("Failed to fetch event color for %s: %s", event_id, err)
+
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -441,12 +480,15 @@ class GoogleCalendarEntity(
             ),
             None,
         ):
+            # Store the Google Calendar event ID for color fetching
+            self._current_event_id = api_event.id
             event = _get_calendar_event(api_event)
             if self._offset:
                 (event.summary, offset_value) = extract_offset(
                     event.summary, self._offset
                 )
             return event, offset_value
+        self._current_event_id = None
         return None, None
 
     async def async_create_event(self, **kwargs: Any) -> None:
