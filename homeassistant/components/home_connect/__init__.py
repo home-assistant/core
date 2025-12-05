@@ -147,5 +147,7 @@ async def async_migrate_entry(
                     )["sub"],
                 )
 
-    _LOGGER.debug("Migration to version %s.%s successful", entry.version, entry.minor_version)
+    _LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
     return True
