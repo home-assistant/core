@@ -577,49 +577,32 @@ async def _async_setup_themes(
             MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
-    def set_theme_legacy(call: ServiceCall) -> None:
-        """Set backend-preferred theme (legacy schema)."""
-        name = call.data[CONF_NAME]
-        mode = call.data.get("mode", "light")
-
-        light_mode = mode == "light"
-
-        theme_key = DATA_DEFAULT_THEME if light_mode else DATA_DEFAULT_DARK_THEME
-
-        if name == VALUE_NO_THEME:
-            to_set = DEFAULT_THEME if light_mode else None
+    def update_hass_theme(theme: str, light: bool) -> None:
+        theme_key = DATA_DEFAULT_THEME if light else DATA_DEFAULT_DARK_THEME
+        if theme == VALUE_NO_THEME:
+            to_set = DEFAULT_THEME if light else None
         else:
-            _LOGGER.info("Theme %s set as default %s theme", name, mode)
-            to_set = name
-
+            _LOGGER.info(
+                "Theme %s set as default %s theme", theme, "light" if light else "dark"
+            )
+            to_set = theme
         hass.data[theme_key] = to_set
-        store.async_delay_save(
-            lambda: {
-                DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
-                DATA_DEFAULT_DARK_THEME: hass.data.get(DATA_DEFAULT_DARK_THEME),
-            },
-            THEMES_SAVE_DELAY,
-        )
-        update_theme_and_fire_event()
 
     @callback
     def set_theme(call: ServiceCall) -> None:
         """Set backend-preferred theme."""
-        if CONF_MODE in call.data:
-            set_theme_legacy(call)
-            return
 
         name = call.data.get(CONF_NAME)
-        name_dark = call.data.get(CONF_NAME_DARK)
-
-        if name:
-            hass.data[DATA_DEFAULT_THEME] = (
-                DEFAULT_THEME if name == VALUE_NO_THEME else name
-            )
-        if name_dark:
-            hass.data[DATA_DEFAULT_DARK_THEME] = (
-                None if name_dark == VALUE_NO_THEME else name_dark
-            )
+        if name is not None and CONF_MODE in call.data:
+            mode = call.data.get("mode", "light")
+            light_mode = mode == "light"
+            update_hass_theme(name, light_mode)
+        else:
+            name_dark = call.data.get(CONF_NAME_DARK)
+            if name:
+                update_hass_theme(name, True)
+            if name_dark:
+                update_hass_theme(name_dark, False)
 
         store.async_delay_save(
             lambda: {
