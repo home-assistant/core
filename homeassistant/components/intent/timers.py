@@ -905,12 +905,12 @@ class StartTimerIntentHandler(intent.IntentHandler):
 
         test_input = ConversationInput(
             text=conversation_command,
-            language=intent_obj.language,
-            device_id=intent_obj.device_id,
-            conversation_id=None,
             context=intent_obj.context,
-            agent_id=str(intent_obj.conversation_agent_id),
-            satellite_id=None,
+            conversation_id=None,
+            device_id=intent_obj.device_id,
+            satellite_id=intent_obj.satellite_id,
+            language=intent_obj.language,
+            agent_id=intent_obj.conversation_agent_id,
         )
 
         # check for sentence trigger
