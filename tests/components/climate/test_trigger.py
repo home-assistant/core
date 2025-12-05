@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -107,8 +106,6 @@ async def test_climate_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await async_setup_component(hass, "climate", {})
-
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
@@ -171,8 +168,6 @@ async def test_climate_state_attribute_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await async_setup_component(hass, "climate", {})
-
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
@@ -239,8 +234,6 @@ async def test_climate_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
-    await async_setup_component(hass, "climate", {})
-
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
@@ -302,8 +295,6 @@ async def test_climate_state_attribute_trigger_behavior_first(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await async_setup_component(hass, "climate", {})
-
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
@@ -369,8 +360,6 @@ async def test_climate_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
-    await async_setup_component(hass, "climate", {})
-
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
@@ -431,8 +420,6 @@ async def test_climate_state_attribute_trigger_behavior_last(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await async_setup_component(hass, "climate", {})
-
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
