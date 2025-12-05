@@ -20,7 +20,7 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "heater_mock")
+@pytest.mark.usefixtures("classic_vario_mock", "heater_mock", "filter_mock")
 async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
@@ -49,7 +49,7 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "heater_mock")
+@pytest.mark.usefixtures("classic_vario_mock", "heater_mock", "filter_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -87,6 +87,23 @@ async def test_setup(
                 ),
             ],
         ),
+        (
+            "filter_mock",
+            [
+                (
+                    "time.mock_filter_day_start_time",
+                    time(9, 0, tzinfo=timezone(timedelta(hours=1))),
+                    "end_time_night_mode",
+                    9 * 60,
+                ),
+                (
+                    "time.mock_filter_night_start_time",
+                    time(19, 0, tzinfo=timezone(timedelta(hours=1))),
+                    "start_time_night_mode",
+                    19 * 60,
+                ),
+            ],
+        ),
     ],
 )
 async def test_set_value(
@@ -118,7 +135,7 @@ async def test_set_value(
         assert calls[-1][1][0][item[2]] == item[3]
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "heater_mock")
+@pytest.mark.usefixtures("classic_vario_mock", "heater_mock", "filter_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -155,6 +172,25 @@ async def test_set_value(
                     "time.mock_classicvario_night_start_time",
                     "classic_vario_data",
                     "startTime_night",
+                    1320,
+                    time(22, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
+                ),
+            ],
+        ),
+        (
+            "filter_mock",
+            [
+                (
+                    "time.mock_filter_day_start_time",
+                    "filter_data",
+                    "end_time_night_mode",
+                    540,
+                    time(9, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
+                ),
+                (
+                    "time.mock_filter_night_start_time",
+                    "filter_data",
+                    "start_time_night_mode",
                     1320,
                     time(22, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
                 ),
