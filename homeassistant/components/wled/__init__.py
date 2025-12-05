@@ -104,14 +104,14 @@ async def async_migrate_entry(
                 entry
                 for entry in duplicate_entries
                 if entry.entry_id != config_entry.entry_id
-                if entry.source == SOURCE_IGNORE
+                and entry.source == SOURCE_IGNORE
             ]
             if ignored_entries:
                 _LOGGER.info(
                     "Found %d ignored WLED config entries with the same MAC address, removing them",
                     len(ignored_entries),
                 )
-                asyncio.gather(
+                await asyncio.gather(
                     *[
                         hass.config_entries.async_remove(entry.entry_id)
                         for entry in ignored_entries
