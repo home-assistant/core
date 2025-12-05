@@ -479,10 +479,8 @@ async def test_add_friend_flow_config_entry_not_loaded(
     assert result["reason"] == "config_entry_not_loaded"
 
 
-@pytest.mark.usefixtures("xbox_live_client")
-async def test_unique_id_and_friends_migration(
-    hass: HomeAssistant,
-) -> None:
+@pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
+async def test_unique_id_and_friends_migration(hass: HomeAssistant) -> None:
     """Test config entry unique_id migration and favorite to subentry migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
