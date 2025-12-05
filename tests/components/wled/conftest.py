@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.123"},
-        unique_id="aabbccddeeff",
+        unique_id="aa:bb:cc:dd:ee:ff",
         minor_version=2,
     )
 

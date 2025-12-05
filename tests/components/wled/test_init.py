@@ -63,14 +63,6 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setting_unique_id(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test we set unique ID if not set yet."""
-    assert init_integration.runtime_data
-    assert init_integration.unique_id == "aabbccddeeff"
-
-
 @pytest.fixture
 def config_entry_v1() -> MockConfigEntry:
     """Return a WLED config entry at version 1.0 with a specific MAC."""
@@ -146,7 +138,7 @@ async def test_migrate_entry_v1_to_1_2_no_duplicates(
     assert config_entry_v1.state == ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
-    assert config_entry_v1.unique_id == "aabbccddeeff"
+    assert config_entry_v1.unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -185,7 +177,7 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
     assert config_entry_v1.state == ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
-    assert config_entry_v1.unique_id == "aabbccddeeff"
+    assert config_entry_v1.unique_id == "aa:bb:cc:dd:ee:ff"
 
     assert ignored_1.state is ConfigEntryState.NOT_LOADED
     assert ignored_2.state is ConfigEntryState.NOT_LOADED

@@ -9,6 +9,7 @@ from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -17,7 +18,6 @@ from .coordinator import (
     WLEDConfigEntry,
     WLEDDataUpdateCoordinator,
     WLEDReleasesDataUpdateCoordinator,
-    normalize_mac_address,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,12 +93,12 @@ async def async_migrate_entry(
                     "Config entry is missing unique ID, cannot migrate to version 1.2"
                 )
                 return False
-            normalized_mac_address = normalize_mac_address(config_entry.unique_id)
+            normalized_mac_address = format_mac(config_entry.unique_id)
             duplicate_entries = [
                 entry
                 for entry in hass.config_entries.async_entries(DOMAIN)
                 if entry.unique_id
-                and normalize_mac_address(entry.unique_id) == normalized_mac_address
+                and format_mac(entry.unique_id) == normalized_mac_address
             ]
             ignored_entries = [
                 entry
