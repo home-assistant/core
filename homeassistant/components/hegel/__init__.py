@@ -7,9 +7,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from hegel_ip_client import HegelClient
 
 from .const import DEFAULT_PORT, DOMAIN
-from .hegel_client import HegelClient
 
 PLATFORMS = ["media_player"]
 _LOGGER = logging.getLogger(__name__)

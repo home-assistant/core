@@ -19,15 +19,21 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
+from hegel_ip_client import (
+    apply_state_changes,
     COMMANDS,
+    HegelClient,
+    HegelStateUpdate,
+    parse_reply_message,
+)
+
+from .const import (
     CONF_MODEL,
     DOMAIN,
+    HEARTBEAT_TIMEOUT_MINUTES,
     MODEL_INPUTS,
     SLOW_POLL_INTERVAL,
-    HEARTBEAT_TIMEOUT_MINUTES,
 )
-from .hegel_client import HegelClient, HegelStateUpdate, parse_reply_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,31 +96,6 @@ async def async_setup_entry(
     }
 
 
-def _apply_state_changes(
-    state: dict[str, Any], update: HegelStateUpdate, source: str = "reply"
-):
-    """Apply parsed changes to the state dictionary."""
-    if update.power is not None:
-        _LOGGER.debug("[%s] Power parse: %s", source, update.power)
-        state["power"] = update.power
-
-    if update.volume is not None:
-        _LOGGER.debug("[%s] Volume parse: %s", source, update.volume)
-        state["volume"] = update.volume
-
-    if update.mute is not None:
-        _LOGGER.debug("[%s] Mute parse: %s", source, update.mute)
-        state["mute"] = update.mute
-
-    if update.input is not None:
-        _LOGGER.debug("[%s] Input parse: %s", source, update.input)
-        state["input"] = update.input
-
-    if update.reset is not None:
-        _LOGGER.info("[%s] Reset/other message: %s", source, update.reset)
-        state["reset"] = update.reset
-
-
 class HegelSlowPollCoordinator(DataUpdateCoordinator):
     """Very slow fallback polling coordinator."""
 
@@ -141,7 +122,9 @@ class HegelSlowPollCoordinator(DataUpdateCoordinator):
                 # client.send() now returns parsed changes directly
                 update = await self._client.send(cmd, expect_reply=True, timeout=3.0)
                 if update and update.has_changes():
-                    _apply_state_changes(self._state, update, source="poll")
+                    apply_state_changes(
+                        self._state, update, logger=_LOGGER, source="poll"
+                    )
             return self._state
         except Exception as err:
             _LOGGER.error("Slow poll failed: %s", err)
@@ -255,7 +238,7 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         try:
             update = parse_reply_message(msg)
             if update.has_changes():
-                _apply_state_changes(self._state, update, source="push")
+                apply_state_changes(self._state, update, logger=_LOGGER, source="push")
                 # notify HA
                 self.async_write_ha_state()
         except Exception as err:
@@ -312,7 +295,9 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         cmd, expect_reply=True, timeout=3.0
                     )
                     if update and update.has_changes():
-                        _apply_state_changes(self._state, update, source="reconnect")
+                        apply_state_changes(
+                            self._state, update, logger=_LOGGER, source="reconnect"
+                        )
                 except Exception as err:
                     _LOGGER.debug("Refresh command %s failed: %s", cmd, err)
             # update entity state
