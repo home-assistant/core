@@ -36,7 +36,6 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
-    DPType,
 )
 from .entity import TuyaEntity
 from .models import (
@@ -54,7 +53,7 @@ from .type_information import EnumTypeInformation
 class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Custom DPCode Wrapper for converting enum to wind direction."""
 
-    DPTYPE = DPType.ENUM
+    _DPTYPE = EnumTypeInformation
 
     _WIND_DIRECTIONS = {
         "north": 0.0,
