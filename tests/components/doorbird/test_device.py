@@ -3,7 +3,6 @@
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
 
 from doorbirdpy import DoorBirdScheduleEntry
 import pytest
@@ -16,7 +15,7 @@ from homeassistant.components.doorbird.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import VALID_CONFIG, get_mock_doorbird_api
+from . import VALID_CONFIG
 from .conftest import DoorbirdMockerType
 
 from tests.common import MockConfigEntry
@@ -106,8 +105,7 @@ async def test_stale_favorites_filtered_by_url(
 
 async def test_custom_url_used_for_favorites(
     hass: HomeAssistant,
-    doorbird_info: dict[str, Any],
-    doorbird_schedule: list[DoorBirdScheduleEntry],
+    doorbird_mocker: DoorbirdMockerType,
 ) -> None:
     """Test that custom URL override is used instead of get_url."""
     custom_url = "https://my-custom-url.example.com:8443"
@@ -133,19 +131,7 @@ async def test_custom_url_used_for_favorites(
         data=config_with_custom_url,
         options={CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]},
     )
-    api = get_mock_doorbird_api(
-        info=doorbird_info,
-        schedule=doorbird_schedule,
-        favorites=favorites,
-    )
-    entry.add_to_hass(hass)
-    # Don't patch get_url - we want to verify custom_url takes precedence
-    with patch(
-        "homeassistant.components.doorbird.DoorBird",
-        return_value=api,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await doorbird_mocker(entry=entry, favorites=favorites)
 
     # Should have 2 event entities using the custom URL
     event_entities = hass.states.async_all("event")
