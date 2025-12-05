@@ -285,21 +285,21 @@ class IntegerTypeInformation(TypeInformation[float]):
 
 
 @dataclass(kw_only=True)
-class JsonTypeInformation(TypeInformation):
+class JsonTypeInformation(TypeInformation[Any]):
     """Json type information."""
 
     _DPTYPE = DPType.JSON
 
 
 @dataclass(kw_only=True)
-class RawTypeInformation(TypeInformation):
+class RawTypeInformation(TypeInformation[Any]):
     """Raw type information."""
 
     _DPTYPE = DPType.RAW
 
 
 @dataclass(kw_only=True)
-class StringTypeInformation(TypeInformation):
+class StringTypeInformation(TypeInformation[str]):
     """String type information."""
 
     _DPTYPE = DPType.STRING
