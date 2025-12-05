@@ -199,7 +199,8 @@ async def async_setup_entry(
     """Set up button entities."""
     entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
-    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+    entry_gen = get_device_entry_gen(config_entry)
+    if entry_gen in RPC_GENERATIONS:
         coordinator = entry_data.rpc
     else:
         coordinator = entry_data.block
@@ -214,10 +215,7 @@ async def async_setup_entry(
 
     # Remove the 'restart' button for sleeping devices as it was mistakenly
     # added in https://github.com/home-assistant/core/pull/154673
-    if (
-        get_device_entry_gen(config_entry) in RPC_GENERATIONS
-        and coordinator.sleep_period > 0
-    ):
+    if entry_gen in RPC_GENERATIONS and coordinator.sleep_period > 0:
         async_remove_shelly_entity(hass, BUTTON_PLATFORM, f"{coordinator.mac}-reboot")
 
     entities: list[ShellyButton] = []
