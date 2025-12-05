@@ -718,7 +718,12 @@ async def test_websocket_subscribe_feature(
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    # Initial state is sent as event
+    event_msg = await client.receive_json()
+    assert event_msg["type"] == "event"
+    assert event_msg["event"] == {
         "preview_feature": "special_repair",
         "domain": "kitchen_sink",
         "enabled": False,
@@ -751,6 +756,12 @@ async def test_websocket_subscribe_feature_receives_updates(
     assert subscribe_msg["success"]
     subscription_id = subscribe_msg["id"]
 
+    # Initial state event
+    initial_event_msg = await client.receive_json()
+    assert initial_event_msg["id"] == subscription_id
+    assert initial_event_msg["type"] == "event"
+    assert initial_event_msg["event"]["enabled"] is False
+
     await client.send_json_auto_id(
         {
             "type": "labs/update",
@@ -760,7 +771,7 @@ async def test_websocket_subscribe_feature_receives_updates(
         }
     )
 
-    # Event message arrives before the update result
+    # Update event arrives before the update result
     event_msg = await client.receive_json()
     assert event_msg["id"] == subscription_id
     assert event_msg["type"] == "event"
@@ -827,6 +838,9 @@ async def test_websocket_subscribe_does_not_require_admin(
 
     assert msg["success"]
 
+    # Consume initial state event
+    await client.receive_json()
+
 
 async def test_websocket_subscribe_only_receives_subscribed_feature_updates(
     hass: HomeAssistant,
@@ -848,6 +862,9 @@ async def test_websocket_subscribe_only_receives_subscribed_feature_updates(
     )
     subscribe_msg = await client.receive_json()
     assert subscribe_msg["success"]
+
+    # Consume initial state event
+    await client.receive_json()
 
     # Fire an event for a different feature
     hass.bus.async_fire(

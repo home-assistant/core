@@ -142,13 +142,8 @@ def websocket_subscribe_feature(
     preview_feature = labs_data.preview_features[preview_feature_id]
 
     @callback
-    def async_handle_event(event: Event[EventLabsUpdatedData]) -> None:
-        """Handle labs updated event."""
-        if (
-            event.data["domain"] != domain
-            or event.data["preview_feature"] != preview_feature_key
-        ):
-            return
+    def send_event() -> None:
+        """Send feature state to client."""
         enabled = (domain, preview_feature_key) in labs_data.data.preview_feature_status
         connection.send_message(
             websocket_api.event_message(
@@ -157,9 +152,19 @@ def websocket_subscribe_feature(
             )
         )
 
+    @callback
+    def async_handle_event(event: Event[EventLabsUpdatedData]) -> None:
+        """Handle labs updated event."""
+        if (
+            event.data["domain"] != domain
+            or event.data["preview_feature"] != preview_feature_key
+        ):
+            return
+        send_event()
+
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_LABS_UPDATED, async_handle_event
     )
 
-    enabled = (domain, preview_feature_key) in labs_data.data.preview_feature_status
-    connection.send_result(msg["id"], preview_feature.to_dict(enabled=enabled))
+    connection.send_result(msg["id"])
+    send_event()
