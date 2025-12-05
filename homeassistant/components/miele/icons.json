@@ -71,7 +71,7 @@
           "plate_step_warming": "mdi:alpha-w-circle-outline"
         }
       },
-      "power_disc_level": {
+      "power_disk_level": {
         "default": "mdi:car-coolant-level"
       },
       "program_id": {

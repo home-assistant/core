@@ -257,8 +257,8 @@
           "plate_step_warm": "Warming"
         }
       },
-      "power_disc_level": {
-        "name": "PowerDisc level"
+      "power_disk_level": {
+        "name": "PowerDisk level"
       },
       "program_id": {
         "name": "Program",

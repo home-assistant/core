@@ -721,8 +721,8 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     MieleSensorDefinition(
         types=(MieleAppliance.DISHWASHER,),
         description=MieleSensorDescription(
-            key="power_disc_level",
-            translation_key="power_disc_level",
+            key="power_disk_level",
+            translation_key="power_disk_level",
             value_fn=lambda value: None,
             level_value_fn=lambda value: value.power_disc_filling_level,
             native_unit_of_measurement=PERCENTAGE,
