@@ -11,6 +11,7 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.frontend import (
     CONF_EXTRA_JS_URL_ES5,
@@ -27,7 +28,7 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -343,7 +344,7 @@ async def test_themes_set_theme_wrong_name(
     """Test frontend.set_theme service called with wrong name."""
 
     with pytest.raises(
-        ServiceValidationError,
+        vol.error.MultipleInvalid,
         match="Theme wrong not found",
     ):
         await hass.services.async_call(
@@ -447,7 +448,7 @@ async def test_themes_set_dark_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with mode dark and wrong name."""
     with pytest.raises(
-        ServiceValidationError,
+        vol.error.MultipleInvalid,
         match="Theme wrong not found",
     ):
         await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
@@ -470,7 +471,7 @@ async def test_themes_reload_themes(
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         with pytest.raises(
-            ServiceValidationError,
+            vol.error.MultipleInvalid,
             match="Theme happy not found",
         ):
             await hass.services.async_call(

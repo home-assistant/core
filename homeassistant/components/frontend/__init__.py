@@ -25,8 +25,8 @@ from homeassistant.const import (
     EVENT_PANELS_UPDATED,
     EVENT_THEMES_UPDATED,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
@@ -527,6 +527,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _validate_selected_theme(theme: str) -> str:
+    """Validate that a user selected theme is a valid theme."""
+    if theme in (DEFAULT_THEME, VALUE_NO_THEME):
+        return theme
+    hass = async_get_hass()
+    if theme not in hass.data[DATA_THEMES]:
+        raise vol.Invalid(f"Theme {theme} not found")
+    return theme
+
+
 async def _async_setup_themes(
     hass: HomeAssistant, themes: dict[str, Any] | None
 ) -> None:
@@ -572,12 +582,6 @@ async def _async_setup_themes(
         name = call.data[CONF_NAME]
         mode = call.data.get("mode", "light")
 
-        if (
-            name not in (DEFAULT_THEME, VALUE_NO_THEME)
-            and name not in hass.data[DATA_THEMES]
-        ):
-            raise ServiceValidationError(f"Theme {name} not found")
-
         light_mode = mode == "light"
 
         theme_key = DATA_DEFAULT_THEME if light_mode else DATA_DEFAULT_DARK_THEME
@@ -607,19 +611,6 @@ async def _async_setup_themes(
 
         name = call.data.get(CONF_NAME)
         name_dark = call.data.get(CONF_NAME_DARK)
-
-        if (
-            name is not None
-            and name not in (DEFAULT_THEME, VALUE_NO_THEME)
-            and name not in hass.data[DATA_THEMES]
-        ):
-            raise ServiceValidationError(f"Theme {name} not found")
-        if (
-            name_dark is not None
-            and name_dark not in (DEFAULT_THEME, VALUE_NO_THEME)
-            and name_dark not in hass.data[DATA_THEMES]
-        ):
-            raise ServiceValidationError(f"Theme {name_dark} not found")
 
         if name:
             hass.data[DATA_DEFAULT_THEME] = (
@@ -664,22 +655,13 @@ async def _async_setup_themes(
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.Any(
-            # Legacy schema
-            vol.Schema(
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MODE): vol.Any("dark", "light"),
-                }
-            ),
-            # Newer schema with two theme selectors
-            vol.All(
-                cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_NAME_DARK): cv.string,
-                },
-            ),
+        vol.All(
+            {
+                vol.Optional(CONF_NAME): _validate_selected_theme,
+                vol.Exclusive(CONF_NAME_DARK, "dark_modes"): _validate_selected_theme,
+                vol.Exclusive(CONF_MODE, "dark_modes"): vol.Any("dark", "light"),
+            },
+            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
         ),
     )
 
