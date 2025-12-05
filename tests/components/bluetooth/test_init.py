@@ -953,7 +953,8 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         inject_advertisement(hass, device, adv_with_service_data_uuid_and_mfr_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
-        mock_config_flow.reset_mock()
+
+        # Ensure we don't regress future discovery steps
 
         # 7th discovery should generate a flow because the
         # service_uuids is in the advertisement
@@ -1290,6 +1291,56 @@ async def test_clear_address_from_match_history(
         # Now discovery should happen because history was cleared and data changed
         assert len(mock_config_flow.mock_calls) == 2
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
+
+
+@pytest.mark.usefixtures("macos_adapter")
+async def test_empty_manufacturer_data_does_not_block_discovery(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """Empty manufacturer_data {} should not block discovery of other matchers."""
+    mock_bt = [
+        {
+            "domain": "my_domain",
+            "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = generate_ble_device("11:22:33:44:55:66", "device")
+
+        # First adv: empty manufacturer_data, no service_data_uuid
+        adv_empty_mfr = generate_advertisement_data(
+            local_name="device",
+            manufacturer_data={},
+            service_data={},
+            service_uuids=[],
+        )
+        inject_advertisement(hass, device, adv_empty_mfr)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # Second adv: introduces the service_data_uuid while manufacturer_data remains empty
+        adv_with_sd_uuid = generate_advertisement_data(
+            local_name="device",
+            manufacturer_data={},
+            service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
+            service_uuids=[],
+        )
+        inject_advertisement(hass, device, adv_with_sd_uuid)
+        await hass.async_block_till_done()
+
+        # Expect discovery to trigger once for my_domain
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
 
 
 @pytest.mark.usefixtures("macos_adapter")
