@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
@@ -29,7 +29,6 @@ from .const import (
     CONF_ACCOUNT_ID,
     CONF_ACCOUNTNAME,
     CONF_BLE_DEVICES,
-    CONF_DEVICE_NAME,
     CONF_STAY_CONNECTED_BLUETOOTH,
     CONF_USE_WIFI,
     DEVICE_SUPPORT,
@@ -174,7 +173,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._stay_connected = user_input.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
-
+            if selected_address := user_input.get(CONF_ADDRESS):
+                self._discovered_device = bluetooth.async_ble_device_from_address(
+                    self.hass, selected_address
+                )
             return await self.async_step_wifi(user_input)
 
         current_addresses = self._async_current_ids()
@@ -186,7 +188,11 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             if name is None or not name.startswith(DEVICE_SUPPORT):
                 continue
 
-            self._discovered_devices[address] = discovery_info.name
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, discovery_info.address
+            )
+            if device and not await self.check_and_update_bluetooth_device(device):
+                self._discovered_devices[address] = discovery_info.name
 
         if not self._discovered_devices:
             return await self.async_step_wifi(user_input)
@@ -195,6 +201,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=False,
             data_schema=vol.Schema(
                 {
+                    vol.Optional(CONF_ADDRESS): vol.In(self._discovered_devices),
                     vol.Optional(
                         CONF_STAY_CONNECTED_BLUETOOTH,
                         default=False,
@@ -236,9 +243,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_ACCOUNTNAME: account,
                         CONF_PASSWORD: password,
                         CONF_ACCOUNT_ID: user_account,
-                        CONF_DEVICE_NAME: self._discovered_device.name
-                        if self._discovered_device
-                        else None,
                         CONF_USE_WIFI: user_input.get(CONF_USE_WIFI, True),
                         **self._config,
                     },

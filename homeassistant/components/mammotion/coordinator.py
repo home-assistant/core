@@ -161,4 +161,7 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator):
 
     async def _async_update_data(self) -> MowingDevice:
         """Get data from the device."""
-        return await self.api.update(self.device_name)
+        data = await self.api.update(self.device_name)
+        await self.async_save_data(data)
+
+        return data
