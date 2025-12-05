@@ -32,11 +32,17 @@
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Updating Duck DNS domain {domain} failed due to a connection error"
+    },
     "entry_not_found": {
       "message": "Duck DNS integration entry not found"
     },
     "entry_not_selected": {
       "message": "Duck DNS integration entry not selected"
+    },
+    "update_failed": {
+      "message": "Updating Duck DNS domain {domain} failed"
     }
   },
   "issues": {

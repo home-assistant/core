@@ -222,7 +222,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==3.5.0
+aiodns==3.6.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -823,7 +823,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==1.0.5
+evohome-async==1.0.6
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1062,7 +1062,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.0
+home-assistant-frontend==20251203.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
@@ -1980,7 +1980,7 @@ pyrate-limiter==3.9.0
 pyrisco==0.6.7
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.6
+pyrituals==0.0.7
 
 # homeassistant.components.thread
 pyroute2==0.7.5
@@ -2547,7 +2547,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.31.0
+uiprotect==7.33.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
