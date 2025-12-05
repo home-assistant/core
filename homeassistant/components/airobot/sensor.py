@@ -35,7 +35,6 @@ class AirobotSensorEntityDescription(SensorEntityDescription):
     """Describes Airobot sensor entity."""
 
     value_fn: Callable[[ThermostatStatus], StateType]
-    available_fn: Callable[[ThermostatStatus], bool] = lambda _: True
     supported_fn: Callable[[ThermostatStatus], bool] = lambda _: True
 
 
@@ -62,7 +61,6 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.temp_floor,
-        available_fn=lambda status: status.has_floor_sensor,
         supported_fn=lambda status: status.has_floor_sensor,
     ),
     AirobotSensorEntityDescription(
@@ -71,7 +69,6 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.co2,
-        available_fn=lambda status: status.has_co2_sensor,
         supported_fn=lambda status: status.has_co2_sensor,
     ),
     AirobotSensorEntityDescription(
@@ -79,19 +76,7 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.aqi,
-        available_fn=lambda status: status.has_co2_sensor,
         supported_fn=lambda status: status.has_co2_sensor,
-    ),
-    AirobotSensorEntityDescription(
-        key="device_uptime",
-        translation_key="device_uptime",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: status.device_uptime,
-        entity_registry_enabled_default=False,
     ),
     AirobotSensorEntityDescription(
         key="heating_uptime",
@@ -147,10 +132,3 @@ class AirobotSensor(AirobotEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.status)
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data.status
-        )
