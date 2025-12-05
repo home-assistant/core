@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
 MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
 NO_TIMER_SUPPORT_RESPONSE = "no_timer_support"
-NO_INTENT_MATCH_RESPONSE = "no_intent_match"
+NO_TIMER_COMMAND_RESPONSE = "no_timer_command"
 
 
 @dataclass
