@@ -41,25 +41,17 @@ def get_config_entry(
     """Return config entry or raise if not found or not loaded."""
 
     if entry_id is None:
-        if not (config_entries := hass.config_entries.async_entries(DOMAIN)):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
-
-        if len(config_entries) != 1:
+        if len(entries := hass.config_entries.async_entries(DOMAIN)) != 1:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entry_not_selected",
             )
-        return config_entries[0]
-
+        return entries[0]
     if not (entry := hass.config_entries.async_get_entry(entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_found",
         )
-
     return entry
 
 
