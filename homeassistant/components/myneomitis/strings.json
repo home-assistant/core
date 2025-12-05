@@ -1,0 +1,86 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This integration is already configured."
+    },
+    "error": {
+      "auth_failed": "Authentication failed. Please check your email address and password.",
+      "connection_error": "Could not connect to the MyNeomitis service. Please try again later.",
+      "unknown_error": "An unexpected error occurred. Please try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Your email address used for your MyNeomitis account",
+          "password": "Your MyNeomitis account password"
+        },
+        "description": "Enter your MyNeomitis account credentials.",
+        "title": "Connect to MyNeomitis"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "pilote": {
+        "state": {
+          "antifrost": "Frost protection",
+          "auto": "Auto",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "eco_1": "Eco -1",
+          "eco_2": "Eco -2",
+          "standby": "Standby"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "antifrost": "mdi:snowflake",
+              "auto": "mdi:refresh-auto",
+              "boost": "mdi:rocket-launch",
+              "comfort": "mdi:fire",
+              "eco": "mdi:leaf",
+              "eco_1": "mdi:leaf",
+              "eco_2": "mdi:leaf",
+              "standby": "mdi:toggle-switch-off-outline"
+            }
+          }
+        }
+      },
+      "relais": {
+        "state": {
+          "auto": "Auto",
+          "off": "Off",
+          "on": "On"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "auto": "mdi:refresh-auto",
+              "off": "mdi:toggle-switch-off-outline",
+              "on": "mdi:toggle-switch"
+            }
+          }
+        }
+      },
+      "ufh": {
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "cooling": "mdi:snowflake",
+              "heating": "mdi:fire"
+            }
+          }
+        }
+      }
+    }
+  }
+}
