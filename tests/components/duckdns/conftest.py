@@ -42,14 +42,8 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_update_duckdns() -> Generator[AsyncMock]:
     """Mock _update_duckdns."""
 
-    with (
-        patch(
-            "homeassistant.components.duckdns.config_flow._update_duckdns",
-            return_value=True,
-        ) as mock,
-        patch(
-            "homeassistant.components.duckdns._update_duckdns",
-            new=mock,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.duckdns.config_flow._update_duckdns",
+        return_value=True,
+    ) as mock:
         yield mock
