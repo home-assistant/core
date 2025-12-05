@@ -12,6 +12,7 @@ from homeassistant.components.bang_olufsen.const import (
 
 from .const import (
     TEST_MEDIA_PLAYER_ENTITY_ID,
+    TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_MEDIA_PLAYER_ENTITY_ID_3,
     TEST_MEDIA_PLAYER_ENTITY_ID_4,
     TEST_REMOTE_SERIAL,
@@ -20,7 +21,10 @@ from .const import (
 
 
 def _get_button_entity_ids(id_prefix: str = "beosound_balance_11111111") -> list[str]:
-    """Return a list of button entity_ids that Mozart devices (except Beoconnect Core and Beosound Premiere) provides."""
+    """Return a list of button entity_ids that Mozart devices provide.
+
+    Beoconnect Core, Beosound A5, Beosound A9 and Beosound Premiere do not have (all of the) physical buttons and need filtering.
+    """
     return [
         f"event.{id_prefix}_{underscore(button_type)}".replace("preset", "favorite_")
         for button_type in DEVICE_BUTTONS
@@ -51,6 +55,11 @@ def get_a5_entity_ids() -> list[str]:
     ]
     buttons.remove("event.beosound_a5_44444444_microphone")
     return buttons
+
+
+def get_core_entity_ids() -> list[str]:
+    """Return a list of entity_ids that a Beoconnect core provides."""
+    return [TEST_MEDIA_PLAYER_ENTITY_ID_2]
 
 
 def get_remote_entity_ids(

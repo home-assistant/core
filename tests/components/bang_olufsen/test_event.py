@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from .conftest import mock_websocket_connection
 from .const import (
     TEST_BUTTON_EVENT_ENTITY_ID,
-    TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
     TEST_SERIAL_NUMBER_3,
     TEST_SERIAL_NUMBER_4,
@@ -27,6 +26,7 @@ from .const import (
 from .util import (
     get_a5_entity_ids,
     get_balance_entity_ids,
+    get_core_entity_ids,
     get_premiere_entity_ids,
     get_remote_entity_ids,
 )
@@ -34,7 +34,7 @@ from .util import (
 from tests.common import MockConfigEntry
 
 
-async def _button_event_creation_body(
+async def _check_button_event_creation(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -68,7 +68,7 @@ async def test_button_event_creation_balance(
 ) -> None:
     """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
 
-    await _button_event_creation_body(
+    await _check_button_event_creation(
         hass,
         entity_registry,
         snapshot,
@@ -90,13 +90,13 @@ async def test_no_button_and_remote_key_event_creation_core(
         items=[]
     )
 
-    await _button_event_creation_body(
+    await _check_button_event_creation(
         hass,
         entity_registry,
         snapshot,
         mock_config_entry_core,
         mock_mozart_client,
-        [TEST_MEDIA_PLAYER_ENTITY_ID_2],
+        get_core_entity_ids(),
     )
 
 
@@ -109,7 +109,7 @@ async def test_button_event_creation_premiere(
 ) -> None:
     """Test Bluetooth and Microphone button event entities are not created when using a Beosound Premiere."""
 
-    await _button_event_creation_body(
+    await _check_button_event_creation(
         hass,
         entity_registry,
         snapshot,
@@ -131,7 +131,7 @@ async def test_button_event_creation_a5(
 ) -> None:
     """Test Microphone button event entity is not created when using a Beosound A5."""
 
-    await _button_event_creation_body(
+    await _check_button_event_creation(
         hass,
         entity_registry,
         snapshot,
