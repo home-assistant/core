@@ -44,6 +44,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    async_remove_shelly_entity,
     format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
@@ -210,6 +211,11 @@ async def async_setup_entry(
         await er.async_migrate_entries(
             hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
         )
+
+    # Remove the 'restart' button for sleeping devices as it was mistakenly
+    # added in https://github.com/home-assistant/core/pull/154673
+    if coordinator.sleep_period == 0:
+        async_remove_shelly_entity(hass, BUTTON_PLATFORM, f"{coordinator.mac}-reboot")
 
     entities: list[ShellyButton] = []
 
