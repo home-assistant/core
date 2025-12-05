@@ -91,6 +91,21 @@
     },
     "vendor": "Plugwise"
   },
+  "c9293d1d68ee48fc8843c6f0dee2b6be": {
+    "dev_class": "pumping",
+    "members": [
+      "854f8a9b0e7e425db97f1f110e1ce4b3",
+      "ad4838d7d35c4d6ea796ee12ae5aedf8"
+    ],
+    "model": "Group",
+    "name": "Vloerverwarming",
+    "sensors": {
+      "electricity_consumed": 45.0,
+      "electricity_produced": 0.0,
+      "temperature": 20.1
+    },
+    "vendor": "Plugwise"
+  },
   "da224107914542988a88561b4452b0f6": {
     "binary_sensors": {
       "plugwise_notification": false
@@ -173,8 +188,12 @@
       "2568cc4b9c1e401495d4741a5f89bee1",
       "29542b2b6a6a4169acecc15c72a599b8"
     ],
-    "model": "Switchgroup",
+    "model": "Group",
     "name": "Test",
+    "sensors": {
+      "electricity_consumed": 16.5,
+      "electricity_produced": 0.0
+    },
     "switches": {
       "relay": true
     },
