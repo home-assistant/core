@@ -526,6 +526,7 @@ FLOWS = {
         "probe_plus",
         "profiler",
         "progettihwsw",
+        "proliphix",
         "prosegur",
         "prowl",
         "proximity",
