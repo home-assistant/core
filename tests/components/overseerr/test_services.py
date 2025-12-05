@@ -1,18 +1,31 @@
 """Tests for the Overseerr services."""
 
+import dataclasses
 from unittest.mock import AsyncMock
 
 import pytest
 from python_overseerr import OverseerrConnectionError
+from python_overseerr.models import MediaType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr.const import (
+    ATTR_LIMIT,
+    ATTR_MEDIA_TYPE,
     ATTR_REQUESTED_BY,
+    ATTR_SEASONS,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
+    ATTR_TMDB_ID,
     DOMAIN,
 )
-from homeassistant.components.overseerr.services import SERVICE_GET_REQUESTS
+from homeassistant.components.overseerr.services import (
+    ATTR_QUERY,
+    SERVICE_GET_REQUESTS,
+    SERVICE_REQUEST_MEDIA,
+    SERVICE_SEARCH_AND_REQUEST,
+    SERVICE_SEARCH_MEDIA,
+    parse_seasons_input,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -75,6 +88,67 @@ async def test_service_get_requests_no_meta(
         assert request["media"] == {}
 
 
+async def test_service_search_media(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the search_media service."""
+    # Mock the search method
+    mock_overseerr_client.search.return_value = []
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Test with a query containing spaces
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH_MEDIA,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_QUERY: "test query with spaces",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"results": []}
+    mock_overseerr_client.search.assert_called_once_with("test query with spaces")
+
+
+async def test_service_request_media(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the request_media service."""
+
+    # Mock the create request method
+    @dataclasses.dataclass
+    class RequestWithMediaMock:
+        tmdb_id: str = "123456789"
+        media_type: MediaType = MediaType.TV
+
+    mock_overseerr_client.create_request.return_value = RequestWithMediaMock()
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REQUEST_MEDIA,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_MEDIA_TYPE: "tv",
+            ATTR_TMDB_ID: "123456789",
+            ATTR_SEASONS: "1",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {"request": {"media_type": MediaType.TV, "tmdb_id": "123456789"}}
+
+
 @pytest.mark.parametrize(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
@@ -85,7 +159,15 @@ async def test_service_get_requests_no_meta(
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
             "Error connecting to the Overseerr instance: Timeout",
-        )
+        ),
+        (
+            SERVICE_SEARCH_MEDIA,
+            {ATTR_QUERY: "test"},
+            "search",
+            OverseerrConnectionError("Timeout"),
+            HomeAssistantError,
+            "Error connecting to the Overseerr instance: Timeout",
+        ),
     ],
 )
 async def test_services_connection_error(
@@ -119,6 +201,12 @@ async def test_services_connection_error(
     ("service", "payload"),
     [
         (SERVICE_GET_REQUESTS, {}),
+        (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test", ATTR_LIMIT: 3}),
+        (
+            SERVICE_REQUEST_MEDIA,
+            {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: "123456789", ATTR_SEASONS: "1"},
+        ),
+        (SERVICE_SEARCH_AND_REQUEST, {ATTR_QUERY: "test", ATTR_SEASONS: "1"}),
     ],
 )
 async def test_service_entry_availability(
@@ -154,3 +242,25 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("seasons_input", "expected_seasons"),
+    [
+        ("1", [1]),
+        ("1,", [1]),
+        ("1,2,3", [1, 2, 3]),
+        ("1, 2, 3", [1, 2, 3]),
+        (" 1 ,     2,  3    ", [1, 2, 3]),
+        ("[1]", [1]),
+        ("[1,2,3]", [1, 2, 3]),
+        ("[  1  , 2 ,    3]", [1, 2, 3]),
+        ("", "all"),
+        ("  ", "all"),
+        ("Not a valid input", "all"),
+        ("-", "all"),
+    ],
+)
+def test_parse_seasons_input(seasons_input, expected_seasons) -> None:
+    """Test that all inputs are parsed correctly."""
+    assert expected_seasons == parse_seasons_input(seasons_input)
