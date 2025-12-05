@@ -17,6 +17,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class FressnapfTrackerBinarySensorDescription(BinarySensorEntityDescription):
@@ -33,13 +36,6 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.charging,
-    ),
-    FressnapfTrackerBinarySensorDescription(
-        translation_key="deep_sleep",
-        key="deep_sleep_value",
-        device_class=BinarySensorDeviceClass.POWER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: bool(data.deep_sleep_value),
     ),
 )
 

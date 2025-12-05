@@ -15,7 +15,9 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
+    Platform.LIGHT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

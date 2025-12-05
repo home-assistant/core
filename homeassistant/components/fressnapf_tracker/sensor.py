@@ -18,6 +18,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class FressnapfTrackerSensorDescription(SensorEntityDescription):

@@ -561,7 +561,7 @@ class BaseCloudLLMEntity(Entity):
                         "schema": _format_structured_output(
                             structure, chat_log.llm_api
                         ),
-                        "strict": True,
+                        "strict": False,
                     },
                 }
 
