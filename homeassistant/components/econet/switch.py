@@ -19,23 +19,24 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: EconetConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+        hass: HomeAssistant,
+        entry: EconetConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat switch entity."""
     equipment = entry.runtime_data
-    async_add_entities(
-        EcoNetSwitchAuxHeatOnly(thermostat)
-        for thermostat in equipment[EquipmentType.THERMOSTAT]
-    )
+    for thermostat in equipment[EquipmentType.THERMOSTAT]:
+        if ThermostatOperationMode.EMERGENCY_HEAT in thermostat.modes:
+            async_add_entities(
+                EcoNetSwitchAuxHeatOnly(thermostat)
+            )
 
 
 class EcoNetSwitchAuxHeatOnly(EcoNetEntity[Thermostat], SwitchEntity):
-    """Representation of a aux_heat_only EcoNet switch."""
+    """Representation of an aux_heat_only EcoNet switch."""
 
     def __init__(self, thermostat: Thermostat) -> None:
-        """Initialize EcoNet ventilator platform."""
+        """Initialize EcoNet platform."""
         super().__init__(thermostat)
         self._attr_name = f"{thermostat.device_name} emergency heat"
         self._attr_unique_id = (
