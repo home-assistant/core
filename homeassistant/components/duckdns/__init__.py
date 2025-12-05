@@ -16,7 +16,8 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_CONFIG_ENTRY
-from .coordinator import DuckDnsConfigEntry, DuckDnsUpdateCoordinator, _update_duckdns
+from .coordinator import DuckDnsConfigEntry, DuckDnsUpdateCoordinator
+from .helpers import update_duckdns
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
+    # Add a dummy listener as we do not have regular entities
     entry.async_on_unload(coordinator.async_add_listener(lambda: None))
 
     return True
@@ -120,7 +122,7 @@ async def update_domain_service(call: ServiceCall) -> None:
 
     session = async_get_clientsession(call.hass)
 
-    await _update_duckdns(
+    await update_duckdns(
         session,
         entry.data[CONF_DOMAIN],
         entry.data[CONF_ACCESS_TOKEN],

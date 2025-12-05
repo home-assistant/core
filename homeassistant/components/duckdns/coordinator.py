@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import cast
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
@@ -15,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .helpers import update_duckdns
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +29,6 @@ BACKOFF_INTERVALS = (
     timedelta(minutes=15),
     timedelta(minutes=30),
 )
-
-UPDATE_URL = "https://www.duckdns.org/update"
-_SENTINEL = object()
 
 
 class DuckDnsUpdateCoordinator(DataUpdateCoordinator[bool]):
@@ -59,7 +56,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[bool]):
         ].total_seconds()
 
         try:
-            if not await _update_duckdns(
+            if not await update_duckdns(
                 self.session,
                 self.config_entry.data[CONF_DOMAIN],
                 self.config_entry.data[CONF_ACCESS_TOKEN],
@@ -86,31 +83,3 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[bool]):
         self.failed = 0
 
         return True
-
-
-async def _update_duckdns(
-    session: ClientSession,
-    domain: str,
-    token: str,
-    *,
-    txt: str | None | object = _SENTINEL,
-    clear: bool = False,
-) -> bool:
-    """Update DuckDNS."""
-    params = {"domains": domain, "token": token}
-
-    if txt is not _SENTINEL:
-        if txt is None:
-            # Pass in empty txt value to indicate it's clearing txt record
-            params["txt"] = ""
-            clear = True
-        else:
-            params["txt"] = cast(str, txt)
-
-    if clear:
-        params["clear"] = "true"
-
-    resp = await session.get(UPDATE_URL, params=params)
-    body = await resp.text()
-
-    return body == "OK"

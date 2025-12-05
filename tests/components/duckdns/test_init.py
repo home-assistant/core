@@ -6,7 +6,8 @@ import logging
 import pytest
 
 from homeassistant.components.duckdns import ATTR_TXT, DOMAIN, SERVICE_SET_TXT
-from homeassistant.components.duckdns.coordinator import BACKOFF_INTERVALS, UPDATE_URL
+from homeassistant.components.duckdns.coordinator import BACKOFF_INTERVALS
+from homeassistant.components.duckdns.helpers import UPDATE_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
