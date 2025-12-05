@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "Re-authentication was successful",
-      "unique_id_mismatch": "The email address does not match the original account."
+      "reauth_successful": "Re-authentication was successful"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
