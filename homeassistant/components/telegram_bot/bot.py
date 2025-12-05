@@ -48,7 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.network import is_hass_url
+from homeassistant.helpers.network import get_url, is_hass_url
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -1167,10 +1167,14 @@ def _prepare_internal_url(hass: HomeAssistant, url: str) -> tuple[str, SSLContex
         hass, path, timedelta(minutes=5), use_content_user=True
     )
 
-    # Build internal URL using local_ip (works in Docker containers)
-    scheme = "https" if hass.config.api.use_ssl else "http"
-    host = hass.config.api.local_ip
-    internal_url = f"{scheme}://{host}:{hass.config.api.port}{signed_path}"
+    internal_url = get_url(
+        hass,
+        allow_internal=True,
+        allow_ip=True,
+        prefer_external=False,
+        require_ssl=False,
+    )
+    internal_url = f"{internal_url}{signed_path}"
 
     # Disable SSL verification (cert may not match the IP address)
     return internal_url, get_default_no_verify_context()
