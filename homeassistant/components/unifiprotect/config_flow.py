@@ -72,6 +72,11 @@ def _filter_empty_credentials(user_input: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in user_input.items() if v not in (None, "")}
 
 
+def _normalize_port(data: dict[str, Any]) -> dict[str, Any]:
+    """Ensure port is stored as int (NumberSelector returns float)."""
+    return {**data, CONF_PORT: int(data.get(CONF_PORT, DEFAULT_PORT))}
+
+
 def _build_data_without_credentials(entry_data: Mapping[str, Any]) -> dict[str, Any]:
     """Build form data from existing config entry, excluding sensitive credentials."""
     return {
@@ -148,13 +153,13 @@ def _build_schema(
 
 
 # Schemas for different flow contexts
-CONFIG_SCHEMA = _build_schema()  # User flow: all fields
-RECONFIGURE_SCHEMA = _build_schema(
-    credentials_optional=True
-)  # Keep existing credentials
-DISCOVERY_SCHEMA = _build_schema(
-    include_host=False
-)  # Host from discovery, user sets port/ssl
+# User flow: all fields required
+CONFIG_SCHEMA = _build_schema()
+# Reconfigure flow: keep existing credentials if not provided
+RECONFIGURE_SCHEMA = _build_schema(credentials_optional=True)
+# Discovery flow: host comes from discovery, user sets port/ssl
+DISCOVERY_SCHEMA = _build_schema(include_host=False)
+# Reauth flow: only credentials, connection settings preserved
 REAUTH_SCHEMA = _build_schema(
     include_host=False, include_connection=False, credentials_optional=True
 )
@@ -340,7 +345,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
         return self.async_create_entry(
             title=title,
-            data={**data, CONF_ID: title},
+            data={**_normalize_port(data), CONF_ID: title},
             options={
                 CONF_DISABLE_RTSP: False,
                 CONF_ALL_UPDATES: False,
@@ -443,7 +448,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             _, errors = await self._async_get_nvr_data(merged_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data=merged_input
+                    reauth_entry, data=_normalize_port(merged_input)
                 )
 
         self.context["title_placeholders"] = {
@@ -497,7 +502,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data=merged_input,
+                    data=_normalize_port(merged_input),
                 )
 
         return self.async_show_form(

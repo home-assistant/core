@@ -19,7 +19,7 @@ from homeassistant.components.unifiprotect.const import (
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -42,7 +42,15 @@ from . import (
     UNIFI_DISCOVERY_PARTIAL,
     _patch_discovery,
 )
-from .conftest import MAC_ADDR
+from .conftest import (
+    DEFAULT_API_KEY,
+    DEFAULT_HOST,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
+    DEFAULT_VERIFY_SSL,
+    MAC_ADDR,
+)
 
 from tests.common import MockConfigEntry
 
@@ -64,8 +72,50 @@ SSDP_DISCOVERY = (
     ),
 )
 
+# Base user input without credentials (for tests that override them)
+BASE_USER_INPUT = {
+    CONF_HOST: DEFAULT_HOST,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+    CONF_USERNAME: DEFAULT_USERNAME,
+}
+
+# Common user input for reconfigure flow tests
+RECONFIGURE_USER_INPUT = {
+    **BASE_USER_INPUT,
+    CONF_PASSWORD: DEFAULT_PASSWORD,
+    CONF_API_KEY: DEFAULT_API_KEY,
+}
+
 UNIFI_DISCOVERY_DICT = asdict(UNIFI_DISCOVERY)
 UNIFI_DISCOVERY_DICT_PARTIAL = asdict(UNIFI_DISCOVERY_PARTIAL)
+
+
+async def _complete_reconfigure_flow(
+    hass: HomeAssistant,
+    flow_id: str,
+    nvr: NVR,
+    bootstrap: Bootstrap,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
+) -> ConfigFlowResult:
+    """Complete a reconfigure flow to terminal state after an error.
+
+    Sets up mocks for successful completion and returns the result.
+    Caller should assert the expected terminal state.
+    """
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
+    bootstrap.nvr = nvr
+    mock_api_bootstrap.side_effect = None
+    mock_api_bootstrap.return_value = bootstrap
+    mock_api_meta_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        RECONFIGURE_USER_INPUT,
+    )
+    await hass.async_block_till_done()
+    return result
 
 
 async def test_form(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) -> None:
@@ -285,12 +335,12 @@ async def test_form_reauth_auth(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
 ) -> None:
     """Test we handle reauth auth."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reauth_flow(hass)
+    result = await ufp_reauth_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -357,12 +407,12 @@ async def test_form_reauth_auth(
     assert len(mock_setup.mock_calls) == 1
 
     # Verify that non-sensitive data was preserved when only credentials were updated
-    assert ufp_reconfigure_entry.data[CONF_HOST] == "1.1.1.1"
-    assert ufp_reconfigure_entry.data[CONF_PORT] == 443
-    assert ufp_reconfigure_entry.data[CONF_VERIFY_SSL] is False
-    assert ufp_reconfigure_entry.data[CONF_USERNAME] == "test-username"
-    assert ufp_reconfigure_entry.data[CONF_PASSWORD] == "new-password"
-    assert ufp_reconfigure_entry.data[CONF_API_KEY] == "test-api-key"
+    assert ufp_reauth_entry.data[CONF_HOST] == "1.1.1.1"
+    assert ufp_reauth_entry.data[CONF_PORT] == 443
+    assert ufp_reauth_entry.data[CONF_VERIFY_SSL] is False
+    assert ufp_reauth_entry.data[CONF_USERNAME] == "test-username"
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == "new-password"
+    assert ufp_reauth_entry.data[CONF_API_KEY] == "test-api-key"
 
 
 async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -> None:
@@ -1161,19 +1211,47 @@ async def test_discovery_confirm_with_api_key_error(
     assert result["step_id"] == "discovery_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # Now provide working connection to complete the flow
+    bootstrap.nvr = nvr
+    mock_api_bootstrap.side_effect = None
+    mock_api_bootstrap.return_value = bootstrap
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "api_key": "test-api-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reconfigure(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1185,12 +1263,9 @@ async def test_reconfigure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            **RECONFIGURE_USER_INPUT,
             CONF_HOST: "1.1.1.2",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-            CONF_USERNAME: "test-username",
             CONF_PASSWORD: "new-password",
-            CONF_API_KEY: "test-api-key",
         },
     )
 
@@ -1198,42 +1273,36 @@ async def test_reconfigure(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Test successful reconfiguration with matching NVR MAC
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-    ) as mock_reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.2",
-                CONF_PORT: 443,
-                CONF_VERIFY_SSL: False,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "new-password",
-                CONF_API_KEY: "new-api-key",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **RECONFIGURE_USER_INPUT,
+            CONF_HOST: "1.1.1.2",
+            CONF_PASSWORD: "new-password",
+            CONF_API_KEY: "new-api-key",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert ufp_reconfigure_entry.data[CONF_HOST] == "1.1.1.2"
-    assert ufp_reconfigure_entry.data[CONF_PASSWORD] == "new-password"
-    assert ufp_reconfigure_entry.data[CONF_API_KEY] == "new-api-key"
-    mock_reload.assert_called_once_with(ufp_reconfigure_entry.entry_id)
+    assert ufp_reauth_entry.data[CONF_HOST] == "1.1.1.2"
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == "new-password"
+    assert ufp_reauth_entry.data[CONF_API_KEY] == "new-api-key"
 
 
 async def test_reconfigure_different_nvr(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
 ) -> None:
     """Test reconfiguration flow aborts when trying to switch to different NVR."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1245,9 +1314,8 @@ async def test_reconfigure_different_nvr(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            **BASE_USER_INPUT,
             CONF_HOST: "2.2.2.2",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
             CONF_USERNAME: "different-username",
             CONF_PASSWORD: "different-password",
             CONF_API_KEY: "different-api-key",
@@ -1257,8 +1325,8 @@ async def test_reconfigure_different_nvr(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_nvr"
     # Verify original config wasn't modified
-    assert ufp_reconfigure_entry.unique_id == _async_unifi_mac_from_hass(MAC_ADDR)
-    assert ufp_reconfigure_entry.data[CONF_HOST] == "1.1.1.1"
+    assert ufp_reauth_entry.unique_id == _async_unifi_mac_from_hass(MAC_ADDR)
+    assert ufp_reauth_entry.data[CONF_HOST] == "1.1.1.1"
 
 
 async def test_reconfigure_wrong_nvr(
@@ -1275,13 +1343,13 @@ async def test_reconfigure_wrong_nvr(
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_API_KEY: "test-api-key",
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
+            CONF_API_KEY: DEFAULT_API_KEY,
             "id": "UnifiProtect",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         },
         unique_id=nvr_mac,
     )
@@ -1299,9 +1367,8 @@ async def test_reconfigure_wrong_nvr(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            **BASE_USER_INPUT,
             CONF_HOST: "2.2.2.2",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
             CONF_USERNAME: "different-username",
             CONF_PASSWORD: "different-password",
             CONF_API_KEY: "different-api-key",
@@ -1312,21 +1379,22 @@ async def test_reconfigure_wrong_nvr(
     assert result["reason"] == "wrong_nvr"
     # Verify original config wasn't modified
     assert mock_config.unique_id == nvr_mac
-    assert mock_config.data[CONF_HOST] == "1.1.1.1"
+    assert mock_config.data[CONF_HOST] == DEFAULT_HOST
 
 
 async def test_reconfigure_auth_error(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow with authentication error."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1335,67 +1403,70 @@ async def test_reconfigure_auth_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "wrong-password",
-            CONF_API_KEY: "test-api-key",
-        },
+        {**RECONFIGURE_USER_INPUT, CONF_PASSWORD: "wrong-password"},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    # Now provide correct credentials to complete the flow
+    result = await _complete_reconfigure_flow(
+        hass, result["flow_id"], nvr, bootstrap, mock_api_bootstrap, mock_api_meta_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_api_key_error(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow with API key error."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
     # Test with API key authentication error
     mock_api_meta_info.side_effect = NotAuthorized
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_API_KEY: "wrong-api-key",
-        },
+        {**RECONFIGURE_USER_INPUT, CONF_API_KEY: "wrong-api-key"},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+
+    # Now provide correct API key to complete the flow
+    result = await _complete_reconfigure_flow(
+        hass, result["flow_id"], nvr, bootstrap, mock_api_bootstrap, mock_api_meta_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_cloud_user(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow with cloud user error."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1413,31 +1484,38 @@ async def test_reconfigure_cloud_user(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
+            **BASE_USER_INPUT,
             CONF_USERNAME: "cloud-username",
             CONF_PASSWORD: "cloud-password",
-            CONF_API_KEY: "test-api-key",
+            CONF_API_KEY: DEFAULT_API_KEY,
         },
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cloud_user"}
 
+    # Now provide local user credentials to complete the flow
+    bootstrap.users[bootstrap.auth_user_id].cloud_account = None
+    result = await _complete_reconfigure_flow(
+        hass, result["flow_id"], nvr, bootstrap, mock_api_bootstrap, mock_api_meta_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_outdated_version(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow with outdated protect version."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1448,32 +1526,33 @@ async def test_reconfigure_outdated_version(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_API_KEY: "test-api-key",
-        },
+        RECONFIGURE_USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "protect_version"}
+
+    # Now provide updated NVR version to complete the flow
+    result = await _complete_reconfigure_flow(
+        hass, result["flow_id"], nvr, bootstrap, mock_api_bootstrap, mock_api_meta_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_form_defaults(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry_alt: MockConfigEntry,
+    ufp_reauth_entry_alt: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow form has correct default values."""
-    ufp_reconfigure_entry_alt.add_to_hass(hass)
+    ufp_reauth_entry_alt.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry_alt.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry_alt.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -1488,25 +1567,24 @@ async def test_reconfigure_form_defaults(
     bootstrap.nvr = nvr
 
     # Complete the flow to verify it works
-    with patch.object(hass.config_entries, "async_reload"):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_PORT: 8443,
-                CONF_VERIFY_SSL: True,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "new-password",
-                CONF_API_KEY: "new-api-key",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 8443,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "new-password",
+            CONF_API_KEY: "new-api-key",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
     # Verify that all data was updated
-    entry = hass.config_entries.async_get_entry(ufp_reconfigure_entry_alt.entry_id)
+    entry = hass.config_entries.async_get_entry(ufp_reauth_entry_alt.entry_id)
     assert entry.data[CONF_HOST] == "1.1.1.1"
     assert entry.data[CONF_PORT] == 8443
     assert entry.data[CONF_VERIFY_SSL] is True
@@ -1521,6 +1599,7 @@ async def test_reconfigure_same_nvr_updated_credentials(
     nvr: NVR,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration flow updating credentials for same NVR."""
     # Use the NVR's actual MAC address
@@ -1546,19 +1625,18 @@ async def test_reconfigure_same_nvr_updated_credentials(
     assert result["step_id"] == "reconfigure"
 
     bootstrap.nvr = nvr
-    with patch.object(hass.config_entries, "async_reload") as mock_reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "2.2.2.2",
-                CONF_PORT: 8443,
-                CONF_VERIFY_SSL: True,
-                CONF_USERNAME: "new-username",
-                CONF_PASSWORD: "new-password",
-                CONF_API_KEY: "new-api-key",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "2.2.2.2",
+            CONF_PORT: 8443,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+            CONF_API_KEY: "new-api-key",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -1571,47 +1649,43 @@ async def test_reconfigure_same_nvr_updated_credentials(
     assert mock_config.data[CONF_USERNAME] == "new-username"
     assert mock_config.data[CONF_PASSWORD] == "new-password"
     assert mock_config.data[CONF_API_KEY] == "new-api-key"
-    # Verify reload was called
-    assert len(mock_reload.mock_calls) == 1
 
 
 async def test_reconfigure_empty_credentials_keeps_existing(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfiguration with empty credentials keeps existing values."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     nvr.mac = MAC_ADDR
     bootstrap.nvr = nvr
-    with patch.object(hass.config_entries, "async_reload"):
-        # Submit with empty password and api_key - should keep existing values
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "2.2.2.2",
-                CONF_PORT: 443,
-                CONF_VERIFY_SSL: False,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "",  # Empty - should keep existing
-                CONF_API_KEY: "",  # Empty - should keep existing
-            },
-        )
-        await hass.async_block_till_done()
+    # Submit with empty password and api_key - should keep existing values
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **BASE_USER_INPUT,
+            CONF_HOST: "2.2.2.2",
+            CONF_PASSWORD: "",  # Empty - should keep existing
+            CONF_API_KEY: "",  # Empty - should keep existing
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     # Verify existing credentials were preserved
-    assert ufp_reconfigure_entry.data[CONF_HOST] == "2.2.2.2"
-    assert ufp_reconfigure_entry.data[CONF_PASSWORD] == "test-password"
-    assert ufp_reconfigure_entry.data[CONF_API_KEY] == "test-api-key"
+    assert ufp_reauth_entry.data[CONF_HOST] == "2.2.2.2"
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == "test-password"
+    assert ufp_reauth_entry.data[CONF_API_KEY] == "test-api-key"
 
 
 @pytest.mark.parametrize(
@@ -1639,53 +1713,46 @@ async def test_reconfigure_credential_update(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
     input_credentials: dict[str, str],
     expected_credentials: dict[str, str],
 ) -> None:
     """Test reconfiguration with various credential update scenarios."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     nvr.mac = MAC_ADDR
     bootstrap.nvr = nvr
-    with patch.object(hass.config_entries, "async_reload"):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_PORT: 443,
-                CONF_VERIFY_SSL: False,
-                CONF_USERNAME: "test-username",
-                **input_credentials,
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**BASE_USER_INPUT, **input_credentials},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert (
-        ufp_reconfigure_entry.data[CONF_PASSWORD] == expected_credentials[CONF_PASSWORD]
-    )
-    assert (
-        ufp_reconfigure_entry.data[CONF_API_KEY] == expected_credentials[CONF_API_KEY]
-    )
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == expected_credentials[CONF_PASSWORD]
+    assert ufp_reauth_entry.data[CONF_API_KEY] == expected_credentials[CONF_API_KEY]
 
 
 async def test_reconfigure_invalid_existing_password_shows_error(
     hass: HomeAssistant,
-    ufp_reconfigure_entry: MockConfigEntry,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfigure shows password error when existing password is invalid."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     # Simulate invalid existing password (user leaves field empty)
@@ -1693,32 +1760,32 @@ async def test_reconfigure_invalid_existing_password_shows_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "",  # Empty - uses existing (invalid) password
-            CONF_API_KEY: "",
-        },
+        {**BASE_USER_INPUT, CONF_PASSWORD: "", CONF_API_KEY: ""},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    # Now provide correct credentials to complete the flow
+    result = await _complete_reconfigure_flow(
+        hass, result["flow_id"], nvr, bootstrap, mock_api_bootstrap, mock_api_meta_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reauth_empty_credentials_keeps_existing(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
 ) -> None:
     """Test reauth with empty credentials keeps existing values."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reauth_flow(hass)
+    result = await ufp_reauth_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -1742,8 +1809,8 @@ async def test_reauth_empty_credentials_keeps_existing(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     # Verify existing credentials were preserved
-    assert ufp_reconfigure_entry.data[CONF_PASSWORD] == "test-password"
-    assert ufp_reconfigure_entry.data[CONF_API_KEY] == "test-api-key"
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == "test-password"
+    assert ufp_reauth_entry.data[CONF_API_KEY] == "test-api-key"
 
 
 @pytest.mark.parametrize(
@@ -1795,16 +1862,16 @@ async def test_reauth_credential_update(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
     input_credentials: dict[str, str],
     expected_credentials: dict[str, str],
 ) -> None:
     """Test reauth with various credential update scenarios."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reauth_flow(hass)
+    result = await ufp_reauth_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -1822,31 +1889,26 @@ async def test_reauth_credential_update(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert (
-        ufp_reconfigure_entry.data[CONF_USERNAME] == expected_credentials[CONF_USERNAME]
-    )
-    assert (
-        ufp_reconfigure_entry.data[CONF_PASSWORD] == expected_credentials[CONF_PASSWORD]
-    )
-    assert (
-        ufp_reconfigure_entry.data[CONF_API_KEY] == expected_credentials[CONF_API_KEY]
-    )
+    assert ufp_reauth_entry.data[CONF_USERNAME] == expected_credentials[CONF_USERNAME]
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == expected_credentials[CONF_PASSWORD]
+    assert ufp_reauth_entry.data[CONF_API_KEY] == expected_credentials[CONF_API_KEY]
     # Host should remain unchanged
-    assert ufp_reconfigure_entry.data[CONF_HOST] == "1.1.1.1"
+    assert ufp_reauth_entry.data[CONF_HOST] == "1.1.1.1"
 
 
 async def test_reconfigure_clears_session_failure_continues(
     hass: HomeAssistant,
     bootstrap: Bootstrap,
     nvr: NVR,
-    ufp_reconfigure_entry: MockConfigEntry,
+    ufp_reauth_entry: MockConfigEntry,
     mock_api_bootstrap: Mock,
     mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test reconfigure continues even if session clearing fails."""
-    ufp_reconfigure_entry.add_to_hass(hass)
+    ufp_reauth_entry.add_to_hass(hass)
 
-    result = await ufp_reconfigure_entry.start_reconfigure_flow(hass)
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1854,14 +1916,9 @@ async def test_reconfigure_clears_session_failure_continues(
     bootstrap.nvr = nvr
 
     # Simulate session clear failure - should still continue
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.async_create_api_client"
-        ) as mock_create_client,
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload",
-        ) as mock_reload,
-    ):
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.async_create_api_client"
+    ) as mock_create_client:
         mock_protect = AsyncMock()
         mock_protect.clear_session = AsyncMock(side_effect=Exception("Session error"))
         mock_create_client.return_value = mock_protect
@@ -1882,9 +1939,8 @@ async def test_reconfigure_clears_session_failure_continues(
     # Should still succeed despite session clear failure
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert ufp_reconfigure_entry.data[CONF_USERNAME] == "new-username"
-    assert ufp_reconfigure_entry.data[CONF_PASSWORD] == "new-password"
-    mock_reload.assert_called_once()
+    assert ufp_reauth_entry.data[CONF_USERNAME] == "new-username"
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == "new-password"
 
 
 async def test_form_api_key_client_error(
@@ -1920,3 +1976,47 @@ async def test_form_api_key_client_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_port_int_conversion(
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
+) -> None:
+    """Test that port value is converted to int (NumberSelector returns float)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    bootstrap.nvr = nvr
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+    ):
+        # NumberSelector returns float, verify int conversion works
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8443.0,  # Float from NumberSelector
+                CONF_VERIFY_SSL: False,
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_API_KEY: "test-api-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PORT] == 8443
+    assert isinstance(result["data"][CONF_PORT], int)
