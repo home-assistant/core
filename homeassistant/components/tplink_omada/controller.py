@@ -9,8 +9,6 @@ from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
@@ -63,9 +61,8 @@ class OmadaSiteController:
 
     async def async_register_device_entities(
         self,
-        add_entities: AddConfigEntryEntitiesCallback,
         device_filter: Callable[[OmadaListDevice], bool],
-        entity_callback: Callable[[OmadaListDevice], Awaitable[list[Entity]]],
+        entity_callback: Callable[[OmadaListDevice], Awaitable[None]],
     ) -> None:
         """Register entities for devices matching the given filter.
 
@@ -73,9 +70,8 @@ class OmadaSiteController:
         currently in a queryable state.
 
         Args:
-            add_entities: Callback to add entities to Home Assistant.
             device_filter: Function that returns True if a device should be processed.
-            entity_callback: Given an Omada device, returns a list of entities to create.
+            entity_callback: Given a discovered Omada device, creates entities for that device.
         """
         # Track which devices have been processed already
         processed_devices: set[str] = set()
@@ -91,13 +87,9 @@ class OmadaSiteController:
             if not devices_to_process:
                 return
 
-            entities: list = []
             for device in devices_to_process:
                 processed_devices.add(device.mac)
-                device_entities = await entity_callback(device)
-                entities.extend(device_entities)
-
-            add_entities(entities)
+                await entity_callback(device)
 
         @callback
         def _handle_devices_update() -> None:

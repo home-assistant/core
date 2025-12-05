@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from tplink_omada_client.definitions import (
     DeviceStatusCategory,
@@ -40,11 +41,10 @@ async def async_setup_entry(
     """Set up binary sensors."""
     controller = config_entry.runtime_data
 
-    async def _create_gateway_port_entities(device: OmadaListDevice) -> list[Entity]:
+    async def _create_gateway_port_entities(device: OmadaListDevice) -> None:
         gateway_coordinator = controller.gateway_coordinator
-        if not gateway_coordinator:
-            # Unreachable as coordinator would be created if gateway device exists.
-            return []  # pragma: no cover
+        if TYPE_CHECKING:
+            assert gateway_coordinator is not None
 
         entities: list[Entity] = []
         gateway = gateway_coordinator.data.get(device.mac)
@@ -57,10 +57,9 @@ async def async_setup_entry(
                 for desc in GATEWAY_PORT_SENSORS
                 if desc.exists_func(p)
             )
-        return entities
+        async_add_entities(entities)
 
     await controller.async_register_device_entities(
-        async_add_entities,
         lambda device: device.type == "gateway"
         and device.status_category == DeviceStatusCategory.CONNECTED,
         _create_gateway_port_entities,

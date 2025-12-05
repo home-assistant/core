@@ -55,7 +55,7 @@ async def async_setup_entry(
 
     async def _create_switch_port_entities(
         device: OmadaListDevice,
-    ) -> list[Entity]:
+    ) -> None:
         """Create entities for a switch's ports."""
         omada_client = controller.omada_client
         switch = await omada_client.get_switch(device)
@@ -78,11 +78,10 @@ async def async_setup_entry(
             for desc in SWITCH_PORT_DETAILS_SWITCHES
             if desc.exists_func(switch, port)
         )
-        return entities
+        async_add_entities(entities)
 
     # Register switch port entities for switches that are connected, such that we can determine the port information
     await controller.async_register_device_entities(
-        async_add_entities,
         device_filter=lambda d: (
             d.type == "switch" and d.status_category == DeviceStatusCategory.CONNECTED
         ),
@@ -92,7 +91,7 @@ async def async_setup_entry(
     # Set up gateway port switches
     async def _create_gateway_port_entities(
         device: OmadaListDevice,
-    ) -> list[Entity]:
+    ) -> None:
         """Create entities for a gateway's ports."""
         entities: list[Entity] = []
         gateway_coordinator = controller.gateway_coordinator
@@ -114,10 +113,9 @@ async def async_setup_entry(
                 for desc in GATEWAY_PORT_CONFIG_SWITCHES
                 if desc.exists_func(gateway, p)
             )
-        return entities
+        async_add_entities(entities)
 
     await controller.async_register_device_entities(
-        async_add_entities,
         device_filter=lambda d: (
             d.type == "gateway" and d.status_category == DeviceStatusCategory.CONNECTED
         ),
