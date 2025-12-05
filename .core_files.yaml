@@ -13,6 +13,7 @@ core: &core
 
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
+  - homeassistant/components/ai_task/**
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
   - homeassistant/components/assist_satellite/**
