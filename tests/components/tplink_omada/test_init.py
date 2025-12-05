@@ -2,8 +2,17 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from tplink_omada_client.exceptions import (
+    ConnectionFailed,
+    OmadaClientException,
+    UnsupportedControllerVersion,
+)
+
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
@@ -15,6 +24,41 @@ MOCK_ENTRY_DATA = {
     "username": "test-username",
     "password": "test-password",
 }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "entry_state"),
+    [
+        (
+            UnsupportedControllerVersion("4.0.0"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            ConnectionFailed(),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            OmadaClientException(),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+)
+async def test_setup_entry_login_failed_raises_configentryauthfailed(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: OmadaClientException,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test setup entry with login failed raises ConfigEntryAuthFailed."""
+    mock_omada_client.login.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == entry_state
 
 
 async def test_missing_devices_removed_at_startup(
@@ -45,3 +89,73 @@ async def test_missing_devices_removed_at_startup(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id) is None
+
+
+async def test_service_reconnect_client(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconnect client service."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mac = "AA:BB:CC:DD:EE:FF"
+    await hass.services.async_call(
+        DOMAIN,
+        "reconnect_client",
+        {"mac": mac},
+        blocking=True,
+    )
+
+    mock_omada_site_client.reconnect_client.assert_awaited_once_with(mac)
+
+
+async def test_service_reconnect_failed_raises_servicevalidationerror(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconnect with missing mac address raises ServiceValidationError."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "reconnect_client",
+            {},
+            blocking=True,
+        )
+
+
+async def test_service_reconnect_failed_raises_homeassistanterror(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconnect client service raises the right kind of exception on service failure."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mac = "AA:BB:CC:DD:EE:FF"
+    mock_omada_site_client.reconnect_client.side_effect = OmadaClientException
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "reconnect_client",
+            {"mac": mac},
+            blocking=True,
+        )
+
+    mock_omada_site_client.reconnect_client.assert_awaited_once_with(mac)
