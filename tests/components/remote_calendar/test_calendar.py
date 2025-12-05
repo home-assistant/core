@@ -3,12 +3,17 @@
 from datetime import datetime
 import pathlib
 import textwrap
+from unittest import mock
 
 from httpx import Response
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.remote_calendar.calendar import RemoteCalendarEntity
+from homeassistant.components.remote_calendar.coordinator import (
+    RemoteCalendarDataUpdateCoordinator,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -61,6 +66,27 @@ async def test_empty_calendar(
     assert dict(state.attributes) == {
         "friendly_name": FRIENDLY_NAME,
     }
+
+
+async def test_event_property_before_timeline_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test event property returns None when timeline is not yet set."""
+
+    # Create a minimal coordinator mock
+    mock_coordinator = mock.MagicMock(spec=RemoteCalendarDataUpdateCoordinator)
+    mock_coordinator.data = mock.MagicMock()  # Mock data to avoid None errors
+
+    # Create the calendar entity directly with timeline = None
+    calendar_entity = RemoteCalendarEntity(
+        coordinator=mock_coordinator,
+        entry=config_entry,
+    )
+    calendar_entity._timeline = None  # Explicitly set timeline to None
+
+    # Event property should return None when timeline is None
+    assert calendar_entity.event is None
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,10 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
+    'entry_data': dict({
+      'calendar_name': 'Home Assistant Events',
+      'url': '**REDACTED**',
+    }),
     'ics': '''
       BEGIN:VCALENDAR
       BEGIN:VEVENT

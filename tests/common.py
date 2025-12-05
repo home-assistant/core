@@ -1984,14 +1984,15 @@ def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
 
 def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
     """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema:
-        if schema_key == key:
+    for marker in schema.schema:
+        # Handle voluptuous markers (Required, Optional) that have a 'schema' attribute
+        if hasattr(marker, "schema") and marker.schema == key:
             if (
-                schema_key.description is None
-                or "suggested_value" not in schema_key.description
+                marker.description is None
+                or "suggested_value" not in marker.description
             ):
                 return None
-            return schema_key.description["suggested_value"]
+            return marker.description["suggested_value"]
     return None
 
 
