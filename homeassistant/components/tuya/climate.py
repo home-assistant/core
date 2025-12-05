@@ -476,8 +476,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
+        if self._switch_wrapper is None and self._hvac_mode_wrapper is None:
+            return None
         # If the switch is off, hvac mode is off as well.
         # Unless the switch doesn't exists of course...
         if (switch_status := self._read_wrapper(self._switch_wrapper)) is False:
