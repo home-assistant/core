@@ -75,15 +75,15 @@ async def test_form_already_configured(
 @pytest.mark.parametrize(
     ("side_effect", "text_error"),
     [
-        (ValueError, "unknown"),
-        (None, "update_failed"),
+        ([ValueError, True], "unknown"),
+        ([False, True], "update_failed"),
     ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_update_duckdns: AsyncMock,
-    side_effect: Exception | None,
+    side_effect: list[Exception | bool],
     text_error: str,
 ) -> None:
     """Test we handle errors."""
@@ -91,7 +91,6 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
     mock_update_duckdns.side_effect = side_effect
-    mock_update_duckdns.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -103,9 +102,6 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
-
-    mock_update_duckdns.side_effect = None
-    mock_update_duckdns.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -254,15 +250,15 @@ async def test_flow_reconfigure(
 @pytest.mark.parametrize(
     ("side_effect", "text_error"),
     [
-        (ValueError, "unknown"),
-        (None, "update_failed"),
+        ([ValueError, True], "unknown"),
+        ([False, True], "update_failed"),
     ],
 )
 async def test_flow_reconfigure_errors(
     hass: HomeAssistant,
     mock_update_duckdns: AsyncMock,
     config_entry: MockConfigEntry,
-    side_effect: Exception | None,
+    side_effect: list[Exception | bool],
     text_error: str,
 ) -> None:
     """Test we handle errors."""
@@ -273,7 +269,6 @@ async def test_flow_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    mock_update_duckdns.return_value = False
     mock_update_duckdns.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
@@ -283,9 +278,6 @@ async def test_flow_reconfigure_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
-
-    mock_update_duckdns.side_effect = None
-    mock_update_duckdns.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
