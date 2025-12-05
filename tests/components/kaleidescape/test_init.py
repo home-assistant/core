@@ -45,6 +45,21 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_disconnect_on_hass_stop(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test device disconnects when Home Assistant stops."""
+    assert mock_integration.state is ConfigEntryState.LOADED
+    assert mock_device.disconnect.call_count == 0
+
+    hass.bus.async_fire("homeassistant_stop")
+    await hass.async_block_till_done()
+
+    assert mock_device.disconnect.call_count == 1
+
+
 @pytest.mark.usefixtures("mock_device", "mock_integration")
 async def test_device(device_registry: dr.DeviceRegistry) -> None:
     """Test device."""
