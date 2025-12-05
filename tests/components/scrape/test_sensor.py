@@ -18,7 +18,6 @@ from homeassistant.components.scrape.const import (
 )
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -494,7 +493,7 @@ async def test_setup_config_entry(
 
     entity = entity_registry.async_get("sensor.current_version")
 
-    assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"
+    assert entity.unique_id == "01JZN07D8D23994A49YKS649S7"
 
 
 async def test_templates_with_yaml(hass: HomeAssistant) -> None:
@@ -578,27 +577,38 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "get_config",
+    ("get_resource_config", "get_sensor_config"),
     [
-        {
-            CONF_RESOURCE: "https://www.home-assistant.io",
-            CONF_METHOD: "GET",
-            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            CONF_TIMEOUT: 10,
-            CONF_ENCODING: DEFAULT_ENCODING,
-            SENSOR_DOMAIN: [
+        (
+            {
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_METHOD: "GET",
+                "auth": {},
+                "advanced": {
+                    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+                    CONF_TIMEOUT: 10,
+                    CONF_ENCODING: DEFAULT_ENCODING,
+                },
+            },
+            (
                 {
-                    CONF_SELECT: ".current-version h1",
-                    CONF_NAME: "Current version",
-                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-                    CONF_INDEX: 0,
-                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                    CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
-                    CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
-                    CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
-                }
-            ],
-        }
+                    "data": {
+                        CONF_SELECT: ".current-version h1",
+                        CONF_INDEX: 0,
+                        "advanced": {
+                            CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                            CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                            CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
+                            CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
+                        },
+                    },
+                    # "subentry_id": "01JZN07D8D23994A49YKS649S7",
+                    "subentry_type": "entity",
+                    "title": "Current version",
+                    "unique_id": None,
+                },
+            ),
+        )
     ],
 )
 async def test_availability(
