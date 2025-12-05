@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
-from .entity import DaliCenterEntity
+from .entity import DaliDeviceEntity
 from .types import DaliCenterConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ async def async_setup_entry(
     )
 
 
-class DaliCenterLight(DaliCenterEntity, LightEntity):
+class DaliCenterLight(DaliDeviceEntity, LightEntity):
     """Representation of a Sunricher DALI Light."""
 
     _attr_name = None

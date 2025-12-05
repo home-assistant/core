@@ -23,11 +23,7 @@ class DaliCenterEntity(Entity):
         self._dali_object = dali_object
         self._attr_unique_id = dali_object.unique_id
         self._unavailable_logged = False
-        # Set initial availability from status if available (Device has it, Scene doesn't)
-        if isinstance(dali_object, Device):
-            self._attr_available = dali_object.status == "online"
-        else:
-            self._attr_available = True
+        self._attr_available = True
 
     async def async_added_to_hass(self) -> None:
         """Register availability listener."""
@@ -41,7 +37,6 @@ class DaliCenterEntity(Entity):
     @callback
     def _handle_availability(self, available: bool) -> None:
         """Handle availability changes."""
-        # Log availability transitions
         if not available and not self._unavailable_logged:
             _LOGGER.info("Entity %s became unavailable", self.entity_id)
             self._unavailable_logged = True
@@ -51,3 +46,12 @@ class DaliCenterEntity(Entity):
 
         self._attr_available = available
         self.schedule_update_ha_state()
+
+
+class DaliDeviceEntity(DaliCenterEntity):
+    """Base entity for DALI Device objects."""
+
+    def __init__(self, device: Device) -> None:
+        """Initialize device entity."""
+        super().__init__(device)
+        self._attr_available = device.status == "online"
