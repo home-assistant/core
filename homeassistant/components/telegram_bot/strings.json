@@ -195,6 +195,9 @@
     "invalid_inline_keyboard": {
       "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
     },
+    "invalid_url": {
+      "message": "Invalid URL: {url}"
+    },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
     },

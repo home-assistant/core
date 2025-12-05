@@ -48,7 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.network import get_url, is_hass_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -95,6 +95,7 @@ from .const import (
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
     EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
@@ -1069,9 +1070,21 @@ async def load_data(
         # Store original URL for logging (signed URLs contain auth tokens)
         log_url = url
 
-        # Check if URL is internal (relative path or points to this HA instance)
-        if url.startswith("/") or is_hass_url(hass, url):
-            url, verify_ssl = _prepare_internal_url(hass, url)
+        # Parse URL once and check if it's internal
+        try:
+            parsed = YarlURL(url)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_url",
+                translation_placeholders={"url": url},
+            ) from err
+
+        # Only treat as internal URL if:
+        # 1. It's a relative path starting with / (e.g., /api/camera_proxy/...)
+        # 2. It's an absolute URL pointing to this Home Assistant instance
+        if (not parsed.is_absolute() and url.startswith("/")) or is_hass_url(hass, url):
+            url = _prepare_internal_url(hass, parsed)
 
         # Load data from URL
         params: dict[str, Any] = {}
@@ -1145,39 +1158,55 @@ async def load_data(
         )
 
 
-def _prepare_internal_url(hass: HomeAssistant, url: str) -> tuple[str, SSLContext]:
+def _prepare_internal_url(hass: HomeAssistant, parsed: YarlURL) -> str:
     """Prepare internal Home Assistant URL with signed path.
 
-    Converts internal URLs (relative paths or HA instance URLs) to internal
-    URLs with signed authentication paths.
+    Converts internal URLs (relative paths or HA instance URLs) to signed
+    internal URLs for authenticated access.
+
+    Args:
+        hass: Home Assistant instance.
+        parsed: Pre-parsed yarl URL object.
+
+    Returns:
+        Fully qualified internal URL with authentication signature.
+
+    Raises:
+        HomeAssistantError: If Home Assistant URL cannot be determined.
+
     """
-    if hass.config.api is None:
-        raise HomeAssistantError(
-            "Home Assistant API not available",
-            translation_domain=DOMAIN,
-            translation_key="failed_to_load_url",
-            translation_placeholders={"error": "Home Assistant API not available"},
-        )
+    # Determine path - use relative() for absolute URLs, or the full URL string for relative
+    if parsed.is_absolute():
+        path = str(parsed.relative())
+    else:
+        path = str(parsed)
 
-    # Extract path from full URL or use directly if relative
-    path = str(YarlURL(url).relative()) if not url.startswith("/") else url
-
-    # Sign the path for authentication (5 minute expiry)
+    # Sign the path for authentication
     signed_path = async_sign_path(
-        hass, path, timedelta(minutes=5), use_content_user=True
+        hass, path, timedelta(seconds=CONTENT_AUTH_EXPIRY_TIME), use_content_user=True
     )
 
-    internal_url = get_url(
-        hass,
-        allow_internal=True,
-        allow_ip=True,
-        prefer_external=False,
-        require_ssl=False,
-    )
-    internal_url = f"{internal_url}{signed_path}"
+    try:
+        internal_url = get_url(
+            hass,
+            allow_internal=True,
+            allow_ip=True,
+            prefer_external=False,
+            # Don't require SSL - internal URLs may use HTTP and we want
+            # to support both local network access without valid certificates
+            require_ssl=False,
+        )
+    except NoURLAvailableError as err:
+        msg = "Unable to determine Home Assistant URL"
+        if (
+            hass.config.api
+            and hass.config.api.use_ssl
+            and (not hass.config.external_url or not hass.config.internal_url)
+        ):
+            msg += ". Configure internal and external URL in general settings."
+        raise HomeAssistantError(msg) from err
 
-    # Disable SSL verification (cert may not match the IP address)
-    return internal_url, get_default_no_verify_context()
+    return f"{internal_url}{signed_path}"
 
 
 def _validate_credentials_input(
