@@ -93,6 +93,10 @@ def mock_authentication_manager() -> Generator[AsyncMock]:
             "homeassistant.components.xbox.config_flow.AuthenticationManager",
             autospec=True,
         ) as mock_client,
+        patch(
+            "homeassistant.components.xbox.AsyncConfigEntryAuth",
+            autospec=True,
+        ),
     ):
         client = mock_client.return_value
 
@@ -110,6 +114,7 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.xbox.config_flow.XboxLiveClient", new=mock_client
         ),
+        patch("homeassistant.components.xbox.XboxLiveClient", new=mock_client),
     ):
         client = mock_client.return_value
 
