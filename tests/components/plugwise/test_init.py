@@ -257,7 +257,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 51
+        == 56
     )
     assert (
         len(
@@ -265,7 +265,7 @@ async def test_update_device(
                 device_registry, mock_config_entry.entry_id
             )
         )
-        == 10
+        == 11
     )
 
     # Add a 2nd Tom/Floor
@@ -289,7 +289,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 58
+            == 63
         )
         assert (
             len(
@@ -297,7 +297,7 @@ async def test_update_device(
                     device_registry, mock_config_entry.entry_id
                 )
             )
-            == 11
+            == 12
         )
         item_list: list[str] = []
         for device_entry in list(device_registry.devices.values()):
@@ -320,7 +320,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 51
+            == 56
         )
         assert (
             len(
@@ -328,7 +328,7 @@ async def test_update_device(
                     device_registry, mock_config_entry.entry_id
                 )
             )
-            == 10
+            == 11
         )
         item_list: list[str] = []
         for device_entry in list(device_registry.devices.values()):
