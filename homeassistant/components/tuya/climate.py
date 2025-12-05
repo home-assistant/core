@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Self
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -32,7 +32,12 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
+from .models import (
+    DeviceWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -54,6 +59,84 @@ class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
         if (value := super().read_device_status(device)) is None:
             return None
         return round(value)
+
+
+@dataclass(kw_only=True)
+class _SwingModeWrapper(DeviceWrapper):
+    """Wrapper for managing climate swing mode operations across multiple DPCodes."""
+
+    on_off: DPCodeBooleanWrapper | None = None
+    horizontal: DPCodeBooleanWrapper | None = None
+    vertical: DPCodeBooleanWrapper | None = None
+    modes: list[str]
+
+    @classmethod
+    def find_dpcode(cls, device: CustomerDevice) -> Self | None:
+        """Find and return a _SwingModeWrapper for the given DP codes."""
+        on_off = DPCodeBooleanWrapper.find_dpcode(
+            device, (DPCode.SWING, DPCode.SHAKE), prefer_function=True
+        )
+        horizontal = DPCodeBooleanWrapper.find_dpcode(
+            device, DPCode.SWITCH_HORIZONTAL, prefer_function=True
+        )
+        vertical = DPCodeBooleanWrapper.find_dpcode(
+            device, DPCode.SWITCH_VERTICAL, prefer_function=True
+        )
+        if on_off or horizontal or vertical:
+            modes = [SWING_OFF]
+            if on_off:
+                modes.append(SWING_ON)
+            if horizontal:
+                modes.append(SWING_HORIZONTAL)
+            if vertical:
+                modes.append(SWING_VERTICAL)
+            return cls(
+                on_off=on_off,
+                horizontal=horizontal,
+                vertical=vertical,
+                modes=modes,
+            )
+        return None
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device swing mode."""
+        if self.on_off and self.on_off.read_device_status(device):
+            return SWING_ON
+
+        horizontal = (
+            self.horizontal.read_device_status(device) if self.horizontal else None
+        )
+        vertical = self.vertical.read_device_status(device) if self.vertical else None
+        if horizontal and vertical:
+            return SWING_BOTH
+        if horizontal:
+            return SWING_HORIZONTAL
+        if vertical:
+            return SWING_VERTICAL
+
+        return SWING_OFF
+
+    def get_update_commands(
+        self, device: CustomerDevice, value: str
+    ) -> list[dict[str, Any]]:
+        """Set new target swing operation."""
+        commands = []
+        if self.on_off:
+            commands.extend(self.on_off.get_update_commands(device, value == SWING_ON))
+
+        if self.vertical:
+            commands.extend(
+                self.vertical.get_update_commands(
+                    device, value in (SWING_BOTH, SWING_VERTICAL)
+                )
+            )
+        if self.horizontal:
+            commands.extend(
+                self.horizontal.get_update_commands(
+                    device, value in (SWING_BOTH, SWING_HORIZONTAL)
+                )
+            )
+        return commands
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,6 +207,18 @@ def _get_temperature_wrappers(
     temp_set_f = DPCodeIntegerWrapper.find_dpcode(
         device, DPCode.TEMP_SET_F, prefer_function=True
     )
+
+    # If there is a temp unit convert dpcode, override empty units
+    if (
+        temp_unit_convert := DPCodeEnumWrapper.find_dpcode(
+            device, DPCode.TEMP_UNIT_CONVERT
+        )
+    ) is not None:
+        for wrapper in (temp_current, temp_current_f, temp_set, temp_set_f):
+            if wrapper is not None and not wrapper.type_information.unit:
+                wrapper.type_information.unit = temp_unit_convert.read_device_status(
+                    device
+                )
 
     # Get wrappers for celsius and fahrenheit
     # We need to check the unit of measurement
@@ -205,15 +300,7 @@ async def async_setup_entry(
                             device, DPCode.MODE, prefer_function=True
                         ),
                         set_temperature_wrapper=temperature_wrappers[1],
-                        swing_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, (DPCode.SWING, DPCode.SHAKE), prefer_function=True
-                        ),
-                        swing_h_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.SWITCH_HORIZONTAL, prefer_function=True
-                        ),
-                        swing_v_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.SWITCH_VERTICAL, prefer_function=True
-                        ),
+                        swing_wrapper=_SwingModeWrapper.find_dpcode(device),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
@@ -250,9 +337,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         fan_mode_wrapper: DPCodeEnumWrapper | None,
         hvac_mode_wrapper: DPCodeEnumWrapper | None,
         set_temperature_wrapper: DPCodeIntegerWrapper | None,
-        swing_wrapper: DPCodeBooleanWrapper | None,
-        swing_h_wrapper: DPCodeBooleanWrapper | None,
-        swing_v_wrapper: DPCodeBooleanWrapper | None,
+        swing_wrapper: _SwingModeWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
         target_humidity_wrapper: _RoundedIntegerWrapper | None,
         temperature_unit: UnitOfTemperature,
@@ -268,8 +353,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._hvac_mode_wrapper = hvac_mode_wrapper
         self._set_temperature = set_temperature_wrapper
         self._swing_wrapper = swing_wrapper
-        self._swing_h_wrapper = swing_h_wrapper
-        self._swing_v_wrapper = swing_v_wrapper
         self._switch_wrapper = switch_wrapper
         self._target_humidity_wrapper = target_humidity_wrapper
         self._attr_temperature_unit = temperature_unit
@@ -324,17 +407,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_fan_modes = fan_mode_wrapper.type_information.range
 
         # Determine swing modes
-        if swing_wrapper or swing_h_wrapper or swing_v_wrapper:
+        if swing_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-            self._attr_swing_modes = [SWING_OFF]
-            if swing_wrapper:
-                self._attr_swing_modes.append(SWING_ON)
-
-            if swing_h_wrapper:
-                self._attr_swing_modes.append(SWING_HORIZONTAL)
-
-            if swing_v_wrapper:
-                self._attr_swing_modes.append(SWING_VERTICAL)
+            self._attr_swing_modes = swing_wrapper.modes
 
         if switch_wrapper:
             self._attr_supported_features |= (
@@ -345,14 +420,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Set new target hvac mode."""
         commands = []
         if self._switch_wrapper:
-            commands.append(
-                self._switch_wrapper.get_update_command(
+            commands.extend(
+                self._switch_wrapper.get_update_commands(
                     self.device, hvac_mode != HVACMode.OFF
                 )
             )
         if self._hvac_mode_wrapper and hvac_mode in self._hvac_to_tuya:
-            commands.append(
-                self._hvac_mode_wrapper.get_update_command(
+            commands.extend(
+                self._hvac_mode_wrapper.get_update_commands(
                     self.device, self._hvac_to_tuya[hvac_mode]
                 )
             )
@@ -360,43 +435,23 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        await self._async_send_dpcode_update(self._hvac_mode_wrapper, preset_mode)
+        await self._async_send_wrapper_updates(self._hvac_mode_wrapper, preset_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._async_send_dpcode_update(self._fan_mode_wrapper, fan_mode)
+        await self._async_send_wrapper_updates(self._fan_mode_wrapper, fan_mode)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
+        await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        commands = []
-        if self._swing_wrapper:
-            commands.append(
-                self._swing_wrapper.get_update_command(
-                    self.device, swing_mode == SWING_ON
-                )
-            )
-        if self._swing_v_wrapper:
-            commands.append(
-                self._swing_v_wrapper.get_update_command(
-                    self.device, swing_mode in (SWING_BOTH, SWING_VERTICAL)
-                )
-            )
-        if self._swing_h_wrapper:
-            commands.append(
-                self._swing_h_wrapper.get_update_command(
-                    self.device, swing_mode in (SWING_BOTH, SWING_HORIZONTAL)
-                )
-            )
-        if commands:
-            await self._async_send_commands(commands)
+        await self._async_send_wrapper_updates(self._swing_wrapper, swing_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._async_send_dpcode_update(
+        await self._async_send_wrapper_updates(
             self._set_temperature, kwargs[ATTR_TEMPERATURE]
         )
 
@@ -457,26 +512,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return self._read_wrapper(self._fan_mode_wrapper)
 
     @property
-    def swing_mode(self) -> str:
+    def swing_mode(self) -> str | None:
         """Return swing mode."""
-        if self._read_wrapper(self._swing_wrapper):
-            return SWING_ON
-
-        horizontal = self._read_wrapper(self._swing_h_wrapper)
-        vertical = self._read_wrapper(self._swing_v_wrapper)
-        if horizontal and vertical:
-            return SWING_BOTH
-        if horizontal:
-            return SWING_HORIZONTAL
-        if vertical:
-            return SWING_VERTICAL
-
-        return SWING_OFF
+        return self._read_wrapper(self._swing_wrapper)
 
     async def async_turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        await self._async_send_dpcode_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
     async def async_turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)

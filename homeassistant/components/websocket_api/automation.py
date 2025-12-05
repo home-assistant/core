@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any, Self
@@ -9,6 +10,9 @@ from typing import Any, Self
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import target as target_helpers
+from homeassistant.helpers.condition import (
+    async_get_all_descriptions as async_get_all_condition_descriptions,
+)
 from homeassistant.helpers.entity import (
     entity_sources,
     get_device_class,
@@ -21,8 +25,13 @@ from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
+
+FLATTENED_SERVICE_DESCRIPTIONS_CACHE: HassKey[
+    tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]
+] = HassKey("websocket_automation_flat_service_description_cache")
 
 
 @dataclass(slots=True, kw_only=True)
@@ -133,7 +142,7 @@ def _async_get_automation_components_for_target(
     hass: HomeAssistant,
     target_selection: ConfigType,
     expand_group: bool,
-    component_descriptions: dict[str, dict[str, Any] | None],
+    component_descriptions: Mapping[str, Mapping[str, Any] | None],
 ) -> set[str]:
     """Get automation components (triggers/conditions/services) for a target.
 
@@ -199,17 +208,44 @@ async def async_get_triggers_for_target(
     )
 
 
+async def async_get_conditions_for_target(
+    hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
+) -> set[str]:
+    """Get conditions for a target."""
+    descriptions = await async_get_all_condition_descriptions(hass)
+    return _async_get_automation_components_for_target(
+        hass, target_selector, expand_group, descriptions
+    )
+
+
 async def async_get_services_for_target(
     hass: HomeAssistant, target_selector: ConfigType, expand_group: bool
 ) -> set[str]:
     """Get services for a target."""
     descriptions = await async_get_all_service_descriptions(hass)
-    # Flatten dicts to be keyed by domain.name to match trigger/condition format
-    descriptions_flatten = {
-        f"{domain}.{service_name}": desc
-        for domain, services in descriptions.items()
-        for service_name, desc in services.items()
-    }
+
+    def get_flattened_service_descriptions() -> dict[str, dict[str, Any]]:
+        """Get flattened service descriptions, with caching."""
+        if FLATTENED_SERVICE_DESCRIPTIONS_CACHE in hass.data:
+            cached_descriptions, cached_flattened_descriptions = hass.data[
+                FLATTENED_SERVICE_DESCRIPTIONS_CACHE
+            ]
+            # If the descriptions are the same, return the cached flattened version
+            if cached_descriptions is descriptions:
+                return cached_flattened_descriptions
+
+        # Flatten dicts to be keyed by domain.name to match trigger/condition format
+        flattened_descriptions = {
+            f"{domain}.{service_name}": desc
+            for domain, services in descriptions.items()
+            for service_name, desc in services.items()
+        }
+        hass.data[FLATTENED_SERVICE_DESCRIPTIONS_CACHE] = (
+            descriptions,
+            flattened_descriptions,
+        )
+        return flattened_descriptions
+
     return _async_get_automation_components_for_target(
-        hass, target_selector, expand_group, descriptions_flatten
+        hass, target_selector, expand_group, get_flattened_service_descriptions()
     )

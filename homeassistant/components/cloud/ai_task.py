@@ -19,7 +19,7 @@ from PIL import Image
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
@@ -94,15 +94,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Home Assistant Cloud AI Task entity."""
     cloud = hass.data[DATA_CLOUD]
-    try:
-        await cloud.llm.async_ensure_token()
-    except LLMError:
-        return
-
-    async_add_entities([CloudLLMTaskEntity(cloud, config_entry)])
+    async_add_entities([CloudAITaskEntity(cloud, config_entry)])
 
 
-class CloudLLMTaskEntity(ai_task.AITaskEntity, BaseCloudLLMEntity):
+class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
     """Home Assistant Cloud AI Task entity."""
 
     _attr_has_entity_name = True
@@ -179,7 +174,7 @@ class CloudLLMTaskEntity(ai_task.AITaskEntity, BaseCloudLLMEntity):
                     attachments=attachments,
                 )
         except LLMAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
+            raise HomeAssistantError("Cloud LLM authentication failed") from err
         except LLMRateLimitError as err:
             raise HomeAssistantError("Cloud LLM is rate limited") from err
         except LLMResponseError as err:

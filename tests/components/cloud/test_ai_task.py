@@ -19,18 +19,18 @@ import voluptuous as vol
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.components.cloud.ai_task import (
-    CloudLLMTaskEntity,
+    CloudAITaskEntity,
     async_prepare_image_generation_attachments,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_cloud_ai_task_entity(hass: HomeAssistant) -> CloudLLMTaskEntity:
-    """Return a CloudLLMTaskEntity with a mocked cloud LLM."""
+def mock_cloud_ai_task_entity(hass: HomeAssistant) -> CloudAITaskEntity:
+    """Return a CloudAITaskEntity with a mocked cloud LLM."""
     cloud = MagicMock()
     cloud.llm = MagicMock(
         async_generate_image=AsyncMock(),
@@ -40,7 +40,7 @@ def mock_cloud_ai_task_entity(hass: HomeAssistant) -> CloudLLMTaskEntity:
     cloud.valid_subscription = True
     entry = MockConfigEntry(domain="cloud")
     entry.add_to_hass(hass)
-    entity = CloudLLMTaskEntity(cloud, entry)
+    entity = CloudAITaskEntity(cloud, entry)
     entity.entity_id = "ai_task.cloud_ai_task"
     entity.hass = hass
     return entity
@@ -50,7 +50,7 @@ def mock_cloud_ai_task_entity(hass: HomeAssistant) -> CloudLLMTaskEntity:
 def mock_handle_chat_log_fixture() -> AsyncMock:
     """Patch the chat log handler."""
     with patch(
-        "homeassistant.components.cloud.ai_task.CloudLLMTaskEntity._async_handle_chat_log",
+        "homeassistant.components.cloud.ai_task.CloudAITaskEntity._async_handle_chat_log",
         AsyncMock(),
     ) as mock:
         yield mock
@@ -154,7 +154,7 @@ async def test_prepare_image_generation_attachments_processing_error(
 
 async def test_generate_data_returns_text(
     hass: HomeAssistant,
-    mock_cloud_ai_task_entity: CloudLLMTaskEntity,
+    mock_cloud_ai_task_entity: CloudAITaskEntity,
     mock_handle_chat_log: AsyncMock,
 ) -> None:
     """Test generating plain text data."""
@@ -183,7 +183,7 @@ async def test_generate_data_returns_text(
 
 async def test_generate_data_returns_json(
     hass: HomeAssistant,
-    mock_cloud_ai_task_entity: CloudLLMTaskEntity,
+    mock_cloud_ai_task_entity: CloudAITaskEntity,
     mock_handle_chat_log: AsyncMock,
 ) -> None:
     """Test generating structured data."""
@@ -211,7 +211,7 @@ async def test_generate_data_returns_json(
 
 async def test_generate_data_invalid_json(
     hass: HomeAssistant,
-    mock_cloud_ai_task_entity: CloudLLMTaskEntity,
+    mock_cloud_ai_task_entity: CloudAITaskEntity,
     mock_handle_chat_log: AsyncMock,
 ) -> None:
     """Test invalid JSON responses raise an error."""
@@ -239,7 +239,7 @@ async def test_generate_data_invalid_json(
 
 
 async def test_generate_image_no_attachments(
-    hass: HomeAssistant, mock_cloud_ai_task_entity: CloudLLMTaskEntity
+    hass: HomeAssistant, mock_cloud_ai_task_entity: CloudAITaskEntity
 ) -> None:
     """Test generating an image without attachments."""
     mock_cloud_ai_task_entity._cloud.llm.async_generate_image.return_value = {
@@ -264,7 +264,7 @@ async def test_generate_image_no_attachments(
 
 async def test_generate_image_with_attachments(
     hass: HomeAssistant,
-    mock_cloud_ai_task_entity: CloudLLMTaskEntity,
+    mock_cloud_ai_task_entity: CloudAITaskEntity,
     mock_prepare_generation_attachments: AsyncMock,
 ) -> None:
     """Test generating an edited image when attachments are provided."""
@@ -302,7 +302,7 @@ async def test_generate_image_with_attachments(
     [
         (
             LLMAuthenticationError("auth"),
-            ConfigEntryAuthFailed,
+            HomeAssistantError,
             "Cloud LLM authentication failed",
         ),
         (
@@ -329,7 +329,7 @@ async def test_generate_image_with_attachments(
 )
 async def test_generate_image_error_handling(
     hass: HomeAssistant,
-    mock_cloud_ai_task_entity: CloudLLMTaskEntity,
+    mock_cloud_ai_task_entity: CloudAITaskEntity,
     err: Exception,
     expected_exception: type[Exception],
     message: str,
