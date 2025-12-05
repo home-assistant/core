@@ -124,6 +124,9 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2025.10.0 because of
     # https://github.com/frenck/spook/issues/1066
     "spook": BlockedIntegration(AwesomeVersion("4.0.0"), "breaks the template engine"),
+    # Added in 2025.12.1 because of
+    # https://github.com/JaccoR/hass-entso-e/issues/263
+    "entsoe": BlockedIntegration(AwesomeVersion("0.7.0"), "crashes Home Assistant"),
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
