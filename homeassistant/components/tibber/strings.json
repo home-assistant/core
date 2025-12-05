@@ -1,7 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The connected account does not match {title}. Sign in with the same Tibber account and try again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +13,10 @@
       "timeout": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
+      "reauth_confirm": {
+        "description": "Reconnect your Tibber account to refresh access.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
@@ -39,6 +47,28 @@
       },
       "average_power": {
         "name": "Average power"
+      },
+      "charging_current_max": {
+        "name": "Maximum charging current"
+      },
+      "charging_current_offline_fallback": {
+        "name": "Offline fallback charging current"
+      },
+      "charging_status": {
+        "name": "Charging status",
+        "state": {
+          "charging": "Charging",
+          "idle": "Idle",
+          "unknown": "Unknown"
+        }
+      },
+      "connector_status": {
+        "name": "Connector status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "unknown": "Unknown"
+        }
       },
       "current_l1": {
         "name": "Current L1"
@@ -88,8 +118,17 @@
       "power_production": {
         "name": "Power production"
       },
+      "range_remaining": {
+        "name": "Remaining range"
+      },
       "signal_strength": {
         "name": "Signal strength"
+      },
+      "storage_state_of_charge": {
+        "name": "Storage state of charge"
+      },
+      "storage_target_state_of_charge": {
+        "name": "Storage target state of charge"
       },
       "voltage_phase1": {
         "name": "Voltage phase1"
@@ -103,8 +142,14 @@
     }
   },
   "exceptions": {
+    "data_api_reauth_required": {
+      "message": "Reconnect Tibber so Home Assistant can enable the new Tibber Data API features."
+    },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"

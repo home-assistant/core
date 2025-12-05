@@ -2,23 +2,30 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
+import aiohttp
 import tibber
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import TibberRuntimeData
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    tibber_connection: tibber.Tibber = hass.data[DOMAIN]
 
-    return {
+    runtime = cast("TibberRuntimeData | None", hass.data.get(DOMAIN))
+    if runtime is None:
+        return {"homes": []}
+    result: dict[str, Any] = {
         "homes": [
             {
                 "last_data_timestamp": home.last_data_timestamp,
@@ -27,6 +34,38 @@ async def async_get_config_entry_diagnostics(
                 "last_cons_data_timestamp": home.last_cons_data_timestamp,
                 "country": home.country,
             }
-            for home in tibber_connection.get_homes(only_active=False)
+            for home in runtime.tibber_connection.get_homes(only_active=False)
         ]
     }
+
+    if runtime.session:
+        devices: dict[str, Any] = {}
+        error: str | None = None
+        try:
+            client = await runtime.async_get_client(hass)
+            devices = await client.get_all_devices()
+        except ConfigEntryAuthFailed:
+            error = "Authentication failed"
+        except TimeoutError:
+            error = "Timeout error"
+        except aiohttp.ClientError:
+            error = "Client error"
+        except tibber.InvalidLoginError:
+            error = "Invalid login"
+        except tibber.RetryableHttpExceptionError as err:
+            error = f"Retryable HTTP error ({err.status})"
+        except tibber.FatalHttpExceptionError as err:
+            error = f"Fatal HTTP error ({err.status})"
+
+        result["error"] = error
+        result["devices"] = [
+            {
+                "id": device.id,
+                "name": device.name,
+                "brand": device.brand,
+                "model": device.model,
+            }
+            for device in devices.values()
+        ]
+
+    return result

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import datetime
 from datetime import timedelta
@@ -10,7 +11,8 @@ from random import randrange
 from typing import Any
 
 import aiohttp
-import tibber
+from tibber import FatalHttpExceptionError, RetryableHttpExceptionError, TibberHome
+from tibber.data_api import TibberDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
 )
 from homeassistant.core import Event, HomeAssistant, callback
@@ -42,7 +45,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import TibberDataCoordinator
+from .coordinator import TibberDataAPICoordinator, TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,6 +263,58 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 )
 
 
+DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="storage.stateOfCharge",
+        translation_key="storage_state_of_charge",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="storage.targetStateOfCharge",
+        translation_key="storage_target_state_of_charge",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="connector.status",
+        translation_key="connector_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["connected", "disconnected", "unknown"],
+    ),
+    SensorEntityDescription(
+        key="charging.status",
+        translation_key="charging_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["charging", "idle", "unknown"],
+    ),
+    SensorEntityDescription(
+        key="range.remaining",
+        translation_key="range_remaining",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="charging.current.max",
+        translation_key="charging_current_max",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="charging.current.offlineFallback",
+        translation_key="charging_current_offline_fallback",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -267,7 +322,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = hass.data[DOMAIN]
+    await asyncio.gather(
+        _async_setup_data_api_sensors(hass, entry, async_add_entities),
+        _async_setup_graphql_sensors(hass, entry, async_add_entities),
+    )
+
+
+async def _async_setup_graphql_sensors(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Tibber sensor."""
+
+    runtime = hass.data.get(DOMAIN)
+    if runtime is None:
+        raise PlatformNotReady("Tibber runtime is not ready")
+    tibber_connection = runtime.tibber_connection
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -280,7 +351,11 @@ async def async_setup_entry(
         except TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
-        except (tibber.RetryableHttpExceptionError, aiohttp.ClientError) as err:
+        except (
+            RetryableHttpExceptionError,
+            FatalHttpExceptionError,
+            aiohttp.ClientError,
+        ) as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
@@ -328,14 +403,93 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
+async def _async_setup_data_api_sensors(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up sensors backed by the Tibber Data API."""
+
+    runtime = hass.data.get(DOMAIN)
+    if runtime is None:
+        raise PlatformNotReady("Tibber runtime is not ready")
+    coordinator = TibberDataAPICoordinator(hass, entry, runtime)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    entities: list[TibberDataAPISensor] = []
+    api_sensors = {sensor.key: sensor for sensor in DATA_API_SENSORS}
+
+    for device in coordinator.data.values():
+        for sensor in device.sensors:
+            description: SensorEntityDescription | None = api_sensors.get(sensor.id)
+            if description is None:
+                _LOGGER.debug(
+                    "Sensor %s not found in DATA_API_SENSORS, skipping", sensor
+                )
+                continue
+            entities.append(
+                TibberDataAPISensor(
+                    coordinator, device, description, sensor.description
+                )
+            )
+    async_add_entities(entities)
+
+
+class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEntity):
+    """Representation of a Tibber Data API capability sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: TibberDataAPICoordinator,
+        device: TibberDevice,
+        entity_description: SensorEntityDescription,
+        name: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._device_id: str = device.id
+        self.entity_description = entity_description
+        self._attr_name = name
+
+        self._attr_unique_id = f"{device.external_id}_{self.entity_description.key}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.external_id)},
+            name=device.name,
+            manufacturer=device.brand,
+            model=device.model,
+        )
+
+    @property
+    def native_value(
+        self,
+    ) -> StateType:
+        """Return the value reported by the device."""
+        device = self.coordinator.data.get(self._device_id)
+        if device is None:
+            return None
+
+        for sensor in device.sensors:
+            if sensor.id == self.entity_description.key:
+                return sensor.value
+        return None
+
+    @property
+    def available(self) -> bool:
+        """Return whether the sensor is available."""
+        return super().available and self.native_value is not None
+
+
 class TibberSensor(SensorEntity):
     """Representation of a generic Tibber sensor."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, *args: Any, tibber_home: tibber.TibberHome, **kwargs: Any
-    ) -> None:
+    def __init__(self, *args: Any, tibber_home: TibberHome, **kwargs: Any) -> None:
         """Initialize the sensor."""
         super().__init__(*args, **kwargs)
         self._tibber_home = tibber_home
@@ -366,7 +520,7 @@ class TibberSensorElPrice(TibberSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "electricity_price"
 
-    def __init__(self, tibber_home: tibber.TibberHome) -> None:
+    def __init__(self, tibber_home: TibberHome) -> None:
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
         self._last_updated: datetime.datetime | None = None
@@ -443,7 +597,7 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
 
     def __init__(
         self,
-        tibber_home: tibber.TibberHome,
+        tibber_home: TibberHome,
         coordinator: TibberDataCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -470,7 +624,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
 
     def __init__(
         self,
-        tibber_home: tibber.TibberHome,
+        tibber_home: TibberHome,
         description: SensorEntityDescription,
         initial_state: float,
         coordinator: TibberRtDataCoordinator,
@@ -532,7 +686,7 @@ class TibberRtEntityCreator:
     def __init__(
         self,
         async_add_entities: AddConfigEntryEntitiesCallback,
-        tibber_home: tibber.TibberHome,
+        tibber_home: TibberHome,
         entity_registry: er.EntityRegistry,
     ) -> None:
         """Initialize the data handler."""
@@ -618,7 +772,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
-        tibber_home: tibber.TibberHome,
+        tibber_home: TibberHome,
     ) -> None:
         """Initialize the data handler."""
         self._add_sensor_callback = add_sensor_callback

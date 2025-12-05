@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
+from aiohttp.client_exceptions import ClientError
 import tibber
+from tibber.data_api import TibberDataAPI, TibberDevice
+
+if TYPE_CHECKING:
+    from . import TibberRuntimeData
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -22,6 +27,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -187,3 +193,45 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     unit_of_measurement=unit,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)
+
+
+class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
+    """Fetch and cache Tibber Data API device capabilities."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        runtime_data: TibberRuntimeData,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN} Data API",
+            update_interval=timedelta(minutes=1),
+            config_entry=entry,
+        )
+        self._runtime_data = runtime_data
+
+    async def _async_get_client(self) -> TibberDataAPI:
+        """Get the Tibber Data API client with error handling."""
+        try:
+            return await self._runtime_data.async_get_client(self.hass)
+        except ConfigEntryAuthFailed:
+            raise
+        except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
+            raise UpdateFailed(
+                f"Unable to create Tibber Data API client: {err}"
+            ) from err
+
+    async def _async_setup(self) -> None:
+        """Initial load of Tibber Data API devices."""
+        client = await self._async_get_client()
+        self.data = await client.get_all_devices()
+
+    async def _async_update_data(self) -> dict[str, TibberDevice]:
+        """Fetch the latest device capabilities from the Tibber Data API."""
+        client = await self._async_get_client()
+        devices: dict[str, TibberDevice] = await client.update_devices()
+        return devices
