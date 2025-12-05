@@ -94,7 +94,7 @@ async def async_migrate_entry(
                 )
                 return False
             normalized_mac_address = normalize_mac_address(config_entry.unique_id)
-            other_entries = [
+            duplicate_entries = [
                 entry
                 for entry in hass.config_entries.async_entries(DOMAIN)
                 if entry.unique_id
@@ -102,7 +102,7 @@ async def async_migrate_entry(
             ]
             ignored_entries = [
                 entry
-                for entry in other_entries
+                for entry in duplicate_entries
                 if entry.entry_id != config_entry.entry_id
                 if entry.source == SOURCE_IGNORE
             ]
@@ -117,7 +117,7 @@ async def async_migrate_entry(
                         for entry in ignored_entries
                     ]
                 )
-            if len(other_entries) > len(ignored_entries) + 1:
+            if len(duplicate_entries) - len(ignored_entries) > 1:
                 _LOGGER.warning(
                     "Found multiple WLED config entries with the same MAC address, cannot migrate to version 1.2"
                 )
