@@ -113,8 +113,4 @@ async def _update_duckdns(
     resp = await session.get(UPDATE_URL, params=params)
     body = await resp.text()
 
-    if body != "OK":
-        _LOGGER.warning("Updating DuckDNS domain failed: %s", domain)
-        return False
-
-    return True
+    return body == "OK"
