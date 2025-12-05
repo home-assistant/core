@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "account_mismatch": "The email address does not match the original account.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "Re-authentication was successful"
     },

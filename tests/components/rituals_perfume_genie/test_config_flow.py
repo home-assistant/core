@@ -110,7 +110,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     """Test successful reauth flow (updating credentials)."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="mock_hash",
+        unique_id=TEST_EMAIL,
         data={
             CONF_EMAIL: TEST_EMAIL,
             CONF_PASSWORD: "wrong_password",

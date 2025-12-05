@@ -90,6 +90,8 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
 
+                self._abort_if_unique_id_mismatch(reason="account_mismatch")
+
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
