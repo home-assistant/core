@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.duckdns import DOMAIN, UPDATE_URL
+from homeassistant.components.duckdns import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -15,7 +15,6 @@ from homeassistant.setup import async_setup_component
 from .conftest import NEW_TOKEN, TEST_SUBDOMAIN, TEST_TOKEN
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("mock_update_duckdns")
@@ -73,16 +72,26 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_form_unknown_exception(
+@pytest.mark.parametrize(
+    ("side_effect", "text_error"),
+    [
+        (ValueError, "unknown"),
+        (None, "update_failed"),
+    ],
+)
+async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_update_duckdns: AsyncMock,
+    side_effect: Exception | None,
+    text_error: str,
 ) -> None:
-    """Test we handle unknown exception."""
+    """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_update_duckdns.side_effect = ValueError
+    mock_update_duckdns.side_effect = side_effect
+    mock_update_duckdns.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -93,50 +102,11 @@ async def test_form_unknown_exception(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": text_error}
 
     mock_update_duckdns.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_DOMAIN: TEST_SUBDOMAIN,
-            CONF_ACCESS_TOKEN: TEST_TOKEN,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{TEST_SUBDOMAIN}.duckdns.org"
-    assert result["data"] == {
-        CONF_DOMAIN: TEST_SUBDOMAIN,
-        CONF_ACCESS_TOKEN: TEST_TOKEN,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_update_failed(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_update_duckdns: AsyncMock,
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    mock_update_duckdns.return_value = False
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_DOMAIN: TEST_SUBDOMAIN,
-            CONF_ACCESS_TOKEN: TEST_TOKEN,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "update_failed"}
-
     mock_update_duckdns.return_value = True
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -260,15 +230,9 @@ async def test_init_import_flow(
 async def test_flow_reconfigure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reconfigure flow."""
 
-    aioclient_mock.get(
-        UPDATE_URL,
-        params={"domains": TEST_SUBDOMAIN, "token": NEW_TOKEN},
-        text="OK",
-    )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
 
@@ -287,62 +251,21 @@ async def test_flow_reconfigure(
     assert config_entry.data[CONF_ACCESS_TOKEN] == NEW_TOKEN
 
 
-async def test_flow_reconfigure_unknown_exception(
+@pytest.mark.parametrize(
+    ("side_effect", "text_error"),
+    [
+        (ValueError, "unknown"),
+        (None, "update_failed"),
+    ],
+)
+async def test_flow_reconfigure_errors(
     hass: HomeAssistant,
     mock_update_duckdns: AsyncMock,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    side_effect: Exception | None,
+    text_error: str,
 ) -> None:
-    """Test we handle unknown exception."""
-
-    aioclient_mock.get(
-        UPDATE_URL,
-        params={"domains": TEST_SUBDOMAIN, "token": NEW_TOKEN},
-        text="OK",
-    )
-
-    config_entry.add_to_hass(hass)
-    result = await config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    mock_update_duckdns.side_effect = ValueError
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ACCESS_TOKEN: NEW_TOKEN},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    mock_update_duckdns.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ACCESS_TOKEN: NEW_TOKEN},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    assert config_entry.data[CONF_ACCESS_TOKEN] == NEW_TOKEN
-
-
-async def test_flow_reconfigure_update_failed(
-    hass: HomeAssistant,
-    mock_update_duckdns: AsyncMock,
-    config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test we handle cannot connect error."""
-
-    aioclient_mock.get(
-        UPDATE_URL,
-        params={"domains": TEST_SUBDOMAIN, "token": NEW_TOKEN},
-        text="OK",
-    )
+    """Test we handle errors."""
 
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -351,6 +274,7 @@ async def test_flow_reconfigure_update_failed(
     assert result["step_id"] == "reconfigure"
 
     mock_update_duckdns.return_value = False
+    mock_update_duckdns.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -358,8 +282,9 @@ async def test_flow_reconfigure_update_failed(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "update_failed"}
+    assert result["errors"] == {"base": text_error}
 
+    mock_update_duckdns.side_effect = None
     mock_update_duckdns.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
