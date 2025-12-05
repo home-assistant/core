@@ -402,7 +402,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             alarm_code = self._code
         else:
             alarm_code = self._code.async_render(
-                parse_result=False, from_state=self._state, to_state=state
+                parse_result=False, from_state=self._state, to_state=state, code=code
             )
 
         if not alarm_code or code == alarm_code:
