@@ -935,7 +935,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==1.0.5
+evohome-async==1.0.6
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -2351,7 +2351,7 @@ pyrepetierng==0.1.0
 pyrisco==0.6.7
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.6
+pyrituals==0.0.7
 
 # homeassistant.components.thread
 pyroute2==0.7.5
@@ -2566,7 +2566,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.10.0
+python-roborock==3.10.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2829,7 +2829,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.1.0
 
 # homeassistant.components.sharkiq
-sharkiq==1.4.2
+sharkiq==1.5.0
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
@@ -3167,7 +3167,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.6.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==1.0.2
+whirlpool-sixth-sense==1.0.3
 
 # homeassistant.components.whois
 whois==0.9.27
