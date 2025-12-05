@@ -790,7 +790,7 @@
     'attributes': ReadOnlyDict({
       'achievements': '2 / 43',
       'developer': 'Mistwalker / Artoon',
-      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
+      'entity_picture': 'https://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
       'friendly_name': 'GSR Ae Now playing',
       'gamerscore': '10 / 1000',
       'genres': 'Role Playing',
