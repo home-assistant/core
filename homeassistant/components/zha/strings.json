@@ -409,6 +409,27 @@
           "step_size": { "name": "Step Size" },
           "transition_time": { "name": "Transition Time" }
         }
+      },
+      "on_off": {
+        "name": "On/Off",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "off": "Off",
+              "off_with_effect": "Off wait effect",
+              "on": "On",
+              "on_with_recall_global_scene": "On with recall of global scene",
+              "on_with_timed_off": "On with timed off",
+              "toggle": "Toggle"
+            }
+          },
+          "level": { "name": "Level" },
+          "move_mode": { "name": "Move Mode" },
+          "rate": { "name": "Rate" },
+          "step_mode": { "name": "Step Mode" },
+          "step_size": { "name": "Step Size" },
+          "transition_time": { "name": "Transition Time" }
+        }
       }
     },
     "fan": {
