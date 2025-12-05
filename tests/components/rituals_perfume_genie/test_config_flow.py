@@ -1,198 +1,213 @@
 """Test the Rituals Perfume Genie config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from pyrituals import AuthenticationException
+import pytest
 
-from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.components.rituals_perfume_genie.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import TEST_EMAIL, TEST_PASSWORD
+
 from tests.common import MockConfigEntry
 
-TEST_EMAIL = "test@rituals.com"
-TEST_PASSWORD = "test-password"
 
-
-async def test_user_flow_success(hass: HomeAssistant) -> None:
+async def test_user_flow_success(
+    hass: HomeAssistant, mock_rituals_account: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test successful user flow setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.rituals_perfume_genie.config_flow.Account"
-        ) as mock_account_cls,
-        patch(
-            "homeassistant.components.rituals_perfume_genie.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        mock_account = mock_account_cls.return_value
-        mock_account.authenticate = AsyncMock()
-        mock_account.account_hash = "mock_hash"
-        mock_account.email = TEST_EMAIL
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: TEST_EMAIL,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_EMAIL
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_EMAIL
+    assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
     }
-    assert ACCOUNT_HASH not in result2["data"]
+    assert result["result"].unique_id == TEST_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """Test user flow with invalid credentials."""
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthenticationException, "invalid_auth"),
+        (ClientError, "cannot_connect"),
+    ],
+)
+async def test_user_flow_errors(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test user flow with different errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    mock_rituals_account.authenticate.side_effect = exception
 
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.config_flow.Account"
-    ) as mock_account_cls:
-        mock_account = mock_account_cls.return_value
-        mock_account.authenticate = AsyncMock(side_effect=AuthenticationException)
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: TEST_EMAIL,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_flow_connection_error(hass: HomeAssistant) -> None:
-    """Test user flow with connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.config_flow.Account"
-    ) as mock_account_cls:
-        mock_account = mock_account_cls.return_value
-        mock_account.authenticate = AsyncMock(side_effect=ClientError)
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: TEST_EMAIL,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_reauth_flow_success(hass: HomeAssistant) -> None:
-    """Test successful reauth flow (updating credentials)."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_EMAIL,
-        data={
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_EMAIL: TEST_EMAIL,
-            CONF_PASSWORD: "wrong_password",
-            ACCOUNT_HASH: "old_hash_should_be_removed",
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
-    entry.add_to_hass(hass)
 
-    # Reauth
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_rituals_account.authenticate.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
-        data=entry.data,
     )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test user flow with invalid credentials."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reauth flow (updating credentials)."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with (
-        patch(
-            "homeassistant.components.rituals_perfume_genie.config_flow.Account"
-        ) as mock_account_cls,
-        patch(
-            "homeassistant.components.rituals_perfume_genie.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        mock_account = mock_account_cls.return_value
-        mock_account.authenticate = AsyncMock()
-        mock_account.account_hash = "mock_hash"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_correct_password"},
+    )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PASSWORD: "new_correct_password",
-                CONF_EMAIL: TEST_EMAIL,
-            },
-        )
-        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
-
-    assert entry.data[CONF_PASSWORD] == "new_correct_password"
-    assert ACCOUNT_HASH not in entry.data
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_correct_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
-    """Test reauth flow with authentication error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: "old"},
-    )
-    entry.add_to_hass(hass)
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthenticationException, "invalid_auth"),
+        (ClientError, "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauth flow with different errors."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
+    mock_rituals_account.authenticate.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_correct_password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_rituals_account.authenticate.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "new_correct_password",
         },
-        data=entry.data,
     )
 
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.config_flow.Account"
-    ) as mock_account_cls:
-        mock_account = mock_account_cls.return_value
-        mock_account.authenticate = AsyncMock(side_effect=AuthenticationException)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_correct_password"
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PASSWORD: "still_wrong_password",
-                CONF_EMAIL: TEST_EMAIL,
-            },
-        )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+async def test_reauth_migrated_entry(
+    hass: HomeAssistant, mock_rituals_account: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test successful reauth flow (updating credentials)."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_EMAIL,
+        data={},
+        title=TEST_EMAIL,
+        version=2,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_correct_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data == {
+        CONF_EMAIL: TEST_EMAIL,
+        CONF_PASSWORD: "new_correct_password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

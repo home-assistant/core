@@ -50,8 +50,10 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.diffuser.update_data()
         except (AuthenticationException, ClientResponseError) as err:
             # Treat 401/403 like AuthenticationException → one silent re-auth, single retry
-            status = getattr(err, "status", None)
-            if isinstance(err, ClientResponseError) and status not in (401, 403):
+            if isinstance(err, ClientResponseError) and (status := err.status) not in (
+                401,
+                403,
+            ):
                 # Non-auth HTTP error → let HA retry
                 raise UpdateFailed(f"HTTP {status}") from err
 
@@ -68,7 +70,7 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # Still HTTP auth errors after refresh → trigger HA reauth
                 if err2.status in (401, 403):
                     raise ConfigEntryAuthFailed from err2
-                raise UpdateFailed(f"HTTP {getattr(err2, 'status', '?')}") from err2
+                raise UpdateFailed(f"HTTP {err2.status}") from err2
         except ClientError as err:
             # Network issues (timeouts, DNS, etc.)
             raise UpdateFailed(f"Network error: {err!r}") from err

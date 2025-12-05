@@ -1,9 +1,9 @@
 {
   "config": {
     "abort": {
-      "account_mismatch": "The email address does not match the original account.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "Re-authentication was successful"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "Re-authentication was successful",
+      "unique_id_mismatch": "The email address does not match the original account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,7 +13,6 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "description": "Please enter the correct password."

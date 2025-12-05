@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from pyrituals import Account, AuthenticationException
@@ -73,10 +73,13 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         reauth_entry = self._get_reauth_entry()
 
+        if TYPE_CHECKING:
+            assert reauth_entry.unique_id is not None
+
         if user_input:
             session = async_get_clientsession(self.hass)
             account = Account(
-                email=user_input[CONF_EMAIL],
+                email=reauth_entry.unique_id,
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
@@ -88,14 +91,10 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_EMAIL])
-
-                self._abort_if_unique_id_mismatch(reason="account_mismatch")
-
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
-                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_EMAIL: reauth_entry.unique_id,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
@@ -103,7 +102,12 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA, reauth_entry.data
+                vol.Schema(
+                    {
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                reauth_entry.data,
             ),
             errors=errors,
         )

@@ -1,12 +1,11 @@
 """Tests for the Rituals Perfume Genie integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import aiohttp
 
 from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -20,68 +19,36 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_migration_v1_to_v2(hass: HomeAssistant) -> None:
+async def test_migration_v1_to_v2(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    old_mock_config_entry: MockConfigEntry,
+) -> None:
     """Test migration from V1 (account_hash) to V2 (credentials)."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="old_entry",
-        data={
-            ACCOUNT_HASH: "old_hash_123",
-            CONF_EMAIL: "test@rituals.com",
-            CONF_PASSWORD: "test-password",
-        },
-        version=1,
-    )
-    config_entry.add_to_hass(hass)
+    old_mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.Account"
-    ) as mock_account_cls:
-        mock_instance = mock_account_cls.return_value
-        mock_instance.authenticate = AsyncMock()
-        mock_instance.get_devices = AsyncMock(return_value=[])
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.version == 2
-    assert ACCOUNT_HASH not in config_entry.data
-    assert config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_setup_missing_credentials(hass: HomeAssistant) -> None:
-    """Test setup fails if credentials are missing (triggers reauth)."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="missing_creds",
-        data={"some_old_data": "value"},
-        version=2,
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(old_mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert old_mock_config_entry.version == 2
+    assert ACCOUNT_HASH not in old_mock_config_entry.data
+    assert old_mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_config_entry_not_ready(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test the Rituals configuration entry setup if connection to Rituals is missing."""
-    config_entry = mock_config_entry(unique_id="id_123_not_ready")
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+    mock_rituals_account.get_devices.side_effect = aiohttp.ClientError
 
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.Account"
-    ) as mock_account_cls:
-        mock_instance = mock_account_cls.return_value
-        mock_instance.authenticate = AsyncMock()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        mock_instance.get_devices = AsyncMock(side_effect=aiohttp.ClientError)
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_unload(hass: HomeAssistant) -> None:

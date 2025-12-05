@@ -29,11 +29,11 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
-    session = async_get_clientsession(hass)
-
     # Initiate reauth for old config entries which don't have username / password in the entry data
     if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
         raise ConfigEntryAuthFailed("Missing credentials")
+
+    session = async_get_clientsession(hass)
 
     account = Account(
         email=entry.data[CONF_EMAIL],
@@ -54,8 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientResponseError as err:
         _LOGGER.debug(
             "HTTP error during Rituals setup: status=%s, url=%s, headers=%s",
-            getattr(err, "status", "?"),
-            getattr(err, "request_info", None),
+            err.status,
+            err.request_info,
             dict(err.headers or {}),
         )
         raise ConfigEntryNotReady from err
