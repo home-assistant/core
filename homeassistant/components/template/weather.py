@@ -320,23 +320,23 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
         """Initialize the features."""
 
         # Templates
-        self._condition_template = config[CONF_CONDITION]
-        self._temperature_template = config[CONF_TEMPERATURE]
-        self._humidity_template = config[CONF_HUMIDITY]
+        self._apparent_temperature_template = config.get(CONF_APPARENT_TEMPERATURE)
         self._attribution_template = config.get(CONF_ATTRIBUTION)
-        self._pressure_template = config.get(CONF_PRESSURE)
-        self._wind_speed_template = config.get(CONF_WIND_SPEED)
-        self._wind_bearing_template = config.get(CONF_WIND_BEARING)
-        self._ozone_template = config.get(CONF_OZONE)
-        self._uv_index_template = config.get(CONF_UV_INDEX)
-        self._visibility_template = config.get(CONF_VISIBILITY)
+        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE)
+        self._condition_template = config[CONF_CONDITION]
+        self._dew_point_template = config.get(CONF_DEW_POINT)
         self._forecast_daily_template = config.get(CONF_FORECAST_DAILY)
         self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY)
         self._forecast_twice_daily_template = config.get(CONF_FORECAST_TWICE_DAILY)
+        self._humidity_template = config[CONF_HUMIDITY]
+        self._ozone_template = config.get(CONF_OZONE)
+        self._pressure_template = config.get(CONF_PRESSURE)
+        self._temperature_template = config[CONF_TEMPERATURE]
+        self._uv_index_template = config.get(CONF_UV_INDEX)
+        self._visibility_template = config.get(CONF_VISIBILITY)
+        self._wind_bearing_template = config.get(CONF_WIND_BEARING)
         self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED)
-        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE)
-        self._dew_point_template = config.get(CONF_DEW_POINT)
-        self._apparent_temperature_template = config.get(CONF_APPARENT_TEMPERATURE)
+        self._wind_speed_template = config.get(CONF_WIND_SPEED)
 
         # Legacy support
         self._attribution: str | None = None
@@ -375,47 +375,18 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
             return None
 
     @callback
+    def _update_apparent_temperature(self, result: Any) -> None:
+        self._attr_native_apparent_temperature = self._validate(
+            vol.Coerce(float), result
+        )
+
+    @callback
+    def _update_attribution(self, result: Any) -> None:
+        self._attribution = vol.Coerce(str)(result)
+
+    @callback
     def _update_condition(self, result: Any) -> None:
         self._attr_condition = result if result in CONDITION_CLASSES else None
-
-    @callback
-    def _update_temperature(self, result: Any) -> None:
-        self._attr_native_temperature = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_humidity(self, result: Any) -> None:
-        self._attr_humidity = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_pressure(self, result: Any) -> None:
-        self._attr_native_pressure = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_wind_speed(self, result: Any) -> None:
-        self._attr_native_wind_speed = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_wind_bearing(self, result: Any) -> None:
-        try:
-            self._attr_wind_bearing = vol.Coerce(float)(result)
-        except vol.Invalid:
-            self._attr_wind_bearing = vol.Coerce(str)(result)
-
-    @callback
-    def _update_ozone(self, result: Any) -> None:
-        self._attr_ozone = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_uv_index(self, result: Any) -> None:
-        self._attr_uv_index = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_visibility(self, result: Any) -> None:
-        self._attr_native_visibility = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_wind_gust_speed(self, result: Any) -> None:
-        self._attr_native_wind_gust_speed = self._validate(vol.Coerce(float), result)
 
     @callback
     def _update_coverage(self, result: Any) -> None:
@@ -426,14 +397,43 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
         self._attr_native_dew_point = self._validate(vol.Coerce(float), result)
 
     @callback
-    def _update_apparent_temperature(self, result: Any) -> None:
-        self._attr_native_apparent_temperature = self._validate(
-            vol.Coerce(float), result
-        )
+    def _update_humidity(self, result: Any) -> None:
+        self._attr_humidity = self._validate(vol.Coerce(float), result)
 
     @callback
-    def _update_attribution(self, result: Any) -> None:
-        self._attribution = vol.Coerce(str)(result)
+    def _update_ozone(self, result: Any) -> None:
+        self._attr_ozone = self._validate(vol.Coerce(float), result)
+
+    @callback
+    def _update_pressure(self, result: Any) -> None:
+        self._attr_native_pressure = self._validate(vol.Coerce(float), result)
+
+    @callback
+    def _update_temperature(self, result: Any) -> None:
+        self._attr_native_temperature = self._validate(vol.Coerce(float), result)
+
+    @callback
+    def _update_uv_index(self, result: Any) -> None:
+        self._attr_uv_index = self._validate(vol.Coerce(float), result)
+
+    @callback
+    def _update_visibility(self, result: Any) -> None:
+        self._attr_native_visibility = self._validate(vol.Coerce(float), result)
+
+    @callback
+    def _update_wind_bearing(self, result: Any) -> None:
+        try:
+            self._attr_wind_bearing = vol.Coerce(float)(result)
+        except vol.Invalid:
+            self._attr_wind_bearing = vol.Coerce(str)(result)
+
+    @callback
+    def _update_wind_gust_speed(self, result: Any) -> None:
+        self._attr_native_wind_gust_speed = self._validate(vol.Coerce(float), result)
+
+    @callback
+    def _update_wind_speed(self, result: Any) -> None:
+        self._attr_native_wind_speed = self._validate(vol.Coerce(float), result)
 
     @callback
     def _validate_forecast(
@@ -500,23 +500,11 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
     def _async_setup_templates(self) -> None:
         """Set up templates."""
 
-        if self._condition_template:
+        if self._apparent_temperature_template:
             self.add_template_attribute(
-                "_attr_condition",
-                self._condition_template,
-                on_update=self._update_condition,
-            )
-        if self._temperature_template:
-            self.add_template_attribute(
-                "_attr_native_temperature",
-                self._temperature_template,
-                on_update=self._update_temperature,
-            )
-        if self._humidity_template:
-            self.add_template_attribute(
-                "_attr_humidity",
-                self._humidity_template,
-                on_update=self._update_humidity,
+                "_attr_native_apparent_temperature",
+                self._apparent_temperature_template,
+                on_update=self._update_apparent_temperature,
             )
         if self._attribution_template:
             self.add_template_attribute(
@@ -524,53 +512,17 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
                 self._attribution_template,
                 on_update=self._update_attribution,
             )
-        if self._pressure_template:
-            self.add_template_attribute(
-                "_attr_native_pressure",
-                self._pressure_template,
-                on_update=self._update_pressure,
-            )
-        if self._wind_speed_template:
-            self.add_template_attribute(
-                "_attr_native_wind_speed",
-                self._wind_speed_template,
-                on_update=self._update_wind_speed,
-            )
-        if self._wind_bearing_template:
-            self.add_template_attribute(
-                "_attr_wind_bearing",
-                self._wind_bearing_template,
-                on_update=self._update_wind_bearing,
-            )
-        if self._ozone_template:
-            self.add_template_attribute(
-                "_attr_ozone",
-                self._ozone_template,
-                on_update=self._update_ozone,
-            )
-        if self._uv_index_template:
-            self.add_template_attribute(
-                "_attr_uv_index",
-                self._uv_index_template,
-                on_update=self._update_uv_index,
-            )
-        if self._visibility_template:
-            self.add_template_attribute(
-                "_attr_native_visibility",
-                self._visibility_template,
-                on_update=self._update_visibility,
-            )
-        if self._wind_gust_speed_template:
-            self.add_template_attribute(
-                "_attr_native_wind_gust_speed",
-                self._wind_gust_speed_template,
-                on_update=self._update_wind_gust_speed,
-            )
         if self._cloud_coverage_template:
             self.add_template_attribute(
                 "_attr_cloud_coverage",
                 self._cloud_coverage_template,
                 on_update=self._update_coverage,
+            )
+        if self._condition_template:
+            self.add_template_attribute(
+                "_attr_condition",
+                self._condition_template,
+                on_update=self._update_condition,
             )
         if self._dew_point_template:
             self.add_template_attribute(
@@ -578,13 +530,6 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
                 self._dew_point_template,
                 on_update=self._update_dew_point,
             )
-        if self._apparent_temperature_template:
-            self.add_template_attribute(
-                "_attr_native_apparent_temperature",
-                self._apparent_temperature_template,
-                on_update=self._update_apparent_temperature,
-            )
-
         if self._forecast_daily_template:
             self.add_template_attribute(
                 "_forecast_daily",
@@ -605,6 +550,60 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
                 self._forecast_twice_daily_template,
                 on_update=partial(self._update_forecast, "twice_daily"),
                 validator=partial(self._validate_forecast, "twice_daily"),
+            )
+        if self._humidity_template:
+            self.add_template_attribute(
+                "_attr_humidity",
+                self._humidity_template,
+                on_update=self._update_humidity,
+            )
+        if self._ozone_template:
+            self.add_template_attribute(
+                "_attr_ozone",
+                self._ozone_template,
+                on_update=self._update_ozone,
+            )
+        if self._pressure_template:
+            self.add_template_attribute(
+                "_attr_native_pressure",
+                self._pressure_template,
+                on_update=self._update_pressure,
+            )
+        if self._temperature_template:
+            self.add_template_attribute(
+                "_attr_native_temperature",
+                self._temperature_template,
+                on_update=self._update_temperature,
+            )
+        if self._uv_index_template:
+            self.add_template_attribute(
+                "_attr_uv_index",
+                self._uv_index_template,
+                on_update=self._update_uv_index,
+            )
+        if self._wind_bearing_template:
+            self.add_template_attribute(
+                "_attr_wind_bearing",
+                self._wind_bearing_template,
+                on_update=self._update_wind_bearing,
+            )
+        if self._wind_gust_speed_template:
+            self.add_template_attribute(
+                "_attr_native_wind_gust_speed",
+                self._wind_gust_speed_template,
+                on_update=self._update_wind_gust_speed,
+            )
+        if self._wind_speed_template:
+            self.add_template_attribute(
+                "_attr_native_wind_speed",
+                self._wind_speed_template,
+                on_update=self._update_wind_speed,
+            )
+        if self._visibility_template:
+            self.add_template_attribute(
+                "_attr_native_visibility",
+                self._visibility_template,
+                on_update=self._update_visibility,
             )
 
         super()._async_setup_templates()
