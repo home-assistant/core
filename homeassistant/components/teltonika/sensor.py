@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from . import TeltonikaConfigEntry, TeltonikaData, TeltonikaDataUpdateCoordinator
 
@@ -150,9 +149,6 @@ class TeltonikaSensorEntity(
         self._modem_name = modem_name
         self._attr_translation_key = description.translation_key
         self._attr_translation_placeholders = {"modem_name": modem_name}
-        self._attr_suggested_object_id = slugify(
-            f"{modem_name} {description.translation_key or description.key}"
-        )
 
     @property
     def available(self) -> bool:
