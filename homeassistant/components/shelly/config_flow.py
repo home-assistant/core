@@ -247,6 +247,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     wifi_networks: list[dict[str, Any]] = []
     selected_ssid: str = ""
     ble_scan_error: str = ""
+    provision_error: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
     disable_ap_after_provision: bool = True
@@ -884,8 +885,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await async_provision_wifi(self.ble_device, self.selected_ssid, password)
         except (DeviceConnectionError, RpcCallError) as err:
-            LOGGER.debug("Failed to provision WiFi via BLE: %s", err)
+            LOGGER.debug("Failed to provision WiFi via BLE: %r", err)
             # BLE connection/communication failed - allow retry from network selection
+            self.provision_error = repr(err)
             return None
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi provisioning")
@@ -933,6 +935,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
                     # Store failure info and return None - provision_done will handle redirect
+                    self.provision_error = "Device not found after provisioning"
                     return None
             else:
                 state.host, state.port = result
@@ -1043,7 +1046,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="provision_failed",
-            description_placeholders={"ssid": self.selected_ssid},
+            description_placeholders={
+                "name": self.context["title_placeholders"]["name"],
+                "ssid": self.selected_ssid,
+                "error": self.provision_error,
+            },
         )
 
     async def async_step_provision_done(

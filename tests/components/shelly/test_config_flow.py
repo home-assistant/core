@@ -3859,7 +3859,7 @@ async def test_bluetooth_wifi_provision_failure(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            side_effect=DeviceConnectionError,
+            side_effect=DeviceConnectionError("BLE connection lost"),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
@@ -3880,6 +3880,11 @@ async def test_bluetooth_wifi_provision_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision_failed"
+    assert result["description_placeholders"] == {
+        "name": "ShellyPlus2PM-C049EF8873E8",
+        "ssid": "MyNetwork",
+        "error": "DeviceConnectionError('BLE connection lost')",
+    }
 
     # Test retry - go back to wifi scan and complete successfully
     with patch(
