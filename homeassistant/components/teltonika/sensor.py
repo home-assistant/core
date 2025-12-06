@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import TeltonikaConfigEntry, TeltonikaData
+from . import TeltonikaConfigEntry, TeltonikaData, TeltonikaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +115,9 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_modems))
 
 
-class TeltonikaSensorEntity(CoordinatorEntity[..], SensorEntity):
+class TeltonikaSensorEntity(
+    CoordinatorEntity[TeltonikaDataUpdateCoordinator], SensorEntity
+):
     """Teltonika sensor entity."""
 
     _attr_has_entity_name = True
