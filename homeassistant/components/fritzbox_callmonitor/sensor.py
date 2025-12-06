@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import queue
-from threading import Event as ThreadingEvent, Thread
+from threading import Event as ThreadingEvent, Lock, Thread
 from time import sleep
-from typing import Any, cast
+from typing import cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
@@ -183,22 +183,47 @@ class FritzBoxCallMonitor:
         self.stopped = ThreadingEvent()
         self._sensor = sensor
 
+        # thread and lock to guard connect/stop
+        self._thread: Thread | None = None
+        self._lock = Lock()
+
     def connect(self) -> None:
-        """Connect to the Fritz!Box."""
+        """Connect to the Fritz!Box (stops previous connection first)."""
         _LOGGER.debug("Setting up socket connection")
-        try:
-            self.connection = FritzMonitor(address=self.host, port=self.port)
-            kwargs: dict[str, Any] = {
-                "event_queue": self.connection.start(
-                    reconnect_tries=50, reconnect_delay=120
+        with self._lock:
+            # If already alive, nothing to do
+            if self.connection and cast(FritzMonitor, self.connection).is_alive:
+                _LOGGER.debug("Connection already alive, skipping connect")
+                return
+
+            # stop previous connection if present
+            if self.connection:
+                try:
+                    self.connection.stop()
+                except (RuntimeError, OSError) as err:
+                    _LOGGER.debug(
+                        "Error stopping previous FritzMonitor (ignored): %s", err
+                    )
+                finally:
+                    self.connection = None
+
+            try:
+                self.connection = FritzMonitor(address=self.host, port=self.port)
+                event_queue = self.connection.start(
+                    reconnect_tries=5, reconnect_delay=5
                 )
-            }
-            Thread(target=self._process_events, kwargs=kwargs).start()
-        except OSError as err:
-            self.connection = None
-            _LOGGER.error(
-                "Cannot connect to %s on port %s: %s", self.host, self.port, err
-            )
+
+                # start processing thread (daemon so HA shutdown isn't blocked)
+                self._thread = Thread(
+                    target=self._process_events, args=(event_queue,), daemon=True
+                )
+                self._thread.start()
+                _LOGGER.debug("FritzMonitor thread started")
+            except OSError as err:
+                self.connection = None
+                _LOGGER.error(
+                    "Cannot connect to %s on port %s: %s", self.host, self.port, err
+                )
 
     def _process_events(self, event_queue: queue.Queue[str]) -> None:
         """Listen to incoming or outgoing calls."""
@@ -207,16 +232,26 @@ class FritzBoxCallMonitor:
             try:
                 event = event_queue.get(timeout=10)
             except queue.Empty:
+                # if underlying connection is dead, try to recreate it
                 if (
-                    not cast(FritzMonitor, self.connection).is_alive
-                    and not self.stopped.is_set()
+                    not self.connection
+                    or not cast(FritzMonitor, self.connection).is_alive
                 ):
-                    _LOGGER.error("Connection has abruptly ended")
-                _LOGGER.debug("Empty event queue")
+                    _LOGGER.warning("Connection lost, attempting reconnect")
+                    try:
+                        self.connect()
+                    except (RuntimeError, OSError) as err:
+                        # prefer logging.exception when inside except handling real exceptions,
+                        # but here we caught specific exceptions so .error is fine:
+                        _LOGGER.error("Reconnect attempt failed: %s", err)
                 continue
             else:
                 _LOGGER.debug("Received event: %s", event)
-                self._parse(event)
+                try:
+                    self._parse(event)
+                except Exception:
+                    # log full traceback but do NOT pass the exception object into the format string
+                    _LOGGER.exception("Failed to parse Fritz event")
                 sleep(1)
 
     def _parse(self, event: str) -> None:
@@ -268,3 +303,18 @@ class FritzBoxCallMonitor:
             att = {"duration": line[3], "closed": isotime}
             self._sensor.set_attributes(att)
         self._sensor.schedule_update_ha_state()
+
+    def stop(self) -> None:
+        """Explicit stop helper (not required, but convenient)."""
+        if not self.stopped.is_set():
+            self.stopped.set()
+        with self._lock:
+            if self.connection:
+                try:
+                    self.connection.stop()
+                except (RuntimeError, OSError) as err:
+                    _LOGGER.debug("Error stopping connection (ignored): %s", err)
+                self.connection = None
+            if self._thread and self._thread.is_alive():
+                self._thread.join(timeout=2)
+                self._thread = None
