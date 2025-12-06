@@ -2,6 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "This device is already configured",
+      "invalid_device": "The device is invalid",
+      "invalid_device_or_unreachable": "The device is invalid or unreachable",
       "no_devices_found": "No Prana devices were found"
     },
     "step": {
@@ -9,7 +11,7 @@
         "description": "Set up {name} at {host}?",
         "title": "Confirm Prana device"
       },
-      "manual": {
+      "user": {
         "description": "Enter the IP address of your Prana device",
         "title": "Add Prana device by IP"
       }

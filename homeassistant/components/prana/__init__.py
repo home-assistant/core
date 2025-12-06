@@ -7,11 +7,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import PranaCoordinator
+from .coordinator import PranaConfigEntry, PranaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SWITCH]
 
 # Provide a typed ConfigEntry
-type PranaConfigEntry = ConfigEntry[PranaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PranaConfigEntry) -> bool:

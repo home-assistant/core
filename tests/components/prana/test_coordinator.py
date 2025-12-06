@@ -59,21 +59,21 @@ async def test_async_update_data_returns_state(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "exc",
+    ("exc", "expected"),
     [
-        PranaApiUpdateFailed("http error"),
-        PranaApiCommunicationError("network error"),
-        Exception("generic"),
+        (PranaApiUpdateFailed("http error"), UpdateFailed),
+        (PranaApiCommunicationError("network error"), UpdateFailed),
+        (Exception("generic"), Exception),
     ],
 )
-async def test_async_update_data_raises_update_failed_on_exceptions(
-    hass: HomeAssistant, mock_entry: ConfigEntry, exc: Exception
+async def test_async_update_data_raises_expected_exceptions(
+    hass: HomeAssistant, mock_entry: ConfigEntry, exc: Exception, expected: type
 ) -> None:
-    """Coordinator should raise UpdateFailed when underlying fetch fails."""
+    """Coordinator should raise UpdateFailed for known client errors and propagate others."""
     coordinator = PranaCoordinator(hass, mock_entry)
 
     coordinator.api_client = MagicMock()
     coordinator.api_client.get_state = AsyncMock(side_effect=exc)
 
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(expected):
         await coordinator._async_update_data()

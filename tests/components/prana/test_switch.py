@@ -5,8 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components.prana.const import DOMAIN, PranaSwitchType
-from homeassistant.components.prana.switch import PranaSwitch, async_setup_entry
+from homeassistant.components.prana.const import DOMAIN
+from homeassistant.components.prana.switch import (
+    PranaSwitch,
+    PranaSwitchEntityDescription,
+    PranaSwitchType,
+    async_setup_entry,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -45,10 +50,16 @@ def config_entry(coordinator: MagicMock, hass: HomeAssistant):
 
 def test_switch_properties(coordinator: MagicMock, config_entry: MagicMock) -> None:
     """Test switch entity properties (is_on reflects coordinator.data)."""
-    bound_switch = PranaSwitch("id1", PranaSwitchType.BOUND, config_entry)
+    bound_desc = PranaSwitchEntityDescription(
+        key=PranaSwitchType.BOUND, translation_key="bound"
+    )
+    bound_switch = PranaSwitch(config_entry, bound_desc)
     assert bound_switch.is_on is True
 
-    heating = PranaSwitch("id2", PranaSwitchType.HEATER, config_entry)
+    heat_desc = PranaSwitchEntityDescription(
+        key=PranaSwitchType.HEATER, translation_key="heater"
+    )
+    heating = PranaSwitch(config_entry, heat_desc)
     assert heating.is_on is False
 
 
@@ -57,7 +68,10 @@ async def test_switch_turn_on_off(
     hass: HomeAssistant, coordinator: MagicMock, config_entry: MagicMock
 ) -> None:
     """Test turning switch on and off triggers API call and refresh."""
-    switch = PranaSwitch("id3", PranaSwitchType.WINTER, config_entry)
+    winter_desc = PranaSwitchEntityDescription(
+        key=PranaSwitchType.WINTER, translation_key="winter"
+    )
+    switch = PranaSwitch(config_entry, winter_desc)
     switch.hass = hass
 
     # initial state True as per fixture

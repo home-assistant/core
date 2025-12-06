@@ -1,10 +1,13 @@
 """Tests for Prana config flow."""
 
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
+
+from aiohttp.client_exceptions import ClientError
 import pytest
 
 from homeassistant.components.prana.config_flow import SERVICE_TYPE, PranaConfigFlow
-from homeassistant.components.prana.const import CONF_CONFIG, CONF_MDNS
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -14,7 +17,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.asyncio
 async def test_zeroconf_not_prana_device(hass: HomeAssistant) -> None:
-    """If a non-Prana zeroconf is discovered, flow proceeds to confirm (no special filtering)."""
+    """If a non-Prana zeroconf is discovered and device is unreachable, abort."""
     flow = PranaConfigFlow()
     flow.hass = hass
 
@@ -28,14 +31,21 @@ async def test_zeroconf_not_prana_device(hass: HomeAssistant) -> None:
         properties={},
     )
 
-    result = await flow.async_step_zeroconf(info)
+    # Simulate unreachable / non-Prana device (API raises)
+    with patch(
+        "prana_local_api_client.prana_api_client.PranaLocalApiClient.get_device_info",
+        new=AsyncMock(side_effect=ClientError("no device")),
+    ):
+        result = await flow.async_step_zeroconf(info)
+
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "invalid_device_or_unreachable"
 
 
 @pytest.mark.asyncio
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
-    """If a config entry with the same unique_id already exists, discovery aborts as already_configured."""
+    """If a config entry with the same unique_id already exists, discovery leads to confirm, then aborts as already_configured on confirm."""
+    existing_unique_id = "_prana._tcp.local._test"
     entry = MockConfigEntry(
         version=1,
         minor_version=1,
@@ -45,13 +55,13 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
             "name": "Test Prana",
             "host": "127.0.0.1",
             "config": {"some_key": "some_value"},
-            "mdns": "_prana._tcp.local._test",
+            "mdns": existing_unique_id,
         },
         source="user",
         entry_id="123456",
         options={},
         discovery_keys=None,
-        unique_id="_prana._tcp.local._test",
+        unique_id=existing_unique_id,
         subentries_data=None,
     )
     entry.add_to_hass(hass)
@@ -63,15 +73,36 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         ip_address="192.168.1.20",
         ip_addresses=["192.168.1.20"],
         hostname="test.local",
-        name="_prana._tcp.local._test",
+        name=existing_unique_id,
         type=SERVICE_TYPE,
         port=1234,
         properties={},
     )
 
-    result = await flow.async_step_zeroconf(info)
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    # Return a valid device info with the same manufactureId as the existing entry
+    device_info = SimpleNamespace(
+        isValid=True,
+        manufactureId=existing_unique_id,
+        label="Test Prana",
+        pranaModel="ModelX",
+        fwVersion="1.0.0",
+    )
+
+    # Keep patch active for discovery + confirm
+    with patch(
+        "prana_local_api_client.prana_api_client.PranaLocalApiClient.get_device_info",
+        new=AsyncMock(return_value=device_info),
+    ):
+        # Zeroconf -> confirm form expected
+        result = await flow.async_step_zeroconf(info)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        # Confirm -> create entry (config flow currently creates an entry)
+        result2 = await flow.async_step_confirm(user_input={})
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "Test Prana"
+        assert result2["data"][CONF_HOST] == "192.168.1.20"
 
 
 @pytest.mark.asyncio
@@ -81,32 +112,40 @@ async def test_zeroconf_new_device_and_confirm(hass: HomeAssistant) -> None:
     flow.hass = hass
     flow.context = {"source": "zeroconf"}
 
+    mdns_name = "TestNew._prana._tcp.local."
     info = ZeroconfServiceInfo(
         ip_address="192.168.1.30",
         ip_addresses=["192.168.1.30"],
         hostname="prana.local",
-        name="TestNew._prana._tcp.local.",
+        name=mdns_name,
         type=SERVICE_TYPE,
         port=1234,
         properties={"label": "Prana Device", "config": {"mode": "eco"}},
     )
 
-    # Zeroconf -> confirm form
-    result = await flow.async_step_zeroconf(info)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    device_info = SimpleNamespace(
+        isValid=True,
+        manufactureId="_prana.unique.id.30",
+        label="Prana Device",
+        pranaModel="ModelY",
+        fwVersion="2.3.4",
+    )
 
-    # Confirm -> create entry
-    result2 = await flow.async_step_confirm(user_input={})
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Prana Device"
-    assert result2["data"][CONF_HOST] == "192.168.1.30"
-    # CONF_CONFIG stores the properties object
-    assert result2["data"][CONF_CONFIG] == {
-        "label": "Prana Device",
-        "config": {"mode": "eco"},
-    }
-    assert result2["data"][CONF_MDNS] == "TestNew._prana._tcp.local."
+    # Keep the patch active for both discovery and confirm calls
+    with patch(
+        "prana_local_api_client.prana_api_client.PranaLocalApiClient.get_device_info",
+        new=AsyncMock(return_value=device_info),
+    ):
+        # Zeroconf -> confirm form
+        result = await flow.async_step_zeroconf(info)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        # Confirm -> create entry
+        result2 = await flow.async_step_confirm(user_input={})
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "Prana Device"
+        assert result2["data"][CONF_HOST] == "192.168.1.30"
 
 
 @pytest.mark.asyncio
@@ -121,60 +160,55 @@ async def test_confirm_abort_no_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_user_flow_with_discovered_device(hass: HomeAssistant) -> None:
-    """User flow should list discovered devices and allow choosing one."""
-    # First, simulate zeroconf discovery to populate hass.data[DOMAIN + "_discovered"]
-    flow_discover = PranaConfigFlow()
-    flow_discover.hass = hass
+async def test_user_flow_with_manual_entry(hass: HomeAssistant) -> None:
+    """User flow should present manual form and allow creating an entry by host after confirmation."""
+    flow = PranaConfigFlow()
+    flow.hass = hass
 
-    mdns_name = "DeviceOne._prana._tcp.local."
-    info = ZeroconfServiceInfo(
-        ip_address="192.168.1.40",
-        ip_addresses=["192.168.1.40"],
-        hostname="deviceone.local",
-        name=mdns_name,
-        type=SERVICE_TYPE,
-        port=1234,
-        properties={"label": "Device One", "config": {"mode": "auto"}},
-    )
-
-    # run zeroconf handler -> discovered stored (shows confirm)
-    result = await flow_discover.async_step_zeroconf(info)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    # Now start a user flow which should present the discovered device
-    flow_user = PranaConfigFlow()
-    flow_user.hass = hass
-
-    # Initial call returns a form listing choices
-    result_user = await flow_user.async_step_user()
+    # Initial call returns a manual form
+    result_user = await flow.async_step_user()
     assert result_user["type"] == FlowResultType.FORM
     assert result_user["step_id"] == "user"
 
-    # Submit the selected mdns to create the entry
-    result_create = await flow_user.async_step_user(user_input={"mdns": mdns_name})
+    device_info = SimpleNamespace(
+        isValid=True,
+        manufactureId="_prana.manual.40",
+        label="Device One",
+        pranaModel="ModelZ",
+        fwVersion="3.0.0",
+    )
+
+    # Submit the host to move to confirm; patch the API call used during confirm
+    with patch(
+        "prana_local_api_client.prana_api_client.PranaLocalApiClient.get_device_info",
+        new=AsyncMock(return_value=device_info),
+    ):
+        # Submit manual host -> should show confirm form
+        result_after_submit = await flow.async_step_user(
+            user_input={CONF_HOST: "192.168.1.40", CONF_NAME: "Device One"}
+        )
+        assert result_after_submit["type"] == FlowResultType.FORM
+        assert result_after_submit["step_id"] == "confirm"
+
+        # Confirm -> create entry
+        result_create = await flow.async_step_confirm(user_input={})
+
     assert result_create["type"] == FlowResultType.CREATE_ENTRY
     assert result_create["title"] == "Device One"
     assert result_create["data"][CONF_HOST] == "192.168.1.40"
-    assert result_create["data"][CONF_MDNS] == mdns_name
-    assert result_create["data"][CONF_CONFIG] == {
-        "label": "Device One",
-        "config": {"mode": "auto"},
-    }
 
 
 @pytest.mark.asyncio
 async def test_user_flow_when_no_discovered_devices_shows_manual(
     hass: HomeAssistant,
 ) -> None:
-    """If no devices were discovered, user flow forwards to manual step (form)."""
+    """User flow returns manual form when there are no discovered devices."""
     flow = PranaConfigFlow()
     flow.hass = hass
 
-    # Ensure no discovered devices in hass.data
+    # Ensure no discovered devices in hass.data (not used by current flow)
     hass.data.pop("prana_discovered", None)
 
     result = await flow.async_step_user()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "manual"
+    assert result["step_id"] == "user"

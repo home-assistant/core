@@ -4,15 +4,18 @@ The flow is discovery-only. Users confirm a found device; manual starts abort.
 """
 
 import logging
-from typing import Any, cast
+from typing import Any
 
+from aiohttp.client_exceptions import ClientError
+from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
+from prana_local_api_client.prana_api_client import PranaLocalApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_CONFIG, CONF_MDNS, DOMAIN
+from .const import CONF_MANUFACTURE_ID, CONF_SW_VERSION, DOMAIN
 
 SERVICE_TYPE = "_prana._tcp.local."
 
@@ -26,8 +29,7 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Prana config flow."""
         self._host: str | None = None
         self._name: str | None = None
-        self._config: dict | str | None = None
-        self._mdns: str | None = None
+        self._device_info: PranaDeviceInfo | None = None
         self.context = {}
 
     async def async_step_zeroconf(
@@ -36,98 +38,68 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle Zeroconf discovery of a Prana device."""
         _LOGGER.debug("Discovered device via Zeroconf: %s", discovery_info)
 
-        name = discovery_info.name
         host = discovery_info.host
-        # Set unique_id to the mDNS name to prevent duplicate entries, name is unique per each device
-        await self.async_set_unique_id(name)
-        self._abort_if_unique_id_configured()
-
-        raw_config = discovery_info.properties
         friendly_name = discovery_info.properties.get("label", "")
-
         self.context["title_placeholders"] = {"name": friendly_name}
-
         self._host = host
-        self._name = friendly_name
-        self._config = raw_config
-        self._mdns = name
-
-        discovered: dict = self.hass.data.setdefault(f"{DOMAIN}_discovered", {})
-        discovered[name] = {
-            "host": host,
-            "label": friendly_name or name,
-            "properties": raw_config,
-        }
 
         return await self.async_step_confirm()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow user to pick from discovered devices and configure one."""
-        return await self.async_step_manual()
-
-    async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
         """Manual entry by IP address."""
         if user_input is not None:
             host = user_input[CONF_HOST]
-            name = user_input.get(CONF_NAME) or host
-
+            # Avoid creating duplicate entries for same host
             self._async_abort_entries_match({CONF_HOST: host})
 
             self._host = host
-            self._name = name
-            self._config = None
-            self._mdns = None
-            return self.async_create_entry(
-                title=cast(str, self._name),
-                data={
-                    CONF_NAME: cast(str, self._name),
-                    CONF_HOST: cast(str, self._host),
-                    CONF_CONFIG: self._config,
-                    CONF_MDNS: self._mdns,
-                },
-                options={},
-                description_placeholders={
-                    "name": cast(str, self._name),
-                    "host": cast(str, self._host),
-                },
-            )
+            return await self.async_step_confirm()
 
-        schema = vol.Schema(
-            {vol.Required(CONF_HOST): str, vol.Optional(CONF_NAME): str}
-        )
-        return self.async_show_form(step_id="manual", data_schema=schema)
+        schema = vol.Schema({vol.Required(CONF_HOST): str})
+        return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show confirmation form or create entry when submitted."""
-        if not all([self._host, self._name, self._mdns]):
+        if not self._host:
             return self.async_abort(reason="no_devices_found")
+
+        api_client = PranaLocalApiClient(host=self._host, port=80)
+        try:
+            device_info = await api_client.get_device_info()
+        except (ClientError, TimeoutError) as err:
+            _LOGGER.error("Error fetching device info from %s: %s", self._host, err)
+            return self.async_abort(reason="invalid_device_or_unreachable")
+        if not device_info.isValid:
+            return self.async_abort(reason="invalid_device")
+
+        await self.async_set_unique_id(device_info.manufactureId)
+        self._abort_if_unique_id_configured()
 
         if user_input is not None:
             return self.async_create_entry(
-                title=cast(str, self._name),
+                title=device_info.label,
                 data={
-                    CONF_NAME: cast(str, self._name),
-                    CONF_HOST: cast(str, self._host),
-                    CONF_CONFIG: self._config,
-                    CONF_MDNS: self._mdns,
+                    CONF_NAME: device_info.label,
+                    CONF_HOST: self._host,
+                    CONF_MODEL: device_info.pranaModel,
+                    CONF_MANUFACTURE_ID: device_info.manufactureId,
+                    CONF_SW_VERSION: device_info.fwVersion,
                 },
                 options={},
                 description_placeholders={
-                    "name": cast(str, self._name),
-                    "host": cast(str, self._host),
+                    "name": device_info.label,
+                    "host": self._host,
                 },
             )
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "name": cast(str, self._name),
-                "host": cast(str, self._host),
+                "name": device_info.label,
+                "host": self._host,
             },
         )
