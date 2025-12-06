@@ -170,6 +170,9 @@ async def _async_setup_block_entry(
         device_entry = dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
+    # https://github.com/home-assistant/core/pull/48076
+    if device_entry and entry.entry_id not in device_entry.config_entries:
+        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -280,6 +283,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         device_entry = dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
+    # https://github.com/home-assistant/core/pull/48076
+    if device_entry and entry.entry_id not in device_entry.config_entries:
+        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
