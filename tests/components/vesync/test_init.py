@@ -3,7 +3,11 @@
 from unittest.mock import AsyncMock, patch
 
 from pyvesync import VeSync
-from pyvesync.utils.errors import VeSyncLoginError
+from pyvesync.utils.errors import (
+    VeSyncAPIResponseError,
+    VeSyncLoginError,
+    VeSyncServerError,
+)
 
 from homeassistant.components.vesync import (
     SERVICE_UPDATE_DEVS,
@@ -33,6 +37,40 @@ async def test_async_setup_entry__not_login(
     assert manager.login.call_count == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hass.data.get(DOMAIN)
+
+
+async def test_async_setup_entry_VeSyncAPIResponseError(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+) -> None:
+    """Test setup does not create config entry when not logged in."""
+    manager.login = AsyncMock(side_effect=VeSyncAPIResponseError("Mock login failed"))
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert manager.login.call_count == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.data.get(DOMAIN)
+
+
+async def test_async_setup_entry_VeSyncServerError(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+) -> None:
+    """Test setup does not create config entry when not logged in."""
+    manager.login = AsyncMock(side_effect=VeSyncServerError("Mock login failed"))
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert manager.login.call_count == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
