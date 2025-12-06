@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from contextlib import ExitStack
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
@@ -34,7 +35,11 @@ from .storage.entity_store_validation import (
     validate_entity_data,
 )
 from .storage.serialize import get_serialized_schema
-from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
+from .telegrams import (
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
+    TelegramDict,
+)
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -334,11 +339,23 @@ def ws_subscribe_telegram(
             telegram_dict,
         )
 
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass,
-        signal=SIGNAL_KNX_TELEGRAM,
-        target=forward_telegram,
+    stack = ExitStack()
+    stack.callback(
+        async_dispatcher_connect(
+            hass,
+            signal=SIGNAL_KNX_TELEGRAM,
+            target=forward_telegram,
+        )
     )
+    stack.callback(
+        async_dispatcher_connect(
+            hass,
+            signal=SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+            target=forward_telegram,
+        )
+    )
+
+    connection.subscriptions[msg["id"]] = stack.close
     connection.send_result(msg["id"])
 
 
