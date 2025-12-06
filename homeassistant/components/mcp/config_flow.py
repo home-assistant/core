@@ -29,7 +29,9 @@ from .const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
+    CONF_TRANSPORT,
     DOMAIN,
+    TRANSPORT_SSE,
 )
 from .coordinator import TokenManager, mcp_client
 
@@ -43,11 +45,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 # OAuth server discovery endpoint for rfc8414
 OAUTH_DISCOVERY_ENDPOINT = ".well-known/oauth-authorization-server"
-MCP_DISCOVERY_HEADERS = {
-    "MCP-Protocol-Version": "2025-03-26",
-}
 
-EXAMPLE_URL = "http://example/sse"
+EXAMPLE_URL = "http://example/mcp"
 
 
 @dataclass
@@ -73,7 +72,7 @@ async def async_discover_oauth_config(
     parsed_url = URL(mcp_server_url)
     discovery_endpoint = str(parsed_url.with_path(OAUTH_DISCOVERY_ENDPOINT))
     try:
-        async with httpx.AsyncClient(headers=MCP_DISCOVERY_HEADERS) as client:
+        async with httpx.AsyncClient() as client:
             response = await client.get(discovery_endpoint)
             response.raise_for_status()
     except httpx.TimeoutException as error:
@@ -149,7 +148,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     VERSION = 1
     DOMAIN = DOMAIN
-    logger = _LOGGER
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -163,6 +166,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            # Autodiscover transport protocol instead of setting default
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:
@@ -172,7 +176,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
-                self.data[CONF_URL] = user_input[CONF_URL]
+                self.data = {CONF_URL: user_input[CONF_URL]}
                 return await self.async_step_auth_discovery()
             except MissingCapabilities:
                 return self.async_abort(reason="missing_capabilities")
@@ -320,6 +324,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
+        self.data.setdefault(CONF_TRANSPORT, TRANSPORT_SSE)
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry
         )

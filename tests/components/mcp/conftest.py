@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -46,10 +46,28 @@ def mock_mcp_client() -> Generator[AsyncMock]:
     """Fixture to mock the MCP client."""
     with (
         patch("homeassistant.components.mcp.coordinator.sse_client"),
+        patch(
+            "homeassistant.components.mcp.coordinator.streamablehttp_client"
+        ) as mock_streamable_client,
         patch("homeassistant.components.mcp.coordinator.ClientSession") as mock_session,
         patch("homeassistant.components.mcp.coordinator.TIMEOUT", 1),
     ):
-        yield mock_session.return_value.__aenter__
+        streamable_context = AsyncMock()
+        streamable_context.__aenter__.return_value = (Mock(), Mock(), lambda: None)
+        mock_streamable_client.return_value = streamable_context
+        session_instance = mock_session.return_value.__aenter__
+        session_instance.streamable_client = mock_streamable_client
+        yield session_instance
+
+
+@pytest.fixture
+def mock_autodiscover_transport() -> Generator[AsyncMock]:
+    """Fixture to mock the transport autodiscovery."""
+    with patch(
+        "homeassistant.components.mcp.config_flow.async_autodiscover_transport",
+        return_value=("sse", MCP_SERVER_URL),
+    ) as mock_autodiscover:
+        yield mock_autodiscover
 
 
 @pytest.fixture(name="config_entry")

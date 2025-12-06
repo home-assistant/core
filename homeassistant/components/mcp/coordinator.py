@@ -1,14 +1,16 @@
-"""Types for the Model Context Protocol integration."""
+"""Coordinator and helpers for the Model Context Protocol integration."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime
 import logging
+from typing import cast
 
 import httpx
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamablehttp_client
 import voluptuous as vol
 from voluptuous_openapi import convert_to_voluptuous
 
@@ -20,7 +22,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.json import JsonObjectType
 
-from .const import DOMAIN
+from .const import DOMAIN, TRANSPORT_SSE, TRANSPORT_STREAMABLE_HTTP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,27 +32,108 @@ TIMEOUT = 10
 type TokenManager = Callable[[], Awaitable[str]]
 
 
+async def async_autodiscover_transport(mcp_server_url: str) -> str:
+    """Autodiscover the transport protocol for the MCP server.
+
+    According to the MCP specification for backwards compatibility:
+    1. Attempt to POST an InitializeRequest to the server URL with proper Accept header
+    2. If it succeeds: assume Streamable HTTP transport
+    3. If it fails with HTTP 4xx: try GET request expecting SSE stream, indicating old HTTP+SSE transport
+
+    Returns:
+        A tuple of (transport_type, final_url) where final_url is the URL after any redirects.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        ssl_context = await loop.run_in_executor(None, httpx.create_ssl_context)
+
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            verify=ssl_context,
+        ) as client:
+            # Try Streamable HTTP transport first
+            # Send a test POST request with proper Accept header
+            response = await client.post(
+                mcp_server_url,
+                headers={
+                    "Accept": "application/json, text/event-stream",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "jsonrpc": "2.0",
+                    "id": "discover",
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2025-06-18",
+                        "capabilities": {},
+                        "clientInfo": {
+                            "name": "Home Assistant",
+                            "version": "1.0.0",
+                        },
+                    },
+                },
+                timeout=5,
+            )
+            response.raise_for_status()
+            _LOGGER.debug("Transport autodiscovery: Streamable HTTP detected")
+            return TRANSPORT_STREAMABLE_HTTP
+    except httpx.HTTPStatusError as error:
+        if 400 <= error.response.status_code < 500:
+            # Try SSE transport (old HTTP+SSE transport)
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                response = await client.get(
+                    mcp_server_url,
+                    headers={"Accept": "text/event-stream"},
+                    timeout=5,
+                )
+                response.raise_for_status()
+                if response.headers.get("content-type", "").startswith(
+                    "text/event-stream"
+                ):
+                    _LOGGER.debug("Transport autodiscovery: SSE transport detected")
+                    return TRANSPORT_SSE
+    # If both methods fail, fall back to default
+    _LOGGER.debug(
+        "Transport autodiscovery: Failed to detect transport, using default SSE"
+    )
+    return TRANSPORT_SSE
+
+
 @asynccontextmanager
 async def mcp_client(
     url: str,
     token_manager: TokenManager | None = None,
 ) -> AsyncGenerator[ClientSession]:
-    """Create a server-sent event MCP client.
+    """Create an MCP client using the configured transport."""
 
-    This is an asynccontext manager that exists to wrap other async context managers
-    so that the coordinator has a single object to manage.
-    """
+    transport = await async_autodiscover_transport(url)
     headers: dict[str, str] = {}
     if token_manager is not None:
         token = await token_manager()
         headers["Authorization"] = f"Bearer {token}"
     try:
-        async with (
-            sse_client(url=url, headers=headers) as streams,
-            ClientSession(*streams) as session,
-        ):
-            await session.initialize()
-            yield session
+        if transport == TRANSPORT_STREAMABLE_HTTP:
+            async with (
+                streamablehttp_client(
+                    url=url,
+                    headers=headers,
+                    timeout=TIMEOUT,
+                ) as (read_stream, write_stream, _),
+                ClientSession(read_stream, write_stream) as session,
+            ):
+                await session.initialize()
+                yield session
+        else:
+            async with (
+                sse_client(
+                    url=url,
+                    headers=headers,
+                    timeout=TIMEOUT,
+                ) as streams,
+                ClientSession(*streams) as session,
+            ):
+                await session.initialize()
+                yield session
     except ExceptionGroup as err:
         _LOGGER.debug("Error creating MCP client: %s", err)
         raise err.exceptions[0] from err
@@ -66,6 +149,8 @@ class ModelContextProtocolTool(llm.Tool):
         parameters: vol.Schema,
         server_url: str,
         token_manager: TokenManager | None = None,
+        *,
+        transport: str = TRANSPORT_SSE,
     ) -> None:
         """Initialize the tool."""
         self.name = name
@@ -73,6 +158,7 @@ class ModelContextProtocolTool(llm.Tool):
         self.parameters = parameters
         self.server_url = server_url
         self.token_manager = token_manager
+        self.transport = transport
 
     async def async_call(
         self,
@@ -93,7 +179,9 @@ class ModelContextProtocolTool(llm.Tool):
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        return result.model_dump(exclude_unset=True, exclude_none=True)
+        return cast(
+            JsonObjectType, result.model_dump(exclude_unset=True, exclude_none=True)
+        )
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
@@ -126,7 +214,8 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         try:
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
-                    self.config_entry.data[CONF_URL], self.token_manager
+                    self.config_entry.data[CONF_URL],
+                    self.token_manager,
                 ) as session:
                     result = await session.list_tools()
         except TimeoutError as error:
