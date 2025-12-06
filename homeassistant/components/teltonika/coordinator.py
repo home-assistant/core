@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from teltasync import Teltasync, TeltonikaConnectionError
 from teltasync.modems import Modems
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import TeltonikaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         client: Teltasync,
-        config_entry: ConfigEntry,
+        config_entry: TeltonikaConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
