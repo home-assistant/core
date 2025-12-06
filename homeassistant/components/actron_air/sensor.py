@@ -3,7 +3,7 @@
 from actron_neo_api import ActronAirZone
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -184,30 +184,31 @@ class BaseZoneSensor(CoordinatorEntity[ActronAirSystemCoordinator], SensorEntity
 class ZoneHumiditySensor(BaseZoneSensor):
     """Humidity sensor for Actron Air zone."""
 
-    _attr_translation_key = "zone_humidity"
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_translation_key = "zone_humidity"
 
     def __init__(self, coordinator: ActronAirSystemCoordinator, zone) -> None:
         """Initialize the humidity sensor."""
         super().__init__(coordinator, zone)
         self._attr_unique_id: str = (
-            f"{self._serial_number}_zone_{zone.zone_id}_{self._attr_name}"
+            f"{self._serial_number}_zone_{zone.zone_id}_zone_humidity"
         )
 
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.zone.get("live_humidity_pc")
+        return getattr(self.zone, "live_humidity_pc", None)
 
 
 class ZoneTemperatureSensor(BaseZoneSensor):
     """Temperature sensor for Actron Air zone."""
 
-    _attr_translation_key = "zone_temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "zone_temperature"
 
     def __init__(
         self, coordinator: ActronAirSystemCoordinator, zone: ActronAirZone
@@ -215,13 +216,13 @@ class ZoneTemperatureSensor(BaseZoneSensor):
         """Initialize the temperature sensor."""
         super().__init__(coordinator, zone)
         self._attr_unique_id: str = (
-            f"{self._serial_number}_zone_{zone.zone_id}_{self._attr_name}"
+            f"{self._serial_number}_zone_{zone.zone_id}_zone_temperature"
         )
 
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.zone.get("live_temp_c")
+        return getattr(self.zone, "live_temp_c", None)
 
 
 # class BasePeripheralSensor(CoordinatorEntity, Entity):
