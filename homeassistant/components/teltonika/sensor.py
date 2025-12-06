@@ -167,7 +167,6 @@ class TeltonikaSensorEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._modem_id not in self.coordinator.data:
-            self._attr_native_value = None
             super()._handle_coordinator_update()
             return
 
@@ -182,7 +181,5 @@ class TeltonikaSensorEntity(
         # Ensure value is a valid state type
         if isinstance(value, (str, int, float)):
             self._attr_native_value = value
-        else:
-            self._attr_native_value = None
 
         super()._handle_coordinator_update()
