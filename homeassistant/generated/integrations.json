@@ -3822,6 +3822,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "mawaqit": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "maytag": {
       "name": "Maytag",
       "integration_type": "virtual",
@@ -8056,6 +8062,7 @@
     "local_calendar",
     "local_ip",
     "local_todo",
+    "mawaqit",
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
