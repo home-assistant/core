@@ -66,11 +66,12 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
 
         # Add extra info if not the gateway
         if device_id != gateway_id:
-            self._attr_device_info.update({
-                ATTR_NAME: data.get(ATTR_NAME),
-                ATTR_VIA_DEVICE: (DOMAIN, str(gateway_id)),
-            })
-
+            self._attr_device_info.update(
+                {
+                    ATTR_NAME: data.get(ATTR_NAME),
+                    ATTR_VIA_DEVICE: (DOMAIN, str(gateway_id)),
+                }
+            )
 
     @property
     def available(self) -> bool:
