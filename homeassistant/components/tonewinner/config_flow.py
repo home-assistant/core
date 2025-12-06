@@ -2,70 +2,59 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
+import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONF_BAUDRATE, DEFAULT_BAUDRATE, DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_DEVICE): str,
+        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): int,
     }
 )
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host: str) -> None:
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+async def validate_serial_connection(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate the serial connection to the device.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
+    port = data[CONF_DEVICE]
+    baudrate = data.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-    # )
-
-    hub = PlaceholderHub(data[CONF_HOST])
-
-    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-        raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
+    try:
+        # Try to open serial connection
+        reader, writer = await asyncio.wait_for(
+            serial_asyncio.open_serial_connection(
+                url=port, baudrate=baudrate, timeout=DEFAULT_TIMEOUT
+            ),
+            timeout=5.0,
+        )
+        writer.close()
+        await writer.wait_closed()
+    except (TimeoutError, OSError, serial_asyncio.SerialException) as err:
+        _LOGGER.debug("Serial connection validation error: %s", err)
+        raise CannotConnect from err
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {
+        "title": f"AT-500 ({port})",
+        CONF_DEVICE: port,
+        CONF_BAUDRATE: baudrate,
+    }
 
 
 class ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -80,15 +69,15 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await validate_serial_connection(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(f"{user_input[CONF_DEVICE]}")
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -96,9 +85,5 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
+class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

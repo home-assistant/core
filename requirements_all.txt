@@ -2391,6 +2391,9 @@ pysenz==1.0.2
 # homeassistant.components.serial
 pyserial-asyncio-fast==0.16
 
+# homeassistant.components.tonewinner
+pyserial-asyncio==0.6
+
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
 # homeassistant.components.route_b_smart_meter
@@ -2845,9 +2848,6 @@ sentry-sdk==2.48.0
 # homeassistant.components.homeassistant_hardware
 # homeassistant.components.zha
 serialx==0.6.2
-
-# homeassistant.components.tonewinner
-serial_asyncio==0.6
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.0

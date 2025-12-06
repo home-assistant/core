@@ -1,20 +1,20 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "This serial port is already configured."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Failed to connect to the serial port. Please check the device path and baud rate.",
+      "unknown": "Unexpected error occurred."
     },
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        }
+          "baudrate": "Baud Rate",
+          "device": "Serial Port"
+        },
+        "description": "Configure a serial connection for your ToneWinner AT-500 preprocessor.",
+        "title": "ToneWinner AT-500"
       }
     }
   }
