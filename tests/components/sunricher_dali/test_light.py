@@ -35,10 +35,8 @@ def _trigger_light_status_callback(
     callback(status)
 
 
-def _trigger_availability_callback(
-    device: MagicMock, device_id: str, available: bool
-) -> None:
-    """Trigger the availability callbacks registered on the device mock."""
+def _trigger_availability_callback(device: MagicMock, available: bool) -> None:
+    """Trigger availability callbacks registered on the device mock."""
     callback = find_device_listener(device, CallbackEventType.ONLINE_STATUS)
     callback(available)
 
@@ -192,13 +190,13 @@ async def test_device_availability(
     init_integration: MockConfigEntry,
     mock_devices: list[MagicMock],
 ) -> None:
-    """Test device availability changes."""
-    _trigger_availability_callback(mock_devices[0], TEST_DIMMER_DEVICE_ID, False)
+    """Test availability changes are reflected in entity state."""
+    _trigger_availability_callback(mock_devices[0], False)
     await hass.async_block_till_done()
     assert (state := hass.states.get(TEST_DIMMER_ENTITY_ID))
     assert state.state == "unavailable"
 
-    _trigger_availability_callback(mock_devices[0], TEST_DIMMER_DEVICE_ID, True)
+    _trigger_availability_callback(mock_devices[0], True)
     await hass.async_block_till_done()
     assert (state := hass.states.get(TEST_DIMMER_ENTITY_ID))
     assert state.state != "unavailable"
