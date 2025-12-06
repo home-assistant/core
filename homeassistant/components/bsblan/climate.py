@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Final
 
 from bsblan import BSBLANError
 
@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE
@@ -38,6 +39,103 @@ PRESET_MODES = [
     PRESET_ECO,
     PRESET_NONE,
 ]
+
+# Parameter 8000 ("Status heating circuit 1") and related BSB-Lan ENUM
+# tables (notably 8004, 8005, 8006 and 8010) yield vendor specific status
+# codes. These sets capture the most common codes we need for Home Assistant's
+# simplified HVAC action states. Any unmapped code will fall back to IDLE.
+BSBLAN_HVAC_ACTION_HEATING: Final[set[int]] = {
+    0x04,
+    0x11,
+    0x16,
+    0x17,
+    0x18,
+    0x38,
+    0x65,
+    0x67,
+    0x68,
+    0x69,
+    0x6A,
+    0x72,
+    0x73,
+    0x74,
+    0x75,
+    0x77,
+    0x78,
+    0x79,
+    0x89,
+}
+
+BSBLAN_HVAC_ACTION_PREHEATING: Final[set[int]] = {
+    0x6F,
+    0x70,
+    0x71,
+}
+
+BSBLAN_HVAC_ACTION_DRYING: Final[set[int]] = {
+    0x66,
+}
+
+BSBLAN_HVAC_ACTION_FAN: Final[set[int]] = {
+    0x6B,
+    0x6C,
+    0x6D,
+    0x6E,
+}
+
+BSBLAN_HVAC_ACTION_COOLING: Final[set[int]] = {
+    0x7F,
+    0x80,
+    0x81,
+    0x82,
+    0x83,
+    0x84,
+    0x85,
+    0x86,
+    0x88,
+    0x90,
+    0x91,
+    0x94,
+    0x95,
+    0x96,
+    0xB1,
+    0xB2,
+    0xB3,
+    0x8E,
+    0xC4,
+    0xCF,
+    0xD0,
+    0xD1,
+    0xD2,
+    0x11D,
+}
+
+BSBLAN_HVAC_ACTION_OFF: Final[set[int]] = {
+    0x02,
+    0x19,
+    0x76,
+    0x8C,
+    0x8A,
+    0x92,
+    0xA1,
+    0xA2,
+    0xCC,
+    0xCD,
+    0xCE,
+}
+
+BSBLAN_HVAC_ACTION_DEFROSTING: Final[set[int]] = {
+    0x7D,
+    0x7E,
+    0x82,
+    0x83,
+    0xCA,
+    0xC0,
+    0xC1,
+    0xC2,
+    0xC3,
+    0x101,
+}
 
 
 async def async_setup_entry(
@@ -101,6 +199,44 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         if self.coordinator.data.state.hvac_mode.value == PRESET_ECO:
             return HVACMode.AUTO
         return try_parse_enum(HVACMode, self.coordinator.data.state.hvac_mode.value)
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac action."""
+        action = self.coordinator.data.state.hvac_action
+        if action is None or action.value in (None, ""):
+            return None
+
+        raw_value = action.value
+        try:
+            if isinstance(raw_value, str):
+                value = raw_value.strip()
+                if not value:
+                    return None
+                base = 16 if value.lower().startswith("0x") else 10
+                action_code = int(value, base)
+            elif isinstance(raw_value, (int, float)):
+                action_code = int(raw_value)
+            else:
+                return None
+        except (TypeError, ValueError):
+            return None
+
+        if action_code in BSBLAN_HVAC_ACTION_DEFROSTING:
+            return HVACAction.DEFROSTING
+        if action_code in BSBLAN_HVAC_ACTION_DRYING:
+            return HVACAction.DRYING
+        if action_code in BSBLAN_HVAC_ACTION_FAN:
+            return HVACAction.FAN
+        if action_code in BSBLAN_HVAC_ACTION_PREHEATING:
+            return HVACAction.PREHEATING
+        if action_code in BSBLAN_HVAC_ACTION_COOLING:
+            return HVACAction.COOLING
+        if action_code in BSBLAN_HVAC_ACTION_HEATING:
+            return HVACAction.HEATING
+        if action_code in BSBLAN_HVAC_ACTION_OFF:
+            return HVACAction.OFF
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
