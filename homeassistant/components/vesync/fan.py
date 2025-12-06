@@ -103,12 +103,12 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return bool(self.device.state.device_status == "on")
 
     @property
     def oscillating(self) -> bool:
         """Return True if device is oscillating."""
-        return rgetattr(self.device, "state.oscillation_status") == "on"
+        return bool(rgetattr(self.device, "state.oscillation_status") == "on")
 
     @property
     def percentage(self) -> int | None:
@@ -148,7 +148,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
         if self.device.state.mode in VS_FAN_MODE_PRESET_LIST_HA:
-            return self.device.state.mode
+            return str(self.device.state.mode)
         return None
 
     @property
