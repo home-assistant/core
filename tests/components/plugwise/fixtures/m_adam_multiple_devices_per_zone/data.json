@@ -505,6 +505,20 @@
     "vendor": "Plugwise",
     "zigbee_mac_address": "ABCD012345670A06"
   },
+  "e117db6848394c8cb70d9c28e63d92d2": {
+    "dev_class": "pumping",
+    "members": [
+      "78d1126fc4c743db81b61c20e88342a7",
+      "b59bcebaf94b499ea7d46e4a66fb62d8"
+    ],
+    "model": "Group",
+    "name": "Vloerverwarming Woonkamer",
+    "sensors": {
+      "electricity_consumed": 35.6,
+      "temperature": 20.9
+    },
+    "vendor": "Plugwise"
+  },
   "e7693eb9582644e5b865dba8d4447cf1": {
     "available": true,
     "binary_sensors": {
@@ -539,8 +553,12 @@
       "02cf28bfec924855854c544690a609ef",
       "4a810418d5394b3f82727340b91ba740"
     ],
-    "model": "Switchgroup",
+    "model": "Group",
     "name": "Test",
+    "sensors": {
+      "electricity_consumed": 14.8,
+      "electricity_produced": 0.0
+    },
     "switches": {
       "relay": true
     },
