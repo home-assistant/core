@@ -1,0 +1,37 @@
+get_codes:
+  target:
+    entity:
+      domain: lock
+      integration: schlage
+
+add_code:
+  target:
+    entity:
+      domain: lock
+      integration: schlage
+  fields:
+    name:
+      required: true
+      example: "Example Person"
+      selector:
+        text:
+          multiline: false
+    code:
+      required: true
+      example: "1111"
+      selector:
+        text:
+          multiline: false
+
+delete_code:
+  target:
+    entity:
+      domain: lock
+      integration: schlage
+  fields:
+    name:
+      required: true
+      example: "Example Person"
+      selector:
+        text:
+          multiline: false
