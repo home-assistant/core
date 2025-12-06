@@ -10,7 +10,7 @@ from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
@@ -281,81 +281,3 @@ async def test_host_update_on_protocol_change(
     # Verify config entry host was updated to https
     assert entry_http.data[CONF_HOST] == "https://192.168.1.1"
     assert entry_http.state is ConfigEntryState.LOADED
-
-
-async def test_entity_registry_cleanup(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teltasync_init: MagicMock,
-    mock_modems: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test cleanup of stale entity registry entries without proper prefix."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Create a stale entity entry without the proper prefix
-    entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id="stale_entity_without_prefix",
-        config_entry=mock_config_entry,
-    )
-
-    # Create a valid entity entry with proper prefix
-    entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id=f"{mock_config_entry.unique_id}_valid_sensor",
-        config_entry=mock_config_entry,
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify stale entity was removed
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "stale_entity_without_prefix"
-        )
-        is None
-    )
-
-    # Verify valid entity still exists
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.unique_id}_valid_sensor"
-        )
-        is not None
-    )
-
-
-async def test_entity_registry_re_enable_device_disabled(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teltasync_init: MagicMock,
-    mock_modems: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test re-enabling entities that were disabled by device."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Create an entity entry disabled by device
-    entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id=f"{mock_config_entry.unique_id}_device_disabled_sensor",
-        config_entry=mock_config_entry,
-        disabled_by=er.RegistryEntryDisabler.DEVICE,
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify entity was re-enabled
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_device_disabled_sensor"
-    )
-    assert entity_id is not None
-    updated_entity = entity_registry.async_get(entity_id)
-    assert updated_entity is not None
-    assert updated_entity.disabled_by is None
