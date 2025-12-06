@@ -65,6 +65,8 @@
         "hasHumidifier": true,
         "humidifierMode": "manual",
         "hasHeatPump": false,
+        "hasForcedAir": true,
+        "hasBoiler": false,
         "humidity": "30"
       },
       "equipmentStatus": "fan,humidifier",
@@ -160,7 +162,10 @@
         "hasHumidifier": true,
         "humidifierMode": "manual",
         "hasHeatPump": true,
+        "hasForcedAir": true,
+        "hasBoiler": false,
         "compressorProtectionMinTemp": 100,
+        "auxMaxOutdoorTemp": 410,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
@@ -256,6 +261,8 @@
         "hasHumidifier": true,
         "humidifierMode": "manual",
         "hasHeatPump": false,
+        "hasForcedAir": true,
+        "hasBoiler": false,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
