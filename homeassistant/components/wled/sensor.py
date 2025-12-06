@@ -55,6 +55,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="info_leds_count",
         translation_key="info_leds_count",
+        native_unit_of_measurement="leds",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.count,
     ),
