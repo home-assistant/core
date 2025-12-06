@@ -67,6 +67,28 @@
       },
       "name": "[%key:common::action::start%]"
     },
+    "start_auditing_events": {
+      "description": "Add list of Python events to audit.",
+      "fields": {
+        "events": {
+          "description": "List of Python events to audit (see https://docs.python.org/3/library/audit_events.html#audit-events for the list of auditable events).",
+          "name": "Events"
+        },
+        "filter": {
+          "description": "Text that must be contained in the string representation of event's arguments (e.g. an IP address).",
+          "name": "Filter"
+        },
+        "summary_interval": {
+          "description": "If set, print aggregated list of events (per traceback and arguments) that occurred between the specified time interval.",
+          "name": "Summary interval"
+        },
+        "verbose": {
+          "description": "Include full stack trace of the audited event.",
+          "name": "Verbose"
+        }
+      },
+      "name": "Add audited events"
+    },
     "start_log_object_sources": {
       "description": "Starts logging sources of new objects in memory.",
       "fields": {
@@ -90,6 +112,10 @@
         }
       },
       "name": "Start logging objects"
+    },
+    "stop_auditing_events": {
+      "description": "Stop Python events auditing.",
+      "name": "Stop auditing events"
     },
     "stop_log_object_sources": {
       "description": "Stops logging sources of new objects in memory.",
