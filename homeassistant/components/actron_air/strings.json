@@ -28,11 +28,32 @@
   },
   "entity": {
     "sensor": {
-      "zone_humidity": {
-        "name": "Zone Humidity"
+      "clean_filter": {
+        "name": "Clean Filter"
       },
-      "zone_temperature": {
-        "name": "Zone Temperature"
+      "compressor_chasing_temperature": {
+        "name": "Compressor Chasing Temperature"
+      },
+      "compressor_coil_inlet_temperature": {
+        "name": "Compressor Coil Inlet Temperature"
+      },
+      "compressor_live_temperature": {
+        "name": "Compressor Live Temperature"
+      },
+      "compressor_mode": {
+        "name": "Compressor Mode"
+      },
+      "compressor_power": {
+        "name": "Compressor Power"
+      },
+      "compressor_speed": {
+        "name": "Compressor Speed"
+      },
+      "defrost_mode": {
+        "name": "Defrost Mode"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor Temperature"
       }
     },
     "switch": {

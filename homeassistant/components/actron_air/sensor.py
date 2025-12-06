@@ -1,9 +1,18 @@
 """Sensor platform for Actron Air integration."""
 
-from actron_neo_api import ActronAirZone
+from actron_neo_api import ActronAirPeripheral
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,155 +33,48 @@ async def async_setup_entry(
     system_coordinators = entry.runtime_data.system_coordinators
     entities: list[SensorEntity] = []
 
-    # sensor_configs = [
-    #     (
-    #         "clean_filter",
-    #         "clean_filter",
-    #         SensorDeviceClass.ENUM,
-    #         None,
-    #         DIAGNOSTIC_CATEGORY,
-    #         SensorStateClass.MEASUREMENT,
-    #         True,
-    #     ),
-    #     (
-    #         "defrost_mode",
-    #         "defrost_mode",
-    #         SensorDeviceClass.ENUM,
-    #         None,
-    #         DIAGNOSTIC_CATEGORY,
-    #         SensorStateClass.MEASUREMENT,
-    #         False,
-    #     ),
-    #     (
-    #         "compressor_chasing_temperature",
-    #         "compressor_chasing_temperature",
-    #         SensorDeviceClass.TEMPERATURE,
-    #         UnitOfTemperature.CELSIUS,
-    #         DIAGNOSTIC_CATEGORY,
-    #         SensorStateClass.MEASUREMENT,
-    #         False,
-    #     ),
-    #     (
-    #         "compressor_live_temperature",
-    #         "compressor_live_temperature",
-    #         SensorDeviceClass.TEMPERATURE,
-    #         UnitOfTemperature.CELSIUS,
-    #         DIAGNOSTIC_CATEGORY,
-    #         SensorStateClass.MEASUREMENT,
-    #         False,
-    #     ),
-    #     (
-    #         "compressor_mode",
-    #         "compressor_mode",
-    #         SensorDeviceClass.ENUM,
-    #         None,
-    #         DIAGNOSTIC_CATEGORY,
-    #         None,
-    #         False,
-    #     ),
-    #     (
-    #         "system_on",
-    #         "system_on",
-    #         SensorDeviceClass.ENUM,
-    #         None,
-    #         None,
-    #         None,
-    #         True,
-    #     ),
-    #     (
-    #         "compressor_speed",
-    #         "compressor_speed",
-    #         SensorDeviceClass.SPEED,
-    #         None,
-    #         DIAGNOSTIC_CATEGORY,
-    #         SensorStateClass.MEASUREMENT,
-    #         False,
-    #     ),
-    #     (
-    #         "compressor_power",
-    #         "compressor_power",
-    #         SensorDeviceClass.POWER,
-    #         UnitOfPower.WATT,
-    #         DIAGNOSTIC_CATEGORY,
-    #         SensorStateClass.MEASUREMENT,
-    #         False,
-    #     ),
-    #     (
-    #         "outdoor_temperature",
-    #         "outdoor_temperature",
-    #         SensorDeviceClass.TEMPERATURE,
-    #         UnitOfTemperature.CELSIUS,
-    #         None,
-    #         SensorStateClass.MEASUREMENT,
-    #         True,
-    #     ),
-    #     (
-    #         "humidity",
-    #         "humidity",
-    #         SensorDeviceClass.HUMIDITY,
-    #         PERCENTAGE,
-    #         None,
-    #         SensorStateClass.MEASUREMENT,
-    #         True,
-    #     ),
-    # ]
-
     for coordinator in system_coordinators.values():
         status = coordinator.data
 
-        # for (
-        #     translation_key,
-        #     sensor_name,
-        #     device_class,
-        #     unit,
-        #     entity_category,
-        #     state_class,
-        #     enabled_default,
-        # ) in sensor_configs:
-        #     sensor = EntitySensor(
-        #         coordinator=coordinator,
-        #         translation_key=translation_key,
-        #         sensor_name=sensor_name,
-        #         device_class=device_class,
-        #         unit_of_measurement=unit,
-        #         is_diagnostic=False,
-        #         entity_category=entity_category,
-        #         state_class=state_class,
-        #         enabled_default=enabled_default,
-        #     )
-        #     entities.append(sensor)
+        # Add AC system sensors
+        entities.append(AirconCleanFilterSensor(coordinator))
+        entities.append(AirconDefrostModeSensor(coordinator))
+        entities.append(AirconCompressorChasingTemperatureSensor(coordinator))
+        entities.append(AirconCompressorLiveTemperatureSensor(coordinator))
+        entities.append(AirconCompressorModeSensor(coordinator))
+        entities.append(AirconCompressorSpeedSensor(coordinator))
+        entities.append(AirconCompressorPowerSensor(coordinator))
+        entities.append(AirconOutdoorTemperatureSensor(coordinator))
 
-        for zone in status.remote_zone_info:
-            if zone.exists:
-                entities.append(ZoneTemperatureSensor(coordinator, zone))
-                entities.append(ZoneHumiditySensor(coordinator, zone))
+        # Add peripheral sensors
+        for peripheral in status.peripherals:
+            entities.append(PeripheralBatterySensor(coordinator, peripheral))
+            entities.append(PeripheralHumiditySensor(coordinator, peripheral))
+            entities.append(PeripheralTemperatureSensor(coordinator, peripheral))
 
-        # for peripheral in status.peripherals:
-        #     entities.append(PeripheralBatterySensor(coordinator, peripheral))
-        #     entities.append(PeripheralTemperatureSensor(coordinator, peripheral))
-        #     entities.append(PeripheralHumiditySensor(coordinator, peripheral))
-
-        # Add all sensors
+        # Register all sensors
         async_add_entities(entities)
 
 
-class BaseZoneSensor(CoordinatorEntity[ActronAirSystemCoordinator], SensorEntity):
+class BaseAirconSensor(CoordinatorEntity[ActronAirSystemCoordinator], SensorEntity):
     """Base class for Actron Air sensors."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_entity_registry_enabled_default = True
 
-    def __init__(
-        self,
-        coordinator: ActronAirSystemCoordinator,
-        zone: ActronAirZone,
-    ) -> None:
-        """Initialise the sensor entity."""
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
+        self._status = self.coordinator.data
         self._serial_number = coordinator.serial_number
-        self.zone = zone
+
         self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._serial_number}_zone_{zone.zone_id}")},
+            identifiers={(DOMAIN, self._serial_number)},
+            name=self._status.ac_system.system_name,
+            manufacturer="Actron Air",
+            model_id=self._status.ac_system.master_wc_model,
+            sw_version=self._status.ac_system.master_wc_firmware_version,
+            serial_number=self._serial_number,
         )
 
     @property
@@ -181,193 +83,247 @@ class BaseZoneSensor(CoordinatorEntity[ActronAirSystemCoordinator], SensorEntity
         return not self.coordinator.is_device_stale()
 
 
-class ZoneHumiditySensor(BaseZoneSensor):
-    """Humidity sensor for Actron Air zone."""
+class AirconCleanFilterSensor(BaseAirconSensor):
+    """Representation of an Actron Air clean filter sensor."""
 
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_translation_key = "zone_humidity"
+    _attr_translation_key = "clean_filter"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: ActronAirSystemCoordinator, zone) -> None:
-        """Initialize the humidity sensor."""
-        super().__init__(coordinator, zone)
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_clean_filter"
+
+    @property
+    def native_value(self) -> bool | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "clean_filter", None)
+
+
+class AirconDefrostModeSensor(BaseAirconSensor):
+    """Representation of an Actron Air defrost mode sensor."""
+
+    _attr_translation_key = "defrost_mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_defrost_mode"
+
+    @property
+    def native_value(self) -> bool | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "defrost_mode", None)
+
+
+class AirconCompressorChasingTemperatureSensor(BaseAirconSensor):
+    """Representation of an Actron Air compressor chasing temperature sensor."""
+
+    _attr_translation_key = "compressor_chasing_temperature"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
         self._attr_unique_id: str = (
-            f"{self._serial_number}_zone_{zone.zone_id}_zone_humidity"
+            f"{self._serial_number}_compressor_chasing_temperature"
         )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "compressor_chasing_temperature", None)
+
+
+class AirconCompressorLiveTemperatureSensor(BaseAirconSensor):
+    """Representation of an Actron Air compressor live temperature sensor."""
+
+    _attr_translation_key = "compressor_live_temperature"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_compressor_live_temperature"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "compressor_live_temperature", None)
+
+
+class AirconCompressorModeSensor(BaseAirconSensor):
+    """Representation of an Actron Air compressor mode sensor."""
+
+    _attr_translation_key = "compressor_mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_compressor_mode"
 
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return getattr(self.zone, "live_humidity_pc", None)
+        return getattr(self.coordinator.data, "compressor_mode", None)
 
 
-class ZoneTemperatureSensor(BaseZoneSensor):
-    """Temperature sensor for Actron Air zone."""
+class AirconCompressorSpeedSensor(BaseAirconSensor):
+    """Representation of an Actron Air compressor speed sensor."""
 
+    _attr_translation_key = "compressor_speed"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_compressor_speed"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "compressor_speed", None)
+
+
+class AirconCompressorPowerSensor(BaseAirconSensor):
+    """Representation of an Actron Air compressor power sensor."""
+
+    _attr_translation_key = "compressor_power"
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_compressor_power"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "compressor_power", None)
+
+
+class AirconOutdoorTemperatureSensor(BaseAirconSensor):
+    """Representation of an Actron Air outdoor temperature sensor."""
+
+    _attr_translation_key = "outdoor_temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_translation_key = "zone_temperature"
+    _attr_sensor_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = f"{self._serial_number}_outdoor_temperature"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, "outdoor_temperature", None)
+
+
+class BasePeripheralSensor(BaseAirconSensor):
+    """Base class for Actron Air peripheral sensors."""
 
     def __init__(
-        self, coordinator: ActronAirSystemCoordinator, zone: ActronAirZone
+        self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
     ) -> None:
-        """Initialize the temperature sensor."""
-        super().__init__(coordinator, zone)
-        self._attr_unique_id: str = (
-            f"{self._serial_number}_zone_{zone.zone_id}_zone_temperature"
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._ac_serial = coordinator.serial_number
+        self._peripheral = peripheral
+        self._serial_number = peripheral.serial_number
+
+        suggested_area = None
+        if hasattr(peripheral, "zones") and len(peripheral.zones) == 1:
+            zone = peripheral.zones[0]
+            if hasattr(zone, "title") and zone.title:
+                suggested_area = zone.title
+
+        self._attr_device_info: DeviceInfo = DeviceInfo(
+            identifiers={(DOMAIN, self._serial_number)},
+            name=f"{peripheral.device_type} {peripheral.logical_address}",
+            model=peripheral.device_type,
+            suggested_area=suggested_area,
+            via_device=(DOMAIN, self._ac_serial),
         )
 
     @property
-    def native_value(self) -> str | None:
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return not self.coordinator.is_device_stale()
+
+
+class PeripheralBatterySensor(BasePeripheralSensor):
+    """Representation of an Actron Air peripheral battery sensor."""
+
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(
+        self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, peripheral)
+        self._attr_unique_id: str = f"{peripheral.serial_number}_battery"
+
+    @property
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
-        return getattr(self.zone, "live_temp_c", None)
+        return getattr(self._peripheral, "battery_level", None)
 
 
-# class BasePeripheralSensor(CoordinatorEntity, Entity):
-#     """Base class for Actron Air sensors."""
+class PeripheralHumiditySensor(BasePeripheralSensor):
+    """Representation of an Actron Air peripheral humidity sensor."""
 
-#     _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
-#     def __init__(
-#         self,
-#         coordinator: ActronAirSystemCoordinator,
-#         peripheral: ActronAirPeripheral,
-#         translation_key: str,
-#         state_key: str,
-#         device_class: SensorDeviceClass,
-#         unit_of_measurement,
-#         entity_category=None,
-#         enabled_default=True,
-#     ) -> None:
-#         """Initialize the sensor."""
-#         super().__init__(coordinator)
-#         self._ac_serial = coordinator.serial_number
-#         self._peripheral_id = peripheral.logical_address
-#         self._state_key = state_key
-#         self._serial_number = peripheral.serial_number
-#         self._entity_category = entity_category
-#         self._enabled_default = enabled_default
-#         self._attr_device_class = device_class
-#         self._attr_unit_of_measurement = unit_of_measurement
-#         self._attr_translation_key = translation_key
-#         self._attr_unique_id: str = f"{self._serial_number}_{translation_key}"
+    def __init__(
+        self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, peripheral)
+        self._attr_unique_id: str = f"{peripheral.serial_number}_humidity"
 
-#         suggested_area = None
-#         if hasattr(peripheral, "zones") and len(peripheral.zones) == 1:
-#             zone = peripheral.zones[0]
-#             if hasattr(zone, "title") and zone.title:
-#                 suggested_area = zone.title
-
-#         self._attr_device_info: DeviceInfo = DeviceInfo(
-#             identifiers={(DOMAIN, self._serial_number)},
-#             name=f"{peripheral.device_type} {peripheral.logical_address}",
-#             manufacturer="Actron Air",
-#             model=peripheral.device_type,
-#             suggested_area=suggested_area,
-#         )
-
-#     @property
-#     def _peripheral(self) -> ActronAirPeripheral:
-#         """Get the current peripheral data from the coordinator."""
-#         for peripheral in self.coordinator.data.peripherals:
-#             if peripheral.logical_address == self._peripheral_id:
-#                 return peripheral
-#         return None
-
-#     @property
-#     def available(self) -> bool:
-#         """Return True if entity is available."""
-#         return not self.coordinator.is_device_stale()
-
-#     @property
-#     def state(self) -> str | None:
-#         """Return the state of the sensor."""
-#         return getattr(self._peripheral, self._state_key, None)
-
-#     @property
-#     def entity_category(self) -> EntityCategory | None:
-#         """Return the entity category."""
-#         return self._entity_category
-
-#     @property
-#     def entity_registry_enabled_default(self) -> bool:
-#         """Return if the entity should be enabled when first added to the entity registry."""
-#         return self._enabled_default
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        return getattr(self._peripheral, "humidity", None)
 
 
-# class PeripheralBatterySensor(BasePeripheralSensor):
-#     """Battery sensor for Actron Air zone."""
+class PeripheralTemperatureSensor(BasePeripheralSensor):
+    """Representation of an Actron Air peripheral temperature sensor."""
 
-#     def __init__(
-#         self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
-#     ) -> None:
-#         """Initialize the battery sensor."""
-#         super().__init__(
-#             coordinator,
-#             peripheral,
-#             "battery",
-#             "battery_level",
-#             SensorDeviceClass.BATTERY,
-#             PERCENTAGE,
-#             entity_category=DIAGNOSTIC_CATEGORY,
-#             enabled_default=True,
-#         )
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
+    def __init__(
+        self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, peripheral)
+        self._attr_unique_id: str = f"{peripheral.serial_number}_temperature"
 
-# class PeripheralTemperatureSensor(BasePeripheralSensor):
-#     """Temperature sensor for Actron Air zone."""
-
-#     def __init__(
-#         self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
-#     ) -> None:
-#         """Initialize the temperature sensor."""
-#         super().__init__(
-#             coordinator,
-#             peripheral,
-#             "temperature",
-#             "temperature",
-#             SensorDeviceClass.TEMPERATURE,
-#             UnitOfTemperature.CELSIUS,
-#         )
-
-
-# class PeripheralHumiditySensor(BasePeripheralSensor):
-#     """Humidity sensor for Actron Air zone."""
-
-#     def __init__(
-#         self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
-#     ) -> None:
-#         """Initialize the humidity sensor."""
-#         super().__init__(
-#             coordinator,
-#             peripheral,
-#             "humidity",
-#             "humidity",
-#             SensorDeviceClass.HUMIDITY,
-#             PERCENTAGE,
-#         )
-
-
-# class BaseEntitySensor(CoordinatorEntity[ActronAirSystemCoordinator], SensorEntity):
-#     """Base class for Actron Air sensors."""
-
-#     _attr_has_entity_name = True
-#     _attr_entity_registry_enabled_default = True
-
-#     def __init__(
-#         self,
-#         coordinator: ActronAirSystemCoordinator,
-#     ) -> None:
-#         """Initialise the sensor entity."""
-#         super().__init__(coordinator)
-#         self._serial_number = coordinator.serial_number
-#         self._attr_device_info: DeviceInfo = DeviceInfo(
-#             identifiers={(DOMAIN, self._serial_number)},
-#         )
-
-#     @property
-#     def available(self) -> bool:
-#         """Return True if entity is available."""
-#         return not self.coordinator.is_device_stale()
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        return getattr(self._peripheral, "temperature", None)
