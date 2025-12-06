@@ -388,6 +388,104 @@
         "name": "[%key:component::cover::entity_component::shade::name%]"
       }
     },
+    "event": {
+      "color": {
+        "name": "Color",
+        "state_attributes": {
+          "action": { "name": "Action" },
+          "color_temp_max_mireds": {
+            "name": "Color temperature minimum mireds"
+          },
+          "color_temp_min_mireds": {
+            "name": "Color temperature minimum mireds"
+          },
+          "color_temp_mireds": { "name": "Color temperature mireds" },
+          "color_x": { "name": "Color `X`" },
+          "color_y": { "name": "Color `Y`" },
+          "direction": { "name": "Direction" },
+          "enhanced_hue": { "name": "Enhanced Hue" },
+          "event_type": {
+            "state": {
+              "color_loop_set": "Color loop set",
+              "enhanced_move_hue": "Enhanced move hue",
+              "enhanced_move_to_hue": "Enhanced move to hue",
+              "enhanced_move_to_hue_and_saturation": "Enhanced move to hue and saturation",
+              "enhanced_step_hue": "Enhanced step hue",
+              "move_color": "Move color",
+              "move_color_temp": "Move color temperature",
+              "move_saturation": "Move saturation",
+              "move_to_color": "Move to color",
+              "move_to_color_temp": "Move to color temperature",
+              "move_to_hue": "Move to hue",
+              "move_to_hue_and_saturation": "Move to hue and saturation",
+              "move_to_saturation": "Move to saturation",
+              "step_color": "Step color",
+              "step_color_temp": "Step color temperature",
+              "step_hue": "Step hue",
+              "step_saturation": "Step saturation",
+              "stop_move_step": "Stop move/step"
+            }
+          },
+          "hue": { "name": "Hue" },
+          "move_mode": { "name": "Move Mode" },
+          "rate": { "name": "Rate" },
+          "rate_x": { "name": "Rate `X`" },
+          "rate_y": { "name": "Rate `Y`" },
+          "saturation": { "name": "Saturation" },
+          "start_hue": { "name": "Start Hue" },
+          "step_mode": { "name": "Step Mode" },
+          "step_size": { "name": "Step Size" },
+          "step_x": { "name": "Step `X`" },
+          "step_y": { "name": "Step `Y`" },
+          "transition_time": { "name": "Transition Time" },
+          "update_flags": { "name": "Update Flags" }
+        }
+      },
+
+      "level_control": {
+        "name": "Level control",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "move": "Move",
+              "move_to_level": "Move to level",
+              "move_to_level_with_on_off": "Move to level with on/off",
+              "move_with_on_off": "Move with on/off",
+              "step": "Step",
+              "step_with_on_off": "Step with on/off",
+              "stop": "Stop"
+            }
+          },
+          "level": { "name": "Level" },
+          "move_mode": { "name": "Move Mode" },
+          "rate": { "name": "Rate" },
+          "step_mode": { "name": "Step Mode" },
+          "step_size": { "name": "Step Size" },
+          "transition_time": { "name": "Transition Time" }
+        }
+      },
+      "on_off": {
+        "name": "On/Off",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "off": "Off",
+              "off_with_effect": "Off wait effect",
+              "on": "On",
+              "on_with_recall_global_scene": "On with recall of global scene",
+              "on_with_timed_off": "On with timed off",
+              "toggle": "Toggle"
+            }
+          },
+          "level": { "name": "Level" },
+          "move_mode": { "name": "Move Mode" },
+          "rate": { "name": "Rate" },
+          "step_mode": { "name": "Step Mode" },
+          "step_size": { "name": "Step Size" },
+          "transition_time": { "name": "Transition Time" }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]",
