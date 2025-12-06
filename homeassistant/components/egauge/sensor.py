@@ -29,23 +29,24 @@ class EgaugeSensorEntityDescription(SensorEntityDescription):
     available_fn: Callable[[EgaugeData, str], bool]
 
 
-POWER_SENSOR = EgaugeSensorEntityDescription(
-    key="power",
-    device_class=SensorDeviceClass.POWER,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfPower.WATT,
-    native_value_fn=lambda data, register: data.measurements[register],
-    available_fn=lambda data, register: register in data.measurements,
-)
-
-ENERGY_SENSOR = EgaugeSensorEntityDescription(
-    key="energy",
-    device_class=SensorDeviceClass.ENERGY,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfEnergy.JOULE,
-    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    native_value_fn=lambda data, register: data.counters[register],
-    available_fn=lambda data, register: register in data.counters,
+SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
+    EgaugeSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_value_fn=lambda data, register: data.measurements[register],
+        available_fn=lambda data, register: register in data.measurements,
+    ),
+    EgaugeSensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_value_fn=lambda data, register: data.counters[register],
+        available_fn=lambda data, register: register in data.counters,
+    ),
 )
 
 
@@ -58,14 +59,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     sensors: list[SensorEntity] = []
 
-    for register_name, register_info in coordinator.data.register_info.items():
-        if register_info.type == RegisterType.POWER:
-            sensors.extend(
-                [
-                    EgaugeSensor(coordinator, register_name, POWER_SENSOR),
-                    EgaugeSensor(coordinator, register_name, ENERGY_SENSOR),
-                ]
-            )
+    async_add_entities(
+        EgaugeSensor(coordinator, register_name, sensor)
+        for sensor in SENSORS
+        for register_name, register_info in coordinator.data.register_info.items()
+        if register_info.type == RegisterType.POWER
+    )
 
     async_add_entities(sensors)
 
