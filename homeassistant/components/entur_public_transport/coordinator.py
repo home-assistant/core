@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from enturclient import EnturPublicTransportData
+from enturclient.dto.place import Place
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -32,7 +32,7 @@ SCAN_INTERVAL = timedelta(seconds=45)
 type EnturConfigEntry = ConfigEntry[EnturCoordinator]
 
 
-class EnturCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class EnturCoordinator(DataUpdateCoordinator[dict[str, Place]]):
     """Coordinator for fetching Entur public transport data."""
 
     config_entry: EnturConfigEntry
@@ -78,7 +78,7 @@ class EnturCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return whether to show location on map."""
         return self._show_on_map
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Place]:
         """Fetch data from Entur API."""
         try:
             if self._expand_platforms and not self._initial_expanded:
@@ -90,7 +90,7 @@ class EnturCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Error communicating with Entur API: {err}") from err
 
         # Build data dictionary with all stop/quay information
-        result: dict[str, Any] = {}
+        result: dict[str, Place] = {}
         for place_id in self.client.all_stop_places_quays():
             stop_info = self.client.get_stop_info(place_id)
             if stop_info is not None:
