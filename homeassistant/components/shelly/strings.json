@@ -112,7 +112,7 @@
         "description": "Select a WiFi network and enter the password to provision the device."
       },
       "wifi_scan_failed": {
-        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
+        "description": "Failed to scan for WiFi networks on {name} via Bluetooth: {error}. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
       }
     }
   },

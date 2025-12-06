@@ -3654,7 +3654,7 @@ async def test_bluetooth_wifi_scan_failure(
     # Confirm and trigger wifi scan that fails
     with patch(
         "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
-        side_effect=DeviceConnectionError,
+        side_effect=DeviceConnectionError("Connection timed out"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -3663,6 +3663,10 @@ async def test_bluetooth_wifi_scan_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi_scan_failed"
+    assert result["description_placeholders"] == {
+        "name": "ShellyPlus2PM-C049EF8873E8",
+        "error": "DeviceConnectionError('Connection timed out')",
+    }
 
     # Test retry and complete flow
     with patch(
