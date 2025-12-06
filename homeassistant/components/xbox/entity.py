@@ -151,6 +151,15 @@ def check_deprecated_entity(
     return False
 
 
+def to_https(image_url: str) -> str:
+    """Convert image URLs to secure URLs."""
+
+    url = URL(image_url)
+    if url.host == "images-eds.xboxlive.com":
+        url = url.with_host("images-eds-ssl.xboxlive.com")
+    return str(url.with_scheme("https"))
+
+
 def profile_pic(person: Person, _: Title | None = None) -> str | None:
     """Return the gamer pic."""
 
@@ -160,9 +169,4 @@ def profile_pic(person: Person, _: Title | None = None) -> str | None:
     # to point to the correct image, with the correct domain and certificate.
     # We need to also remove the 'mode=Padding' query because with it,
     # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
+    return str(URL(to_https(person.display_pic_raw)).without_query_params("mode"))

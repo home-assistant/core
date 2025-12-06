@@ -35,8 +35,8 @@ from .models import (
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
-    IntegerTypeData,
 )
+from .type_information import IntegerTypeInformation
 from .util import remap_value
 
 
@@ -138,24 +138,24 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
         )
 
 
-DEFAULT_H_TYPE = IntegerTypeData(
+DEFAULT_H_TYPE = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
 )
-DEFAULT_S_TYPE = IntegerTypeData(
+DEFAULT_S_TYPE = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
 )
-DEFAULT_V_TYPE = IntegerTypeData(
+DEFAULT_V_TYPE = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
 )
 
 
-DEFAULT_H_TYPE_V2 = IntegerTypeData(
+DEFAULT_H_TYPE_V2 = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
 )
-DEFAULT_S_TYPE_V2 = IntegerTypeData(
+DEFAULT_S_TYPE_V2 = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
 )
-DEFAULT_V_TYPE_V2 = IntegerTypeData(
+DEFAULT_V_TYPE_V2 = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
 )
 
@@ -578,15 +578,15 @@ def _get_color_data_wrapper(
     if function_data := json_loads_object(
         cast(str, color_data_wrapper.type_information.type_data)
     ):
-        color_data_wrapper.h_type = IntegerTypeData(
+        color_data_wrapper.h_type = IntegerTypeInformation(
             dpcode=color_data_wrapper.dpcode,
             **cast(dict, function_data["h"]),
         )
-        color_data_wrapper.s_type = IntegerTypeData(
+        color_data_wrapper.s_type = IntegerTypeInformation(
             dpcode=color_data_wrapper.dpcode,
             **cast(dict, function_data["s"]),
         )
-        color_data_wrapper.v_type = IntegerTypeData(
+        color_data_wrapper.v_type = IntegerTypeInformation(
             dpcode=color_data_wrapper.dpcode,
             **cast(dict, function_data["v"]),
         )
@@ -718,27 +718,25 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return true if light is on."""
         return self._read_wrapper(self._switch_wrapper)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
-        commands = [
-            self._switch_wrapper.get_update_command(self.device, True),
-        ]
+        commands = self._switch_wrapper.get_update_commands(self.device, True)
 
         if self._color_mode_wrapper and (
             ATTR_WHITE in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs
         ):
-            commands += [
-                self._color_mode_wrapper.get_update_command(
+            commands.extend(
+                self._color_mode_wrapper.get_update_commands(
                     self.device, WorkMode.WHITE
                 ),
-            ]
+            )
 
         if self._color_temp_wrapper and ATTR_COLOR_TEMP_KELVIN in kwargs:
-            commands += [
-                self._color_temp_wrapper.get_update_command(
+            commands.extend(
+                self._color_temp_wrapper.get_update_commands(
                     self.device, kwargs[ATTR_COLOR_TEMP_KELVIN]
                 )
-            ]
+            )
 
         if self._color_data_wrapper and (
             ATTR_HS_COLOR in kwargs
@@ -750,11 +748,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             )
         ):
             if self._color_mode_wrapper:
-                commands += [
-                    self._color_mode_wrapper.get_update_command(
+                commands.extend(
+                    self._color_mode_wrapper.get_update_commands(
                         self.device, WorkMode.COLOUR
                     ),
-                ]
+                )
 
             if not (brightness := kwargs.get(ATTR_BRIGHTNESS)):
                 brightness = self.brightness or 0
@@ -762,11 +760,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             if not (color := kwargs.get(ATTR_HS_COLOR)):
                 color = self.hs_color or (0, 0)
 
-            commands += [
-                self._color_data_wrapper.get_update_command(
+            commands.extend(
+                self._color_data_wrapper.get_update_commands(
                     self.device, (color, brightness)
                 ),
-            ]
+            )
 
         elif self._brightness_wrapper and (
             ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs
@@ -776,15 +774,15 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             else:
                 brightness = kwargs[ATTR_WHITE]
 
-            commands += [
-                self._brightness_wrapper.get_update_command(self.device, brightness),
-            ]
+            commands.extend(
+                self._brightness_wrapper.get_update_commands(self.device, brightness),
+            )
 
-        self._send_command(commands)
+        await self._async_send_commands(commands)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     @property
     def brightness(self) -> int | None:

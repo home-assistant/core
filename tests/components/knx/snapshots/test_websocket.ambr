@@ -937,6 +937,102 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[date]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_date',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 11,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[datetime]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_datetime',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 19,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[light]
   dict({
     'id': 1,
@@ -1380,6 +1476,54 @@
           }),
         }),
         'type': 'ha_selector',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[time]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_time',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 10,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
       }),
       dict({
         'default': False,
