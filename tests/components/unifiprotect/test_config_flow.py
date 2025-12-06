@@ -1666,7 +1666,7 @@ async def test_reconfigure_empty_credentials_keeps_existing(
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
-    nvr.mac = MAC_ADDR
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
     # Submit with empty password and api_key - should keep existing values
     result = await hass.config_entries.flow.async_configure(
@@ -1726,7 +1726,7 @@ async def test_reconfigure_credential_update(
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
-    nvr.mac = MAC_ADDR
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1789,7 +1789,7 @@ async def test_reauth_empty_credentials_keeps_existing(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    nvr.mac = MAC_ADDR
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
     with patch(
         "homeassistant.components.unifiprotect.async_setup",
@@ -1875,7 +1875,7 @@ async def test_reauth_credential_update(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    nvr.mac = MAC_ADDR
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
     with patch(
         "homeassistant.components.unifiprotect.async_setup",
