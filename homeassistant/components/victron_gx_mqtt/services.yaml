@@ -1,0 +1,14 @@
+publish:
+  fields:
+    metric_id:
+      required: true
+      selector:
+        text:
+    device_id:
+      required: true
+      selector:
+        text:
+    value:
+      required: false
+      selector:
+        text:
