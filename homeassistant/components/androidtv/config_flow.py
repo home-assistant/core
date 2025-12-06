@@ -389,6 +389,31 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_migration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle migration from androidtv_remote integration."""
+        if user_input is None:
+            return self.async_abort(reason="unknown")
+
+        # Data comes from the migration process in __init__.py
+        self.host = user_input[CONF_HOST]
+        self.name = user_input[CONF_NAME]
+        self.mac = user_input[CONF_MAC]
+
+        await self.async_set_unique_id(format_mac(self.mac))
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=self.name,
+            data={
+                CONF_HOST: self.host,
+                CONF_NAME: self.name,
+                CONF_MAC: self.mac,
+                CONF_CONNECTION_TYPE: CONNECTION_TYPE_REMOTE,
+            },
+        )
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -34,6 +34,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_MAC,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -86,6 +87,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
+
+# Domain of the legacy androidtv_remote integration
+ANDROIDTV_REMOTE_DOMAIN = "androidtv_remote"
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
 
@@ -222,7 +226,89 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Android TV integration."""
     async_setup_services(hass)
+
+    # Migrate any existing androidtv_remote entries to androidtv
+    await _async_migrate_androidtv_remote_entries(hass)
+
     return True
+
+
+async def _async_migrate_androidtv_remote_entries(hass: HomeAssistant) -> None:
+    """Migrate androidtv_remote config entries to androidtv integration."""
+    # Get all androidtv_remote entries
+    old_entries = hass.config_entries.async_entries(ANDROIDTV_REMOTE_DOMAIN)
+    if not old_entries:
+        return
+
+    _LOGGER.info(
+        "Found %d androidtv_remote entries to migrate to androidtv",
+        len(old_entries),
+    )
+
+    for old_entry in old_entries:
+        await _async_migrate_single_entry(hass, old_entry)
+
+
+async def _async_migrate_single_entry(
+    hass: HomeAssistant,
+    old_entry: ConfigEntry,
+) -> None:
+    """Migrate a single androidtv_remote entry to androidtv."""
+    _LOGGER.info(
+        "Migrating androidtv_remote entry '%s' (%s) to androidtv",
+        old_entry.title,
+        old_entry.entry_id,
+    )
+
+    # Build new entry data with connection_type: remote
+    new_data = {
+        CONF_HOST: old_entry.data[CONF_HOST],
+        CONF_NAME: old_entry.data[CONF_NAME],
+        CONF_MAC: old_entry.data[CONF_MAC],
+        CONF_CONNECTION_TYPE: CONNECTION_TYPE_REMOTE,
+    }
+
+    # Check if an androidtv entry with the same unique_id already exists
+    existing_entries = hass.config_entries.async_entries(DOMAIN)
+    for existing in existing_entries:
+        if existing.unique_id == old_entry.unique_id:
+            _LOGGER.warning(
+                "Android TV entry with unique_id %s already exists, removing old androidtv_remote entry",
+                old_entry.unique_id,
+            )
+            await hass.config_entries.async_remove(old_entry.entry_id)
+            return
+
+    # Create new config entry for androidtv domain via config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "migration"},
+        data=new_data,
+    )
+
+    if result.get("type") != "create_entry":
+        _LOGGER.error(
+            "Failed to create androidtv entry for migrated device %s: %s",
+            old_entry.title,
+            result,
+        )
+        return
+
+    new_entry = result.get("result")
+    if new_entry:
+        _LOGGER.debug(
+            "Created new androidtv entry %s for migrated device",
+            new_entry.entry_id,
+        )
+
+    # Remove the old androidtv_remote entry
+    # Note: Entity and device migration happens automatically when the new entry
+    # loads with the same unique_id - Home Assistant handles this
+    await hass.config_entries.async_remove(old_entry.entry_id)
+    _LOGGER.info(
+        "Successfully migrated androidtv_remote entry '%s' to androidtv",
+        old_entry.title,
+    )
 
 
 async def _async_setup_adb_entry(
