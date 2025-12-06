@@ -60,6 +60,7 @@ from . import (
     template,
 )
 from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
+from .group import deduplicate_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -838,6 +839,14 @@ async def entity_service_call(
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
         return {entity.entity_id: single_response} if return_response else None
+
+    # Deduplicate entities to avoid calling the same entity multiple times
+    deduplicated_entity_ids = set(
+        deduplicate_entity_ids(hass, [entity.entity_id for entity in entities])
+    )
+    entities = [
+        entity for entity in entities if entity.entity_id in deduplicated_entity_ids
+    ]
 
     # Use asyncio.gather here to ensure the returned results
     # are in the same order as the entities list
