@@ -22,6 +22,7 @@ from homeassistant.util import dt as dt_util
 from .binary_sensor import profile_pic
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
+from .entity import to_https
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -655,6 +656,6 @@ def game_thumbnail(images: list[Image]) -> str | None:
             (i for i in images if i.type == img_type),
             None,
         ):
-            return match.url
+            return to_https(match.url)
 
     return None

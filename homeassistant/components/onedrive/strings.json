@@ -156,7 +156,7 @@
         },
         "filename": {
           "description": "Path to the file to upload.",
-          "example": "/config/www/image.jpg",
+          "example": "{example_image_path}",
           "name": "Filename"
         }
       },
