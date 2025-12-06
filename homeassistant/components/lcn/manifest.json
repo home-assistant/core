@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["pypck"],
   "quality_scale": "silver",
-  "requirements": ["pypck==0.9.5", "lcn-frontend==0.2.7"]
+  "requirements": ["pypck==0.9.7", "lcn-frontend==0.2.7"]
 }
