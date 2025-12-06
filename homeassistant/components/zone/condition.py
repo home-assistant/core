@@ -114,6 +114,7 @@ class ZoneCondition(Condition):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
 

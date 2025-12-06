@@ -259,6 +259,8 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 class Condition(abc.ABC):
     """Condition class."""
 
+    _hass: HomeAssistant
+
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -293,6 +295,7 @@ class Condition(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        self._hass = hass
 
     @abc.abstractmethod
     async def async_get_checker(self) -> ConditionCheckerType:
