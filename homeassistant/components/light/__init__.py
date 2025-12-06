@@ -423,13 +423,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(  # noqa: C901
+    def _process_turn_on_params(  # noqa: C901
         light: LightEntity, call: ServiceCall
-    ) -> None:
-        """Handle turning a light on.
-
-        If brightness is set to 0, this service will turn the light off.
-        """
+    ) -> dict[str, Any]:
         params: dict[str, Any] = dict(call.data["params"])
 
         # Only process params once we processed brightness step
@@ -644,6 +640,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
+        return params
+
+    async def async_handle_light_on_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
+        """Handle turning a light on.
+
+        If brightness is set to 0, this service will turn the light off.
+        """
+        params: dict[str, Any] = _process_turn_on_params(light, call)
+
         # Remove deprecated white value if the light supports color mode
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             await async_handle_light_off_service(light, call)
@@ -665,10 +672,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle toggling a light."""
-        if light.is_on:
-            await async_handle_light_off_service(light, call)
-        else:
-            await async_handle_light_on_service(light, call)
+        params: dict[str, Any] = _process_turn_on_params(light, call)
+        await light.async_toggle(**params)
 
     # Listen for light on and light off service calls.
 
