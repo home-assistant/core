@@ -64,6 +64,70 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "is_arrival_delayed": {
+        "name": "Arrival delayed"
+      },
+      "is_departure_delayed": {
+        "name": "Departure delayed"
+      },
+      "is_going": {
+        "name": "Going"
+      }
+    },
+    "sensor": {
+      "arrival_platform_actual": {
+        "name": "Actual arrival platform"
+      },
+      "arrival_platform_planned": {
+        "name": "Planned arrival platform"
+      },
+      "arrival_time_actual": {
+        "name": "Actual arrival time"
+      },
+      "arrival_time_planned": {
+        "name": "Planned arrival time"
+      },
+      "departure": {
+        "name": "Departure"
+      },
+      "departure_platform_actual": {
+        "name": "Actual departure platform"
+      },
+      "departure_platform_planned": {
+        "name": "Planned departure platform"
+      },
+      "departure_time_actual": {
+        "name": "Actual departure time"
+      },
+      "departure_time_planned": {
+        "name": "Planned departure time"
+      },
+      "next_departure_time": {
+        "name": "Next departure"
+      },
+      "route": {
+        "name": "Route"
+      },
+      "route_from": {
+        "name": "Route from"
+      },
+      "route_to": {
+        "name": "Route to"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "cancelled": "Cancelled",
+          "normal": "Normal"
+        }
+      },
+      "transfers": {
+        "name": "Transfers"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the NS API. Please check your internet connection and the status of the NS API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",

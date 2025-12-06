@@ -45,6 +45,7 @@ from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
+PARALLEL_UPDATES = 0
 
 HDR_MODES = [
     {"id": "always", "name": "Always On"},

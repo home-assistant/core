@@ -109,7 +109,7 @@
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },
     "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation unavailable, will retry"
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "update_failed": {
       "message": "Failed to update drive state"
@@ -156,7 +156,7 @@
         },
         "filename": {
           "description": "Path to the file to upload.",
-          "example": "/config/www/image.jpg",
+          "example": "{example_image_path}",
           "name": "Filename"
         }
       },

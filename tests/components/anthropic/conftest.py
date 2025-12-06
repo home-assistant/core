@@ -1,11 +1,14 @@
 """Tests helpers."""
 
 from collections.abc import AsyncGenerator, Generator, Iterable
+import datetime
 from unittest.mock import AsyncMock, patch
 
+from anthropic.pagination import AsyncPage
 from anthropic.types import (
     Message,
     MessageDeltaUsage,
+    ModelInfo,
     RawContentBlockStartEvent,
     RawMessageDeltaEvent,
     RawMessageStartEvent,
@@ -17,8 +20,8 @@ from anthropic.types import (
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
-from homeassistant.components.anthropic import CONF_CHAT_MODEL
 from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -123,7 +126,75 @@ async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
-    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+    model_list = AsyncPage(
+        data=[
+            ModelInfo(
+                id="claude-opus-4-5-20251101",
+                created_at=datetime.datetime(2025, 11, 1, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Opus 4.5",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-haiku-4-5-20251001",
+                created_at=datetime.datetime(2025, 10, 15, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Haiku 4.5",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-sonnet-4-5-20250929",
+                created_at=datetime.datetime(2025, 9, 29, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Sonnet 4.5",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-opus-4-1-20250805",
+                created_at=datetime.datetime(2025, 8, 5, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Opus 4.1",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-opus-4-20250514",
+                created_at=datetime.datetime(2025, 5, 22, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Opus 4",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-sonnet-4-20250514",
+                created_at=datetime.datetime(2025, 5, 22, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Sonnet 4",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-3-7-sonnet-20250219",
+                created_at=datetime.datetime(2025, 2, 24, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Sonnet 3.7",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-3-5-haiku-20241022",
+                created_at=datetime.datetime(2024, 10, 22, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Haiku 3.5",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-3-haiku-20240307",
+                created_at=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Haiku 3",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-3-opus-20240229",
+                created_at=datetime.datetime(2024, 2, 29, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Opus 3",
+                type="model",
+            ),
+        ]
+    )
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        return_value=model_list,
+    ):
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         yield

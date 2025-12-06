@@ -40,7 +40,10 @@ def mock_growatt_v1_api():
     Methods mocked for service operations:
     - min_write_time_segment: Called by time segment management services
     """
-    with patch("growattServer.OpenApiV1", autospec=True) as mock_v1_api_class:
+    with patch(
+        "homeassistant.components.growatt_server.config_flow.growattServer.OpenApiV1",
+        autospec=True,
+    ) as mock_v1_api_class:
         mock_v1_api = mock_v1_api_class.return_value
 
         # Called during setup to discover devices
@@ -161,7 +164,10 @@ def mock_growatt_classic_api():
     Methods mocked for device-specific tests:
     - tlx_detail: Provides TLX device data (kept for potential future tests)
     """
-    with patch("growattServer.GrowattApi", autospec=True) as mock_classic_api_class:
+    with patch(
+        "homeassistant.components.growatt_server.config_flow.growattServer.GrowattApi",
+        autospec=True,
+    ) as mock_classic_api_class:
         # Use the autospec'd mock instance instead of creating a new Mock()
         mock_classic_api = mock_classic_api_class.return_value
 
@@ -209,10 +215,10 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TOKEN: "test_token_123",
             CONF_URL: DEFAULT_URL,
             "user_id": "12345",
-            CONF_PLANT_ID: "plant_123",
+            CONF_PLANT_ID: "123456",
             "name": "Test Plant",
         },
-        unique_id="plant_123",
+        unique_id="123456",
     )
 
 
@@ -230,10 +236,10 @@ def mock_config_entry_classic() -> MockConfigEntry:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
             CONF_URL: DEFAULT_URL,
-            CONF_PLANT_ID: "12345",
+            CONF_PLANT_ID: "123456",
             "name": "Test Plant",
         },
-        unique_id="12345",
+        unique_id="123456",
     )
 
 
@@ -257,3 +263,13 @@ async def init_integration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock async_setup_entry to prevent actual setup during config flow tests."""
+    with patch(
+        "homeassistant.components.growatt_server.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
