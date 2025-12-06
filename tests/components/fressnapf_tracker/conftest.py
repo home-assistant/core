@@ -59,6 +59,7 @@ MOCK_TRACKER = Tracker(
         not_charging=True,
         overall=True,
     ),
+    icon="http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg",
 )
 
 
