@@ -7,7 +7,7 @@ from typing import Any, cast
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import ModelName, PreExtractionMode, WidgetType
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import CoffeeBoiler, PreBrewing
+from pylamarzocco.models import CoffeeBoiler, PreBrewing, SteamBoilerTemperature
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -58,6 +58,28 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
                 CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
             ).target_temperature
         ),
+        bt_offline_mode=True,
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="steam_temp",
+        translation_key="steam_temp",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_step=PRECISION_TENTHS,
+        native_min_value=20,
+        native_max_value=134,
+        set_value_fn=lambda machine, temp: machine.set_steam_target_temperature(temp),
+        native_value_fn=(
+            lambda machine: cast(
+                SteamBoilerTemperature,
+                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
+            ).target_temperature
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.GS3_AV, ModelName.GS3_MP)
+        ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
         key="smart_standby_time",
@@ -76,6 +98,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
+        bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
         key="preinfusion_off",
@@ -206,13 +229,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities."""
     coordinator = entry.runtime_data.config_coordinator
-    entities: list[NumberEntity] = [
-        LaMarzoccoNumberEntity(coordinator, description)
+
+    async_add_entities(
+        LaMarzoccoNumberEntity(
+            coordinator, description, entry.runtime_data.bluetooth_coordinator
+        )
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):

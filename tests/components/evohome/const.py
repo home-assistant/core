@@ -16,6 +16,7 @@ TEST_INSTALLS: Final = (
     "h032585",  # VisionProWifi: no preset modes for TCS, zoneId=systemId
     "h099625",  # RoundThermostat
     "h139906",  # zone with null schedule
+    "h157546",  # tcs with long 8-digit system_id
     "sys_004",  # RoundModulation
 )
 #   "botched",  # as default: but with activeFaults, ghost zones & unknown types
