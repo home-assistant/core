@@ -22,7 +22,8 @@ from homeassistant.components.victron_gx_mqtt.const import (
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
-from homeassistant.components.victron_gx_mqtt.hub import Hub, VictronSensor
+from homeassistant.components.victron_gx_mqtt.hub import Hub
+from homeassistant.components.victron_gx_mqtt.sensor import VictronSensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -34,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
 
 
 @pytest.fixture
@@ -253,7 +253,7 @@ async def test_register_add_entities_callback(
     hub = Hub(hass, mock_config_entry)
 
     mock_callback = MagicMock()
-    hub.register_add_entities_callback(mock_callback, MetricKind.SENSOR)
+    hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
 
     assert MetricKind.SENSOR in hub.add_entities_map
     assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
@@ -270,66 +270,17 @@ async def test_unregister_add_entities_callback(
 
     # Register a callback first
     mock_callback = MagicMock()
-    hub.register_add_entities_callback(mock_callback, MetricKind.SENSOR)
+    hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
 
     # Verify it was registered
     assert MetricKind.SENSOR in hub.add_entities_map
     assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
 
     # Unregister the callback
-    hub.unregister_all_add_entities_callback()
+    hub.unregister_all_new_metric_callbacks()
 
     # Verify it was removed
     assert MetricKind.SENSOR not in hub.add_entities_map
-
-
-async def test_create_entity_sensor(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test creating a sensor entity."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    mock_device = MagicMock(spec=VictronVenusDevice)
-    mock_metric = MagicMock(spec=VictronVenusMetric)
-    mock_metric.metric_kind = MetricKind.SENSOR
-    mock_device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, "12345_device_123")},
-        "name": "Test Device",
-    }
-
-    with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronSensor"
-    ) as mock_sensor:
-        entity = hub.create_entity(mock_device, mock_metric, mock_device_info, "12345")
-
-        mock_sensor.assert_called_once_with(
-            mock_device, mock_metric, mock_device_info, False, "12345"
-        )
-        assert entity == mock_sensor.return_value
-
-
-async def test_create_entity_unsupported(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test creating an unsupported entity type."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    mock_device = MagicMock(spec=VictronVenusDevice)
-    mock_metric = MagicMock(spec=VictronVenusMetric)
-    mock_metric.metric_kind = "UNSUPPORTED_KIND"
-    mock_device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, "12345_device_123")},
-        "name": "Test Device",
-    }
-
-    with pytest.raises(ValueError, match="Unsupported metric kind"):
-        hub.create_entity(mock_device, mock_metric, mock_device_info, "12345")
 
 
 async def test_on_new_metric_sensor(
@@ -341,9 +292,17 @@ async def test_on_new_metric_sensor(
 
     hub = Hub(hass, mock_config_entry)
 
-    # Register callback
-    mock_add_entities = MagicMock()
-    hub.register_add_entities_callback(mock_add_entities, MetricKind.SENSOR)
+    # Register callback that creates entities
+    created_entities = []
+
+    def mock_callback(device, metric, device_info, installation_id):
+        """Mock callback that creates a sensor entity."""
+        entity = VictronSensor(
+            device, metric, device_info, hub.simple_naming, installation_id
+        )
+        created_entities.append(entity)
+
+    hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
 
     # Create mock device and metric
     mock_device = MagicMock(spec=VictronVenusDevice)
@@ -360,12 +319,9 @@ async def test_on_new_metric_sensor(
     # Trigger the callback
     hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
 
-    # Verify add_entities was called with a list containing one entity
-    mock_add_entities.assert_called_once()
-    entities = mock_add_entities.call_args[0][0]
-    assert isinstance(entities, list)
-    assert len(entities) == 1
-    entity = entities[0]
+    # Verify entity was created
+    assert len(created_entities) == 1
+    entity = created_entities[0]
     assert isinstance(entity, VictronSensor)
 
     # Patch schedule_update_ha_state and call _on_update_task

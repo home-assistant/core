@@ -68,6 +68,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hub.stop()
 
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hub.unregister_all_add_entities_callback()
+    hub.unregister_all_new_metric_callbacks()
 
     return True

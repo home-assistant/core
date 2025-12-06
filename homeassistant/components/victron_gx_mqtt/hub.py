@@ -1,5 +1,6 @@
 """Main Hub class."""
 
+from collections.abc import Callable
 import logging
 
 from victron_mqtt import (
@@ -23,7 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_INSTALLATION_ID,
@@ -35,10 +35,12 @@ from .const import (
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
-from .entity import VictronBaseEntity
-from .sensor import VictronSensor
 
 _LOGGER = logging.getLogger(__name__)
+
+NewMetricCallback = Callable[
+    [VictronVenusDevice, VictronVenusMetric, DeviceInfo, str], None
+]
 
 
 class Hub:
@@ -79,7 +81,7 @@ class Hub:
             ),
         )
         self._hub.on_new_metric = self._on_new_metric
-        self.add_entities_map: dict[MetricKind, AddEntitiesCallback] = {}
+        self.add_entities_map: dict[MetricKind, NewMetricCallback] = {}
 
     async def start(self) -> None:
         """Start the Victron MQTT hub."""
@@ -106,10 +108,9 @@ class Hub:
         _LOGGER.info("New metric received. Device: %s, Metric: %s", device, metric)
         assert hub.installation_id is not None
         device_info = Hub._map_device_info(device, hub.installation_id)
-        entity = self.create_entity(device, metric, device_info, hub.installation_id)
-
-        # Add entity dynamically to the platform
-        self.add_entities_map[metric.metric_kind]([entity])
+        callback = self.add_entities_map.get(metric.metric_kind)
+        if callback is not None:
+            callback(device, metric, device_info, hub.installation_id)
 
     @staticmethod
     def _map_device_info(
@@ -130,35 +131,21 @@ class Hub:
 
         return info
 
-    def register_add_entities_callback(
-        self, async_add_entities: AddEntitiesCallback, kind: MetricKind
+    def register_new_metric_callback(
+        self, kind: MetricKind, new_metric_callback: NewMetricCallback
     ) -> None:
         """Register a callback to add entities for a specific metric kind."""
         _LOGGER.info(
             "Registering AddEntitiesCallback. kind: %s, AddEntitiesCallback: %s",
             kind,
-            async_add_entities,
+            new_metric_callback,
         )
-        self.add_entities_map[kind] = async_add_entities
+        assert kind not in self.add_entities_map, (
+            f"AddEntitiesCallback for kind {kind} is already registered"
+        )
+        self.add_entities_map[kind] = new_metric_callback
 
-    def unregister_all_add_entities_callback(self) -> None:
+    def unregister_all_new_metric_callbacks(self) -> None:
         """Unregister all callbacks to add entities for all metric kinds."""
-        _LOGGER.info("Unregistering AddEntitiesCallback")
+        _LOGGER.info("Unregistering NewMetricCallback")
         self.add_entities_map.clear()
-
-    def create_entity(
-        self,
-        device: VictronVenusDevice,
-        metric: VictronVenusMetric,
-        info: DeviceInfo,
-        installation_id: str,
-    ) -> VictronBaseEntity:
-        """Create a VictronBaseEntity from a device and metric."""
-        if metric.metric_kind == MetricKind.SENSOR:
-            return VictronSensor(
-                device, metric, info, self.simple_naming, installation_id
-            )
-        if metric.metric_kind == MetricKind.BINARY_SENSOR:
-            # More platforms can be added here in the future
-            pass
-        raise ValueError(f"Unsupported metric kind: {metric.metric_kind}")

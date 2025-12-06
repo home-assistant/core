@@ -5,7 +5,7 @@ implementation is in this file; import of `Hub` is type-only to avoid a
 runtime circular dependency with `hub.py`.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -20,9 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import VictronBaseEntity
-
-if TYPE_CHECKING:
-    from .hub import Hub
+from .hub import Hub
 
 
 async def async_setup_entry(
@@ -32,7 +30,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Victron Venus sensors from a config entry."""
     hub: Hub = config_entry.runtime_data
-    hub.register_add_entities_callback(async_add_entities, MetricKind.SENSOR)
+
+    def on_new_metric(
+        device: VictronVenusDevice,
+        metric: VictronVenusMetric,
+        device_info: DeviceInfo,
+        installation_id: str,
+    ) -> None:
+        """Handle new sensor metric discovery."""
+        async_add_entities(
+            [
+                VictronSensor(
+                    device,
+                    metric,
+                    device_info,
+                    hub.simple_naming,
+                    installation_id,
+                )
+            ]
+        )
+
+    hub.register_new_metric_callback(MetricKind.SENSOR, on_new_metric)
 
 
 class VictronSensor(VictronBaseEntity, SensorEntity):
@@ -51,10 +69,6 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         super().__init__(
             device, metric, device_info, "sensor", simple_naming, installation_id
         )
-
-    def __repr__(self) -> str:
-        """Return a string representation of the sensor."""
-        return f"VictronSensor({super().__repr__()}, native_value={self._attr_native_value})"
 
     def _on_update_task(self, value: Any) -> None:
         if self._attr_native_value == value:
