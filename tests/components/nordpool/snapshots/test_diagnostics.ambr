@@ -297,7 +297,7 @@
               'SE3',
               'SE4',
             ]),
-            'state': 'Final',
+            'state': 'Preliminary',
           }),
         ]),
         'blockPriceAggregates': list([
@@ -1151,7 +1151,7 @@
               'SE3',
               'SE4',
             ]),
-            'state': 'Final',
+            'state': 'Preliminary',
           }),
         ]),
         'blockPriceAggregates': list([
