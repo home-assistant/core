@@ -40,6 +40,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+from .scene_activity import get_or_create_scene_activity_manager
+from .scene_activity_sensor import HueActiveSceneDynamicBinarySensor
 
 type SensorType = (
     CameraMotion
@@ -124,6 +126,37 @@ async def async_setup_entry(
     register_items(api.sensors.tamper, HueTamperSensor)
     register_items(api.sensors.grouped_motion, HueGroupedMotionSensor)
     register_items(api.sensors.security_area_motion, HueMotionAwareSensor)
+
+    # Register dynamic scene activity binary sensor
+    scene_activity_manager = get_or_create_scene_activity_manager(hass, api)
+
+    @callback
+    def _add_dynamic_scene_activity(group_controller):
+        for group in group_controller:
+            async_add_entities(
+                [
+                    HueActiveSceneDynamicBinarySensor(
+                        bridge, scene_activity_manager, group.id
+                    )
+                ]
+            )
+
+        @callback
+        def _added(event_type: EventType, group) -> None:
+            async_add_entities(
+                [
+                    HueActiveSceneDynamicBinarySensor(
+                        bridge, scene_activity_manager, group.id
+                    )
+                ]
+            )
+
+        config_entry.async_on_unload(
+            group_controller.subscribe(_added, event_filter=EventType.RESOURCE_ADDED)
+        )
+
+    _add_dynamic_scene_activity(api.groups.room)
+    _add_dynamic_scene_activity(api.groups.zone)
 
 
 # pylint: disable-next=hass-enforce-class-module

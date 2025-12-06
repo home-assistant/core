@@ -14,10 +14,18 @@ CONF_SUBTYPE = "subtype"
 
 ATTR_HUE_EVENT = "hue_event"
 SERVICE_HUE_ACTIVATE_SCENE = "hue_activate_scene"
+SERVICE_CAPTURE_GROUP_SCENE = "capture_group_scene"
+SERVICE_RESTORE_GROUP_SCENE = "restore_group_scene"
 ATTR_GROUP_NAME = "group_name"
 ATTR_SCENE_NAME = "scene_name"
 ATTR_TRANSITION = "transition"
 ATTR_DYNAMIC = "dynamic"
+ATTR_GROUPS = "groups"
+ATTR_SCENE_MODE = "scene_mode"
+ATTR_SCENE_ENTITY_ID = "scene_entity_id"
+ATTR_SMART_SCENE_ENTITY_ID = "smart_scene_entity_id"
+ATTR_SCENE_SPEED = "scene_speed"
+ATTR_SCENE_BRIGHTNESS = "scene_brightness"
 
 
 # V1 API SPECIFIC CONSTANTS ##################
