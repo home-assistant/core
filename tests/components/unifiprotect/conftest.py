@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
@@ -32,7 +32,15 @@ from uiprotect.data import (
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -42,6 +50,14 @@ from .utils import MockUFPFixture
 from tests.common import MockConfigEntry, load_fixture
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
+
+# Common test data constants
+DEFAULT_HOST = "1.1.1.1"
+DEFAULT_PORT = 443
+DEFAULT_VERIFY_SSL = False
+DEFAULT_USERNAME = "test-username"
+DEFAULT_PASSWORD = "test-password"
+DEFAULT_API_KEY = "test-api-key"
 
 
 @pytest.fixture(name="nvr")
@@ -66,13 +82,13 @@ def mock_ufp_config_entry():
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            "host": "1.1.1.1",
-            "username": "test-username",
-            "password": "test-password",
-            CONF_API_KEY: "test-api-key",
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
+            CONF_API_KEY: DEFAULT_API_KEY,
             "id": "UnifiProtect",
-            "port": 443,
-            "verify_ssl": False,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         },
         version=2,
     )
@@ -369,6 +385,78 @@ def chime():
 def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="ufp_reauth_entry")
+def mock_ufp_reauth_entry():
+    """Mock the unifiprotect config entry for reauth and reconfigure tests."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
+            CONF_API_KEY: DEFAULT_API_KEY,
+            "id": "UnifiProtect",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+        },
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
+    )
+
+
+@pytest.fixture(name="ufp_reauth_entry_alt")
+def mock_ufp_reauth_entry_alt():
+    """Mock the unifiprotect config entry with alternate port/SSL for reauth/reconfigure tests."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
+            CONF_API_KEY: DEFAULT_API_KEY,
+            "id": "UnifiProtect",
+            CONF_PORT: 8443,
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
+    )
+
+
+@pytest.fixture(name="mock_setup")
+def mock_setup_fixture() -> Generator[AsyncMock]:
+    """Mock async_setup and async_setup_entry to prevent reload issues in tests."""
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ) as mock,
+    ):
+        yield mock
+
+
+@pytest.fixture(name="mock_api_bootstrap")
+def mock_api_bootstrap_fixture(bootstrap: Bootstrap):
+    """Mock the ProtectApiClient.get_bootstrap method."""
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+        return_value=bootstrap,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(name="mock_api_meta_info")
+def mock_api_meta_info_fixture():
+    """Mock the ProtectApiClient.get_meta_info method."""
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+        return_value=None,
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture(name="cloud_account")
