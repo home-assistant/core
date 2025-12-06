@@ -1,0 +1,230 @@
+"""Config flow for Entur public transport integration."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from enturclient import EnturPublicTransportData
+import voluptuous as vol
+
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
+from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    API_CLIENT_NAME,
+    CONF_EXPAND_PLATFORMS,
+    CONF_NUMBER_OF_DEPARTURES,
+    CONF_OMIT_NON_BOARDING,
+    CONF_STOP_IDS,
+    CONF_WHITELIST_LINES,
+    DEFAULT_NUMBER_OF_DEPARTURES,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STOP_IDS): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
+        ),
+        vol.Optional(CONF_EXPAND_PLATFORMS, default=True): BooleanSelector(),
+        vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
+        vol.Optional(CONF_WHITELIST_LINES): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
+        ),
+        vol.Optional(CONF_OMIT_NON_BOARDING, default=True): BooleanSelector(),
+        vol.Optional(
+            CONF_NUMBER_OF_DEPARTURES, default=DEFAULT_NUMBER_OF_DEPARTURES
+        ): NumberSelector(
+            NumberSelectorConfig(min=2, max=10, mode=NumberSelectorMode.SLIDER)
+        ),
+    }
+)
+
+
+class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Entur public transport."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            stop_ids = user_input.get(CONF_STOP_IDS, [])
+
+            # Validate that we have valid stop IDs
+            stops = [s for s in stop_ids if "StopPlace" in s]
+            quays = [s for s in stop_ids if "Quay" in s]
+
+            if not stops and not quays:
+                errors["base"] = "invalid_stop_id"
+            else:
+                # Try to connect to the API
+                try:
+                    client = EnturPublicTransportData(
+                        API_CLIENT_NAME,
+                        stops=stops,
+                        quays=quays,
+                        line_whitelist=user_input.get(CONF_WHITELIST_LINES) or [],
+                        omit_non_boarding=user_input.get(CONF_OMIT_NON_BOARDING, True),
+                        number_of_departures=user_input.get(
+                            CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
+                        ),
+                        web_session=async_get_clientsession(self.hass),
+                    )
+                    await client.update()
+                except Exception:  # noqa: BLE001
+                    errors["base"] = "cannot_connect"
+
+                if not errors:
+                    # Create unique ID from sorted stop IDs
+                    unique_id = "_".join(sorted(stop_ids))
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+
+                    # Create a title from the first stop ID
+                    title = f"Entur {stop_ids[0]}" if stop_ids else "Entur"
+
+                    return self.async_create_entry(title=title, data=user_input)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_import(
+        self, import_data: ConfigType
+    ) -> ConfigFlowResult:
+        """Handle import from configuration.yaml."""
+        _LOGGER.debug("Importing Entur config from YAML: %s", import_data)
+
+        # Map old YAML config to new format
+        stop_ids = import_data.get(CONF_STOP_IDS, [])
+
+        # Create unique ID from sorted stop IDs
+        unique_id = "_".join(sorted(stop_ids))
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+        # Validate stop IDs
+        stops = [s for s in stop_ids if "StopPlace" in s]
+        quays = [s for s in stop_ids if "Quay" in s]
+
+        if not stops and not quays:
+            _LOGGER.error("No valid stop IDs found in YAML config: %s", stop_ids)
+            return self.async_abort(reason="invalid_stop_id")
+
+        # Try to connect to the API
+        try:
+            client = EnturPublicTransportData(
+                API_CLIENT_NAME,
+                stops=stops,
+                quays=quays,
+                line_whitelist=import_data.get(CONF_WHITELIST_LINES, []),
+                omit_non_boarding=import_data.get(CONF_OMIT_NON_BOARDING, True),
+                number_of_departures=import_data.get(
+                    CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
+                ),
+                web_session=async_get_clientsession(self.hass),
+            )
+            await client.update()
+        except Exception:
+            _LOGGER.exception(
+                "Failed to connect to Entur API during YAML import, aborting import"
+            )
+            return self.async_abort(reason="cannot_connect")
+
+        # Build config entry data
+        entry_data = {
+            CONF_STOP_IDS: stop_ids,
+            CONF_EXPAND_PLATFORMS: import_data.get(CONF_EXPAND_PLATFORMS, True),
+            CONF_SHOW_ON_MAP: import_data.get("show_on_map", False),
+            CONF_WHITELIST_LINES: import_data.get(CONF_WHITELIST_LINES, []),
+            CONF_OMIT_NON_BOARDING: import_data.get(CONF_OMIT_NON_BOARDING, True),
+            CONF_NUMBER_OF_DEPARTURES: import_data.get(
+                CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
+            ),
+        }
+
+        # Use the name from YAML config or generate one
+        title = import_data.get(CONF_NAME, f"Entur {stop_ids[0]}" if stop_ids else "Entur")
+
+        return self.async_create_entry(title=title, data=entry_data)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> EnturOptionsFlow:
+        """Return the options flow handler."""
+        return EnturOptionsFlow()
+
+
+class EnturOptionsFlow(OptionsFlow):
+    """Handle options flow for Entur public transport."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        # Merge data and options for defaults
+        current = {**self.config_entry.data, **self.config_entry.options}
+
+        options_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_EXPAND_PLATFORMS,
+                    default=current.get(CONF_EXPAND_PLATFORMS, True),
+                ): BooleanSelector(),
+                vol.Optional(
+                    CONF_SHOW_ON_MAP,
+                    default=current.get(CONF_SHOW_ON_MAP, False),
+                ): BooleanSelector(),
+                vol.Optional(
+                    CONF_WHITELIST_LINES,
+                    default=current.get(CONF_WHITELIST_LINES, []),
+                ): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
+                ),
+                vol.Optional(
+                    CONF_OMIT_NON_BOARDING,
+                    default=current.get(CONF_OMIT_NON_BOARDING, True),
+                ): BooleanSelector(),
+                vol.Optional(
+                    CONF_NUMBER_OF_DEPARTURES,
+                    default=current.get(
+                        CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(min=2, max=10, mode=NumberSelectorMode.SLIDER)
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
