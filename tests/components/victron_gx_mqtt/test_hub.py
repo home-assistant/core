@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from victron_mqtt import (
     CannotConnectError,
     Device as VictronVenusDevice,
@@ -11,6 +12,7 @@ from victron_mqtt import (
     MetricKind,
     OperationMode,
 )
+from victron_mqtt.testing import create_mocked_hub, finalize_injection, inject_message
 
 from homeassistant.components.victron_gx_mqtt.const import (
     CONF_INSTALLATION_ID,
@@ -23,7 +25,10 @@ from homeassistant.components.victron_gx_mqtt.const import (
     DOMAIN,
 )
 from homeassistant.components.victron_gx_mqtt.hub import Hub
-from homeassistant.components.victron_gx_mqtt.sensor import VictronSensor
+from homeassistant.components.victron_gx_mqtt.sensor import (
+    VictronSensor,
+    async_setup_entry as sensor_setup_entry,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -74,6 +79,30 @@ def mock_victron_hub():
         mock_hub.installation_id = "12345"
         mock_hub_class.return_value = mock_hub
         yield mock_hub
+
+
+@pytest.fixture
+async def mqtt_test_setup(hass: HomeAssistant):
+    """Set up MQTT testing with ALL platform callbacks."""
+    victron_hub = await create_mocked_hub()
+    mock_async_add_entities = AsyncMock()
+
+    # Create a real Hub and config entry
+    mock_config_entry = MagicMock(spec=ConfigEntry)
+    mock_config_entry.data = {
+        CONF_HOST: "localhost",
+        CONF_SERIAL: "test_serial",
+    }
+    mock_config_entry.unique_id = "test_unique_id"
+
+    # Create the real Hub
+    hub = Hub(hass, mock_config_entry)
+    victron_hub.on_new_metric = hub._on_new_metric
+    mock_config_entry.runtime_data = hub
+
+    # Register all platform callbacks
+    await sensor_setup_entry(hass, mock_config_entry, mock_async_add_entities)
+    return victron_hub, mock_async_add_entities
 
 
 async def test_hub_initialization(
@@ -371,3 +400,20 @@ async def test_simple_naming_enabled(
     hub = Hub(hass, mock_config_entry)
 
     assert hub.simple_naming is True
+
+
+async def test_victron_battery_sensor(
+    snapshot: SnapshotAssertion, mqtt_test_setup
+) -> None:
+    """Test SENSOR MetricKind - battery current."""
+    victron_hub, mock_async_add_entities = mqtt_test_setup
+    mock_async_add_entities.reset_mock()
+
+    # Inject a sensor metric (battery current)
+    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 10.5}')
+    await finalize_injection(victron_hub)
+
+    # Verify async_add_entities was called once
+    assert mock_async_add_entities.call_count == 1
+    call_args = mock_async_add_entities.call_args_list
+    assert call_args == snapshot
