@@ -230,6 +230,13 @@ def websocket_update_entity(
         # Convert aliases to a set
         changes["aliases"] = set(msg["aliases"])
 
+        # Clean the aliases set:
+        #   - Remove empty strings
+        #   - Remove trailing and leasing whitespace characters from aliases
+        changes["aliases"] = {
+            s_strip for s in changes["aliases"] if (s_strip := s.strip())
+        }
+
     if "labels" in msg:
         # Convert labels to a set
         changes["labels"] = set(msg["labels"])

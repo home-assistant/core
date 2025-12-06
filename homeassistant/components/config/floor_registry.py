@@ -64,6 +64,11 @@ def websocket_create_floor(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+        # Clean the aliases set:
+        #   - Remove empty strings
+        #   - Remove trailing and leasing whitespace characters from aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
+
     try:
         entry = registry.async_create(**data)
     except ValueError as err:
@@ -119,6 +124,11 @@ def websocket_update_floor(
     if "aliases" in data:
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
+
+        # Clean the aliases set:
+        #   - Remove empty strings
+        #   - Remove trailing and leasing whitespace characters from aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
         entry = registry.async_update(**data)
