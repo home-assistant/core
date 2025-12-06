@@ -25,5 +25,21 @@
         "title": "Actron Air OAuth2 Authorization"
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "away_mode": {
+        "name": "Away Mode"
+      },
+      "continuous_fan": {
+        "name": "Continuous Fan"
+      },
+      "quiet_mode": {
+        "name": "Quiet Mode"
+      },
+      "turbo_mode": {
+        "name": "Turbo Mode"
+      }
+    }
   }
 }
