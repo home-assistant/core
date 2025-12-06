@@ -440,13 +440,19 @@
     }
   },
   "options": {
+    "error": {
+      "missing_/": "Invalid format for list of endpoints, one or more are missing starting /.",
+      "trailing_/": "Invalid format for list of endpoints, one or more has ending /."
+    },
     "step": {
       "init": {
         "data": {
+          "diagnostics_additional_endpoints": "List of additional endpoints to include in diagnostics report.",
           "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
           "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
         },
         "data_description": {
+          "diagnostics_additional_endpoints": "Comma separated list of endpoints. Each endpoints must start with / and NOT end with /.",
           "diagnostics_include_fixtures": "Include fixtures in diagnostics report",
           "disable_keep_alive": "May resolve communication issues with some Envoy firmwares."
         },
