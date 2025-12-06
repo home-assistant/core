@@ -83,7 +83,7 @@ async def test_sensor_deprecation_remove_entity(
 
 
 @pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
-async def test_recently_played_games_sensor(
+async def test_sensor_recently_played_games(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -94,6 +94,10 @@ async def test_recently_played_games_sensor(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+
+    # Trigger a coordinator refresh to populate data
+    await config_entry.runtime_data.title_history.async_refresh()
+    await hass.async_block_till_done()
 
     # Verify the sensor was created
     state = hass.states.get("sensor.home_assistant_cloud_recently_played_games")
@@ -113,7 +117,7 @@ async def test_recently_played_games_sensor(
     assert game1["achievements_total"] == 43
     assert game1["gamerscore_earned"] == 15
     assert game1["gamerscore_total"] == 1000
-    assert game1["achievement_progress"] == "2%"
+    assert game1["achievement_progress"] == 2
     assert "last_played" in game1
 
     # Verify second game data
@@ -122,11 +126,11 @@ async def test_recently_played_games_sensor(
     assert game2["title_id"] == "1560034050"
     assert game2["achievements_earned"] == 22
     assert game2["gamerscore_total"] == 1300
-    assert game2["achievement_progress"] == "36%"
+    assert game2["achievement_progress"] == 36
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_recently_played_games_no_data(
+async def test_sensor_recently_played_games_no_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     xbox_live_client,
@@ -143,6 +147,10 @@ async def test_recently_played_games_no_data(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+
+    # Trigger a coordinator refresh to populate data
+    await config_entry.runtime_data.title_history.async_refresh()
+    await hass.async_block_till_done()
 
     # Verify the sensor handles empty data gracefully
     state = hass.states.get("sensor.home_assistant_cloud_recently_played_games")

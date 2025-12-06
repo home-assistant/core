@@ -171,8 +171,8 @@ def recently_played_games_attributes(
     if title_history and title_history.titles:
         for game in title_history.titles:
             game_data: dict[str, Any] = {
-                "title": game.name,
-                "title_id": game.title_id,
+                "title": game.name or "Unknown",
+                "title_id": game.title_id or "",
             }
 
             if game.title_history:
@@ -189,9 +189,19 @@ def recently_played_games_attributes(
                         "achievements_total": game.achievement.total_achievements,
                         "gamerscore_earned": game.achievement.current_gamerscore,
                         "gamerscore_total": game.achievement.total_gamerscore,
-                        "achievement_progress": f"{int(game.achievement.progress_percentage)}%",
+                        "achievement_progress": int(
+                            game.achievement.progress_percentage
+                        ),
                     }
                 )
+
+            # Add image URL if available
+            if game.images:
+                image_url = next(
+                    (i.url for i in game.images if i.type == "Poster"), None
+                ) or next((i.url for i in game.images if i.type == "Logo"), None)
+                if image_url:
+                    game_data["image_url"] = image_url
 
             games_list.append(game_data)
 
@@ -300,6 +310,7 @@ TITLE_HISTORY_SENSOR_DESCRIPTIONS: tuple[
     XboxTitleHistorySensorEntityDescription(
         key=XboxSensor.RECENTLY_PLAYED_GAMES,
         translation_key=XboxSensor.RECENTLY_PLAYED_GAMES,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: len(x.titles) if x and x.titles else 0,
         attributes_fn=recently_played_games_attributes,
     ),
@@ -460,7 +471,10 @@ class XboxTitleHistorySensorEntity(
         """Restore last state when entity is added."""
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
-            self._restored_state = last_state.state
+            try:
+                self._restored_state = int(last_state.state)
+            except (ValueError, TypeError):
+                self._restored_state = None
             self._restored_attributes = dict(last_state.attributes)
 
     @property
