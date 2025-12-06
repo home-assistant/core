@@ -25,7 +25,10 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import (
+    display_temp as show_temp,
+    display_temp_interval,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -317,7 +320,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         }
 
         if target_temperature_step := self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
+            data[ATTR_TARGET_TEMP_STEP] = display_temp_interval(
+                hass, target_temperature_step, temperature_unit, precision
+            )
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
