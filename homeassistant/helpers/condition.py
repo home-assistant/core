@@ -198,7 +198,12 @@ def async_subscribe_platform_events(
 async def _register_condition_platform(
     hass: HomeAssistant, integration_domain: str, platform: ConditionProtocol
 ) -> None:
-    """Register a condition platform."""
+    """Register a condition platform and notify listeners.
+
+    If the condition platform does not provide any conditions, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
 
@@ -209,11 +214,21 @@ async def _register_condition_platform(
             )
             hass.data[CONDITIONS][condition_key] = integration_domain
             new_conditions.add(condition_key)
+        if not new_conditions:
+            _LOGGER.debug(
+                "Integration %s returned no conditions in async_get_conditions",
+                integration_domain,
+            )
+            return
     else:
         _LOGGER.debug(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_condition(hass, integration_domain):
+        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -243,6 +258,8 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 
 class Condition(abc.ABC):
     """Condition class."""
+
+    _hass: HomeAssistant
 
     @classmethod
     async def async_validate_complete_config(
@@ -278,6 +295,7 @@ class Condition(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        self._hass = hass
 
     @abc.abstractmethod
     async def async_get_checker(self) -> ConditionCheckerType:

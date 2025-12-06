@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from hass_nabucasa import NabuCasaBaseError
-from hass_nabucasa.llm import LLMError
-
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -24,19 +21,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Assistant Cloud conversation entity."""
-    if not (cloud := hass.data[DATA_CLOUD]).is_logged_in:
-        return
-    try:
-        await cloud.llm.async_ensure_token()
-    except (LLMError, NabuCasaBaseError):
-        return
-
+    cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudConversationEntity(cloud, config_entry)])
 
 
 class CloudConversationEntity(
-    conversation.ConversationEntity,
     BaseCloudLLMEntity,
+    conversation.ConversationEntity,
 ):
     """Home Assistant Cloud conversation agent."""
 

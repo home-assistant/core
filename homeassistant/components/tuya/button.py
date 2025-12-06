@@ -117,4 +117,4 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, True)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
