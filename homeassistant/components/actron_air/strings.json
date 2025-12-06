@@ -27,6 +27,14 @@
     }
   },
   "entity": {
+    "sensor": {
+      "zone_humidity": {
+        "name": "Zone Humidity"
+      },
+      "zone_temperature": {
+        "name": "Zone Temperature"
+      }
+    },
     "switch": {
       "away_mode": {
         "name": "Away Mode"
