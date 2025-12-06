@@ -57,6 +57,9 @@
   },
   "entity": {
     "sensor": {
+      "band": {
+        "name": "{modem_name} Band"
+      },
       "connection_type": {
         "name": "{modem_name} Connection type"
       },

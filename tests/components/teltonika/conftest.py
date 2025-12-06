@@ -93,7 +93,6 @@ def mock_modems() -> Generator[MagicMock]:
         modem_mock.rsrq = modem_fixture["rsrq"]  # type: ignore[index]
         modem_mock.sinr = modem_fixture["sinr"]  # type: ignore[index]
         modem_mock.band = modem_fixture.get("band", "5G N3")  # type: ignore[union-attr]
-        modem_mock.sc_band_av = None  # Set to None so the code uses .band
         modem_mock.txbytes = modem_fixture.get("txbytes", 0)  # type: ignore[union-attr]
         modem_mock.rxbytes = modem_fixture.get("rxbytes", 0)  # type: ignore[union-attr]
 

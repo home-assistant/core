@@ -77,6 +77,10 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key="connection_type",
         translation_key="connection_type",
     ),
+    SensorEntityDescription(
+        key="band",
+        translation_key="band",
+    ),
 )
 
 
@@ -162,26 +166,8 @@ class TeltonikaSensorEntity(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Always set base attributes (all keys must always be present)
-        attrs = {
-            "modem_id": self._modem_id,
-            "modem_name": self._modem_name,
-            "connection_type": None,
-            "operator": None,
-        }
-
-        # Add sensor-specific attributes with None defaults
-        if self.entity_description.key in ("rssi", "rsrp", "rsrq", "sinr"):
-            attrs.update(
-                {
-                    "band": None,
-                    "state": None,
-                }
-            )
-
         if self._modem_id not in self.coordinator.data:
             self._attr_native_value = None
-            self._attr_extra_state_attributes = attrs
             super()._handle_coordinator_update()
             return
 
@@ -199,16 +185,4 @@ class TeltonikaSensorEntity(
         else:
             self._attr_native_value = None
 
-        # Update attributes with modem data
-        attrs["modem_name"] = modem.name or self._modem_name
-        attrs["connection_type"] = modem.conntype
-        attrs["operator"] = modem.operator
-
-        # Update sensor-specific attributes
-        if self.entity_description.key in ("rssi", "rsrp", "rsrq", "sinr"):
-            band = modem.sc_band_av or modem.band
-            attrs["band"] = band
-            attrs["state"] = modem.state
-
-        self._attr_extra_state_attributes = attrs
         super()._handle_coordinator_update()
