@@ -30,6 +30,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
+    ATTR_ENTITY_ID,
     ATTR_FILE,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
@@ -316,10 +317,10 @@ async def test_send_sticker_partial_error(
 
     await hass.async_block_till_done()
 
-    assert mock_load_data.call_count == 1
+    assert mock_load_data.call_count == 2
     assert mock_send_sticker.call_count == 2
-    assert err.value.translation_key == "failed_chat_ids"
-    assert err.value.args[0] == "Failed targets: [123456, 654321]"
+    assert err.value.translation_key == "failed_targets"
+    assert err.value.translation_placeholders == {"failed_targets": "123456, 654321"}
 
 
 async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
@@ -848,7 +849,7 @@ async def test_multiple_config_entries_error(
         )
 
     await hass.async_block_till_done()
-    assert err.value.translation_key == "multiple_config_entry"
+    assert err.value.translation_key == "no_targets_found"
 
 
 async def test_send_message_with_config_entry(
@@ -877,10 +878,11 @@ async def test_send_message_with_config_entry(
         )
     await hass.async_block_till_done()
 
-    assert err.value.translation_key == "failed_chat_ids"
-    assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["chat_ids"] == "1"
-    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+    assert err.value.translation_key == "invalid_chat_ids"
+    assert err.value.translation_placeholders == {
+        "chat_ids": "1",
+        "bot_name": "Mock Title",
+    }
 
     # test: send message to valid chat id
 
@@ -930,8 +932,7 @@ async def test_send_message_no_chat_id_error(
         )
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
-    assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+    assert err.value.translation_placeholders == {"bot_name": "Mock Title"}
 
 
 async def test_send_message_config_entry_error(
@@ -985,9 +986,10 @@ async def test_delete_message(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "invalid_chat_ids"
-    assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["chat_ids"] == "1"
-    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+    assert err.value.translation_placeholders == {
+        "chat_ids": "1",
+        "bot_name": "Mock Title",
+    }
 
     # test: delete message with valid chat id
 
@@ -1544,3 +1546,62 @@ async def test_send_message_multi_target(
 
     await hass.async_block_till_done()
     assert response == {"chats": [{"chat_id": 654321, "message_id": 12345}]}
+
+
+async def test_notify_entity_send_message(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message using notify entity as target."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2", ATTR_MESSAGE: "test_message"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 654321,
+                ATTR_MESSAGEID: 12345,
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
+            }
+        ]
+    }
+
+
+async def test_notify_entity_not_found(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message using notify entity as target."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.non_existent_entity",
+                ATTR_MESSAGE: "test_message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "action_failed"
+    assert err.value.translation_placeholders == {
+        "error": "Notify entity not found: notify.non_existent_entity"
+    }
