@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -39,7 +38,7 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 @pytest.fixture
 async def target_assist_satellites(hass: HomeAssistant) -> list[str]:
     """Create multiple assist satellite entities associated with different targets."""
-    return await target_entities(hass, "assist_satellite")
+    return (await target_entities(hass, "assist_satellite"))["included"]
 
 
 @pytest.mark.parametrize(
@@ -105,19 +104,18 @@ async def test_assist_satellite_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
-
     other_entity_ids = set(target_assist_satellites) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
     for eid in target_assist_satellites:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -126,7 +124,7 @@ async def test_assist_satellite_state_trigger_behavior_any(
 
         # Check if changing other assist satellites also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -173,19 +171,18 @@ async def test_assist_satellite_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
-
     other_entity_ids = set(target_assist_satellites) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
     for eid in target_assist_satellites:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -194,7 +191,7 @@ async def test_assist_satellite_state_trigger_behavior_first(
 
         # Triggering other assist satellites should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -240,24 +237,23 @@ async def test_assist_satellite_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
-
     other_entity_ids = set(target_assist_satellites) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
     for eid in target_assist_satellites:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
+        included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state)
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:

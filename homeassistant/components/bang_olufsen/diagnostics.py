@@ -10,13 +10,13 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import BangOlufsenConfigEntry
+from . import BeoConfigEntry
 from .const import DOMAIN
 from .util import get_device_buttons
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: BangOlufsenConfigEntry
+    hass: HomeAssistant, config_entry: BeoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 

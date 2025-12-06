@@ -45,11 +45,11 @@
         'beolink': dict({
           'listeners': dict({
             'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-            'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
           }),
           'peers': dict({
             'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-            'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
           }),
           'self': dict({
             'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
