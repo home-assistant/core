@@ -5,6 +5,8 @@ import asyncio
 from collections.abc import Callable, Sequence
 import io
 import logging
+import os
+from pathlib import Path
 from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
@@ -13,6 +15,7 @@ import httpx
 from telegram import (
     Bot,
     CallbackQuery,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMedia,
@@ -45,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -61,6 +65,7 @@ from .const import (
     ATTR_FILE_ID,
     ATTR_FILE_MIME_TYPE,
     ATTR_FILE_NAME,
+    ATTR_FILE_PATH,
     ATTR_FILE_SIZE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
@@ -1035,6 +1040,55 @@ class TelegramNotificationService:
             read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
+
+    async def download_file(
+        self,
+        file_id: str,
+        directory_path: str | None = None,
+        file_name: str | None = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[str, JsonValueType]:
+        """Download a file from Telegram."""
+        if not directory_path:
+            directory_path = self.hass.config.path(DOMAIN)
+        if not self.hass.config.is_allowed_path(directory_path):
+            raise ServiceValidationError(
+                "File path has not been configured in allowlist_external_dirs.",
+                translation_domain=DOMAIN,
+                translation_key="allowlist_external_dirs_error",
+            )
+        file: File = await self._send_msg(
+            self.bot.get_file,
+            "Error getting file",
+            None,
+            file_id=file_id,
+            context=context,
+        )
+        if not file_name:
+            file_name = (
+                os.path.basename(file.file_path) if file.file_path else "unknown_file"
+            )
+        custom_path = os.path.join(directory_path, file_name)
+        if not os.path.exists(directory_path):
+            _LOGGER.debug("directory %s does not exist, creating it", directory_path)
+
+            def mkdir() -> None:
+                os.makedirs(directory_path, exist_ok=True)
+
+            await self.hass.async_add_executor_job(mkdir)
+        _LOGGER.debug("Download file %s to %s", file_id, custom_path)
+        try:
+            file_content = await file.download_as_bytearray()
+            await asyncio.to_thread(Path(custom_path).write_bytes, file_content)
+        except Exception as exc:
+            _LOGGER.error("Error downloading file to %s: %s", custom_path, exc)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        return {ATTR_FILE_PATH: custom_path}
 
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:

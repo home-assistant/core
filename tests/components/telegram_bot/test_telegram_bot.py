@@ -3,11 +3,19 @@
 import base64
 from datetime import datetime
 import io
+import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram import (
+    Chat,
+    File,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    Update,
+)
 from telegram.constants import ChatType, InputMediaType, ParseMode
 from telegram.error import (
     InvalidToken,
@@ -28,9 +36,12 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_CAPTION,
     ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
+    ATTR_DIRECTORY_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
+    ATTR_FILE_NAME,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
@@ -1544,3 +1555,132 @@ async def test_send_message_multi_target(
 
     await hass.async_block_till_done()
     assert response == {"chats": [{"chat_id": 654321, "message_id": 12345}]}
+
+
+@pytest.mark.parametrize(
+    ("telegram_file_name", "schema_request", "expected_download_path"),
+    [
+        pytest.param(
+            "file_name1.jpg",
+            {ATTR_FILE_ID: "some-file-id-1"},
+            lambda hass: f"{hass.config.path(DOMAIN)}/file_name1.jpg",
+            id="no_custom_name_no_custom_dir",
+        ),
+        pytest.param(
+            "file_name2.jpg",
+            {ATTR_FILE_ID: "some-file-id-2", ATTR_FILE_NAME: "custom_name2.jpg"},
+            lambda hass: f"{hass.config.path(DOMAIN)}/custom_name2.jpg",
+            id="custom_name_no_custom_dir",
+        ),
+        pytest.param(
+            "file_name3.jpg",
+            {
+                ATTR_FILE_ID: "some-file-id-3",
+                ATTR_DIRECTORY_PATH: "/tmp/tempfolder3",  # noqa: S108
+            },
+            lambda hass: "/tmp/tempfolder3/file_name3.jpg",  # noqa: S108
+            id="no_custom_name_custom_dir",
+        ),
+        pytest.param(
+            "file_name4.jpg",
+            {
+                ATTR_FILE_ID: "some-file-id-4",
+                ATTR_FILE_NAME: "custom_name4.jpg",
+                ATTR_DIRECTORY_PATH: "/tmp/tempfolder4",  # noqa: S108
+            },
+            lambda hass: "/tmp/tempfolder4/custom_name4.jpg",  # noqa: S108
+            id="custom_name_custom_dir",
+        ),
+    ],
+)
+async def test_download_file(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    telegram_file_name: str,
+    schema_request: dict[str, Any],
+    expected_download_path: Any,
+) -> None:
+    """Test download file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    expected_path = expected_download_path(hass)
+    expected_directory = os.path.dirname(expected_path)
+    allowlist_dir = (
+        expected_directory
+        if os.path.exists(expected_directory)
+        else os.path.dirname(expected_directory)
+    )
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+
+    file_id = schema_request[ATTR_FILE_ID]
+    telegram_file = File(
+        file_id=file_id,
+        file_unique_id="file_unique_id",
+        file_path=f"file/path/{telegram_file_name}",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(return_value=telegram_file),
+        ) as get_file_mock,
+        patch(
+            "telegram.File.download_as_bytearray",
+            AsyncMock(
+                return_value=f"This is the file content of {telegram_file_name}".encode()
+            ),
+        ) as download_as_bytearray_mock,
+        patch(
+            "homeassistant.components.telegram_bot.bot.asyncio.to_thread",
+            AsyncMock(return_value=None),
+        ) as to_thread_mock,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            schema_request,
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    get_file_mock.assert_called_once_with(file_id=file_id)
+    download_as_bytearray_mock.assert_called_once()
+    to_thread_mock.assert_called()
+    args, _ = to_thread_mock.call_args
+    assert str(args[0].__self__) == expected_path
+    assert args[1] == f"This is the file content of {telegram_file_name}".encode()
+
+
+async def test_download_file_when_bot_failed_to_get_file(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download file when bot failed to get file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    schema_request = {
+        ATTR_FILE_ID: "some-file-id",
+        ATTR_DIRECTORY_PATH: "/some/path",
+        ATTR_FILE_NAME: "custom_name.jpg",
+    }
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(side_effect=TelegramError("failed to get file")),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            schema_request,
+            blocking=True,
+        )
+    await hass.async_block_till_done()
