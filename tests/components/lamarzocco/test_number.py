@@ -13,6 +13,7 @@ from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lamarzocco.select import DOSE_MODE_HA_TO_LM
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -291,3 +292,45 @@ async def test_steam_temperature(
     mock_lamarzocco.set_steam_target_temperature.assert_called_once_with(
         temperature=128.3,
     )
+
+
+@pytest.mark.parametrize("device_fixture", [ModelName.LINEA_MINI])
+async def test_brew_by_weight_dose(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test brew by weight dose."""
+
+    await async_init_integration(hass, mock_config_entry)
+    serial_number = mock_lamarzocco.serial_number
+    for dose in (1, 2):
+        entity_id = f"number.{serial_number}_brew_by_weight_dose_{dose}"
+
+        state = hass.states.get(entity_id)
+
+        assert state
+        assert state == snapshot(name=f"dose_{dose}")
+
+        entry = entity_registry.async_get(state.entity_id)
+        assert entry
+        assert entry.device_id
+        assert entry == snapshot(name=f"dose_{dose}")
+
+        # service call
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_VALUE: 42,
+            },
+            blocking=True,
+        )
+
+        mock_lamarzocco.set_brew_by_weight_dose.assert_called_with(
+            dose=DOSE_MODE_HA_TO_LM[f"dose{dose}"],
+            value=42,
+        )
