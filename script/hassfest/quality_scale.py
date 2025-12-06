@@ -298,7 +298,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "dsmr",
     "dsmr_reader",
     "dublin_bus_transport",
-    "duckdns",
     "duke_energy",
     "dunehd",
     "duotecno",
