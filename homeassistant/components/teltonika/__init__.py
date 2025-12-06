@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -124,17 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
             entry,
             data={**entry.data, CONF_HOST: selected_host},
         )
-
-    # Remove stale entity registry entries from earlier revisions
-    registry = er.async_get(hass)
-    entry_unique_id = entry.unique_id or entry.entry_id
-    prefix = f"{entry_unique_id}_"
-    for entity_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if not entity_entry.unique_id.startswith(prefix):
-            registry.async_remove(entity_entry.entity_id)
-            continue
-        if entity_entry.disabled_by == er.RegistryEntryDisabler.DEVICE:
-            registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
 
     # Create device info for device registry
     device_info = DeviceInfo(
