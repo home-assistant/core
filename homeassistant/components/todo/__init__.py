@@ -36,6 +36,7 @@ from .const import (
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
+    ATTR_LABELS,
     ATTR_RENAME,
     ATTR_STATUS,
     DATA_COMPONENT,
@@ -138,6 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Required(ATTR_ITEM): vol.All(
                         cv.string, str.strip, vol.Length(min=1)
                     ),
+                    vol.Optional(ATTR_LABELS): vol.Any(cv.string, None),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -158,6 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
+                    vol.Optional(ATTR_LABELS): vol.Any(cv.string, None),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -165,6 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_least_one_key(
                 ATTR_RENAME,
                 ATTR_STATUS,
+                ATTR_LABELS,
                 *[desc.service_field for desc in TODO_ITEM_FIELDS],
             ),
         ),
@@ -229,6 +233,9 @@ class TodoItem:
 
     priority: str | None = None
     """The priority of the To-do item."""
+
+    labels: str | None = None
+    """Labels for the item (comma-separated string in your use-case)."""
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -468,6 +475,7 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
                 for desc in TODO_ITEM_FIELDS
                 if desc.service_field in call.data
             },
+            labels=call.data.get(ATTR_LABELS),
         )
     )
 
@@ -500,6 +508,9 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
             if desc.service_field in call.data
         }
     )
+    if ATTR_LABELS in call.data:
+        updated_data["labels"] = call.data[ATTR_LABELS]
+
     await entity.async_update_todo_item(item=TodoItem(**updated_data))
 
 

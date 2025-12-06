@@ -35,6 +35,9 @@
         "description": {
           "name": "Description",
           "description": "A more complete description of the to-do item than provided by the item name."
+        },
+        "labels": {
+          "name": "labels"
         }
       }
     },
@@ -65,6 +68,10 @@
         "description": {
           "name": "[%key:component::todo::services::add_item::fields::description::name%]",
           "description": "[%key:component::todo::services::add_item::fields::description::description%]"
+        },
+        "labels": {
+          "name": "[%key:component::todo::services::add_item::fields::labels::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::labels::description%]"
         }
       }
     },

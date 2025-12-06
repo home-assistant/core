@@ -22,6 +22,7 @@ ATTR_DESCRIPTION = "description"
 ATTR_ITEM = "item"
 ATTR_RENAME = "rename"
 ATTR_STATUS = "status"
+ATTR_LABELS = "labels"
 
 
 class TodoServices(StrEnum):

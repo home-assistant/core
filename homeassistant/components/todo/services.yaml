@@ -46,6 +46,10 @@ add_item:
       example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
+    labels:
+      example: "Work"
+      selector:
+        text:
 update_item:
   target:
     entity:
