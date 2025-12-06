@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Konfigurera Energy Tracker",
+        "description": "Ange din personliga åtkomsttoken för att ansluta till ditt Energy Tracker-konto.",
+        "data": {
+          "api_token": "Personlig åtkomsttoken"
+        }
+      },
+      "reconfigure": {
+        "title": "Omkonfigurera Energy Tracker",
+        "description": "Uppdatera din Energy Tracker-kontotoken. Lämna tokenfältet tomt för att behålla den befintliga token.",
+        "data": {
+          "api_token": "Personlig åtkomsttoken (lämna tomt för att behålla befintlig)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Personlig åtkomsttoken får inte vara tom."
+    },
+    "abort": {
+      "already_configured": "Denna personliga åtkomsttoken är redan konfigurerad. Varje token kan endast användas en gång.",
+      "entry_not_found": "Konfigurationspost hittades inte.",
+      "reconfigure_successful": "Konfigurationen har uppdaterats."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Autentisering med Energy Tracker misslyckades",
+      "description": "Den konfigurerade personliga åtkomsttokenen är ogiltig eller har löpt ut. Skapa en ny token i ditt Energy Tracker-konto och uppdatera token i integrationsinställningarna."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Otillräckliga behörigheter för Energy Tracker",
+      "description": "Den konfigurerade personliga åtkomsttokenen har inte de nödvändiga behörigheterna. Skapa en ny token med de nödvändiga behörigheterna i ditt Energy Tracker-konto och uppdatera token i denna integrations inställningar."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Timeout för begäran. Kontrollera nätverksanslutningen och försök igen."
+    },
+    "network_error": {
+      "message": "Nätverksfel vid begäran. Kontrollera internetanslutningen och försök igen."
+    },
+    "bad_request": {
+      "message": "Ogiltig indata. Kontrollera indata. ({error})"
+    },
+    "auth_failed": {
+      "message": "Autentisering misslyckades. Kontrollera din personliga åtkomsttoken i integrationsinställningarna."
+    },
+    "device_not_found": {
+      "message": "Standardmätenhet hittades inte. Kontrollera enhets-ID."
+    },
+    "rate_limit": {
+      "message": "För många begäranden. Försök igen om {retry_after} sekunder."
+    },
+    "rate_limit_no_time": {
+      "message": "För många begäranden. Försök igen senare."
+    },
+    "server_error": {
+      "message": "Ett serverfel inträffade. Försök igen senare. ({error})"
+    },
+    "unknown_error": {
+      "message": "Ett oväntat fel inträffade. Försök igen senare. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standardmätenhets-ID krävs."
+    },
+    "entity_not_found": {
+      "message": "Entitet {entity_id} hittades inte."
+    },
+    "entity_unavailable": {
+      "message": "Entitet {entity_id} är {state}."
+    },
+    "invalid_number": {
+      "message": "Värdet '{state}' för entitet {entity_id} är inte ett nummer."
+    },
+    "missing_timestamp": {
+      "message": "Entitet {entity_id} har ingen tidsstämpel."
+    },
+    "no_api_token": {
+      "message": "Ingen personlig åtkomsttoken har konfigurerats. Kontrollera kontoinställningarna."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Skicka mätarställning",
+      "description": "Skickar det aktuella värdet från en sensor till Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Konto",
+          "description": "Ditt Energy Tracker-konto"
+        },
+        "device_id": {
+          "name": "Standardmätenhets-ID",
+          "description": "ID för standardmätenhet i ditt Energy Tracker-konto"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor som tillhandahåller mätarställningen"
+        },
+        "allow_rounding": {
+          "name": "Tillåt avrundning",
+          "description": "Avrunda värdet för att matcha mätarprecisionen"
+        }
+      }
+    }
+  }
+}

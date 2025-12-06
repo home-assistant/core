@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "設定 Energy Tracker",
+        "description": "輸入您的個人存取令牌以連線至您的 Energy Tracker 帳戶。",
+        "data": {
+          "api_token": "個人存取令牌"
+        }
+      },
+      "reconfigure": {
+        "title": "重新設定 Energy Tracker",
+        "description": "更新您的 Energy Tracker 帳戶令牌。將令牌欄位留空以保留現有令牌。",
+        "data": {
+          "api_token": "個人存取權杖(留空以保留現有權杖)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "個人存取權杖不能為空白。"
+    },
+    "abort": {
+      "already_configured": "此個人存取權杖已設定。每個權杖只能使用一次。",
+      "entry_not_found": "找不到設定項目。",
+      "reconfigure_successful": "設定已成功更新。"
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Energy Tracker 身分驗證失敗",
+      "description": "設定的個人存取權杖無效或已過期。請在您的 Energy Tracker 帳號中建立新權杖,並在整合設定中更新權杖。"
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Energy Tracker 權限不足",
+      "description": "設定的個人存取權杖沒有所需權限。請在您的 Energy Tracker 帳號中建立具有所需權限的新權杖,並在此整合的設定中更新權杖。"
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "請求逾時。請檢查網路連線並重試。"
+    },
+    "network_error": {
+      "message": "請求期間發生網路錯誤。請檢查網際網路連線並重試。"
+    },
+    "bad_request": {
+      "message": "輸入無效。請檢查輸入資料。({error})"
+    },
+    "auth_failed": {
+      "message": "身分驗證失敗。請在整合設定中檢查您的個人存取權杖。"
+    },
+    "device_not_found": {
+      "message": "找不到標準測量裝置。請檢查裝置 ID。"
+    },
+    "rate_limit": {
+      "message": "請求過多。請在 {retry_after} 秒後重試。"
+    },
+    "rate_limit_no_time": {
+      "message": "請求過多。請稍後重試。"
+    },
+    "server_error": {
+      "message": "發生伺服器錯誤。請稍後重試。({error})"
+    },
+    "unknown_error": {
+      "message": "發生意外錯誤。請稍後重試。({error})"
+    },
+    "device_id_empty": {
+      "message": "需要標準測量裝置 ID。"
+    },
+    "entity_not_found": {
+      "message": "找不到實體 {entity_id}。"
+    },
+    "entity_unavailable": {
+      "message": "實體 {entity_id} 處於 {state} 狀態。"
+    },
+    "invalid_number": {
+      "message": "實體 {entity_id} 的值 '{state}' 不是數字。"
+    },
+    "missing_timestamp": {
+      "message": "實體 {entity_id} 沒有時間戳記。"
+    },
+    "no_api_token": {
+      "message": "未設定個人存取權杖。請檢查帳號設定。"
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "傳送計量讀數",
+      "description": "將感測器的目前值傳送到 Energy Tracker。",
+      "fields": {
+        "entry_id": {
+          "name": "帳號",
+          "description": "您的 Energy Tracker 帳號"
+        },
+        "device_id": {
+          "name": "標準測量裝置 ID",
+          "description": "您的 Energy Tracker 帳號中的標準測量裝置 ID"
+        },
+        "source_entity_id": {
+          "name": "感測器",
+          "description": "提供計量讀數的感測器"
+        },
+        "allow_rounding": {
+          "name": "允許四捨五入",
+          "description": "四捨五入值以符合計量精度"
+        }
+      }
+    }
+  }
+}

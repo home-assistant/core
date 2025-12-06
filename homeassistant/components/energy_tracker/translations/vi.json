@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Thiết lập Energy Tracker",
+        "description": "Nhập mã token truy cập cá nhân của bạn để kết nối với tài khoản Energy Tracker của bạn.",
+        "data": {
+          "api_token": "Mã token truy cập cá nhân"
+        }
+      },
+      "reconfigure": {
+        "title": "Cấu hình lại Energy Tracker",
+        "description": "Cập nhật token tài khoản Energy Tracker của bạn. Để trống trường token để giữ token hiện tại.",
+        "data": {
+          "api_token": "Mã thông báo truy cập cá nhân (để trống để giữ mã hiện có)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Mã thông báo truy cập cá nhân không được để trống."
+    },
+    "abort": {
+      "already_configured": "Mã thông báo truy cập cá nhân này đã được cấu hình. Mỗi mã thông báo chỉ có thể được sử dụng một lần.",
+      "entry_not_found": "Không tìm thấy mục cấu hình.",
+      "reconfigure_successful": "Cấu hình đã được cập nhật thành công."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Xác thực với Energy Tracker thất bại",
+      "description": "Mã thông báo truy cập cá nhân được cấu hình không hợp lệ hoặc đã hết hạn. Tạo mã thông báo mới trong tài khoản Energy Tracker của bạn và cập nhật mã thông báo trong cài đặt tích hợp."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Quyền không đủ cho Energy Tracker",
+      "description": "Mã thông báo truy cập cá nhân được cấu hình không có quyền cần thiết. Tạo mã thông báo mới với các quyền cần thiết trong tài khoản Energy Tracker của bạn và cập nhật mã thông báo trong cài đặt tích hợp này."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Yêu cầu hết thời gian chờ. Kiểm tra kết nối mạng và thử lại."
+    },
+    "network_error": {
+      "message": "Lỗi mạng trong quá trình yêu cầu. Kiểm tra kết nối internet và thử lại."
+    },
+    "bad_request": {
+      "message": "Đầu vào không hợp lệ. Kiểm tra dữ liệu đầu vào. ({error})"
+    },
+    "auth_failed": {
+      "message": "Xác thực thất bại. Kiểm tra mã thông báo truy cập cá nhân của bạn trong cài đặt tích hợp."
+    },
+    "device_not_found": {
+      "message": "Không tìm thấy thiết bị đo tiêu chuẩn. Kiểm tra ID thiết bị."
+    },
+    "rate_limit": {
+      "message": "Quá nhiều yêu cầu. Thử lại sau {retry_after} giây."
+    },
+    "rate_limit_no_time": {
+      "message": "Quá nhiều yêu cầu. Thử lại sau."
+    },
+    "server_error": {
+      "message": "Đã xảy ra lỗi máy chủ. Thử lại sau. ({error})"
+    },
+    "unknown_error": {
+      "message": "Đã xảy ra lỗi không mong đợi. Thử lại sau. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Cần có ID thiết bị đo tiêu chuẩn."
+    },
+    "entity_not_found": {
+      "message": "Không tìm thấy thực thể {entity_id}."
+    },
+    "entity_unavailable": {
+      "message": "Thực thể {entity_id} ở trạng thái {state}."
+    },
+    "invalid_number": {
+      "message": "Giá trị '{state}' của thực thể {entity_id} không phải là số."
+    },
+    "missing_timestamp": {
+      "message": "Thực thể {entity_id} không có dấu thời gian."
+    },
+    "no_api_token": {
+      "message": "Chưa cấu hình mã thông báo truy cập cá nhân. Kiểm tra cài đặt tài khoản."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Gửi số đo đồng hồ",
+      "description": "Gửi giá trị hiện tại của cảm biến đến Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Tài khoản",
+          "description": "Tài khoản Energy Tracker của bạn"
+        },
+        "device_id": {
+          "name": "ID thiết bị đo tiêu chuẩn",
+          "description": "ID của thiết bị đo tiêu chuẩn trong tài khoản Energy Tracker của bạn"
+        },
+        "source_entity_id": {
+          "name": "Cảm biến",
+          "description": "Cảm biến cung cấp số đo đồng hồ"
+        },
+        "allow_rounding": {
+          "name": "Cho phép làm tròn",
+          "description": "Làm tròn giá trị để phù hợp với độ chính xác của đồng hồ"
+        }
+      }
+    }
+  }
+}

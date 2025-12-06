@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura Energy Tracker",
+        "description": "Inserisci il tuo token di accesso personale per connetterti al tuo account Energy Tracker.",
+        "data": {
+          "api_token": "Token di accesso personale"
+        }
+      },
+      "reconfigure": {
+        "title": "Riconfigura Energy Tracker",
+        "description": "Aggiorna il token del tuo account Energy Tracker. Lascia il campo del token vuoto per mantenere il token esistente.",
+        "data": {
+          "api_token": "Token di accesso personale (lasciare vuoto per mantenere l'esistente)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "Il token di accesso personale non può essere vuoto."
+    },
+    "abort": {
+      "already_configured": "Questo token di accesso personale è già configurato. Ogni token può essere utilizzato una sola volta.",
+      "entry_not_found": "Voce di configurazione non trovata.",
+      "reconfigure_successful": "Configurazione aggiornata con successo."
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Autenticazione con Energy Tracker non riuscita",
+      "description": "Il token di accesso personale configurato non è valido o è scaduto. Crea un nuovo token nel tuo account Energy Tracker e aggiorna il token nelle impostazioni dell'integrazione."
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Autorizzazioni insufficienti per Energy Tracker",
+      "description": "Il token di accesso personale configurato non dispone delle autorizzazioni necessarie. Crea un nuovo token con le autorizzazioni necessarie nel tuo account Energy Tracker e aggiorna il token nelle impostazioni di questa integrazione."
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Timeout della richiesta. Verifica la connessione di rete e riprova."
+    },
+    "network_error": {
+      "message": "Errore di rete durante la richiesta. Verifica la connessione Internet e riprova."
+    },
+    "bad_request": {
+      "message": "Input non valido. Verifica i dati di input. ({error})"
+    },
+    "auth_failed": {
+      "message": "Autenticazione non riuscita. Verifica il tuo token di accesso personale nelle impostazioni dell'integrazione."
+    },
+    "device_not_found": {
+      "message": "Dispositivo di misurazione standard non trovato. Verifica l'ID del dispositivo."
+    },
+    "rate_limit": {
+      "message": "Troppe richieste. Riprova tra {retry_after} secondi."
+    },
+    "rate_limit_no_time": {
+      "message": "Troppe richieste. Riprova più tardi."
+    },
+    "server_error": {
+      "message": "Si è verificato un errore del server. Riprova più tardi. ({error})"
+    },
+    "unknown_error": {
+      "message": "Si è verificato un errore imprevisto. Riprova più tardi. ({error})"
+    },
+    "device_id_empty": {
+      "message": "L'ID del dispositivo di misurazione standard è richiesto."
+    },
+    "entity_not_found": {
+      "message": "Entità {entity_id} non trovata."
+    },
+    "entity_unavailable": {
+      "message": "L'entità {entity_id} è {state}."
+    },
+    "invalid_number": {
+      "message": "Il valore '{state}' dell'entità {entity_id} non è un numero."
+    },
+    "missing_timestamp": {
+      "message": "L'entità {entity_id} non ha un timestamp."
+    },
+    "no_api_token": {
+      "message": "Nessun token di accesso personale configurato. Verifica le impostazioni dell'account."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Invia lettura contatore",
+      "description": "Invia il valore corrente di un sensore a Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Account",
+          "description": "Il tuo account Energy Tracker"
+        },
+        "device_id": {
+          "name": "ID dispositivo di misurazione standard",
+          "description": "ID del dispositivo di misurazione standard nel tuo account Energy Tracker"
+        },
+        "source_entity_id": {
+          "name": "Sensore",
+          "description": "Sensore che fornisce la lettura del contatore"
+        },
+        "allow_rounding": {
+          "name": "Consenti arrotondamento",
+          "description": "Arrotonda il valore per corrispondere alla precisione del contatore"
+        }
+      }
+    }
+  }
+}
