@@ -1,0 +1,37 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: |
+      Registers the `hausbus.discover_devices` service, which calls `searchDevices` on the gateway.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: done
+    comment: |
+      All actions are documented
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  discovery:
+    status: done
+    comment: |
+      Provides `async_step_discovery` in config_flow.py, which calls `searchDevices` for automatic device discovery.
+  parallel-updates:
+    status: exempt
+    comment: |
+      Integration does not use polling; entities are event-driven.
