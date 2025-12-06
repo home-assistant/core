@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -63,12 +62,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             auth_valid = await client.validate_credentials()
             if not auth_valid:
                 raise InvalidAuth
-
-            return {
-                "title": getattr(device_info, "device_name", host),
-                "serial": getattr(device_info, "device_identifier", None),
-                "host": base_url,
-            }
         except TeltonikaConnectionError as err:
             _LOGGER.debug(
                 "Failed to connect to Teltonika device at %s: %s", base_url, err
@@ -77,13 +70,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         except TeltonikaAuthenticationError as err:
             _LOGGER.error("Authentication failed: %s", err)
             raise InvalidAuth from err
+        else:
+            return {
+                "title": device_info.device_name,
+                "device_id": device_info.device_identifier,
+                "host": base_url,
+            }
         finally:
             await client.close()
 
-    _LOGGER.error("Cannot connect to device after trying all protocols")
-    if last_error is not None:
-        raise CannotConnect from last_error
-    raise CannotConnect
+    _LOGGER.error("Cannot connect to device after trying all schemas")
+    raise CannotConnect from last_error
 
 
 class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -110,7 +107,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Set unique ID to prevent duplicates
-                await self.async_set_unique_id(info["serial"] or info["title"])
+                await self.async_set_unique_id(info["device_id"])
                 self._abort_if_unique_id_configured()
 
                 data_to_store = dict(user_input)
@@ -126,68 +123,6 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth when authentication fails."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            try:
-                # Validate new credentials and host
-                data = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_VALIDATE_SSL: reauth_entry.data.get(CONF_VALIDATE_SSL, False),
-                }
-                info = await validate_input(self.hass, data)
-
-                # Verify it's the same device
-                if info["serial"] and reauth_entry.unique_id != info["serial"]:
-                    return self.async_abort(reason="wrong_account")
-
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={
-                        CONF_HOST: info["host"],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during reauth")
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=reauth_entry.data[CONF_HOST]): str,
-                    vol.Required(
-                        CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            errors=errors,
-            description_placeholders={
-                "name": reauth_entry.title,
-                "host": reauth_entry.data[CONF_HOST],
-            },
-        )
-
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -197,15 +132,8 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store discovered host for later use
         self._discovered_host = host
 
-        # Check if we already have this device configured by MAC address or hostname
-        # Set a temporary unique ID based on the MAC address
-        await self.async_set_unique_id(discovery_info.macaddress)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-
-        # Try to get device info without authentication to get device name
-        # But continue with discovery even if this fails
+        # Try to get device info without authentication to get device identifier and name
         session = async_get_clientsession(self.hass)
-        device_name = None
 
         for base_url in get_url_variants(host):
             client = Teltasync(
@@ -213,23 +141,31 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 username="",  # No credentials yet
                 password="",
                 session=session,
-                verify_ssl=False,  # DHCP discovery typically on local network
+                verify_ssl=False,  # Teltonika devices use self-signed certs by default
             )
 
             try:
-                # Try to get device info from unauthorized endpoint
+                # Get device info from unauthorized endpoint
                 device_info = await client.get_device_info()
-                device_name = getattr(device_info, "device_name", None)
+                device_name = device_info.device_name
+                device_id = device_info.device_identifier
                 break
-            except (TeltonikaConnectionError, TeltonikaAuthenticationError, Exception):  # noqa: BLE001
-                # Device might require auth - that's okay, we'll continue anyway
+            except TeltonikaConnectionError:
+                # Connection failed, try next URL variant
                 continue
             finally:
                 await client.close()
+        else:
+            # No URL variant worked, device not reachable, don't autodiscover
+            return self.async_abort(reason="cannot_connect")
+
+        # Set unique ID and check for existing conf
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
         self.context["title_placeholders"] = {
-            "name": device_name or "Teltonika Device",
+            "name": device_name,
             "host": host,
         }
 
@@ -256,12 +192,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 info = await validate_input(self.hass, data)
 
-                # Update unique ID to use device serial instead of MAC address
-                if info["serial"]:
-                    await self.async_set_unique_id(
-                        info["serial"], raise_on_progress=False
-                    )
-                    self._abort_if_unique_id_configured()
+                # Update unique ID to device identifier if we didn't get it during discovery
+                await self.async_set_unique_id(
+                    info["device_id"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title=info["title"],
