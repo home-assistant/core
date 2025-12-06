@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 from aioshelly.const import DEFAULT_HTTP_PORT, MODEL_1, MODEL_PLUS_2PM
 from aioshelly.exceptions import (
@@ -356,6 +356,8 @@ def create_mock_rpc_device(
     mock_device.wifi_setconfig = AsyncMock(return_value={})
     mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
     mock_device.shutdown = AsyncMock()
+    mock_device.config = MagicMock()
+    mock_device.subscribe_updates = MagicMock()
     return mock_device
 
 
