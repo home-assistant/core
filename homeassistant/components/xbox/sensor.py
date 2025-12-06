@@ -15,6 +15,7 @@ from pythonxbox.api.provider.titlehub.models import Title, TitleHubResponse
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     EntityCategory,
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -431,12 +432,14 @@ class XboxStorageDeviceSensorEntity(
 
 
 class XboxTitleHistorySensorEntity(
-    CoordinatorEntity[XboxTitleHistoryCoordinator], SensorEntity
+    CoordinatorEntity[XboxTitleHistoryCoordinator], RestoreSensor
 ):
     """Title history sensor for the Xbox integration."""
 
     _attr_has_entity_name = True
     entity_description: XboxTitleHistorySensorEntityDescription
+    _restored_state: StateType = None
+    _restored_attributes: dict[str, Any] | None = None
 
     def __init__(
         self,
@@ -447,22 +450,34 @@ class XboxTitleHistorySensorEntity(
         """Initialize the Xbox title history sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{config_entry.unique_id}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{config_entry.unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.unique_id)},
+            identifiers={(DOMAIN, str(config_entry.unique_id))},
             name=config_entry.title,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state when entity is added."""
+        await super().async_added_to_hass()
+        if last_state := await self.async_get_last_state():
+            self._restored_state = last_state.state
+            self._restored_attributes = dict(last_state.attributes)
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        if self.coordinator.data is not None:
+            return self.entity_description.value_fn(self.coordinator.data)
+        # Use restored state if coordinator hasn't updated yet
+        return self._restored_state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional attributes."""
         if self.entity_description.attributes_fn:
-            return self.entity_description.attributes_fn(self.coordinator.data)
+            # Prefer live coordinator data
+            if self.coordinator.data is not None:
+                return self.entity_description.attributes_fn(self.coordinator.data)
+            # Fall back to restored attributes until first update
+            return self._restored_attributes
         return None
