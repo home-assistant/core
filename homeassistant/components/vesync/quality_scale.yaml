@@ -9,7 +9,7 @@ rules:
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: todo
-  docs-installation-instructions: todo
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
