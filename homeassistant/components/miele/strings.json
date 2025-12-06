@@ -257,6 +257,9 @@
           "plate_step_warm": "Warming"
         }
       },
+      "power_disk_level": {
+        "name": "PowerDisk level"
+      },
       "program_id": {
         "name": "Program",
         "state": {
@@ -1027,6 +1030,12 @@
       "remaining_time": {
         "name": "Remaining time"
       },
+      "rinse_aid_level": {
+        "name": "Rinse aid level"
+      },
+      "salt_level": {
+        "name": "Salt level"
+      },
       "spin_speed": {
         "name": "Spin speed"
       },
@@ -1067,6 +1076,12 @@
       },
       "temperature_zone_3": {
         "name": "Temperature zone 3"
+      },
+      "twin_dos_1_level": {
+        "name": "TwinDos 1 level"
+      },
+      "twin_dos_2_level": {
+        "name": "TwinDos 2 level"
       },
       "water_consumption": {
         "name": "Water consumption"
