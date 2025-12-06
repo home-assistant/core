@@ -134,6 +134,7 @@ FLOWS = {
         "cync",
         "daikin",
         "datadog",
+        "daybetter_light_local",
         "deako",
         "deconz",
         "deluge",
