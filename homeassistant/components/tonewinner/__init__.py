@@ -1,38 +1,30 @@
-"""The ToneWinner AT-500 integration."""
+"""Set up Tonewinner from a config entry."""
 
-from __future__ import annotations
-
-from homeassistant.config_entries import ConfigEntry  # noqa: F401 - used for type hints
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-__all__ = ["DOMAIN", "async_setup_entry", "async_unload_entry"]
 
-from .coordinator import ToneWinnerConfigEntry, ToneWinnerCoordinator
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Tonewinner from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = entry.data
 
-_PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ToneWinnerConfigEntry) -> bool:
-    """Set up ToneWinner AT-500 from a config entry."""
-    coordinator = ToneWinnerCoordinator(hass, entry)
-
-    # Setup coordinator
-    await coordinator.async_setup()
-
-    # Store coordinator in runtime_data
-    entry.runtime_data = coordinator
-
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
+    # Pass a LIST of platforms
+    await hass.config_entries.async_forward_entry_setups(entry, ["media_player"])
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ToneWinnerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    # Cleanup coordinator
-    await entry.runtime_data.async_shutdown()
+    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
 
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    # Unregister the service if it exists
+    service_key = f"{entry.entry_id}_service"
+    if service_key in hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, "send_raw")
+        del hass.data[DOMAIN][service_key]
+
+    hass.data[DOMAIN].pop(entry.entry_id)
+    return True

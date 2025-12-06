@@ -3,11 +3,11 @@
 DOMAIN = "tonewinner"
 
 # Configuration constants
-CONF_SERIAL_PORT = "device"
-CONF_BAUDRATE = "baudrate"
+CONF_SERIAL_PORT = "serial_port"
+CONF_BAUD_RATE = "baud_rate"
 
 # Serial communication constants
-DEFAULT_BAUDRATE = 9600
+DEFAULT_BAUD_RATE = 9600
 DEFAULT_TIMEOUT = 1.0
 COMMAND_TERMINATOR = "\r\n"
 
