@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Hegel amplifier",
+        "description": "Enter the host/IP of your Hegel amplifier to set it up.",
+        "data": {
+          "host": "Host/IP",
+          "port": "Port",
+          "name": "Name",
+          "model": "Model"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the amplifier",
+      "already_configured": "This amplifier is already configured"
+    },
+    "abort": {
+      "no_host_found": "Could not determine host from discovery information"
+    }
+  },
+  "entity": {
+    "media_player": {
+      "hegel": {
+        "name": "Hegel Amplifier"
+      }
+    }
+  },
+  "device": {
+    "hegel": {
+      "name": "Hegel Amplifier",
+      "manufacturer": "Hegel"
+    }
+  }
+}
