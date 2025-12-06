@@ -3,12 +3,16 @@
 import logging
 
 from pyvesync import VeSync
-from pyvesync.utils.errors import VeSyncLoginError
+from pyvesync.utils.errors import (
+    VeSyncAPIResponseError,
+    VeSyncLoginError,
+    VeSyncServerError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -49,6 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await manager.login()
     except VeSyncLoginError as err:
         raise ConfigEntryAuthFailed from err
+    except VeSyncServerError as err:
+        raise ConfigEntryNotReady from err
+    except VeSyncAPIResponseError as err:
+        raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
