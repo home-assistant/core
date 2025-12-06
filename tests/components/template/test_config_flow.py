@@ -270,6 +270,16 @@ BINARY_SENSOR_OPTIONS = {
             {"start": []},
             {},
         ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            "sunny",
+            {"one": "sunny", "two": "cloudy"},
+            {},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {},
+        ),
     ],
 )
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
@@ -462,6 +472,12 @@ async def test_config_flow(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )
@@ -751,6 +767,16 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"condition": "{{ states('weather.two') }}"},
+            ["sunny", "cloudy"],
+            {"one": "sunny", "two": "cloudy"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            "condition",
         ),
     ],
 )
@@ -1600,6 +1626,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )
