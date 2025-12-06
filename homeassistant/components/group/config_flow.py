@@ -39,6 +39,7 @@ from .valve import async_create_preview_valve
 
 _STATISTIC_MEASURES = [
     "last",
+    "first",
     "max",
     "mean",
     "median",
