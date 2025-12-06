@@ -166,7 +166,9 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         zb_firmware: list[FirmwareList] = []
 
         try:
-            esp_firmware = await self.client.get_firmware_version(info.fw_channel)
+            esp_firmware = await self.client.get_firmware_version(
+                info.fw_channel, device=info.model
+            )
             zb_firmware.extend(
                 [
                     await self.client.get_firmware_version(

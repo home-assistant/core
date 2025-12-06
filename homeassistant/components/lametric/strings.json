@@ -211,7 +211,7 @@
           "name": "[%key:common::config_flow::data::device%]"
         },
         "icon": {
-          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons.",
+          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: {icons_url}.",
           "name": "Icon ID"
         },
         "icon_type": {
