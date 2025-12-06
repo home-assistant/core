@@ -127,6 +127,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "binary_sensor",
     "climate",
     "cover",
+    "device_tracker",
     "fan",
     "lawn_mower",
     "light",

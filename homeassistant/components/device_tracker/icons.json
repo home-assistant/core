@@ -11,5 +11,13 @@
     "see": {
       "service": "mdi:account-eye"
     }
+  },
+  "triggers": {
+    "entered_home": {
+      "trigger": "mdi:account-arrow-left"
+    },
+    "left_home": {
+      "trigger": "mdi:account-arrow-right"
+    }
   }
 }

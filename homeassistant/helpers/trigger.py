@@ -394,12 +394,12 @@ class EntityTriggerBase(Trigger):
             if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return
 
-            # The trigger should never fire if the previous state was not the from state
-            if not to_state or not self.is_from_state(from_state, to_state):
+            # The trigger should never fire if the new state is not the to state
+            if not to_state or not self.is_to_state(to_state):
                 return
 
-            # The trigger should never fire if the new state is not the to state
-            if not self.is_to_state(to_state):
+            # The trigger should never fire if the previous state was not the from state
+            if not self.is_from_state(from_state, to_state):
                 return
 
             if behavior == BEHAVIOR_LAST:
@@ -453,6 +453,22 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
         return state.state in self._to_states
 
 
+class FromEntityStateTriggerBase(EntityTriggerBase):
+    """Class for entity state changes from a specific state."""
+
+    _from_state: str
+
+    def is_from_state(self, from_state: State, to_state: State) -> bool:
+        """Check if the state matches the origin state."""
+        return (
+            from_state.state == self._from_state and to_state.state != self._from_state
+        )
+
+    def is_to_state(self, state: State) -> bool:
+        """Check if the state matches the target state."""
+        return state.state != self._from_state
+
+
 class EntityStateAttributeTriggerBase(EntityTriggerBase):
     """Trigger for entity state attribute changes."""
 
@@ -489,6 +505,20 @@ def make_conditional_entity_state_trigger(
         _domain = domain
         _from_states = from_states
         _to_states = to_states
+
+    return CustomTrigger
+
+
+def make_from_entity_state_trigger(
+    domain: str, *, from_state: str
+) -> type[FromEntityStateTriggerBase]:
+    """Create a "from" entity state trigger class."""
+
+    class CustomTrigger(FromEntityStateTriggerBase):
+        """Trigger for "from" entity state changes."""
+
+        _domain = domain
+        _from_state = from_state
 
     return CustomTrigger
 
