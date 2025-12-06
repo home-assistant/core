@@ -12,7 +12,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -41,7 +40,7 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 @pytest.fixture
 async def target_texts(hass: HomeAssistant) -> list[str]:
     """Create multiple text entities associated with different targets."""
-    return await target_entities(hass, "text")
+    return (await target_entities(hass, "text"))["included"]
 
 
 @pytest.mark.parametrize(
@@ -94,43 +93,50 @@ async def test_text_triggers_gated_by_labs_flag(
         (
             "text.changed",
             [
-                {"state": None, "attributes": {}, "count": 0},
-                {"state": "bar", "attributes": {}, "count": 0},
-                {"state": "baz", "attributes": {}, "count": 1},
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "bar", "attributes": {}}, "count": 0},
+                {"included": {"state": "baz", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "text.changed",
             [
-                {"state": "foo", "attributes": {}, "count": 0},
-                {"state": "bar", "attributes": {}, "count": 1},
-                {"state": "baz", "attributes": {}, "count": 1},
+                {"included": {"state": "foo", "attributes": {}}, "count": 0},
+                {"included": {"state": "bar", "attributes": {}}, "count": 1},
+                {"included": {"state": "baz", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "text.changed",
             [
-                {"state": "foo", "attributes": {}, "count": 0},
-                {"state": "", "attributes": {}, "count": 1},  # empty string
-                {"state": "baz", "attributes": {}, "count": 1},
+                {"included": {"state": "foo", "attributes": {}}, "count": 0},
+                # empty string
+                {"included": {"state": "", "attributes": {}}, "count": 1},
+                {"included": {"state": "baz", "attributes": {}}, "count": 1},
             ],
         ),
         (
             "text.changed",
             [
-                {"state": STATE_UNAVAILABLE, "attributes": {}, "count": 0},
-                {"state": "bar", "attributes": {}, "count": 0},
-                {"state": "baz", "attributes": {}, "count": 1},
-                {"state": STATE_UNAVAILABLE, "attributes": {}, "count": 0},
+                {
+                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "count": 0,
+                },
+                {"included": {"state": "bar", "attributes": {}}, "count": 0},
+                {"included": {"state": "baz", "attributes": {}}, "count": 1},
+                {
+                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "count": 0,
+                },
             ],
         ),
         (
             "text.changed",
             [
-                {"state": STATE_UNKNOWN, "attributes": {}, "count": 0},
-                {"state": "bar", "attributes": {}, "count": 0},
-                {"state": "baz", "attributes": {}, "count": 1},
-                {"state": STATE_UNKNOWN, "attributes": {}, "count": 0},
+                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {"included": {"state": "bar", "attributes": {}}, "count": 0},
+                {"included": {"state": "baz", "attributes": {}}, "count": 1},
+                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
             ],
         ),
     ],
@@ -146,19 +152,18 @@ async def test_text_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the text state trigger fires when any text state changes to a specific state."""
-    await async_setup_component(hass, "text", {})
-
     other_entity_ids = set(target_texts) - {entity_id}
 
     # Set all texts, including the tested text, to the initial state
     for eid in target_texts:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -167,7 +172,7 @@ async def test_text_state_trigger_behavior_any(
 
         # Check if changing other texts also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()

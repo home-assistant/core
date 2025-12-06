@@ -92,7 +92,7 @@
         },
         "filename": {
           "description": "Path to the image or video to upload.",
-          "example": "/config/www/image.jpg",
+          "example": "{example_image_path}",
           "name": "Filename"
         }
       },
