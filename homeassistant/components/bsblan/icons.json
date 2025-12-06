@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_hot_water_schedule": {
+      "service": "mdi:calendar-clock"
+    }
+  }
+}

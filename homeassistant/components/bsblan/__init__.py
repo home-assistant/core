@@ -27,12 +27,17 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type BSBLanConfigEntry = ConfigEntry[BSBLanData]
 
@@ -47,6 +52,12 @@ class BSBLanData:
     device: Device
     info: Info
     static: StaticState
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the BSB-Lan integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
