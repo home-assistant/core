@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyanglianwater.api import API
 from pyanglianwater.meter import SmartMeter
 import pytest
 
@@ -11,7 +12,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -81,6 +82,10 @@ def mock_anglian_water_client(
         mock_client.account_config = {"meter_type": "SmartMeter"}
         mock_client.updated_data_callbacks = []
         mock_client.validate_smart_meter.return_value = None
+        mock_client.api = AsyncMock(spec=API)
+        mock_client.api.get_associated_accounts.return_value = load_json_object_fixture(
+            "multi_associated_accounts.json", DOMAIN
+        )
         yield mock_client
 
 

@@ -10,6 +10,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "select_account": {
+        "data": {
+          "account_number": "Billing Account Number"
+        },
+        "data_description": {
+          "account_number": "Select the billing account you wish to use."
+        },
+        "description": "Multiple active billing accounts were found with your credentials. Please select the account you wish to use. If this is unexpected, contact Anglian Water to confirm your active accounts."
+      },
       "user": {
         "data": {
           "account_number": "Billing Account Number",

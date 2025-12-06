@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def test_full_flow(
@@ -40,7 +40,51 @@ async def test_full_flow(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_account"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_NUMBER
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
+    assert result["result"].unique_id == ACCOUNT_NUMBER
+
+
+async def test_single_account_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test a full and successful config flow with a single account."""
+    mock_anglian_water_client.api.get_associated_accounts.return_value = (
+        load_json_object_fixture("single_associated_accounts.json", DOMAIN)
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         },
     )
 
@@ -75,6 +119,15 @@ async def test_already_configured(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_account"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
@@ -109,7 +162,6 @@ async def test_auth_recover_exception(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 
@@ -126,6 +178,15 @@ async def test_auth_recover_exception(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_account"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
@@ -161,19 +222,28 @@ async def test_account_recover_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_anglian_water_client.validate_smart_meter.side_effect = exception_type
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    mock_anglian_water_client.validate_smart_meter.side_effect = exception_type
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_account"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "select_account"
     assert result["errors"] == {"base": expected_error}
 
     # Now test we can recover
@@ -183,8 +253,6 @@ async def test_account_recover_exception(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
             CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
