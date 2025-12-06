@@ -17,11 +17,16 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.typing import ConfigType
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import (
+    ConfigurationStyle,
+    TemplateEntityTestsSetup,
+    async_get_flow_preview_state,
+    async_trigger,
+)
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import MockConfigEntry
 from tests.components.vacuum import common
 from tests.typing import WebSocketGenerator
 
@@ -33,21 +38,17 @@ TEST_SPEED_SENSOR = "sensor.test_fan_speed"
 TEST_BATTERY_LEVEL_SENSOR = "sensor.test_battery_level"
 TEST_AVAILABILITY_ENTITY = "availability_state.state"
 
-TEST_STATE_TRIGGER = {
-    "trigger": {
-        "trigger": "state",
-        "entity_id": [
-            TEST_STATE_SENSOR,
-            TEST_SPEED_SENSOR,
-            TEST_BATTERY_LEVEL_SENSOR,
-            TEST_AVAILABILITY_ENTITY,
-        ],
-    },
-    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
-    "action": [
-        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
-    ],
-}
+template_entity_setup = TemplateEntityTestsSetup(
+    vacuum.DOMAIN,
+    "vacuums",
+    TEST_OBJECT_ID,
+    (
+        TEST_STATE_SENSOR,
+        TEST_SPEED_SENSOR,
+        TEST_BATTERY_LEVEL_SENSOR,
+        TEST_AVAILABILITY_ENTITY,
+    ),
+)
 
 START_ACTION = {
     "start": {
@@ -114,68 +115,16 @@ def _verify(
     hass: HomeAssistant,
     expected_state: str,
     expected_battery_level: int | None = None,
-    expected_fan_speed: int | None = None,
+    expected_fan_speed: str | None = None,
 ) -> None:
     """Verify vacuum's state and speed."""
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.attributes is not None
     attributes = state.attributes
     assert state.state == expected_state
     assert attributes.get(ATTR_BATTERY_LEVEL) == expected_battery_level
     assert attributes.get(ATTR_FAN_SPEED) == expected_fan_speed
-
-
-async def async_setup_legacy_format(
-    hass: HomeAssistant, count: int, vacuum_config: dict[str, Any]
-) -> None:
-    """Do setup of vacuum integration via new format."""
-    config = {"vacuum": {"platform": "template", "vacuums": vacuum_config}}
-
-    with assert_setup_component(count, vacuum.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            vacuum.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_modern_format(
-    hass: HomeAssistant, count: int, vacuum_config: dict[str, Any]
-) -> None:
-    """Do setup of vacuum integration via modern format."""
-    config = {"template": {"vacuum": vacuum_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant, count: int, vacuum_config: dict[str, Any]
-) -> None:
-    """Do setup of vacuum integration via trigger format."""
-    config = {"template": {"vacuum": vacuum_config, **TEST_STATE_TRIGGER}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -186,12 +135,7 @@ async def setup_vacuum(
     vacuum_config: dict[str, Any],
 ) -> None:
     """Do setup of number integration."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(hass, count, vacuum_config)
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(hass, count, vacuum_config)
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(hass, count, vacuum_config)
+    await template_entity_setup.setup_entity(hass, style, count, vacuum_config)
 
 
 @pytest.fixture
@@ -203,18 +147,9 @@ async def setup_test_vacuum_with_extra_config(
     extra_config: dict[str, Any],
 ) -> None:
     """Do setup of number integration."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass, count, {TEST_OBJECT_ID: {**vacuum_config, **extra_config}}
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass, count, {"name": TEST_OBJECT_ID, **vacuum_config, **extra_config}
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass, count, {"name": TEST_OBJECT_ID, **vacuum_config, **extra_config}
-        )
+    await template_entity_setup.setup_entity(
+        hass, style, count, vacuum_config, extra_config=extra_config
+    )
 
 
 @pytest.fixture
@@ -225,37 +160,9 @@ async def setup_state_vacuum(
     state_template: str,
 ):
     """Do setup of vacuum integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                TEST_OBJECT_ID: {
-                    "value_template": state_template,
-                    **TEMPLATE_VACUUM_ACTIONS,
-                }
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                "state": state_template,
-                **TEMPLATE_VACUUM_ACTIONS,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                "state": state_template,
-                **TEMPLATE_VACUUM_ACTIONS,
-            },
-        )
+    await template_entity_setup.setup_entity(
+        hass, style, count, TEMPLATE_VACUUM_ACTIONS, state_template
+    )
 
 
 @pytest.fixture
@@ -267,40 +174,9 @@ async def setup_base_vacuum(
     extra_config: dict,
 ):
     """Do setup of vacuum integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        state_config = {"value_template": state_template} if state_template else {}
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                TEST_OBJECT_ID: {
-                    **state_config,
-                    **extra_config,
-                }
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        state_config = {"state": state_template} if state_template else {}
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **state_config,
-                **extra_config,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        state_config = {"state": state_template} if state_template else {}
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **state_config,
-                **extra_config,
-            },
-        )
+    await template_entity_setup.setup_entity(
+        hass, style, count, extra_config, state_template
+    )
 
 
 @pytest.fixture
@@ -314,47 +190,15 @@ async def setup_single_attribute_state_vacuum(
     extra_config: dict,
 ) -> None:
     """Do setup of vacuum integration testing a single attribute."""
-    extra = {attribute: attribute_template} if attribute and attribute_template else {}
-    if style == ConfigurationStyle.LEGACY:
-        state_config = {"value_template": state_template} if state_template else {}
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                TEST_OBJECT_ID: {
-                    **state_config,
-                    **TEMPLATE_VACUUM_ACTIONS,
-                    **extra,
-                    **extra_config,
-                }
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        state_config = {"state": state_template} if state_template else {}
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **state_config,
-                **TEMPLATE_VACUUM_ACTIONS,
-                **extra,
-                **extra_config,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        state_config = {"state": state_template} if state_template else {}
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **state_config,
-                **TEMPLATE_VACUUM_ACTIONS,
-                **extra,
-                **extra_config,
-            },
-        )
+    config = {attribute: attribute_template} if attribute and attribute_template else {}
+    await template_entity_setup.setup_entity(
+        hass,
+        style,
+        count,
+        {**config, **TEMPLATE_VACUUM_ACTIONS},
+        state_template,
+        extra_config,
+    )
 
 
 @pytest.fixture
@@ -366,43 +210,14 @@ async def setup_attributes_state_vacuum(
     attributes: dict,
 ) -> None:
     """Do setup of vacuum integration testing a single attribute."""
-    if style == ConfigurationStyle.LEGACY:
-        state_config = {"value_template": state_template} if state_template else {}
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                TEST_OBJECT_ID: {
-                    "attribute_templates": attributes,
-                    **state_config,
-                    **TEMPLATE_VACUUM_ACTIONS,
-                }
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        state_config = {"state": state_template} if state_template else {}
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                "attributes": attributes,
-                **state_config,
-                **TEMPLATE_VACUUM_ACTIONS,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        state_config = {"state": state_template} if state_template else {}
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                "attributes": attributes,
-                **state_config,
-                **TEMPLATE_VACUUM_ACTIONS,
-            },
-        )
+    await template_entity_setup.setup_entity(
+        hass,
+        style,
+        count,
+        TEMPLATE_VACUUM_ACTIONS,
+        state_template,
+        attributes=attributes,
+    )
 
 
 @pytest.mark.parametrize("count", [1])
@@ -530,7 +345,7 @@ async def test_valid_legacy_configs(hass: HomeAssistant, count, parm1, parm2) ->
     """Test: configs."""
 
     # Ensure trigger entity templates are rendered
-    hass.states.async_set(TEST_STATE_SENSOR, None)
+    hass.states.async_set(TEST_STATE_SENSOR, "")
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("vacuum")) == count
@@ -582,10 +397,7 @@ async def test_battery_level_template(
     hass: HomeAssistant, expected: int | None
 ) -> None:
     """Test templates with values from other entities."""
-    # Ensure trigger entity templates are rendered
-    hass.states.async_set(TEST_STATE_SENSOR, None)
-    await hass.async_block_till_done()
-
+    await async_trigger(hass, TEST_STATE_SENSOR)
     _verify(hass, STATE_UNKNOWN, expected)
 
 
@@ -609,16 +421,16 @@ async def test_battery_level_template_repair(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test battery_level template raises issue."""
-    # Ensure trigger entity templates are rendered
-    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_SENSOR, VacuumActivity.DOCKED)
 
     assert len(issue_registry.issues) == issue_count
     issue = issue_registry.async_get_issue(
         "template", f"deprecated_battery_level_{TEST_ENTITY_ID}"
     )
+    assert issue is not None
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders is not None
     assert issue.translation_placeholders["entity_name"] == TEST_OBJECT_ID
     assert issue.translation_placeholders["entity_id"] == TEST_ENTITY_ID
     assert "Detected that integration 'template' is setting the" not in caplog.text
@@ -656,10 +468,7 @@ async def test_battery_level_template_repair(
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> None:
     """Test templates with values from other entities."""
-    # Ensure trigger entity templates are rendered
-    hass.states.async_set(TEST_STATE_SENSOR, None)
-    await hass.async_block_till_done()
-
+    await async_trigger(hass, TEST_STATE_SENSOR)
     _verify(hass, STATE_UNKNOWN, None, expected)
 
 
@@ -686,12 +495,14 @@ async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> 
 async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes.get("icon") == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes["icon"] == "mdi:check"
 
 
@@ -718,12 +529,14 @@ async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
 async def test_picture_template(hass: HomeAssistant, expected: int) -> None:
     """Test picture template."""
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes.get("entity_picture") == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes["entity_picture"] == "local/vacuum.png"
 
 
@@ -755,14 +568,18 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     # When Availability template returns false
     hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    assert hass.states.get(TEST_ENTITY_ID).state == STATE_UNAVAILABLE
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("extra_config", [{}])
@@ -789,11 +606,7 @@ async def test_invalid_availability_template_keeps_component_available(
     hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid availability keeps the device available."""
-
-    # Ensure state change triggers trigger entity.
-    hass.states.async_set(TEST_STATE_SENSOR, None)
-    await hass.async_block_till_done()
-
+    await async_trigger(hass, TEST_STATE_SENSOR)
     assert hass.states.get(TEST_ENTITY_ID) != STATE_UNAVAILABLE
     err = "'x' is undefined"
     assert err in caplog_setup_text or err in caplog.text
@@ -816,12 +629,14 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_attribute_templates(hass: HomeAssistant) -> None:
     """Test attribute_templates template."""
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes["test_attribute"] == "It ."
 
     hass.states.async_set(TEST_STATE_SENSOR, "Works")
     await hass.async_block_till_done()
     await async_update_entity(hass, TEST_ENTITY_ID)
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes["test_attribute"] == "It Works."
 
 
@@ -853,59 +668,32 @@ async def test_invalid_attribute_template(
     assert err in caplog_setup_text or err in caplog.text
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
 @pytest.mark.parametrize(
-    ("style", "vacuum_config"),
-    [
-        (
-            ConfigurationStyle.LEGACY,
-            {
-                "test_template_vacuum_01": {
-                    "value_template": "{{ true }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-                "test_template_vacuum_02": {
-                    "value_template": "{{ false }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-            },
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            [
-                {
-                    "name": "test_template_vacuum_01",
-                    "state": "{{ true }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_vacuum_02",
-                    "state": "{{ false }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-            ],
-        ),
-        (
-            ConfigurationStyle.TRIGGER,
-            [
-                {
-                    "name": "test_template_vacuum_01",
-                    "state": "{{ true }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_vacuum_02",
-                    "state": "{{ false }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-            ],
-        ),
-    ],
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.usefixtures("setup_vacuum")
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
     """Test unique_id option only creates one vacuum per id."""
-    assert len(hass.states.async_all("vacuum")) == 1
+    await template_entity_setup.setup_and_test_unique_id(hass, style, config)
+
+
+@pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates to vacuum unique_ids."""
+    await template_entity_setup.setup_and_test_nested_unique_id(
+        hass, style, entity_registry, config
+    )
 
 
 @pytest.mark.parametrize(
@@ -1089,48 +877,6 @@ async def test_set_invalid_fan_speed(
     assert calls[-1].data["fan_speed"] == "high"
 
 
-async def test_nested_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test a template unique_id propagates to switch unique_ids."""
-    with assert_setup_component(1, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {
-                "template": {
-                    "unique_id": "x",
-                    "vacuum": [
-                        {
-                            **TEMPLATE_VACUUM_ACTIONS,
-                            "name": "test_a",
-                            "unique_id": "a",
-                        },
-                        {
-                            **TEMPLATE_VACUUM_ACTIONS,
-                            "name": "test_b",
-                            "unique_id": "b",
-                        },
-                    ],
-                },
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("vacuum")) == 2
-
-    entry = entity_registry.async_get("vacuum.test_a")
-    assert entry
-    assert entry.unique_id == "x-a"
-
-    entry = entity_registry.async_get("vacuum.test_b")
-    assert entry
-    assert entry.unique_id == "x-b"
-
-
 @pytest.mark.parametrize(("count", "vacuum_config"), [(1, {"start": []})])
 @pytest.mark.parametrize(
     "style",
@@ -1177,16 +923,17 @@ async def test_nested_unique_id(
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
 async def test_empty_action_config(
     hass: HomeAssistant,
     supported_features: VacuumEntityFeature,
-    setup_test_vacuum_with_extra_config,
 ) -> None:
     """Test configuration with empty script."""
     await common.async_start(hass, TEST_ENTITY_ID)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.attributes["supported_features"] == (
         VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
     )
@@ -1233,6 +980,7 @@ async def test_assumed_optimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.state == expected
 
 
@@ -1277,6 +1025,7 @@ async def test_optimistic_option(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.state == VacuumActivity.DOCKED
 
     await hass.services.async_call(
@@ -1288,6 +1037,7 @@ async def test_optimistic_option(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.state == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.RETURNING)
@@ -1297,6 +1047,7 @@ async def test_optimistic_option(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.state == VacuumActivity.DOCKED
 
 
@@ -1345,6 +1096,7 @@ async def test_not_optimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
     assert state.state == STATE_UNKNOWN
 
 
