@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
@@ -88,11 +89,8 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
-            if config_entry.unique_id is None:
-                _LOGGER.warning(
-                    "Config entry is missing unique ID, cannot migrate to version 1.2"
-                )
-                return False
+            if TYPE_CHECKING:
+                assert config_entry.unique_id
             normalized_mac_address = format_mac(config_entry.unique_id)
             duplicate_entries = [
                 entry
