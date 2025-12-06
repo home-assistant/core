@@ -12,7 +12,7 @@ from xknx.telegram import Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_TYPE, CONF_VALUE_TEMPLATE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -151,6 +151,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
     ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
         {
             vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
         }
     ),
     vol.Schema(
