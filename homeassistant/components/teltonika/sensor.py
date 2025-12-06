@@ -145,7 +145,7 @@ class TeltonikaSensorEntity(
         self._attr_unique_id = f"{entry_unique_id}_{modem_id}_{description.key}"
 
         # Use translation key for proper naming
-        modem_name = getattr(modem, "name", f"Modem {modem_id}")
+        modem_name = modem.name or f"Modem {modem_id}"
         self._modem_name = modem_name
         self._attr_translation_key = description.translation_key
         self._attr_translation_placeholders = {"modem_name": modem_name}
@@ -185,9 +185,9 @@ class TeltonikaSensorEntity(
 
         # Update native value
         if self.entity_description.key == "connection_type":
-            value = getattr(modem, "conntype", None)
+            value = modem.conntype
         else:
-            value = getattr(modem, self.entity_description.key, None)
+            value = getattr(modem, self.entity_description.key)
 
         # Ensure value is a valid state type
         if isinstance(value, (str, int, float)):
@@ -196,15 +196,15 @@ class TeltonikaSensorEntity(
             self._attr_native_value = None
 
         # Update attributes with modem data
-        attrs["modem_name"] = getattr(modem, "name", self._modem_name)
-        attrs["connection_type"] = getattr(modem, "conntype", None)
-        attrs["operator"] = getattr(modem, "operator", None)
+        attrs["modem_name"] = modem.name or self._modem_name
+        attrs["connection_type"] = modem.conntype
+        attrs["operator"] = modem.operator
 
         # Update sensor-specific attributes
         if self.entity_description.key in ("rssi", "rsrp", "rsrq", "sinr"):
-            band = getattr(modem, "sc_band_av", None) or getattr(modem, "band", None)
+            band = modem.sc_band_av or modem.band
             attrs["band"] = band
-            attrs["state"] = getattr(modem, "state", None)
+            attrs["state"] = modem.state
 
         self._attr_extra_state_attributes = attrs
         super()._handle_coordinator_update()
