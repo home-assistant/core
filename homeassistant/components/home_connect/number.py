@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import DOMAIN, UNIT_MAP
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import get_dict_from_home_connect_error
 
@@ -122,26 +122,24 @@ NUMBER_OPTIONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectNumberEntity(entry.runtime_data, appliance, description)
+        HomeConnectNumberEntity(appliance_coordinator, description)
         for description in NUMBERS
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     ]
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of currently available option entities."""
     return [
-        HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
+        HomeConnectOptionNumberEntity(appliance_coordinator, description)
         for description in NUMBER_OPTIONS
-        if description.key in appliance.options
+        if description.key in appliance_coordinator.data.options
     ]
 
 

@@ -10,11 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -48,20 +44,17 @@ COMMAND_BUTTONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = []
     entities.extend(
-        HomeConnectCommandButtonEntity(entry.runtime_data, appliance, description)
+        HomeConnectCommandButtonEntity(appliance_coordinator, description)
         for description in COMMAND_BUTTONS
-        if description.key in appliance.commands
+        if description.key in appliance_coordinator.data.commands
     )
-    if appliance.info.type in APPLIANCES_WITH_PROGRAMS:
-        entities.append(
-            HomeConnectStopProgramButtonEntity(entry.runtime_data, appliance)
-        )
+    if appliance_coordinator.data.info.type in APPLIANCES_WITH_PROGRAMS:
+        entities.append(HomeConnectStopProgramButtonEntity(appliance_coordinator))
 
     return entities
 
@@ -86,17 +79,11 @@ class HomeConnectButtonEntity(HomeConnectEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: ButtonEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(
-            coordinator,
-            appliance,
-            desc,
-            (appliance.info.ha_id,),
-        )
+        super().__init__(appliance_coordinator, desc, True)
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""
@@ -129,15 +116,10 @@ class HomeConnectCommandButtonEntity(HomeConnectButtonEntity):
 class HomeConnectStopProgramButtonEntity(HomeConnectButtonEntity):
     """Button entity for stopping a program."""
 
-    def __init__(
-        self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
-    ) -> None:
+    def __init__(self, appliance_coordinator: HomeConnectApplianceCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             ButtonEntityDescription(
                 key="StopProgram",
                 translation_key="stop_program",
