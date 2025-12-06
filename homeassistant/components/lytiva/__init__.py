@@ -1,10 +1,9 @@
-"""Lytiva integration with independent MQTT connection (single global MQTT handler)."""
+"""Lytiva integration with independent MQTT connection (single platform - light only)."""
 from __future__ import annotations
 import logging
 import json
 import asyncio
-from typing import Any, Callable, Dict, List, Optional
-from .const import DOMAIN, PLATFORMS  # ✅ Import from const.py
+from typing import Any, Callable, Dict, List
 
 import paho.mqtt.client as mqtt_client
 
@@ -12,22 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-# DOMAIN = "lytiva"
-
-# # default platforms the integration may forward to
-# PLATFORMS = [
-#     "light",
-#     "cover",
-#     "switch",
-#     "fan",
-#     "sensor",
-#     "binary_sensor",
-#     "climate",
-#     "scene"
-# ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -62,51 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # quick lookup by address (address may be int or str) -> entity
         "entities_by_address": {},  # type: Dict[str, Any]
         # platform registration callbacks
-        "cover_callbacks": [],  # type: List[Callable[[dict], None]]
-        "climate_callbacks": [],
-        "fan_callbacks": [],
-        "light_callbacks": [],
-        "switch_callbacks": [],
-        "sensor_callbacks": [],
-        "binary_sensor_callbacks": [],
-        "other_callbacks": [],
-        
+        "light_callbacks": [],  # type: List[Callable[[dict], None]]
     }
 
-    # Helper: registration functions for platforms to register discovery callback
-    def register_cover_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["cover_callbacks"].append(callback)
-
-    def register_climate_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["climate_callbacks"].append(callback)
-
-    def register_fan_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["fan_callbacks"].append(callback)
-
+    # Helper: registration function for light platform to register discovery callback
     def register_light_callback(callback: Callable[[dict], None]) -> None:
         hass.data[DOMAIN][entry.entry_id]["light_callbacks"].append(callback)
 
-    def register_switch_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["switch_callbacks"].append(callback)
-
-    def register_sensor_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["sensor_callbacks"].append(callback)
-
-    def register_binary_sensor_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["binary_sensor_callbacks"].append(callback)
-    
-    def register_other_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["other_callbacks"].append(callback)
-
-    # expose registration helpers to hass.data for platforms to call
-    hass.data[DOMAIN][entry.entry_id]["register_cover_callback"] = register_cover_callback
-    hass.data[DOMAIN][entry.entry_id]["register_climate_callback"] = register_climate_callback
-    hass.data[DOMAIN][entry.entry_id]["register_fan_callback"] = register_fan_callback
+    # expose registration helper to hass.data for platform to call
     hass.data[DOMAIN][entry.entry_id]["register_light_callback"] = register_light_callback
-    hass.data[DOMAIN][entry.entry_id]["register_switch_callback"] = register_switch_callback
-    hass.data[DOMAIN][entry.entry_id]["register_sensor_callback"] = register_sensor_callback
-    hass.data[DOMAIN][entry.entry_id]["register_binary_sensor_callback"] = register_binary_sensor_callback
-    hass.data[DOMAIN][entry.entry_id]["register_other_callback"] = register_other_callback
 
     #
     # Central STATUS handler: updates entity objects (by address or unique_id)
@@ -114,8 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _schedule_entity_update(entity, payload):
         """Schedule entity._update_from_payload(payload). Works for async/sync methods."""
         try:
-            # If entity has async _update_from_payload
-            update_coro = None
             if hasattr(entity, "_update_from_payload"):
                 fn = getattr(entity, "_update_from_payload")
                 if asyncio.iscoroutinefunction(fn):
@@ -182,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except Exception:
                 continue
 
-        # no entity matched — optionally we can store this status for later
+        # no entity matched
         _LOGGER.debug("Status received but no matching entity found (address=%s unique=%s)", address, unique)
 
     # Thread callback for paho -> schedule coroutine on hass loop
@@ -303,32 +251,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         _LOGGER.debug("Discovery payload stored for unique_id=%s platform=%s", unique_id, platform)
 
-        # Call appropriate callbacks (safe)
+        # Call appropriate callbacks (only light for now)
         try:
-            if platform == "cover":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["cover_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            elif platform == "climate":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["climate_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            elif platform == "fan":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["fan_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            elif platform == "light":
+            if platform == "light":
                 for cb in list(hass.data[DOMAIN][entry.entry_id]["light_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            elif platform == "switch":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["switch_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            elif platform == "sensor":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["sensor_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            elif platform == "binary_sensor":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["binary_sensor_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-            else:
-                # call any other registered callbacks
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["other_callbacks"]):
                     hass.loop.call_soon_threadsafe(cb, payload)
         except Exception as e:
             _LOGGER.exception("Error calling discovery callbacks: %s", e)
@@ -376,13 +302,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Could not connect/start MQTT: %s", e)
         return False
 
-    # Forward platforms (load platform modules)
+    # Forward platforms (only light for initial submission)
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception as e:
         _LOGGER.exception("Error forwarding platforms: %s", e)
 
-    # After platforms are loaded, force-call callbacks for any already discovered payloads
+    # After platform is loaded, force-call callbacks for any already discovered payloads
     try:
         discovered_items = list(hass.data[DOMAIN][entry.entry_id]["discovered_payloads"].values())
         for item in discovered_items:
@@ -391,42 +317,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 payload = item["payload"]
                 platform = item["platform"]
             else:
-                # Fallback for old structure (should not happen after restart with new code, but good for safety)
+                # Fallback for old structure
                 payload = item
                 platform = None
             
-            # Dispatch based on platform
-            if platform:
-                callbacks = []
-                if platform == "cover":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["cover_callbacks"]
-                elif platform == "climate":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["climate_callbacks"]
-                elif platform == "fan":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["fan_callbacks"]
-                elif platform == "light":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["light_callbacks"]
-                elif platform == "switch":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["switch_callbacks"]
-                elif platform == "sensor":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["sensor_callbacks"]
-                elif platform == "binary_sensor":
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["binary_sensor_callbacks"]
-                else:
-                    callbacks = hass.data[DOMAIN][entry.entry_id]["other_callbacks"]
-                
+            # Dispatch only to light platform
+            if platform == "light":
+                callbacks = hass.data[DOMAIN][entry.entry_id]["light_callbacks"]
                 for cb in callbacks:
                     hass.loop.call_soon_threadsafe(cb, payload)
-            else:
-                # Fallback heuristic (only if platform is missing)
-                called = False
-                if "device_class" in payload and "cover" in str(payload.get("device_class","")).lower():
-                    for cb in hass.data[DOMAIN][entry.entry_id]["cover_callbacks"]:
-                        hass.loop.call_soon_threadsafe(cb, payload)
-                        called = True
-                if not called and ("state_topic" in payload or "command_topic" in payload or "unique_id" in payload):
-                    for cb in hass.data[DOMAIN][entry.entry_id]["light_callbacks"]:
-                        hass.loop.call_soon_threadsafe(cb, payload)
     except Exception as e:
         _LOGGER.exception("Error during initial dispatch of discovered payloads: %s", e)
 

@@ -2,14 +2,6 @@
 
 DOMAIN = "lytiva"
 
-# Default platforms
-PLATFORMS = [
-    "light",
-    "cover",
-    "switch",
-    "fan",
-    "sensor",
-    "binary_sensor",
-    "climate",
-    "scene",
-]
+# Single platform for initial submission (light only)
+# Additional platforms will be added in follow-up PRs
+PLATFORMS = ["light"]
