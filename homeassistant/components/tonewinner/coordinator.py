@@ -3,21 +3,32 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+from datetime import timedelta
 import logging
 from typing import Any
 
+# serial_asyncio_fast is the correct import for Home Assistant
 import serial_asyncio_fast as serial_asyncio
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CMD_MUTE_OFF,
+    CMD_MUTE_ON,
     CMD_MUTE_QUERY,
+    CMD_POWER_OFF,
+    CMD_POWER_ON,
     CMD_POWER_QUERY,
+    CMD_VOLUME_DOWN,
     CMD_VOLUME_QUERY,
+    CMD_VOLUME_SET,
+    CMD_VOLUME_UP,
     COMMAND_TERMINATOR,
     CONF_BAUDRATE,
-    CONF_SERIAL_PORT,
     DEFAULT_BAUDRATE,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -25,32 +36,35 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = 30  # Poll device every 30 seconds
+SCAN_INTERVAL = timedelta(seconds=30)
+
+
+type ToneWinnerConfigEntry = ConfigEntry[ToneWinnerCoordinator]
 
 
 class ToneWinnerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to manage the serial connection and device state."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: dict[str, Any],
-    ) -> None:
+    config_entry: ToneWinnerConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: ToneWinnerConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.port = entry[CONF_SERIAL_PORT]
-        self.baudrate = entry.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
+        self.port = entry.data[CONF_DEVICE]
+        self.baudrate = entry.data.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._command_queue: asyncio.Queue[str] = asyncio.Queue()
         self._response_event: asyncio.Event = asyncio.Event()
         self._last_response: str = ""
         self._command_task: asyncio.Task | None = None
+        self._shutdown = False
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
 
     async def _connect(self) -> None:
@@ -63,9 +77,9 @@ class ToneWinnerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 timeout=DEFAULT_TIMEOUT,
             )
             _LOGGER.info("Successfully connected to %s", self.port)
-        except Exception as err:
+        except OSError as err:
             _LOGGER.error("Failed to connect to %s: %s", self.port, err)
-            raise
+            raise UpdateFailed(f"Serial connection failed: {err}") from err
 
     async def _disconnect(self) -> None:
         """Close serial connection."""
@@ -73,33 +87,35 @@ class ToneWinnerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 self._writer.close()
                 await self._writer.wait_closed()
-            except Exception:
-                pass
+            except Exception as err:  # noqa: BLE001 - catching all exceptions for cleanup
+                _LOGGER.debug("Error closing serial connection: %s", err)
         self._reader = None
         self._writer = None
 
     async def _process_commands(self) -> None:
         """Background task to process commands from the queue."""
-        while True:
+        while not self._shutdown:
             try:
                 command = await self._command_queue.get()
-                if not self._writer or not self._reader:
+                if self._writer is None or self._reader is None:
                     await self._connect()
 
                 _LOGGER.debug("Sending command: %s", command.strip())
+                assert self._writer is not None
                 self._writer.write(command.encode())
                 await self._writer.drain()
 
                 # Read response
+                assert self._reader is not None
                 response = await self._reader.readuntil(COMMAND_TERMINATOR.encode())
                 self._last_response = response.decode().strip()
                 _LOGGER.debug("Received response: %s", self._last_response)
                 self._response_event.set()
 
             except TimeoutError:
-                _LOGGER.warning("Timeout waiting for response to %s", command)
-            except Exception as err:
-                _LOGGER.error("Error processing command %s: %s", command, err)
+                _LOGGER.warning("Timeout waiting for response")
+            except OSError as err:
+                _LOGGER.error("Serial error processing command: %s", err)
                 await self._disconnect()
             finally:
                 self._command_queue.task_done()
@@ -117,32 +133,11 @@ class ToneWinnerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._response_event.wait(),
                 timeout=DEFAULT_TIMEOUT * 2,
             )
-            return self._last_response
         except TimeoutError:
             _LOGGER.error("Timeout waiting for command response")
             return ""
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update device status by polling."""
-        try:
-            # Query device status
-            power_response = await self.send_command(CMD_POWER_QUERY)
-            volume_response = await self.send_command(CMD_VOLUME_QUERY)
-            mute_response = await self.send_command(CMD_MUTE_QUERY)
-
-            data: dict[str, Any] = {
-                "power": self._parse_power(power_response),
-                "volume": self._parse_volume(volume_response),
-                "mute": self._parse_mute(mute_response),
-            }
-
-            _LOGGER.debug("Device status: %s", data)
-            return data
-
-        except Exception as err:
-            _LOGGER.error("Error updating device data: %s", err)
-            await self._disconnect()
-            raise UpdateFailed(f"Failed to update device data: {err}")
+        else:
+            return self._last_response
 
     def _parse_power(self, response: str) -> bool | None:
         """Parse power status from response."""
@@ -174,32 +169,52 @@ class ToneWinnerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 pass
         return None
 
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update device status by polling."""
+        # Query device status
+        power_response = await self.send_command(CMD_POWER_QUERY + COMMAND_TERMINATOR)
+        volume_response = await self.send_command(CMD_VOLUME_QUERY + COMMAND_TERMINATOR)
+        mute_response = await self.send_command(CMD_MUTE_QUERY + COMMAND_TERMINATOR)
+
+        data: dict[str, Any] = {
+            "power": self._parse_power(power_response),
+            "volume": self._parse_volume(volume_response),
+            "mute": self._parse_mute(mute_response),
+        }
+
+        _LOGGER.debug("Device status: %s", data)
+        return data
+
     async def async_power_on(self) -> None:
         """Turn device on."""
-        await self.send_command("PWR01")
+        await self.send_command(CMD_POWER_ON + COMMAND_TERMINATOR)
 
     async def async_power_off(self) -> None:
         """Turn device off."""
-        await self.send_command("PWR00")
+        await self.send_command(CMD_POWER_OFF + COMMAND_TERMINATOR)
 
     async def async_set_volume(self, volume: float) -> None:
         """Set volume (0-100)."""
+        if not 0 <= volume <= 100:
+            raise ValueError("Volume must be between 0 and 100")
+
         # Convert 0-100 to 0-128 hex
         vol_value = int((volume / 100) * 128)
         vol_hex = f"{vol_value:02X}"
-        await self.send_command(f"MVL{vol_hex}")
+        await self.send_command(f"{CMD_VOLUME_SET}{vol_hex}{COMMAND_TERMINATOR}")
 
     async def async_volume_up(self) -> None:
         """Increase volume."""
-        await self.send_command(CMD_VOLUME_UP)
+        await self.send_command(CMD_VOLUME_UP + COMMAND_TERMINATOR)
 
     async def async_volume_down(self) -> None:
         """Decrease volume."""
-        await self.send_command(CMD_VOLUME_DOWN)
+        await self.send_command(CMD_VOLUME_DOWN + COMMAND_TERMINATOR)
 
     async def async_mute(self, mute: bool) -> None:
         """Set mute state."""
-        await self.send_command("AMT01" if mute else "AMT00")
+        command = CMD_MUTE_ON if mute else CMD_MUTE_OFF
+        await self.send_command(command + COMMAND_TERMINATOR)
 
     async def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -209,12 +224,13 @@ class ToneWinnerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
+        self._shutdown = True
+
+        # Cancel command task
         if self._command_task:
             self._command_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._command_task
-            except asyncio.CancelledError:
-                pass
 
         await self._disconnect()
         _LOGGER.debug("Coordinator shutdown complete")

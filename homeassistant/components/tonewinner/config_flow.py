@@ -6,6 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
+from serial import SerialException
 import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
@@ -25,6 +26,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
+
+
 async def validate_serial_connection(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> dict[str, Any]:
@@ -37,7 +42,7 @@ async def validate_serial_connection(
 
     try:
         # Try to open serial connection
-        reader, writer = await asyncio.wait_for(
+        _reader, writer = await asyncio.wait_for(
             serial_asyncio.open_serial_connection(
                 url=port, baudrate=baudrate, timeout=DEFAULT_TIMEOUT
             ),
@@ -45,7 +50,7 @@ async def validate_serial_connection(
         )
         writer.close()
         await writer.wait_closed()
-    except (TimeoutError, OSError, serial_asyncio.SerialException) as err:
+    except (TimeoutError, OSError, SerialException) as err:
         _LOGGER.debug("Serial connection validation error: %s", err)
         raise CannotConnect from err
 
@@ -57,7 +62,7 @@ async def validate_serial_connection(
     }
 
 
-class ConfigFlow(ConfigFlow, domain=DOMAIN):
+class ToneWinnerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ToneWinner AT-500."""
 
     VERSION = 1
@@ -83,7 +88,3 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect."""

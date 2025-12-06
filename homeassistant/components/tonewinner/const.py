@@ -2,6 +2,10 @@
 
 DOMAIN = "tonewinner"
 
+# Configuration constants
+CONF_SERIAL_PORT = "device"
+CONF_BAUDRATE = "baudrate"
+
 # Serial communication constants
 DEFAULT_BAUDRATE = 9600
 DEFAULT_TIMEOUT = 1.0
