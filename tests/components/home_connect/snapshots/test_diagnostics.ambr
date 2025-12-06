@@ -66,7 +66,7 @@
       'connected': True,
       'e_number': 'HCS000000/07',
       'ha_id': '8765432109876543210',
-      'name': 'AirConditioner',
+      'name': 'Air conditioner',
       'programs': list([
         'HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Auto',
