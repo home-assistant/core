@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+
+from teltasync.modems import ModemStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -124,11 +126,11 @@ class TeltonikaSensorEntity(
 
     def __init__(
         self,
-        coordinator,
-        device_info,
+        coordinator: TeltonikaDataUpdateCoordinator,
+        device_info: DeviceInfo,
         description: SensorEntityDescription,
         modem_id: str,
-        modem: Any,
+        modem: ModemStatus,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -137,6 +139,7 @@ class TeltonikaSensorEntity(
         self._attr_device_info = device_info
 
         # Create unique ID using entry unique identifier, modem ID, and sensor type
+        assert coordinator.config_entry is not None
         entry_unique_id = (
             coordinator.config_entry.unique_id or coordinator.config_entry.entry_id
         )
