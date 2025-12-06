@@ -13,7 +13,10 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events
+from tests.common import (
+    async_capture_events,
+    async_check_service_description_placeholders,
+)
 
 
 @pytest.mark.parametrize(
@@ -298,3 +301,11 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "integration_not_loaded"
+
+
+async def test_service_desciption_placeholders(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test `knx.read` service."""
+    await knx.setup_integration()
+    await async_check_service_description_placeholders(hass, "knx")

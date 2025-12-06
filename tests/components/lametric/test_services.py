@@ -30,6 +30,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from tests.common import async_check_service_description_placeholders
+
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
@@ -208,3 +210,9 @@ async def test_service_message(
         )
 
     assert len(mock_lametric.notify.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("mock_lametric")
+async def test_service_description_placeholders(hass: HomeAssistant) -> None:
+    """Test the LaMetric service description placeholders."""
+    await async_check_service_description_placeholders(hass, DOMAIN)
