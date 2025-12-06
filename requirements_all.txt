@@ -2846,6 +2846,9 @@ sentry-sdk==2.48.0
 # homeassistant.components.zha
 serialx==0.6.2
 
+# homeassistant.components.tonewinner
+serial_asyncio==0.6
+
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.0
 
