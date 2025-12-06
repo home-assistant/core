@@ -72,6 +72,7 @@ from .const import (
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
+    CONF_STORE_LOGS,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -88,6 +89,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_STORE_LOGS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
@@ -490,7 +492,7 @@ class OpenAIBaseLLMEntity(Entity):
             top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             user=chat_log.conversation_id,
-            store=False,
+            store=options.get(CONF_STORE_LOGS, RECOMMENDED_STORE_LOGS),
             stream=True,
         )
 
