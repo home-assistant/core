@@ -77,9 +77,6 @@
       },
       "sinr": {
         "name": "{modem_name} SINR"
-      },
-      "temperature": {
-        "name": "{modem_name} Temperature"
       }
     }
   }
