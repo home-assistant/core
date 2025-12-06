@@ -115,7 +115,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_modems))
 
 
-class TeltonikaSensorEntity(CoordinatorEntity, SensorEntity):
+class TeltonikaSensorEntity(CoordinatorEntity[..], SensorEntity):
     """Teltonika sensor entity."""
 
     _attr_has_entity_name = True
