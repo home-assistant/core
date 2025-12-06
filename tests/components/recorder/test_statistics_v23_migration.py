@@ -35,7 +35,7 @@ SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("hass_storage", "skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 async def test_delete_duplicates(
     async_test_recorder: RecorderInstanceContextManager,
@@ -228,7 +228,7 @@ async def test_delete_duplicates(
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("hass_storage", "skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 async def test_delete_duplicates_many(
     async_test_recorder: RecorderInstanceContextManager,
@@ -428,7 +428,7 @@ async def test_delete_duplicates_many(
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("hass_storage", "skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 async def test_delete_duplicates_non_identical(
     async_test_recorder: RecorderInstanceContextManager,
@@ -629,7 +629,7 @@ async def test_delete_duplicates_non_identical(
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("hass_storage", "skip_by_db_engine")
 async def test_delete_duplicates_short_term(
     async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,

@@ -626,8 +626,17 @@ async def test_setup_without_migration(
 async def test_saving_state_include_domains(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
     await async_setup_recorder_instance(hass, {"include": {"domains": "test2"}})
     states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
@@ -637,8 +646,20 @@ async def test_saving_state_include_domains(
 async def test_saving_state_include_domains_globs(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test3", "mock", "1234", suggested_object_id="included_entity"
+    )
+
     await async_setup_recorder_instance(
         hass, {"include": {"domains": "test2", "entity_globs": "*.included_*"}}
     )
@@ -661,8 +682,17 @@ async def test_saving_state_include_domains_globs(
 async def test_saving_state_incl_entities(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
     await async_setup_recorder_instance(
         hass, {"include": {"entities": "test2.recorder"}}
     )
@@ -725,8 +755,17 @@ async def test_saving_event_exclude_event_type(
 async def test_saving_state_exclude_domains(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
     await async_setup_recorder_instance(hass, {"exclude": {"domains": "test"}})
     states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
@@ -736,8 +775,20 @@ async def test_saving_state_exclude_domains(
 async def test_saving_state_exclude_domains_globs(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "2345", suggested_object_id="excluded_entity"
+    )
+
     await async_setup_recorder_instance(
         hass, {"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
     )
@@ -751,8 +802,17 @@ async def test_saving_state_exclude_domains_globs(
 async def test_saving_state_exclude_entities(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
     await async_setup_recorder_instance(
         hass, {"exclude": {"entities": "test.recorder"}}
     )
@@ -764,8 +824,17 @@ async def test_saving_state_exclude_entities(
 async def test_saving_state_exclude_domain_include_entity(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
     await async_setup_recorder_instance(
         hass,
         {
@@ -780,8 +849,20 @@ async def test_saving_state_exclude_domain_include_entity(
 async def test_saving_state_exclude_domain_glob_include_entity(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test", "mock", "2345", suggested_object_id="excluded_entity"
+    )
+
     await async_setup_recorder_instance(
         hass,
         {
@@ -798,8 +879,20 @@ async def test_saving_state_exclude_domain_glob_include_entity(
 async def test_saving_state_include_domain_exclude_entity(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test", "mock", "2345", suggested_object_id="ok"
+    )
+
     await async_setup_recorder_instance(
         hass,
         {
@@ -816,8 +909,23 @@ async def test_saving_state_include_domain_exclude_entity(
 async def test_saving_state_include_domain_glob_exclude_entity(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test", "mock", "2345", suggested_object_id="ok"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "2345", suggested_object_id="included_entity"
+    )
+
     await async_setup_recorder_instance(
         hass,
         {
@@ -1765,8 +1873,17 @@ async def test_database_corruption_while_running(
 async def test_entity_id_filter(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that entity ID filtering filters string and list."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "hello", "mock", "1234", suggested_object_id="world"
+    )
+    entity_registry.async_get_or_create(
+        "hidden_domain", "mock", "1234", suggested_object_id="person"
+    )
+
     await async_setup_recorder_instance(
         hass,
         {
@@ -1811,6 +1928,45 @@ async def test_entity_id_filter(
             )
             # Keep referring idx + 1, as no new events are being added
             assert len(db_events) == idx + 1, data
+
+
+@pytest.mark.parametrize(
+    "hass_storage_data",
+    [
+        {
+            "recorder.recorded_entities": {
+                "data": {
+                    "recorded_entities": {},
+                    "recorder_preferences": {
+                        "entity_filter_imported": True,
+                    },
+                },
+                "key": "recorder.recorded_entities",
+                "minor_version": 1,
+                "version": 1,
+            },
+        }
+    ],
+)
+async def test_entity_id_filter_imported_once(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
+    await async_setup_recorder_instance(hass, {"include": {"domains": "test2"}})
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
+    assert len(states) == 2
+    assert _state_with_context(hass, "test.recorder").as_dict() == states[0].as_dict()
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[1].as_dict()
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
