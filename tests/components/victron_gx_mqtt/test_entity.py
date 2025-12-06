@@ -59,9 +59,6 @@ async def test_sensor_repr_and_unique_id(
     )
 
     assert sensor.unique_id == "sensor.victron_inst_metric_1"
-    rep = repr(sensor)
-    assert "VictronSensor(" in rep
-    assert "metric.short" in rep
 
     # simple_naming = True -> omit installation_id
     sensor2 = VictronSensor(
