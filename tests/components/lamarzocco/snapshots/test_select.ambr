@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LM012345 Brew by weight dose mode',
       'options': list([
+        'continuous',
         'dose1',
         'dose2',
       ]),
@@ -13,7 +14,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'continuous',
   })
 # ---
 # name: test_bbw_dose_mode[Linea Mini].1
@@ -23,6 +24,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'continuous',
         'dose1',
         'dose2',
       ]),

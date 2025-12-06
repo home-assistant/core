@@ -130,7 +130,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         key="bbw_dose_mode",
         translation_key="bbw_dose_mode",
         entity_category=EntityCategory.CONFIG,
-        options=["dose1", "dose2"],
+        options=["continuous", "dose1", "dose2"],
         select_option_fn=lambda machine, option: machine.set_brew_by_weight_dose_mode(
             mode=DOSE_MODE_HA_TO_LM[option]
         ),
