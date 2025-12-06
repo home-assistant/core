@@ -6,6 +6,10 @@ from homeassistant.config_entries import ConfigEntry  # noqa: F401 - used for ty
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN
+
+__all__ = ["DOMAIN", "async_setup_entry", "async_unload_entry"]
+
 from .coordinator import ToneWinnerConfigEntry, ToneWinnerCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
