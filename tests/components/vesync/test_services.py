@@ -1,5 +1,7 @@
 """Tests for VeSync services."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 from pyvesync import VeSync
 
@@ -12,6 +14,7 @@ from homeassistant.components.vesync.const import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_async_new_device_discovery_no_entry(
@@ -42,28 +45,42 @@ async def test_async_new_device_discovery_entry_not_loaded(
 
 
 async def test_async_new_device_discovery(
-    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan, humidifier
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+    fan,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test new device discovery."""
 
+    # Entry should not be set up yet; we'll install a fan before setup
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # Set up the config entry (no devices initially)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    # Assert platforms loaded
     await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.LOADED
     assert not hass.data[DOMAIN][VS_MANAGER].devices
 
-    # Mock discovery of new fan which would get added to VS_DEVICES.
-    manager._dev_list["fans"].append(fan)
+    # Simulate the manager discovering a new fan when get_devices is called
+    manager.get_devices = AsyncMock(
+        side_effect=lambda: manager._dev_list["fans"].append(fan)
+    )
+
+    # Call the service that should trigger discovery and platform setup
     await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+    await hass.async_block_till_done()
 
     assert manager.get_devices.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
 
-    # Mock discovery of new humidifier which would invoke discovery in all platforms.
-    manager._dev_list["humidifiers"].append(humidifier)
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
-
-    assert manager.get_devices.call_count == 2
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan, humidifier]
+    # Verify an entity for the new fan was created in Home Assistant
+    fan_entry = next(
+        (
+            e
+            for e in entity_registry.entities.values()
+            if e.unique_id == fan.cid and e.domain == "fan"
+        ),
+        None,
+    )
+    assert fan_entry is not None

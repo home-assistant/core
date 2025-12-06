@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_MANAGER
+from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 
 
 @callback
@@ -33,4 +33,4 @@ async def async_new_device_discovery(call: ServiceCall) -> None:
     new_devices = [device for device in manager.devices if device not in known_devices]
 
     if new_devices:
-        async_dispatcher_send(call.hass, "vesync_new_devices", new_devices)
+        async_dispatcher_send(call.hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
