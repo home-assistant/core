@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aiohttp import ClientResponseError, ContentTypeError
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
@@ -17,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONF_VALIDATE_SSL, DOMAIN
 from .coordinator import TeltonikaDataUpdateCoordinator
-from .util import base_url_to_host, candidate_base_urls
+from .util import normalize_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,72 +38,6 @@ class TeltonikaData:
         self.device_info = device_info
 
 
-async def _try_connect(
-    host: str,
-    username: str,
-    password: str,
-    validate_ssl: bool,
-    session: Any,
-) -> tuple[Teltasync, str, Any]:
-    """Try to connect to device with different protocol schemes.
-
-    Returns tuple of (client, base_url, system_info_response).
-    Raises ConfigEntryAuthFailed for authentication issues.
-    Raises ConfigEntryNotReady for connection issues.
-    """
-    last_error: Exception | None = None
-
-    for candidate in candidate_base_urls(host):
-        candidate_client = Teltasync(
-            base_url=candidate,
-            username=username,
-            password=password,
-            session=session,
-            verify_ssl=validate_ssl,
-        )
-
-        try:
-            await candidate_client.get_device_info()
-            system_info_response = await candidate_client.get_system_info()
-        except TeltonikaConnectionError as err:
-            last_error = err
-            await candidate_client.close()
-        except TeltonikaAuthenticationError as err:
-            await candidate_client.close()
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except ContentTypeError as err:
-            # Device returned HTML instead of JSON - likely auth failure
-            await candidate_client.close()
-            if err.status == 403:
-                raise ConfigEntryAuthFailed(
-                    f"Access denied - check credentials: {err}"
-                ) from err
-            last_error = err
-        except ClientResponseError as err:
-            await candidate_client.close()
-            if err.status in (401, 403):
-                raise ConfigEntryAuthFailed(
-                    f"Authentication failed (HTTP {err.status}): {err.message}"
-                ) from err
-            last_error = err
-        except Exception as err:  # pylint: disable=broad-except
-            await candidate_client.close()
-            # Check if error message indicates authentication issues
-            error_str = str(err).lower()
-            if any(
-                keyword in error_str
-                for keyword in ("auth", "unauthorized", "forbidden", "credentials")
-            ):
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-            last_error = err
-        else:
-            return candidate_client, candidate, system_info_response
-
-    raise ConfigEntryNotReady(
-        f"Failed to connect to device at {host}: {last_error}"
-    ) from last_error
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> bool:
     """Set up Teltonika from a config entry."""
     host = entry.data[CONF_HOST]
@@ -113,16 +46,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
     validate_ssl = entry.data.get(CONF_VALIDATE_SSL, False)
     session = async_get_clientsession(hass)
 
-    client, selected_base_url, system_info_response = await _try_connect(
-        host, username, password, validate_ssl, session
+    base_url = normalize_url(host)
+
+    client = Teltasync(
+        base_url=f"{base_url}/api",
+        username=username,
+        password=password,
+        session=session,
+        verify_ssl=validate_ssl,
     )
 
-    selected_host = base_url_to_host(selected_base_url)
-    if selected_host != host:
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CONF_HOST: selected_host},
-        )
+    try:
+        await client.get_device_info()
+        system_info_response = await client.get_system_info()
+    except TeltonikaAuthenticationError as err:
+        await client.close()
+        raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+    except (ClientResponseError, ContentTypeError) as err:
+        await client.close()
+        # 401/403 errors should trigger reauth
+        if isinstance(err, (ClientResponseError, ContentTypeError)) and (
+            hasattr(err, "status") and err.status in (401, 403)
+        ):
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
+    except TeltonikaConnectionError as err:
+        await client.close()
+        raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
+    except Exception as err:
+        await client.close()
+        raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
 
     # Create device info for device registry
     device_info = DeviceInfo(
@@ -132,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
         model=system_info_response.static.model,
         sw_version=system_info_response.static.fw_version,
         serial_number=system_info_response.mnf_info.serial,
-        configuration_url=selected_host,
+        configuration_url=base_url,
     )
 
     # Create coordinator

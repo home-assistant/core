@@ -6,7 +6,6 @@ import pytest
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.teltonika.config_flow import CannotConnect, validate_input
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -731,25 +730,3 @@ async def test_dhcp_confirm_cannot_connect(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert result2["step_id"] == "dhcp_confirm"
-
-
-async def test_validate_input_no_candidate_urls(
-    hass: HomeAssistant,
-) -> None:
-    """Test validate_input when candidate_base_urls returns empty list."""
-    with (
-        patch(
-            "homeassistant.components.teltonika.config_flow.candidate_base_urls",
-            return_value=[],
-        ),
-        pytest.raises(CannotConnect),
-    ):
-        await validate_input(
-            hass,
-            {
-                CONF_HOST: "192.168.1.1",
-                CONF_USERNAME: "admin",
-                CONF_PASSWORD: "password",
-                "validate_ssl": False,
-            },
-        )

@@ -2,33 +2,38 @@
 
 from __future__ import annotations
 
-API_SUFFIX = "/api"
+from yarl import URL
 
 
-def candidate_base_urls(host: str) -> list[str]:
-    """Return candidate base URLs for the Teltonika device.
+def normalize_url(host: str) -> str:
+    """Normalize host input to a base URL without path.
 
-    The Teltonika API lives under the ``/api`` path and can be accessed over
-    HTTPS or HTTP. We try to use HTTPS whenever possible but fall back to
-    HTTP if the device is not accessible over HTTPS.
+    Returns just the scheme://host part, without /api.
+    Ensures the URL has a scheme (defaults to HTTPS).
     """
-
     host_input = host.strip().rstrip("/")
 
+    # Parse or construct URL
     if host_input.startswith(("http://", "https://")):
-        scheme, raw_host = host_input.split("://", 1)
-        base = raw_host.removesuffix(API_SUFFIX)
-        if scheme == "https":
-            return [f"https://{base}{API_SUFFIX}", f"http://{base}{API_SUFFIX}"]
-        return [f"http://{base}{API_SUFFIX}", f"https://{base}{API_SUFFIX}"]
+        url = URL(host_input)
+    else:
+        # Default to HTTPS if no scheme provided
+        url = URL(f"https://{host_input}")
 
-    base_host = host_input.removesuffix(API_SUFFIX)
-    return [
-        f"https://{base_host}{API_SUFFIX}",
-        f"http://{base_host}{API_SUFFIX}",
-    ]
+    # Return base URL without path (scheme + netloc only)
+    return f"{url.scheme}://{url.host}"
 
 
-def base_url_to_host(base_url: str) -> str:
-    """Return the host value stored in the config entry for the given base URL."""
-    return base_url.rstrip("/").removesuffix(API_SUFFIX)
+def get_url_variants(host: str) -> list[str]:
+    """Get URL variants to try during setup (HTTPS first, then HTTP fallback)."""
+    normalized = normalize_url(host)
+    url = URL(normalized)
+
+    # If user specified a scheme, only try that
+    if host.strip().startswith(("http://", "https://")):
+        return [normalized]
+
+    # Otherwise try HTTPS first, then HTTP
+    https_url = str(url.with_scheme("https"))
+    http_url = str(url.with_scheme("http"))
+    return [https_url, http_url]

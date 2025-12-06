@@ -17,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_VALIDATE_SSL, DOMAIN
-from .util import base_url_to_host, candidate_base_urls
+from .util import get_url_variants
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +49,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     last_error: Exception | None = None
 
-    for base_url in candidate_base_urls(host):
+    for base_url in get_url_variants(host):
         client = Teltasync(
-            base_url=base_url,
+            base_url=f"{base_url}/api",
             username=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
             session=session,
@@ -67,7 +67,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             return {
                 "title": getattr(device_info, "device_name", host),
                 "serial": getattr(device_info, "device_identifier", None),
-                "host": base_url_to_host(base_url),
+                "host": base_url,
             }
         except TeltonikaConnectionError as err:
             _LOGGER.debug(
@@ -207,9 +207,9 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         device_name = None
 
-        for base_url in candidate_base_urls(host):
+        for base_url in get_url_variants(host):
             client = Teltasync(
-                base_url=base_url,
+                base_url=f"{base_url}/api",
                 username="",  # No credentials yet
                 password="",
                 session=session,

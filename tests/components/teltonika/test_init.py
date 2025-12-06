@@ -208,17 +208,12 @@ async def test_coordinator_data_structure(
             TeltonikaAuthenticationError("Invalid credentials"),
             ConfigEntryState.SETUP_ERROR,
         ),
-        (
-            Exception("Authentication required"),
-            ConfigEntryState.SETUP_ERROR,
-        ),
     ],
     ids=[
         "content_type_403",
         "response_401",
         "response_403",
         "auth_error",
-        "generic_auth",
     ],
 )
 async def test_setup_auth_errors(
@@ -236,48 +231,3 @@ async def test_setup_auth_errors(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is error_status
-
-
-async def test_host_update_on_protocol_change(
-    hass: HomeAssistant,
-    mock_teltasync_init: MagicMock,
-    mock_modems: MagicMock,
-) -> None:
-    """Test config entry is updated when protocol changes from http to https."""
-    # Setup config entry with http
-    entry_http = MockConfigEntry(
-        domain=DOMAIN,
-        title="Test Device",
-        data={
-            CONF_HOST: "http://192.168.1.1",  # Start with HTTP
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "test_password",
-        },
-        unique_id="1234567890",
-    )
-    entry_http.add_to_hass(hass)
-
-    # First call (http) fails, subsequent calls (https) succeed
-    call_count = 0
-
-    def get_device_info_side_effect():
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise TeltonikaConnectionError("HTTP failed")
-        # Return valid data for https
-        device_info = MagicMock()
-        device_info.device_name = "Test Device"
-        device_info.model = "RUTX50"
-        return device_info
-
-    mock_teltasync_init.return_value.get_device_info.side_effect = (
-        get_device_info_side_effect
-    )
-
-    await hass.config_entries.async_setup(entry_http.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify config entry host was updated to https
-    assert entry_http.data[CONF_HOST] == "https://192.168.1.1"
-    assert entry_http.state is ConfigEntryState.LOADED
