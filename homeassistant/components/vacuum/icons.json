@@ -44,13 +44,16 @@
   },
   "triggers": {
     "docked": {
-      "trigger": "mdi:home-import-outline"
+      "trigger": "mdi:home-outline"
     },
     "errored": {
       "trigger": "mdi:alert-circle-outline"
     },
     "paused_cleaning": {
       "trigger": "mdi:pause"
+    },
+    "returning": {
+      "trigger": "mdi:home-import-outline"
     },
     "started_cleaning": {
       "trigger": "mdi:play"
