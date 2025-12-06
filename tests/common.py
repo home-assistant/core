@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import pathlib
+import re
 import time
 from types import FrameType, ModuleType
 from typing import Any, Literal, NoReturn
@@ -132,6 +133,8 @@ _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+RE_PLACEHOLDERS = re.compile(r"{(\w+)}")
 
 
 class QualityScaleStatus(StrEnum):
@@ -403,6 +406,50 @@ def async_mock_service(
 
 
 mock_service = threadsafe_callback_factory(async_mock_service)
+
+
+async def async_check_service_description_placeholders(
+    hass: HomeAssistant,
+    domain: str,
+    service_name: str | None = None,
+    language: str = "en",
+) -> None:
+    """Check service action description place holders."""
+    translations = await translation.async_get_translations(
+        hass, language, "services", [domain]
+    )
+    assert (services := hass.services.async_services_for_domain(domain)), (
+        f"No registered service asction found for domain '{domain}'"
+    )
+
+    def _check_service_action_placeholders(service_name: str) -> None:
+        assert (service := services.get(service_name)) is not None, (
+            f"Service action '{service_name} does not exist for domain '{domain}'"
+        )
+        assert translations, (
+            f"No translations found for service action '{service_name}' of domain '{domain}'"
+        )
+        for key, translation_string in translations.items():
+            if not key.startswith(f"component.{domain}.services.{service_name}"):
+                continue
+            if placeholders := re.findall(RE_PLACEHOLDERS, translation_string):
+                assert service.description_placeholders is not None, (
+                    "No description placeholders set "
+                    f"for service action '{service_name}' of domain '{domain}', "
+                    f"got '{key}': '{translation_string}'"
+                )
+                for placeholder in placeholders:
+                    assert placeholder in service.description_placeholders, (
+                        f"Placeholder {placeholder} in translation key {key} not set "
+                        f"for service asction '{service_name}' of domain '{domain}'"
+                    )
+
+    if service_name is not None:
+        _check_service_action_placeholders(service_name)
+        return
+
+    for service_key in services:
+        _check_service_action_placeholders(service_key)
 
 
 @callback

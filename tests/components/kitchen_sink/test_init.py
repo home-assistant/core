@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+from tests.common import async_check_service_description_placeholders
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -353,9 +354,7 @@ async def test_issues_created(
     }
 
 
-async def test_service(
-    hass: HomeAssistant,
-) -> None:
+async def test_service(hass: HomeAssistant) -> None:
     """Test we can call the service."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -372,6 +371,9 @@ async def test_service(
         {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
         blocking=True,
     )
+
+    await async_check_service_description_placeholders(hass, DOMAIN, "test_service_1")
+    await async_check_service_description_placeholders(hass, DOMAIN)
 
 
 @pytest.fixture
