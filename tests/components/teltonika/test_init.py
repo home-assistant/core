@@ -82,7 +82,9 @@ async def test_coordinator_update_failure_recovery(
     coordinator = init_integration.runtime_data.coordinator
 
     mock_modems_instance = mock_modems.return_value
-    mock_modems_instance.get_status.side_effect = Exception("Connection lost")
+    mock_modems_instance.get_status.side_effect = TeltonikaConnectionError(
+        "Connection lost"
+    )
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -93,21 +95,6 @@ async def test_coordinator_update_failure_recovery(
     data = await coordinator._async_update_data()
     assert data
     coordinator.async_set_updated_data(data)
-
-
-async def test_coordinator_unexpected_exception(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_modems: MagicMock,
-) -> None:
-    """Test coordinator handles unexpected exceptions."""
-    coordinator = init_integration.runtime_data.coordinator
-
-    mock_modems_instance = mock_modems.return_value
-    mock_modems_instance.get_status.side_effect = ValueError("Unexpected error")
-
-    with pytest.raises(UpdateFailed, match="Unexpected error"):
-        await coordinator._async_update_data()
 
 
 async def test_device_registry_creation(
@@ -147,8 +134,8 @@ async def test_setup_exceptions(
     mock_teltasync_init: MagicMock,
 ) -> None:
     """Test various setup exceptions."""
-    mock_teltasync_init.return_value.get_device_info.side_effect = Exception(
-        "Unexpected error"
+    mock_teltasync_init.return_value.get_device_info.side_effect = (
+        TeltonikaConnectionError("Connection failed")
     )
 
     mock_config_entry.add_to_hass(hass)

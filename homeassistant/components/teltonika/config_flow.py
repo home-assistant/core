@@ -60,24 +60,28 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         try:
             device_info = await client.get_device_info()
             auth_valid = await client.validate_credentials()
-            if not auth_valid:
-                raise InvalidAuth
         except TeltonikaConnectionError as err:
             _LOGGER.debug(
                 "Failed to connect to Teltonika device at %s: %s", base_url, err
             )
             last_error = err
+            await client.close()
+            continue
         except TeltonikaAuthenticationError as err:
+            await client.close()
             _LOGGER.error("Authentication failed: %s", err)
             raise InvalidAuth from err
-        else:
-            return {
-                "title": device_info.device_name,
-                "device_id": device_info.device_identifier,
-                "host": base_url,
-            }
-        finally:
-            await client.close()
+
+        await client.close()
+
+        if not auth_valid:
+            raise InvalidAuth
+
+        return {
+            "title": device_info.device_name,
+            "device_id": device_info.device_identifier,
+            "host": base_url,
+        }
 
     _LOGGER.error("Cannot connect to device after trying all schemas")
     raise CannotConnect from last_error

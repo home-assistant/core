@@ -45,17 +45,14 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Get modems data using the teltasync library
             modems = Modems(self.client.auth)
             modems_response = await modems.get_status()
-
-            # Return only modems which are online
-            modem_data = {}
-            if modems_response.data:
-                for modem in modems_response.data:
-                    if Modems.is_online(modem):
-                        modem_data[modem.id] = modem
-
         except TeltonikaConnectionError as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(f"Unexpected error: {err}") from err
-        else:
-            return modem_data
+
+        # Return only modems which are online
+        modem_data = {}
+        if modems_response.data:
+            for modem in modems_response.data:
+                if Modems.is_online(modem):
+                    modem_data[modem.id] = modem
+
+        return modem_data

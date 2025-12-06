@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from aiohttp import ClientResponseError, ContentTypeError
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -62,18 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
     except TeltonikaAuthenticationError as err:
         await client.close()
         raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-    except (ClientResponseError, ContentTypeError) as err:
-        await client.close()
-        # 401/403 errors should trigger reauth
-        if isinstance(err, (ClientResponseError, ContentTypeError)) and (
-            hasattr(err, "status") and err.status in (401, 403)
-        ):
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
     except TeltonikaConnectionError as err:
-        await client.close()
-        raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
-    except Exception as err:
         await client.close()
         raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
 
