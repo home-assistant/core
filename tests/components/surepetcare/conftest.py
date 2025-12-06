@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from surepy import MESTART_RESOURCE
 
+from homeassistant.components.surepetcare import switch
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,7 @@ from tests.common import MockConfigEntry
 
 
 async def _mock_call(method, resource):
+    """Mock API call that only handles the initial GET request."""
     if method == "GET" and resource == MESTART_RESOURCE:
         return {"data": MOCK_API_DATA}
     return None
@@ -44,5 +46,13 @@ async def mock_config_entry_setup(hass: HomeAssistant) -> MockConfigEntry:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data)
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    # Patch switch entities to be enabled by default in tests
+    with patch.object(
+        switch.SurePetcareIndoorModeSwitch,
+        "_attr_entity_registry_enabled_default",
+        True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
     return entry

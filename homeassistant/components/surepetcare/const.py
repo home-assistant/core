@@ -21,3 +21,7 @@ ATTR_FLAP_ID = "flap_id"
 ATTR_LOCATION = "location"
 ATTR_LOCK_STATE = "lock_state"
 ATTR_PET_NAME = "pet_name"
+
+# pet profile modes
+PROFILE_INDOOR = 3  # indoor mode - pet can enter but cannot exit
+PROFILE_OUTDOOR = 2  # outdoor/normal mode - pet can enter and exit
