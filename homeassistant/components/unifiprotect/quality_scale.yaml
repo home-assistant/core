@@ -141,10 +141,10 @@ rules:
     comment: Exceptions use translation_key for api_key_required, cloud_user, protect_version.
   icon-translations:
     status: done
-    comment: icons.json defines service icons for all custom actions.
+    comment: Entities use device classes for icons or have static icons that don't require state-based changes.
   reconfiguration-flow:
     status: done
-    comment: https://github.com/home-assistant/core/pull/157532
+    comment: async_step_reconfigure implemented in config_flow.py.
   repair-issues:
     status: done
     comment: repairs.py implements RepairsFlow for cloud_user and RTSP issues.
