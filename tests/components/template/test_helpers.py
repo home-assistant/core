@@ -832,13 +832,14 @@ async def test_legacy_deprecation(
                     "sensors": {
                         "some_sensor": {
                             "friendly_name": "Sensor",
+                            "entity_id": "sensor.some_sensor",
                             "device_class": "timestamp",
                             "value_template": "{{ now().isoformat() }}",
                         }
                     },
                 },
             },
-            ["device_class: timestamp"],
+            ["device_class: timestamp", "entity_id: sensor.some_sensor"],
         ),
     ],
 )
