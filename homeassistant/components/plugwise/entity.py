@@ -30,17 +30,28 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._dev_id = device_id
 
-        configuration_url: str | None = None
-        if entry := self.coordinator.config_entry:
-            configuration_url = f"http://{entry.data[CONF_HOST]}"
-
+        api = coordinator.api
+        gateway_id = api.gateway_id
+        entry = coordinator.config_entry
         data = coordinator.data[device_id]
-        connections = set()
-        if mac := data.get("mac_address"):
-            connections.add((CONNECTION_NETWORK_MAC, mac))
-        if mac := data.get("zigbee_mac_address"):
-            connections.add((CONNECTION_ZIGBEE, mac))
 
+        # Determine configuration URL if this is the gateway
+        configuration_url = (
+            f"http://{entry.data[CONF_HOST]}"
+            if device_id == gateway_id and entry
+            else None
+        )
+
+        # Build connection set
+        connections = {
+            (CONNECTION_NETWORK_MAC, mac)
+            for key in ("mac_address",)
+            if (mac := data.get(key))
+        }
+        if zigbee_mac := data.get("zigbee_mac_address"):
+            connections.add((CONNECTION_ZIGBEE, zigbee_mac))
+
+        # Base device info
         self._attr_device_info = DeviceInfo(
             configuration_url=configuration_url,
             identifiers={(DOMAIN, device_id)},
@@ -48,21 +59,18 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             manufacturer=data.get("vendor"),
             model=data.get("model"),
             model_id=data.get("model_id"),
-            name=coordinator.api.smile.name,
+            name=api.smile.name,
             sw_version=data.get("firmware"),
             hw_version=data.get("hardware"),
         )
 
-        if device_id != coordinator.api.gateway_id:
-            self._attr_device_info.update(
-                {
-                    ATTR_NAME: data.get(ATTR_NAME),
-                    ATTR_VIA_DEVICE: (
-                        DOMAIN,
-                        str(self.coordinator.api.gateway_id),
-                    ),
-                }
-            )
+        # Add extra info if not the gateway
+        if device_id != gateway_id:
+            self._attr_device_info.update({
+                ATTR_NAME: data.get(ATTR_NAME),
+                ATTR_VIA_DEVICE: (DOMAIN, str(gateway_id)),
+            })
+
 
     @property
     def available(self) -> bool:
