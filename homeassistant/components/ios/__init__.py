@@ -41,6 +41,9 @@ from .const import (
     CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTION_USE_CUSTOM_COLORS,
     CONF_ACTIONS,
+    CONF_CARPLAY_ENABLED,
+    CONF_CARPLAY_QUICK_ACCESS,
+    DATA_CARPLAY_CONFIG,
     DOMAIN,
 )
 
@@ -148,6 +151,24 @@ ACTION_SCHEMA = vol.Schema(
 
 ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
+# Configuration schema for carplay settings
+CARPLAY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CARPLAY_ENABLED, default=True): cv.boolean,
+        vol.Optional(CONF_CARPLAY_QUICK_ACCESS, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required("entity_id"): cv.entity_id,
+                        vol.Optional("display_name"): cv.string,
+                    }
+                )
+            ],
+        ),
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -155,6 +176,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
                 CONF_ACTIONS: ACTION_LIST_SCHEMA,
+                vol.Optional("carplay", default={}): CARPLAY_SCHEMA,
             },
         )
     },
@@ -261,7 +283,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if CONF_PUSH not in (conf_user := conf or {}):
         conf_user[CONF_PUSH] = {}
 
+    # Get the carplay configuration from config.yaml
+    carplay_config = config.get(DOMAIN, {}).get("carplay", {})
+
     ios_config[CONF_USER] = conf_user
+    # Store carplay configuration in hass.data for access by the config view
+    ios_config[DATA_CARPLAY_CONFIG] = carplay_config
 
     hass.data[DOMAIN] = ios_config
 
@@ -320,7 +347,17 @@ class iOSConfigView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the user-defined configuration."""
-        return self.json(self.config)
+        hass = request.app[KEY_HASS]
+
+        # Include carplay config from iOS integration
+        response_config = self.config.copy()
+
+        # Add carplay configuration if available
+        carplay_config = hass.data[DOMAIN].get(DATA_CARPLAY_CONFIG)
+        if carplay_config:
+            response_config["carplay"] = carplay_config
+
+        return self.json(response_config)
 
 
 class iOSIdentifyDeviceView(HomeAssistantView):
