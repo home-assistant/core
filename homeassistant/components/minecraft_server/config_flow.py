@@ -107,7 +107,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 for server in self.SUGGESTED_SERVERS
             ]
             for server in self.in_progress_suggested_server_data:
-                await server.async_initialise()
+                await server.async_initialize()
 
             self.in_progress_suggested_server_data = [
                 await server.async_get_data()
@@ -115,7 +115,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             ]
 
             self.SUGGESTED_SERVERS_DATA = [
-                {"value": address, "label": data.motd}
+                {"value": address, "label": f"{data.motd} | {address}"}
                 for (data, address) in zip(
                     self.in_progress_suggested_server_data,
                     self.SUGGESTED_SERVERS,
@@ -133,9 +133,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 "select": {
                     "options": (
                         self.SUGGESTED_SERVERS_DATA
-                        if len(self.SUGGESTED_SERVERS_DATA) <= 0
+                        if len(self.SUGGESTED_SERVERS_DATA) >= 0
                         else self.SUGGESTED_SERVERS
-                    ),  # self.SUGGESTED_SERVERS,  # Can change this to {value:str,label:str}
+                    ),
                     "custom_value": True,
                 }
             }

@@ -42,6 +42,31 @@ class MockServerLocator(ServerLocator):
         return []
 
 
+class CommonServerLocator(ServerLocator):
+    """Returns a list of common online servers."""
+
+    def __init__(self) -> None:
+        """Init function for the class."""
+        self._should_return = True
+
+    def should_return(self, should_return: bool) -> None:
+        """Specify whether the mock should return a value, or not."""
+        self._should_return = should_return
+
+    async def find_servers(self) -> list[str]:
+        """Tries to locate servers."""
+        if self._should_return:
+            return [
+                "mc.hypixel.net:25565",
+                "org.mc-complex.com:25565",
+                "join.insanitycraft.net:25565",
+                "hub.opblocks.com:25565",
+                "mcs.vanillarealms.com:25565",
+                "org.mc-complex.com:25565",
+            ]
+        return []
+
+
 def _get_all_ips(ip: str) -> list[str]:
     net = ".".join(ip.split(".")[:3])
     return [f"{net}.{x}" for x in range(1, 255)]
