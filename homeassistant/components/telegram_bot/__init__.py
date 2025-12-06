@@ -34,8 +34,8 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import broadcast, polling, webhooks
 from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
@@ -158,38 +158,43 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
+SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    BASE_SERVICE_SCHEMA.extend(
+        {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
+    ),
 )
 
-SERVICE_SCHEMA_SEND_CHAT_ACTION = BASE_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_CHAT_ACTION): vol.In(
-            (
-                CHAT_ACTION_TYPING,
-                CHAT_ACTION_UPLOAD_PHOTO,
-                CHAT_ACTION_RECORD_VIDEO,
-                CHAT_ACTION_UPLOAD_VIDEO,
-                CHAT_ACTION_RECORD_VOICE,
-                CHAT_ACTION_UPLOAD_VOICE,
-                CHAT_ACTION_UPLOAD_DOCUMENT,
-                CHAT_ACTION_CHOOSE_STICKER,
-                CHAT_ACTION_FIND_LOCATION,
-                CHAT_ACTION_RECORD_VIDEO_NOTE,
-                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-            )
-        ),
-    }
+SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    BASE_SERVICE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_CHAT_ACTION): vol.In(
+                (
+                    CHAT_ACTION_TYPING,
+                    CHAT_ACTION_UPLOAD_PHOTO,
+                    CHAT_ACTION_RECORD_VIDEO,
+                    CHAT_ACTION_UPLOAD_VIDEO,
+                    CHAT_ACTION_RECORD_VOICE,
+                    CHAT_ACTION_UPLOAD_VOICE,
+                    CHAT_ACTION_UPLOAD_DOCUMENT,
+                    CHAT_ACTION_CHOOSE_STICKER,
+                    CHAT_ACTION_FIND_LOCATION,
+                    CHAT_ACTION_RECORD_VIDEO_NOTE,
+                    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+                )
+            ),
+        }
+    ),
 )
 
-SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
+SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Optional(ATTR_URL): cv.string,
         vol.Optional(ATTR_FILE): cv.string,
@@ -201,68 +206,83 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     }
 )
 
-SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
-    {vol.Optional(ATTR_STICKER_ID): cv.string}
+SERVICE_SCHEMA_SEND_FILE = vol.All(
+    cv.deprecated(ATTR_TIMEOUT), SERVICE_SCHEMA_BASE_SEND_FILE
 )
 
-SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_LONGITUDE): cv.string,
-        vol.Required(ATTR_LATITUDE): cv.string,
-    }
+
+SERVICE_SCHEMA_SEND_STICKER = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    SERVICE_SCHEMA_BASE_SEND_FILE.extend({vol.Optional(ATTR_STICKER_ID): cv.string}),
 )
 
-SERVICE_SCHEMA_SEND_POLL = vol.Schema(
-    {
-        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Required(ATTR_QUESTION): cv.string,
-        vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
-        vol.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
-        vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
-        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    }
+SERVICE_SCHEMA_SEND_LOCATION = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    BASE_SERVICE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_LONGITUDE): cv.string,
+            vol.Required(ATTR_LATITUDE): cv.string,
+        }
+    ),
 )
 
-SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
-    {
-        vol.Required(ATTR_MESSAGEID): vol.Any(
-            cv.positive_int, vol.All(cv.string, "last")
-        ),
-        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    }
+SERVICE_SCHEMA_SEND_POLL = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    vol.Schema(
+        {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            vol.Required(ATTR_QUESTION): cv.string,
+            vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
+            vol.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
+            vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
+            vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+            vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+        }
+    ),
 )
 
-SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
-    {
-        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
-            cv.positive_int, vol.All(cv.string, "last")
-        ),
-        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-        vol.Optional(ATTR_CAPTION): cv.string,
-        vol.Required(ATTR_MEDIA_TYPE): vol.In(
-            (
-                str(InputMediaType.ANIMATION),
-                str(InputMediaType.AUDIO),
-                str(InputMediaType.VIDEO),
-                str(InputMediaType.DOCUMENT),
-                str(InputMediaType.PHOTO),
-            )
-        ),
-        vol.Optional(ATTR_URL): cv.string,
-        vol.Optional(ATTR_FILE): cv.string,
-        vol.Optional(ATTR_USERNAME): cv.string,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-        vol.Optional(ATTR_AUTHENTICATION): cv.string,
-        vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
-        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-    },
-    extra=vol.ALLOW_EXTRA,
+SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    SERVICE_SCHEMA_BASE_SEND_FILE.extend(
+        {
+            vol.Required(ATTR_MESSAGEID): vol.Any(
+                cv.positive_int, vol.All(cv.string, "last")
+            ),
+            vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        }
+    ),
+)
+
+SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    vol.Schema(
+        {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Required(ATTR_MESSAGEID): vol.Any(
+                cv.positive_int, vol.All(cv.string, "last")
+            ),
+            vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+            vol.Optional(ATTR_CAPTION): cv.string,
+            vol.Required(ATTR_MEDIA_TYPE): vol.In(
+                (
+                    str(InputMediaType.ANIMATION),
+                    str(InputMediaType.AUDIO),
+                    str(InputMediaType.VIDEO),
+                    str(InputMediaType.DOCUMENT),
+                    str(InputMediaType.PHOTO),
+                )
+            ),
+            vol.Optional(ATTR_URL): cv.string,
+            vol.Optional(ATTR_FILE): cv.string,
+            vol.Optional(ATTR_USERNAME): cv.string,
+            vol.Optional(ATTR_PASSWORD): cv.string,
+            vol.Optional(ATTR_AUTHENTICATION): cv.string,
+            vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+            vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        }
+    ),
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
@@ -274,8 +294,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_CAPTION): cv.string,
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
@@ -286,8 +305,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
@@ -296,8 +314,7 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
         vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
@@ -307,8 +324,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
@@ -327,11 +343,10 @@ SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_REACTION): cv.string,
         vol.Optional(ATTR_IS_BIG, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
-SERVICE_MAP = {
+SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
@@ -399,6 +414,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         msgtype = service.service
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
+
+        if ATTR_TIMEOUT in kwargs:
+            entity_id = "fragment"
+            origin = service.context.origin_event
+            if origin:
+                # script or automation
+                entity_id = origin.data["entity_id"]
+
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_timeout_parameter",
+                breaks_in_ha_version="2026.5.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_timeout_parameter",
+                translation_placeholders={
+                    "integration_title": "Telegram Bot",
+                    "action": f"{DOMAIN}.{msgtype}",
+                    "entity_id": entity_id,
+                },
+                learn_more_url="https://github.com/home-assistant/core/pull/155198",
+            )
 
         config_entry_id: str | None = service.data.get(CONF_CONFIG_ENTRY_ID)
         config_entry: TelegramBotConfigEntry | None = None
