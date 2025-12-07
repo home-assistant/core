@@ -49,7 +49,9 @@ rules:
   devices:
     status: exempt
     comment: integration has no devices
-  diagnostics: todo
+  diagnostics:
+    status: exempt
+    comment: the integration has no runtime data and entry data only contains sensitive information
   discovery-update-info:
     status: exempt
     comment: the service cannot be discovered
