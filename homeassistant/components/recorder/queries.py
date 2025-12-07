@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime
 
-from sqlalchemy import and_, delete, distinct, func, lambda_stmt, select, update
+from sqlalchemy import and_, delete, desc, distinct, func, lambda_stmt, select, update
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
+from .const import STATE_ROW_OVERHEAD_BYTES
 from .db_schema import (
     EventData,
     Events,
@@ -645,4 +646,61 @@ def delete_duplicate_statistics_row(statistic_id: int) -> StatementLambdaElement
         lambda: delete(Statistics)
         .where(Statistics.id == statistic_id)
         .execution_options(synchronize_session=False)
+    )
+
+
+def get_entity_disk_usage() -> StatementLambdaElement:
+    """Calculate estimated disk usage per entity.
+
+    Returns entity_id, state_count, and estimated_bytes for each entity,
+    sorted by estimated_bytes descending.
+
+    The estimated_bytes calculation includes:
+    - Length of the state value
+    - Length of shared attributes (proportionally allocated)
+    - Fixed overhead per row (timestamps, IDs, context)
+    """
+    return lambda_stmt(
+        lambda: select(
+            StatesMeta.entity_id,
+            func.count(States.state_id).label("state_count"),
+            func.sum(
+                func.coalesce(func.length(States.state), 0)
+                + func.coalesce(func.length(StateAttributes.shared_attrs), 0)
+                + STATE_ROW_OVERHEAD_BYTES
+            ).label("estimated_bytes"),
+        )
+        .select_from(States)
+        .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        .outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
+        .group_by(StatesMeta.entity_id)
+        .order_by(desc("estimated_bytes"))
+    )
+
+
+def get_entity_disk_usage_limited(limit: int) -> StatementLambdaElement:
+    """Calculate estimated disk usage per entity with limit.
+
+    Same as get_entity_disk_usage but with a limit on results.
+    """
+    return lambda_stmt(
+        lambda: select(
+            StatesMeta.entity_id,
+            func.count(States.state_id).label("state_count"),
+            func.sum(
+                func.coalesce(func.length(States.state), 0)
+                + func.coalesce(func.length(StateAttributes.shared_attrs), 0)
+                + STATE_ROW_OVERHEAD_BYTES
+            ).label("estimated_bytes"),
+        )
+        .select_from(States)
+        .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        .outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
+        .group_by(StatesMeta.entity_id)
+        .order_by(desc("estimated_bytes"))
+        .limit(limit)
     )

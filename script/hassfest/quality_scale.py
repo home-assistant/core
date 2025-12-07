@@ -2153,6 +2153,7 @@ NO_QUALITY_SCALE = [
     "device_automation",
     "device_tracker",
     "diagnostics",
+    "entity_migration",
     "ffmpeg",
     "file_upload",
     "frontend",

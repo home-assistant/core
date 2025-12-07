@@ -1,0 +1,35 @@
+scan:
+  fields:
+    entity_id:
+      required: true
+      example: "sensor.temperature"
+      selector:
+        entity:
+
+migrate:
+  fields:
+    source_entity_id:
+      required: true
+      example: "sensor.old_temperature"
+      selector:
+        entity:
+    target_entity_id:
+      required: true
+      example: "sensor.new_temperature"
+      selector:
+        entity:
+    dry_run:
+      required: false
+      default: false
+      selector:
+        boolean:
+    create_backup:
+      required: false
+      default: false
+      selector:
+        boolean:
+    force:
+      required: false
+      default: false
+      selector:
+        boolean:

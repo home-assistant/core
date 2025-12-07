@@ -82,3 +82,16 @@ class SupportedDialect(StrEnum):
     SQLITE = "sqlite"
     MYSQL = "mysql"
     POSTGRESQL = "postgresql"
+
+
+# WebSocket API types for database management
+WS_TYPE_GET_ENTITY_DISK_USAGE = "recorder/get_entity_disk_usage"
+WS_TYPE_GET_ENTITY_EXCLUSIONS = "recorder/get_entity_exclusions"
+WS_TYPE_UPDATE_ENTITY_EXCLUSIONS = "recorder/update_entity_exclusions"
+
+# Storage keys
+STORAGE_KEY_EXCLUSIONS = "recorder.exclusions"
+STORAGE_VERSION_EXCLUSIONS = 1
+
+# Fixed overhead per state row (timestamps, IDs, context) for disk usage estimation
+STATE_ROW_OVERHEAD_BYTES = 120
