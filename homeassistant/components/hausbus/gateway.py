@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    
 from .const import DOMAIN
 from .cover import HausbusCover, Rollladen
 from .entity import HausbusEntity
@@ -36,6 +37,8 @@ class HausbusGateway(IBusDataListener):
 
         self.hass = hass
         self.config_entry = config_entry
+        self._domain_add_entity_callbacks: dict[str, AddConfigEntryEntitiesCallback] = {}
+
 
         self.home_server = HomeServer()
         self.home_server.addBusEventListener(self)
@@ -100,7 +103,7 @@ class HausbusGateway(IBusDataListener):
 
                 if new_entity is not None:
                     asyncio.run_coroutine_threadsafe(
-                        HausbusEntity.register_entity(new_entity), self.hass.loop
+                        self.register_entity(new_entity), self.hass.loop
                     ).result()
                     new_entity.get_hardware_status()
                     LOGGER.debug("created %s for %s", new_entity.get_domain(), channel)
@@ -158,3 +161,16 @@ class HausbusGateway(IBusDataListener):
             device_info.get("model"),
             device_info.get("name"),
         )
+
+
+    def register_platform_add_channel_callback(self, domain: str, cb: AddConfigEntryEntitiesCallback) -> None:
+        """Register a plattform specific add channel callback."""
+        self._domain_add_entity_callbacks[domain] = add_channel_callback
+
+    async def register_entity(cls, entity: HausbusEntity) -> None:
+        """Registers entity with the prior remembered callback."""
+        cb = self._domain_add_entity_callbacks.get(entity.get_domain())
+        if cb is not None:
+            cb([entity])
+
+

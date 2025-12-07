@@ -22,21 +22,6 @@ class HausbusEntity(Entity):
     """Common base class for Haus-Bus entities."""
 
     _attr_has_entity_name = True
-    _domain_add_entity_callbacks: dict[str, AddConfigEntryEntitiesCallback] = {}
-
-    @classmethod
-    def add_add_entities_callback(
-        cls, domain: str, cb: AddConfigEntryEntitiesCallback
-    ) -> None:
-        """Remembers callback to register entities for the given domain."""
-        cls._domain_add_entity_callbacks[domain] = cb
-
-    @classmethod
-    async def register_entity(cls, entity: HausbusEntity) -> None:
-        """Registers entity with the prior remembered callback."""
-        cb = cls._domain_add_entity_callbacks.get(entity.get_domain())
-        if cb is not None:
-            cb([entity])
 
     def __init__(
         self,
@@ -93,10 +78,6 @@ class HausbusEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA."""
-
-        # add type information for individual actions
-        self.hass.data.setdefault(DOMAIN, {}).setdefault("device_types", {})
-        self.hass.data[DOMAIN]["device_types"][self.entity_id] = self.__class__.__name__
 
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, f"hausbus_update_{self._objectId.getValue()}", self.handle_event

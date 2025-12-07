@@ -43,7 +43,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up a cover from a config entry."""
 
-    HausbusEntity.add_add_entities_callback(COVER_DOMAIN, async_add_entities)
+    gateway = config_entry.runtime_data.gateway
+    gateway.register_platform_add_channel_callback(COVER_DOMAIN, async_add_entities)
 
 
 class HausbusCover(HausbusEntity, CoverEntity):
