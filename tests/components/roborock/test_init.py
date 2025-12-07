@@ -31,7 +31,7 @@ async def test_unload_entry(
     setup_entry: MockConfigEntry,
     device_manager: AsyncMock,
 ) -> None:
-    """Test unloading roboorck integration."""
+    """Test unloading roborock integration."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
 
