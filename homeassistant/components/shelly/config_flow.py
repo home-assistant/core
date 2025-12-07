@@ -291,7 +291,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._ble_rpc_device is not None and self._ble_rpc_device.connected:
             # Ping to verify connection is still alive
             try:
-                await self._ble_rpc_device.call_rpc("Shelly.GetDeviceInfo", timeout=5)
+                await self._ble_rpc_device.update_status()
             except (DeviceConnectionError, RpcCallError):
                 # Connection dropped, need to reconnect
                 LOGGER.debug("BLE connection lost, reconnecting")
