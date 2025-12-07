@@ -15,6 +15,7 @@ from homeassistant.components.entur_public_transport.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -78,7 +79,7 @@ def mock_entur_client(mock_place: MagicMock) -> Generator[MagicMock]:
 
 @pytest.fixture
 async def init_integration(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_entur_client: MagicMock,
 ) -> MockConfigEntry:
