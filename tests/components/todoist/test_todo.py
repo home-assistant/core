@@ -18,6 +18,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
+from homeassistant.components.todoist.todo import define_priority_level
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
@@ -638,3 +639,25 @@ async def test_subscribe(
     assert items[0]["summary"] == "Wine"
     assert items[0]["status"] == "needs_action"
     assert items[0]["uid"]
+
+
+@pytest.mark.parametrize(
+    ("priority", "expected"),
+    [
+        # Positive scenarios
+        (1, "Low"),
+        (2, "Medium"),
+        (3, "High"),
+        (4, "Urgent"),
+        # Negative / invalid scenarios
+        (0, "Unknown"),
+        (5, "Unknown"),
+        (-1, "Unknown"),
+        ("3", "Unknown"),
+        (None, "Unknown"),
+        (2.5, "Unknown"),
+    ],
+)
+def test_define_priority_level(priority, expected) -> None:
+    """Test that define_priority_level maps priorities to the expected labels."""
+    assert define_priority_level(priority) == expected
