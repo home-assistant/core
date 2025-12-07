@@ -77,28 +77,37 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    async def _test_connection(
-        self,
-        stops: list[str],
-        quays: list[str],
-        line_whitelist: list[str],
-        omit_non_boarding: bool,
-        number_of_departures: int,
-    ) -> None:
-        """Test connection to the Entur API.
+    async def _validate_and_test(
+        self, data: dict[str, Any]
+    ) -> tuple[list[str], list[str], str | None]:
+        """Validate stop IDs and test connection to Entur API.
 
-        Raises an exception if connection fails.
+        Returns a tuple of (stops, quays, error).
+        Error is None if validation and connection test succeeded.
         """
-        client = EnturPublicTransportData(
-            API_CLIENT_NAME,
-            stops=stops,
-            quays=quays,
-            line_whitelist=line_whitelist,
-            omit_non_boarding=omit_non_boarding,
-            number_of_departures=number_of_departures,
-            web_session=async_get_clientsession(self.hass),
-        )
-        await client.update()
+        stop_ids = data.get(CONF_STOP_IDS, [])
+        stops, quays = _parse_stop_ids(stop_ids)
+
+        if not stops and not quays:
+            return stops, quays, "invalid_stop_id"
+
+        try:
+            client = EnturPublicTransportData(
+                API_CLIENT_NAME,
+                stops=stops,
+                quays=quays,
+                line_whitelist=data.get(CONF_WHITELIST_LINES) or [],
+                omit_non_boarding=data.get(CONF_OMIT_NON_BOARDING, True),
+                number_of_departures=data.get(
+                    CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
+                ),
+                web_session=async_get_clientsession(self.hass),
+            )
+            await client.update()
+        except Exception:  # noqa: BLE001
+            return stops, quays, "cannot_connect"
+
+        return stops, quays, None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -108,33 +117,17 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             stop_ids = user_input.get(CONF_STOP_IDS, [])
-            stops, quays = _parse_stop_ids(stop_ids)
+            _, _, error = await self._validate_and_test(user_input)
 
-            if not stops and not quays:
-                errors["base"] = "invalid_stop_id"
+            if error:
+                errors["base"] = error
             else:
-                try:
-                    await self._test_connection(
-                        stops=stops,
-                        quays=quays,
-                        line_whitelist=user_input.get(CONF_WHITELIST_LINES) or [],
-                        omit_non_boarding=user_input.get(
-                            CONF_OMIT_NON_BOARDING, True
-                        ),
-                        number_of_departures=user_input.get(
-                            CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
-                        ),
-                    )
-                except Exception:  # noqa: BLE001
-                    errors["base"] = "cannot_connect"
+                unique_id = "_".join(sorted(stop_ids))
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
-                if not errors:
-                    unique_id = "_".join(sorted(stop_ids))
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
-
-                    title = f"Entur {stop_ids[0]}" if stop_ids else "Entur"
-                    return self.async_create_entry(title=title, data=user_input)
+                title = f"Entur {stop_ids[0]}" if stop_ids else "Entur"
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -146,38 +139,24 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import from configuration.yaml."""
         _LOGGER.debug("Importing Entur config from YAML: %s", import_data)
 
-        stop_ids = import_data.get(CONF_STOP_IDS, [])
+        stop_ids: list[str] = import_data.get(CONF_STOP_IDS, [])
 
         unique_id = "_".join(sorted(stop_ids))
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        stops, quays = _parse_stop_ids(stop_ids)
+        _, _, error = await self._validate_and_test(dict(import_data))
 
-        if not stops and not quays:
-            _LOGGER.error("No valid stop IDs found in YAML config: %s", stop_ids)
-            return self.async_abort(reason="invalid_stop_id")
-
-        try:
-            await self._test_connection(
-                stops=stops,
-                quays=quays,
-                line_whitelist=import_data.get(CONF_WHITELIST_LINES, []),
-                omit_non_boarding=import_data.get(CONF_OMIT_NON_BOARDING, True),
-                number_of_departures=import_data.get(
-                    CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
-                ),
+        if error:
+            _LOGGER.error(
+                "Failed to import Entur config from YAML (%s): %s", error, import_data
             )
-        except Exception:
-            _LOGGER.exception(
-                "Failed to connect to Entur API during YAML import, aborting import"
-            )
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=error)
 
         entry_data = {
             CONF_STOP_IDS: stop_ids,
             CONF_EXPAND_PLATFORMS: import_data.get(CONF_EXPAND_PLATFORMS, True),
-            CONF_SHOW_ON_MAP: import_data.get("show_on_map", False),
+            CONF_SHOW_ON_MAP: import_data.get(CONF_SHOW_ON_MAP, False),
             CONF_WHITELIST_LINES: import_data.get(CONF_WHITELIST_LINES, []),
             CONF_OMIT_NON_BOARDING: import_data.get(CONF_OMIT_NON_BOARDING, True),
             CONF_NUMBER_OF_DEPARTURES: import_data.get(
