@@ -28,14 +28,6 @@ from .coordinator import EnvertechEVT800Coordinator
 from .entity import EnvertechEVT800Entity
 
 SENSORS: dict[str, SensorEntityDescription] = {
-    "timestamp": SensorEntityDescription(
-        key="timestamp",
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        entity_registry_enabled_default=False,
-        entity_registry_visible_default=False,
-        translation_key="timestamp",
-    ),
     "id_1": SensorEntityDescription(
         key="id_1",
         entity_registry_enabled_default=False,
@@ -170,22 +162,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Envertech EVT800 sensors."""
 
-    evt800: pyenvertechevt800.EnvertechEVT800 = config_entry.runtime_data.client
-    coordinator: EnvertechEVT800Coordinator = config_entry.runtime_data
+    evt800 = config_entry.runtime_data.client
+    coordinator = config_entry.runtime_data
 
-    entities = []
-    for name, description in SENSORS.items():
-        data = evt800.data.get(name)
-        entities.append(
-            EnvertechEVT800Sensor(
-                evt800,
-                coordinator,
-                config_entry,
-                description,
-                name,
-                data,
-            )
+    entities = [
+        EnvertechEVT800Sensor(
+            evt800,
+            coordinator,
+            config_entry,
+            description,
+            name,
+            evt800.data.get(name),
         )
+        for name, description in SENSORS.items()
+    ]
+
     if entities:
         async_add_entities(entities)
 

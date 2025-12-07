@@ -15,7 +15,7 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class EnvertechEVT800Coordinator(DataUpdateCoordinator):
+class EnvertechEVT800Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Envertech EVT800."""
 
     def __init__(
@@ -35,6 +35,6 @@ class EnvertechEVT800Coordinator(DataUpdateCoordinator):
         self.client = client
         client.set_data_listener(self.async_set_updated_data)
 
-    async def _async_update_data(self) -> Any:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return self.client.data

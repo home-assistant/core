@@ -40,10 +40,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: EnvertechEVT800ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        client = entry.runtime_data.client
-        if hasattr(client, "stop") and callable(client.stop):
-            client.stop()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

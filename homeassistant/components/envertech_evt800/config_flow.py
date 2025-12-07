@@ -39,6 +39,12 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
         """First step in config flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
             self._data[CONF_IP_ADDRESS] = user_input[CONF_IP_ADDRESS]
             self._data[CONF_PORT] = user_input[CONF_PORT]
             self._data[CONF_TYPE] = TYPE_TCP_SERVER_MODE

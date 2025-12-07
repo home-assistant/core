@@ -1,7 +1,7 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
+    status: done
     comment: |
       The integration does not provide any additional actions.
   appropriate-polling: done
@@ -11,14 +11,14 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: exempt
+    status: done
     comment: |
       The integration does not provide any additional actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
-    status: exempt
+    status: done
     comment: |
       Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
@@ -30,7 +30,7 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
+    status: todo
     comment: |
       The integration does not provide any actions.
   config-entry-unloading: done
@@ -40,26 +40,26 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
-    status: exempt
+    status: todo
     comment: |
       The integration does not support parallel updates.
   reauthentication-flow:
-    status: exempt
+    status: todo
     comment: |
       The integration does not have any authentication.
   test-coverage: done
   # Gold
   devices: done
   diagnostics:
-    status: exempt
+    status: todo
     comment: |
       This integration dont have any diagnostics.
   discovery-update-info:
-    status: exempt
+    status: todo
     comment: |
       The dependency does not support discovery update infos.
   discovery:
-    status: exempt
+    status: todo
     comment: |
       The dependency does not support discovery.
   docs-data-update: done
@@ -70,7 +70,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: exempt
+    status: todo
     comment: |
       The integration does not have any dynamic devices
   entity-category: done
@@ -78,36 +78,36 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
-    status: exempt
+    status: todo
     comment: |
       The integration does not have any own exceptions.
   icon-translations:
-    status: exempt
+    status: todo
     comment: |
       The integration does not support icon translations.
   reconfiguration-flow:
-    status: exempt
+    status: todo
     comment: |
       The integration does not support reconfiguration flow.
   repair-issues:
-    status: exempt
+    status: todo
     comment: |
       The integration does not support repairing issues.
   stale-devices:
-    status: exempt
+    status: todo
     comment: |
       This integration connects to a single device per configuration entry.
 
   # Platinum
   async-dependency:
-    status: exempt
+    status: todo
     comment: |
       The dependency pyenvertechevt800 is not async.
   inject-websession:
-    status: exempt
+    status: todo
     comment: |
       No websession is used
   strict-typing:
-    status: exempt
+    status: todo
     comment: |
       Not all functions and variables are type-annotated.
