@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fressnapftracker import (
     Device,
+    EnergySaving,
     LedActivatable,
     LedBrightness,
     PhoneVerificationResponse,
@@ -44,9 +45,12 @@ MOCK_TRACKER = Tracker(
     ),
     tracker_settings=TrackerSettings(
         generation="GPS Tracker 2.0",
-        features=TrackerFeatures(flash_light=True, live_tracking=True),
+        features=TrackerFeatures(
+            flash_light=True, energy_saving_mode=True, live_tracking=True
+        ),
     ),
-    led_brightness=LedBrightness(value=50),
+    led_brightness=LedBrightness(status="ok", value=50),
+    energy_saving=EnergySaving(status="ok", value=1),
     deep_sleep=None,
     led_activatable=LedActivatable(
         has_led=True,
@@ -55,6 +59,7 @@ MOCK_TRACKER = Tracker(
         not_charging=True,
         overall=True,
     ),
+    icon="http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg",
 )
 
 
@@ -133,6 +138,7 @@ def mock_api_client() -> Generator[MagicMock]:
         client = mock_api_client.return_value
         client.get_tracker = AsyncMock(return_value=MOCK_TRACKER)
         client.set_led_brightness = AsyncMock(return_value=None)
+        client.set_energy_saving = AsyncMock(return_value=None)
         yield client
 
 

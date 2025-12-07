@@ -8,6 +8,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FressnapfTrackerConfigEntry, FressnapfTrackerDataUpdateCoordinator
 from .entity import FressnapfTrackerBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -38,6 +41,11 @@ class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.position is not None
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture url."""
+        return self.coordinator.data.icon
 
     @property
     def latitude(self) -> float | None:
