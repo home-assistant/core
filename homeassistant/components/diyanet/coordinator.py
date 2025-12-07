@@ -45,13 +45,13 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
         self._force_refresh = False
 
     async def async_setup(self) -> None:
-        """Set up the coordinator with daily updates at 00:15."""
-        # Schedule daily update at 00:15
+        """Set up the coordinator with daily updates at 00:05."""
+        # Schedule daily update at 00:05
         self._unsub_timer = async_track_time_change(
             self.hass,
             self._scheduled_update,
             hour=0,
-            minute=15,
+            minute=5,
             second=0,
         )
 
