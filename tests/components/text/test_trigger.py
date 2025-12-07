@@ -12,7 +12,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -153,8 +152,6 @@ async def test_text_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the text state trigger fires when any text state changes to a specific state."""
-    await async_setup_component(hass, "text", {})
-
     other_entity_ids = set(target_texts) - {entity_id}
 
     # Set all texts, including the tested text, to the initial state
