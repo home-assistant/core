@@ -43,7 +43,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up a cover from a config entry."""
 
-    LOGGER.debug("async_setup_entry cover")
     HausbusEntity.add_add_entities_callback(COVER_DOMAIN, async_add_entities)
 
 
