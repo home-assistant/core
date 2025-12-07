@@ -6,7 +6,7 @@ DOMAIN = "entur_public_transport"
 
 PLATFORMS = [Platform.SENSOR]
 
-ATTRIBUTION = "Data provided by Entur"
+ATTRIBUTION = "Data provided by entur.org under NLOD"
 
 # Configuration keys
 CONF_STOP_IDS = "stop_ids"
