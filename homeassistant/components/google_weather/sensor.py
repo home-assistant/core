@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from google_weather_api import CurrentConditionsResponse
+from google_weather_api import CurrentConditionsResponse, DailyForecastResponse
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,6 +31,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import (
     GoogleWeatherConfigEntry,
     GoogleWeatherCurrentConditionsCoordinator,
+    GoogleWeatherDailyForecastCoordinator,
 )
 from .entity import GoogleWeatherBaseEntity
 
@@ -42,6 +43,13 @@ class GoogleWeatherSensorDescription(SensorEntityDescription):
     """Class describing Google Weather sensor entities."""
 
     value_fn: Callable[[CurrentConditionsResponse], str | int | float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class GoogleWeatherDailyForecastSensorDescription(SensorEntityDescription):
+    """Class describing Google Weather daily forecast sensor entities."""
+
+    value_fn: Callable[[DailyForecastResponse], float | None]
 
 
 SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
@@ -184,6 +192,32 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
 )
 
 
+DAILY_FORECAST_SENSOR_TYPES: tuple[GoogleWeatherDailyForecastSensorDescription, ...] = (
+    GoogleWeatherDailyForecastSensorDescription(
+        key="daily_max_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: (
+            data.forecast_days[0].max_temperature.degrees
+            if data.forecast_days
+            else None
+        ),
+        translation_key="daily_max_temperature",
+    ),
+    GoogleWeatherDailyForecastSensorDescription(
+        key="daily_min_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: (
+            data.forecast_days[0].min_temperature.degrees
+            if data.forecast_days
+            else None
+        ),
+        translation_key="daily_min_temperature",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GoogleWeatherConfigEntry,
@@ -194,15 +228,22 @@ async def async_setup_entry(
         subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
             subentry.subentry_id
         ]
-        coordinator = subentry_runtime_data.coordinator_observation
-        async_add_entities(
-            (
-                GoogleWeatherSensor(coordinator, subentry, description)
-                for description in SENSOR_TYPES
-                if description.value_fn(coordinator.data) is not None
-            ),
-            config_subentry_id=subentry.subentry_id,
+        observation_coordinator = subentry_runtime_data.coordinator_observation
+        daily_forecast_coordinator = subentry_runtime_data.coordinator_daily_forecast
+
+        entities: list[GoogleWeatherSensor | GoogleWeatherDailyForecastSensor] = [
+            GoogleWeatherSensor(observation_coordinator, subentry, description)
+            for description in SENSOR_TYPES
+            if description.value_fn(observation_coordinator.data) is not None
+        ]
+        entities.extend(
+            GoogleWeatherDailyForecastSensor(
+                daily_forecast_coordinator, subentry, description
+            )
+            for description in DAILY_FORECAST_SENSOR_TYPES
+            if description.value_fn(daily_forecast_coordinator.data) is not None
         )
+        async_add_entities(entities, config_subentry_id=subentry.subentry_id)
 
 
 class GoogleWeatherSensor(
@@ -229,5 +270,33 @@ class GoogleWeatherSensor(
 
     @property
     def native_value(self) -> str | int | float | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class GoogleWeatherDailyForecastSensor(
+    CoordinatorEntity[GoogleWeatherDailyForecastCoordinator],
+    GoogleWeatherBaseEntity,
+    SensorEntity,
+):
+    """Define a Google Weather daily forecast sensor entity."""
+
+    entity_description: GoogleWeatherDailyForecastSensorDescription
+
+    def __init__(
+        self,
+        coordinator: GoogleWeatherDailyForecastCoordinator,
+        subentry: ConfigSubentry,
+        description: GoogleWeatherDailyForecastSensorDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        GoogleWeatherBaseEntity.__init__(
+            self, coordinator.config_entry, subentry, description.key
+        )
+        self.entity_description = description
+
+    @property
+    def native_value(self) -> float | None:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -166,3 +166,64 @@ async def test_state_update(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "15.0"
+
+
+async def test_daily_forecast_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the daily min/max temperature sensors."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify daily max temperature sensor
+    state = hass.states.get("sensor.home_daily_maximum_temperature")
+    assert state
+    assert state.state == "13.3"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+
+    # Verify daily min temperature sensor
+    state = hass.states.get("sensor.home_daily_minimum_temperature")
+    assert state
+    assert state.state == "1.5"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+
+
+async def test_daily_forecast_sensor_availability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure daily forecast sensors become unavailable when API fails."""
+    entity_id = "sensor.home_daily_maximum_temperature"
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "13.3"
+
+    mock_google_weather_api.async_get_daily_forecast.side_effect = (
+        GoogleWeatherApiError()
+    )
+
+    # Daily forecast updates every hour
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_google_weather_api.async_get_daily_forecast.side_effect = None
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "13.3"
