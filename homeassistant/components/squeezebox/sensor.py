@@ -78,6 +78,7 @@ SERVER_STATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
 PLAYER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=PLAYER_SENSOR_NEXT_ALARM,
+        translation_key=PLAYER_SENSOR_NEXT_ALARM,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
@@ -140,13 +141,13 @@ class SqueezeboxSensorEntity(SqueezeboxEntity, SensorEntity):
     ) -> None:
         """Initialize the SqueezeBox sensor."""
         super().__init__(coordinator)
-        self.description = description
-        self._attr_translation_key = description.key
+        self.entity_description = description
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Sensor value directly from player coordinator."""
         return cast(
-            StateType, getattr(self.coordinator.player, self.description.key, None)
+            StateType,
+            getattr(self.coordinator.player, self.entity_description.key, None),
         )

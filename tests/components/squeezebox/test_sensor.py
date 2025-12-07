@@ -62,7 +62,7 @@ async def test_player_sensor_next_alarm(
     # test alarm time is set from player
     state = hass.states.get("sensor.none_next_alarm")
     assert state is not None
-    assert state.state == TEST_ALARM_NEXT_TIME.isoformat(sep=" ")
+    assert state.state == TEST_ALARM_NEXT_TIME.isoformat()
 
     # simulate no upcoming alarm
     player.alarm_next = None

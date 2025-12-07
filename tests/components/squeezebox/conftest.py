@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -48,7 +49,14 @@ TEST_MAC = ["aa:bb:cc:dd:ee:ff", "de:ad:be:ef:de:ad", "ff:ee:dd:cc:bb:aa"]
 TEST_PLAYER_NAME = "Test Player"
 TEST_SERVER_NAME = "Test Server"
 TEST_ALARM_ID = "1"
-TEST_ALARM_NEXT_TIME = datetime(year=1985, month=10, day=26, hour=1, minute=21)
+TEST_ALARM_NEXT_TIME = datetime(
+    year=1985,
+    month=10,
+    day=26,
+    hour=1,
+    minute=21,
+    tzinfo=ZoneInfo("UTC"),
+)
 FAKE_VALID_ITEM_ID = "1234"
 FAKE_INVALID_ITEM_ID = "4321"
 
