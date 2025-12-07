@@ -227,7 +227,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     ),
     LaMarzoccoNumberEntityDescription(
         key="bbw_dose_1",
-        translation_key="bbw_dose_1",
+        translation_key="bbw_dose",
         translation_placeholders={"dose": "Dose 1"},
         device_class=NumberDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
@@ -260,7 +260,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     ),
     LaMarzoccoNumberEntityDescription(
         key="bbw_dose_2",
-        translation_key="bbw_dose_2",
+        translation_key="bbw_dose",
         translation_placeholders={"dose": "Dose 2"},
         device_class=NumberDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,

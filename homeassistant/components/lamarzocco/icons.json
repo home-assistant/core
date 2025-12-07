@@ -28,10 +28,7 @@
       }
     },
     "number": {
-      "bbw_dose_1": {
-        "default": "mdi:weight-gram"
-      },
-      "bbw_dose_2": {
+      "bbw_dose": {
         "default": "mdi:weight-gram"
       },
       "coffee_temp": {

@@ -87,11 +87,8 @@
       }
     },
     "number": {
-      "bbw_dose_1": {
+      "bbw_dose": {
         "name": "Brew by weight {dose}"
-      },
-      "bbw_dose_2": {
-        "name": "[%key:component::lamarzocco::entity::number::bbw_dose_1::name%]"
       },
       "coffee_temp": {
         "name": "Coffee target temperature"
