@@ -35,6 +35,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import setup_platform
 from .conftest import create_config_entry
@@ -561,3 +564,20 @@ async def test_vehicle_with_location_scope(
     assert VehicleDataEndpoint.DRIVE_STATE in endpoints
     assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
     assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    normal_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tesla_fleet.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(normal_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
