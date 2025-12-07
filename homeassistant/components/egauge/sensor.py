@@ -57,16 +57,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up eGauge sensor platform."""
     coordinator = entry.runtime_data
-    sensors: list[SensorEntity] = []
-
     async_add_entities(
         EgaugeSensor(coordinator, register_name, sensor)
         for sensor in SENSORS
         for register_name, register_info in coordinator.data.register_info.items()
         if register_info.type == RegisterType.POWER
     )
-
-    async_add_entities(sensors)
 
 
 class EgaugeSensor(EgaugeEntity, SensorEntity):
