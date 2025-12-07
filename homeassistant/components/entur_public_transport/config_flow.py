@@ -61,11 +61,44 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _parse_stop_ids(stop_ids: list[str]) -> tuple[list[str], list[str]]:
+    """Parse stop IDs into stops and quays lists.
+
+    Returns a tuple of (stops, quays).
+    """
+    stops = [s for s in stop_ids if "StopPlace" in s]
+    quays = [s for s in stop_ids if "Quay" in s]
+    return stops, quays
+
+
 class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Entur public transport."""
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    async def _test_connection(
+        self,
+        stops: list[str],
+        quays: list[str],
+        line_whitelist: list[str],
+        omit_non_boarding: bool,
+        number_of_departures: int,
+    ) -> None:
+        """Test connection to the Entur API.
+
+        Raises an exception if connection fails.
+        """
+        client = EnturPublicTransportData(
+            API_CLIENT_NAME,
+            stops=stops,
+            quays=quays,
+            line_whitelist=line_whitelist,
+            omit_non_boarding=omit_non_boarding,
+            number_of_departures=number_of_departures,
+            web_session=async_get_clientsession(self.hass),
+        )
+        await client.update()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -75,40 +108,32 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             stop_ids = user_input.get(CONF_STOP_IDS, [])
-
-            # Validate that we have valid stop IDs
-            stops = [s for s in stop_ids if "StopPlace" in s]
-            quays = [s for s in stop_ids if "Quay" in s]
+            stops, quays = _parse_stop_ids(stop_ids)
 
             if not stops and not quays:
                 errors["base"] = "invalid_stop_id"
             else:
-                # Try to connect to the API
                 try:
-                    client = EnturPublicTransportData(
-                        API_CLIENT_NAME,
+                    await self._test_connection(
                         stops=stops,
                         quays=quays,
                         line_whitelist=user_input.get(CONF_WHITELIST_LINES) or [],
-                        omit_non_boarding=user_input.get(CONF_OMIT_NON_BOARDING, True),
+                        omit_non_boarding=user_input.get(
+                            CONF_OMIT_NON_BOARDING, True
+                        ),
                         number_of_departures=user_input.get(
                             CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
                         ),
-                        web_session=async_get_clientsession(self.hass),
                     )
-                    await client.update()
                 except Exception:  # noqa: BLE001
                     errors["base"] = "cannot_connect"
 
                 if not errors:
-                    # Create unique ID from sorted stop IDs
                     unique_id = "_".join(sorted(stop_ids))
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
 
-                    # Create a title from the first stop ID
                     title = f"Entur {stop_ids[0]}" if stop_ids else "Entur"
-
                     return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -117,32 +142,24 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_data: ConfigType
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         _LOGGER.debug("Importing Entur config from YAML: %s", import_data)
 
-        # Map old YAML config to new format
         stop_ids = import_data.get(CONF_STOP_IDS, [])
 
-        # Create unique ID from sorted stop IDs
         unique_id = "_".join(sorted(stop_ids))
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        # Validate stop IDs
-        stops = [s for s in stop_ids if "StopPlace" in s]
-        quays = [s for s in stop_ids if "Quay" in s]
+        stops, quays = _parse_stop_ids(stop_ids)
 
         if not stops and not quays:
             _LOGGER.error("No valid stop IDs found in YAML config: %s", stop_ids)
             return self.async_abort(reason="invalid_stop_id")
 
-        # Try to connect to the API
         try:
-            client = EnturPublicTransportData(
-                API_CLIENT_NAME,
+            await self._test_connection(
                 stops=stops,
                 quays=quays,
                 line_whitelist=import_data.get(CONF_WHITELIST_LINES, []),
@@ -150,16 +167,13 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 number_of_departures=import_data.get(
                     CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
                 ),
-                web_session=async_get_clientsession(self.hass),
             )
-            await client.update()
         except Exception:
             _LOGGER.exception(
                 "Failed to connect to Entur API during YAML import, aborting import"
             )
             return self.async_abort(reason="cannot_connect")
 
-        # Build config entry data
         entry_data = {
             CONF_STOP_IDS: stop_ids,
             CONF_EXPAND_PLATFORMS: import_data.get(CONF_EXPAND_PLATFORMS, True),
@@ -171,8 +185,9 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         }
 
-        # Use the name from YAML config or generate one
-        title = import_data.get(CONF_NAME, f"Entur {stop_ids[0]}" if stop_ids else "Entur")
+        title = import_data.get(
+            CONF_NAME, f"Entur {stop_ids[0]}" if stop_ids else "Entur"
+        )
 
         return self.async_create_entry(title=title, data=entry_data)
 
