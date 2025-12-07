@@ -187,7 +187,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.2
+aioairzone==1.0.3
 
 # homeassistant.components.alexa_devices
 aioamazondevices==10.0.0
@@ -393,7 +393,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.22.0
+aioshelly==13.23.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2154,7 +2154,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.2
+pylamarzocco==2.2.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2196,7 +2196,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.6.0
+pymiele==0.6.1
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
