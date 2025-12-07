@@ -25,6 +25,7 @@ from roborock.data import (
     ZeoState,
 )
 from roborock.devices.device import RoborockDevice
+from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
@@ -132,18 +133,6 @@ class FakeDevice(RoborockDevice):
 
     async def close(self) -> None:
         """Close the device."""
-
-
-class FakeDeviceManager:
-    """A fake device manager that returns a list of devices."""
-
-    def __init__(self, devices: list[RoborockDevice]) -> None:
-        """Initialize the fake device manager."""
-        self._devices = devices
-
-    async def get_devices(self) -> list[RoborockDevice]:
-        """Return the list of devices."""
-        return self._devices
 
 
 def make_mock_trait(
@@ -348,16 +337,26 @@ def fake_vacuum_command_fixture(
     return command_trait
 
 
+@pytest.fixture(name="device_manager")
+def device_manager_fixture(
+    fake_devices: list[FakeDevice],
+) -> AsyncMock:
+    """Fixture to create a fake device manager."""
+    device_manager = AsyncMock(spec=DeviceManager)
+    device_manager.get_devices = AsyncMock(return_value=fake_devices)
+    return device_manager
+
+
 @pytest.fixture(name="fake_create_device_manager", autouse=True)
 def fake_create_device_manager_fixture(
-    fake_devices: list[FakeDevice],
-) -> Generator[Mock]:
+    device_manager: AsyncMock,
+) -> None:
     """Fixture to create a fake device manager."""
     with patch(
         "homeassistant.components.roborock.create_device_manager",
     ) as mock_create_device_manager:
-        mock_create_device_manager.return_value = FakeDeviceManager(fake_devices)
-        yield mock_create_device_manager
+        mock_create_device_manager.return_value = device_manager
+        yield
 
 
 @pytest.fixture(name="config_entry_data")
