@@ -103,10 +103,16 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
 
 @pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize(
+    ("charset", "collation"),
+    [("utf8mb3", "utf8_general_ci"), ("utf8mb4", "utf8mb4_unicode_ci")],
+)
 async def test_validate_db_schema_fix_incorrect_collation(
     hass: HomeAssistant,
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
+    charset: str,
+    collation: str,
 ) -> None:
     """Test validating DB schema with MySQL when the collation is incorrect."""
     await async_wait_recording_done(hass)
@@ -116,7 +122,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
         with session_scope(session=session_maker()) as session:
             session.execute(
                 text(
-                    "ALTER TABLE states CHARACTER SET utf8mb3 COLLATE utf8_general_ci, "
+                    f"ALTER TABLE states CHARACTER SET {charset} COLLATE {collation}, "
                     "LOCK=EXCLUSIVE;"
                 )
             )
@@ -125,7 +131,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
     schema_errors = await recorder_mock.async_add_executor_job(
         validate_table_schema_has_correct_collation, recorder_mock, States
     )
-    assert schema_errors == {"states.utf8mb4_unicode_ci"}
+    assert schema_errors == {"states.utf8mb4_bin"}
 
     # Now repair the schema
     await recorder_mock.async_add_executor_job(

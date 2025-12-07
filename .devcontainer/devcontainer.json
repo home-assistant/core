@@ -27,13 +27,12 @@
         "charliermarsh.ruff",
         "ms-python.pylint",
         "ms-python.vscode-pylance",
-        "visualstudioexptteam.vscodeintellicode",
         "redhat.vscode-yaml",
         "esbenp.prettier-vscode",
         "GitHub.vscode-pull-request-github",
         "GitHub.copilot"
       ],
-      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
+      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.jsonc
       "settings": {
         "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.defaultInterpreterPath": "/home/vscode/.local/ha-venv/bin/python",
@@ -62,6 +61,9 @@
         ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        "[json][jsonc][yaml]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
         "json.schemas": [
           {

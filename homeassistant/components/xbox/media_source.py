@@ -2,67 +2,86 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
-from dataclasses import dataclass
+import logging
+from typing import TYPE_CHECKING
 
-from pydantic import ValidationError
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.models import FieldsTemplate, Image
-from xbox.webapi.api.provider.gameclips.models import GameclipsResponse
-from xbox.webapi.api.provider.screenshots.models import ScreenshotResponse
-from xbox.webapi.api.provider.smartglass.models import InstalledPackage
+from httpx import HTTPStatusError, RequestError, TimeoutException
+from pythonxbox.api.provider.titlehub.models import Image, Title, TitleFields
 
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .browse_media import _find_media_image
+from .binary_sensor import profile_pic
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
+from .entity import to_https
+
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_GAMECLIPS = "gameclips"
+ATTR_SCREENSHOTS = "screenshots"
+ATTR_GAME_MEDIA = "game_media"
+ATTR_COMMUNITY_GAMECLIPS = "community_gameclips"
+ATTR_COMMUNITY_SCREENSHOTS = "community_screenshots"
+
+MAP_TITLE = {
+    ATTR_GAMECLIPS: "Gameclips",
+    ATTR_SCREENSHOTS: "Screenshots",
+    ATTR_GAME_MEDIA: "Game media",
+    ATTR_COMMUNITY_GAMECLIPS: "Community gameclips",
+    ATTR_COMMUNITY_SCREENSHOTS: "Community screenshots",
+}
 
 MIME_TYPE_MAP = {
-    "gameclips": "video/mp4",
-    "screenshots": "image/png",
+    ATTR_GAMECLIPS: "video/mp4",
+    ATTR_COMMUNITY_GAMECLIPS: "video/mp4",
+    ATTR_SCREENSHOTS: "image/png",
+    ATTR_COMMUNITY_SCREENSHOTS: "image/png",
 }
 
 MEDIA_CLASS_MAP = {
-    "gameclips": MediaClass.VIDEO,
-    "screenshots": MediaClass.IMAGE,
+    ATTR_GAMECLIPS: MediaClass.VIDEO,
+    ATTR_COMMUNITY_GAMECLIPS: MediaClass.VIDEO,
+    ATTR_SCREENSHOTS: MediaClass.IMAGE,
+    ATTR_COMMUNITY_SCREENSHOTS: MediaClass.IMAGE,
+    ATTR_GAME_MEDIA: MediaClass.IMAGE,
 }
 
+SEPARATOR = "/"
 
-async def async_get_media_source(hass: HomeAssistant):
+
+async def async_get_media_source(hass: HomeAssistant) -> XboxSource:
     """Set up Xbox media source."""
-    entry: XboxConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    client = entry.runtime_data.client
-    return XboxSource(hass, client)
+
+    return XboxSource(hass)
 
 
-@callback
-def async_parse_identifier(
-    item: MediaSourceItem,
-) -> tuple[str, str, str]:
-    """Parse identifier."""
-    identifier = item.identifier or ""
-    start = ["", "", ""]
-    items = identifier.lstrip("/").split("~~", 2)
-    return tuple(items + start[len(items) :])  # type: ignore[return-value]
+class XboxMediaSourceIdentifier:
+    """Media item identifier."""
 
+    xuid = title_id = media_type = media_id = ""
 
-@dataclass
-class XboxMediaItem:
-    """Represents gameclip/screenshot media."""
+    def __init__(self, item: MediaSourceItem) -> None:
+        """Initialize identifier."""
+        if item.identifier is not None:
+            self.xuid, _, self.title_id = (item.identifier).partition(SEPARATOR)
+            self.title_id, _, self.media_type = (self.title_id).partition(SEPARATOR)
+            self.media_type, _, self.media_id = (self.media_type).partition(SEPARATOR)
 
-    caption: str
-    thumbnail: str
-    uri: str
-    media_class: str
+    def __str__(self) -> str:
+        """Build identifier."""
+
+        return SEPARATOR.join(
+            [i for i in (self.xuid, self.title_id, self.media_type, self.media_id) if i]
+        )
 
 
 class XboxSource(MediaSource):
@@ -70,202 +89,573 @@ class XboxSource(MediaSource):
 
     name: str = "Xbox Game Media"
 
-    def __init__(self, hass: HomeAssistant, client: XboxLiveClient) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize Xbox source."""
         super().__init__(DOMAIN)
-
-        self.hass: HomeAssistant = hass
-        self.client: XboxLiveClient = client
+        self.hass = hass
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        _, category, url = async_parse_identifier(item)
-        kind = category.split("#", 1)[1]
-        return PlayMedia(url, MIME_TYPE_MAP[kind])
+        identifier = XboxMediaSourceIdentifier(item)
+
+        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="xbox_not_configured",
+            )
+        try:
+            entry: XboxConfigEntry = next(
+                e for e in entries if e.unique_id == identifier.xuid
+            )
+        except StopIteration as e:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="account_not_configured",
+            ) from e
+
+        client = entry.runtime_data.status.client
+
+        if identifier.media_type in (ATTR_GAMECLIPS, ATTR_COMMUNITY_GAMECLIPS):
+            try:
+                if identifier.media_type == ATTR_GAMECLIPS:
+                    gameclips_response = (
+                        await client.gameclips.get_recent_clips_by_xuid(
+                            identifier.xuid, identifier.title_id, max_items=999
+                        )
+                    )
+                else:
+                    gameclips_response = (
+                        await client.gameclips.get_recent_community_clips_by_title_id(
+                            identifier.title_id
+                        )
+                    )
+            except TimeoutException as e:
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_exception",
+                ) from e
+            except (RequestError, HTTPStatusError) as e:
+                _LOGGER.debug("Xbox exception:", exc_info=True)
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="request_exception",
+                ) from e
+            gameclips = gameclips_response.game_clips
+            try:
+                clip = next(
+                    g for g in gameclips if g.game_clip_id == identifier.media_id
+                )
+            except StopIteration as e:
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="media_not_found",
+                ) from e
+            return PlayMedia(clip.game_clip_uris[0].uri, MIME_TYPE_MAP[ATTR_GAMECLIPS])
+
+        if identifier.media_type in (ATTR_SCREENSHOTS, ATTR_COMMUNITY_SCREENSHOTS):
+            try:
+                if identifier.media_type == ATTR_SCREENSHOTS:
+                    screenshot_response = (
+                        await client.screenshots.get_recent_screenshots_by_xuid(
+                            identifier.xuid, identifier.title_id, max_items=999
+                        )
+                    )
+                else:
+                    screenshot_response = await client.screenshots.get_recent_community_screenshots_by_title_id(
+                        identifier.title_id
+                    )
+            except TimeoutException as e:
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_exception",
+                ) from e
+            except (RequestError, HTTPStatusError) as e:
+                _LOGGER.debug("Xbox exception:", exc_info=True)
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="request_exception",
+                ) from e
+            screenshots = screenshot_response.screenshots
+            try:
+                img = next(
+                    s for s in screenshots if s.screenshot_id == identifier.media_id
+                )
+            except StopIteration as e:
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="media_not_found",
+                ) from e
+            return PlayMedia(
+                img.screenshot_uris[0].uri, MIME_TYPE_MAP[identifier.media_type]
+            )
+        if identifier.media_type == ATTR_GAME_MEDIA:
+            try:
+                images = (
+                    (await client.titlehub.get_title_info(identifier.title_id))
+                    .titles[0]
+                    .images
+                )
+            except TimeoutException as e:
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_exception",
+                ) from e
+            except (RequestError, HTTPStatusError) as e:
+                _LOGGER.debug("Xbox exception:", exc_info=True)
+                raise Unresolvable(
+                    translation_domain=DOMAIN,
+                    translation_key="request_exception",
+                ) from e
+            if images is not None:
+                try:
+                    return PlayMedia(
+                        images[int(identifier.media_id)].url,
+                        MIME_TYPE_MAP[ATTR_SCREENSHOTS],
+                    )
+                except (ValueError, IndexError):
+                    pass
+
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="media_not_found",
+        )
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
-        title, category, _ = async_parse_identifier(item)
+        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="xbox_not_configured",
+            )
 
-        if not title:
-            return await self._build_game_library()
+        # if there is only one entry we can directly jump to it
+        if not item.identifier and len(entries) > 1:
+            return BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=None,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaClass.IMAGE,
+                title="Xbox Game Media",
+                can_play=False,
+                can_expand=True,
+                children=[*await self._build_accounts(entries)],
+                children_media_class=MediaClass.DIRECTORY,
+            )
 
-        if not category:
-            return _build_categories(title)
+        identifier = XboxMediaSourceIdentifier(item)
+        if not identifier.xuid and len(entries) == 1:
+            if TYPE_CHECKING:
+                assert entries[0].unique_id
+            identifier.xuid = entries[0].unique_id
 
-        return await self._build_media_items(title, category)
+        try:
+            entry: XboxConfigEntry = next(
+                e for e in entries if e.unique_id == identifier.xuid
+            )
+        except StopIteration as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="account_not_configured",
+            ) from e
 
-    async def _build_game_library(self):
-        """Display installed games across all consoles."""
-        apps = await self.client.smartglass.get_installed_apps()
-        games = {
-            game.one_store_product_id: game
-            for game in apps.result
-            if game.is_game and game.title_id
-        }
+        if not identifier.title_id:
+            return await self._build_game_library(entry)
 
-        app_details = await self.client.catalog.get_products(
-            games.keys(),
-            FieldsTemplate.BROWSE,
-        )
+        if not identifier.media_type:
+            return await self._build_game_title(entry, identifier)
 
-        images = {
-            prod.product_id: prod.localized_properties[0].images
-            for prod in app_details.products
-        }
+        return await self._build_game_media(entry, identifier)
+
+    async def _build_accounts(
+        self, entries: list[XboxConfigEntry]
+    ) -> list[BrowseMediaSource]:
+        """List Xbox accounts."""
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=entry.unique_id,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaClass.DIRECTORY,
+                title=entry.title,
+                can_play=False,
+                can_expand=True,
+                thumbnail=gamerpic(entry),
+            )
+            for entry in entries
+        ]
+
+    async def _build_game_library(self, entry: XboxConfigEntry) -> BrowseMediaSource:
+        """Display played games."""
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier="",
+            identifier=entry.unique_id,
             media_class=MediaClass.DIRECTORY,
-            media_content_type="",
-            title="Xbox Game Media",
+            media_content_type=MediaClass.DIRECTORY,
+            title=f"Xbox / {entry.title}",
             can_play=False,
             can_expand=True,
-            children=[_build_game_item(game, images) for game in games.values()],
+            children=[*await self._build_games(entry)],
             children_media_class=MediaClass.GAME,
         )
 
-    async def _build_media_items(self, title, category):
-        """Fetch requested gameclip/screenshot media."""
-        title_id, _, thumbnail = title.split("#", 2)
-        owner, kind = category.split("#", 1)
+    async def _build_games(self, entry: XboxConfigEntry) -> list[BrowseMediaSource]:
+        """List Xbox games for the selected account."""
 
-        items: list[XboxMediaItem] = []
-        with suppress(ValidationError):  # Unexpected API response
-            if kind == "gameclips":
-                if owner == "my":
-                    response: GameclipsResponse = (
-                        await self.client.gameclips.get_recent_clips_by_xuid(
-                            self.client.xuid, title_id
-                        )
-                    )
-                elif owner == "community":
-                    response: GameclipsResponse = await self.client.gameclips.get_recent_community_clips_by_title_id(
-                        title_id
-                    )
-                else:
-                    return None
-                items = [
-                    XboxMediaItem(
-                        item.user_caption
-                        or dt_util.as_local(
-                            dt_util.parse_datetime(item.date_recorded)
-                        ).strftime("%b. %d, %Y %I:%M %p"),
-                        item.thumbnails[0].uri,
-                        item.game_clip_uris[0].uri,
-                        MediaClass.VIDEO,
-                    )
-                    for item in response.game_clips
-                ]
-            elif kind == "screenshots":
-                if owner == "my":
-                    response: ScreenshotResponse = (
-                        await self.client.screenshots.get_recent_screenshots_by_xuid(
-                            self.client.xuid, title_id
-                        )
-                    )
-                elif owner == "community":
-                    response: ScreenshotResponse = await self.client.screenshots.get_recent_community_screenshots_by_title_id(
-                        title_id
-                    )
-                else:
-                    return None
-                items = [
-                    XboxMediaItem(
-                        item.user_caption
-                        or dt_util.as_local(item.date_taken).strftime(
-                            "%b. %d, %Y %I:%M%p"
-                        ),
-                        item.thumbnails[0].uri,
-                        item.screenshot_uris[0].uri,
-                        MediaClass.IMAGE,
-                    )
-                    for item in response.screenshots
-                ]
+        client = entry.runtime_data.status.client
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        fields = [
+            TitleFields.ACHIEVEMENT,
+            TitleFields.STATS,
+            TitleFields.IMAGE,
+        ]
+        try:
+            games = await client.titlehub.get_title_history(
+                entry.unique_id, fields, max_items=999
+            )
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{entry.unique_id}/{game.title_id}",
+                media_class=MediaClass.GAME,
+                media_content_type=MediaClass.GAME,
+                title=game.name,
+                can_play=False,
+                can_expand=True,
+                children_media_class=MediaClass.DIRECTORY,
+                thumbnail=game_thumbnail(game.images or []),
+            )
+            for game in games.titles
+            if game.achievement and game.achievement.source_version != 0
+        ]
+
+    async def _build_game_title(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> BrowseMediaSource:
+        """Display game title."""
+        client = entry.runtime_data.status.client
+        try:
+            game = (await client.titlehub.get_title_info(identifier.title_id)).titles[0]
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{title}~~{category}",
-            media_class=MediaClass.DIRECTORY,
-            media_content_type="",
-            title=f"{owner.title()} {kind.title()}",
+            identifier=str(identifier),
+            media_class=MediaClass.GAME,
+            media_content_type=MediaClass.GAME,
+            title=f"Xbox / {entry.title} / {game.name}",
             can_play=False,
             can_expand=True,
-            children=[_build_media_item(title, category, item) for item in items],
-            children_media_class=MEDIA_CLASS_MAP[kind],
-            thumbnail=thumbnail,
+            children=[*self._build_categories(identifier)],
+            children_media_class=MediaClass.DIRECTORY,
+        )
+
+    def _build_categories(
+        self, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media categories."""
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{media_type}",
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaClass.DIRECTORY,
+                title=MAP_TITLE[media_type],
+                can_play=False,
+                can_expand=True,
+                children_media_class=MEDIA_CLASS_MAP[media_type],
+            )
+            for media_type in (
+                ATTR_GAMECLIPS,
+                ATTR_SCREENSHOTS,
+                ATTR_COMMUNITY_GAMECLIPS,
+                ATTR_COMMUNITY_SCREENSHOTS,
+                ATTR_GAME_MEDIA,
+            )
+        ]
+
+    async def _build_game_media(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> BrowseMediaSource:
+        """List game media."""
+        client = entry.runtime_data.status.client
+        try:
+            game = (await client.titlehub.get_title_info(identifier.title_id)).titles[0]
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=str(identifier),
+            media_class=MEDIA_CLASS_MAP[identifier.media_type],
+            media_content_type=MediaClass.DIRECTORY,
+            title=f"Xbox / {entry.title} / {game.name} / {MAP_TITLE[identifier.media_type]}",
+            can_play=False,
+            can_expand=True,
+            children=[
+                *await self._build_media_items_gameclips(entry, identifier)
+                + await self._build_media_items_community_gameclips(entry, identifier)
+                + await self._build_media_items_screenshots(entry, identifier)
+                + await self._build_media_items_community_screenshots(entry, identifier)
+                + self._build_media_items_promotional(identifier, game)
+            ],
+            children_media_class=MEDIA_CLASS_MAP[identifier.media_type],
+        )
+
+    async def _build_media_items_gameclips(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media items."""
+        client = entry.runtime_data.status.client
+
+        if identifier.media_type != ATTR_GAMECLIPS:
+            return []
+        try:
+            gameclips = (
+                await client.gameclips.get_recent_clips_by_xuid(
+                    identifier.xuid, identifier.title_id, max_items=999
+                )
+            ).game_clips
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{gameclip.game_clip_id}",
+                media_class=MediaClass.VIDEO,
+                media_content_type=MediaClass.VIDEO,
+                title=(
+                    f"{gameclip.user_caption}"
+                    f"{' | ' if gameclip.user_caption else ''}"
+                    f"{dt_util.get_age(gameclip.date_recorded)}"
+                ),
+                can_play=True,
+                can_expand=False,
+                thumbnail=gameclip.thumbnails[0].uri,
+            )
+            for gameclip in gameclips
+        ]
+
+    async def _build_media_items_community_gameclips(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media items."""
+        client = entry.runtime_data.status.client
+
+        if identifier.media_type != ATTR_COMMUNITY_GAMECLIPS:
+            return []
+        try:
+            gameclips = (
+                await client.gameclips.get_recent_community_clips_by_title_id(
+                    identifier.title_id
+                )
+            ).game_clips
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{gameclip.game_clip_id}",
+                media_class=MediaClass.VIDEO,
+                media_content_type=MediaClass.VIDEO,
+                title=(
+                    f"{gameclip.user_caption}"
+                    f"{' | ' if gameclip.user_caption else ''}"
+                    f"{dt_util.get_age(gameclip.date_recorded)}"
+                ),
+                can_play=True,
+                can_expand=False,
+                thumbnail=gameclip.thumbnails[0].uri,
+            )
+            for gameclip in gameclips
+        ]
+
+    async def _build_media_items_screenshots(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media items."""
+        client = entry.runtime_data.status.client
+
+        if identifier.media_type != ATTR_SCREENSHOTS:
+            return []
+        try:
+            screenshots = (
+                await client.screenshots.get_recent_screenshots_by_xuid(
+                    identifier.xuid, identifier.title_id, max_items=999
+                )
+            ).screenshots
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{screenshot.screenshot_id}",
+                media_class=MediaClass.VIDEO,
+                media_content_type=MediaClass.VIDEO,
+                title=(
+                    f"{screenshot.user_caption}"
+                    f"{' | ' if screenshot.user_caption else ''}"
+                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                ),
+                can_play=True,
+                can_expand=False,
+                thumbnail=screenshot.thumbnails[0].uri,
+            )
+            for screenshot in screenshots
+        ]
+
+    async def _build_media_items_community_screenshots(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media items."""
+        client = entry.runtime_data.status.client
+
+        if identifier.media_type != ATTR_COMMUNITY_SCREENSHOTS:
+            return []
+        try:
+            screenshots = (
+                await client.screenshots.get_recent_community_screenshots_by_title_id(
+                    identifier.title_id
+                )
+            ).screenshots
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{screenshot.screenshot_id}",
+                media_class=MediaClass.VIDEO,
+                media_content_type=MediaClass.VIDEO,
+                title=(
+                    f"{screenshot.user_caption}"
+                    f"{' | ' if screenshot.user_caption else ''}"
+                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                ),
+                can_play=True,
+                can_expand=False,
+                thumbnail=screenshot.thumbnails[0].uri,
+            )
+            for screenshot in screenshots
+        ]
+
+    def _build_media_items_promotional(
+        self, identifier: XboxMediaSourceIdentifier, game: Title
+    ) -> list[BrowseMediaSource]:
+        """List promotional game media."""
+
+        if identifier.media_type != ATTR_GAME_MEDIA:
+            return []
+
+        return (
+            [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{identifier}/{game.images.index(image)}",
+                    media_class=MediaClass.VIDEO,
+                    media_content_type=MediaClass.VIDEO,
+                    title=image.type,
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=to_https(image.url),
+                )
+                for image in game.images
+            ]
+            if game.images
+            else []
         )
 
 
-def _build_game_item(item: InstalledPackage, images: dict[str, list[Image]]):
-    """Build individual game."""
-    thumbnail = ""
-    image = _find_media_image(images.get(item.one_store_product_id, []))
-    if image is not None:
-        thumbnail = image.uri
-        if thumbnail[0] == "/":
-            thumbnail = f"https:{thumbnail}"
-
-    return BrowseMediaSource(
-        domain=DOMAIN,
-        identifier=f"{item.title_id}#{item.name}#{thumbnail}",
-        media_class=MediaClass.GAME,
-        media_content_type="",
-        title=item.name,
-        can_play=False,
-        can_expand=True,
-        children_media_class=MediaClass.DIRECTORY,
-        thumbnail=thumbnail,
-    )
+def gamerpic(config_entry: XboxConfigEntry) -> str | None:
+    """Return gamerpic."""
+    coordinator = config_entry.runtime_data.status
+    if TYPE_CHECKING:
+        assert config_entry.unique_id
+    person = coordinator.data.presence[coordinator.client.xuid]
+    return profile_pic(person)
 
 
-def _build_categories(title):
-    """Build base categories for Xbox media."""
-    _, name, thumbnail = title.split("#", 2)
-    base = BrowseMediaSource(
-        domain=DOMAIN,
-        identifier=f"{title}",
-        media_class=MediaClass.GAME,
-        media_content_type="",
-        title=name,
-        can_play=False,
-        can_expand=True,
-        children=[],
-        children_media_class=MediaClass.DIRECTORY,
-        thumbnail=thumbnail,
-    )
+def game_thumbnail(images: list[Image]) -> str | None:
+    """Return the title image."""
 
-    owners = ["my", "community"]
-    kinds = ["gameclips", "screenshots"]
-    for owner in owners:
-        for kind in kinds:
-            base.children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{title}~~{owner}#{kind}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=f"{owner.title()} {kind.title()}",
-                    can_play=False,
-                    can_expand=True,
-                    children_media_class=MEDIA_CLASS_MAP[kind],
-                )
-            )
+    for img_type in ("BrandedKeyArt", "Poster", "BoxArt"):
+        if match := next(
+            (i for i in images if i.type == img_type),
+            None,
+        ):
+            return to_https(match.url)
 
-    return base
-
-
-def _build_media_item(title: str, category: str, item: XboxMediaItem):
-    """Build individual media item."""
-    kind = category.split("#", 1)[1]
-    return BrowseMediaSource(
-        domain=DOMAIN,
-        identifier=f"{title}~~{category}~~{item.uri}",
-        media_class=item.media_class,
-        media_content_type=MIME_TYPE_MAP[kind],
-        title=item.caption,
-        can_play=True,
-        can_expand=False,
-        thumbnail=item.thumbnail,
-    )
+    return None

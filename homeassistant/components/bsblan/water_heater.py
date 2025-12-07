@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import DOMAIN
-from .entity import BSBLanEntity
+from .entity import BSBLanDualCoordinatorEntity
 
 PARALLEL_UPDATES = 1
 
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     # Only create water heater entity if DHW (Domestic Hot Water) is available
     # Check if we have any DHW-related data indicating water heater support
-    dhw_data = data.coordinator.data.dhw
+    dhw_data = data.fast_coordinator.data.dhw
     if (
         dhw_data.operating_mode is None
         and dhw_data.nominal_setpoint is None
@@ -56,7 +56,7 @@ async def async_setup_entry(
     async_add_entities([BSBLANWaterHeater(data)])
 
 
-class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
+class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
@@ -67,16 +67,43 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
 
     def __init__(self, data: BSBLanData) -> None:
         """Initialize BSBLAN water heater."""
-        super().__init__(data.coordinator, data)
+        super().__init__(data.fast_coordinator, data.slow_coordinator, data)
         self._attr_unique_id = format_mac(data.device.MAC)
         self._attr_operation_list = list(OPERATION_MODES_REVERSE.keys())
 
-        # Set temperature limits based on device capabilities
-        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
-        if data.coordinator.data.dhw.reduced_setpoint is not None:
-            self._attr_min_temp = data.coordinator.data.dhw.reduced_setpoint.value
-        if data.coordinator.data.dhw.nominal_setpoint_max is not None:
-            self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint_max.value
+        # Set temperature unit
+        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
+        # Initialize available attribute to resolve multiple inheritance conflict
+        self._attr_available = True
+
+        # Set temperature limits based on device capabilities from slow coordinator
+        # For min_temp: Use reduced_setpoint from config data (slow polling)
+        if (
+            data.slow_coordinator.data
+            and data.slow_coordinator.data.dhw_config is not None
+            and data.slow_coordinator.data.dhw_config.reduced_setpoint is not None
+            and hasattr(data.slow_coordinator.data.dhw_config.reduced_setpoint, "value")
+        ):
+            self._attr_min_temp = float(
+                data.slow_coordinator.data.dhw_config.reduced_setpoint.value
+            )
+        else:
+            self._attr_min_temp = 10.0  # Default minimum
+
+        # For max_temp: Use nominal_setpoint_max from config data (slow polling)
+        if (
+            data.slow_coordinator.data
+            and data.slow_coordinator.data.dhw_config is not None
+            and data.slow_coordinator.data.dhw_config.nominal_setpoint_max is not None
+            and hasattr(
+                data.slow_coordinator.data.dhw_config.nominal_setpoint_max, "value"
+            )
+        ):
+            self._attr_max_temp = float(
+                data.slow_coordinator.data.dhw_config.nominal_setpoint_max.value
+            )
+        else:
+            self._attr_max_temp = 65.0  # Default maximum
 
     @property
     def current_operation(self) -> str | None:

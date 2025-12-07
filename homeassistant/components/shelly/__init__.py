@@ -60,6 +60,7 @@ from .coordinator import (
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
+    async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
 )
 from .utils import (
@@ -98,6 +99,7 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 ]
 RPC_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.UPDATE,
 ]
@@ -346,6 +348,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             hass,
             entry,
         )
+        async_manage_open_wifi_ap_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

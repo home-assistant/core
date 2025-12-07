@@ -1,5 +1,13 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -9,14 +17,6 @@
           "station_id": "Select a hydrological station from the list."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -24,9 +24,9 @@
       "hydrological_alert": {
         "name": "Hydrological alert",
         "state": {
-          "no_alert": "No alert",
           "exceeding_the_warning_level": "Exceeding the warning level",
           "hydrological_drought": "Hydrological drought",
+          "no_alert": "No alert",
           "rapid_water_level_rise": "Rapid water level rise"
         },
         "state_attributes": {
@@ -41,9 +41,9 @@
           },
           "options": {
             "state": {
-              "no_alert": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::no_alert%]",
               "exceeding_the_warning_level": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::exceeding_the_warning_level%]",
               "hydrological_drought": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::hydrological_drought%]",
+              "no_alert": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::no_alert%]",
               "rapid_water_level_rise": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::rapid_water_level_rise%]"
             }
           },

@@ -3,33 +3,6 @@
     "pressure": "Pressure"
   },
   "config": {
-    "step": {
-      "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "reauth_confirm": {
-        "description": "The Volvo integration needs to re-authenticate your account.",
-        "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "api_key": {
-        "description": "Get your API key from the [Volvo developer portal]({volvo_dev_portal}).",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "The Volvo developers API key"
-        }
-      },
-      "vin": {
-        "description": "Select a vehicle",
-        "data": {
-          "vin": "VIN"
-        },
-        "data_description": {
-          "vin": "The Vehicle Identification Number of the vehicle you want to add"
-        }
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -44,12 +17,39 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
     "error": {
       "cannot_load_vehicles": "Unable to retrieve vehicles.",
       "no_vehicles": "No vehicles found on this account."
     },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    "step": {
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The Volvo developers API key"
+        },
+        "description": "Get your API key from the [Volvo developer portal]({volvo_dev_portal})."
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Volvo integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "vin": {
+        "data": {
+          "vin": "VIN"
+        },
+        "data_description": {
+          "vin": "The Vehicle Identification Number of the vehicle you want to add"
+        },
+        "description": "Select a vehicle"
+      }
     }
   },
   "entity": {
@@ -147,18 +147,6 @@
       "tank_lid": {
         "name": "Tank lid"
       },
-      "turn_indication_front_left_warning": {
-        "name": "Turn indication front left"
-      },
-      "turn_indication_front_right_warning": {
-        "name": "Turn indication front right"
-      },
-      "turn_indication_rear_left_warning": {
-        "name": "Turn indication rear left"
-      },
-      "turn_indication_rear_right_warning": {
-        "name": "Turn indication rear right"
-      },
       "tire_front_left": {
         "name": "Tire front left"
       },
@@ -170,6 +158,18 @@
       },
       "tire_rear_right": {
         "name": "Tire rear right"
+      },
+      "turn_indication_front_left_warning": {
+        "name": "Turn indication front left"
+      },
+      "turn_indication_front_right_warning": {
+        "name": "Turn indication front right"
+      },
+      "turn_indication_rear_left_warning": {
+        "name": "Turn indication rear left"
+      },
+      "turn_indication_rear_right_warning": {
+        "name": "Turn indication rear right"
       },
       "washer_fluid_level_warning": {
         "name": "Washer fluid"
@@ -194,6 +194,12 @@
       "climatization_stop": {
         "name": "Stop climatization"
       },
+      "engine_start": {
+        "name": "Start engine"
+      },
+      "engine_stop": {
+        "name": "Stop engine"
+      },
       "flash": {
         "name": "Flash"
       },
@@ -202,6 +208,19 @@
       },
       "honk_flash": {
         "name": "Honk & flash"
+      },
+      "lock_reduced_guard": {
+        "name": "Lock reduced guard"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
       }
     },
     "sensor": {
@@ -261,9 +280,9 @@
         "name": "Charging power status",
         "state": {
           "fault": "[%key:common::state::fault%]",
+          "no_power_available": "No power",
           "power_available_but_not_activated": "Power available",
-          "providing_power": "Providing power",
-          "no_power_available": "No power"
+          "providing_power": "Providing power"
         }
       },
       "charging_status": {
@@ -346,11 +365,14 @@
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
     },
-    "update_failed": {
-      "message": "Unable to update data."
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "unauthorized": {
       "message": "Authentication failed. {message}"
+    },
+    "update_failed": {
+      "message": "Unable to update data."
     }
   }
 }
