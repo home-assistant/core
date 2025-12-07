@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientError
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
@@ -104,8 +105,10 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 web_session=async_get_clientsession(self.hass),
             )
             await client.update()
-        except Exception:  # noqa: BLE001
+        except (TimeoutError, ClientError):
             return stops, quays, "cannot_connect"
+        except Exception:  # noqa: BLE001
+            return stops, quays, "unknown"
 
         return stops, quays, None
 

@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
+
 from homeassistant.components.entur_public_transport.const import (
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
@@ -116,7 +118,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
     ) as mock_client_class:
         mock_client = MagicMock()
-        mock_client.update = AsyncMock(side_effect=Exception("Connection error"))
+        mock_client.update = AsyncMock(side_effect=ClientError("Connection error"))
         mock_client_class.return_value = mock_client
 
         result = await hass.config_entries.flow.async_configure(
@@ -132,6 +134,62 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_timeout(hass: HomeAssistant) -> None:
+    """Test user flow when API times out."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=TimeoutError("Timeout"))
+        mock_client_class.return_value = mock_client
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_STOP_IDS: ["NSR:StopPlace:548"],
+                CONF_EXPAND_PLATFORMS: True,
+                CONF_SHOW_ON_MAP: False,
+                CONF_OMIT_NON_BOARDING: True,
+                CONF_NUMBER_OF_DEPARTURES: 2,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test user flow when an unexpected error occurs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=Exception("Unexpected error"))
+        mock_client_class.return_value = mock_client
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_STOP_IDS: ["NSR:StopPlace:548"],
+                CONF_EXPAND_PLATFORMS: True,
+                CONF_SHOW_ON_MAP: False,
+                CONF_OMIT_NON_BOARDING: True,
+                CONF_NUMBER_OF_DEPARTURES: 2,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
@@ -284,7 +342,7 @@ async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
     ) as mock_client_class:
         mock_client = MagicMock()
-        mock_client.update = AsyncMock(side_effect=Exception("Connection error"))
+        mock_client.update = AsyncMock(side_effect=ClientError("Connection error"))
         mock_client_class.return_value = mock_client
 
         result = await hass.config_entries.flow.async_init(
@@ -295,6 +353,35 @@ async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test import flow when an unexpected error occurs."""
+    yaml_config = {
+        CONF_STOP_IDS: ["NSR:StopPlace:548"],
+        CONF_EXPAND_PLATFORMS: True,
+        CONF_NAME: "My Bus Stop",
+        "show_on_map": False,
+        CONF_WHITELIST_LINES: [],
+        CONF_OMIT_NON_BOARDING: True,
+        CONF_NUMBER_OF_DEPARTURES: 2,
+    }
+
+    with patch(
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=Exception("Unexpected error"))
+        mock_client_class.return_value = mock_client
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=yaml_config,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
