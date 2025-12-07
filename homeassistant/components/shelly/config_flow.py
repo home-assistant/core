@@ -334,7 +334,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         try:
             device = await self._async_ensure_ble_connected()
-            await device.update_status()
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug("Failed to get IP via BLE: %s", err)
             return None
