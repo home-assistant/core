@@ -141,10 +141,7 @@ async def async_setup_entry(
     """Set up Entur sensors from a config entry."""
     coordinator = entry.runtime_data
 
-    entities = [
-        EnturSensor(coordinator, stop_id)
-        for stop_id in coordinator.data
-    ]
+    entities = [EnturSensor(coordinator, stop_id) for stop_id in coordinator.data]
     async_add_entities(entities)
 
 
@@ -219,11 +216,7 @@ class EnturSensor(CoordinatorEntity[EnturCoordinator], SensorEntity):
             return attrs
 
         # Add location if configured
-        if (
-            self.coordinator.show_on_map
-            and stop_info.latitude
-            and stop_info.longitude
-        ):
+        if self.coordinator.show_on_map and stop_info.latitude and stop_info.longitude:
             attrs[CONF_LATITUDE] = stop_info.latitude
             attrs[CONF_LONGITUDE] = stop_info.longitude
 
@@ -263,4 +256,3 @@ class EnturSensor(CoordinatorEntity[EnturCoordinator], SensorEntity):
                 )
 
         return attrs
-
