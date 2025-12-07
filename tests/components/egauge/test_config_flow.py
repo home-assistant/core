@@ -76,7 +76,7 @@ async def test_user_flow_errors(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_HOST: "http://192.168.1.100",
+            CONF_HOST: "192.168.1.100",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "wrong",
             CONF_SSL: True,
@@ -93,7 +93,7 @@ async def test_user_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "http://192.168.1.100",
+            CONF_HOST: "192.168.1.100",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
             CONF_SSL: True,
@@ -101,6 +101,15 @@ async def test_user_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "egauge-home"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "secret",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    }
+    assert result["result"].unique_id == "ABC123456"
 
 
 async def test_user_flow_already_configured(
