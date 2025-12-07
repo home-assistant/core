@@ -133,6 +133,9 @@
     "invalid_config_entry": {
       "message": "Config entry not found or not loaded!"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "valve_inoperable_currently": {
       "message": "The Valve cannot be operated currently."
     }

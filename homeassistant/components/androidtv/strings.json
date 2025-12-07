@@ -65,6 +65,13 @@
       }
     }
   },
+  "selector": {
+    "device_class": {
+      "options": {
+        "auto": "Auto-detect device type"
+      }
+    }
+  },
   "services": {
     "adb_command": {
       "description": "Sends an ADB command to an Android / Fire TV device.",

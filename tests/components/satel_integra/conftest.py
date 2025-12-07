@@ -11,6 +11,7 @@ from homeassistant.components.satel_integra.const import DOMAIN
 from . import (
     MOCK_CONFIG_DATA,
     MOCK_CONFIG_OPTIONS,
+    MOCK_ENTRY_ID,
     MOCK_OUTPUT_SUBENTRY,
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
@@ -37,15 +38,18 @@ def mock_satel() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.satel_integra.AsyncSatel",
             autospec=True,
-        ) as client,
+        ) as mock_client,
         patch(
-            "homeassistant.components.satel_integra.config_flow.AsyncSatel", new=client
+            "homeassistant.components.satel_integra.config_flow.AsyncSatel",
+            new=mock_client,
         ),
     ):
-        client.return_value.partition_states = {}
-        client.return_value.violated_outputs = []
-        client.return_value.violated_zones = []
-        client.return_value.connect.return_value = True
+        client = mock_client.return_value
+        client.partition_states = {}
+        client.violated_outputs = []
+        client.violated_zones = []
+        client.connect = AsyncMock(return_value=True)
+        client.set_output = AsyncMock()
 
         yield client
 
@@ -58,9 +62,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="192.168.0.2",
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
-        entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
-        version=1,
-        minor_version=2,
+        entry_id=MOCK_ENTRY_ID,
+        version=2,
+        minor_version=1,
     )
 
 

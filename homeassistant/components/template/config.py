@@ -72,7 +72,11 @@ from . import (
     weather as weather_platform,
 )
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
+from .helpers import (
+    async_get_blueprints,
+    create_legacy_template_issue,
+    rewrite_legacy_to_modern_configs,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,22 +88,26 @@ def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
         binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
         for binary_sensor in binary_sensors:
-            if binary_sensor_platform.CONF_AUTO_OFF in binary_sensor:
-                identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
-                if (
-                    (name := binary_sensor.get(CONF_NAME))
-                    and isinstance(name, Template)
-                    and name.template != binary_sensor_platform.DEFAULT_NAME
-                ):
-                    identifier = f"{CONF_NAME}: {name.template}"
-                elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
-                    identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
-                elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
-                    identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+            if binary_sensor_platform.CONF_AUTO_OFF not in binary_sensor:
+                continue
 
-                raise vol.Invalid(
-                    f"The auto_off option for template binary sensor: {identifier} requires a trigger, remove the auto_off option or rewrite configuration to use a trigger"
-                )
+            identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
+            if (
+                (name := binary_sensor.get(CONF_NAME))
+                and isinstance(name, Template)
+                and name.template != binary_sensor_platform.DEFAULT_NAME
+            ):
+                identifier = f"{CONF_NAME}: {name.template}"
+            elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
+                identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+            elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
+                identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+            raise vol.Invalid(
+                f"The auto_off option for template binary sensor: {identifier} "
+                "requires a trigger, remove the auto_off option or rewrite "
+                "configuration to use a trigger"
+            )
 
     return obj
 
@@ -382,11 +390,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             definitions = (
                 list(template_config[new_key]) if new_key in template_config else []
             )
-            definitions.extend(
-                rewrite_legacy_to_modern_configs(
-                    hass, new_key, template_config[old_key], legacy_fields
-                )
-            )
+            for definition in rewrite_legacy_to_modern_configs(
+                hass, new_key, template_config[old_key], legacy_fields
+            ):
+                create_legacy_template_issue(hass, definition, new_key)
+                definitions.append(definition)
             template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)

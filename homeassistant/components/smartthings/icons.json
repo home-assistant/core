@@ -82,8 +82,14 @@
           "stop": "mdi:stop"
         }
       },
+      "soil_level": {
+        "default": "mdi:liquid-spot"
+      },
       "spin_level": {
         "default": "mdi:rotate-right"
+      },
+      "water_temperature": {
+        "default": "mdi:water-thermometer"
       }
     },
     "sensor": {
@@ -155,6 +161,13 @@
       },
       "sanitize": {
         "default": "mdi:lotion"
+      },
+      "sound_effect": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-off",
+          "on": "mdi:volume-high"
+        }
       },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
