@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiyanetConfigEntry) -> b
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
 
-    # Set up daily scheduled updates at 00:15
+    # Set up daily scheduled updates at 00:05
     await coordinator.async_setup()
 
     # Store coordinator in runtime_data
