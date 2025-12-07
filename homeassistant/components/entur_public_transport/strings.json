@@ -55,7 +55,7 @@
   "issues": {
     "deprecated_yaml_import_issue": {
       "title": "YAML configuration import failed",
-      "description": "The Entur public transport YAML configuration could not be imported automatically (reason: {error_reason}).\n\nPlease remove the YAML configuration from your `configuration.yaml` file and set up the integration through the Home Assistant UI instead.\n\nGo to **Settings** > **Devices & Services** > **Add Integration** and search for \"Entur public transport\"."
+      "description": "Your Entur public transport integration is configured using the deprecated YAML method in `configuration.yaml`, which failed to import automatically due to: {error_reason}.\n\nTo continue using this integration, you must migrate to the UI configuration:\n\n1. Open your `configuration.yaml` file\n2. Remove the `entur_public_transport` sensor platform section\n3. Save the file and restart Home Assistant\n4. Go to **Settings** > **Devices & Services** > **Add Integration**\n5. Search for and add \"Entur public transport\"\n6. Configure your stop IDs using the setup wizard\n\nAfter completing these steps, your integration will be configured through the UI and this issue will be resolved."
     }
   }
 }
