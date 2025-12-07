@@ -18,6 +18,7 @@ from homeassistant.components.entur_public_transport.const import (
     ATTR_ROUTE,
     ATTR_ROUTE_ID,
     ATTR_STOP_ID,
+    ATTRIBUTION,
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -35,7 +36,7 @@ async def test_sensor_state(
     state = hass.states.get("sensor.entur_bergen_stasjon")
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
-    assert state.attributes.get("attribution") == "Data provided by Entur"
+    assert state.attributes.get("attribution") == ATTRIBUTION
 
 
 @pytest.mark.usefixtures("init_integration")

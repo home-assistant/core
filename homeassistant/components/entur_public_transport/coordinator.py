@@ -72,20 +72,33 @@ class EnturCoordinator(DataUpdateCoordinator[dict[str, Place]]):
 
         self._expand_platforms = data.get(CONF_EXPAND_PLATFORMS, True)
         self._show_on_map = data.get(CONF_SHOW_ON_MAP, False)
-        self._initial_expanded = False
 
     @property
     def show_on_map(self) -> bool:
         """Return whether to show location on map."""
         return self._show_on_map
 
+    async def _async_setup(self) -> None:
+        """Perform one-time setup for the coordinator."""
+        if self._expand_platforms:
+            try:
+                await self.client.expand_all_quays()
+            except TimeoutError as err:
+                raise UpdateFailed(
+                    f"Timeout communicating with Entur API: {err}"
+                ) from err
+            except ClientError as err:
+                raise UpdateFailed(
+                    f"Error communicating with Entur API: {err}"
+                ) from err
+            except Exception as err:  # noqa: BLE001
+                raise UpdateFailed(
+                    f"Unexpected error expanding platforms: {err}"
+                ) from err
+
     async def _async_update_data(self) -> dict[str, Place]:
         """Fetch data from Entur API."""
         try:
-            if self._expand_platforms and not self._initial_expanded:
-                await self.client.expand_all_quays()
-                self._initial_expanded = True
-
             await self.client.update()
         except TimeoutError as err:
             raise UpdateFailed(
