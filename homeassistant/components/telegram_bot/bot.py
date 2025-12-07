@@ -1070,7 +1070,7 @@ async def load_data(
         # Store original URL for logging (signed URLs contain auth tokens)
         log_url = url
 
-        # Parse URL once and check if it's internal
+        # Parse URL to determine if it needs authentication
         try:
             parsed = YarlURL(url)
         except ValueError as err:
@@ -1080,10 +1080,13 @@ async def load_data(
                 translation_placeholders={"url": url},
             ) from err
 
-        # Only treat as internal URL if:
-        # 1. It's a relative path starting with / (e.g., /api/camera_proxy/...)
-        # 2. It's an absolute URL pointing to this Home Assistant instance
-        if (not parsed.is_absolute() and url.startswith("/")) or is_hass_url(hass, url):
+        # Sign internal URLs for authenticated access
+        if parsed.is_absolute():
+            # Absolute URL - check if it points to this HA instance
+            if is_hass_url(hass, url):
+                url = _prepare_internal_url(hass, parsed)
+        elif url[0] == "/":
+            # Relative path - always an internal URL
             url = _prepare_internal_url(hass, parsed)
 
         # Load data from URL

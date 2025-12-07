@@ -83,12 +83,12 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
@@ -1551,99 +1551,74 @@ async def test_send_photo_with_hass_url(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    mock_httpx_client: AsyncMock,
 ) -> None:
     """Test send photo with Home Assistant internal URL gets signed."""
+    # Configure Home Assistant URLs
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://homeassistant.local:8123"},
+    )
+
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.is_hass_url",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.telegram_bot.bot.async_sign_path",
-            return_value="/api/test?authSig=mock_signature",
-        ) as mock_sign,
-        patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient"
-        ) as mock_client,
-    ):
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"image_data"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_PHOTO,
+        {
+            ATTR_URL: "http://homeassistant.local:8123/api/unifiprotect/thumbnail/test123",
+        },
+        blocking=True,
+    )
 
-        mock_client_instance = AsyncMock()
-        mock_client_instance.get = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-        mock_client.return_value = mock_client_instance
-
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_PHOTO,
-            {
-                ATTR_URL: "http://homeassistant.local:8123/api/unifiprotect/thumbnail/test123",
-            },
-            blocking=True,
-        )
-
-        # Verify async_sign_path was called
-        mock_sign.assert_called_once()
-        call_args = mock_sign.call_args
-        assert call_args[0][1] == "/api/unifiprotect/thumbnail/test123"
-
-        # Verify httpx was called with internal URL (local_ip)
-        mock_client_instance.get.assert_called_once()
-        called_url = mock_client_instance.get.call_args[0][0]
-        assert "authSig=mock_signature" in called_url
-        # Should use local_ip from hass.config.api, not 127.0.0.1
-        assert hass.config.api.local_ip in called_url
+    # Verify httpx was called with signed URL
+    mock_httpx_client.get.assert_called_once()
+    called_url = mock_httpx_client.get.call_args[0][0]
+    # Should contain auth signature
+    assert "authSig=" in called_url
+    # Should contain the original path
+    assert "/api/unifiprotect/thumbnail/test123" in called_url
+    # Should use configured internal URL
+    assert "homeassistant.local:8123" in called_url
 
 
 async def test_send_photo_with_relative_url(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    mock_httpx_client: AsyncMock,
 ) -> None:
     """Test send photo with relative URL path gets signed."""
+    # Configure Home Assistant URLs
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://192.168.1.100:8123"},
+    )
+
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.async_sign_path",
-            return_value="/api/test?authSig=mock_signature",
-        ) as mock_sign,
-        patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient"
-        ) as mock_client,
-    ):
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"image_data"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_PHOTO,
+        {
+            ATTR_URL: "/api/unifiprotect/thumbnail/test123",
+        },
+        blocking=True,
+    )
 
-        mock_client_instance = AsyncMock()
-        mock_client_instance.get = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-        mock_client.return_value = mock_client_instance
-
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_PHOTO,
-            {
-                ATTR_URL: "/api/unifiprotect/thumbnail/test123",
-            },
-            blocking=True,
-        )
-
-        # Verify async_sign_path was called with the relative path
-        mock_sign.assert_called_once()
-        call_args = mock_sign.call_args
-        assert call_args[0][1] == "/api/unifiprotect/thumbnail/test123"
+    # Verify httpx was called with signed URL
+    mock_httpx_client.get.assert_called_once()
+    called_url = mock_httpx_client.get.call_args[0][0]
+    # Should contain auth signature
+    assert "authSig=" in called_url
+    # Should contain the original path
+    assert "/api/unifiprotect/thumbnail/test123" in called_url
+    # Should use configured internal URL
+    assert "192.168.1.100:8123" in called_url
 
 
 async def test_send_photo_with_hass_url_no_url_available(
@@ -1652,19 +1627,14 @@ async def test_send_photo_with_hass_url_no_url_available(
     mock_external_calls: None,
 ) -> None:
     """Test send photo with HA URL fails when no URL can be determined."""
+    # Don't configure any URLs - this should cause NoURLAvailableError
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.get_url",
-            side_effect=NoURLAvailableError,
-        ),
-        pytest.raises(
-            HomeAssistantError,
-            match="Unable to determine Home Assistant URL",
-        ),
+    with pytest.raises(
+        HomeAssistantError,
+        match="Unable to determine Home Assistant URL",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1682,24 +1652,20 @@ async def test_send_photo_with_hass_url_no_url_available_ssl_hint(
     mock_external_calls: None,
 ) -> None:
     """Test send photo with HA URL shows SSL hint when applicable."""
+    # Configure SSL but no URLs - should trigger helpful error message
+    await async_process_ha_core_config(
+        hass,
+        {"server_port": 8123},
+    )
+    hass.config.api.use_ssl = True
+
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Simulate SSL enabled with no URLs configured
-    hass.config.api.use_ssl = True
-    hass.config.external_url = None
-    hass.config.internal_url = None
-
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.get_url",
-            side_effect=NoURLAvailableError,
-        ),
-        pytest.raises(
-            HomeAssistantError,
-            match="Configure internal and external URL in general settings",
-        ),
+    with pytest.raises(
+        HomeAssistantError,
+        match="Configure internal and external URL in general settings",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1715,50 +1681,34 @@ async def test_send_photo_with_external_url_not_signed(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    mock_httpx_client: AsyncMock,
 ) -> None:
     """Test send photo with external URL is NOT signed."""
+    # Configure internal URL so we have a base URL, but test with external URL
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://192.168.1.100:8123"},
+    )
+
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.is_hass_url",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.telegram_bot.bot.async_sign_path",
-        ) as mock_sign,
-        patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient"
-        ) as mock_client,
-    ):
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"image_data"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_PHOTO,
+        {
+            ATTR_URL: "https://example.com/image.jpg",
+        },
+        blocking=True,
+    )
 
-        mock_client_instance = AsyncMock()
-        mock_client_instance.get = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-        mock_client.return_value = mock_client_instance
-
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_PHOTO,
-            {
-                ATTR_URL: "https://example.com/image.jpg",
-            },
-            blocking=True,
-        )
-
-        # Verify async_sign_path was NOT called for external URL
-        mock_sign.assert_not_called()
-
-        # Verify the original external URL was used
-        mock_client_instance.get.assert_called_once()
-        called_url = mock_client_instance.get.call_args[0][0]
-        assert called_url == "https://example.com/image.jpg"
+    # Verify the original external URL was used without auth signature
+    mock_httpx_client.get.assert_called_once()
+    called_url = mock_httpx_client.get.call_args[0][0]
+    assert called_url == "https://example.com/image.jpg"
+    # Should NOT contain auth signature
+    assert "authSig=" not in called_url
 
 
 async def test_send_photo_with_invalid_url(
@@ -1790,47 +1740,68 @@ async def test_send_photo_with_query_params_preserved(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    mock_httpx_client: AsyncMock,
 ) -> None:
     """Test send photo with URL containing query params preserves them."""
+    # Configure Home Assistant URLs
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://192.168.1.100:8123"},
+    )
+
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.bot.async_sign_path",
-            return_value="/api/test?existing=param&authSig=mock_signature",
-        ) as mock_sign,
-        patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient"
-        ) as mock_client,
-    ):
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"image_data"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_PHOTO,
+        {
+            ATTR_URL: "/api/test?existing=param",
+        },
+        blocking=True,
+    )
 
-        mock_client_instance = AsyncMock()
-        mock_client_instance.get = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-        mock_client.return_value = mock_client_instance
+    # Verify httpx was called with URL containing both original and auth params
+    mock_httpx_client.get.assert_called_once()
+    called_url = mock_httpx_client.get.call_args[0][0]
+    assert "existing=param" in called_url
+    assert "authSig=" in called_url
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_PHOTO,
-            {
-                ATTR_URL: "/api/test?existing=param",
-            },
-            blocking=True,
-        )
 
-        # Verify async_sign_path was called with the path including query params
-        mock_sign.assert_called_once()
-        call_args = mock_sign.call_args
-        assert call_args[0][1] == "/api/test?existing=param"
+async def test_send_photo_with_internal_and_external_urls(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    mock_httpx_client: AsyncMock,
+) -> None:
+    """Test send photo uses internal URL when both internal and external are configured."""
+    # Configure both internal and external URLs
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": "http://192.168.1.100:8123",
+            "external_url": "https://example.com",
+        },
+    )
 
-        # Verify httpx was called with URL containing both original and auth params
-        mock_client_instance.get.assert_called_once()
-        called_url = mock_client_instance.get.call_args[0][0]
-        assert "existing=param" in called_url
-        assert "authSig=mock_signature" in called_url
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Test with HA instance URL (internal)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_PHOTO,
+        {
+            ATTR_URL: "http://192.168.1.100:8123/api/camera_proxy/camera.test",
+        },
+        blocking=True,
+    )
+
+    # Should use internal URL and include auth signature
+    mock_httpx_client.get.assert_called_once()
+    called_url = mock_httpx_client.get.call_args[0][0]
+    assert "192.168.1.100:8123" in called_url
+    assert "authSig=" in called_url
+    assert "/api/camera_proxy/camera.test" in called_url

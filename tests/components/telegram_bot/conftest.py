@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from telegram import (
@@ -373,3 +373,22 @@ def mock_polling_calls() -> Generator[None]:
         application.shutdown = AsyncMock()
 
         yield
+
+
+@pytest.fixture
+def mock_httpx_client() -> Generator[AsyncMock]:
+    """Fixture for mocking httpx.AsyncClient with successful image response."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient"
+    ) as mock_client:
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = b"image_data"
+
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(return_value=mock_response)
+        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
+        mock_client_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_client.return_value = mock_client_instance
+
+        yield mock_client_instance
