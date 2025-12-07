@@ -1,6 +1,6 @@
 """Support for services."""
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
@@ -56,8 +56,11 @@ def async_get_config_entry_for_service_call(
         )
 
     for entry_id in device_entry.config_entries:
-        if (config_entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
+        config_entry = call.hass.config_entries.async_get_entry(entry_id)
+
+        if TYPE_CHECKING:
+            assert config_entry
+
         if config_entry.domain != DOMAIN:
             continue
         if config_entry.state is not ConfigEntryState.LOADED:
