@@ -104,7 +104,7 @@ async def async_setup_platform(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            "deprecated_yaml_import_issue",
             breaks_in_ha_version="2027.1.0",
             is_fixable=False,
             issue_domain=DOMAIN,
@@ -113,6 +113,7 @@ async def async_setup_platform(
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "Entur public transport",
+                "error_reason": result.get("reason", "unknown"),
             },
         )
         return

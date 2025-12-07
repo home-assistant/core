@@ -55,7 +55,7 @@
   "issues": {
     "deprecated_yaml_import_issue": {
       "title": "YAML configuration import failed",
-      "description": "The Entur public transport YAML configuration could not be imported automatically.\n\nPlease remove the YAML configuration from your `configuration.yaml` file and set up the integration through the Home Assistant UI instead.\n\nGo to **Settings** > **Devices & Services** > **Add Integration** and search for \"Entur public transport\"."
+      "description": "The Entur public transport YAML configuration could not be imported automatically (reason: {error_reason}).\n\nPlease remove the YAML configuration from your `configuration.yaml` file and set up the integration through the Home Assistant UI instead.\n\nGo to **Settings** > **Devices & Services** > **Add Integration** and search for \"Entur public transport\"."
     }
   },
   "entity": {
