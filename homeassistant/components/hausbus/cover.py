@@ -43,7 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a cover from a config entry."""
 
-    gateway = config_entry.runtime_data.gateway
+    gateway = config_entry.runtime_data
     gateway.register_platform_add_channel_callback(COVER_DOMAIN, async_add_entities)
 
 

@@ -163,11 +163,11 @@ class HausbusGateway(IBusDataListener):
         )
 
 
-    def register_platform_add_channel_callback(self, domain: str, cb: AddConfigEntryEntitiesCallback) -> None:
+    def register_platform_add_channel_callback(self, domain: str, add_channel_callback: AddConfigEntryEntitiesCallback) -> None:
         """Register a plattform specific add channel callback."""
         self._domain_add_entity_callbacks[domain] = add_channel_callback
 
-    async def register_entity(cls, entity: HausbusEntity) -> None:
+    async def register_entity(self, entity: HausbusEntity) -> None:
         """Registers entity with the prior remembered callback."""
         cb = self._domain_add_entity_callbacks.get(entity.get_domain())
         if cb is not None:
