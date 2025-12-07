@@ -1170,7 +1170,7 @@ async def test_user_flow_with_ble_devices(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     for flow in flows:
         if flow["context"]["source"] == config_entries.SOURCE_BLUETOOTH:
-            await hass.config_entries.flow.async_abort(flow["flow_id"])
+            hass.config_entries.flow.async_abort(flow["flow_id"])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -5063,3 +5063,44 @@ async def test_zeroconf_aborts_idle_ble_flow(
     assert result["result"].unique_id == "C049EF8873E8"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_ble_rpc_device_class")
+async def test_bluetooth_flow_abort_cleans_up_ble_connection(
+    hass: HomeAssistant,
+    mock_ble_rpc_device: AsyncMock,
+) -> None:
+    """Test that aborting BLE flow cleans up the BLE connection."""
+    # Configure mock BLE device
+    mock_ble_rpc_device.wifi_scan.return_value = [
+        {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
+    ]
+
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    # Start BLE flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    flow_id = result["flow_id"]
+
+    # Confirm to proceed to WiFi scan (this creates the BLE connection)
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "wifi_scan"
+
+    # Verify BLE device was connected
+    mock_ble_rpc_device.initialize.assert_called_once()
+    mock_ble_rpc_device.wifi_scan.assert_called_once()
+
+    # Abort the flow - this should trigger async_remove and clean up BLE
+    hass.config_entries.flow.async_abort(flow_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify cleanup was called
+    mock_ble_rpc_device.shutdown.assert_called_once()
