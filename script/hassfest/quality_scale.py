@@ -1290,7 +1290,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "dsmr",
     "dsmr_reader",
     "dublin_bus_transport",
-    "duckdns",
     "duke_energy",
     "dunehd",
     "duotecno",
