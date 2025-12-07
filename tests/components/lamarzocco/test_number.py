@@ -312,12 +312,12 @@ async def test_brew_by_weight_dose(
         state = hass.states.get(entity_id)
 
         assert state
-        assert state == snapshot(name=f"dose_{dose}")
+        assert state == snapshot(name=f"state-dose-{dose}")
 
         entry = entity_registry.async_get(state.entity_id)
         assert entry
         assert entry.device_id
-        assert entry == snapshot(name=f"dose_{dose}")
+        assert entry == snapshot(name=f"entry-dose-{dose}")
 
         # service call
         await hass.services.async_call(
