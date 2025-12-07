@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
@@ -48,6 +49,7 @@ async def test_setup_creates_nvr_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     ufp: MockUFPFixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that setup creates the NVR device before loading platforms.
 
@@ -64,11 +66,7 @@ async def test_setup_creates_nvr_device(
     nvr_device = device_registry.async_get_device(
         identifiers={(DOMAIN, nvr.mac)},
     )
-    assert nvr_device is not None
-    assert nvr_device.manufacturer == "Ubiquiti"
-    assert nvr_device.name == nvr.display_name
-    assert nvr_device.model == nvr.type
-    assert nvr_device.sw_version == str(nvr.version)
+    assert nvr_device == snapshot
 
 
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
