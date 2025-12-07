@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+import re
 from typing import Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
@@ -54,6 +55,13 @@ _IMPERIAL: Final = (
     EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES,
     EcoWittSensorTypes.SPEED_MPH,
     EcoWittSensorTypes.PRESSURE_INHG,
+)
+
+
+# Hourly and 24h rain count sensors are rolling window sensors
+_ROLLING_WINDOW_RAIN_COUNT_SENSOR = re.compile(
+    "(?:hourly|last24h)rain(?:in|mm)"
+    "|(?:last24)?hrain_piezo(?:mm)?"
 )
 
 
@@ -287,13 +295,8 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
-        if sensor.key in (
-            "hrain_piezomm",
-            "hrain_piezo",
-            "hourlyrainmm",
-            "hourlyrainin",
-        ):
+        # Rolling window sensors must use measurement state classes
+        if _ROLLING_WINDOW_RAIN_COUNT_SENSOR.fullmatch(sensor.key):
             description = dataclasses.replace(
                 description,
                 state_class=SensorStateClass.MEASUREMENT,
