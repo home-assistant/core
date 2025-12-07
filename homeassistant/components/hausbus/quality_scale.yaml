@@ -13,14 +13,14 @@ rules:
   docs-actions:
     status: done
     comment: |
-      All actions are documented
+      All actions are documented.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
-      Entities of this integration does not explicitly subscribe to events.
+      Entities of this integration do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -35,3 +35,32 @@ rules:
     status: exempt
     comment: |
       Integration does not use polling; entities are event-driven.
+  log-setup: done
+  stub-polling:
+    status: exempt
+    comment: |
+      Integration is event-driven and has no polling.
+
+  # Bronze: missing rules (now included)
+  diagnostics-basic: todo
+  dev-docs: todo
+  integration-owner: todo
+  script-examples: todo
+
+  # Silver
+  test-support: todo
+  typing: done
+  entity-category: done
+  entity-device-info: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-handling: done
+  reconfiguration: todo
+
+  # Gold
+  repair-issues: todo
+  long-term-statistics: exempt
+  quality-assurance: todo
+  test-coverage: todo
+  diagnostics-extended: todo
+
