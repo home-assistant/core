@@ -1,9 +1,10 @@
 """Support for Roborock vacuum class."""
 
+import logging
 from typing import Any
 
 from roborock.data import RoborockStateCode
-from roborock.roborock_message import RoborockDataProtocol
+from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 import voluptuous as vol
 
@@ -25,6 +26,8 @@ from .const import (
 )
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
+
+_LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
@@ -62,11 +65,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock sensor."""
     async_add_entities(
-        RoborockVacuum(coordinator)
-        for coordinator in config_entry.runtime_data.v1
-        if isinstance(coordinator, RoborockDataUpdateCoordinator)
+        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
     )
-
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -124,12 +124,12 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             self,
             coordinator.duid_slug,
             coordinator,
-            listener_request=[
-                RoborockDataProtocol.FAN_POWER,
-                RoborockDataProtocol.STATE,
-            ],
         )
-        self._attr_fan_speed_list = self._device_status.fan_power_options
+
+    @property
+    def fan_speed_list(self) -> list[str]:
+        """Get the list of available fan speeds."""
+        return self._device_status.fan_power_options
 
     @property
     def activity(self) -> VacuumActivity | None:
@@ -197,32 +197,40 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
+        home_trait = self.coordinator.properties_api.home
         return {
             "maps": [
                 {
-                    "flag": vacuum_map.flag,
+                    "flag": vacuum_map.map_flag,
                     "name": vacuum_map.name,
-                    # JsonValueType does not accept a int as a key - was not a
-                    # issue with previous asdict() implementation.
-                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
+                    "rooms": {
+                        # JsonValueType does not accept a int as a key - was not a
+                        # issue with previous asdict() implementation.
+                        room.segment_id: room.name  # type: ignore[misc]
+                        for room in vacuum_map.rooms
+                    },
                 }
-                for vacuum_map in self.coordinator.maps.values()
+                for vacuum_map in (home_trait.home_map_info or {}).values()
             ]
         }
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
-
-        map_data = await self.coordinator.cloud_api.get_map_v1()
-        if not isinstance(map_data, bytes):
+        map_content_trait = self.coordinator.properties_api.map_content
+        try:
+            await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh map content: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from err
+        if map_content_trait.map_data is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_map = self.coordinator.map_parser.parse(map_data)
-        robot_position = parsed_map.vacuum_position
-
-        if robot_position is None:
+        if (robot_position := map_content_trait.map_data.vacuum_position) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="position_not_found"
             )

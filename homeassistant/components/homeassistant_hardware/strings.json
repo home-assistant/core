@@ -53,6 +53,10 @@
           },
           "title": "Pick your protocol"
         },
+        "show_z2m_docs_url": {
+          "description": "Your {model} is now running the latest Zigbee firmware.\nPlease read the Zigbee2MQTT documentation for EmberZNet adapters and copy the config for your {model}: {z2m_docs_url}",
+          "title": "Set up Zigbee2MQTT"
+        },
         "start_otbr_addon": {
           "title": "Configuring Thread"
         },

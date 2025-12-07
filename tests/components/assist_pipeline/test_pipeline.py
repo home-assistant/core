@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1637,6 +1638,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
         ),
     ],
 )
+@freeze_time("2025-10-31 12:00:00")
 async def test_chat_log_tts_streaming(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
