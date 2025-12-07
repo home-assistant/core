@@ -44,6 +44,33 @@ def mock_user_can_write_nvr(request: pytest.FixtureRequest, ufp: MockUFPFixture)
         object.__setattr__(ufp.api.bootstrap.nvr, "can_write", original_can_write)
 
 
+async def test_setup_creates_nvr_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """Test that setup creates the NVR device before loading platforms.
+
+    This ensures that via_device references from camera/sensor entities
+    to the NVR device work correctly.
+    """
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+    # Verify NVR device was created
+    nvr = ufp.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, nvr.mac)},
+    )
+    assert nvr_device is not None
+    assert nvr_device.manufacturer == "Ubiquiti"
+    assert nvr_device.name == nvr.display_name
+    assert nvr_device.model == nvr.type
+    assert nvr_device.sw_version == str(nvr.version)
+
+
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test working setup of unifiprotect entry."""
 
