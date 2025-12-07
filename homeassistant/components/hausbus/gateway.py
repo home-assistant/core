@@ -122,7 +122,7 @@ class HausbusGateway(IBusDataListener):
             return
 
         LOGGER.debug("busDataReceived: data %s from %s", data, object_id)
-        dispatcher_send(hass, f"hausbus_update_{object_id.getValue()}", data)
+        dispatcher_send(self.hass, f"hausbus_update_{object_id.getValue()}", data)
 
 
     async def async_register_device(self, device_id: int, device_info: DeviceInfo):
