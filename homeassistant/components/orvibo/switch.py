@@ -17,7 +17,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
-    AsyncAddEntitiesCallback,
+    AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities_callback: AsyncAddEntitiesCallback,
+    add_entities_callback: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the integration from configuration.yaml."""
