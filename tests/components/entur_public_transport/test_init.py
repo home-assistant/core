@@ -2,9 +2,17 @@
 
 from unittest.mock import MagicMock
 
+from aiohttp import ClientError
 import pytest
 
+from homeassistant.components.entur_public_transport.const import (
+    CONF_EXPAND_PLATFORMS,
+    CONF_NUMBER_OF_DEPARTURES,
+    CONF_OMIT_NON_BOARDING,
+    CONF_WHITELIST_LINES,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,10 +61,10 @@ async def test_unload_entry(
     assert state.state == "unavailable"
 
 
+@pytest.mark.usefixtures("mock_entur_client")
 async def test_reload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_entur_client: MagicMock,
 ) -> None:
     """Test reloading of config entry."""
     mock_config_entry.add_to_hass(hass)
@@ -71,3 +79,76 @@ async def test_reload_entry(
 
     # Verify the entry is still loaded after reload
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_entur_client")
+async def test_options_update_triggers_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that updating options triggers a reload and applies new settings."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify initial state - show_on_map is False, so no coordinates
+    state = hass.states.get("sensor.entur_bergen_stasjon")
+    assert state is not None
+    assert CONF_LATITUDE not in state.attributes
+    assert CONF_LONGITUDE not in state.attributes
+
+    # Update options to enable show_on_map
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            CONF_EXPAND_PLATFORMS: True,
+            CONF_SHOW_ON_MAP: True,  # Changed from False to True
+            CONF_WHITELIST_LINES: [],
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify entry is still loaded after options update triggered reload
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify the new settings are applied - coordinates should now be present
+    state = hass.states.get("sensor.entur_bergen_stasjon")
+    assert state is not None
+    assert state.attributes.get(CONF_LATITUDE) == 60.39032
+    assert state.attributes.get(CONF_LONGITUDE) == 5.33396
+
+
+async def test_coordinator_timeout_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test coordinator handles timeout errors gracefully."""
+    mock_entur_client.update.side_effect = TimeoutError("Connection timed out")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entry should fail to load due to timeout on first refresh
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_client_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test coordinator handles client errors gracefully."""
+    mock_entur_client.update.side_effect = ClientError("Connection failed")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entry should fail to load due to client error on first refresh
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
