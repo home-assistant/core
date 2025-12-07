@@ -59,10 +59,7 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
         except HomeAssistantError:
             return Error.NOT_SUPPORTED
 
-        _, errors = await light.poll_state()
-        if len(errors) != 0:
-            _LOGGER.warning("Errors raised when connecting to light: %s", errors)
-            return Error.CANNOT_CONNECT
+        await light.poll_state()
 
     except Exception:
         _LOGGER.exception("Unexpected error validating light connection")

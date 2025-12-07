@@ -65,7 +65,7 @@ async def test_bluetooth_form(
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
-            side_effect=[(True, [])],
+            side_effect=[True],
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.connected",
@@ -110,7 +110,7 @@ async def test_bluetooth_form(
             True,
             True,
             True,
-            (True, []),
+            True,
             Error.NO_SCANNERS,
         ),
         (
@@ -120,7 +120,7 @@ async def test_bluetooth_form(
             True,
             True,
             True,
-            (True, []),
+            True,
             Error.NOT_FOUND,
         ),
         (
@@ -130,7 +130,7 @@ async def test_bluetooth_form(
             False,
             True,
             True,
-            (True, []),
+            True,
             Error.INVALID_AUTH,
         ),
         (
@@ -140,7 +140,7 @@ async def test_bluetooth_form(
             True,
             False,
             True,
-            (True, []),
+            True,
             Error.CANNOT_CONNECT,
         ),
         (
@@ -150,7 +150,7 @@ async def test_bluetooth_form(
             True,
             True,
             False,
-            (True, []),
+            True,
             Error.NOT_SUPPORTED,
         ),
         (
@@ -160,8 +160,8 @@ async def test_bluetooth_form(
             True,
             True,
             True,
-            (True, ["ERROR!"]),
-            Error.CANNOT_CONNECT,
+            Exception,
+            Error.UNKNOWN,
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -170,7 +170,7 @@ async def test_bluetooth_form(
             None,
             True,
             True,
-            (True, []),
+            Exception,
             Error.UNKNOWN,
         ),
     ],
@@ -193,7 +193,7 @@ async def test_bluetooth_form_exception(
     mock_authenticated: bool | None,
     mock_connected: bool,
     mock_support_on_off: bool,
-    mock_poll_state: Exception | tuple[bool, list[Exception]],
+    mock_poll_state: Exception | bool,
     error: Error,
 ) -> None:
     """Test bluetooth discovery form with errors."""
@@ -262,7 +262,7 @@ async def test_bluetooth_form_exception(
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
-            side_effect=[(True, [])],
+            side_effect=[True],
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.connected",
