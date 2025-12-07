@@ -79,6 +79,7 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
                     CONF_LONGITUDE: hass.config.longitude,
                 },
             ): LocationSelector(LocationSelectorConfig(radius=False)),
+            vol.Optional("forecast"): int,
         }
     )
 
@@ -197,3 +198,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     async_step_user = async_step_location
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a sensor subentry."""
+        return await self.async_step_location()
