@@ -4616,6 +4616,7 @@ async def test_bluetooth_provision_timeout_ble_exception(
 
     # Confirm and scan, select network and enter password
     # Provision WiFi but no zeroconf discovery, active lookup fails, BLE raises exception
+    # Keep patches active until all background tasks complete to avoid socket errors
     with (
         patch(
             "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
@@ -4624,6 +4625,10 @@ async def test_bluetooth_provision_timeout_ble_exception(
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
             return_value=None,  # Active lookup fails
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            side_effect=DeviceConnectionError,  # get_info also fails
         ),
     ):
         # Select network and enter password in single step
@@ -4639,16 +4644,21 @@ async def test_bluetooth_provision_timeout_ble_exception(
         # Timeout occurs, both active lookup and BLE fallback fail (exception)
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # Should show provision_failed form
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "provision_failed"
+        # Should show provision_failed form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "provision_failed"
 
-    # User aborts after failure - configure wifi_scan to raise exception
-    mock_ble_rpc_device.wifi_scan.side_effect = RuntimeError("BLE device unavailable")
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        # User aborts after failure - configure wifi_scan to raise exception
+        mock_ble_rpc_device.wifi_scan.side_effect = RuntimeError(
+            "BLE device unavailable"
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unknown"
+
+        # Wait for all background tasks to complete before patches are removed
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("mock_ble_rpc_device_class")
