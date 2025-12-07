@@ -75,32 +75,26 @@ The updated tests provide confidence that the integration correctly processes ta
 
 
 
-This repository contains an enhancement to the existing \*\*Home Assistant Todoist integration\*\*, adding support for displaying \*\*task priorities\*\* in both the backend entity attributes and the frontend Todo list UI.
+- This repository contains an enhancement to the existing `Home Assistant Todoist integration`, adding support for displaying `task priorities` in both the backend entity attributes and the frontend Todo list UI.
 
-
-
-The goal of this extension is to improve task visibility and user awareness by mapping Todoist’s internal priority values to clear, human-readable labels.
-
-
+- The goal of this extension is to improve task visibility and user awareness by mapping Todoist’s internal priority values to clear, human-readable labels.
 
 ---
-
-
 
 ## Feature Overview
 ### Added Priority Display for Todoist Tasks
 Todoist represents task priority using numeric values (`1–4`). Home Assistant previously did not expose or display this information. This extension introduces:
 
-- Priority mapping from numeric → human-readable labels  
-&nbsp; - `1 → Low`  
-&nbsp; - `2 → Medium`  
-&nbsp; - `3 → High`  
-&nbsp; - `4 → Urgent`
+- Priority mapping from numeric → human-readable labels
+    - `1 → Low`
+    - `2 → Medium`
+    - `3 → High`
+    - `4 → Urgent`
 
 - Frontend rendering of the priority field in the Todo list card
 - Backend attribute `priority` added to each Todo entity
-- Safe handling of invalid, missing, or unexpected priority values  
-&nbsp; - Mapped to `"Unknown"` instead of causing errors
+- Safe handling of invalid, missing, or unexpected priority values
+    - Mapped to `"Unknown"` instead of causing errors
 
 This makes Todoist tasks more informative in the Home Assistant UI.
 
@@ -110,7 +104,7 @@ This makes Todoist tasks more informative in the Home Assistant UI.
 
 ### Design Summary
 ### Backend Changes (Core Integration)
-- Added a helper function `define\_priority\_level()` to translate Todoist priorities.
+- Added a helper function `define_priority_level()` to translate Todoist priorities.
 - Updated task attribute construction to include the new mapped priority label.
 - Implemented defensive checks for invalid API data.
 - Ensured compatibility with the generic Home Assistant `todo` platform.
@@ -121,7 +115,6 @@ This makes Todoist tasks more informative in the Home Assistant UI.
 
 ---
 
-
 ### Testing
 ### Unit Tests
 
@@ -129,21 +122,17 @@ Added new parametrized test coverage for:
 
 - Valid priority values (1–4)
 - Invalid/edge cases:  
+- `0`, `5`, negative numbers, `None`, floats, strings
+    - All map to `"Unknown"`
 
-&nbsp; - `0`, `5`, negative numbers, `None`, floats, strings  
-&nbsp; - All map to `"Unknown"`
+- Tests are located in: `tests/components/todoist/test\_todo.py`
 
-Tests are located in:tests/components/todoist/test\_todo.py
-
-File  structure\[Modified]:
-
-homeassistant/components/todoist/
-
-&nbsp;   \_\_init\_\_.py
-&nbsp;   todoist.py
-&nbsp;   <other updated backend files>
-
-tests/components/todoist/test\_todo.py
-
-frontend/src/panels/lovelace/cards/
-&nbsp;   hui-todo-list-card.ts   (modified for priority display)
+**File  structure\[Modified]:**
+- `homeassistant/components/todoist/`
+    - `__init__.py`
+    - `todoist.py`
+- Other updated backend files
+    - `tests/components/todoist/test\_todo.py`
+- `frontend/src/panels/lovelace/cards/`
+    - `hui-todo-list-card.ts`
+        - modified for priority display
