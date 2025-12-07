@@ -23,7 +23,6 @@ type HausbusConfigEntry = ConfigEntry[HausbusGateway]
 async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Set up Haus-Bus integration from a config entry."""
 
-    LOGGER.info("Setting up Haus-Bus integration")
     gateway = HausbusGateway(hass, entry)
     entry.runtime_data = gateway
 
@@ -36,8 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Unload a config entry."""
-
-    LOGGER.info("Unloading Haus-Bus integration")
 
     gateway = entry.runtime_data
     gateway.home_server.removeBusEventListener(gateway)
