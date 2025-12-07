@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -28,20 +29,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
 
             _LOGGER.info("Received user input %s", user_input)
 
-            # Validating the port user submitted
-            is_valid = self.validate_port(user_input[CONF_PORT])
-            if not is_valid:
-                errors["base"] = "invalid_port"  # Custom error key
-                _LOGGER.error("Provided port is invalid: %s", user_input[CONF_PORT])
-
-            if not errors:
-                return self.async_create_entry(
-                    title="TIS Control Bridge", data=user_input
-                )
-
-            # If there are errors, show the form again with the error message
-            _LOGGER.error("Errors occurred: %s", errors)
-            return self._show_setup_form(errors)
+            return self.async_create_entry(title="TIS Control Bridge", data=user_input)
 
         # If user_input is None (initial step), show the setup form
         return self._show_setup_form(errors=errors)
@@ -51,7 +39,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
 
         schema = vol.Schema(
-            {vol.Required(CONF_PORT, default=6000): int},
+            {vol.Required(CONF_PORT, default=6000): cv.port},
             required=True,
         )
         return self.async_show_form(
@@ -59,10 +47,3 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             errors=errors if errors else {},
         )
-
-    def validate_port(self, port: int) -> bool:
-        """Validate the port."""
-        if isinstance(port, int):
-            if 1 <= port <= 65535:
-                return True
-        return False
