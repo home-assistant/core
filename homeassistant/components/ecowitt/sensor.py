@@ -60,8 +60,7 @@ _IMPERIAL: Final = (
 
 # Hourly and 24h rain count sensors are rolling window sensors
 _ROLLING_WINDOW_RAIN_COUNT_SENSOR = re.compile(
-    "(?:hourly|last24h)rain(?:in|mm)"
-    "|(?:last24)?hrain_piezo(?:mm)?"
+    "(?:hourly|last24h)rain(?:in|mm)|(?:last24)?hrain_piezo(?:mm)?"
 )
 
 
