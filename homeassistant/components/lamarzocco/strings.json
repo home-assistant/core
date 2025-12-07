@@ -88,10 +88,10 @@
     },
     "number": {
       "bbw_dose_1": {
-        "name": "Brew by weight Dose 1"
+        "name": "Brew by weight {dose}"
       },
       "bbw_dose_2": {
-        "name": "Brew by weight Dose 2"
+        "name": "[%key:component::lamarzocco::entity::number::bbw_dose_1::name%]"
       },
       "coffee_temp": {
         "name": "Coffee target temperature"
