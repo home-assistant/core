@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     
 from .const import DOMAIN
@@ -122,14 +122,8 @@ class HausbusGateway(IBusDataListener):
             return
 
         LOGGER.debug("busDataReceived: data %s from %s", data, object_id)
+        dispatcher_send(hass, f"hausbus_update_{object_id.getValue()}", data)
 
-        # pass events to corresponding channel
-        self.hass.loop.call_soon_threadsafe(
-            async_dispatcher_send,
-            self.hass,
-            f"hausbus_update_{object_id.getValue()}",
-            data,
-        )
 
     async def async_register_device(self, device_id: int, device_info: DeviceInfo):
         """Creates a device in the hass registry."""

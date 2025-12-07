@@ -11,7 +11,7 @@ from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -79,7 +79,7 @@ class HausbusEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA."""
 
-        self.async_on_remove(async_dispatcher_connect(
+        self.async_on_remove(dispatcher_connect(
             self.hass, f"hausbus_update_{self._objectId.getValue()}", self.handle_event
         ))
         LOGGER.debug(
