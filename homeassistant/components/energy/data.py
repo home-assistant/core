@@ -88,6 +88,7 @@ class SolarSourceType(TypedDict):
 
     stat_energy_from: str
     stat_rate: NotRequired[str]
+    stat_rate_negate: NotRequired[bool]
     config_entry_solar_forecast: list[str] | None
 
 
@@ -264,6 +265,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
         vol.Optional("stat_rate"): str,
+        vol.Optional("stat_rate_negate"): bool,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
