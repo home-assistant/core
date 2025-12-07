@@ -30,6 +30,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device.models import ShellyWiFiNetwork
 from aioshelly.zeroconf import async_discover_devices, async_lookup_device_by_name
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
@@ -244,7 +245,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     device_info: dict[str, Any] = {}
     ble_device: BLEDevice | None = None
     device_name: str = ""
-    wifi_networks: list[dict[str, Any]] = []
+    wifi_networks: list[ShellyWiFiNetwork] = []
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
