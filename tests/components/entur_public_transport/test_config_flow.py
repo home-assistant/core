@@ -115,9 +115,12 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        side_effect=ClientError("Connection error"),
-    ):
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=ClientError("Connection error"))
+        mock_client_class.return_value = mock_client
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -140,9 +143,12 @@ async def test_user_flow_timeout(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        side_effect=TimeoutError("Timeout"),
-    ):
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=TimeoutError("Timeout"))
+        mock_client_class.return_value = mock_client
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -165,9 +171,12 @@ async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        side_effect=Exception("Unexpected error"),
-    ):
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=Exception("Unexpected error"))
+        mock_client_class.return_value = mock_client
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -181,44 +190,6 @@ async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
-
-
-async def test_user_flow_invalid_whitelist_line(hass: HomeAssistant) -> None:
-    """Test user flow when whitelist contains invalid line IDs."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
-    ) as mock_client_class:
-        # Mock a successful connection with some available lines
-        mock_stop_info = MagicMock()
-        mock_call = MagicMock()
-        mock_call.line_id = "NSB:Line:45"
-        mock_stop_info.estimated_calls = [mock_call]
-
-        mock_client = MagicMock()
-        mock_client.update = AsyncMock()
-        mock_client.all_stop_places_quays.return_value = ["NSR:StopPlace:548"]
-        mock_client.get_stop_info.return_value = mock_stop_info
-        mock_client_class.return_value = mock_client
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_STOP_IDS: ["NSR:StopPlace:548"],
-                CONF_EXPAND_PLATFORMS: True,
-                CONF_SHOW_ON_MAP: False,
-                CONF_WHITELIST_LINES: ["INVALID:Line:999"],
-                CONF_OMIT_NON_BOARDING: True,
-                CONF_NUMBER_OF_DEPARTURES: 2,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_line"}
-    assert "INVALID:Line:999" in result["description_placeholders"]["invalid_lines"]
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
@@ -273,21 +244,17 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        return_value=[],
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_EXPAND_PLATFORMS: False,
-                CONF_SHOW_ON_MAP: True,
-                CONF_WHITELIST_LINES: ["NSB:Line:45"],
-                CONF_OMIT_NON_BOARDING: False,
-                CONF_NUMBER_OF_DEPARTURES: 5,
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_EXPAND_PLATFORMS: False,
+            CONF_SHOW_ON_MAP: True,
+            CONF_WHITELIST_LINES: ["NSB:Line:45"],
+            CONF_OMIT_NON_BOARDING: False,
+            CONF_NUMBER_OF_DEPARTURES: 5,
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -297,40 +264,6 @@ async def test_options_flow(
         CONF_OMIT_NON_BOARDING: False,
         CONF_NUMBER_OF_DEPARTURES: 5,
     }
-
-
-async def test_options_flow_invalid_whitelist_line(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_entur_client: MagicMock,
-) -> None:
-    """Test options flow when whitelist contains invalid line IDs."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        return_value=["INVALID:Line:999"],
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_EXPAND_PLATFORMS: False,
-                CONF_SHOW_ON_MAP: True,
-                CONF_WHITELIST_LINES: ["INVALID:Line:999"],
-                CONF_OMIT_NON_BOARDING: False,
-                CONF_NUMBER_OF_DEPARTURES: 5,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_line"}
-    assert "INVALID:Line:999" in result["description_placeholders"]["invalid_lines"]
 
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:
@@ -406,9 +339,12 @@ async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        side_effect=ClientError("Connection error"),
-    ):
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=ClientError("Connection error"))
+        mock_client_class.return_value = mock_client
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -432,14 +368,20 @@ async def test_import_flow_unknown_error(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.entur_public_transport.config_flow._validate_whitelist_lines",
-        side_effect=Exception("Unexpected error"),
-    ):
+        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData"
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.update = AsyncMock(side_effect=Exception("Unexpected error"))
+        mock_client_class.return_value = mock_client
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=yaml_config,
         )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
