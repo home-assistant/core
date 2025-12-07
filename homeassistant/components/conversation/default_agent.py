@@ -1015,6 +1015,10 @@ class DefaultAgent(ConversationEntity):
         }
         speech_slots.update(intent_response.speech_slots)
 
+        # Add state count for pluralization support in templates
+        state_count = len(intent_response.matched_states)
+        speech_slots["state_count"] = state_count
+
         speech = response_template.async_render(
             {
                 # Slots from intent recognizer and response
@@ -1044,6 +1048,43 @@ class DefaultAgent(ConversationEntity):
         if speech is not None:
             speech = str(speech)
             speech = " ".join(speech.strip().split())
+
+        # Apply pluralization fixes for English when multiple entities are matched
+        if state_count > 1 and language.startswith("en"):
+            speech = self._apply_pluralization(speech)
+
+        return speech
+
+    def _apply_pluralization(self, speech: str) -> str:
+        """Apply English pluralization fixes for common phrases.
+
+        This corrects grammar when multiple entities are matched,
+        e.g., "Turned off the light" -> "Turned off the lights".
+        """
+        # Common singular -> plural replacements for English responses
+        replacements = [
+            ("the light", "the lights"),
+            ("the fan", "the fans"),
+            ("the switch", "the switches"),
+            ("the lock", "the locks"),
+            ("the cover", "the covers"),
+            ("the valve", "the valves"),
+            ("the device", "the devices"),
+            ("the entity", "the entities"),
+        ]
+
+        for singular, plural in replacements:
+            # Case-insensitive replacement while preserving original case
+            lower_speech = speech.lower()
+            if singular in lower_speech:
+                # Find the position and replace preserving case of first character
+                idx = lower_speech.find(singular)
+                original_phrase = speech[idx : idx + len(singular)]
+                if original_phrase[0].isupper():
+                    plural_replacement = plural[0].upper() + plural[1:]
+                else:
+                    plural_replacement = plural
+                speech = speech[:idx] + plural_replacement + speech[idx + len(singular) :]
 
         return speech
 
