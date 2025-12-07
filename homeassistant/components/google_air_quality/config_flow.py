@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
@@ -38,7 +38,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
         vol.Optional(SECTION_API_KEY_OPTIONS): section(
-            vol.Schema({vol.Optional(CONF_REFERRER): str}), {"collapsed": True}
+            vol.Schema({vol.Optional(CONF_REFERRER): str}),
+            SectionConfig(collapsed=True),
         ),
     }
 )
