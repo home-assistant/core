@@ -66,7 +66,7 @@ class GridPowerSourceType(TypedDict):
     # negative values indicate grid return
     stat_rate: str
     # Whether to negate the energy source such that negative power means grid import
-    stat_negate: NotRequired[bool]
+    stat_rate_negate: NotRequired[bool]
 
 
 class GridSourceType(TypedDict):
@@ -101,7 +101,7 @@ class BatterySourceType(TypedDict):
     # positive when discharging, negative when charging
     stat_rate: NotRequired[str]
     # Whether to negate power such that negative means discharging
-    stat_negate: NotRequired[bool]
+    stat_rate_negate: NotRequired[bool]
 
 
 class GasSourceType(TypedDict):
@@ -218,7 +218,7 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
 GRID_POWER_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("stat_rate"): str,
-        vol.Optional("stat_negate"): bool,
+        vol.Optional("stat_rate_negate"): bool,
     }
 )
 
@@ -273,7 +273,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
         vol.Optional("stat_rate"): str,
-        vol.Optional("stat_negate"): bool,
+        vol.Optional("stat_rate_negate"): bool,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(
