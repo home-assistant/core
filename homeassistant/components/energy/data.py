@@ -65,7 +65,7 @@ class GridPowerSourceType(TypedDict):
     # statistic_id of a power meter (kW)
     # negative values indicate grid return
     stat_rate: str
-    # Whether to negate the energy source such that negative power means grid import
+    # Whether to negate the power source such that negative means grid import
     stat_rate_negate: NotRequired[bool]
 
 
