@@ -302,17 +302,26 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # Create new connection
         LOGGER.debug("Creating new BLE RPC connection to %s", self.ble_device.address)
         options = ConnectionOptions(ble_device=self.ble_device)
-        self._ble_rpc_device = await RpcDevice.create(
+        device = await RpcDevice.create(
             aiohttp_session=None, ws_context=None, ip_or_options=options
         )
-        await self._ble_rpc_device.initialize()
+        try:
+            await device.initialize()
+        except (DeviceConnectionError, RpcCallError):
+            await device.shutdown()
+            raise
+        self._ble_rpc_device = device
         return self._ble_rpc_device
 
     async def _async_disconnect_ble(self) -> None:
         """Disconnect and cleanup BLE RPC device."""
         if self._ble_rpc_device is not None:
-            await self._ble_rpc_device.shutdown()
-            self._ble_rpc_device = None
+            try:
+                await self._ble_rpc_device.shutdown()
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Error during BLE shutdown", exc_info=True)
+            finally:
+                self._ble_rpc_device = None
 
     async def _async_get_ip_from_ble(self) -> str | None:
         """Get device IP address via BLE after WiFi provisioning.

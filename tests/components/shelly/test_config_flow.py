@@ -5104,3 +5104,77 @@ async def test_bluetooth_flow_abort_cleans_up_ble_connection(
 
     # Verify cleanup was called
     mock_ble_rpc_device.shutdown.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_ble_initialize_failure_cleans_up(
+    hass: HomeAssistant,
+) -> None:
+    """Test that initialize failure properly cleans up the device."""
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock(side_effect=DeviceConnectionError)
+    mock_device.shutdown = AsyncMock()
+
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    # Start BLE flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Confirm to proceed to WiFi scan - this will try to create BLE connection
+    # but initialize() will fail
+    with patch(
+        "homeassistant.components.shelly.config_flow.RpcDevice.create",
+        return_value=mock_device,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should show wifi_scan_failed due to connection error
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "wifi_scan_failed"
+
+    # Verify device was cleaned up after initialize failure
+    mock_device.shutdown.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_ble_rpc_device_class")
+async def test_bluetooth_ble_shutdown_exception_handled(
+    hass: HomeAssistant,
+    mock_ble_rpc_device: AsyncMock,
+) -> None:
+    """Test that shutdown exceptions during cleanup are handled gracefully."""
+    # Configure mock BLE device
+    mock_ble_rpc_device.wifi_scan.return_value = [
+        {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
+    ]
+    # Make shutdown raise an exception
+    mock_ble_rpc_device.shutdown.side_effect = RuntimeError("Shutdown failed")
+
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    # Start BLE flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Confirm to proceed to WiFi scan (creates BLE connection)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "wifi_scan"
+
+    # Abort the flow - this should trigger async_remove and cleanup
+    # The shutdown exception should be caught and logged, not propagate
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify shutdown was attempted despite the exception
+    mock_ble_rpc_device.shutdown.assert_called_once()
