@@ -79,20 +79,14 @@ class HausbusEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA."""
 
-        self._unsub_dispatcher = async_dispatcher_connect(
+        self.async_on_remove(async_dispatcher_connect(
             self.hass, f"hausbus_update_{self._objectId.getValue()}", self.handle_event
-        )
-
+        ))
         LOGGER.debug(
             "added_to_hass %s type %s",
             self._debug_identifier,
             self.__class__.__name__,
         )
-
-    async def async_will_remove_from_hass(self):
-        """Entity wird entfernt."""
-        if self._unsub_dispatcher:
-            self._unsub_dispatcher()
 
     async def ensure_configuration(self) -> bool:
         """Ensures that the channel configuration is known."""
