@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientError
 from enturclient import EnturPublicTransportData
 from enturclient.dto.place import Place
 
@@ -86,8 +87,14 @@ class EnturCoordinator(DataUpdateCoordinator[dict[str, Place]]):
                 self._initial_expanded = True
 
             await self.client.update()
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with Entur API: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed(
+                f"Timeout communicating with Entur API: {err}"
+            ) from err
+        except ClientError as err:
+            raise UpdateFailed(
+                f"Error communicating with Entur API: {err}"
+            ) from err
 
         # Build data dictionary with all stop/quay information
         result: dict[str, Place] = {}
