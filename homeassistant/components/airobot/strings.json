@@ -43,6 +43,25 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "device_uptime": {
+        "name": "Device uptime"
+      },
+      "errors": {
+        "name": "Error count"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
+      },
+      "heating_uptime": {
+        "name": "Heating uptime"
+      }
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication failed, please reauthenticate."

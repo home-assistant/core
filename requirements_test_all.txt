@@ -243,7 +243,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.10.0
+aioesphomeapi==43.0.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1816,7 +1816,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.2
+pylamarzocco==2.2.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2682,7 +2682,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.2.1
+yalexs-ble==3.2.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
