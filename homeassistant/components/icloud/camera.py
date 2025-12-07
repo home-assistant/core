@@ -95,7 +95,7 @@ class AppleiCloudAlbumCamera(Camera):
     ) -> None:
         """Initialize iCloud album camera."""
         super().__init__()
-        self._api: PyiCloudService = api
+        self._api: PyiCloudService | None = api
         self._config_entry: ConfigEntry = config_entry
         self._subentry: ConfigSubentry = sub_entry
 
@@ -118,6 +118,7 @@ class AppleiCloudAlbumCamera(Camera):
         self._album: BasePhotoAlbum | None = None
         self._photo: PhotoAsset | None = None
         self._image: bytes | None = None
+        self._attr_available: bool = False
 
     def _get_album(self) -> None:
         """Get the album."""
@@ -132,7 +133,7 @@ class AppleiCloudAlbumCamera(Camera):
             _LOGGER.error("Apple iCloud Photos service is not activated: %s", exc)
             return
         self._album = albums.get(self._id)
-        # self._next_image()
+        self._next_image()
 
     async def _load_album(self) -> None:
         await self.hass.async_add_executor_job(self._get_album)
@@ -169,7 +170,7 @@ class AppleiCloudAlbumCamera(Camera):
 
     async def _handle_timer_update(self, _) -> None:
         """Handle the update timer."""
-        # await self.next_image()
+        await self.next_image()
 
     @property
     def available(self) -> bool:
@@ -186,13 +187,13 @@ class AppleiCloudAlbumCamera(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes:
         """Return bytes of camera image."""
-        if not self.enabled or self._album is None:
+        if not self.enabled or self._album is None or self._attr_is_on is False:
             return b""
         return self._image or b""
 
     async def next_image(self, randomize: bool | None = None) -> None:
         """Load the next image."""
-        if not self.enabled or self._album is None:
+        if not self.enabled or self._album is None or self._attr_is_on is False:
             return
         self.hass.add_job(self._next_image, randomize)
 

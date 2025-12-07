@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 import operator
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -20,7 +20,7 @@ from pyicloud.services.findmyiphone import AppleDevice, FindMyiPhoneServiceManag
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -71,7 +71,7 @@ class IcloudAccount:
         hass: HomeAssistant,
         username: str,
         password: str,
-        icloud_dir: Store[Any],
+        icloud_dir: Store,
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
@@ -82,18 +82,18 @@ class IcloudAccount:
         self._username: str = username
         self._password: str = password
         self._with_family: bool = with_family
-        self._fetch_interval: float = float(max_interval)
+        self._fetch_interval: float = max_interval
         self._max_interval: int = max_interval
         self._gps_accuracy_threshold: int = gps_accuracy_threshold
 
-        self._icloud_dir: Store[Any] = icloud_dir
+        self._icloud_dir: Store = icloud_dir
 
         self.api: PyiCloudService | None = None
         self._owner_fullname: str | None = None
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
-        self._retried_fetch = False
-        self._config_entry = config_entry
+        self._retried_fetch: bool = False
+        self._config_entry: IcloudConfigEntry = config_entry
 
         self.listeners: list[CALLBACK_TYPE] = []
 
@@ -126,22 +126,9 @@ class IcloudAccount:
             self._require_reauth()
             return
 
-    async def async_get_devices(self) -> None:
-        """Get iCloud devices."""
-        if self.api is None:
-            return
-        self.hass.async_add_executor_job(self._get_devices)
-
-    def _get_devices(self) -> None:
-        """Get iCloud devices."""
-        if self.api is None:
-            _LOGGER.debug("No iCloud API available")
-            return
-        _LOGGER.debug("Getting devices")
         try:
-            api_devices: FindMyiPhoneServiceManager = self.api.devices
             # Gets device owners infos
-            user_info: MappingProxyType[str, Any] | None = api_devices.user_info
+            user_info: MappingProxyType[str, Any] | None = self.api.devices.user_info
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
@@ -159,7 +146,7 @@ class IcloudAccount:
 
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info.get("membersInfo").items():
+            for prs_id, member in user_info.get("membersInfo", {}).items():
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )
@@ -177,7 +164,7 @@ class IcloudAccount:
             self._require_reauth()
             return
 
-        api_devices: FindMyiPhoneServiceManager | None
+        api_devices: FindMyiPhoneServiceManager | None = None
         try:
             api_devices = self.api.devices
         except Exception as err:  # noqa: BLE001
@@ -191,12 +178,14 @@ class IcloudAccount:
         new_device = False
         for device in api_devices:
             status: dict[str, Any] = device.status(DEVICE_STATUS_SET)
-            device_id: str = status[DEVICE_ID]
-            device_name: str = status[DEVICE_NAME]
+            device_id: str | None = status.get(DEVICE_ID)
+            device_name: str | None = status.get(DEVICE_NAME)
 
             if (
-                status[DEVICE_BATTERY_STATUS] == "Unknown"
+                status.get(DEVICE_BATTERY_STATUS, "Unknown") == "Unknown"
                 or status.get(DEVICE_BATTERY_LEVEL) is None
+                or device_id is None
+                or device_name is None
             ):
                 continue
 
@@ -209,7 +198,7 @@ class IcloudAccount:
                 _LOGGER.debug(
                     "Adding iCloud device: %s [model: %s]",
                     device_name,
-                    status[DEVICE_RAW_DEVICE_MODEL],
+                    status.get(DEVICE_RAW_DEVICE_MODEL),
                 )
                 self._devices[device_id] = IcloudDevice(self, device, status)
                 self._devices[device_id].update(status)
@@ -244,13 +233,13 @@ class IcloudAccount:
             if device.location is None:
                 continue
 
-            current_zone = run_callback_threadsafe(
+            current_zone: State | None = run_callback_threadsafe(
                 self.hass.loop,
                 async_active_zone,
                 self.hass,
-                device.location[DEVICE_LOCATION_LATITUDE],
-                device.location[DEVICE_LOCATION_LONGITUDE],
-                device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY],
+                device.location.get(DEVICE_LOCATION_LATITUDE, 0.0),
+                device.location.get(DEVICE_LOCATION_LONGITUDE, 0.0),
+                device.location.get(DEVICE_LOCATION_HORIZONTAL_ACCURACY, 0.0),
             ).result()
 
             # Max interval if in zone
@@ -268,7 +257,7 @@ class IcloudAccount:
                     continue
                 zone_state_lat = zone_state.attributes[DEVICE_LOCATION_LATITUDE]
                 zone_state_long = zone_state.attributes[DEVICE_LOCATION_LONGITUDE]
-                zone_distance = distance(
+                zone_distance: float | None = distance(
                     device.location[DEVICE_LOCATION_LATITUDE],
                     device.location[DEVICE_LOCATION_LONGITUDE],
                     zone_state_lat,
@@ -280,11 +269,11 @@ class IcloudAccount:
             # Max interval if no zone
             if not distances:
                 continue
-            mindistance = min(distances)
+            mindistance: float = min(distances)
 
             # Calculate out how long it would take for the device to drive
             # to the nearest zone at 120 km/h:
-            interval = round(mindistance / 2)
+            interval: int = round(mindistance / 2)
 
             # Never poll more than once per minute
             interval = max(interval, 1)
@@ -330,8 +319,8 @@ class IcloudAccount:
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
-        name_slug = slugify(name.replace(" ", "", 99))
-        result = [
+        name_slug: str = slugify(name.replace(" ", "", 99))
+        result: list[Any] = [
             device
             for device in self.devices.values()
             if slugify(device.name.replace(" ", "", 99)) == name_slug
@@ -396,8 +385,8 @@ class IcloudDevice:
         self._device_model: str = self._status[DEVICE_DISPLAY_NAME]
 
         self._battery_level: int | None = None
-        self._battery_status = None
-        self._location = None
+        self._battery_status: str | None = None
+        self._location: dict[str, Any] | None = None
 
         self._attrs: dict[str, Any] = {
             ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
@@ -424,7 +413,7 @@ class IcloudDevice:
 
         self._battery_status = self._status[DEVICE_BATTERY_STATUS]
         self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
-        device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
+        device_battery_level: int = self._status.get(DEVICE_BATTERY_LEVEL, 0)
         if self._battery_status != "Unknown" and device_battery_level is not None:
             self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
@@ -434,7 +423,7 @@ class IcloudDevice:
                 self._status[DEVICE_LOCATION]
                 and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
             ):
-                location = self._status[DEVICE_LOCATION]
+                location: dict[str, Any] | None = self._status[DEVICE_LOCATION]
                 if self._location is None:
                     dispatcher_send(self._account.hass, self._account.signal_device_new)
                 self._location = location
@@ -465,7 +454,7 @@ class IcloudDevice:
         self._account.api.authenticate()
         if self._status[DEVICE_LOST_MODE_CAPABLE]:
             _LOGGER.debug("Make device lost for %s", self.name)
-            self.device.lost_device(number, message)
+            self.device.lost_device(number, message, "")
         else:
             _LOGGER.error("Cannot make device lost for %s", self.name)
 

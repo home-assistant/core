@@ -18,7 +18,7 @@ from homeassistant.components.icloud.const import (
     DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -317,7 +317,7 @@ async def test_validate_verification_code_failed(
     hass: HomeAssistant, service_validate_verification_code_failed: MagicMock
 ) -> None:
     """Test when we have errors during validate_verification_code."""
-    result = await hass.config_entries.flow.async_init(
+    result: ConfigFlowResult = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
