@@ -100,8 +100,6 @@ This makes Todoist tasks more informative in the Home Assistant UI.
 
 ---
 
-
-
 ### Design Summary
 ### Backend Changes (Core Integration)
 - Added a helper function `define_priority_level()` to translate Todoist priorities.
