@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 21
+  Built-in integrations: 22
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -48,6 +48,7 @@
   stt | Speech-to-text (STT)
   system_health | System Health
   tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
   webhook | Webhook
   
   </details>
@@ -122,7 +123,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 21
+  Built-in integrations: 22
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -149,6 +150,7 @@
   stt | Speech-to-text (STT)
   system_health | System Health
   tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
   webhook | Webhook
   
   </details>
