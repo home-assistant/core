@@ -1,11 +1,19 @@
 """Tests for the WLED select platform."""
 
+import typing
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+from wled import (
+    Device as WLEDDevice,
+    Palette as WLEDPalette,
+    Playlist as WLEDPlaylist,
+    Preset as WLEDPreset,
+    WLEDConnectionError,
+    WLEDError,
+)
 
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
@@ -168,3 +176,79 @@ async def test_playlist_unavailable_without_playlists(hass: HomeAssistant) -> No
     """Test WLED playlist entity is unavailable when playlists are not available."""
     assert (state := hass.states.get("select.wled_rgb_light_playlist"))
     assert state.state == STATE_UNAVAILABLE
+
+
+PLAYLIST = {"ps": [1], "dur": [100], "transition": [7], "repeat": 0, "end": 0, "r": 0}
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "data_attr", "new_data", "new_options"),
+    [
+        (
+            "select.wled_rgb_light_preset",
+            "presets",
+            {
+                1: WLEDPreset.from_dict({"preset_id": 1, "n": "Preset 1"}),
+                2: WLEDPreset.from_dict({"preset_id": 2, "n": "Preset 2"}),
+            },
+            ["Preset 1", "Preset 2"],
+        ),
+        (
+            "select.wled_rgb_light_playlist",
+            "playlists",
+            {
+                1: WLEDPlaylist.from_dict(
+                    {"playlist_id": 1, "n": "Playlist 1", "playlist": PLAYLIST}
+                ),
+                2: WLEDPlaylist.from_dict(
+                    {"playlist_id": 2, "n": "Playlist 2", "playlist": PLAYLIST}
+                ),
+            },
+            ["Playlist 1", "Playlist 2"],
+        ),
+        (
+            "select.wled_rgb_light_color_palette",
+            "palettes",
+            {
+                0: WLEDPalette.from_dict({"palette_id": 0, "name": "Palette 1"}),
+                1: WLEDPalette.from_dict({"palette_id": 1, "name": "Palette 2"}),
+            },
+            ["Palette 1", "Palette 2"],
+        ),
+    ],
+)
+async def test_select_load_new_options_after_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    entity_id: str,
+    data_attr: str,
+    new_data: typing.Any,
+    new_options: list[str],
+) -> None:
+    """Test WLED select entity is updated when new options are added."""
+    setattr(
+        mock_wled.update.return_value,
+        data_attr,
+        {},
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["options"] == []
+
+    setattr(
+        mock_wled.update.return_value,
+        data_attr,
+        new_data,
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["options"] == new_options

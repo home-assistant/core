@@ -9,6 +9,7 @@ from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
 from aiohue.v2.models.feature import DynamicStatus
+from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -66,7 +67,11 @@ async def async_setup_entry(
 
     # add current items
     for item in api.groups.grouped_light.items:
-        await async_add_light(EventType.RESOURCE_ADDED, item)
+        if item.owner.rtype not in [
+            ResourceTypes.BRIDGE_HOME,
+            ResourceTypes.PRIVATE_GROUP,
+        ]:
+            await async_add_light(EventType.RESOURCE_ADDED, item)
 
     # register listener for new grouped_light
     config_entry.async_on_unload(
@@ -157,7 +162,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
+        color_temp = normalize_hue_colortemp(
+            kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            color_util.color_temperature_kelvin_to_mired(self.max_color_temp_kelvin),
+            color_util.color_temperature_kelvin_to_mired(self.min_color_temp_kelvin),
+        )
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 

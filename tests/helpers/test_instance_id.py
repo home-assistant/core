@@ -83,3 +83,15 @@ async def test_get_id_migrate_fail(
         "Could not read hass instance ID from 'core.uuid' or '.uuid', a "
         "new instance ID will be generated" in caplog.text
     )
+
+
+async def test_async_recreate(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test recreating instance ID."""
+    uuid1 = await instance_id.async_get(hass)
+    uuid2 = await instance_id.async_recreate(hass)
+    assert uuid1 != uuid2
+
+    # Assert it's stored
+    assert hass_storage["core.uuid"]["data"]["uuid"] == uuid2

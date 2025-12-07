@@ -1,22 +1,20 @@
 """Test initialization of lamarzocco."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
-from pylamarzocco.const import FirmwareType, ModelName
+from freezegun.api import FrozenDateTimeFactory
+from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
-from homeassistant.components.lamarzocco.const import DOMAIN
+from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_ADDRESS,
-    CONF_HOST,
     CONF_MAC,
-    CONF_MODEL,
-    CONF_NAME,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -27,9 +25,9 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
+from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -53,6 +51,7 @@ async def test_config_entry_not_ready(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test the La Marzocco configuration entry not ready."""
+    mock_lamarzocco.bluetooth_client_available = False
     mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
 
@@ -129,101 +128,68 @@ async def test_v1_migration_fails(
     assert entry_v1.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_v2_migration(
+async def test_v4_migration(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
 ) -> None:
-    """Test v2 -> v3 Migration."""
+    """Test v3 -> v4 Migration."""
 
-    entry_v2 = MockConfigEntry(
+    entry_v3 = MockConfigEntry(
         domain=DOMAIN,
-        version=2,
+        version=3,
         unique_id=mock_lamarzocco.serial_number,
         data={
             **USER_INPUT,
-            CONF_HOST: "192.168.1.24",
-            CONF_NAME: "La Marzocco",
-            CONF_MODEL: ModelName.GS3_MP.value,
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "000000000000",
+            CONF_TOKEN: "token",
         },
     )
-    entry_v2.add_to_hass(hass)
+    entry_v3.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry_v2.entry_id)
-    assert entry_v2.state is ConfigEntryState.LOADED
-    assert entry_v2.version == 3
-    assert dict(entry_v2.data) == {
+    assert await hass.config_entries.async_setup(entry_v3.entry_id)
+    assert entry_v3.state is ConfigEntryState.LOADED
+    assert entry_v3.version == 4
+    assert dict(entry_v3.data) == {
         **USER_INPUT,
-        CONF_MAC: "aa:bb:cc:dd:ee:ff",
-        CONF_TOKEN: None,
+        CONF_ADDRESS: "000000000000",
+        CONF_TOKEN: "token",
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 
 async def test_migration_errors(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test errors during migration."""
 
-    mock_cloud_client.list_things.side_effect = RequestNotSuccessful("Error")
+    mock_cloud_client.async_register_client.side_effect = RequestNotSuccessful("Error")
 
-    entry_v2 = MockConfigEntry(
+    entry_v3 = MockConfigEntry(
         domain=DOMAIN,
-        version=2,
+        version=3,
         unique_id=mock_lamarzocco.serial_number,
         data={
             **USER_INPUT,
-            CONF_MACHINE: mock_lamarzocco.serial_number,
+            CONF_ADDRESS: "000000000000",
+            CONF_TOKEN: "token",
         },
     )
-    entry_v2.add_to_hass(hass)
+    entry_v3.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(entry_v2.entry_id)
-    assert entry_v2.state is ConfigEntryState.MIGRATION_ERROR
+    assert not await hass.config_entries.async_setup(entry_v3.entry_id)
+    assert entry_v3.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_config_flow_entry_migration_downgrade(
     hass: HomeAssistant,
 ) -> None:
     """Test that config entry fails setup if the version is from the future."""
-    entry = MockConfigEntry(domain=DOMAIN, version=4)
+    entry = MockConfigEntry(domain=DOMAIN, version=5)
     entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
-
-
-async def test_bluetooth_is_set_from_discovery(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lamarzocco: MagicMock,
-    mock_cloud_client: MagicMock,
-) -> None:
-    """Check we can fill a device from discovery info."""
-
-    service_info = get_bluetooth_service_info(
-        ModelName.GS3_MP, mock_lamarzocco.serial_number
-    )
-    mock_cloud_client.get_thing_settings.return_value.ble_auth_token = "token"
-    with (
-        patch(
-            "homeassistant.components.lamarzocco.async_discovered_service_info",
-            return_value=[service_info],
-        ) as discovery,
-        patch(
-            "homeassistant.components.lamarzocco.LaMarzoccoMachine"
-        ) as mock_machine_class,
-    ):
-        mock_machine_class.return_value = mock_lamarzocco
-        await async_init_integration(hass, mock_config_entry)
-    discovery.assert_called_once()
-    assert mock_machine_class.call_count == 1
-    _, kwargs = mock_machine_class.call_args
-    assert kwargs["bluetooth_client"] is not None
-
-    assert mock_config_entry.data[CONF_MAC] == service_info.address
-    assert mock_config_entry.data[CONF_TOKEN] == "token"
 
 
 async def test_websocket_closed_on_unload(
@@ -310,3 +276,31 @@ async def test_device(
     device = device_registry.async_get(entry.device_id)
     assert device
     assert device == snapshot
+
+
+async def test_websocket_reconnects_after_termination(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_terminated: PropertyMock,
+) -> None:
+    """Test the websocket reconnects after background task terminates."""
+    # Setup: websocket disconnected initially
+    mock_websocket_terminated.return_value = True
+
+    await async_init_integration(hass, mock_config_entry)
+
+    # Verify initial websocket connection was attempted
+    assert mock_lamarzocco.connect_dashboard_websocket.call_count == 1
+
+    # Simulate websocket disconnection (e.g., after internet outage)
+    mock_websocket_terminated.return_value = True
+
+    # Trigger the coordinator's update (which runs every 60 seconds)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify websocket reconnection was attempted
+    assert mock_lamarzocco.connect_dashboard_websocket.call_count == 2

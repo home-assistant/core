@@ -16,6 +16,7 @@ from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
@@ -88,7 +89,7 @@ def com_port(device="/dev/ttyUSB1234"):
 
 
 @pytest.fixture
-def mock_connect_zigpy_app() -> Generator[MagicMock]:
+def mock_create_zigpy_app() -> Generator[MagicMock]:
     """Mock the radio connection."""
 
     mock_connect_app = MagicMock()
@@ -98,7 +99,7 @@ def mock_connect_zigpy_app() -> Generator[MagicMock]:
     )
 
     with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.create_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield mock_connect_app
@@ -107,7 +108,7 @@ def mock_connect_zigpy_app() -> Generator[MagicMock]:
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migrate_matching_port(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -167,7 +168,7 @@ async def test_migrate_matching_port(
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migrate_matching_port_usb(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -214,7 +215,7 @@ async def test_migrate_matching_port_usb(
 
 async def test_migrate_matching_port_config_entry_not_loaded(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -268,13 +269,13 @@ async def test_migrate_matching_port_config_entry_not_loaded(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaRadioManager.async_restore_backup_step_1",
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
     side_effect=OSError,
 )
 async def test_migrate_matching_port_retry(
     mock_restore_backup_step_1,
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -331,7 +332,7 @@ async def test_migrate_matching_port_retry(
 
 async def test_migrate_non_matching_port(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -379,7 +380,7 @@ async def test_migrate_non_matching_port(
 
 async def test_migrate_initiate_failure(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test retries with failure."""
     # Set up the config entry
@@ -416,7 +417,7 @@ async def test_migrate_initiate_failure(
     }
 
     mock_load_info = AsyncMock(side_effect=OSError())
-    mock_connect_zigpy_app.__aenter__.return_value.load_network_info = mock_load_info
+    mock_create_zigpy_app.__aenter__.return_value.load_network_info = mock_load_info
 
     migration_helper = radio_manager.ZhaMultiPANMigrationHelper(hass, config_entry)
 
@@ -484,3 +485,32 @@ async def test_detect_radio_type_failure_no_detect(
     ):
         assert await radio_manager.detect_radio_type() == ProbeResult.PROBING_FAILED
         assert radio_manager.radio_type is None
+
+
+async def test_load_network_settings_oserror(
+    radio_manager: ZhaRadioManager, hass: HomeAssistant
+) -> None:
+    """Test that OSError during network settings loading is handled."""
+    radio_manager.device_path = "/dev/ttyZigbee"
+    radio_manager.radio_type = RadioType.ezsp
+    radio_manager.device_settings = {"database": "/test/db/path"}
+
+    with (
+        patch("os.path.exists", side_effect=OSError("Test error")),
+        pytest.raises(HomeAssistantError, match="Could not read the ZHA database"),
+    ):
+        await radio_manager.async_load_network_settings()
+
+
+async def test_create_zigpy_app_connect_oserror(
+    radio_manager: ZhaRadioManager, hass: HomeAssistant, mock_app
+) -> None:
+    """Test that OSError during zigpy app connection is handled."""
+    radio_manager.radio_type = RadioType.ezsp
+    radio_manager.device_settings = {CONF_DEVICE_PATH: "/dev/ttyZigbee"}
+
+    mock_app.connect.side_effect = OSError("Test error")
+
+    with pytest.raises(HomeAssistantError, match="Failed to connect to Zigbee adapter"):
+        async with radio_manager.create_zigpy_app():
+            pytest.fail("Should not be reached")

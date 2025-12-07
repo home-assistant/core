@@ -1,23 +1,23 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]",
-          "device_id": "[%key:common::config_flow::data::device%]"
-        },
-        "data_description": {
-          "ip_address": "The IP address of the Flexit Nordic device",
-          "device_id": "The device ID of the Flexit Nordic device"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "device_id": "The device ID of the Flexit Nordic device",
+          "ip_address": "The IP address of the Flexit Nordic device"
+        }
+      }
     }
   },
   "entity": {
@@ -42,6 +42,9 @@
       "fireplace_extract_fan_setpoint": {
         "name": "Fireplace extract fan setpoint"
       },
+      "fireplace_mode_runtime": {
+        "name": "Fireplace mode runtime"
+      },
       "fireplace_supply_fan_setpoint": {
         "name": "Fireplace supply fan setpoint"
       },
@@ -56,38 +59,14 @@
       },
       "home_supply_fan_setpoint": {
         "name": "Home supply fan setpoint"
-      },
-      "fireplace_mode_runtime": {
-        "name": "Fireplace mode runtime"
       }
     },
     "sensor": {
-      "outside_air_temperature": {
-        "name": "Outside air temperature"
+      "air_filter_operating_time": {
+        "name": "Air filter operating time"
       },
-      "supply_air_temperature": {
-        "name": "Supply air temperature"
-      },
-      "exhaust_air_temperature": {
-        "name": "Exhaust air temperature"
-      },
-      "extract_air_temperature": {
-        "name": "Extract air temperature"
-      },
-      "room_temperature": {
-        "name": "Room temperature"
-      },
-      "fireplace_ventilation_remaining_duration": {
-        "name": "Fireplace ventilation remaining duration"
-      },
-      "rapid_ventilation_remaining_duration": {
-        "name": "Rapid ventilation remaining duration"
-      },
-      "supply_air_fan_control_signal": {
-        "name": "Supply air fan control signal"
-      },
-      "supply_air_fan_rpm": {
-        "name": "Supply air fan"
+      "electric_heater_power": {
+        "name": "Electric heater power"
       },
       "exhaust_air_fan_control_signal": {
         "name": "Exhaust air fan control signal"
@@ -95,37 +74,58 @@
       "exhaust_air_fan_rpm": {
         "name": "Exhaust air fan"
       },
-      "electric_heater_power": {
-        "name": "Electric heater power"
+      "exhaust_air_temperature": {
+        "name": "Exhaust air temperature"
       },
-      "air_filter_operating_time": {
-        "name": "Air filter operating time"
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "fireplace_ventilation_remaining_duration": {
+        "name": "Fireplace ventilation remaining duration"
       },
       "heat_exchanger_efficiency": {
         "name": "Heat exchanger efficiency"
       },
       "heat_exchanger_speed": {
         "name": "Heat exchanger speed"
+      },
+      "outside_air_temperature": {
+        "name": "Outside air temperature"
+      },
+      "rapid_ventilation_remaining_duration": {
+        "name": "Rapid ventilation remaining duration"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "supply_air_fan_control_signal": {
+        "name": "Supply air fan control signal"
+      },
+      "supply_air_fan_rpm": {
+        "name": "Supply air fan"
+      },
+      "supply_air_temperature": {
+        "name": "Supply air temperature"
       }
     },
     "switch": {
+      "cooker_hood_mode": {
+        "name": "Cooker hood mode"
+      },
       "electric_heater": {
         "name": "Electric heater"
       },
       "fireplace_mode": {
         "name": "Fireplace mode"
-      },
-      "cooker_hood_mode": {
-        "name": "Cooker hood mode"
       }
     }
   },
   "exceptions": {
-    "set_value_error": {
-      "message": "Failed setting the value {value}."
+    "not_ready": {
+      "message": "Timeout while connecting to {ip}."
     },
-    "switch_turn": {
-      "message": "Failed to turn the switch {state}."
+    "set_hvac_mode": {
+      "message": "Failed to set HVAC mode {mode}."
     },
     "set_preset_mode": {
       "message": "Failed to set preset mode {preset}."
@@ -133,11 +133,11 @@
     "set_temperature": {
       "message": "Failed to set temperature {temperature}."
     },
-    "set_hvac_mode": {
-      "message": "Failed to set HVAC mode {mode}."
+    "set_value_error": {
+      "message": "Failed setting the value {value}."
     },
-    "not_ready": {
-      "message": "Timeout while connecting to {ip}."
+    "switch_turn": {
+      "message": "Failed to turn the switch {state}."
     }
   }
 }

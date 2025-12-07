@@ -22,7 +22,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
 from .helpers import async_register_firmware_info_callback
-from .util import ApplicationType, FirmwareInfo, async_flash_silabs_firmware
+from .util import (
+    ApplicationType,
+    FirmwareInfo,
+    ResetTarget,
+    async_firmware_flashing_context,
+    async_flash_silabs_firmware,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +87,8 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    bootloader_reset_type: str | None = None
+    BOOTLOADER_RESET_METHODS: list[ResetTarget]
+    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]]
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -144,6 +151,11 @@ class BaseFirmwareUpdateEntity(
             self._latest_manifest = hardware_extra_data.firmware_manifest
 
         self._update_attributes()
+
+        # Fetch firmware info early to avoid prolonged "unknown" state when the device
+        # is initially set up
+        if self._latest_manifest is None:
+            await self.coordinator.async_request_refresh()
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
@@ -263,14 +275,18 @@ class BaseFirmwareUpdateEntity(
         )
 
         try:
-            firmware_info = await async_flash_silabs_firmware(
-                hass=self.hass,
-                device=self._current_device,
-                fw_data=fw_data,
-                expected_installed_firmware_type=self.entity_description.expected_firmware_type,
-                bootloader_reset_type=self.bootloader_reset_type,
-                progress_callback=self._update_progress,
-            )
+            async with async_firmware_flashing_context(
+                self.hass, self._current_device, self._config_entry.domain
+            ):
+                firmware_info = await async_flash_silabs_firmware(
+                    hass=self.hass,
+                    device=self._current_device,
+                    fw_data=fw_data,
+                    expected_installed_firmware_type=self.entity_description.expected_firmware_type,
+                    bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+                    application_probe_methods=self.APPLICATION_PROBE_METHODS,
+                    progress_callback=self._update_progress,
+                )
         finally:
             self._attr_in_progress = False
             self.async_write_ha_state()

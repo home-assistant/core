@@ -16,7 +16,7 @@ from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 
-PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
+PLATFORMS = [Platform.CAMERA, Platform.NUMBER, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
         entry.data[CONF_PASSWORD],
         verbose=False,
     )
+
     coordinator = FoscamCoordinator(hass, entry, session)
     await coordinator.async_config_entry_first_refresh()
 

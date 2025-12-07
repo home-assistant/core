@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyecotrend_ista"],
   "quality_scale": "gold",
-  "requirements": ["pyecotrend-ista==3.3.1"]
+  "requirements": ["pyecotrend-ista==3.4.0"]
 }

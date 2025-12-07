@@ -3181,12 +3181,9 @@ async def test_repeat_limits(
 
     title_condition = condition.title()
 
-    assert f"{title_condition} condition" in caplog.text
-    assert f"in script `Test {condition}` looped 5 times" in caplog.text
-    assert (
-        f"script `Test {condition}` terminated because it looped 10 times"
-        in caplog.text
-    )
+    assert f"Test {condition}: {title_condition} condition" in caplog.text
+    assert "looped 5 times" in caplog.text
+    assert "terminated because it looped 10 times" in caplog.text
 
     assert len(events) == 10
 
@@ -3690,6 +3687,7 @@ async def test_sequence(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                         },
                     },
                 ],
+                "metadata": {"anything": "not used by core"},
             },
             {
                 "alias": "action 2",

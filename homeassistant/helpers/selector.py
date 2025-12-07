@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
@@ -56,6 +57,10 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
+    # Context keys that are allowed to be used in the selector, with list of allowed selector types.
+    # Selectors can use the value of other fields in the same schema as context for filtering for example.
+    # The selector defines which context keys it supports and what selector types are allowed for each key.
+    allowed_context_keys: dict[str, set[str]] = {}
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
@@ -344,6 +349,11 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
     """Selector for an entity attribute."""
 
     selector_type = "attribute"
+
+    allowed_context_keys = {
+        # Filters the available attributes based on the selected entity
+        "filter_entity": {"entity"}
+    }
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
@@ -1029,6 +1039,7 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
 
     accept: list[str]
+    multiple: bool
 
 
 @SELECTORS.register("media")
@@ -1037,9 +1048,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
+    allowed_context_keys = {
+        # Filters the available media based on the selected entity
+        "filter_entity": {EntitySelector.selector_type}
+    }
+
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("accept"): [str],
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
     DATA_SCHEMA = vol.Schema(
@@ -1058,9 +1075,9 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, str]:
+    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
         """Validate the passed selection."""
-        schema = {
+        item_schema_dict = {
             key: value
             for key, value in self.DATA_SCHEMA.schema.items()
             if key != "entity_id"
@@ -1068,10 +1085,19 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
         if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
-            schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
+            item_schema_dict[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
-        media: dict[str, str] = vol.Schema(schema)(data)
-        return media
+        item_schema = vol.Schema(item_schema_dict)
+
+        if not self.config["multiple"]:
+            media: dict[str, str] = item_schema(data)
+            return media
+
+        # Backwards compatibility for places that now accept multiple items
+        if not isinstance(data, list):
+            data = [data]
+
+        return [item_schema(item) for item in data]
 
 
 class NumberSelectorConfig(BaseSelectorConfig, total=False):
@@ -1148,21 +1174,21 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
-class ObjectSelectorField(TypedDict):
+class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
     label: str
     required: bool
-    selector: dict[str, Any]
+    selector: Required[Selector | dict[str, Any]]
 
 
-class ObjectSelectorConfig(BaseSelectorConfig):
+class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an object selector config."""
 
     fields: dict[str, ObjectSelectorField]
     multiple: bool
     label_field: str
-    description_field: bool
+    description_field: str
     translation_key: str
 
 
@@ -1176,7 +1202,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         {
             vol.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): dict,
+                    vol.Required("selector"): vol.Any(Selector, validate_selector),
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
@@ -1192,8 +1218,45 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
+        """Serialize ObjectSelector for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "fields" in _config:
+            for field_items in _config["fields"].values():
+                if isinstance(field_items["selector"], ObjectSelector):
+                    field_items["selector"] = field_items["selector"].serialize()
+                elif isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = {
+                        field_items["selector"].selector_type: field_items[
+                            "selector"
+                        ].config
+                    }
+        return {"selector": {self.selector_type: _config}}
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
+        if "fields" not in self.config:
+            # Return data if no fields are defined
+            return data
+
+        if not isinstance(data, (list, dict)):
+            raise vol.Invalid("Value should be a dict or a list of dicts")
+        if isinstance(data, list) and not self.config["multiple"]:
+            raise vol.Invalid("Value should not be a list")
+
+        test_data = data if isinstance(data, list) else [data]
+
+        for _config in test_data:
+            for field, field_data in self.config["fields"].items():
+                if field_data.get("required") and field not in _config:
+                    raise vol.Invalid(f"Field {field} is required")
+                if field in _config:
+                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+
+            for key in _config:
+                if key not in self.config["fields"]:
+                    raise vol.Invalid(f"Field {key} is not allowed")
+
         return data
 
 
@@ -1336,6 +1399,15 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
+    allowed_context_keys = {
+        # Filters the available states based on the selected entity
+        "filter_entity": {EntitySelector.selector_type},
+        # Filters the available states based on the selected target
+        "filter_target": {"target"},
+        # Only show the attribute values of a specific attribute
+        "filter_attribute": {AttributeSelector.selector_type},
+    }
+
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity_id"): cv.entity_id,
@@ -1425,7 +1497,8 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         }
     )
 
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+    # We want to transition to not including templates in the target selector.
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED)  # noqa: SLF001
 
     def __init__(self, config: TargetSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

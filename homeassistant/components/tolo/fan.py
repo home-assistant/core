@@ -5,22 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ToloSaunaUpdateCoordinator
+from .coordinator import ToloConfigEntry, ToloSaunaUpdateCoordinator
 from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ToloConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up fan controls for TOLO Sauna."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([ToloFan(coordinator, entry)])
 
 
@@ -31,7 +29,7 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
     def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
+        self, coordinator: ToloSaunaUpdateCoordinator, entry: ToloConfigEntry
     ) -> None:
         """Initialize TOLO fan entity."""
         super().__init__(coordinator, entry)

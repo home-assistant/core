@@ -16,7 +16,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+    async_parse_date_datetime,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -37,10 +39,10 @@ from .template import (
     _SENTINEL,
     Template,
     TemplateStateFromEntityId,
-    _render_with_context,
     render_complex,
     result_as_boolean,
 )
+from .template.context import render_with_context
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -131,7 +133,7 @@ class ValueTemplate(Template):
         compiled = self._compiled or self._ensure_compiled()
 
         try:
-            render_result = _render_with_context(
+            render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:

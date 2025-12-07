@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from pyvesync import VeSync
+from pyvesync.auth import VeSyncAuth
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.fan_base import VeSyncFanBase
 from pyvesync.base_devices.humidifier_base import HumidifierState
@@ -31,15 +32,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-def patch_vesync_firmware():
-    """Patch VeSync to disable firmware checks."""
-    with patch(
-        "pyvesync.vesync.VeSync.check_firmware", new=AsyncMock(return_value=True)
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def patch_vesync_login():
     """Patch VeSync login method."""
     with patch("pyvesync.vesync.VeSync.login", new=AsyncMock()):
@@ -51,21 +43,39 @@ def patch_vesync():
     """Patch VeSync methods and several properties/attributes for all tests."""
     props = {
         "enabled": True,
-        "token": "TEST_TOKEN",
-        "account_id": "TEST_ACCOUNT_ID",
+    }
+
+    with ExitStack() as stack:
+        for name, value in props.items():
+            mock = stack.enter_context(
+                patch.object(VeSync, name, new_callable=PropertyMock)
+            )
+            mock.return_value = value
+        yield
+
+
+@pytest.fixture(autouse=True)
+def patch_vesync_auth():
+    """Patch VeSync Auth methods and several properties/attributes for all tests."""
+    props = {
+        "_token": "TESTTOKEN",
+        "_account_id": "TESTACCOUNTID",
+        "_country_code": "US",
+        "_current_region": "US",
+        "_username": "TESTUSERNAME",
+        "_password": "TESTPASSWORD",
     }
 
     with (
         patch.multiple(
-            "pyvesync.vesync.VeSync",
-            check_firmware=AsyncMock(return_value=True),
-            login=AsyncMock(return_value=None),
+            "pyvesync.auth.VeSyncAuth",
+            login=AsyncMock(return_value=True),
         ),
         ExitStack() as stack,
     ):
         for name, value in props.items():
             mock = stack.enter_context(
-                patch.object(VeSync, name, new_callable=PropertyMock)
+                patch.object(VeSyncAuth, name, new_callable=PropertyMock)
             )
             mock.return_value = value
         yield
@@ -138,6 +148,7 @@ def fan_fixture():
         modes=[],
         connection_status="online",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -211,6 +222,7 @@ def humidifier_fixture():
         ),
         connection_status="online",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -246,6 +258,7 @@ def humidifier_300s_fixture():
         ),
         config_module="configModule",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 

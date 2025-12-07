@@ -43,7 +43,7 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         exists_fn=lambda device: rgetattr(device, "state.water_lacks") is not None,
     ),
     VeSyncBinarySensorEntityDescription(
-        key="water_tank_lifted",
+        key="details.water_tank_lifted",
         translation_key="water_tank_lifted",
         is_on=lambda device: device.state.water_tank_lifted,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -64,9 +64,9 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
@@ -78,7 +78,11 @@ async def async_setup_entry(
 
 
 @callback
-def _setup_entities(devices, async_add_entities, coordinator):
+def _setup_entities(
+    devices: list[VeSyncBaseDevice],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    coordinator: VeSyncDataCoordinator,
+) -> None:
     """Add entity."""
     async_add_entities(
         (

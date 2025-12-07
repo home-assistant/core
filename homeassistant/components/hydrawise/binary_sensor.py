@@ -122,11 +122,24 @@ async def async_setup_entry(
     coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RESUME, None, "resume")
     platform.async_register_entity_service(
-        SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
+        SERVICE_RESUME,
+        None,
+        "resume",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
     )
-    platform.async_register_entity_service(SERVICE_SUSPEND, SCHEMA_SUSPEND, "suspend")
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING,
+        SCHEMA_START_WATERING,
+        "start_watering",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
+    platform.async_register_entity_service(
+        SERVICE_SUSPEND,
+        SCHEMA_SUSPEND,
+        "suspend",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):

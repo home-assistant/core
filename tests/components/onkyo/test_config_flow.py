@@ -32,7 +32,11 @@ def _receiver_display_name(receiver_info: ReceiverInfo) -> str:
     return f"{receiver_info.model_name} ({receiver_info.host})"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.fixture(autouse=True)
+def mock_setup_entry(mock_setup_entry) -> None:
+    """Use async_setup_entry fixture in all tests."""
+
+
 async def test_manual(hass: HomeAssistant) -> None:
     """Test successful manual."""
     result = await hass.config_entries.flow.async_init(
@@ -79,7 +83,6 @@ async def test_manual(hass: HomeAssistant) -> None:
         (mock_discovery([RECEIVER_INFO]), "cannot_connect"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_manual_recoverable_error(
     hass: HomeAssistant, mock_discovery: AbstractContextManager, error_reason: str
 ) -> None:
@@ -129,7 +132,6 @@ async def test_manual_recoverable_error(
     assert result["title"] == RECEIVER_INFO_2.model_name
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_manual_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -158,7 +160,6 @@ async def test_manual_error(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_eiscp_discovery(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -214,7 +215,6 @@ async def test_eiscp_discovery(
         (mock_discovery([RECEIVER_INFO]), "no_devices_found"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_eiscp_discovery_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -291,7 +291,6 @@ async def test_eiscp_discovery_replace_ignored_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_ssdp_discovery(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -343,7 +342,6 @@ async def test_ssdp_discovery(
         (f"http://{RECEIVER_INFO.host}:8080", nullcontext(), "already_configured"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_ssdp_discovery_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -371,7 +369,6 @@ async def test_ssdp_discovery_error(
     assert result["reason"] == error_reason
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_configure(hass: HomeAssistant) -> None:
     """Test receiver configure."""
     result = await hass.config_entries.flow.async_init(
@@ -442,7 +439,6 @@ async def test_configure(hass: HomeAssistant) -> None:
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -479,7 +475,6 @@ async def test_reconfigure(
         assert mock_config_entry.options[option] == option_value
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -504,7 +499,6 @@ async def test_reconfigure_error(
     assert mock_config_entry.unique_id == old_unique_id
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "ignore_missing_translations",
     [

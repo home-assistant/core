@@ -824,6 +824,7 @@ class EntityRegistry(BaseRegistry):
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            serialize_in_event_loop=False,
         )
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED,
@@ -1630,13 +1631,17 @@ class EntityRegistry(BaseRegistry):
         self.entities = entities
         self._entities_data = entities.data
 
-    @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
+        # Create intermediate lists to allow this method to be called from a thread
+        # other than the event loop.
         return {
-            "entities": [entry.as_storage_fragment for entry in self.entities.values()],
+            "entities": [
+                entry.as_storage_fragment for entry in list(self.entities.values())
+            ],
             "deleted_entities": [
-                entry.as_storage_fragment for entry in self.deleted_entities.values()
+                entry.as_storage_fragment
+                for entry in list(self.deleted_entities.values())
             ],
         }
 
@@ -1899,11 +1904,25 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     @callback
     def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
-        return bool(event_data["action"] == "remove")
+        return (event_data["action"] == "remove") or (
+            event_data["action"] == "update"
+            and "old_entity_id" in event_data
+            and event_data["entity_id"] != event_data["old_entity_id"]
+        )
 
     @callback
     def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
         """Clean up restored states."""
+        if event.data["action"] == "update":
+            old_entity_id = event.data["old_entity_id"]
+            old_state = hass.states.get(old_entity_id)
+            if old_state is None or not old_state.attributes.get(ATTR_RESTORED):
+                return
+            hass.states.async_remove(old_entity_id, context=event.context)
+            if entry := registry.async_get(event.data["entity_id"]):
+                entry.write_unavailable_state(hass)
+            return
+
         state = hass.states.get(event.data["entity_id"])
 
         if state is None or not state.attributes.get(ATTR_RESTORED):

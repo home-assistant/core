@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
-from aioshelly.const import MODEL_BULB, MODEL_BUTTON1
+from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -29,6 +29,8 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
     MOCK_MAC,
@@ -40,7 +42,11 @@ from . import (
     register_entity,
 )
 
-from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache,
+)
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
@@ -553,6 +559,57 @@ async def test_rpc_click_event(
     }
 
 
+async def test_rpc_ignore_virtual_click_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC virtual click events are ignored as they are triggered by the integration."""
+    await init_integration(hass, 2)
+
+    # Generate a virtual button event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "button:200",
+                    "id": 200,
+                    "event": "single_push",
+                    "ts": 1757358109.89,
+                }
+            ],
+            "ts": 757358109.89,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    # Generate valid event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "data": [],
+                    "event": "single_push",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 async def test_rpc_update_entry_sleep_period(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -876,6 +933,7 @@ async def test_rpc_runs_connected_events_when_initialized(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     supports_scripts: bool,
     zigbee_firmware: bool,
     result: bool,
@@ -899,6 +957,13 @@ async def test_rpc_runs_connected_events_when_initialized(
     # BLE script list is called during connected events if device supports scripts
     # and Zigbee is disabled
     assert bool(call.script_list() in mock_rpc_device.mock_calls) == result
+    assert "Device Test name already connected" not in caplog.text
+
+    # Mock initialized event after already initialized
+    caplog.clear()
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+    assert "Device Test name already connected" in caplog.text
 
 
 async def test_rpc_sleeping_device_unload_ignore_ble_scanner(
@@ -1088,3 +1153,70 @@ async def test_xmod_model_lookup(
     )
     assert device
     assert device.model == xmod_model
+
+
+async def test_sub_device_area_from_main_device(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test Shelly sub-device area is set to main device area when created."""
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    config_entry = await init_integration(
+        hass, gen=3, model=MODEL_2PM_G3, skip_setup=True
+    )
+
+    # create main device and set area
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        name="Test name",
+        connections={(CONNECTION_NETWORK_MAC, MOCK_MAC)},
+        identifiers={(DOMAIN, MOCK_MAC)},
+        suggested_area="living_room",
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # verify sub-devices have the same area as main device
+    for relay_index in range(2):
+        entity_id = f"switch.test_name_output_{relay_index}"
+        assert hass.states.get(entity_id) is not None
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+
+        device_entry = device_registry.async_get(entry.device_id)
+        assert device_entry
+        assert device_entry.area_id == "living_room"
+
+
+@pytest.mark.parametrize("restart_required", [True, False])
+async def test_rpc_ble_scanner_enable_reboot(
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    restart_required: bool,
+) -> None:
+    """Test RPC BLE scanner enabling requires reboot."""
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "ble_getconfig",
+        AsyncMock(return_value={"enable": False}),
+    )
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "ble_setconfig",
+        AsyncMock(return_value={"restart_required": restart_required}),
+    )
+    await init_integration(
+        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+    )
+    assert bool("BLE enable required a reboot" in caplog.text) == restart_required
+    assert mock_rpc_device.trigger_reboot.call_count == int(restart_required)

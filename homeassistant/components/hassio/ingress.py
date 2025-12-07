@@ -139,21 +139,27 @@ class HassIOIngress(HomeAssistantView):
             url = url.with_query(request.query_string)
 
         # Start proxy
-        async with self._websession.ws_connect(
-            url,
-            headers=source_header,
-            protocols=req_protocols,
-            autoclose=False,
-            autoping=False,
-        ) as ws_client:
-            # Proxy requests
-            await asyncio.wait(
-                [
-                    create_eager_task(_websocket_forward(ws_server, ws_client)),
-                    create_eager_task(_websocket_forward(ws_client, ws_server)),
-                ],
-                return_when=asyncio.FIRST_COMPLETED,
+        try:
+            _LOGGER.debug(
+                "Proxying WebSocket to %s / %s, upstream url: %s", token, path, url
             )
+            async with self._websession.ws_connect(
+                url,
+                headers=source_header,
+                protocols=req_protocols,
+                autoclose=False,
+                autoping=False,
+            ) as ws_client:
+                # Proxy requests
+                await asyncio.wait(
+                    [
+                        create_eager_task(_websocket_forward(ws_server, ws_client)),
+                        create_eager_task(_websocket_forward(ws_client, ws_server)),
+                    ],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+        except TimeoutError:
+            _LOGGER.warning("WebSocket proxy to %s / %s timed out", token, path)
 
         return ws_server
 
@@ -226,6 +232,7 @@ class HassIOIngress(HomeAssistantView):
                 aiohttp.ClientError,
                 aiohttp.ClientPayloadError,
                 ConnectionResetError,
+                ConnectionError,
             ) as err:
                 _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
 
