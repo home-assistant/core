@@ -89,6 +89,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
@@ -1625,16 +1626,23 @@ async def test_send_photo_with_hass_url_no_url_available(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    mock_httpx_client: MagicMock,
 ) -> None:
     """Test send photo with HA URL fails when no URL can be determined."""
-    # Don't configure any URLs - this should cause NoURLAvailableError
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Unable to determine Home Assistant URL",
+    # Mock get_url to raise NoURLAvailableError to test error handling
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.get_url",
+            side_effect=NoURLAvailableError,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Unable to determine Home Assistant URL",
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1650,22 +1658,30 @@ async def test_send_photo_with_hass_url_no_url_available_ssl_hint(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    mock_httpx_client: MagicMock,
 ) -> None:
     """Test send photo with HA URL shows SSL hint when applicable."""
-    # Configure SSL but no URLs - should trigger helpful error message
-    await async_process_ha_core_config(
-        hass,
-        {"server_port": 8123},
-    )
-    hass.config.api.use_ssl = True
-
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Configure internal and external URL in general settings",
+    # Configure SSL to trigger the helpful error message (after setup)
+    hass.config.api = MagicMock()
+    hass.config.api.use_ssl = True
+    # Clear internal/external URL to trigger NoURLAvailableError
+    hass.config.internal_url = None
+    hass.config.external_url = None
+
+    # Mock get_url to raise NoURLAvailableError to test SSL hint in error message
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.get_url",
+            side_effect=NoURLAvailableError,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Configure internal and external URL in general settings",
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
