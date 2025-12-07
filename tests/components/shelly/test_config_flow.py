@@ -5195,3 +5195,78 @@ async def test_bluetooth_ble_shutdown_exception_handled(
 
     # Verify shutdown was attempted despite the exception
     mock_ble_rpc_device.shutdown.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_ble_rpc_device_class")
+async def test_bluetooth_provision_ble_reconnect_fails_during_ip_fetch(
+    hass: HomeAssistant,
+    mock_ble_rpc_device: AsyncMock,
+) -> None:
+    """Test BLE reconnection fails during IP fetch fallback after provisioning."""
+    # Configure mock BLE device for initial wifi scan
+    mock_ble_rpc_device.wifi_scan.return_value = [
+        {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
+    ]
+
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Scan for networks first (this creates the initial BLE connection)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "wifi_scan"
+
+    # Track initialize calls - first call succeeds (for wifi_setconfig reconnect),
+    # second call fails (during _async_get_ip_from_ble reconnect)
+    init_call_count = 0
+
+    async def initialize_side_effect() -> None:
+        nonlocal init_call_count
+        init_call_count += 1
+        if init_call_count == 1:
+            # First reconnect (for wifi_setconfig) succeeds
+            return
+        # Second reconnect (for _async_get_ip_from_ble) fails
+        raise DeviceConnectionError
+
+    # Simulate: device disconnects, first reconnect succeeds, second fails
+    mock_ble_rpc_device.connected = False
+    mock_ble_rpc_device.initialize = AsyncMock(side_effect=initialize_side_effect)
+
+    # Provision WiFi - timeout occurs, active lookup fails, BLE reconnect fails
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            side_effect=DeviceConnectionError,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SSID: "MyNetwork", CONF_PASSWORD: "my_password"},
+        )
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        # Should show provision_failed since BLE reconnection failed during IP fetch
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "provision_failed"
+
+        # Abort flow to reach terminal state
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
