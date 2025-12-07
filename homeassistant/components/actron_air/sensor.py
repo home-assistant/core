@@ -87,7 +87,6 @@ class AirconCleanFilterSensor(BaseAirconSensor):
     """Representation of an Actron Air clean filter sensor."""
 
     _attr_translation_key = "clean_filter"
-    _attr_device_class = SensorDeviceClass.ENUM
 
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
         """Initialize the sensor."""
@@ -104,7 +103,6 @@ class AirconDefrostModeSensor(BaseAirconSensor):
     """Representation of an Actron Air defrost mode sensor."""
 
     _attr_translation_key = "defrost_mode"
-    _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
@@ -164,7 +162,6 @@ class AirconCompressorModeSensor(BaseAirconSensor):
     """Representation of an Actron Air compressor mode sensor."""
 
     _attr_translation_key = "compressor_mode"
-    _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
@@ -274,6 +271,7 @@ class PeripheralBatterySensor(BasePeripheralSensor):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
@@ -293,6 +291,7 @@ class PeripheralHumiditySensor(BasePeripheralSensor):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
@@ -312,6 +311,7 @@ class PeripheralTemperatureSensor(BasePeripheralSensor):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: ActronAirSystemCoordinator, peripheral: ActronAirPeripheral
