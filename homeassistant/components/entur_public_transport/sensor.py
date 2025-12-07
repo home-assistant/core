@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, UnitOfTime
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_SHOW_ON_MAP,
+    UnitOfTime,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -60,7 +66,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
         vol.Optional(CONF_NAME, default="Entur"): cv.string,
-        vol.Optional("show_on_map", default=False): cv.boolean,
+        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
         vol.Optional(CONF_WHITELIST_LINES, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
