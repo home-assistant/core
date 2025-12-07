@@ -88,7 +88,6 @@ class AirconCleanFilterSensor(BaseAirconSensor):
 
     _attr_translation_key = "clean_filter"
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
         """Initialize the sensor."""
@@ -106,7 +105,6 @@ class AirconDefrostModeSensor(BaseAirconSensor):
 
     _attr_translation_key = "defrost_mode"
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
@@ -167,7 +165,6 @@ class AirconCompressorModeSensor(BaseAirconSensor):
 
     _attr_translation_key = "compressor_mode"
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
@@ -185,7 +182,7 @@ class AirconCompressorSpeedSensor(BaseAirconSensor):
     """Representation of an Actron Air compressor speed sensor."""
 
     _attr_translation_key = "compressor_speed"
-    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_native_unit_of_measurement = "RPM"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_registry_enabled_default = False
 
