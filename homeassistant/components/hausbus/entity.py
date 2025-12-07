@@ -87,27 +87,3 @@ class HausbusEntity(Entity):
             self._debug_identifier,
             self.__class__.__name__,
         )
-
-    async def ensure_configuration(self) -> bool:
-        """Ensures that the channel configuration is known."""
-        if self._configuration:
-            return True
-
-        self._channel.getConfiguration()
-
-        try:
-            await asyncio.wait_for(self._wait_for_configuration(), timeout=5.0)
-        except TimeoutError:
-            LOGGER.warning(
-                "%s Timeout while waiting for configuration of %s",
-                self._debug_identifier,
-                self.entity_id,
-            )
-            return False
-        else:
-            return True
-
-    async def _wait_for_configuration(self):
-        """Waits until configuration is received."""
-        while not self._configuration:
-            await asyncio.sleep(0.1)
