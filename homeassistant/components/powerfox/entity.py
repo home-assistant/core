@@ -2,23 +2,29 @@
 
 from __future__ import annotations
 
+from typing import Any, Generic, TypeVar
+
 from powerfox import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
-from .coordinator import PowerfoxDataUpdateCoordinator
+
+CoordinatorT = TypeVar("CoordinatorT", bound=DataUpdateCoordinator[Any])
 
 
-class PowerfoxEntity(CoordinatorEntity[PowerfoxDataUpdateCoordinator]):
+class PowerfoxEntity(CoordinatorEntity[CoordinatorT], Generic[CoordinatorT]):
     """Base entity for Powerfox."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: PowerfoxDataUpdateCoordinator,
+        coordinator: CoordinatorT,
         device: Device,
     ) -> None:
         """Initialize Powerfox entity."""
