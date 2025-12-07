@@ -5141,6 +5141,13 @@ async def test_bluetooth_ble_initialize_failure_cleans_up(
     # Verify device was cleaned up after initialize failure
     mock_device.shutdown.assert_called_once()
 
+    # Abort the flow to reach terminal state
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify shutdown wasn't called again during abort (device was already cleaned up)
+    mock_device.shutdown.assert_called_once()
+
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_ble_rpc_device_class")
 async def test_bluetooth_ble_shutdown_exception_handled(
