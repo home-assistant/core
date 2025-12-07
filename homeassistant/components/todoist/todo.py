@@ -40,30 +40,20 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
     """Convert a TodoItem to the set of add or update arguments."""
     item_data: dict[str, Any] = {
         "content": item.summary,
-        # Description needs to be empty string to be cleared
         "description": item.description or "",
     }
 
-    # Labels: treat as single field (comma separated) everywhere
-    # Frontend sets `item.labels` as a string like "w<ork,home"
-    if getattr(item, "labels", None):
-        item_data["labels"] = [
-            label.strip() for label in str(item.labels).split(",") if label.strip()
-        ]
+    if item.labels is not None:
+        item_data["labels"] = [label.strip() for label in item.labels if label.strip()]
+
     if due := item.due:
         if isinstance(due, datetime.datetime):
             item_data["due_datetime"] = due
         else:
             item_data["due_date"] = due
-        # In order to not lose any recurrence metadata for the task, we need to
-        # ensure that we send the `due_string` param if the task has it set.
-        # NOTE: It's ok to send stale data for non-recurring tasks. Any provided
-        # date/datetime will override this string.
         if api_data and api_data.due:
             item_data["due_string"] = api_data.due.string
     else:
-        # Special flag "no date" clears the due date/datetime.
-        # See https://developer.todoist.com/rest/v2/#update-a-task for more.
         item_data["due_string"] = "no date"
     return item_data
 
@@ -102,14 +92,12 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # if not self.coordinator.data:
         if self.coordinator.data is None:
             self._attr_todo_items = None
             super()._handle_coordinator_update()
             return
 
         def parse_due(task_due) -> datetime.date | datetime.datetime | None:
-            """Parse Todoist due field safely."""
             if not task_due:
                 return None
             raw_dt = getattr(task_due, "datetime", None)
@@ -148,7 +136,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                     due=due,
                     description=task.description or None,
                     priority=define_priority_level(task.priority),
-                    labels=",".join(task.labels) if task.labels else None,
+                    labels=list(task.labels) if task.labels else None,
                 )
             )
 
@@ -172,7 +160,6 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         if update_data := _task_api_data(item, api_data):
             await self.coordinator.api.update_task(task_id=uid, **update_data)
         if item.status is not None:
-            # Only update status if changed
             for existing_item in self._attr_todo_items or ():
                 if existing_item.uid != item.uid:
                     continue

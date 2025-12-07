@@ -139,7 +139,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Required(ATTR_ITEM): vol.All(
                         cv.string, str.strip, vol.Length(min=1)
                     ),
-                    vol.Optional(ATTR_LABELS): vol.Any(cv.string, None),
+                    vol.Optional(ATTR_LABELS): vol.Any(
+                        vol.All(cv.ensure_list, [cv.string]),
+                        None,
+                    ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -160,7 +163,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
-                    vol.Optional(ATTR_LABELS): vol.Any(cv.string, None),
+                    vol.Optional(ATTR_LABELS): vol.Any(
+                        vol.All(cv.ensure_list, [cv.string]),
+                        None,
+                    ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -234,7 +240,7 @@ class TodoItem:
     priority: str | None = None
     """The priority of the To-do item."""
 
-    labels: str | None = None
+    labels: list[str] | None = None
     """Labels for the item (comma-separated string in your use-case)."""
 
 
@@ -368,14 +374,16 @@ async def websocket_handle_subscribe_todo_items(
     entity.async_update_listeners()
 
 
-def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
-    result: dict[str, str] = {}
+    result: dict[str, Any] = {}
     for name, value in obj:
         if value is None:
             continue
         if isinstance(value, (datetime.date, datetime.datetime)):
             result[name] = value.isoformat()
+        elif isinstance(value, list):
+            result[name] = value
         else:
             result[name] = str(value)
     return result

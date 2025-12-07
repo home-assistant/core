@@ -98,6 +98,7 @@ async def test_todo_item_state(
                 "summary": "Soda",
                 "status": "needs_action",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -118,6 +119,7 @@ async def test_todo_item_state(
                 "status": "needs_action",
                 "due": "2023-11-18",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -147,6 +149,7 @@ async def test_todo_item_state(
                 "status": "needs_action",
                 "due": "2023-11-18",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -167,6 +170,7 @@ async def test_todo_item_state(
                 "status": "needs_action",
                 "description": "6-pack",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
     ],
@@ -308,6 +312,7 @@ async def test_update_todo_item_status(
                 "content": "Milk",
                 "description": "desc",
                 "due_string": "no date",
+                "labels": ["Label1"],
             },
             {
                 "uid": "task-id-1",
@@ -315,6 +320,7 @@ async def test_update_todo_item_status(
                 "status": "needs_action",
                 "description": "desc",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -333,6 +339,7 @@ async def test_update_todo_item_status(
                 "content": "Soda",
                 "due_date": datetime.date(2023, 11, 18),
                 "description": "",
+                "labels": ["Label1"],
             },
             {
                 "uid": "task-id-1",
@@ -340,6 +347,7 @@ async def test_update_todo_item_status(
                 "status": "needs_action",
                 "due": "2023-11-18",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -364,6 +372,7 @@ async def test_update_todo_item_status(
                     2023, 11, 18, 6, 30, tzinfo=zoneinfo.ZoneInfo("America/Regina")
                 ),
                 "description": "",
+                "labels": ["Label1"],
             },
             {
                 "uid": "task-id-1",
@@ -371,6 +380,7 @@ async def test_update_todo_item_status(
                 "status": "needs_action",
                 "due": "2023-11-18",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -389,6 +399,7 @@ async def test_update_todo_item_status(
                 "content": "Soda",
                 "description": "6-pack",
                 "due_string": "no date",
+                "labels": ["Label1"],
             },
             {
                 "uid": "task-id-1",
@@ -396,6 +407,7 @@ async def test_update_todo_item_status(
                 "status": "needs_action",
                 "description": "6-pack",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -421,12 +433,14 @@ async def test_update_todo_item_status(
                 "content": "Soda",
                 "description": "",
                 "due_string": "no date",
+                "labels": ["Label1"],
             },
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
                 "status": "needs_action",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
         (
@@ -455,6 +469,7 @@ async def test_update_todo_item_status(
                 "description": "6-pack",
                 "due_date": datetime.date(2024, 2, 1),
                 "due_string": "every day",
+                "labels": ["Label1"],
             },
             {
                 "uid": "task-id-1",
@@ -463,6 +478,7 @@ async def test_update_todo_item_status(
                 "description": "6-pack",
                 "due": "2024-02-01",
                 "priority": "Low",
+                "labels": ["Label1"],
             },
         ),
     ],
