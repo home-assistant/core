@@ -93,4 +93,4 @@ rules:
     status: exempt
     comment: integration has no external dependencies
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
