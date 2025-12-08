@@ -12,8 +12,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_REFERRER
 from .coordinator import (
     GoogleAirQualityConfigEntry,
+    GoogleAirQualityCurrentConditionsCoordinator,
+    GoogleAirQualityForecastCoordinator,
     GoogleAirQualityRuntimeData,
-    GoogleAirQualityUpdateCoordinator,
+    GoogleAirQualitySubEntryRuntimeData,
 )
 
 PLATFORMS: list[Platform] = [
@@ -30,20 +32,29 @@ async def async_setup_entry(
     referrer = entry.data.get(CONF_REFERRER)
     auth = Auth(session, api_key, referrer=referrer)
     client = GoogleAirQualityApi(auth)
-    coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = {}
+    subentries_runtime_data: dict[str, GoogleAirQualitySubEntryRuntimeData] = {}
     for subentry_id in entry.subentries:
-        coordinators[subentry_id] = GoogleAirQualityUpdateCoordinator(
-            hass, entry, subentry_id, client
+        subentry_runtime_data = GoogleAirQualitySubEntryRuntimeData(
+            coordinator_current_conditions=GoogleAirQualityCurrentConditionsCoordinator(
+                hass, entry, subentry_id, client
+            ),
+            coordinator_forecast=GoogleAirQualityForecastCoordinator(
+                hass, entry, subentry_id, client
+            ),
         )
-    await asyncio.gather(
-        *(
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators.values()
+        subentries_runtime_data[subentry_id] = subentry_runtime_data
+    tasks = [
+        coro
+        for subentry_runtime_data in subentries_runtime_data.values()
+        for coro in (
+            subentry_runtime_data.coordinator_current_conditions.async_config_entry_first_refresh(),
+            subentry_runtime_data.coordinator_forecast.async_config_entry_first_refresh(),
         )
-    )
+    ]
+    await asyncio.gather(*tasks)
     entry.runtime_data = GoogleAirQualityRuntimeData(
         api=client,
-        subentries_runtime_data=coordinators,
+        subentries_runtime_data=subentries_runtime_data,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))

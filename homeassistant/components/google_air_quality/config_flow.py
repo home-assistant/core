@@ -140,6 +140,12 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
                             "title": user_input[CONF_NAME],
                             "unique_id": None,
                         },
+                        {
+                            "subentry_type": "forecast",
+                            "data": user_input[CONF_LOCATION],
+                            "title": user_input[CONF_NAME],
+                            "unique_id": None,
+                        },
                     ],
                 )
         else:

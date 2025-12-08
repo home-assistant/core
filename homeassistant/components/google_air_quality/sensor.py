@@ -22,7 +22,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GoogleAirQualityConfigEntry
 from .const import DOMAIN
-from .coordinator import GoogleAirQualityUpdateCoordinator
+from .coordinator import (
+    GoogleAirQualityCurrentConditionsCoordinator,
+    GoogleAirQualityForecastCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 # Coordinator is used to centralize the data updates
@@ -148,23 +151,45 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinators = entry.runtime_data.subentries_runtime_data
+    for subentry in entry.subentries.values():
+        subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
+            subentry.subentry_id
+        ]
+        coordinator = subentry_runtime_data.coordinator_current_conditions
+        if subentry.subentry_type == "location":
+            async_add_entities(
+                (
+                    AirQualitySensorEntity(
+                        coordinator, description, subentry.subentry_id, subentry
+                    )
+                    for description in AIR_QUALITY_SENSOR_TYPES
+                    if description.exists_fn(coordinator.data)
+                ),
+                config_subentry_id=subentry.subentry_id,
+            )
 
-    for subentry_id, subentry in entry.subentries.items():
-        coordinator = coordinators[subentry_id]
-        _LOGGER.debug("subentry.data: %s", subentry.data)
-        async_add_entities(
-            (
-                AirQualitySensorEntity(coordinator, description, subentry_id, subentry)
-                for description in AIR_QUALITY_SENSOR_TYPES
-                if description.exists_fn(coordinator.data)
-            ),
-            config_subentry_id=subentry_id,
-        )
+        if subentry.subentry_type == "forecast":
+            forecast_coordinator = subentry_runtime_data.coordinator_forecast
+            _LOGGER.debug("forecast_coordinator.data %s", forecast_coordinator.data)
+            async_add_entities(
+                (
+                    AirQualityForecastSensorEntity(
+                        forecast_coordinator,
+                        description,
+                        subentry.subentry_id,
+                        subentry,
+                    )
+                    for description in AIR_QUALITY_SENSOR_TYPES
+                    if description.exists_fn(
+                        forecast_coordinator.data.hourly_forecasts[0]
+                    )
+                ),
+                config_subentry_id=subentry.subentry_id,
+            )
 
 
 class AirQualitySensorEntity(
-    CoordinatorEntity[GoogleAirQualityUpdateCoordinator], SensorEntity
+    CoordinatorEntity[GoogleAirQualityCurrentConditionsCoordinator], SensorEntity
 ):
     """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
 
@@ -174,7 +199,7 @@ class AirQualitySensorEntity(
 
     def __init__(
         self,
-        coordinator: GoogleAirQualityUpdateCoordinator,
+        coordinator: GoogleAirQualityCurrentConditionsCoordinator,
         description: AirQualitySensorEntityDescription,
         subentry_id: str,
         subentry: ConfigSubentry,
@@ -210,4 +235,60 @@ class AirQualitySensorEntity(
         """Return the native unit of measurement of the sensor."""
         return self.entity_description.native_unit_of_measurement_fn(
             self.coordinator.data
+        )
+
+
+class AirQualityForecastSensorEntity(
+    CoordinatorEntity[GoogleAirQualityForecastCoordinator], SensorEntity
+):
+    """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
+
+    entity_description: AirQualitySensorEntityDescription
+    _attr_attribution = "Data provided by Google Air Quality"
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GoogleAirQualityForecastCoordinator,
+        description: AirQualitySensorEntityDescription,
+        subentry_id: str,
+        subentry: ConfigSubentry,
+    ) -> None:
+        """Set up Air Quality Sensors."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}_forecast"
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
+            },
+            name=subentry.title,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        if description.translation_placeholders_fn:
+            self._attr_translation_placeholders = (
+                description.translation_placeholders_fn(
+                    coordinator.data.hourly_forecasts[0]
+                )
+            )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(
+            self.coordinator.data.hourly_forecasts[0]
+        )
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return the option of the sensor."""
+        return self.entity_description.options_fn(
+            self.coordinator.data.hourly_forecasts[0]
+        )
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the native unit of measurement of the sensor."""
+        return self.entity_description.native_unit_of_measurement_fn(
+            self.coordinator.data.hourly_forecasts[0]
         )
