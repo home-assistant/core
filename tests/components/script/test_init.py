@@ -64,6 +64,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "script")
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_passing_variables(hass: HomeAssistant) -> None:
     """Test different ways of passing in variables."""
     mock_restore_cache(hass, ())
@@ -429,6 +430,7 @@ async def test_reload_service(hass: HomeAssistant, running) -> None:
         assert hass.services.has_service(script.DOMAIN, "test")
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_unchanged_does_not_stop(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -517,6 +519,7 @@ async def test_reload_unchanged_does_not_stop(
         },
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_unchanged_script(
     hass: HomeAssistant, calls: list[ServiceCall], script_config
 ) -> None:
@@ -1032,6 +1035,7 @@ async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.parametrize("concurrently", [False, True])
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
     """Test calling script concurrently or not."""
     if concurrently:
@@ -1117,6 +1121,7 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
     assert not script.is_on(hass, "script.script2")
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_script_variables(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1216,6 +1221,7 @@ async def test_script_variables(
     assert mock_calls[3].data["value"] == 1
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_script_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1294,6 +1300,7 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
         (SCRIPT_MODE_SINGLE, "Already running"),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_recursive_script(
     hass: HomeAssistant, script_mode, warning_msg, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1344,6 +1351,7 @@ async def test_recursive_script(
         (SCRIPT_MODE_SINGLE, "Already running"),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_recursive_script_indirect(
     hass: HomeAssistant, script_mode, warning_msg, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1407,6 +1415,7 @@ async def test_recursive_script_indirect(
     "script_mode", [SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED, SCRIPT_MODE_RESTART]
 )
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_recursive_script_turn_on(
     hass: HomeAssistant, script_mode, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1558,6 +1567,7 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_script_service_changed_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -1614,6 +1624,7 @@ async def test_script_service_changed_entity_id(
     assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test blueprint script."""
     assert await async_setup_component(
@@ -1827,6 +1838,7 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_script_queued_mode(hass: HomeAssistant) -> None:
     """Test calling a queued mode script called in parallel."""
     calls = 0
