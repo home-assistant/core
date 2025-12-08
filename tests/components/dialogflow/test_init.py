@@ -345,6 +345,7 @@ async def test_intent_request_without_slots_v2(hass: HomeAssistant, fixture) -> 
     assert text == "You are both home, you silly"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_request_calling_service_v1(
     fixture, calls: list[ServiceCall]
 ) -> None:
@@ -369,6 +370,7 @@ async def test_intent_request_calling_service_v1(
     assert call.data.get("hello") == "virgo"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_request_calling_service_v2(
     fixture, calls: list[ServiceCall]
 ) -> None:
