@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -145,6 +146,10 @@ async def test_firmware_error_twice(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -1128,6 +1133,33 @@ async def test_camera_wake_callback(
     # check that a coordinator update was scheduled.
     assert reolink_host.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(("last_check", "call_count"), [(25, 1), (23, 0)])
+async def test_firmware_update_delay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    last_check: int,
+    call_count: int,
+) -> None:
+    """Test delay of firmware update check."""
+    reolink_host.baichuan_only = True
+
+    store = MagicMock()
+    last_firmware_check = (datetime.now(UTC) - timedelta(hours=last_check)).isoformat()
+    store.async_load = AsyncMock(return_value=last_firmware_check)
+
+    with patch("homeassistant.components.reolink.get_store", return_value=store):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_host.check_new_firmware.call_count == call_count
 
 
 async def test_baichaun_only(
