@@ -15,7 +15,6 @@ from roborock.data import (
     S7Status,
     UserData,
 )
-from roborock.roborock_typing import DeviceProp
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
 from vacuum_map_parser_roborock.map_data_parser import MapData
@@ -1011,6 +1010,12 @@ HOME_DATA_RAW = {
     ],
 }
 
+ROOM_MAPPING = {
+    2362048: 16,
+    2362044: 17,
+    2362041: 18,
+}
+
 HOME_DATA: HomeData = HomeData.from_dict(HOME_DATA_RAW)
 
 CLEAN_RECORD = CleanRecord.from_dict(
@@ -1113,12 +1118,6 @@ STATUS = S7Status.from_dict(
         "unsave_map_flag": 0,
     }
 )
-PROP = DeviceProp(
-    status=STATUS,
-    clean_summary=CLEAN_SUMMARY,
-    consumable=CONSUMABLE,
-    last_clean_record=CLEAN_RECORD,
-)
 
 NETWORK_INFO = NetworkInfo(
     ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc:cc", bssid="bssid", rssi=90
@@ -1126,6 +1125,10 @@ NETWORK_INFO = NetworkInfo(
 NETWORK_INFO_2 = NetworkInfo(
     ip="123.232.12.2", ssid="wifi", mac="ac:cc:cc:cc:cd:cc", bssid="bssid", rssi=90
 )
+NETWORK_INFO_BY_DEVICE = {
+    "abc123": NETWORK_INFO,
+    "device_2": NETWORK_INFO_2,
+}
 
 MULTI_MAP_LIST = MultiMapsList.from_dict(
     {
@@ -1145,6 +1148,29 @@ MULTI_MAP_LIST = MultiMapsList.from_dict(
                 "addTime": 1697579901,
                 "length": 10,
                 "name": "Downstairs",
+                "bakMaps": [{"addTime": 1695521431}],
+            },
+        ],
+    }
+)
+MULTI_MAP_LIST_NO_MAP_NAMES = MultiMapsList.from_dict(
+    {
+        "maxMultiMap": 4,
+        "maxBakMap": 1,
+        "multiMapCount": 2,
+        "mapInfo": [
+            {
+                "mapFlag": 0,
+                "addTime": 1686235489,
+                "length": 0,
+                "name": "",
+                "bakMaps": [{"addTime": 1673304288}],
+            },
+            {
+                "mapFlag": 1,
+                "addTime": 1697579901,
+                "length": 0,
+                "name": "",
                 "bakMaps": [{"addTime": 1695521431}],
             },
         ],

@@ -45,6 +45,9 @@
       },
       "smart_standby_time": {
         "default": "mdi:timer"
+      },
+      "steam_temp": {
+        "default": "mdi:kettle-steam"
       }
     },
     "select": {

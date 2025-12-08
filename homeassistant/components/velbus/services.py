@@ -69,7 +69,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
         if not module:
             raise ServiceValidationError("Module not found")
-        await module.set_memo_text(memo_text.async_render())
+        await module.set_memo_text(memo_text)
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
@@ -135,7 +135,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.string,
             }
         ),
     )

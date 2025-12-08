@@ -62,7 +62,7 @@ async def test_init_error(
 ) -> None:
     """Test initialization errors."""
     with patch(
-        "anthropic.resources.models.AsyncModels.retrieve",
+        "anthropic.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
         assert await async_setup_component(hass, "anthropic", {})

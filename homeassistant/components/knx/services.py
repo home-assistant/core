@@ -39,6 +39,10 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+_DESCRIPTION_PLACEHOLDERS = {
+    "sensor_value_types_url": "https://www.home-assistant.io/integrations/knx/#value-types"
+}
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -48,6 +52,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_SEND,
         service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     hass.services.async_register(
@@ -63,6 +68,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EVENT_REGISTER,
         service_event_register_modify,
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(
@@ -71,6 +77,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EXPOSURE_REGISTER,
         service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(

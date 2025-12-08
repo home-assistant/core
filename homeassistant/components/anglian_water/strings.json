@@ -1,0 +1,55 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "smart_meter_unavailable": "This account does not have any smart meters associated with it. If this is unexpected, enter your Billing Account Number found at the top of your latest bill.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "account_number": "Billing Account Number",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "account_number": "Your account number found on your latest bill.",
+          "password": "Your password",
+          "username": "Username or email used to log in to the Anglian Water website."
+        },
+        "description": "Enter your Anglian Water account credentials to connect to Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_reading": {
+        "name": "Latest reading"
+      },
+      "yesterday_consumption": {
+        "name": "Yesterday's usage"
+      },
+      "yesterday_sewerage_cost": {
+        "name": "Yesterday's sewerage cost"
+      },
+      "yesterday_water_cost": {
+        "name": "Yesterday's water cost"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_expired": {
+      "message": "Authentication token expired"
+    },
+    "service_unavailable": {
+      "message": "Anglian Water services are currently unavailable for maintenance."
+    },
+    "smart_meter_unavailable": {
+      "message": "This account no longer has a smart meter associated with it."
+    }
+  }
+}
