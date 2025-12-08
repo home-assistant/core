@@ -385,9 +385,6 @@ async def test_import_flow_unknown_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
-
 
 async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
     """Test import flow when entry already exists."""
