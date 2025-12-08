@@ -182,3 +182,11 @@ class PlexMediaSearchResult:
         if isinstance(shuffle, str):
             shuffle = result_as_boolean(shuffle)
         return shuffle
+
+    @property
+    def continuous(self) -> bool:
+        """Return value of continuous parameter."""
+        continuous = self._params.get("continuous", False)
+        if isinstance(continuous, str):
+            continuous = result_as_boolean(continuous)
+        return continuous
