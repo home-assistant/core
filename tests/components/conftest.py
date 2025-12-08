@@ -958,6 +958,20 @@ async def _check_service_registration_translation(
         f"{service_name}.",
         description_placeholders,
     )
+    # Service `name` and `description` should be compulsory
+    # Notify is exempted as it is a special case
+    if domain != "notify":
+        for subkey in ("name", "description"):
+            await _validate_translation(
+                hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                "services",
+                domain,
+                f"{service_name}.{subkey}",
+                description_placeholders,
+                translation_required=True,
+            )
 
 
 @pytest.fixture(autouse=True)
