@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
-import re
 from typing import Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
@@ -59,9 +58,16 @@ _IMPERIAL: Final = (
 
 
 # Hourly and 24h rain count sensors are rolling window sensors
-_ROLLING_WINDOW_RAIN_COUNT_SENSOR = re.compile(
-    "(?:hourly|last24h)rain(?:in|mm)|(?:last24)?hrain_piezo(?:mm)?"
-)
+_ROLLING_WINDOW_RAIN_COUNT_SENSORS = {
+    "hourlyrainin",
+    "hourlyrainmm",
+    "hrain_piezo",
+    "hrain_piezomm",
+    "last24hrainin",
+    "last24hrainmm",
+    "last24hrain_piezo",
+    "last24hrain_piezomm",
+}
 
 
 ECOWITT_SENSORS_MAPPING: Final = {
@@ -294,12 +300,8 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Rolling window sensors must use measurement state classes
-        if _ROLLING_WINDOW_RAIN_COUNT_SENSOR.fullmatch(sensor.key):
-            description = dataclasses.replace(
-                description,
-                state_class=SensorStateClass.MEASUREMENT,
-            )
+        if sensor.key in _ROLLING_WINDOW_RAIN_COUNT_SENSORS:
+            description = dataclasses.replace(description, state_class=None)
 
         async_add_entities([EcowittSensorEntity(sensor, description)])
 
