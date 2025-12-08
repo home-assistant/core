@@ -65,11 +65,7 @@ async def _handle_webhook(
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
         # Always attempt to read the body; request.text() returns "" if empty
         text = await request.text()
-        try:
-            base_result["json"] = json_loads(text) if text else {}
-        except ValueError:
-            _LOGGER.debug("Webhook payload is not valid JSON")
-            base_result["json"] = {}
+        base_result["json"] = json_loads(text) if text else {}
     else:
         base_result["data"] = await request.post()
 
