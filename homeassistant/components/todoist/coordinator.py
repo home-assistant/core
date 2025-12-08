@@ -46,7 +46,8 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
 
             # Collect completed tasks (optional date range)
             since = datetime(2025, 11, 1, tzinfo=UTC)
-            until = datetime(2025, 11, 14, 23, 59, 59, tzinfo=UTC)
+            # until = datetime(2025, 11, 14, 23, 59, 59, tzinfo=UTC)
+            until = datetime.now(UTC)
             completed_tasks: list[Task] = []
             async for task_page in await self.api.get_completed_tasks_by_due_date(
                 since=since, until=until
