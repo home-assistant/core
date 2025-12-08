@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_full_flow(
@@ -70,7 +70,9 @@ async def test_single_account_flow(
 ) -> None:
     """Test a full and successful config flow with a single account."""
     mock_anglian_water_client.api.get_associated_accounts.return_value = (
-        load_json_object_fixture("single_associated_accounts.json", DOMAIN)
+        await async_load_json_object_fixture(
+            hass, "single_associated_accounts.json", DOMAIN
+        )
     )
 
     result = await hass.config_entries.flow.async_init(
