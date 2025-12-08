@@ -30,6 +30,7 @@ from tests.common import (
 
 
 @pytest.mark.usefixtures("create_registrations")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_unload_unloads(hass: HomeAssistant, webhook_client) -> None:
     """Test we clean up when we unload."""
     # Second config entry is the one without encryption
