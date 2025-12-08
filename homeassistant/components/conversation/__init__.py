@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 from hassil.recognize import RecognizeResult
 import voluptuous as vol
@@ -21,6 +21,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -52,6 +53,8 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
+    METADATA_CUSTOM_FILE,
+    METADATA_CUSTOM_SENTENCE,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
@@ -233,7 +236,9 @@ async def async_prepare_agent(
 
 
 async def async_handle_sentence_triggers(
-    hass: HomeAssistant, user_input: ConversationInput
+    hass: HomeAssistant,
+    user_input: ConversationInput,
+    chat_log: ChatLog,
 ) -> str | None:
     """Try to match input against sentence triggers and return response text.
 
@@ -242,12 +247,13 @@ async def async_handle_sentence_triggers(
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
 
-    return await agent.async_handle_sentence_triggers(user_input)
+    return await agent.async_handle_sentence_triggers(user_input, chat_log)
 
 
 async def async_handle_intents(
     hass: HomeAssistant,
     user_input: ConversationInput,
+    chat_log: ChatLog,
     *,
     intent_filter: Callable[[RecognizeResult], bool] | None = None,
 ) -> intent.IntentResponse | None:
@@ -258,7 +264,9 @@ async def async_handle_intents(
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
 
-    return await agent.async_handle_intents(user_input, intent_filter=intent_filter)
+    return await agent.async_handle_intents(
+        user_input, chat_log, intent_filter=intent_filter
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -266,10 +274,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
 
-    agent_config = config.get(DOMAIN, {})
-    await async_setup_default_agent(
-        hass, entity_component, config_intents=agent_config.get("intents", {})
-    )
+    manager = get_agent_manager(hass)
+
+    hass_config_path = hass.config.path()
+    config_intents = _get_config_intents(config, hass_config_path)
+    manager.update_config_intents(config_intents)
+
+    await async_setup_default_agent(hass, entity_component)
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:
         """Parse text into commands."""
@@ -294,9 +305,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_reload(service: ServiceCall) -> None:
         """Reload intents."""
-        agent = get_agent_manager(hass).default_agent
+        language = service.data.get(ATTR_LANGUAGE)
+        if language is None:
+            conf = await async_integration_yaml_config(hass, DOMAIN)
+            if conf is not None:
+                config_intents = _get_config_intents(conf, hass_config_path)
+                manager.update_config_intents(config_intents)
+
+        agent = manager.default_agent
         if agent is not None:
-            await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
+            await agent.async_reload(language=language)
 
     hass.services.async_register(
         DOMAIN,
@@ -311,6 +329,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_conversation_http(hass)
 
     return True
+
+
+def _get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, Any]:
+    """Return config intents."""
+    intents = config.get(DOMAIN, {}).get("intents", {})
+    return {
+        "intents": {
+            intent_name: {
+                "data": [
+                    {
+                        "sentences": sentences,
+                        "metadata": {
+                            METADATA_CUSTOM_SENTENCE: True,
+                            METADATA_CUSTOM_FILE: hass_config_path,
+                        },
+                    }
+                ]
+            }
+            for intent_name, sentences in intents.items()
+        }
+    }
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
