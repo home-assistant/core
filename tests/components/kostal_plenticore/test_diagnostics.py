@@ -1,9 +1,8 @@
 """Test Kostal Plenticore diagnostics."""
 
-from pykoplenti import SettingsData
+from unittest.mock import Mock
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 
 from tests.common import ANY, MockConfigEntry
@@ -14,28 +13,14 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_plenticore: Plenticore,
+    mock_plenticore_client: Mock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
 
-    # set some test process and settings data for the diagnostics output
-    mock_plenticore.client.get_process_data.return_value = {
+    # set some test process data for the diagnostics output
+    mock_plenticore_client.get_process_data.return_value = {
         "devices:local": ["HomeGrid_P", "HomePv_P"]
-    }
-
-    mock_plenticore.client.get_settings.return_value = {
-        "devices:local": [
-            SettingsData(
-                min="5",
-                max="100",
-                default=None,
-                access="readwrite",
-                unit="%",
-                id="Battery:MinSoc",
-                type="byte",
-            )
-        ]
     }
 
     assert await get_diagnostics_for_config_entry(
@@ -65,8 +50,19 @@ async def test_entry_diagnostics(
             "available_process_data": {"devices:local": ["HomeGrid_P", "HomePv_P"]},
             "available_settings_data": {
                 "devices:local": [
-                    "min='5' max='100' default=None access='readwrite' unit='%' id='Battery:MinSoc' type='byte'"
-                ]
+                    "min='5' max='100' default=None access='readwrite' unit='%' id='Battery:MinSoc' type='byte'",
+                    "min='50' max='38000' default=None access='readwrite' unit='W' id='Battery:MinHomeComsumption' type='byte'",
+                ],
+                "scb:network": [
+                    "min='1' max='63' default=None access='readwrite' unit=None id='Hostname' type='string'"
+                ],
+            },
+        },
+        "configuration": {
+            "devices:local": {
+                "Properties:StringCnt": "2",
+                "Properties:String0Features": "1",
+                "Properties:String1Features": "1",
             },
         },
         "device": {
@@ -77,4 +73,29 @@ async def test_entry_diagnostics(
             "name": "scb",
             "sw_version": "IOC: 01.45 MC: 01.46",
         },
+    }
+
+
+async def test_entry_diagnostics_invalid_string_count(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_plenticore_client: Mock,
+    mock_get_setting_values: Mock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test config entry diagnostics if string count is invalid."""
+
+    # set some test process data for the diagnostics output
+    mock_plenticore_client.get_process_data.return_value = {
+        "devices:local": ["HomeGrid_P", "HomePv_P"]
+    }
+
+    mock_get_setting_values["devices:local"]["Properties:StringCnt"] = "invalid"
+
+    diagnostic_data = await get_diagnostics_for_config_entry(
+        hass, hass_client, init_integration
+    )
+
+    assert diagnostic_data["configuration"] == {
+        "devices:local": {"Properties:StringCnt": "invalid"}
     }

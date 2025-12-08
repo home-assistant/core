@@ -39,13 +39,11 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     SystemBridgeBinarySensorEntityDescription(
         key="camera_in_use",
         translation_key="camera_in_use",
-        icon="mdi:webcam",
         value_fn=camera_in_use,
     ),
     SystemBridgeBinarySensorEntityDescription(
         key="pending_reboot",
         translation_key="pending_reboot",
-        icon="mdi:restart",
         value_fn=lambda data: data.system.pending_reboot,
     ),
     SystemBridgeBinarySensorEntityDescription(

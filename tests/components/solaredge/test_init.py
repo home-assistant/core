@@ -1,6 +1,6 @@
 """Tests for the SolarEdge integration."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 
@@ -15,8 +15,15 @@ from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 from tests.common import MockConfigEntry
 
 
+@patch(
+    "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+    return_value=True,
+)
 async def test_setup_unload_api_key(
-    recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
+    mock_unload_platforms: AsyncMock,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_api: Mock,
 ) -> None:
     """Test successful setup and unload of a config entry with API key."""
     entry = MockConfigEntry(
@@ -33,11 +40,21 @@ async def test_setup_unload_api_key(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    # Unloading should be attempted because sensors were set up.
+    mock_unload_platforms.assert_awaited_once()
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@patch(
+    "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+    return_value=True,
+)
 async def test_setup_unload_web_login(
-    recorder_mock: Recorder, hass: HomeAssistant, solaredge_web_api: AsyncMock
+    mock_unload_platforms: AsyncMock,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_web_api: AsyncMock,
 ) -> None:
     """Test successful setup and unload of a config entry with web login."""
     entry = MockConfigEntry(
@@ -59,10 +76,18 @@ async def test_setup_unload_web_login(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    # Unloading should NOT be attempted because sensors were not set up.
+    mock_unload_platforms.assert_not_called()
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@patch(
+    "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+    return_value=True,
+)
 async def test_setup_unload_both(
+    mock_unload_platforms: AsyncMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     solaredge_api: Mock,
@@ -90,6 +115,8 @@ async def test_setup_unload_both(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    mock_unload_platforms.assert_awaited_once()
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 

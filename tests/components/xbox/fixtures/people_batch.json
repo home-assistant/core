@@ -7,7 +7,7 @@
       "isFollowedByCaller": false,
       "isIdentityShared": false,
       "addedDateTimeUtc": null,
-      "displayName": null,
+      "displayName": "GSR Ae",
       "realName": "Test Test",
       "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png",
       "showUserAsAvatar": "0",
@@ -17,9 +17,12 @@
       "modernGamertagSuffix": "",
       "uniqueModernGamertag": "GSR Ae",
       "xboxOneRep": "GoodPlayer",
-      "presenceState": "Offline",
+      "presenceState": "Online",
       "presenceText": "Last seen 49m ago: Xbox App",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": false,
       "isQuarantined": false,
@@ -30,8 +33,21 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "joinableActivities": [],
+        "partyDetails": [
+          {
+            "sessionRef": {
+              "scid": "7ffcfe63-a320-4086-85bb-a1734bef7a30",
+              "templateName": "chat",
+              "name": "d3804c40-ac93-4c7d-9414-6cb419931105"
+            },
+            "status": "active",
+            "visibility": "open",
+            "joinRestriction": "followed",
+            "accepted": 2
+          }
+        ],
+        "inParty": 2
       },
       "recentPlayer": null,
       "follower": null,
@@ -43,13 +59,13 @@
       "presenceDetails": [
         {
           "IsBroadcasting": false,
-          "Device": "iOS",
-          "PresenceText": "Last seen 49m ago: Xbox App",
-          "State": "LastSeen",
-          "TitleId": "328178078",
+          "Device": "Xbox360",
+          "PresenceText": "Blue Dragon",
+          "State": "Active",
+          "TitleId": "1297287135",
           "TitleType": null,
           "IsPrimary": true,
-          "IsGame": false,
+          "IsGame": true,
           "RichPresenceText": null
         }
       ],
@@ -58,7 +74,7 @@
       "presenceTitleIds": null,
       "detail": {
         "accountTier": "Gold",
-        "bio": null,
+        "bio": "My mind is a swirling miasma of scintillating thoughts and turgid ideas.",
         "isVerified": false,
         "location": null,
         "tenure": null,
@@ -67,7 +83,17 @@
         "mute": false,
         "followerCount": 105,
         "followingCount": 121,
-        "hasGamePass": true
+        "hasGamePass": true,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": null,
@@ -99,6 +125,9 @@
       "presenceState": "Online",
       "presenceText": "Online",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": null,
       "isQuarantined": false,
@@ -109,8 +138,8 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0
       },
       "recentPlayer": null,
       "follower": null,
@@ -146,7 +175,17 @@
         "mute": false,
         "followerCount": 78,
         "followingCount": 83,
-        "hasGamePass": false
+        "hasGamePass": false,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": null,
@@ -178,6 +217,9 @@
       "presenceState": "Online",
       "presenceText": "Amazon Instant Video",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": null,
       "isQuarantined": false,
@@ -188,8 +230,8 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0
       },
       "recentPlayer": null,
       "follower": null,
@@ -236,7 +278,17 @@
         "mute": false,
         "followerCount": 27659,
         "followingCount": 0,
-        "hasGamePass": false
+        "hasGamePass": false,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": null,

@@ -160,9 +160,13 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.LIGHT,
     Platform.SWITCH,
+    Platform.TIME,
 }
 
 # Map KNX controller modes to HA modes. This list might not be complete.
@@ -193,3 +197,23 @@ class CoverConf:
     INVERT_UPDOWN: Final = "invert_updown"
     INVERT_POSITION: Final = "invert_position"
     INVERT_ANGLE: Final = "invert_angle"
+
+
+class ClimateConf:
+    """Common config keys for climate."""
+
+    MIN_TEMP: Final = "min_temp"
+    MAX_TEMP: Final = "max_temp"
+    TEMPERATURE_STEP: Final = "temperature_step"
+    SETPOINT_SHIFT_MAX: Final = "setpoint_shift_max"
+    SETPOINT_SHIFT_MIN: Final = "setpoint_shift_min"
+
+    ON_OFF_INVERT: Final = "on_off_invert"
+
+    OPERATION_MODES: Final = "operation_modes"
+    CONTROLLER_MODES: Final = "controller_modes"
+    DEFAULT_CONTROLLER_MODE: Final = "default_controller_mode"
+
+    FAN_MAX_STEP: Final = "fan_max_step"
+    FAN_SPEED_MODE: Final = "fan_speed_mode"
+    FAN_ZERO_MODE: Final = "fan_zero_mode"
