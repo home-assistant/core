@@ -296,6 +296,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Migrate default lovelace panel to dashboard entry (storage mode only)
     if mode == MODE_STORAGE:
         await _async_migrate_default_config(hass, dashboards_collection)
+    # Register default lovelace panel if no panel exists yet
+    # (new installation without YAML mode and no migrated dashboard)
+
+    if (
+        frontend.DATA_PANELS not in hass.data
+        or DOMAIN not in hass.data[frontend.DATA_PANELS]
+    ):
+        frontend.async_register_built_in_panel(
+            hass,
+            DOMAIN,
+            config={"mode": MODE_STORAGE},
+        )
 
     dashboard.DashboardsCollectionWebSocket(
         dashboards_collection,
