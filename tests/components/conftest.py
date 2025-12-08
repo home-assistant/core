@@ -945,7 +945,14 @@ async def _check_exception_translation(
     )
 
 
-_DYNAMIC_SERVICE_DOMAINS = {"esphome", "notify", "script", "shell_command", "tts"}
+_DYNAMIC_SERVICE_DOMAINS = {
+    "esphome",
+    "notify",
+    "rest_command",
+    "script",
+    "shell_command",
+    "tts",
+}
 """These domain create services dynamically.
 
 name/description translations are not required.
