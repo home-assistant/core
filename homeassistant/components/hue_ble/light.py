@@ -113,7 +113,7 @@ class HueBLELight(LightEntity):
 
     async def async_update(self) -> None:
         """Fetch latest state from light and make available via properties."""
-        await self._api.poll_state(run_callbacks=True)
+        await self._api.poll_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set properties then turn the light on."""
