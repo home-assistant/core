@@ -54,7 +54,6 @@ def mock_anglian_water_authenticator() -> Generator[MagicMock]:
         ),
     ):
         mock_instance = mock_auth_class.return_value
-        mock_instance.account_number = ACCOUNT_NUMBER
         mock_instance.access_token = ACCESS_TOKEN
         mock_instance.refresh_token = ACCESS_TOKEN
         mock_instance.send_login_request.return_value = None
