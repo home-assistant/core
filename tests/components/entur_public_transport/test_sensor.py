@@ -35,7 +35,9 @@ async def test_sensor_state(
     state = hass.states.get("sensor.entur_bergen_stasjon")
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
-    assert state.attributes.get("attribution") == "Data provided by entur.org under NLOD"
+    assert (
+        state.attributes.get("attribution") == "Data provided by entur.org under NLOD"
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

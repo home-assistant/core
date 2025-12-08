@@ -53,9 +53,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
         ),
         vol.Optional(CONF_OMIT_NON_BOARDING, default=True): BooleanSelector(),
-        vol.Optional(
-            CONF_NUMBER_OF_DEPARTURES, default=2
-        ): NumberSelector(
+        vol.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): NumberSelector(
             NumberSelectorConfig(min=2, max=10, mode=NumberSelectorMode.SLIDER)
         ),
     }
