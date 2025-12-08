@@ -18,7 +18,7 @@
         "title": "Connection error"
       },
       "reauth_confirm": {
-        "description": "Please select continue to reauthenticate to your Actron Air account.",
+        "description": "Your Actron Air authentication has expired. Select continue to reauthenticate with your Actron Air account. You will be prompted to log in again to restore the connection.",
         "title": "Authentication expired"
       },
       "timeout": {
@@ -29,6 +29,11 @@
       "user": {
         "title": "Actron Air Authentication"
       }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed, please reauthenticate"
     }
   }
 }
