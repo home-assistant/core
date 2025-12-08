@@ -57,7 +57,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.octoprint_current_state")
     assert state is not None
-    assert state.state == "Operational"
+    assert state.state == "operational"
     assert state.name == "OctoPrint Current State"
     entry = entity_registry.async_get("sensor.octoprint_current_state")
     assert entry.unique_id == "Current State-uuid"
