@@ -28,6 +28,7 @@ from tests.common import async_mock_service
     ],
 )
 @pytest.mark.usefixtures("mock_hass_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_hass_start(
     hass: HomeAssistant, hass_config: ConfigType
 ) -> None:
@@ -53,6 +54,7 @@ async def test_if_fires_on_hass_start(
     assert calls[0].data["id"] == 0
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_hass_shutdown(hass: HomeAssistant) -> None:
     """Test the firing when Home Assistant shuts down."""
     calls = async_mock_service(hass, "test", "automation")

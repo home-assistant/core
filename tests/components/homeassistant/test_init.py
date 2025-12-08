@@ -577,6 +577,9 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
         assert mock_load_custom_templates.called
 
 
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains", [["test1", "test2", "test3"]]
+)
 async def test_reload_all(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
