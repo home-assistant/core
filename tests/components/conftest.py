@@ -945,6 +945,13 @@ async def _check_exception_translation(
     )
 
 
+_DYNAMIC_SERVICE_DOMAINS = {"esphome", "notify", "script", "shell_command", "tts"}
+"""These domain create services dynamically.
+
+name/description translations are not required.
+"""
+
+
 async def _check_service_registration_translation(
     hass: HomeAssistant,
     domain: str,
@@ -965,8 +972,8 @@ async def _check_service_registration_translation(
         description_placeholders,
     )
     # Service `name` and `description` should be compulsory
-    # `notify`, `script`, `tts` are special exempted cases
-    if domain not in ("esphome", "notify", "script", "tts"):
+    # unless for specific domains where the services are dynamically created
+    if domain not in _DYNAMIC_SERVICE_DOMAINS:
         for subkey in ("name", "description"):
             await _validate_translation(
                 hass,
