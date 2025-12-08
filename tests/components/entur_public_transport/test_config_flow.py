@@ -41,6 +41,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
                 CONF_STOP_IDS: ["NSR:StopPlace:548"],
                 CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
+                CONF_WHITELIST_LINES: [],
                 CONF_OMIT_NON_BOARDING: True,
                 CONF_NUMBER_OF_DEPARTURES: 2,
             },
@@ -53,6 +54,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
         CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: False,
+        CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
         CONF_NUMBER_OF_DEPARTURES: 2,
     }

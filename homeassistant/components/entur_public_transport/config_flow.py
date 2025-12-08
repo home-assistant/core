@@ -49,7 +49,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_EXPAND_PLATFORMS, default=True): BooleanSelector(),
         vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
-        vol.Optional(CONF_WHITELIST_LINES): TextSelector(
+        vol.Optional(CONF_WHITELIST_LINES, default=[]): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
         ),
         vol.Optional(CONF_OMIT_NON_BOARDING, default=True): BooleanSelector(),
