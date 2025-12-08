@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.script import CONF_MODE
 from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     intent,
@@ -97,7 +98,14 @@ async def async_load_intents(
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
-            actions = await async_validate_actions_config(hass, conf[CONF_ACTION])
+            try:
+                actions = await async_validate_actions_config(hass, conf[CONF_ACTION])
+            except (vol.Invalid, HomeAssistantError) as exc:
+                _LOGGER.error(
+                    "Failed to validate actions for intent %s: %s", intent_type, exc
+                )
+                continue  # Skip this intent
+
             script_mode: str = conf.get(CONF_MODE, script.DEFAULT_SCRIPT_MODE)
             conf[CONF_ACTION] = script.Script(
                 hass,
