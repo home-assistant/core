@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_auto_configured": "This integration automatically discovers and configures all supported devices on your network. No manual setup required.",
+      "already_configured": "Device is already configured",
+      "firmware_version_incompatible": "Device firmware version too old. Please update to at least version 0.9.5.",
+      "firmware_version_missing": "Device missing firmware version information",
+      "not_supported": "Unsupported device type",
+      "unsupported_model": "Unsupported device model",
+      "no_connection": "Could not establish connection `{host}`"
+    },
+    "flow_title": "{name}-({model})",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to add the device `{name}` to Home Assistant?",
+        "title": "Discovered Nexa System 2 device"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "433mhz": {
+        "name": "433Mhz"
+      }
+    }
+  }
+}
