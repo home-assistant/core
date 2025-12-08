@@ -971,6 +971,7 @@ async def test_unused_services(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("setup_state_vacuum")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_state_services(
     hass: HomeAssistant, action: str, calls: list[ServiceCall]
 ) -> None:
@@ -1012,6 +1013,7 @@ async def test_state_services(
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid fan speed."""
 
@@ -1063,6 +1065,7 @@ async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_invalid_fan_speed(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1216,6 +1219,7 @@ async def test_empty_action_config(
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_assumed_optimistic(
     hass: HomeAssistant,
     service: str,
@@ -1266,6 +1270,7 @@ async def test_assumed_optimistic(
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_optimistic_option(
     hass: HomeAssistant,
     service: str,
@@ -1330,6 +1335,7 @@ async def test_optimistic_option(
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_not_optimistic(
     hass: HomeAssistant,
     service: str,

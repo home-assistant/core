@@ -562,6 +562,7 @@ async def test_template_state_boolean(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("setup_position_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_template_position(
     hass: HomeAssistant,
     test_state: str,
@@ -628,6 +629,7 @@ async def test_template_position(
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_template_not_optimistic(
     hass: HomeAssistant,
     calls: list[ServiceCall],
@@ -822,6 +824,7 @@ async def test_template_open_or_position(
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_position_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the open_cover command."""
 
@@ -896,6 +899,7 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the close-cover and stop_cover commands."""
     # This forces a trigger for trigger based entities
@@ -957,6 +961,7 @@ async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) 
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the set_position command."""
     state = hass.states.get(TEST_ENTITY_ID)
@@ -1069,6 +1074,7 @@ async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> No
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_tilt_position(
     hass: HomeAssistant,
     service,
@@ -1120,6 +1126,7 @@ async def test_set_tilt_position(
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_position_optimistic(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1166,6 +1173,7 @@ async def test_set_position_optimistic(
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_non_optimistic_template_with_optimistic_state(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1230,6 +1238,7 @@ async def test_non_optimistic_template_with_optimistic_state(
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_tilt_position_optimistic(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:

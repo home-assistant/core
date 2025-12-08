@@ -151,6 +151,7 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("button") == []
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_all_optional_config(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

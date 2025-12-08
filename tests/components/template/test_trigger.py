@@ -49,6 +49,7 @@ def setup_comp(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_bool(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -273,6 +274,7 @@ async def test_if_fires_on_change_bool(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_general(
     hass: HomeAssistant, call_setup, calls: list[ServiceCall]
 ) -> None:
@@ -311,6 +313,7 @@ async def test_general(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_not_fires_because_fail(
     hass: HomeAssistant, call_setup, calls: list[ServiceCall]
 ) -> None:
@@ -350,6 +353,7 @@ async def test_if_not_fires_because_fail(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_template_advanced(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -383,6 +387,7 @@ async def test_if_fires_on_change_with_template_advanced(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for firing if action."""
     # Condition is not true yet
@@ -414,6 +419,7 @@ async def test_if_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_bad_template(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -452,6 +458,7 @@ async def test_if_fires_on_change_with_bad_template(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_wait_template_with_trigger(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -470,6 +477,7 @@ async def test_wait_template_with_trigger(
     assert calls[0].data["some"] == "template - test.entity - hello - world - None"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -525,6 +533,7 @@ async def test_if_fires_on_change_with_for(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_advanced(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -570,6 +579,7 @@ async def test_if_fires_on_change_with_for_advanced(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_0_advanced(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -612,6 +622,7 @@ async def test_if_fires_on_change_with_for_0_advanced(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_2(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -644,6 +655,7 @@ async def test_if_fires_on_change_with_for_2(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_not_fires_on_change_with_for(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -679,6 +691,7 @@ async def test_if_not_fires_on_change_with_for(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_not_fires_when_turned_off_with_for(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -718,6 +731,7 @@ async def test_if_not_fires_when_turned_off_with_for(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_template_1(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -747,6 +761,7 @@ async def test_if_fires_on_change_with_for_template_1(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_template_2(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -776,6 +791,7 @@ async def test_if_fires_on_change_with_for_template_2(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_template_3(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -809,6 +825,7 @@ async def test_if_fires_on_change_with_for_template_3(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_change_with_for_template_4(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -838,6 +855,7 @@ async def test_if_fires_on_change_with_for_template_4(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_invalid_for_template_1(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -848,6 +866,7 @@ async def test_invalid_for_template_1(
         assert mock_logger.error.called
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_if_fires_on_time_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:

@@ -570,6 +570,7 @@ async def test_icon_template(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_fan")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_percentage_template(
     hass: HomeAssistant, percent: str, expected: int, calls: list[ServiceCall]
 ) -> None:
@@ -976,6 +977,7 @@ async def test_invalid_availability_template_keeps_component_available(
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_off(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test turn on and turn off."""
 
@@ -1032,6 +1034,7 @@ async def test_on_off(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_with_extra_attributes(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1153,6 +1156,7 @@ async def test_set_invalid_direction_from_initial_stage(hass: HomeAssistant) -> 
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set oscillating."""
     expected_calls = 0
@@ -1196,6 +1200,7 @@ async def test_set_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_direction(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid direction."""
     expected_calls = 0
@@ -1239,6 +1244,7 @@ async def test_set_direction(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_invalid_direction(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1280,6 +1286,7 @@ async def test_set_invalid_direction(
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_preset_modes(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test preset_modes."""
     expected_calls = 0
@@ -1323,6 +1330,7 @@ async def test_preset_modes(hass: HomeAssistant, calls: list[ServiceCall]) -> No
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_percentage(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid speed percentage."""
     expected_calls = 0
@@ -1373,6 +1381,7 @@ async def test_set_percentage(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_increase_decrease_speed(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1411,6 +1420,7 @@ async def test_increase_decrease_speed(
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_named_fan")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_optimistic_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test a fan without a value_template."""
 
@@ -1520,6 +1530,7 @@ async def test_optimistic_state(hass: HomeAssistant, calls: list[ServiceCall]) -
     ],
 )
 @pytest.mark.usefixtures("setup_optimistic_fan_attribute")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_optimistic_attributes(
     hass: HomeAssistant,
     attribute: str,
@@ -1565,6 +1576,7 @@ async def test_optimistic_attributes(
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_increase_decrease_speed_default_speed_count(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1608,6 +1620,7 @@ async def test_increase_decrease_speed_default_speed_count(
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_invalid_osc_from_initial_state(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1645,6 +1658,7 @@ async def test_set_invalid_osc_from_initial_state(
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set invalid oscillating when fan has valid osc."""
     await common.async_turn_on(hass, TEST_ENTITY_ID)

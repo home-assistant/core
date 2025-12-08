@@ -239,6 +239,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
     _verify(hass, 4, 1, 3, 5, "beer")
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_templates_with_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
 ) -> None:

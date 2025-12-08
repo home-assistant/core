@@ -926,6 +926,7 @@ async def test_missing_key(hass: HomeAssistant, count, setup_light) -> None:
     ],
 )
 @pytest.mark.parametrize("state_template", ["{{ states.light.test_state.state }}"])
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_action(
     hass: HomeAssistant, setup_state_light, calls: list[ServiceCall]
 ) -> None:
@@ -990,6 +991,7 @@ async def test_on_action(
         ),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_action_with_transition(
     hass: HomeAssistant, setup_light, calls: list[ServiceCall]
 ) -> None:
@@ -1050,6 +1052,7 @@ async def test_on_action_with_transition(
         ),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_action_optimistic(
     hass: HomeAssistant,
     initial_state: str,
@@ -1110,6 +1113,7 @@ async def test_on_action_optimistic(
     ],
 )
 @pytest.mark.parametrize("state_template", ["{{ states.light.test_state.state }}"])
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_off_action(
     hass: HomeAssistant, setup_state_light, calls: list[ServiceCall]
 ) -> None:
@@ -1173,6 +1177,7 @@ async def test_off_action(
         ),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_off_action_with_transition(
     hass: HomeAssistant, setup_light, calls: list[ServiceCall]
 ) -> None:
@@ -1232,6 +1237,7 @@ async def test_off_action_with_transition(
         ),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_off_action_optimistic(
     hass: HomeAssistant, initial_state, setup_light, calls: list[ServiceCall]
 ) -> None:
@@ -1267,6 +1273,7 @@ async def test_off_action_optimistic(
     ],
 )
 @pytest.mark.parametrize("state_template", ["{{1 == 1}}"])
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_level_action_no_template(
     hass: HomeAssistant,
     setup_state_light,
@@ -1398,6 +1405,7 @@ async def test_temperature_template(
         ConfigurationStyle.TRIGGER,
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_temperature_action_no_template(
     hass: HomeAssistant,
     setup_single_action_light,
@@ -1542,6 +1550,7 @@ async def test_entity_picture_template(
         ConfigurationStyle.LEGACY,
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_legacy_color_action_no_template(
     hass: HomeAssistant,
     setup_single_action_light,
@@ -1586,6 +1595,7 @@ async def test_legacy_color_action_no_template(
         ConfigurationStyle.TRIGGER,
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_hs_color_action_no_template(
     hass: HomeAssistant,
     setup_single_action_light,
@@ -1628,6 +1638,7 @@ async def test_hs_color_action_no_template(
         ConfigurationStyle.TRIGGER,
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_rgb_color_action_no_template(
     hass: HomeAssistant,
     setup_single_action_light,
@@ -1671,6 +1682,7 @@ async def test_rgb_color_action_no_template(
         ConfigurationStyle.TRIGGER,
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_rgbw_color_action_no_template(
     hass: HomeAssistant,
     setup_single_action_light,
@@ -1718,6 +1730,7 @@ async def test_rgbw_color_action_no_template(
         ConfigurationStyle.TRIGGER,
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_rgbww_color_action_no_template(
     hass: HomeAssistant,
     setup_single_action_light,
@@ -2021,6 +2034,7 @@ async def test_rgbww_template(
         ),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_all_colors_mode_no_template(
     hass: HomeAssistant, setup_light, calls: list[ServiceCall]
 ) -> None:
@@ -2226,6 +2240,7 @@ async def test_all_colors_mode_no_template(
         ("{{ ['Disco', 'Police'] }}", "{{ 'None' }}", "RGB", None),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_effect_action(
     hass: HomeAssistant,
     effect: str,
