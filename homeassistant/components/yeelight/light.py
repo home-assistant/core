@@ -384,7 +384,8 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SCHEMA_START_FLOW,
         _async_start_flow,
         description_placeholders={
-            "flow_objects_urls": "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects"
+            "examples_url": "https://yeelight.readthedocs.io/en/stable/flow.html",
+            "flow_objects_urls": "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects",
         },
     )
     platform.async_register_entity_service(
