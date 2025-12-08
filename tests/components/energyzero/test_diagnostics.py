@@ -45,7 +45,7 @@ async def test_diagnostics_no_gas_today(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics, no gas sensors available."""
-    mock_energyzero.gas_prices.side_effect = EnergyZeroNoDataError
+    mock_energyzero.get_gas_prices_legacy.side_effect = EnergyZeroNoDataError
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
