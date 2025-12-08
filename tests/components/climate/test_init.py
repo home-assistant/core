@@ -49,6 +49,9 @@ from tests.common import (
 )
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.climate.services.test_set_temperature."]
+)
 async def test_set_temp_schema_no_req(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -66,6 +69,9 @@ async def test_set_temp_schema_no_req(
     assert len(calls) == 0
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.climate.services.test_set_temperature."]
+)
 async def test_set_temp_schema(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
