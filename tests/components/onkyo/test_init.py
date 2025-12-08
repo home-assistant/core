@@ -17,6 +17,11 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_receiver")
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_load_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -39,6 +44,11 @@ async def test_load_unload_entry(
         [],
     ],
 )
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_initialization_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -51,6 +61,11 @@ async def test_initialization_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_connection_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -65,6 +80,11 @@ async def test_connection_failure(
 
 
 @pytest.mark.usefixtures("mock_receiver")
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_reconnect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
