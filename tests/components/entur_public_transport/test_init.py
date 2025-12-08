@@ -13,7 +13,6 @@ from homeassistant.components.entur_public_transport.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -31,16 +30,10 @@ async def test_setup_entry(
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test unloading of config entry."""
     # Verify the entry is loaded and entities exist
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    entities_before = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entities_before) > 0
 
     # Verify entity has valid state before unload
     state = hass.states.get("sensor.entur_bergen_stasjon")
@@ -53,11 +46,6 @@ async def test_unload_entry(
 
     # Verify the entry is unloaded
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-    # Verify entity state is unavailable after unload
-    state = hass.states.get("sensor.entur_bergen_stasjon")
-    assert state is not None
-    assert state.state == "unavailable"
 
 
 @pytest.mark.usefixtures("mock_entur_client")

@@ -152,7 +152,7 @@ async def async_setup_entry(
             given_name = f"{name} {place}"
 
         entities.append(
-            EnturPublicTransportSensor(entry, proxy, given_name, place, show_on_map)
+            EnturPublicTransportSensor(proxy, given_name, place, show_on_map)
         )
 
     async_add_entities(entities, True)
@@ -164,7 +164,7 @@ class EnturProxy:
     Ensure throttle to not hit rate limiting on the API.
     """
 
-    def __init__(self, api: EnturPublicTransportData) -> None:
+    def __init__(self, api):
         """Initialize the proxy."""
         self._api = api
 
@@ -185,7 +185,6 @@ class EnturPublicTransportSensor(SensorEntity):
 
     def __init__(
         self,
-        entry: EnturConfigEntry,
         api: EnturProxy,
         name: str,
         stop: str,
@@ -199,7 +198,6 @@ class EnturPublicTransportSensor(SensorEntity):
         self._state: int | None = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes: dict[str, str] = {}
-        self._attr_unique_id = f"{entry.entry_id}_{stop}"
 
     @property
     def name(self) -> str:
