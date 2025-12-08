@@ -9,6 +9,7 @@ from aiohttp import ClientError, ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
 from homelink.settings import COGNITO_CLIENT_ID
 
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -53,6 +54,7 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
         new_token["expires_at"] = (
             time.time() + tokens["AuthenticationResult"]["ExpiresIn"]
         )
+        new_token[CONF_EMAIL] = external_data[CONF_EMAIL]
 
         return new_token
 

@@ -1,13 +1,18 @@
 """Test the homelink config flow."""
 
+from http import HTTPStatus
+import time
 from unittest.mock import patch
 
 import botocore.exceptions
 
 from homeassistant import config_entries
-from homeassistant.components.gentex_homelink.const import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
+from tests.conftest import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -21,7 +26,9 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
 
 
-async def test_full_flow(hass: HomeAssistant) -> None:
+async def test_full_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Check full flow."""
     with patch(
         "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
@@ -42,6 +49,17 @@ async def test_full_flow(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={"email": "test@test.com", "password": "SomePassword"},
         )
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            OAUTH2_TOKEN,
+            json={
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "expires_at": time.time() + 3600,
+                "expires_in": 3600,
+            },
+        )
+
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"]
         assert result["data"]["token"]
@@ -49,6 +67,77 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         assert result["data"]["token"]["refresh_token"] == "refresh"
         assert result["data"]["token"]["expires_in"] == 3600
         assert result["data"]["token"]["expires_at"]
+
+
+async def test_auth_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test if the auth server returns an error refreshing the token."""
+    with patch(
+        "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
+    ) as MockSRPAuth:
+        instance = MockSRPAuth.return_value
+        instance.async_get_access_token.return_value = {
+            "AuthenticationResult": {
+                "AccessToken": "access",
+                "RefreshToken": "refresh",
+                "TokenType": "bearer",
+                "ExpiresIn": 3600,
+            }
+        }
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.UNAUTHORIZED)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"email": "test@test.com", "password": "SomePassword"},
+        )
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the reauth flow."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "access",
+            "refresh_token": "refresh",
+            "expires_at": time.time() + 3600,
+            "expires_in": 3600,
+        },
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test@test.com",
+        version=1,
+        data={
+            "auth_implementation": "gentex_homelink",
+            "token": {
+                "expires_at": time.time() + 10000,
+                "access_token": "",
+                "refresh_token": "",
+            },
+            "last_update_id": None,
+        },
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"email": "test@test.com", "password": "SomePassword"},
+    )
 
 
 async def test_boto_error(hass: HomeAssistant) -> None:
