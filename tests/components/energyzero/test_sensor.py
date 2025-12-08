@@ -40,7 +40,7 @@ async def test_no_gas_today(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the EnergyZero - No gas sensors available."""
-    mock_energyzero.gas_prices.side_effect = EnergyZeroNoDataError
+    mock_energyzero.get_gas_prices_legacy.side_effect = EnergyZeroNoDataError
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
