@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any, cast
 
 from pydantic import ValidationError
@@ -44,6 +45,8 @@ from .const import (
     KEYRINGS_USER_STATUS,
 )
 from .data import async_ufp_instance_for_config_entry_ids
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -92,7 +95,11 @@ GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
     if not (device_entry := device_registry.async_get(device_id)):
-        raise HomeAssistantError(f"No device found for device id: {device_id}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
 
     if device_entry.via_device_id is not None:
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
@@ -101,7 +108,11 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
     if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
         return ufp_instance
 
-    raise HomeAssistantError(f"No device found for device id: {device_id}")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 @callback
@@ -141,7 +152,11 @@ async def _async_service_call_nvr(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
     except (ClientError, ValidationError) as err:
-        raise HomeAssistantError(str(err)) from err
+        _LOGGER.debug("Error calling UniFi Protect service: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
 
 
 async def add_doorbell_text(call: ServiceCall) -> None:
@@ -170,7 +185,12 @@ async def remove_privacy_zone(call: ServiceCall) -> None:
 
     if remove_index is None:
         raise ServiceValidationError(
-            f"Could not find privacy zone with name {name} on camera {camera.display_name}."
+            translation_domain=DOMAIN,
+            translation_key="privacy_zone_not_found",
+            translation_placeholders={
+                "zone_name": name,
+                "camera_name": camera.display_name,
+            },
         )
 
     def remove_zone() -> None:
@@ -230,7 +250,10 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     camera = _async_get_ufp_camera(call)
     ulp_users = camera.api.bootstrap.ulp_users.as_list()
     if not ulp_users:
-        raise HomeAssistantError("No users found, please check Protect permissions.")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_users_found",
+        )
 
     user_keyrings: list[JsonValueType] = [
         {

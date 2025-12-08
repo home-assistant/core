@@ -1,8 +1,64 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "update_failed": "Updating Duck DNS failed"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:component::duckdns::config::step::user::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::duckdns::config::step::user::data_description::access_token%]"
+        },
+        "title": "Re-configure {name}"
+      },
+      "user": {
+        "data": {
+          "access_token": "Token",
+          "domain": "Subdomain"
+        },
+        "data_description": {
+          "access_token": "Your Duck DNS account token",
+          "domain": "The Duck DNS subdomain to update"
+        },
+        "description": "Enter your Duck DNS subdomain and token below to configure dynamic DNS updates. You can find your token on the [Duck DNS]({url}) homepage after logging into your account."
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Updating Duck DNS domain {domain} failed due to a connection error"
+    },
+    "entry_not_found": {
+      "message": "Duck DNS integration entry not found"
+    },
+    "entry_not_selected": {
+      "message": "Duck DNS integration entry not selected"
+    },
+    "update_failed": {
+      "message": "Updating Duck DNS domain {domain} failed"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "description": "Configuring Duck DNS using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Duck DNS YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.",
+      "title": "The Duck DNS YAML configuration import failed"
+    }
+  },
   "services": {
     "set_txt": {
-      "description": "Sets the TXT record of your DuckDNS subdomain.",
+      "description": "Sets the TXT record of your Duck DNS subdomain.",
       "fields": {
+        "config_entry_id": {
+          "description": "The Duck DNS integration ID.",
+          "name": "Integration ID"
+        },
         "txt": {
           "description": "Payload for the TXT record.",
           "name": "TXT"
