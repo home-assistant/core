@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import cast
 
+import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 from pyoctoprintapi.exceptions import UnauthorizedException
 from yarl import URL
@@ -54,7 +55,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             job = await self._octoprint.get_job_info()
         except UnauthorizedException as err:
             raise ConfigEntryAuthFailed from err
-        except ApiError as err:
+        except (ApiError, aiohttp.ClientError, TimeoutError) as err:
             raise UpdateFailed(err) from err
 
         # If octoprint is on, but the printer is disconnected
@@ -68,7 +69,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
                 self._printer_offline = True
         except UnauthorizedException as err:
             raise ConfigEntryAuthFailed from err
-        except ApiError as err:
+        except (ApiError, aiohttp.ClientError, TimeoutError) as err:
             raise UpdateFailed(err) from err
         else:
             self._printer_offline = False
