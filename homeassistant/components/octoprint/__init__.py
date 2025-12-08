@@ -27,7 +27,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
@@ -208,7 +208,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = OctoprintDataUpdateCoordinator(hass, client, entry, 30)
 
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        _LOGGER.debug(
+            "OctoPrint server at %s is not available, will retry",
+            entry.data[CONF_HOST],
+        )
+        # Continue setup even if the server is not available
+        # Entities will be marked as unavailable
 
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
