@@ -134,3 +134,68 @@ Added new parametrized test coverage for:
 - `frontend/src/panels/lovelace/cards/`
     - `hui-todo-list-card.ts`
         - modified for priority display
+
+## Toddoist Label based browsing Backend Changes
+
+### **Modified Files**
+
+#### `homeassistant/components/todo/__init__.py`
+- Updated `TodoItem` dataclass so `labels` is now a **list of strings**.
+- Updated service schemas (`add_item`, `update_item`) to validate labels as **list[str]**.
+- Normalized labels to list format on add/update.
+- Updated API responses (`todo.get_items`) to output labels as lists.
+- Updated update logic to preserve labels and handle label changes cleanly.
+
+---
+
+### Todoist Integration Changes
+
+### **Modified Files**
+
+#### 5. `homeassistant/components/todoist/todo.py`
+- Todoist → HA Mapping:
+  - Converts Todoist task labels into **list[str]** inside `TodoItem`.
+- HA → Todoist Mapping:
+  - Converts `TodoItem.labels` list back into Todoist API format.
+- Ensured labels are sent during create/update calls to Todoist.
+- Improved data consistency between Todoist API and Home Assistant.
+
+---
+
+### Test Updates
+
+### **Modified Files**
+
+#### `tests/components/todoist/test_todo.py`
+- Updated all expected test results involving labels.
+- Modified `make_api_task` usage to include label lists when appropriate.
+- Updated add/update tests to assert:
+  - `labels` field appears in returned items.
+  - `labels` are passed to Todoist API calls.
+- Updated existing test parametrizations to match new list-format label behavior.
+
+---
+
+### Summary of Functional Changes
+
+#### What labels now support:
+- Add labels when creating a task.
+- Update labels on existing tasks.
+- Store labels in Home Assistant as a **list**, not a string.
+- Display labels in UI.
+- New Labels panel for browsing tasks by label.
+- Labels round-trip correctly between:
+  - UI → HA Core → Todoist API → HA Core → UI.
+- All tests updated to reflect new behavior.
+
+---
+
+### Summary of All Modified Files
+frontend/src/data/todo.ts
+frontend/src/panels/todo/dialog-todo-item-editor.ts
+frontend/src/panels/todo/ha-panel-todo.ts
+homeassistant/components/todo/init.py
+homeassistant/components/todoist/todo.py
+tests/components/todois t/test_todo.py
+
+---
