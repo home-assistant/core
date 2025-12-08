@@ -1,0 +1,29 @@
+{
+  "config": {
+    "flow_title": "Rebooter Pro {serial}",
+    "step": {
+      "zeroconf_confirm": {
+        "title": "Discovered Rebooter Pro",
+        "description": "Do you want to set up {model} with serial {serial}?",
+        "data": {}
+      },
+      "user": {
+        "title": "Add Rebooter Pro",
+        "description": "Enter the device hostname (e.g., `rebooter-pro.local`) or IP address.",
+        "data": {
+          "host": "Host or IP"
+        },
+        "data_description": {
+          "host": "Use the device hostname (e.g., rebooter-pro.local) or IP address."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This Rebooter Pro is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the host and try again.",
+      "unknown": "Unexpected error."
+    }
+  }
+}
