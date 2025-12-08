@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, URL_PAIRING_MODE
+from .const import DOMAIN, URL_FACTORY_RESET, URL_PAIRING_MODE
 from .light import get_available_color_modes
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,6 +126,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: self._discovery_info.name,
                 CONF_MAC: self._discovery_info.address,
                 "url_pairing_mode": URL_PAIRING_MODE,
+                "url_factory_reset": URL_FACTORY_RESET,
             },
         )
 
