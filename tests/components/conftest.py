@@ -676,6 +676,11 @@ async def _validate_translation(
     if not translation_required:
         return
 
+    if full_key not in translation_errors:
+        for k in translation_errors:
+            if k.endswith(".") and full_key.startswith(k):
+                full_key = k
+                break
     if translation_errors.get(full_key) in {"used", "unused"}:
         # If the does not integration exist, translation errors should be ignored
         # via the ignore_translations_for_mock_domains fixture instead of the

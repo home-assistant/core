@@ -36,13 +36,7 @@ async def set_utc(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_valid_config(hass: HomeAssistant) -> None:
     """Test configuration."""
@@ -64,13 +58,7 @@ async def test_valid_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -98,13 +86,7 @@ async def test_unique_id(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_restore_state_last_on(hass: HomeAssistant) -> None:
     """Test restoring state when the last state is on."""
@@ -129,13 +111,7 @@ async def test_restore_state_last_on(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_restore_state_last_off(hass: HomeAssistant) -> None:
     """Test restoring state when the last state is off."""
@@ -160,13 +136,7 @@ async def test_restore_state_last_off(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_valid_config_with_info(hass: HomeAssistant) -> None:
     """Test configuration."""
@@ -190,13 +160,7 @@ async def test_valid_config_with_info(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_valid_config_no_name(hass: HomeAssistant) -> None:
     """Test configuration."""
@@ -219,13 +183,7 @@ async def test_invalid_config_no_lights(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_when_switch_is_off(
     hass: HomeAssistant,
@@ -285,13 +243,7 @@ async def test_flux_when_switch_is_off(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_before_sunrise(
     hass: HomeAssistant,
@@ -359,13 +311,7 @@ async def test_flux_before_sunrise(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_before_sunrise_known_location(
     hass: HomeAssistant,
@@ -427,13 +373,7 @@ async def test_flux_before_sunrise_known_location(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_sunrise_before_sunset(
     hass: HomeAssistant,
@@ -500,13 +440,7 @@ async def test_flux_after_sunrise_before_sunset(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_sunset_before_stop(
     hass: HomeAssistant,
@@ -574,13 +508,7 @@ async def test_flux_after_sunset_before_stop(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_stop_before_sunrise(
     hass: HomeAssistant,
@@ -647,13 +575,7 @@ async def test_flux_after_stop_before_sunrise(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_with_custom_start_stop_times(
     hass: HomeAssistant,
@@ -722,13 +644,7 @@ async def test_flux_with_custom_start_stop_times(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_before_sunrise_stop_next_day(
     hass: HomeAssistant,
@@ -799,13 +715,7 @@ async def test_flux_before_sunrise_stop_next_day(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
     hass: HomeAssistant,
@@ -876,13 +786,7 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_sunset_before_midnight_stop_next_day(
     hass: HomeAssistant,
@@ -953,13 +857,7 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_sunset_after_midnight_stop_next_day(
     hass: HomeAssistant,
@@ -1030,13 +928,7 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_after_stop_before_sunrise_stop_next_day(
     hass: HomeAssistant,
@@ -1107,13 +999,7 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_with_custom_colortemps(
     hass: HomeAssistant,
@@ -1183,13 +1069,7 @@ async def test_flux_with_custom_colortemps(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_with_custom_brightness(
     hass: HomeAssistant,
@@ -1258,13 +1138,7 @@ async def test_flux_with_custom_brightness(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_with_multiple_lights(
     hass: HomeAssistant,
@@ -1354,13 +1228,7 @@ async def test_flux_with_multiple_lights(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_with_temp(
     hass: HomeAssistant,
@@ -1426,13 +1294,7 @@ async def test_flux_with_temp(
 
 
 @pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.switch.services.flux_update.name",
-            "component.switch.services.flux_update.description",
-        ]
-    ],
+    "ignore_missing_translations", ["component.switch.services.flux_update."]
 )
 async def test_flux_with_rgb(
     hass: HomeAssistant,

@@ -23,6 +23,9 @@ from .conftest import TEST_URL, ComponentSetup
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> None:
     """Verify we can reload rest_command integration."""
     await setup_component()
@@ -46,6 +49,9 @@ async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> N
     assert not hass.services.has_service(DOMAIN, "get_test")
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_setup_tests(
     hass: HomeAssistant, setup_component: ComponentSetup
 ) -> None:
@@ -58,6 +64,9 @@ async def test_setup_tests(
     assert hass.services.has_service(DOMAIN, "delete_test")
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_timeout(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -75,6 +84,9 @@ async def test_rest_command_timeout(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_aiohttp_error(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -95,6 +107,9 @@ async def test_rest_command_aiohttp_error(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_http_error(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -110,6 +125,9 @@ async def test_rest_command_http_error(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_auth(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -125,6 +143,9 @@ async def test_rest_command_auth(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_digest_auth(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -174,6 +195,9 @@ async def test_rest_command_digest_auth(
         assert isinstance(call_kwargs["middlewares"][0], aiohttp.DigestAuthMiddleware)
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_form_data(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -190,6 +214,9 @@ async def test_rest_command_form_data(
     assert aioclient_mock.mock_calls[0][2] == b"test"
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 @pytest.mark.parametrize(
     "method",
     [
@@ -216,6 +243,9 @@ async def test_rest_command_methods(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_headers(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -322,6 +352,9 @@ async def test_rest_command_headers(
     assert aioclient_mock.mock_calls[6][3].get("Accept") == "application/2json"
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_get_response_plaintext(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -344,6 +377,9 @@ async def test_rest_command_get_response_plaintext(
     assert response["headers"] == {"content-type": "text/plain"}
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_get_response_json(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -398,6 +434,9 @@ async def test_rest_command_get_response_malformed_json(
     )
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_get_response_none(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -434,6 +473,9 @@ async def test_rest_command_get_response_none(
     assert not response
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_response_iter_chunked(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
@@ -458,6 +500,9 @@ async def test_rest_command_response_iter_chunked(
         assert mock_iter_chunked.called
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_skip_url_encoding(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
