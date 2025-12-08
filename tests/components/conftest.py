@@ -1100,13 +1100,18 @@ async def check_translations(
         *,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
-        caller = inspect.stack()[1]
         if (
-            # async_mock_service is used in tests to register test services
-            caller.function != "async_mock_service"
-            # ServiceRegistry.async_register can also be called directly in
-            # a test module
-            and not caller.filename.startswith(str(Path(__file__).parents[0]))
+            (current_frame := inspect.currentframe()) is None
+            or (caller := current_frame.f_back) is None
+            or (
+                # async_mock_service is used in tests to register test services
+                caller.f_code.co_name != "async_mock_service"
+                # ServiceRegistry.async_register can also be called directly in
+                # a test module
+                and not caller.f_code.co_filename.startswith(
+                    str(Path(__file__).parents[0])
+                )
+            )
         ):
             translation_coros.add(
                 _check_service_registration_translation(
