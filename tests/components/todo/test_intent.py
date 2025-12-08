@@ -181,6 +181,9 @@ async def test_add_item_intent_errors(
         )
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.todo.services.HassListCompleteItem."]
+)
 async def test_complete_item_intent(
     hass: HomeAssistant,
 ) -> None:
