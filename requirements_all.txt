@@ -893,7 +893,7 @@ energyflip-client==0.2.2
 energyid-webhooks==0.0.14
 
 # homeassistant.components.energyzero
-energyzero==2.1.1
+energyzero==4.0.1
 
 # homeassistant.components.enocean
 enocean==0.50
