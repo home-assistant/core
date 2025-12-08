@@ -249,6 +249,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if change_type == collection.CHANGE_REMOVED:
             frontend.async_remove_panel(hass, url_path)
             await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
+            # Re-register default lovelace panel if the "lovelace" dashboard was deleted
+            if url_path == DOMAIN:
+                frontend.async_register_built_in_panel(
+                    hass,
+                    DOMAIN,
+                    config={"mode": MODE_STORAGE},
+                )
             return
 
         if change_type == collection.CHANGE_ADDED:
