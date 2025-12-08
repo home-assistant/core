@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.33
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.9
+DoorBirdPy==3.0.11
 
 # homeassistant.components.homekit
 HAP-python==5.0.0
