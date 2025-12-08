@@ -24,7 +24,7 @@ classifiers = [
 ]
 requires-python = ">=3.13.2"
 dependencies = [
-  "aiodns==3.5.0",
+  "aiodns==3.6.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
@@ -48,7 +48,7 @@ dependencies = [
   "fnv-hash-fast==1.6.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==1.6.2",
+  "hass-nabucasa==1.7.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",

@@ -438,6 +438,8 @@ def get_rpc_sub_device_name(
         return f"{device.name} Energy Meter {component_id}"
     if component == "em" and emeter_phase is not None:
         return f"{device.name} Phase {emeter_phase}"
+    if component == "switch":
+        return f"{device.name} Output {component_id}"
 
     return f"{device.name} {component.title()} {component_id}"
 

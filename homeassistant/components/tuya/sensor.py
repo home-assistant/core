@@ -36,7 +36,6 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
-    DPType,
 )
 from .entity import TuyaEntity
 from .models import (
@@ -46,15 +45,15 @@ from .models import (
     DPCodeJsonWrapper,
     DPCodeTypeInformationWrapper,
     DPCodeWrapper,
-    EnumTypeData,
 )
 from .raw_data_models import ElectricityData
+from .type_information import EnumTypeInformation
 
 
-class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
+class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Custom DPCode Wrapper for converting enum to wind direction."""
 
-    DPTYPE = DPType.ENUM
+    _DPTYPE = EnumTypeInformation
 
     _WIND_DIRECTIONS = {
         "north": 0.0,
@@ -1851,4 +1850,4 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)

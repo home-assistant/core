@@ -80,7 +80,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
         """Get the number of speeds supported by the fan."""
         return len(self.type_information.range)
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
@@ -209,19 +209,19 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        await self._async_send_dpcode_update(self._mode_wrapper, preset_mode)
+        await self._async_send_wrapper_updates(self._mode_wrapper, preset_mode)
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        await self._async_send_dpcode_update(self._direction_wrapper, direction)
+        await self._async_send_wrapper_updates(self._direction_wrapper, direction)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        await self._async_send_dpcode_update(self._speed_wrapper, percentage)
+        await self._async_send_wrapper_updates(self._speed_wrapper, percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     async def async_turn_on(
         self,
@@ -233,24 +233,22 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._switch_wrapper is None:
             return
 
-        commands: list[dict[str, str | bool | int]] = [
-            self._switch_wrapper.get_update_command(self.device, True)
-        ]
+        commands = self._switch_wrapper.get_update_commands(self.device, True)
 
         if percentage is not None and self._speed_wrapper is not None:
-            commands.append(
-                self._speed_wrapper.get_update_command(self.device, percentage)
+            commands.extend(
+                self._speed_wrapper.get_update_commands(self.device, percentage)
             )
 
         if preset_mode is not None and self._mode_wrapper:
-            commands.append(
-                self._mode_wrapper.get_update_command(self.device, preset_mode)
+            commands.extend(
+                self._mode_wrapper.get_update_commands(self.device, preset_mode)
             )
         await self._async_send_commands(commands)
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        await self._async_send_dpcode_update(self._oscillate_wrapper, oscillating)
+        await self._async_send_wrapper_updates(self._oscillate_wrapper, oscillating)
 
     @property
     def is_on(self) -> bool | None:
