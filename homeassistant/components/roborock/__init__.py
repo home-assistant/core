@@ -20,7 +20,7 @@ from roborock.devices.device_manager import UserParams, create_device_manager
 from roborock.map.map_parser import MapParserConfig
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -99,10 +99,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
+
+    async def shutdown_roborock(_: Event | None = None) -> None:
+        await asyncio.gather(device_manager.close(), cache.flush())
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_roborock)
+    )
+    entry.async_on_unload(shutdown_roborock)
+
     devices = await device_manager.get_devices()
     _LOGGER.debug("Device manager found %d devices", len(devices))
-    for device in devices:
-        entry.async_on_unload(device.close)
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, devices, user_data),
@@ -124,25 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
-
-    async def on_stop(_: Any) -> None:
-        _LOGGER.debug("Shutting down roborock")
-        await asyncio.gather(
-            *(
-                coordinator.async_shutdown()
-                for coordinator in valid_coordinators.values()
-            ),
-            cache.flush(),
-        )
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            on_stop,
-        )
-    )
-    entry.runtime_data = valid_coordinators
+    entry.runtime_data = RoborockCoordinators(v1_coords, a01_coords)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

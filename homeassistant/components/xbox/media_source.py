@@ -630,7 +630,7 @@ class XboxSource(MediaSource):
                     title=image.type,
                     can_play=True,
                     can_expand=False,
-                    thumbnail=image.url,
+                    thumbnail=to_https(image.url),
                 )
                 for image in game.images
             ]

@@ -51,9 +51,9 @@ async def _validate_input(
     description_placeholders: dict[str, str],
 ) -> bool:
     try:
-        await api.async_air_quality(
+        await api.async_get_current_conditions(
             lat=user_input[CONF_LOCATION][CONF_LATITUDE],
-            long=user_input[CONF_LOCATION][CONF_LONGITUDE],
+            lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
         )
     except GoogleAirQualityApiError as err:
         errors["base"] = "cannot_connect"
