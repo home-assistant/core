@@ -187,7 +187,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.3
+aioairzone==1.0.4
 
 # homeassistant.components.alexa_devices
 aioamazondevices==10.0.0
@@ -1748,7 +1748,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==1.2.1
+powerfox==2.0.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -1889,7 +1889,7 @@ pyairobotrest==0.1.0
 pyairvisual==2023.08.1
 
 # homeassistant.components.anglian_water
-pyanglianwater==2.1.0
+pyanglianwater==3.0.0
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
