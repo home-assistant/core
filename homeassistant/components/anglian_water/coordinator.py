@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 
 type AnglianWaterConfigEntry = ConfigEntry[AnglianWaterUpdateCoordinator]
 
@@ -44,6 +44,6 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Update data from Anglian Water's API."""
         try:
-            return await self.api.update()
+            return await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
         except (ExpiredAccessTokenError, UnknownEndpointError) as err:
             raise UpdateFailed from err
