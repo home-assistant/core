@@ -10,6 +10,7 @@ from pymarstek import MarstekUDPClient
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -25,6 +26,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     domain = DOMAIN
     discovered_devices: list[dict[str, Any]]
+    _discovered_ip: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -201,4 +203,52 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # No existing entry found, continue with user flow
         _LOGGER.debug("DHCP discovery: No existing entry found for MAC %s", mac)
+        return await self.async_step_user()
+
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Handle discovery from Scanner (integration discovery)."""
+        discovered_ip = discovery_info.get("ip")
+        discovered_ble_mac = discovery_info.get("ble_mac")
+
+        if not discovered_ble_mac:
+            return self.async_abort(reason="invalid_discovery_info")
+
+        # Set unique_id using BLE-MAC
+        await self.async_set_unique_id(format_mac(discovered_ble_mac))
+        self._discovered_ip = discovered_ip
+
+        # Handle discovery with unique_id (updates existing entries or creates new)
+        return await self._async_handle_discovery_with_unique_id()
+
+    async def _async_handle_discovery_with_unique_id(
+        self,
+    ) -> config_entries.ConfigFlowResult:
+        """Handle any discovery with a unique id (similar to Yeelight pattern)."""
+        for entry in self._async_current_entries(include_ignore=False):
+            # Check if unique_id matches
+            if entry.unique_id != self.unique_id:
+                continue
+
+            reload = entry.state == ConfigEntryState.SETUP_RETRY
+            if entry.data.get(CONF_HOST) != self._discovered_ip:
+                _LOGGER.info(
+                    "Discovery: Device %s IP changed from %s to %s, updating config entry",
+                    entry.unique_id,
+                    entry.data.get(CONF_HOST),
+                    self._discovered_ip,
+                )
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_HOST: self._discovered_ip}
+                )
+                reload = entry.state in (
+                    ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.LOADED,
+                )
+            if reload:
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        # No existing entry found, continue with user flow
         return await self.async_step_user()

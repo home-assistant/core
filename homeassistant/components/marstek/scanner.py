@@ -8,9 +8,11 @@ from typing import Any, ClassVar, Self
 
 from pymarstek import MarstekUDPClient
 
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -158,14 +160,21 @@ class MarstekScanner:
                         stored_ip,
                         new_ip,
                     )
-                    # Update config entry via config flow (mik-laj feedback)
-                    self._hass.config_entries.async_update_entry(
-                        entry,
-                        data={**entry.data, CONF_HOST: new_ip},
-                    )
-                    # Reload the entry to use new IP
-                    self._hass.async_create_task(
-                        self._hass.config_entries.async_reload(entry.entry_id)
+                    # Trigger discovery flow to update config entry (mik-laj feedback)
+                    # This follows the pattern used in Yeelight integration
+                    discovery_flow.async_create_flow(
+                        self._hass,
+                        DOMAIN,
+                        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                        data={
+                            "ip": new_ip,
+                            "ble_mac": stored_ble_mac,
+                            "device_type": matched_device.get("device_type"),
+                            "version": matched_device.get("version"),
+                            "wifi_name": matched_device.get("wifi_name"),
+                            "wifi_mac": matched_device.get("wifi_mac"),
+                            "mac": matched_device.get("mac"),
+                        },
                     )
                 else:
                     _LOGGER.debug(
