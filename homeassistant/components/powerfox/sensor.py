@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
+from typing import TYPE_CHECKING, Generic
 
-from powerfox import Device, HeatMeter, PowerMeter, WaterMeter
-from powerfox.models import GasReport
+from powerfox import Device, GasReport, HeatMeter, PowerMeter, WaterMeter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -348,4 +347,7 @@ class PowerfoxGasSensorEntity(
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
-        return self.entity_description.value_fn(self.coordinator.data.gas)
+        gas_report = self.coordinator.data.gas
+        if TYPE_CHECKING:
+            assert gas_report is not None
+        return self.entity_description.value_fn(gas_report)
