@@ -31,10 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
+    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,  # "Attaching the mop"
     RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,  # "Charger disconnected"
     RoborockStateCode.idle: VacuumActivity.IDLE,  # "Idle"
     RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,  # "Remote control active"
     RoborockStateCode.cleaning: VacuumActivity.CLEANING,  # "Cleaning"
+    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,  # "Detaching the mop"
     RoborockStateCode.returning_home: VacuumActivity.RETURNING,  # "Returning home"
     RoborockStateCode.manual_mode: VacuumActivity.CLEANING,  # "Manual mode"
     RoborockStateCode.charging: VacuumActivity.DOCKED,  # "Charging"
