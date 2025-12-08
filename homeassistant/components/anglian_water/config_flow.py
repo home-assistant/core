@@ -7,7 +7,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
-from pyanglianwater.auth import BaseAuth, MSOB2CAuth
+from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     InvalidAccountIdError,
     SelfAssertedError,
@@ -30,11 +30,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
+        vol.Required(CONF_ACCOUNT_NUMBER): selector.TextSelector(),
     }
 )
 
 
-async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
+async def validate_credentials(
+    auth: MSOB2CAuth, account_number: str
+) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
@@ -45,7 +48,7 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
         return "unknown"
     _aw = AnglianWater(authenticator=auth)
     try:
-        await _aw.validate_smart_meter()
+        await _aw.validate_smart_meter(account_number)
     except (InvalidAccountIdError, SmartMeterUnavailableError):
         return "smart_meter_unavailable"
     return auth
@@ -68,35 +71,21 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass,
                         cookie_jar=CookieJar(quote_cookie=False),
                     ),
-                    account_number=user_input.get(CONF_ACCOUNT_NUMBER),
-                )
+                ),
+                user_input[CONF_ACCOUNT_NUMBER],
             )
-            if isinstance(validation_response, BaseAuth):
-                account_number = (
-                    user_input.get(CONF_ACCOUNT_NUMBER)
-                    or validation_response.account_number
-                )
-                await self.async_set_unique_id(account_number)
+            if isinstance(validation_response, str):
+                errors["base"] = validation_response
+            else:
+                await self.async_set_unique_id(user_input[CONF_ACCOUNT_NUMBER])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=account_number,
+                    title=user_input[CONF_ACCOUNT_NUMBER],
                     data={
                         **user_input,
                         CONF_ACCESS_TOKEN: validation_response.refresh_token,
-                        CONF_ACCOUNT_NUMBER: account_number,
                     },
                 )
-            if validation_response == "smart_meter_unavailable":
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=STEP_USER_DATA_SCHEMA.extend(
-                        {
-                            vol.Required(CONF_ACCOUNT_NUMBER): selector.TextSelector(),
-                        }
-                    ),
-                    errors={"base": validation_response},
-                )
-            errors["base"] = validation_response
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

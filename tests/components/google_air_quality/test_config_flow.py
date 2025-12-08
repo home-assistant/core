@@ -68,7 +68,7 @@ async def test_create_entry(
         },
     )
 
-    mock_api.async_air_quality.assert_called_once_with(lat=10.1, long=20.1)
+    mock_api.async_get_current_conditions.assert_called_once_with(lat=10.1, lon=20.1)
 
     _assert_create_entry_result(result)
     assert len(mock_setup_entry.mock_calls) == 1
@@ -101,7 +101,7 @@ async def test_form_with_referrer(
         },
     )
 
-    mock_api.async_air_quality.assert_called_once_with(lat=10.1, long=20.1)
+    mock_api.async_get_current_conditions.assert_called_once_with(lat=10.1, lon=20.1)
 
     _assert_create_entry_result(result, expected_referrer="test-referrer")
     assert len(mock_setup_entry.mock_calls) == 1
@@ -126,7 +126,7 @@ async def test_form_exceptions(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_api.async_air_quality.side_effect = api_exception
+    mock_api.async_get_current_conditions.side_effect = api_exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -154,7 +154,7 @@ async def test_form_exceptions(
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
 
-    mock_api.async_air_quality.side_effect = None
+    mock_api.async_get_current_conditions.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -196,7 +196,7 @@ async def test_form_api_key_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_api.async_air_quality.call_count == 0
+    assert mock_api.async_get_current_conditions.call_count == 0
 
 
 async def test_form_location_already_configured(
@@ -224,7 +224,7 @@ async def test_form_location_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_api.async_air_quality.call_count == 0
+    assert mock_api.async_get_current_conditions.call_count == 0
 
 
 async def test_form_not_already_configured(
@@ -251,7 +251,9 @@ async def test_form_not_already_configured(
         },
     )
 
-    mock_api.async_air_quality.assert_called_once_with(lat=10.1002, long=20.0998)
+    mock_api.async_get_current_conditions.assert_called_once_with(
+        lat=10.1002, lon=20.0998
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Google Air Quality"
@@ -281,7 +283,7 @@ async def test_subentry_flow(
     await hass.async_block_till_done()
 
     # After initial setup for 1 subentry, each API is called once
-    assert mock_api.async_air_quality.call_count == 1
+    assert mock_api.async_get_current_conditions.call_count == 1
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "location"),
@@ -313,7 +315,7 @@ async def test_subentry_flow(
     # Initial setup: 1 of each API call
     # Subentry flow validation: 1 current conditions call
     # Reload with 2 subentries: 2 of each API call
-    assert mock_api.async_air_quality.call_count == 1 + 1 + 2
+    assert mock_api.async_get_current_conditions.call_count == 1 + 1 + 2
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 2
