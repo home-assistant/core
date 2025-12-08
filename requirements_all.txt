@@ -2588,6 +2588,9 @@ python-roborock==4.2.1
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
 
+# homeassistant.components.systemnexa2
+python-sn2==0.1.2
+
 # homeassistant.components.snoo
 python-snoo==0.8.3
 
