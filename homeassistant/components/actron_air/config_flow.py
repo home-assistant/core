@@ -6,7 +6,7 @@ from typing import Any
 
 from actron_neo_api import ActronAirAPI, ActronAirAuthError
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 
@@ -98,7 +98,8 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
 
         # Check if this is a reauth flow
-        if self.context.get("source") == "reauth":
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
                 data_updates={CONF_API_TOKEN: self._api.refresh_token_value},
