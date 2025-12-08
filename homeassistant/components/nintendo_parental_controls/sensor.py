@@ -86,16 +86,16 @@ PLAYER_SENSOR_DESCRIPTIONS: tuple[
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NintendoParentalControlsConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    async_add_devices(
+    async_add_entities(
         NintendoParentalControlsDeviceSensorEntity(entry.runtime_data, device, sensor)
         for device in entry.runtime_data.api.devices.values()
         for sensor in DEVICE_SENSOR_DESCRIPTIONS
     )
     for device in entry.runtime_data.api.devices.values():
-        async_add_devices(
+        async_add_entities(
             NintendoParentalControlsPlayerSensorEntity(
                 entry.runtime_data, device, player.player_id, sensor
             )
@@ -129,6 +129,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
     """Represent a single player sensor."""
 
     entity_description: NintendoParentalControlsPlayerSensorEntityDescription
+    _unrecorded_attributes = frozenset({"games"})
 
     def __init__(
         self,
