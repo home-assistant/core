@@ -41,11 +41,9 @@ from .const import (
     CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTION_USE_CUSTOM_COLORS,
     CONF_ACTIONS,
-    CONF_CARPLAY_ENABLED,
-    CONF_CARPLAY_QUICK_ACCESS,
-    DATA_CARPLAY_CONFIG,
     DOMAIN,
 )
+from .storage import async_get_carplay_store
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -151,24 +149,6 @@ ACTION_SCHEMA = vol.Schema(
 
 ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
-# Configuration schema for carplay settings
-CARPLAY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_CARPLAY_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_CARPLAY_QUICK_ACCESS, default=[]): vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required("entity_id"): cv.entity_id,
-                        vol.Optional("display_name"): cv.string,
-                    }
-                )
-            ],
-        ),
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -176,7 +156,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
                 CONF_ACTIONS: ACTION_LIST_SCHEMA,
-                vol.Optional("carplay", default={}): CARPLAY_SCHEMA,
             },
         )
     },
@@ -283,14 +262,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if CONF_PUSH not in (conf_user := conf or {}):
         conf_user[CONF_PUSH] = {}
 
-    # Get the carplay configuration from config.yaml
-    carplay_config = config.get(DOMAIN, {}).get("carplay", {})
-
     ios_config[CONF_USER] = conf_user
-    # Store carplay configuration in hass.data for access by the config view
-    ios_config[DATA_CARPLAY_CONFIG] = carplay_config
 
     hass.data[DOMAIN] = ios_config
+
+    # Initialize CarPlay storage and register API endpoints always
+    store = await async_get_carplay_store(hass)
+    hass.data[DOMAIN]["carplay_store"] = store
+
+    # Register CarPlay API endpoints - always available regardless of config entries
+    hass.http.register_view(iOSCarPlayConfigView())
+    hass.http.register_view(iOSCarPlayUpdateView())
 
     # No entry support for notify component yet
     discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
@@ -309,11 +291,19 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up an iOS entry."""
+    # CarPlay store should already be initialized in async_setup
+    if "carplay_store" not in hass.data.get(DOMAIN, {}):
+        store = await async_get_carplay_store(hass)
+        if DOMAIN not in hass.data:
+            hass.data[DOMAIN] = {}
+        hass.data[DOMAIN]["carplay_store"] = store
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
     hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
     hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
+    # CarPlay views are already registered in async_setup
 
     return True
 
@@ -344,17 +334,17 @@ class iOSConfigView(HomeAssistantView):
         """Init the view."""
         self.config = config
 
-    @callback
-    def get(self, request: web.Request) -> web.Response:
+    async def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the user-defined configuration."""
         hass = request.app[KEY_HASS]
 
-        # Include carplay config from iOS integration
+        # Include carplay config from storage
         response_config = self.config.copy()
 
-        # Add carplay configuration if available
-        carplay_config = hass.data[DOMAIN].get(DATA_CARPLAY_CONFIG)
-        if carplay_config:
+        # Add carplay config if store exists
+        if DOMAIN in hass.data and "carplay_store" in hass.data[DOMAIN]:
+            store = hass.data[DOMAIN]["carplay_store"]
+            carplay_config = await store.async_get_data()
             response_config["carplay"] = carplay_config
 
         return self.json(response_config)
@@ -395,3 +385,84 @@ class iOSIdentifyDeviceView(HomeAssistantView):
             )
 
         return self.json({"status": "registered"})
+
+
+class iOSCarPlayConfigView(HomeAssistantView):
+    """A view that provides the CarPlay configuration."""
+
+    url = "/api/ios/carplay"
+    name = "api:ios:carplay"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Handle the GET request for CarPlay configuration."""
+        hass = request.app[KEY_HASS]
+        store = await async_get_carplay_store(hass)
+        carplay_config = await store.async_get_data()
+        return self.json(carplay_config)
+
+
+class iOSCarPlayUpdateView(HomeAssistantView):
+    """A view that handles CarPlay configuration updates."""
+
+    url = "/api/ios/carplay/update"
+    name = "api:ios:carplay:update"
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle the POST request for CarPlay configuration updates."""
+        try:
+            data = await request.json()
+        except ValueError:
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
+
+        hass = request.app[KEY_HASS]
+        store = await async_get_carplay_store(hass)
+
+        # Validate the data structure
+        if not isinstance(data, dict):
+            return self.json_message("Data must be an object", HTTPStatus.BAD_REQUEST)
+
+        # Validate enabled field if present
+        if "enabled" in data and not isinstance(data["enabled"], bool):
+            return self.json_message(
+                "enabled must be a boolean", HTTPStatus.BAD_REQUEST
+            )
+
+        # Validate quick_access field if present
+        if "quick_access" in data:
+            if not isinstance(data["quick_access"], list):
+                return self.json_message(
+                    "quick_access must be an array", HTTPStatus.BAD_REQUEST
+                )
+
+            for item in data["quick_access"]:
+                if not isinstance(item, dict):
+                    return self.json_message(
+                        "quick_access items must be objects", HTTPStatus.BAD_REQUEST
+                    )
+                if "entity_id" not in item:
+                    return self.json_message(
+                        "quick_access items must have entity_id", HTTPStatus.BAD_REQUEST
+                    )
+                if not isinstance(item["entity_id"], str):
+                    return self.json_message(
+                        "entity_id must be a string", HTTPStatus.BAD_REQUEST
+                    )
+
+                # Validate entity_id format (domain.entity_name)
+                try:
+                    cv.entity_id(item["entity_id"])
+                except vol.Invalid:
+                    return self.json_message(
+                        f"Invalid entity_id format: {item['entity_id']}",
+                        HTTPStatus.BAD_REQUEST,
+                    )
+
+                if "display_name" in item and not isinstance(item["display_name"], str):
+                    return self.json_message(
+                        "display_name must be a string", HTTPStatus.BAD_REQUEST
+                    )
+
+        # Update the configuration
+        await store.async_set_data(data)
+
+        return self.json({"status": "updated"})
