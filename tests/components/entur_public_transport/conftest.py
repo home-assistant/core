@@ -67,7 +67,7 @@ def mock_place(mock_estimated_call: MagicMock) -> MagicMock:
 def mock_entur_client(mock_place: MagicMock) -> Generator[MagicMock]:
     """Return a mock Entur client."""
     with patch(
-        "homeassistant.components.entur_public_transport.coordinator.EnturPublicTransportData"
+        "homeassistant.components.entur_public_transport.EnturPublicTransportData"
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.update = AsyncMock()

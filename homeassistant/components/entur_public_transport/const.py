@@ -1,12 +1,12 @@
 """Constants for the Entur public transport integration."""
 
+from datetime import timedelta
+
 from homeassistant.const import Platform
 
 DOMAIN = "entur_public_transport"
 
 PLATFORMS = [Platform.SENSOR]
-
-ATTRIBUTION = "Data provided by entur.org under NLOD"
 
 # Configuration keys
 CONF_STOP_IDS = "stop_ids"
@@ -16,22 +16,23 @@ CONF_OMIT_NON_BOARDING = "omit_non_boarding"
 CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 # Defaults
+DEFAULT_NAME = "Entur"
 DEFAULT_NUMBER_OF_DEPARTURES = 2
 
 # API
-API_CLIENT_NAME = "homeassistant-entur"
+API_CLIENT_NAME = "homeassistant-{}"
+SCAN_INTERVAL = timedelta(seconds=45)
 
 # Icons for different transport modes
 ICONS = {
     "air": "mdi:airplane",
     "bus": "mdi:bus",
-    "coach": "mdi:bus",
     "metro": "mdi:subway",
     "rail": "mdi:train",
     "tram": "mdi:tram",
     "water": "mdi:ferry",
 }
-DEFAULT_ICON = "mdi:bus"
+DEFAULT_ICON_KEY = "bus"
 
 # Attribute keys
 ATTR_STOP_ID = "stop_id"
@@ -46,3 +47,6 @@ ATTR_NEXT_UP_ROUTE_ID = "next_route_id"
 ATTR_NEXT_UP_AT = "next_due_at"
 ATTR_NEXT_UP_DELAY = "next_delay"
 ATTR_NEXT_UP_REALTIME = "next_real_time"
+
+# Attribution
+ATTRIBUTION = "Data provided by entur.org under NLOD"

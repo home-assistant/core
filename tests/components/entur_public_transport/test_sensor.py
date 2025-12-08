@@ -211,33 +211,3 @@ async def test_sensor_with_three_or_more_departures(
     assert departure_4 is not None
     assert "80 Stavanger" in departure_4
     assert departure_4.startswith("ca.")  # not realtime, has prefix
-
-
-async def test_sensor_stop_info_becomes_none(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_entur_client: MagicMock,
-    mock_place: MagicMock,
-) -> None:
-    """Test sensor handles stop_info becoming None after initial setup."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Initially should have valid state
-    state = hass.states.get("sensor.entur_bergen_stasjon")
-    assert state is not None
-    assert state.state != "unknown"
-
-    # Simulate stop info becoming None (e.g., API returns no data for this stop)
-    mock_entur_client.get_stop_info.return_value = None
-    mock_entur_client.all_stop_places_quays.return_value = ["NSR:StopPlace:548"]
-
-    # Trigger a coordinator refresh
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Entity should still exist but be unavailable
-    state = hass.states.get("sensor.entur_bergen_stasjon")
-    assert state is not None
-    assert state.state == "unavailable"

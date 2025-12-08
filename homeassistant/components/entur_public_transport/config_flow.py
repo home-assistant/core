@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from random import randint
 from typing import Any
 
 from aiohttp import ClientError
@@ -99,7 +100,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             client = EnturPublicTransportData(
-                API_CLIENT_NAME,
+                API_CLIENT_NAME.format(str(randint(100000, 999999))),
                 stops=stops,
                 quays=quays,
                 line_whitelist=[],

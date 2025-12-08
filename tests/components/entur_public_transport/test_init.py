@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.entur_public_transport.const import (
@@ -122,33 +121,41 @@ async def test_options_update_triggers_reload(
     assert state.attributes.get(CONF_LONGITUDE) == 5.33396
 
 
-async def test_coordinator_timeout_error(
+async def test_setup_entry_expand_quays(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_entur_client: MagicMock,
 ) -> None:
-    """Test coordinator handles timeout errors gracefully."""
-    mock_entur_client.update.side_effect = TimeoutError("Connection timed out")
-
+    """Test that expand_all_quays is called when expand_platforms is True."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Entry should fail to load due to timeout on first refresh
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_entur_client.expand_all_quays.assert_called_once()
 
 
-async def test_coordinator_client_error(
+async def test_setup_entry_no_expand_quays(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_entur_client: MagicMock,
 ) -> None:
-    """Test coordinator handles client errors gracefully."""
-    mock_entur_client.update.side_effect = ClientError("Connection failed")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    """Test that expand_all_quays is not called when expand_platforms is False."""
+    entry = MockConfigEntry(
+        domain="entur_public_transport",
+        title="Entur",
+        data={
+            "stop_ids": ["NSR:StopPlace:548"],
+            "expand_platforms": False,  # Disabled
+            "show_on_map": False,
+            "line_whitelist": [],
+            "omit_non_boarding": True,
+            "number_of_departures": 2,
+        },
+        unique_id="NSR:StopPlace:548",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Entry should fail to load due to client error on first refresh
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
+    mock_entur_client.expand_all_quays.assert_not_called()
