@@ -128,6 +128,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
             # convert to local time for display, matching existing attributes
             local_next = dt_util.as_local(api_time)
             attr["next_tide_event_time"] = local_next.strftime("%Y-%m-%dT%H:%M")
+            attr["next_tide_event_height"] = self.data["predicted_wl"][0]
 
             # minutes until next tide event, based on now in the same timezone
             delta = (local_next - dt_util.now()).total_seconds() / 60
