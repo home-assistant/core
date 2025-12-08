@@ -129,7 +129,6 @@ async def test_get_triggers(
         EVENT_FIREALARM_1,
     ],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_firing_event(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, rfxtrx, event
 ) -> None:

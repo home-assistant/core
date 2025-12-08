@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant.components import switch
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -165,9 +163,6 @@ async def test_broadcast_config_port(
     mock_send_magic_packet.assert_called_with(mac, port=port)
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.shell_command.services.turn_off_target."]
-)
 async def test_off_script(
     hass: HomeAssistant, mock_send_magic_packet: AsyncMock
 ) -> None:
