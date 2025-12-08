@@ -39,6 +39,7 @@ from .entity import (
 )
 
 _KEY_DOOR = "door"
+PARALLEL_UPDATES = 0
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

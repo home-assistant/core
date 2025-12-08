@@ -40,7 +40,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the available OctoPrint binary sensors."""
+    """Set up the available OctoPrint sensors."""
     coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
@@ -111,7 +111,7 @@ class OctoPrintSensorBase(
 
 
 class OctoPrintStatusSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint status sensor."""
 
     _attr_icon = "mdi:printer-3d"
 
@@ -137,7 +137,7 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
 
 
 class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint job percentage sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:file-percent"
@@ -162,9 +162,10 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
 
 
 class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint estimated finish time sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:clock-end"
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -191,9 +192,10 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint start time sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:clock-start"
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -221,11 +223,12 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint temperature sensor."""
 
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:printer-3d-nozzle-heat"
 
     def __init__(
         self,
@@ -267,7 +270,9 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
 
 class OctoPrintFileNameSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint file name sensor."""
+
+    _attr_icon = "mdi:printer-3d-nozzle"
 
     def __init__(
         self,
@@ -294,7 +299,7 @@ class OctoPrintFileNameSensor(OctoPrintSensorBase):
 
 
 class OctoPrintFileSizeSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
+    """Representation of an OctoPrint file size sensor."""
 
     _attr_device_class = SensorDeviceClass.DATA_SIZE
     _attr_native_unit_of_measurement = UnitOfInformation.BYTES
