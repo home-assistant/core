@@ -422,6 +422,9 @@ async def async_setup_entry(
             },
         ),
         supports_response=SupportsResponse.ONLY,
+        description_placeholders={
+            "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+        },
     )
 
     hass.services.async_register(
