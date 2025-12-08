@@ -385,6 +385,7 @@ async def test_api_get_services(
     assert data2[-1] == snapshot
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test_domain"])
 async def test_api_call_service_no_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -403,6 +404,7 @@ async def test_api_call_service_no_data(
     assert len(test_value) == 1
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test_domain"])
 async def test_api_call_service_with_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -463,6 +465,7 @@ RESP_UNSUPPORTED = {
         (ha.SupportsResponse.NONE, False, 1, HTTPStatus.OK, []),
     ],
 )
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test_domain"])
 async def test_api_call_service_returns_response_requested_response(
     hass: HomeAssistant,
     mock_api_client: TestClient,
@@ -495,6 +498,7 @@ async def test_api_call_service_returns_response_requested_response(
     assert await resp.json() == expected_response
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test_domain"])
 async def test_api_call_service_client_closed(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -757,6 +761,7 @@ async def test_api_fire_event_context(
     assert test_value[0].context.user_id == refresh_token.user.id
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test_domain"])
 async def test_api_call_service_context(
     hass: HomeAssistant, mock_api_client: TestClient, hass_access_token: str
 ) -> None:
@@ -901,6 +906,7 @@ async def test_api_call_service_not_found(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test_domain"])
 async def test_api_call_service_bad_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
