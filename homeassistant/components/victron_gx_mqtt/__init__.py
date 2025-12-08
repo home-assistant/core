@@ -11,8 +11,6 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-from homeassistant.helpers import config_validation as cv
-
 from .const import DOMAIN
 from .hub import Hub
 
