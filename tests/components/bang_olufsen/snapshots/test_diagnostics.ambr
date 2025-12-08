@@ -82,6 +82,14 @@
       'entity_id': 'media_player.beosound_balance_11111111',
       'state': 'playing',
     }),
+    'remote_55555555': dict({
+      'address': '',
+      'appVersion': '1.0.0',
+      'batteryLevel': 50,
+      'connected': True,
+      'name': 'BEORC',
+      'serialNumber': '55555555',
+    }),
     'websocket_connected': False,
   })
 # ---
