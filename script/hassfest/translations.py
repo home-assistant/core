@@ -148,7 +148,10 @@ def translation_value_validator(value: Any) -> str:
     if string_value != string_value.strip():
         raise vol.Invalid("the string should not contain leading or trailing spaces")
     if RE_URL.search(string_value):
-        raise vol.Invalid("the string should not contain URLs or file paths")
+        raise vol.Invalid(
+            "the string should not contain URLs or file paths, "
+            "please use description placeholders instead"
+        )
     return string_value
 
 
