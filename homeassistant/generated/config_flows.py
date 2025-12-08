@@ -97,6 +97,7 @@ FLOWS = {
         "bluemaestro",
         "bluesound",
         "bluetooth",
+        "bms_ble",
         "bmw_connected_drive",
         "bond",
         "bosch_alarm",
