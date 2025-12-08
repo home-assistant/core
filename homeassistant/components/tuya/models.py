@@ -9,12 +9,15 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.util.json import json_loads
 
-from .const import DPType
 from .type_information import (
+    BitmapTypeInformation,
+    BooleanTypeInformation,
     EnumTypeInformation,
     IntegerTypeInformation,
+    JsonTypeInformation,
+    RawTypeInformation,
+    StringTypeInformation,
     TypeInformation,
-    find_dpcode,
 )
 
 
@@ -79,7 +82,7 @@ class DPCodeWrapper(DeviceWrapper):
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     """Base DPCode wrapper with Type Information."""
 
-    DPTYPE: DPType
+    _DPTYPE: type[T]
     type_information: T
 
     def __init__(self, dpcode: str, type_information: T) -> None:
@@ -102,8 +105,8 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         prefer_function: bool = False,
     ) -> Self | None:
         """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
-        if type_information := find_dpcode(  # type: ignore[call-overload]
-            device, dpcodes, dptype=cls.DPTYPE, prefer_function=prefer_function
+        if type_information := cls._DPTYPE.find_dpcode(
+            device, dpcodes, prefer_function=prefer_function
         ):
             return cls(
                 dpcode=type_information.dpcode, type_information=type_information
@@ -111,10 +114,10 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         return None
 
 
-class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
     """Wrapper to extract information from a RAW/binary value."""
 
-    DPTYPE = DPType.RAW
+    _DPTYPE = RawTypeInformation
 
     def read_bytes(self, device: CustomerDevice) -> bytes | None:
         """Read the device value for the dpcode."""
@@ -125,13 +128,13 @@ class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         return decoded
 
 
-class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation]):
     """Simple wrapper for boolean values.
 
     Supports True/False only.
     """
 
-    DPTYPE = DPType.BOOLEAN
+    _DPTYPE = BooleanTypeInformation
 
     def _convert_value_to_raw_value(
         self, device: CustomerDevice, value: Any
@@ -144,10 +147,10 @@ class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         raise ValueError(f"Invalid boolean value `{value}`")
 
 
-class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
     """Wrapper to extract information from a JSON value."""
 
-    DPTYPE = DPType.JSON
+    _DPTYPE = JsonTypeInformation
 
     def read_json(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
@@ -159,7 +162,7 @@ class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
-    DPTYPE = DPType.ENUM
+    _DPTYPE = EnumTypeInformation
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
@@ -175,7 +178,7 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
 class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation]):
     """Simple wrapper for IntegerTypeInformation values."""
 
-    DPTYPE = DPType.INTEGER
+    _DPTYPE = IntegerTypeInformation
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
         """Init DPCodeIntegerWrapper."""
@@ -195,10 +198,10 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
         )
 
 
-class DPCodeStringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeStringWrapper(DPCodeTypeInformationWrapper[StringTypeInformation]):
     """Wrapper to extract information from a STRING value."""
 
-    DPTYPE = DPType.STRING
+    _DPTYPE = StringTypeInformation
 
 
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
@@ -225,7 +228,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
     ) -> Self | None:
         """Find and return a DPCodeBitmapBitWrapper for the given DP codes."""
         if (
-            type_information := find_dpcode(device, dpcodes, dptype=DPType.BITMAP)
+            type_information := BitmapTypeInformation.find_dpcode(device, dpcodes)
         ) and bitmap_key in type_information.label:
             return cls(
                 type_information.dpcode, type_information.label.index(bitmap_key)
