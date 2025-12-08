@@ -18,8 +18,6 @@ from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
-# Config schema - this integration is config entry only
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]

@@ -70,8 +70,9 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
             device, metric, device_info, "sensor", simple_naming, installation_id
         )
 
+    @callback
     def _on_update_task(self, value: Any) -> None:
         if self._attr_native_value == value:
             return
         self._attr_native_value = value
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

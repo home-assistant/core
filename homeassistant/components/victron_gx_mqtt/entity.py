@@ -81,14 +81,13 @@ class VictronBaseEntity(Entity):
             f"translation_placeholders={self._attr_translation_placeholders})"
         )
 
+    @callback
     @abstractmethod
     def _on_update_task(self, value: Any) -> None:
         """Handle the metric update. Must be implemented by subclasses."""
 
+    @callback
     def _on_update(self, metric: VictronVenusMetric, value: Any) -> None:
-        # Might be that the entity was removed or not added yet
-        if self.hass is None:
-            return
         self._on_update_task(value)
 
     async def async_added_to_hass(self) -> None:

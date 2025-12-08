@@ -81,7 +81,7 @@ class Hub:
             ),
         )
         self._hub.on_new_metric = self._on_new_metric
-        self.add_entities_map: dict[MetricKind, NewMetricCallback] = {}
+        self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
 
     async def start(self) -> None:
         """Start the Victron MQTT hub."""
@@ -108,7 +108,7 @@ class Hub:
         _LOGGER.info("New metric received. Device: %s, Metric: %s", device, metric)
         assert hub.installation_id is not None
         device_info = Hub._map_device_info(device, hub.installation_id)
-        callback = self.add_entities_map.get(metric.metric_kind)
+        callback = self.new_metric_callbacks.get(metric.metric_kind)
         if callback is not None:
             callback(device, metric, device_info, hub.installation_id)
 
@@ -134,18 +134,18 @@ class Hub:
     def register_new_metric_callback(
         self, kind: MetricKind, new_metric_callback: NewMetricCallback
     ) -> None:
-        """Register a callback to add entities for a specific metric kind."""
+        """Register a callback to handle a new specific metric kind."""
         _LOGGER.info(
-            "Registering AddEntitiesCallback. kind: %s, AddEntitiesCallback: %s",
+            "Registering NewMetricCallback. kind: %s, NewMetricCallback: %s",
             kind,
             new_metric_callback,
         )
-        assert kind not in self.add_entities_map, (
-            f"AddEntitiesCallback for kind {kind} is already registered"
+        assert kind not in self.new_metric_callbacks, (
+            f"NewMetricCallback for kind {kind} is already registered"
         )
-        self.add_entities_map[kind] = new_metric_callback
+        self.new_metric_callbacks[kind] = new_metric_callback
 
     def unregister_all_new_metric_callbacks(self) -> None:
-        """Unregister all callbacks to add entities for all metric kinds."""
+        """Unregister all callbacks to handle new metrics for all metric kinds."""
         _LOGGER.info("Unregistering NewMetricCallback")
-        self.add_entities_map.clear()
+        self.new_metric_callbacks.clear()
