@@ -1,4 +1,9 @@
-"""Locate minecraft servers to use when adding new devices."""
+"""Locate minecraft servers to use when adding new devices.
+
+This module defines a small set of classes for discovering Minecraft servers.
+The discovery logic is kept separate from the config flow so that networking
+code is isolated, easier to test, and easier to change later.
+"""
 
 from abc import ABC, abstractmethod
 import asyncio
@@ -11,9 +16,12 @@ from .api import JavaServer
 
 
 class ServerLocator(ABC):
-    """Class encapsulating functionality related to locating servers.
+    """Interface for discovering Minecraft servers.
 
-    This is done usually through scanning the local network for running servers.
+    The goal of this class is to separate server-discovery logic from the
+    config flow. By using a shared interface, the integration can support
+    multiple discovery methods (local scanning, mock data, etc.) without
+    changing the rest of the code.
     """
 
     @abstractmethod
@@ -24,11 +32,13 @@ class ServerLocator(ABC):
 class MockServerLocator(ServerLocator):
     """Mock version of the ServerLocator.
 
-    Includes function should_return to specify if a result should be returned.
+    Used mainly for testing. This locator does not scan the network but returns
+    a preset result. The method should_return() controls whether find_servers()
+    will return a mock server or an empty list.
     """
 
     def __init__(self) -> None:
-        """Init function for the class."""
+        """Initialize the mock locator with a default return value."""
         self._should_return = True
 
     def should_return(self, should_return: bool) -> None:
@@ -36,17 +46,22 @@ class MockServerLocator(ServerLocator):
         self._should_return = should_return
 
     async def find_servers(self) -> list[str]:
-        """Tries to locate servers."""
+        """Return a mock server or an empty list based on the current setting."""
         if self._should_return:
             return ["127.0.0.1:25565"]
         return []
 
 
 class CommonServerLocator(ServerLocator):
-    """Returns a list of common online servers."""
+    """Locator that returns a list of well-known public servers.
+
+    Useful for testing or providing example servers. This locator does not scan
+    the network. The method should_return() controls whether find_servers()
+    returns the preset list or an empty list.
+    """
 
     def __init__(self) -> None:
-        """Init function for the class."""
+        """Initialize the locator with a default return value."""
         self._should_return = True
 
     def should_return(self, should_return: bool) -> None:
@@ -54,7 +69,7 @@ class CommonServerLocator(ServerLocator):
         self._should_return = should_return
 
     async def find_servers(self) -> list[str]:
-        """Tries to locate servers."""
+        """Return the preset server list or an empty list based on the setting."""
         if self._should_return:
             return [
                 "mc.hypixel.net:25565",
@@ -81,13 +96,24 @@ async def _ping_server(ip: str) -> None | str:
 
 
 class LocalServerLocator(ServerLocator):
-    """Version of ServerLocator meant to find servers on the local network."""
+    """Locator that scans the local network for Minecraft servers.
+
+    Retrieves local network interfaces, generates IP addresses
+    within each detected subnet, and tests each address to determine whether a
+    Minecraft server is running there.
+    """
 
     async def find_servers(self) -> list[str]:
         """Returns a list of servers."""
         return await self._find_minecraft_servers_async()
 
     async def _find_minecraft_servers_async(self) -> list[str]:
+        """Scan all detected local subnets for Minecraft servers.
+
+        Builds a list of IP addresses from all local networks and
+        asynchronously tests each address. Only addresses that respond as a
+        Minecraft server are returned.
+        """
         tasks: list[Coroutine[None, None, str | None]] = []
         for _, address in await self._get_local_networks():
             for ip in _get_all_ips(address):

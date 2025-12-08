@@ -28,7 +28,10 @@ NO_SERVERS_FOUND_MESSAGE = (
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Minecraft Server."""
+    """Handle the config flow for the Minecraft Server integration.
+
+    Adds suggested servers discovered on the local network.
+    """
 
     VERSION = 3
 
