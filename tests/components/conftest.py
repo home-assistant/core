@@ -965,7 +965,7 @@ async def _check_service_registration_translation(
     )
     # Service `name` and `description` should be compulsory
     # `notify`, `script`, `tts` are special exempted cases
-    if domain not in ("notify", "script", "tts"):
+    if domain not in ("esphome", "notify", "script", "tts"):
         for subkey in ("name", "description"):
             await _validate_translation(
                 hass,
