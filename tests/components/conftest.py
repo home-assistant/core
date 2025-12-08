@@ -683,7 +683,7 @@ async def _validate_translation(
                 full_key = k
                 break
     if translation_errors.get(full_key) in {"used", "unused"}:
-        # If the does not integration exist, translation errors should be ignored
+        # If the integration does not exist, translation errors should be ignored
         # via the ignore_translations_for_mock_domains fixture instead of the
         # ignore_missing_translations fixture.
         try:
@@ -953,7 +953,7 @@ _DYNAMIC_SERVICE_DOMAINS = {
     "shell_command",
     "tts",
 }
-"""These domain create services dynamically.
+"""These domains create services dynamically.
 
 name/description translations are not required.
 """
