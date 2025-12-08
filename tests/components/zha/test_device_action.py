@@ -264,9 +264,6 @@ async def test_invalid_zha_event_type(
         cluster_handler.zha_send_event(COMMAND_SINGLE, 123)
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.zha.services.test."]
-)
 async def test_client_unique_id_suffix_stripped(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],

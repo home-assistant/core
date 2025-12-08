@@ -768,7 +768,6 @@ async def test_supported_features_children_and_cmds(
     assert check_flags == ump.supported_features
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_overrides(hass: HomeAssistant, config_children_and_attr) -> None:
     """Test overrides."""
     config = copy(config_children_and_attr)
@@ -1065,7 +1064,6 @@ async def test_service_call_to_child(hass: HomeAssistant, mock_states) -> None:
     assert len(mock_states.mock_mp_2.service_calls["turn_off"]) == 2
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_service_call_to_command(hass: HomeAssistant, mock_states) -> None:
     """Test service call to command."""
     config = copy(CONFIG_CHILDREN_ONLY)

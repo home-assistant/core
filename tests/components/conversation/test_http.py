@@ -484,7 +484,6 @@ async def test_ws_hass_agent_debug_custom_sentence(
     assert debug_results[0].get("file") == "en/beer.yaml"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_ws_hass_agent_debug_sentence_trigger(
     hass: HomeAssistant,
     init_components,

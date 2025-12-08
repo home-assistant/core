@@ -35,9 +35,6 @@ async def set_utc(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("UTC")
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_valid_config(hass: HomeAssistant) -> None:
     """Test configuration."""
     assert await async_setup_component(
@@ -57,9 +54,6 @@ async def test_valid_config(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -85,9 +79,6 @@ async def test_unique_id(
     assert entity_registry.async_get_entity_id("switch", "flux", "zaphotbeeblebrox")
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_restore_state_last_on(hass: HomeAssistant) -> None:
     """Test restoring state when the last state is on."""
     mock_restore_cache(hass, [State("switch.flux", "on")])
@@ -110,9 +101,6 @@ async def test_restore_state_last_on(hass: HomeAssistant) -> None:
     assert state.state == "on"
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_restore_state_last_off(hass: HomeAssistant) -> None:
     """Test restoring state when the last state is off."""
     mock_restore_cache(hass, [State("switch.flux", "off")])
@@ -135,9 +123,6 @@ async def test_restore_state_last_off(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_valid_config_with_info(hass: HomeAssistant) -> None:
     """Test configuration."""
     assert await async_setup_component(
@@ -159,9 +144,6 @@ async def test_valid_config_with_info(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_valid_config_no_name(hass: HomeAssistant) -> None:
     """Test configuration."""
     with assert_setup_component(1, "switch"):
@@ -182,9 +164,6 @@ async def test_invalid_config_no_lights(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_when_switch_is_off(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -242,9 +221,6 @@ async def test_flux_when_switch_is_off(
     assert not turn_on_calls
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_before_sunrise(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -310,9 +286,6 @@ async def test_flux_before_sunrise(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_before_sunrise_known_location(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -372,9 +345,6 @@ async def test_flux_before_sunrise_known_location(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_sunrise_before_sunset(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -439,9 +409,6 @@ async def test_flux_after_sunrise_before_sunset(
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_sunset_before_stop(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -507,9 +474,6 @@ async def test_flux_after_sunset_before_stop(
     assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_stop_before_sunrise(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -574,9 +538,6 @@ async def test_flux_after_stop_before_sunrise(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_with_custom_start_stop_times(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -643,9 +604,6 @@ async def test_flux_with_custom_start_stop_times(
     assert call.data[light.ATTR_XY_COLOR] == [0.504, 0.385]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_before_sunrise_stop_next_day(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -714,9 +672,6 @@ async def test_flux_before_sunrise_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -785,9 +740,6 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_sunset_before_midnight_stop_next_day(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -856,9 +808,6 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.588, 0.386]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_sunset_after_midnight_stop_next_day(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -927,9 +876,6 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.601, 0.382]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_after_stop_before_sunrise_stop_next_day(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -998,9 +944,6 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_with_custom_colortemps(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -1068,9 +1011,6 @@ async def test_flux_with_custom_colortemps(
     assert call.data[light.ATTR_XY_COLOR] == [0.469, 0.378]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_with_custom_brightness(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -1137,9 +1077,6 @@ async def test_flux_with_custom_brightness(
     assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_with_multiple_lights(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -1227,9 +1164,6 @@ async def test_flux_with_multiple_lights(
     assert call.data[light.ATTR_XY_COLOR] == [0.46, 0.376]
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_with_temp(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
@@ -1293,9 +1227,6 @@ async def test_flux_with_temp(
     assert call.data[light.ATTR_COLOR_TEMP_KELVIN] == 3708
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.switch.services.flux_update."]
-)
 async def test_flux_with_rgb(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],

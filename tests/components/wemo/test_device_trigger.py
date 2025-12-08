@@ -99,7 +99,6 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
     assert triggers == unordered(expected_triggers)
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_fires_on_long_press(
     hass: HomeAssistant, wemo_entity: er.RegistryEntry
 ) -> None:

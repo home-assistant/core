@@ -368,7 +368,6 @@ async def test_fire_event_without_data(
     assert runs[0].data == {}
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_call_service(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
@@ -397,7 +396,6 @@ async def test_call_service(
     assert call.context.as_dict() == msg["result"]["context"]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_return_response_error(hass: HomeAssistant, websocket_client) -> None:
     """Test return_response=True errors when service has no response."""
     hass.services.async_register(
@@ -420,10 +418,6 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
 
 
 @pytest.mark.parametrize("command", ["call_service", "call_service_action"])
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.homeassistant.services.test_service."]
-)
 async def test_call_service_blocking(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket, command
 ) -> None:
@@ -546,7 +540,6 @@ async def test_call_service_blocking(
     )
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_call_service_target(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
@@ -631,7 +624,6 @@ async def test_call_service_not_found(
     assert msg["error"]["translation_domain"] == "homeassistant"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_call_service_child_not_found(
     hass: HomeAssistant, websocket_client
 ) -> None:
@@ -669,7 +661,6 @@ async def test_call_service_child_not_found(
     assert msg["error"]["translation_domain"] == "websocket_api"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_call_service_schema_validation_error(
     hass: HomeAssistant, websocket_client
 ) -> None:
@@ -735,9 +726,7 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains", [["test", "domain_test"]]
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_call_service_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1192,7 +1181,6 @@ async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
     assert msg["type"] == "pong"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_call_service_context_with_user(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -2758,7 +2746,6 @@ async def test_test_condition(
     assert msg["result"]["result"] is False
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["domain_test"])
 async def test_execute_script(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
@@ -2842,9 +2829,7 @@ async def test_execute_script(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains", [["domain_test", "test"]]
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_execute_script_err_localization(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -3946,22 +3931,6 @@ async def test_get_triggers_conditions_for_target(
 @pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_services", return_value=True)
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.component1.services.light_dance.",
-            "component.component1.services.light_flash.",
-            "component.component1.services.light_message.",
-            "component.component2.services.match_all.",
-            "component.component2.services.other_integration_lights.",
-            "component.light.services.non_target_service.",
-            "component.sensor.services.non_target_service.",
-            "component.sensor.services.turn_on.",
-            "component.switch.services.non_target_service.",
-        ]
-    ],
-)
 async def test_get_services_for_target(
     mock_has_services: Mock,
     mock_load_yaml: Mock,
@@ -4197,7 +4166,6 @@ async def test_get_services_for_target(
 
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_services", return_value=True)
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["new_domain"])
 async def test_get_services_for_target_caching(
     mock_has_services: Mock,
     mock_load_yaml: Mock,

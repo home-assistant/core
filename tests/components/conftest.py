@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
+import inspect
 from pathlib import Path
 import re
 import string
@@ -1085,16 +1086,25 @@ async def check_translations(
         *,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
-        translation_coros.add(
-            _check_service_registration_translation(
-                self._hass,
-                domain,
-                service,
-                description_placeholders,
-                translation_errors,
-                ignored_domains,
+        caller = inspect.stack()[1]
+        if (
+            # async_mock_service is used in tests to register test services
+            caller.function != "async_mock_service"
+            # ServiceRegistry.async_register can also be called directly in
+            # a test module
+            and not caller.filename.startswith(str(Path(__file__).parents[0]))
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    description_placeholders,
+                    translation_errors,
+                    ignored_domains,
+                )
             )
-        )
+
         _original_service_registry_async_register(
             self,
             domain,

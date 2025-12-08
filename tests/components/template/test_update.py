@@ -429,7 +429,6 @@ async def test_latest_version_template(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.usefixtures("setup_update")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test install action."""
 
@@ -809,7 +808,6 @@ async def test_optimistic_in_progress_with_update_percent_template(
     ],
 )
 @pytest.mark.usefixtures("setup_update")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_supported_features(
     hass: HomeAssistant,
     supported_feature: update.UpdateEntityFeature,

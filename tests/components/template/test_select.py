@@ -242,7 +242,6 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("select") == []
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_templates_with_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
 ) -> None:

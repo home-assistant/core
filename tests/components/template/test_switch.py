@@ -459,7 +459,6 @@ async def test_icon_template(
     ("config_attr", "attribute", "expected"),
     [("icon", "icon", "mdi:icon"), ("picture", "entity_picture", "picture.jpg")],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_attributes_with_optimistic_state(
     hass: HomeAssistant,
     config_attr: str,
@@ -770,7 +769,6 @@ async def test_missing_off_does_not_create(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_action(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -803,7 +801,6 @@ async def test_on_action(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_on_action_optimistic(
     hass: HomeAssistant, setup_optimistic_switch, calls: list[ServiceCall]
 ) -> None:
@@ -836,7 +833,6 @@ async def test_on_action_optimistic(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_off_action(
     hass: HomeAssistant,
     style: ConfigurationStyle,
@@ -869,7 +865,6 @@ async def test_off_action(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_off_action_optimistic(
     hass: HomeAssistant, setup_optimistic_switch, calls: list[ServiceCall]
 ) -> None:

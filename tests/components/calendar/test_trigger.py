@@ -168,7 +168,6 @@ def mock_update_interval() -> Generator[None]:
         yield
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_event_start_trigger(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -203,7 +202,6 @@ async def test_event_start_trigger(
         ("+01:00", datetime.timedelta(hours=1)),
     ],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_event_start_trigger_with_offset(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -237,7 +235,6 @@ async def test_event_start_trigger_with_offset(
         ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_event_end_trigger(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -276,7 +273,6 @@ async def test_event_end_trigger(
         ("+01:00", datetime.timedelta(hours=1)),
     ],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_event_end_trigger_with_offset(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -310,7 +306,6 @@ async def test_event_end_trigger_with_offset(
         ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_calendar_trigger_with_no_events(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -326,7 +321,6 @@ async def test_calendar_trigger_with_no_events(
     assert len(calls_data()) == 0
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_multiple_start_events(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -361,7 +355,6 @@ async def test_multiple_start_events(
     ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_multiple_end_events(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -397,7 +390,6 @@ async def test_multiple_end_events(
     ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_multiple_events_sharing_start_time(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -433,7 +425,6 @@ async def test_multiple_events_sharing_start_time(
     ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_overlap_events(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -511,7 +502,6 @@ async def test_legacy_entity_type(
     assert "is not a calendar entity" in caplog.text
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_update_next_event(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -555,7 +545,6 @@ async def test_update_next_event(
     ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_update_missed(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -646,7 +635,6 @@ async def test_update_missed(
     ],
     ids=["basic", "more-fields", "all-day"],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_event_payload(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -672,7 +660,6 @@ async def test_event_payload(
         ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_trigger_timestamp_window_edge(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -703,7 +690,6 @@ async def test_trigger_timestamp_window_edge(
         ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_event_start_trigger_dst(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -760,7 +746,6 @@ async def test_event_start_trigger_dst(
         ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_config_entry_reload(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
@@ -801,7 +786,6 @@ async def test_config_entry_reload(
     ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_config_entry_unload(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],

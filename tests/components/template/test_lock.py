@@ -334,7 +334,6 @@ async def test_template_state(hass: HomeAssistant) -> None:
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_open_lock_optimistic(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -533,7 +532,6 @@ async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test lock action."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
@@ -562,7 +560,6 @@ async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test unlock action."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
@@ -592,7 +589,6 @@ async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test open action."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
@@ -632,7 +628,6 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_lock_action_with_code(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -675,7 +670,6 @@ async def test_lock_action_with_code(
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_unlock_action_with_code(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -726,7 +720,6 @@ async def test_unlock_action_with_code(
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_lock_actions_fail_with_invalid_code(
     hass: HomeAssistant, calls: list[ServiceCall], test_action
 ) -> None:
@@ -769,7 +762,6 @@ async def test_lock_actions_fail_with_invalid_code(
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     hass: HomeAssistant, calls: list[ServiceCall], expected: int
 ) -> None:
@@ -817,7 +809,6 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
 )
 @pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_actions_with_none_as_codeformat_ignores_code(
     hass: HomeAssistant, action, calls: list[ServiceCall]
 ) -> None:
@@ -861,7 +852,6 @@ async def test_actions_with_none_as_codeformat_ignores_code(
 )
 @pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
     hass: HomeAssistant, action, calls: list[ServiceCall]
 ) -> None:

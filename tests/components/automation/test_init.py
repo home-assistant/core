@@ -73,7 +73,6 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "automation")
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_service_data_not_a_dict(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls: list[ServiceCall]
 ) -> None:
@@ -96,7 +95,6 @@ async def test_service_data_not_a_dict(
     assert "Result is not a Dictionary" in caplog.text
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_service_data_single_template(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -122,7 +120,6 @@ async def test_service_data_single_template(
     assert calls[0].data["foo"] == "bar"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_service_specify_data(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -159,7 +156,6 @@ async def test_service_specify_data(
     assert state.attributes.get("last_triggered") == time
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_service_specify_entity_id(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -181,7 +177,6 @@ async def test_service_specify_entity_id(
     assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_service_specify_entity_id_list(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -206,7 +201,6 @@ async def test_service_specify_entity_id_list(
     assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world", "hello.world2"]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_two_triggers(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test triggers."""
     assert await async_setup_component(
@@ -231,7 +225,6 @@ async def test_two_triggers(hass: HomeAssistant, calls: list[ServiceCall]) -> No
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_trigger_service_ignoring_condition(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls: list[ServiceCall]
 ) -> None:
@@ -285,7 +278,6 @@ async def test_trigger_service_ignoring_condition(
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_two_conditions_with_and(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -326,7 +318,6 @@ async def test_two_conditions_with_and(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_shorthand_conditions_template(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -354,7 +345,6 @@ async def test_shorthand_conditions_template(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_list_setting(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -385,7 +375,6 @@ async def test_automation_list_setting(
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_calling_two_actions(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -412,7 +401,6 @@ async def test_automation_calling_two_actions(
     assert calls[1].data["position"] == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test that the shared context is passed down the chain."""
     assert await async_setup_component(
@@ -480,7 +468,6 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     assert calls[0].context is second_trigger_context
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the automation services for turning entities on/off."""
     entity_id = "automation.hello"
@@ -563,7 +550,6 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert automation.is_on(hass, entity_id)
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_config_service(
     hass: HomeAssistant,
     calls: list[ServiceCall],
@@ -647,7 +633,6 @@ async def test_reload_config_service(
     assert calls[1].data.get("event") == "test_event2"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_config_when_invalid_config(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -689,7 +674,6 @@ async def test_reload_config_when_invalid_config(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_config_handles_load_fails(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -732,7 +716,6 @@ async def test_reload_config_handles_load_fails(
 @pytest.mark.parametrize(
     "service", ["turn_off_stop", "turn_off_no_stop", "reload", "reload_single"]
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_stops(
     hass: HomeAssistant, calls: list[ServiceCall], service: str
 ) -> None:
@@ -811,7 +794,6 @@ async def test_automation_stops(
 
 
 @pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_unchanged_does_not_stop(
     hass: HomeAssistant, calls: list[ServiceCall], extra_config: dict[str, str]
 ) -> None:
@@ -858,7 +840,6 @@ async def test_reload_unchanged_does_not_stop(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_single_unchanged_does_not_stop(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -910,7 +891,6 @@ async def test_reload_single_unchanged_does_not_stop(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_single_add_automation(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -947,7 +927,6 @@ async def test_reload_single_add_automation(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_single_parallel_calls(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1063,7 +1042,6 @@ async def test_reload_single_parallel_calls(
     assert len(calls) == 4
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_single_remove_automation(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1100,7 +1078,6 @@ async def test_reload_single_remove_automation(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_moved_automation_without_alias(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1156,7 +1133,6 @@ async def test_reload_moved_automation_without_alias(
         assert len(calls) == 2
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_identical_automations_without_id(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -1332,7 +1308,6 @@ async def test_reload_identical_automations_without_id(
         },
     ],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_unchanged_automation(
     hass: HomeAssistant, calls: list[ServiceCall], automation_config: dict[str, Any]
 ) -> None:
@@ -1368,7 +1343,6 @@ async def test_reload_unchanged_automation(
 
 
 @pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_automation_when_blueprint_changes(
     hass: HomeAssistant, calls: list[ServiceCall], extra_config: dict[str, str]
 ) -> None:
@@ -1431,7 +1405,6 @@ async def test_reload_automation_when_blueprint_changes(
         assert len(calls) == 3
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     time = dt_util.utcnow()
@@ -1487,7 +1460,6 @@ async def test_automation_restore_state(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_initial_value_off(hass: HomeAssistant) -> None:
     """Test initial value off."""
     calls = async_mock_service(hass, "test", "automation")
@@ -1511,7 +1483,6 @@ async def test_initial_value_off(hass: HomeAssistant) -> None:
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_initial_value_on(hass: HomeAssistant) -> None:
     """Test initial value on."""
     hass.set_state(CoreState.not_running)
@@ -1541,7 +1512,6 @@ async def test_initial_value_on(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
     hass.set_state(CoreState.not_running)
@@ -1568,7 +1538,6 @@ async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_initial_value_on_but_restore_off(hass: HomeAssistant) -> None:
     """Test initial value on and restored state is turned off."""
     calls = async_mock_service(hass, "test", "automation")
@@ -1593,7 +1562,6 @@ async def test_initial_value_on_but_restore_off(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_no_initial_value_and_restore_off(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
     calls = async_mock_service(hass, "test", "automation")
@@ -1617,7 +1585,6 @@ async def test_no_initial_value_and_restore_off(hass: HomeAssistant) -> None:
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_is_on_if_no_initial_state_or_restore(
     hass: HomeAssistant,
 ) -> None:
@@ -1642,7 +1609,6 @@ async def test_automation_is_on_if_no_initial_state_or_restore(
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     """Test if automation is not trigger on bootstrap."""
     hass.set_state(CoreState.not_running)
@@ -2302,7 +2268,6 @@ async def test_logbook_humanify_automation_triggered_event(hass: HomeAssistant) 
     assert event2["entity_id"] == "automation.bye"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_variables(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2386,7 +2351,6 @@ async def test_automation_variables(
     assert len(calls) == 3
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_trigger_variables(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2455,7 +2419,6 @@ async def test_automation_trigger_variables(
     assert "Error rendering variables" not in caplog.text
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_bad_trigger_variables(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2486,7 +2449,6 @@ async def test_automation_bad_trigger_variables(
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_automation_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2518,7 +2480,6 @@ async def test_automation_this_var_always(
     assert "Error rendering variables" not in caplog.text
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_blueprint_automation(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -2554,7 +2515,6 @@ async def test_blueprint_automation(
     ]
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_blueprint_automation_legacy_schema(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -2615,7 +2575,6 @@ async def test_blueprint_automation_legacy_schema(
         ),
     ],
 )
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_blueprint_automation_override(
     hass: HomeAssistant, calls: list[ServiceCall], blueprint: str, override: dict
 ) -> None:
@@ -2770,7 +2729,6 @@ async def test_blueprint_automation_fails_substitution(
     }
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the automation trigger service."""
     assert await async_setup_component(
@@ -2801,7 +2759,6 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
     assert calls[0].context.parent_id is context.id
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_trigger_condition_implicit_id(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -2854,7 +2811,6 @@ async def test_trigger_condition_implicit_id(
     assert calls[-1].data.get("param") == "one"
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_trigger_condition_explicit_id(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -2920,7 +2876,6 @@ async def test_trigger_condition_explicit_id(
     ],
 )
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_recursive_automation_starting_script(
     hass: HomeAssistant,
     automation_mode,
@@ -3037,7 +2992,6 @@ async def test_recursive_automation_starting_script(
     [mode for mode in SCRIPT_MODE_CHOICES if mode != SCRIPT_MODE_RESTART],
 )
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -3098,7 +3052,6 @@ async def test_recursive_automation(
 
 
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_recursive_automation_restart_mode(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -3425,7 +3378,6 @@ async def test_two_automation_call_restart_script_right_after_each_other(
     assert len(events) == 1
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_action_backward_compatibility(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
@@ -3543,7 +3495,6 @@ async def test_valid_configuration(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_reload_when_labs_flag_changes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
