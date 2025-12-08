@@ -681,7 +681,7 @@
     ]),
   })
 # ---
-# name: test_ws_hass_agent_debug_sentence_trigger
+# name: test_ws_hass_agent_debug_sentence_trigger[test]
   dict({
     'trigger_sentences': list([
       'hello',
@@ -689,7 +689,7 @@
     ]),
   })
 # ---
-# name: test_ws_hass_agent_debug_sentence_trigger.1
+# name: test_ws_hass_agent_debug_sentence_trigger[test].1
   dict({
     'results': list([
       dict({
