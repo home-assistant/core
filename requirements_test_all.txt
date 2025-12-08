@@ -178,7 +178,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.2
+aioairzone==1.0.3
 
 # homeassistant.components.alexa_devices
 aioamazondevices==10.0.0
@@ -378,7 +378,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.22.0
+aioshelly==13.23.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1852,7 +1852,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.6.0
+pymiele==0.6.1
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2147,7 +2147,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.10.2
+python-roborock==3.10.10
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
