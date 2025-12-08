@@ -56,11 +56,11 @@
   "issues": {
     "yaml_deprecation": {
       "description": "The device (MAC: {mac}, Host: {host}) is configured in configuration.yaml. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from configuration.yaml to avoid future issues.",
-      "title": "Legacy YAML configuration detected {name}."
+      "title": "Legacy YAML configuration detected {host}."
     },
     "yaml_deprecation_import_issue": {
       "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. Please try reloading the integration, or removing the YAML block from configuration.yaml and creating the entry using the UI.",
-      "title": "Legacy YAML configuration import issue for {name}"
+      "title": "Legacy YAML configuration import issue for {host}"
     }
   }
 }

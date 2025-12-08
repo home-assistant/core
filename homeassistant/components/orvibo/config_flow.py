@@ -8,7 +8,7 @@ from orvibo.s20 import discover
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -44,7 +44,6 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         async def _filter_discovered_switches(
             switches: dict[str, dict[str, Any]],
         ) -> dict[str, dict[str, Any]]:
-            _LOGGER.debug("Discovered switches: %s", self._discovered_switches)
             # Get existing unique_ids from config entries
             existing_ids = {entry.unique_id for entry in self._async_current_entries()}
             _LOGGER.debug("Existing unique IDs: %s", existing_ids)
@@ -64,8 +63,11 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         # Discover S20 devices.
         _LOGGER.debug("Discovering S20 switches")
 
+        _unfiltered_switches = await self.hass.async_add_executor_job(discover)
+        _LOGGER.debug("All discovered switches: %s", _unfiltered_switches)
+
         self._discovered_switches = await _filter_discovered_switches(
-            await self.hass.async_add_executor_job(discover)
+            _unfiltered_switches
         )
 
     async def async_step_user(
@@ -95,9 +97,8 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             if not error:
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
-                user_input[CONF_NAME] = f"{DEFAULT_NAME} ({user_input[CONF_HOST]})"
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=f"{DEFAULT_NAME} ({user_input[CONF_HOST]})", data=user_input
                 )
             errors["base"] = error
 
@@ -143,13 +144,12 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if _chosen_host == host:
                     self.chosen_switch[CONF_HOST] = host
                     self.chosen_switch[CONF_MAC] = _format_mac(data[CONF_MAC])
-                    self.chosen_switch[CONF_NAME] = f"{DEFAULT_NAME} ({host})"
 
                 await self.async_set_unique_id(self.chosen_switch[CONF_MAC])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=self.chosen_switch
+                    title=f"{DEFAULT_NAME} ({host})", data=self.chosen_switch
                 )
 
         _LOGGER.debug("discovered switches: %s", self._discovered_switches)

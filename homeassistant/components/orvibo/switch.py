@@ -9,7 +9,7 @@ from orvibo.s20 import S20, S20Exception
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -60,7 +60,6 @@ async def async_setup_platform(
                 translation_placeholders={
                     "host": switch.get("host"),
                     "mac": switch.get("mac"),
-                    "name": switch.get("name"),
                 },
             )
             return
@@ -69,7 +68,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"eyaml_deprecation_{switch.get('mac').replace(':', '').lower()}",
-            breaks_in_ha_version="2026.11.0",
+            breaks_in_ha_version="2026.5.0",
             is_fixable=False,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
@@ -77,7 +76,6 @@ async def async_setup_platform(
             translation_placeholders={
                 "host": switch.get("host"),
                 "mac": switch.get("mac"),
-                "name": switch.get("name"),
             },
         )
 
@@ -90,7 +88,7 @@ async def async_setup_entry(
     """Setup Entry."""
     switch = []
     switch.append(
-        S20Switch(entry.data[CONF_NAME], entry.data[CONF_HOST], entry.data[CONF_MAC]),
+        S20Switch(entry.title, entry.data[CONF_HOST], entry.data[CONF_MAC]),
     )
     async_add_entities(switch)
 
