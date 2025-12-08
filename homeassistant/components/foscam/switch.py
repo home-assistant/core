@@ -143,6 +143,7 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_human_detection_on,
         turn_off_fn=lambda session: set_motion_detection(session, "humanEnable", False),
         turn_on_fn=lambda session: set_motion_detection(session, "humanEnable", True),
+        exists_fn=lambda coordinator: coordinator.data.supports_human_adjustment,
     ),
 ]
 

@@ -223,11 +223,13 @@
         "name": "Status",
         "state": {
           "air_drying_stopping": "Air drying stopping",
+          "attaching_the_mop": "Attaching the mop",
           "charger_disconnected": "Charger disconnected",
           "charging": "[%key:common::state::charging%]",
           "charging_complete": "Charging complete",
           "charging_problem": "Charging problem",
           "cleaning": "Cleaning",
+          "detaching_the_mop": "Detaching the mop",
           "device_offline": "Device offline",
           "docking": "Docking",
           "egg_attack": "Cupid mode",

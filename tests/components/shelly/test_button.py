@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -487,35 +487,17 @@ async def test_migrate_unique_id_virtual_components_roles(
 async def test_rpc_smoke_mute_alarm_button(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC smoke mute alarm button."""
     entity_id = f"{BUTTON_DOMAIN}.test_name_mute_alarm"
-    status = {
-        "sys": {"wakeup_period": 1000},
-        "smoke:0": {
-            "id": 0,
-            "alarm": False,
-            "mute": False,
-        },
-    }
-    monkeypatch.setattr(mock_rpc_device, "status", status)
-    config = {"smoke:0": {"id": 0, "name": None}}
-    monkeypatch.setattr(mock_rpc_device, "config", config)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(mock_rpc_device, "config", {"smoke:0": {"id": 0, "name": None}})
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    entry = await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(
-        hass,
-        BUTTON_DOMAIN,
-        "test_name_mute_alarm",
-        "smoke:0-smoke_mute",
-        entry,
-    )
 
     # Make device online
     mock_rpc_device.mock_online()
@@ -538,3 +520,64 @@ async def test_rpc_smoke_mute_alarm_button(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.smoke_mute_alarm.assert_called_once_with(0)
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(("action", "value"), [("turn_on", True), ("turn_off", False)])
+async def test_wall_display_screen_buttons(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    snapshot: SnapshotAssertion,
+    action: str,
+    value: bool,
+) -> None:
+    """Test a Wall Display screen buttons."""
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    entity_id = f"button.test_name_{action}_the_screen"
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_set_screen.assert_called_once_with(value=value)
+
+
+async def test_rpc_remove_restart_button_for_sleeping_devices(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC remove restart button for sleeping devices."""
+    config_entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        BUTTON_DOMAIN,
+        "test_name_restart",
+        "reboot",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id) is not None
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None

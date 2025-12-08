@@ -85,6 +85,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
                 return_value=lambda: "mock-unregister"
             ),
         )
+        mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any

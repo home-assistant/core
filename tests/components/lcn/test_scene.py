@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
 from tests.common import snapshot_platform
 
@@ -39,7 +39,7 @@ async def test_scene_activate(
 ) -> None:
     """Test the scene is activated."""
     await init_integration(hass, entry)
-    with patch.object(MockModuleConnection, "activate_scene") as activate_scene:
+    with patch.object(MockDeviceConnection, "activate_scene") as activate_scene:
         await hass.services.async_call(
             DOMAIN_SCENE,
             SERVICE_TURN_ON,

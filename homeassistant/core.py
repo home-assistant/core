@@ -2426,7 +2426,14 @@ class SupportsResponse(enum.StrEnum):
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["domain", "job", "schema", "service", "supports_response"]
+    __slots__ = [
+        "description_placeholders",
+        "domain",
+        "job",
+        "schema",
+        "service",
+        "supports_response",
+    ]
 
     def __init__(
         self,
@@ -2443,11 +2450,13 @@ class Service:
         context: Context | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}", job_type=job_type)
         self.schema = schema
         self.supports_response = supports_response
+        self.description_placeholders = description_placeholders
 
 
 class ServiceCall:
@@ -2590,6 +2599,8 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register a service.
 
@@ -2599,7 +2610,13 @@ class ServiceRegistry:
         """
         self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
-            domain, service, service_func, schema, supports_response, job_type
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders,
         )
 
     @callback
@@ -2617,6 +2634,7 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register a service.
 
@@ -2633,6 +2651,7 @@ class ServiceRegistry:
             service,
             supports_response=supports_response,
             job_type=job_type,
+            description_placeholders=description_placeholders,
         )
 
         if domain in self._services:

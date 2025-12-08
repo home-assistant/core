@@ -18,13 +18,13 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config_entry: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light(s) for Velux platform."""
-    pyvlx = config.runtime_data
+    pyvlx = config_entry.runtime_data
     async_add_entities(
-        VeluxLight(node, config.entry_id)
+        VeluxLight(node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, LighteningDevice)
     )
@@ -35,6 +35,7 @@ class VeluxLight(VeluxEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_name = None
 
     node: LighteningDevice
 

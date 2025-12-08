@@ -10,11 +10,12 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
     ATTR_CONTENT_WARNING,
+    ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
@@ -42,6 +43,7 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
+        vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
         vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_LANGUAGE): str,
         vol.Optional(ATTR_MEDIA): str,
@@ -68,7 +70,8 @@ def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> MastodonConfig
     return cast(MastodonConfigEntry, entry)
 
 
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mastodon integration."""
 
     async def async_post(call: ServiceCall) -> ServiceResponse:
@@ -76,18 +79,25 @@ def setup_services(hass: HomeAssistant) -> None:
         entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         client = entry.runtime_data.client
 
-        status = call.data[ATTR_STATUS]
+        status: str = call.data[ATTR_STATUS]
 
         visibility: str | None = (
             StatusVisibility(call.data[ATTR_VISIBILITY])
             if ATTR_VISIBILITY in call.data
             else None
         )
+        idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
         spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
         language: str | None = call.data.get(ATTR_LANGUAGE)
         media_path: str | None = call.data.get(ATTR_MEDIA)
         media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+
+        if idempotency_key and len(idempotency_key) < 4:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="idempotency_key_too_short",
+            )
 
         await hass.async_add_executor_job(
             partial(
@@ -95,6 +105,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 client=client,
                 status=status,
                 visibility=visibility,
+                idempotency_key=idempotency_key,
                 spoiler_text=spoiler_text,
                 language=language,
                 media_path=media_path,

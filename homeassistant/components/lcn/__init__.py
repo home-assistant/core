@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import cast
 
 import pypck
 from pypck.connection import (
@@ -48,7 +49,6 @@ from .const import (
 )
 from .helpers import (
     AddressType,
-    InputType,
     LcnConfigEntry,
     LcnRuntimeData,
     async_update_config_entry,
@@ -285,7 +285,7 @@ def _async_fire_access_control_event(
     hass: HomeAssistant,
     device: dr.DeviceEntry | None,
     address: AddressType,
-    inp: InputType,
+    inp: pypck.inputs.ModStatusAccessControl,
 ) -> None:
     """Fire access control event (transponder, transmitter, fingerprint, codelock)."""
     event_data = {
@@ -299,7 +299,11 @@ def _async_fire_access_control_event(
 
     if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
         event_data.update(
-            {"level": inp.level, "key": inp.key, "action": inp.action.value}
+            {
+                "level": inp.level,
+                "key": inp.key,
+                "action": cast(pypck.lcn_defs.KeyAction, inp.action).value,
+            }
         )
 
     event_name = f"lcn_{inp.periphery.value.lower()}"
@@ -310,7 +314,7 @@ def _async_fire_send_keys_event(
     hass: HomeAssistant,
     device: dr.DeviceEntry | None,
     address: AddressType,
-    inp: InputType,
+    inp: pypck.inputs.ModSendKeysHost,
 ) -> None:
     """Fire send_keys event."""
     for table, action in enumerate(inp.actions):

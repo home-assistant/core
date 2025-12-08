@@ -2873,6 +2873,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.oven_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'DummyAppliance_12-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.oven_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3416,6 +3465,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.oven_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'DummyAppliance_12-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3986,6 +4084,55 @@
     'state': '10.0',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'Dummy_Appliance_3-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3994,26 +4141,34 @@
     'capabilities': dict({
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -4021,10 +4176,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -4065,26 +4223,34 @@
       'friendly_name': 'Washing machine Program',
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -4092,10 +4258,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -4116,12 +4285,14 @@
     'capabilities': dict({
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -4172,12 +4343,14 @@
       'friendly_name': 'Washing machine Program phase',
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -4360,6 +4533,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.washing_machine_spin_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5021,6 +5243,55 @@
     'state': '0',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'DummyAppliance_12-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-05-31T12:35:00+00:00',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5568,6 +5839,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'DummyAppliance_12-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start_in-entry]
@@ -6134,6 +6454,55 @@
     'state': '10.0',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'Dummy_Appliance_3-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6142,26 +6511,34 @@
     'capabilities': dict({
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -6169,10 +6546,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -6213,26 +6593,34 @@
       'friendly_name': 'Washing machine Program',
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -6240,10 +6628,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -6264,12 +6655,14 @@
     'capabilities': dict({
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -6320,12 +6713,14 @@
       'friendly_name': 'Washing machine Program phase',
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -6508,6 +6903,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.washing_machine_spin_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6925,6 +7369,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'Dummy_Vacuum_1-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Robot vacuum cleaner Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7100,6 +7593,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.robot_vacuum_cleaner_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Vacuum_1-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Robot vacuum cleaner Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

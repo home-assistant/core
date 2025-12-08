@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from contextlib import suppress
+import itertools
 import logging
 from typing import Any
 
@@ -72,7 +73,11 @@ from . import (
     weather as weather_platform,
 )
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
+from .helpers import (
+    async_get_blueprints,
+    create_legacy_template_issue,
+    rewrite_legacy_to_modern_configs,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -342,12 +347,21 @@ async def async_validate_config_section(
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
-    if DOMAIN not in config:
+
+    configs = []
+    for key in config:
+        if DOMAIN not in key:
+            continue
+
+        if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
+            configs.append(cv.ensure_list(config[key]))
+
+    if not configs:
         return config
 
     config_sections = []
 
-    for cfg in cv.ensure_list(config[DOMAIN]):
+    for cfg in itertools.chain(*configs):
         try:
             template_config: TemplateConfig = await async_validate_config_section(
                 hass, cfg
@@ -386,11 +400,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             definitions = (
                 list(template_config[new_key]) if new_key in template_config else []
             )
-            definitions.extend(
-                rewrite_legacy_to_modern_configs(
-                    hass, new_key, template_config[old_key], legacy_fields
-                )
-            )
+            for definition in rewrite_legacy_to_modern_configs(
+                hass, new_key, template_config[old_key], legacy_fields
+            ):
+                create_legacy_template_issue(hass, definition, new_key)
+                definitions.append(definition)
             template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)

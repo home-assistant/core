@@ -323,7 +323,7 @@ class ZhaRadioManager:
 
         return backup
 
-    async def async_form_network(self, config: dict[str, Any] | None) -> None:
+    async def async_form_network(self) -> None:
         """Form a brand-new network."""
 
         # When forming a new network, we delete the ZHA database to prevent old devices
@@ -332,7 +332,7 @@ class ZhaRadioManager:
             await self.hass.async_add_executor_job(os.remove, self.zigpy_database_path)
 
         async with self.create_zigpy_app() as app:
-            await app.form_network(config=config)
+            await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""

@@ -9,6 +9,7 @@ post:
       required: true
       selector:
         text:
+          multiline: true
     visibility:
       selector:
         select:
@@ -18,6 +19,9 @@ post:
             - private
             - direct
           translation_key: post_visibility
+    idempotency_key:
+      selector:
+        text:
     content_warning:
       selector:
         text:

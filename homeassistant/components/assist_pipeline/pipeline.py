@@ -1123,63 +1123,6 @@ class PipelineRun:
         )
 
         try:
-            user_input = conversation.ConversationInput(
-                text=intent_input,
-                context=self.context,
-                conversation_id=conversation_id,
-                device_id=self._device_id,
-                satellite_id=self._satellite_id,
-                language=input_language,
-                agent_id=self.intent_agent.id,
-                extra_system_prompt=conversation_extra_system_prompt,
-            )
-
-            agent_id = self.intent_agent.id
-            processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
-            all_targets_in_satellite_area = False
-            intent_response: intent.IntentResponse | None = None
-            if not processed_locally and not self._intent_agent_only:
-                # Sentence triggers override conversation agent
-                if (
-                    trigger_response_text
-                    := await conversation.async_handle_sentence_triggers(
-                        self.hass, user_input
-                    )
-                ) is not None:
-                    # Sentence trigger matched
-                    agent_id = "sentence_trigger"
-                    processed_locally = True
-                    intent_response = intent.IntentResponse(
-                        self.pipeline.conversation_language
-                    )
-                    intent_response.async_set_speech(trigger_response_text)
-
-                intent_filter: Callable[[RecognizeResult], bool] | None = None
-                # If the LLM has API access, we filter out some sentences that are
-                # interfering with LLM operation.
-                if (
-                    intent_agent_state := self.hass.states.get(self.intent_agent.id)
-                ) and intent_agent_state.attributes.get(
-                    ATTR_SUPPORTED_FEATURES, 0
-                ) & conversation.ConversationEntityFeature.CONTROL:
-                    intent_filter = _async_local_fallback_intent_filter
-
-                # Try local intents
-                if (
-                    intent_response is None
-                    and self.pipeline.prefer_local_intents
-                    and (
-                        intent_response := await conversation.async_handle_intents(
-                            self.hass,
-                            user_input,
-                            intent_filter=intent_filter,
-                        )
-                    )
-                ):
-                    # Local intent matched
-                    agent_id = conversation.HOME_ASSISTANT_AGENT
-                    processed_locally = True
-
             if self.tts_stream and self.tts_stream.supports_streaming_input:
                 tts_input_stream: asyncio.Queue[str | None] | None = asyncio.Queue()
             else:
@@ -1265,6 +1208,17 @@ class PipelineRun:
                 assert self.tts_stream is not None
                 self.tts_stream.async_set_message_stream(tts_input_stream_generator())
 
+            user_input = conversation.ConversationInput(
+                text=intent_input,
+                context=self.context,
+                conversation_id=conversation_id,
+                device_id=self._device_id,
+                satellite_id=self._satellite_id,
+                language=input_language,
+                agent_id=self.intent_agent.id,
+                extra_system_prompt=conversation_extra_system_prompt,
+            )
+
             with (
                 chat_session.async_get_chat_session(
                     self.hass, user_input.conversation_id
@@ -1276,6 +1230,53 @@ class PipelineRun:
                     chat_log_delta_listener=chat_log_delta_listener,
                 ) as chat_log,
             ):
+                agent_id = self.intent_agent.id
+                processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
+                all_targets_in_satellite_area = False
+                intent_response: intent.IntentResponse | None = None
+                if not processed_locally and not self._intent_agent_only:
+                    # Sentence triggers override conversation agent
+                    if (
+                        trigger_response_text
+                        := await conversation.async_handle_sentence_triggers(
+                            self.hass, user_input, chat_log
+                        )
+                    ) is not None:
+                        # Sentence trigger matched
+                        agent_id = "sentence_trigger"
+                        processed_locally = True
+                        intent_response = intent.IntentResponse(
+                            self.pipeline.conversation_language
+                        )
+                        intent_response.async_set_speech(trigger_response_text)
+
+                    intent_filter: Callable[[RecognizeResult], bool] | None = None
+                    # If the LLM has API access, we filter out some sentences that are
+                    # interfering with LLM operation.
+                    if (
+                        intent_agent_state := self.hass.states.get(self.intent_agent.id)
+                    ) and intent_agent_state.attributes.get(
+                        ATTR_SUPPORTED_FEATURES, 0
+                    ) & conversation.ConversationEntityFeature.CONTROL:
+                        intent_filter = _async_local_fallback_intent_filter
+
+                    # Try local intents
+                    if (
+                        intent_response is None
+                        and self.pipeline.prefer_local_intents
+                        and (
+                            intent_response := await conversation.async_handle_intents(
+                                self.hass,
+                                user_input,
+                                chat_log,
+                                intent_filter=intent_filter,
+                            )
+                        )
+                    ):
+                        # Local intent matched
+                        agent_id = conversation.HOME_ASSISTANT_AGENT
+                        processed_locally = True
+
                 # It was already handled, create response and add to chat history
                 if intent_response is not None:
                     speech: str = intent_response.speech.get("plain", {}).get(

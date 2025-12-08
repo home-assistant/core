@@ -159,4 +159,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_handle_upload,
         schema=UPLOAD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+        description_placeholders={"example_image_path": "/config/www/image.jpg"},
     )

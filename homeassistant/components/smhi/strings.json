@@ -45,8 +45,8 @@
         "name": "Fuel drying",
         "state": {
           "dry": "Dry",
-          "extremely_dry": "Extemely dry",
-          "moderate_wet": "Moderate wet",
+          "extremely_dry": "Extremely dry",
+          "moderate_wet": "Moderately wet",
           "very_dry": "Very dry",
           "very_wet": "Very wet",
           "wet": "Wet"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from PySrDaliGateway import Device
+from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_light_device
 from PySrDaliGateway.types import LightStatus
 
@@ -19,10 +19,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
@@ -40,14 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sunricher DALI light entities from config entry."""
     runtime_data = entry.runtime_data
-    gateway = runtime_data.gateway
     devices = runtime_data.devices
-
-    def _on_light_status(dev_id: str, status: LightStatus) -> None:
-        signal = f"{DOMAIN}_update_{dev_id}"
-        hass.add_job(async_dispatcher_send, hass, signal, status)
-
-    gateway.on_light_status = _on_light_status
 
     async_add_entities(
         DaliCenterLight(device)
@@ -123,14 +112,16 @@ class DaliCenterLight(LightEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
 
-        signal = f"{DOMAIN}_update_{self._attr_unique_id}"
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, signal, self._handle_device_update)
+            self._light.register_listener(
+                CallbackEventType.LIGHT_STATUS, self._handle_device_update
+            )
         )
 
-        signal = f"{DOMAIN}_update_available_{self._attr_unique_id}"
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, signal, self._handle_availability)
+            self._light.register_listener(
+                CallbackEventType.ONLINE_STATUS, self._handle_availability
+            )
         )
 
         # read_status() only queues a request on the gateway and relies on the
@@ -187,4 +178,4 @@ class DaliCenterLight(LightEntity):
         ):
             self._attr_rgbw_color = status["rgbw_color"]
 
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()

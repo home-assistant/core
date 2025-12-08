@@ -8,13 +8,14 @@ import collections
 from contextlib import suppress
 from enum import StrEnum
 import json
+import logging
 import os
 from typing import Any
 
 import voluptuous as vol
 from zha.application.const import RadioType
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_TX_POWER
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
 
 from homeassistant.components import onboarding, usb
@@ -39,7 +40,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, progress_step
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
@@ -56,6 +57,8 @@ from .radio_manager import (
     ProbeResult,
     ZhaRadioManager,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_MANUAL_PATH = "Enter Manually"
 DECONZ_DOMAIN = "deconz"
@@ -191,7 +194,12 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
         self._restore_backup_task: asyncio.Task[None] | None = None
-        self._extra_network_config: dict[str, Any] = {}
+        self._reset_old_radio_task: asyncio.Task[None] | None = None
+        self._form_network_task: asyncio.Task[None] | None = None
+
+        # Progress flow steps cannot abort so we need to store the abort reason and then
+        # re-raise it in a dedicated step
+        self._progress_error: AbortFlow | None = None
 
     @property
     def hass(self) -> HomeAssistant:
@@ -223,6 +231,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     @abstractmethod
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
+
+    async def async_step_progress_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when progress step failed."""
+        assert self._progress_error is not None
+        raise self._progress_error
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -464,7 +479,22 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
         return await self.async_step_maybe_reset_old_radio()
 
-    @progress_step()
+    async def _async_reset_old_radio(self, config_entry: ConfigEntry) -> None:
+        """Do the work of resetting the old radio."""
+
+        # Unload ZHA before connecting to the old adapter
+        with suppress(OperationNotAllowed):
+            await self.hass.config_entries.async_unload(config_entry.entry_id)
+
+        # Create a radio manager to connect to the old stick to reset it
+        temp_radio_mgr = ZhaRadioManager()
+        temp_radio_mgr.hass = self.hass
+        temp_radio_mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
+        temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+        await temp_radio_mgr.async_reset_adapter()
+
     async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -475,30 +505,37 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             DOMAIN, include_ignore=False
         )
 
-        if config_entries:
+        if not config_entries:
+            return await self.async_step_restore_backup()
+
+        if self._reset_old_radio_task is None:
+            # This will only ever be called during migration, so there must be an
+            # existing config entry
             assert len(config_entries) == 1
             config_entry = config_entries[0]
 
-            # Unload ZHA before connecting to the old adapter
-            with suppress(OperationNotAllowed):
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
+            self._reset_old_radio_task = self.hass.async_create_task(
+                self._async_reset_old_radio(config_entry),
+                "Reset old radio",
+            )
 
-            # Create a radio manager to connect to the old stick to reset it
-            temp_radio_mgr = ZhaRadioManager()
-            temp_radio_mgr.hass = self.hass
-            temp_radio_mgr.device_path = config_entry.data[CONF_DEVICE][
-                CONF_DEVICE_PATH
-            ]
-            temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
-            temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+        if not self._reset_old_radio_task.done():
+            return self.async_show_progress(
+                step_id="maybe_reset_old_radio",
+                progress_action="maybe_reset_old_radio",
+                progress_task=self._reset_old_radio_task,
+            )
 
-            try:
-                await temp_radio_mgr.async_reset_adapter()
-            except HomeAssistantError:
-                # Old adapter not found or cannot connect, show prompt to plug back in
-                return await self.async_step_plug_in_old_radio()
+        try:
+            await self._reset_old_radio_task
+        except HomeAssistantError:
+            _LOGGER.exception("Failed to reset old radio during migration")
+            # Old adapter not found or cannot connect, show prompt to plug back in
+            return self.async_show_progress_done(next_step_id="plug_in_old_radio")
+        finally:
+            self._reset_old_radio_task = None
 
-        return await self.async_step_restore_backup()
+        return self.async_show_progress_done(next_step_id="restore_backup")
 
     async def async_step_plug_in_old_radio(
         self, user_input: dict[str, Any] | None = None
@@ -618,16 +655,42 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # This step exists only for translations, it does nothing new
         return await self.async_step_form_new_network(user_input)
 
-    @progress_step()
+    async def _async_form_new_network(self) -> None:
+        """Do the work of forming a new network."""
+        await self._radio_mgr.async_form_network()
+        # Load the newly formed network settings to get the network info
+        await self._radio_mgr.async_load_network_settings()
+
     async def async_step_form_new_network(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Form a brand-new network."""
-        await self._radio_mgr.async_form_network(config=self._extra_network_config)
+        if self._form_network_task is None:
+            self._form_network_task = self.hass.async_create_task(
+                self._async_form_new_network(),
+                "Form new network",
+            )
 
-        # Load the newly formed network settings to get the network info
-        await self._radio_mgr.async_load_network_settings()
-        return await self._async_create_radio_entry()
+        if not self._form_network_task.done():
+            return self.async_show_progress(
+                step_id="form_new_network",
+                progress_action="form_new_network",
+                progress_task=self._form_network_task,
+            )
+
+        try:
+            await self._form_network_task
+        except Exception as exc:
+            _LOGGER.exception("Failed to form new network")
+            self._progress_error = AbortFlow(
+                reason="cannot_form_network",
+                description_placeholders={"error": str(exc)},
+            )
+            return self.async_show_progress_done(next_step_id="progress_failed")
+        finally:
+            self._form_network_task = None
+
+        return self.async_show_progress_done(next_step_id="create_entry")
 
     def _parse_uploaded_backup(
         self, uploaded_file_id: str
@@ -732,13 +795,15 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 next_step_id="pre_confirm_ezsp_ieee_overwrite"
             )
         except HomeAssistantError:
+            _LOGGER.exception("Failed to restore network backup to new radio")
             # User unplugged the new adapter, allow retry
             return self.async_show_progress_done(next_step_id="pre_plug_in_new_radio")
         except CannotWriteNetworkSettings as exc:
-            return self.async_abort(
+            self._progress_error = AbortFlow(
                 reason="cannot_restore_backup",
                 description_placeholders={"error": str(exc)},
             )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self._restore_backup_task = None
 
@@ -1008,9 +1073,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
         self._flow_strategy = discovery_data.get("flow_strategy")
-
-        if "tx_power" in discovery_data:
-            self._extra_network_config[CONF_NWK_TX_POWER] = discovery_data["tx_power"]
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",

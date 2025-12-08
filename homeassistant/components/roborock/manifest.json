@@ -15,11 +15,12 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/roborock",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["roborock"],
   "quality_scale": "silver",
   "requirements": [
-    "python-roborock==3.7.0",
+    "python-roborock==3.10.10",
     "vacuum-map-parser-roborock==0.1.4"
   ]
 }

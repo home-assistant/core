@@ -130,8 +130,7 @@ async def test_abort_if_authorization_timeout(hass: HomeAssistant) -> None:
         application_credentials.ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
     with patch(
-        "homeassistant.components.yolink.config_entry_oauth2_flow."
-        "LocalOAuth2Implementation.async_generate_authorize_url",
+        "homeassistant.helpers.config_entry_oauth2_flow.LocalOAuth2Implementation.async_generate_authorize_url",
         side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(

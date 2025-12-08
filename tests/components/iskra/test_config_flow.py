@@ -1,5 +1,8 @@
 """Tests for the Iskra config flow."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
 from pyiskra.exceptions import (
     DeviceConnectionError,
     DeviceTimeoutError,
@@ -33,6 +36,15 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.iskra.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 # Test step_user with Rest API protocol

@@ -135,7 +135,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
-    frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
+    frontend.async_register_built_in_panel(
+        hass,
+        DOMAIN,
+        config={"mode": mode},
+        sidebar_title="overview",
+        sidebar_icon="mdi:view-dashboard",
+        sidebar_default_visible=False,
+    )
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""

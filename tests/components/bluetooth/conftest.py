@@ -17,6 +17,7 @@ from . import (
     HCI1_SOURCE_ADDRESS,
     NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
     FakeScanner,
+    patch_bleak_backend_type,
 )
 
 
@@ -88,7 +89,7 @@ def mock_operating_system_90():
 def macos_adapter() -> Generator[None]:
     """Fixture that mocks the macos adapter."""
     with (
-        patch("bleak.get_platform_scanner_backend_type"),
+        patch_bleak_backend_type(),
         patch(
             "homeassistant.components.bluetooth.platform.system",
             return_value="Darwin",

@@ -41,6 +41,9 @@
       "energy_forecast": {
         "default": "mdi:lightning-bolt-outline"
       },
+      "finish": {
+        "default": "mdi:clock-end"
+      },
       "plate": {
         "default": "mdi:circle-outline",
         "state": {
@@ -82,6 +85,9 @@
       },
       "spin_speed": {
         "default": "mdi:sync"
+      },
+      "start": {
+        "default": "mdi:clock-start"
       },
       "start_time": {
         "default": "mdi:clock-start"
