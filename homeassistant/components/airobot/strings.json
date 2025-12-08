@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,15 +15,24 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The thermostat password."
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]"
         },
         "description": "Airobot thermostat {device_id} discovered at {host}. Enter the password to complete setup. Find the password in the thermostat settings menu under Connectivity → Mobile app."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]"
+        },
+        "description": "The authentication for Airobot thermostat at {host} (Device ID: {username}) has expired. Please enter the password to reauthenticate. Find the password in the thermostat settings menu under Connectivity → Mobile app."
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "Device ID"
         },
         "data_description": {
           "host": "The hostname or IP address of your Airobot thermostat.",
@@ -33,7 +43,32 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "device_uptime": {
+        "name": "Device uptime"
+      },
+      "errors": {
+        "name": "Error count"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
+      },
+      "heating_uptime": {
+        "name": "Heating uptime"
+      }
+    }
+  },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed, please reauthenticate."
+    },
+    "connection_failed": {
+      "message": "Failed to communicate with device."
+    },
     "set_preset_mode_failed": {
       "message": "Failed to set preset mode to {preset_mode}."
     },

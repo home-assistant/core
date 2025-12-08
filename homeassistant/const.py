@@ -271,6 +271,7 @@ EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop
 EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
     "homeassistant_final_write"
 )
+EVENT_LABS_UPDATED: Final = "labs_updated"
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
@@ -653,6 +654,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     LITERS_PER_SECOND = "L/s"
     GALLONS_PER_HOUR = "gal/h"
     GALLONS_PER_MINUTE = "gal/min"
+    GALLONS_PER_DAY = "gal/d"
     MILLILITERS_PER_SECOND = "mL/s"
 
 

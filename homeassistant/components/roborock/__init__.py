@@ -17,6 +17,7 @@ from roborock import (
 from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import UserParams, create_device_manager
+from roborock.map.map_parser import MapParserConfig
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -24,7 +25,16 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
+from .const import (
+    CONF_BASE_URL,
+    CONF_SHOW_BACKGROUND,
+    CONF_USER_DATA,
+    DEFAULT_DRAWABLES,
+    DOMAIN,
+    DRAWABLES,
+    MAP_SCALE,
+    PLATFORMS,
+)
 from .coordinator import (
     RoborockConfigEntry,
     RoborockCoordinators,
@@ -33,7 +43,7 @@ from .coordinator import (
     RoborockWashingMachineUpdateCoordinator,
     RoborockWetDryVacUpdateCoordinator,
 )
-from .roborock_storage import CacheStore, async_remove_map_storage
+from .roborock_storage import CacheStore, async_cleanup_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -42,6 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
+    await async_cleanup_map_storage(hass, entry.entry_id)
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     user_params = UserParams(
@@ -55,6 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             user_params,
             cache=cache,
             session=async_get_clientsession(hass),
+            map_parser_config=MapParserConfig(
+                drawables=[
+                    drawable
+                    for drawable, default_value in DEFAULT_DRAWABLES.items()
+                    if entry.options.get(DRAWABLES, {}).get(drawable, default_value)
+                ],
+                show_background=entry.options.get(CONF_SHOW_BACKGROUND, False),
+                map_scale=MAP_SCALE,
+            ),
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
@@ -245,6 +265,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) ->
 
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
-    await async_remove_map_storage(hass, entry.entry_id)
     store = CacheStore(hass, entry.entry_id)
     await store.async_remove()
