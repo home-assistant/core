@@ -947,7 +947,8 @@ async def _check_service_registration_translation(
     translation_errors: dict[str, str],
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
-    # Use trailing . to check placeholders for all subkeys
+    # Use trailing . to check all subkeys
+    # This validates placeholders only, and only if the translation exists
     await _validate_translation(
         hass,
         translation_errors,
