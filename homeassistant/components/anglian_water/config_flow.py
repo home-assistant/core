@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
@@ -48,9 +48,9 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
 
 def humanize_account_data(account: dict) -> str:
     """Convert an account data into a human-readable format."""
-    if account["address"]["company_name"]:
+    if account["address"]["company_name"] != "":
         return f"{account['account_number']} - {account['address']['company_name']}"
-    if account["address"]["building_name"]:
+    if account["address"]["building_name"] != "":
         return f"{account['account_number']} - {account['address']['building_name']}"
     return f"{account['account_number']} - {account['address']['postcode']}"
 
@@ -127,6 +127,8 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the account selection step."""
         errors = {}
         if user_input is not None:
+            if TYPE_CHECKING:
+                assert self.authenticator
             validation_result = await validate_account(
                 self.authenticator,
                 user_input[CONF_ACCOUNT_NUMBER],
@@ -155,11 +157,15 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the final configuration step."""
         await self.async_set_unique_id(user_input[CONF_ACCOUNT_NUMBER])
         self._abort_if_unique_id_configured()
+        if TYPE_CHECKING:
+            assert self.authenticator
+            assert self.user_input
+        config_entry_data = {
+            **self.user_input,
+            CONF_ACCOUNT_NUMBER: user_input[CONF_ACCOUNT_NUMBER],
+            CONF_ACCESS_TOKEN: self.authenticator.refresh_token,
+        }
         return self.async_create_entry(
             title=user_input[CONF_ACCOUNT_NUMBER],
-            data={
-                **self.user_input,
-                CONF_ACCOUNT_NUMBER: user_input[CONF_ACCOUNT_NUMBER],
-                CONF_ACCESS_TOKEN: self.authenticator.refresh_token,
-            },
+            data=config_entry_data,
         )
