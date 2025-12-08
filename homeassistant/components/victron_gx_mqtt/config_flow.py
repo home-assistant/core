@@ -6,7 +6,6 @@ from __future__ import annotations
 # Standard library imports
 from collections.abc import Sequence
 import logging
-from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
@@ -37,11 +36,9 @@ from .const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_SIMPLE_NAMING,
     CONF_UPDATE_FREQUENCY_SECONDS,
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_SIMPLE_NAMING,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
@@ -54,47 +51,19 @@ DEVICE_CODES: Sequence[SelectOptionDict] = [
     if device_type.string != "<Not used>"
 ]
 
-
-def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.Schema:
-    """Get the user data schema with optional defaults."""
-    if defaults is None:
-        defaults = MappingProxyType({})
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, DEFAULT_HOST)): str,
-            vol.Required(CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)): int,
-            # Using suggested_value to be able to set empty string as default
-            vol.Optional(
-                CONF_USERNAME,
-                description={"suggested_value": f"{defaults.get(CONF_USERNAME, '')}"},
-            ): str,
-            vol.Optional(
-                CONF_PASSWORD,
-                description={"suggested_value": f"{defaults.get(CONF_PASSWORD, '')}"},
-            ): str,
-            vol.Required(CONF_SSL, default=defaults.get(CONF_SSL, False)): bool,
-            vol.Optional(
-                CONF_SIMPLE_NAMING,
-                default=defaults.get(CONF_SIMPLE_NAMING, DEFAULT_SIMPLE_NAMING),
-            ): bool,
-            vol.Optional(
-                CONF_ROOT_TOPIC_PREFIX,
-                description={
-                    "suggested_value": f"{defaults.get(CONF_ROOT_TOPIC_PREFIX, '')}"
-                },
-            ): str,
-            vol.Optional(
-                CONF_UPDATE_FREQUENCY_SECONDS,
-                default=defaults.get(
-                    CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
-                ),
-            ): int,
-        }
-    )
-
-
-STEP_USER_DATA_SCHEMA = _get_user_schema()
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Required(CONF_SSL, default=False): bool,
+        vol.Optional(CONF_ROOT_TOPIC_PREFIX): str,
+        vol.Optional(
+            CONF_UPDATE_FREQUENCY_SECONDS, default=DEFAULT_UPDATE_FREQUENCY_SECONDS
+        ): int,
+    }
+)
 
 
 async def validate_input(data: dict[str, Any]) -> str:
@@ -194,7 +163,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
         self.model_name = discovery_info.upnp["modelName"]
         self.friendly_name = discovery_info.upnp["friendlyName"]
-        _LOGGER.info(
+        _LOGGER.debug(
             "SSDP: hostname=%s, serial=%s, installation_id=%s, model_name=%s, friendly_name=%s",
             self.hostname,
             self.serial,
@@ -266,4 +235,6 @@ class VictronMQTTOptionsFlow(OptionsFlow):
 
     def _get_options_schema(self) -> vol.Schema:
         """Get the options schema with current values as defaults."""
-        return _get_user_schema(self.config_entry.data)
+        return self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA, self.config_entry.data
+        )

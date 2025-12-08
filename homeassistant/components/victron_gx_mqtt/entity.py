@@ -13,14 +13,11 @@ from victron_mqtt import (
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    ENTITIES_CATEGORY_DIAGNOSTIC,
-    ENTITIES_DISABLE_BY_DEFAULT,
-    ENTITY_PREFIX,
-)
+from .const import ENTITIES_CATEGORY_DIAGNOSTIC, ENTITIES_DISABLE_BY_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,25 +25,20 @@ _LOGGER = logging.getLogger(__name__)
 class VictronBaseEntity(Entity):
     """Implementation of a Victron Venus base entity."""
 
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
         device_info: DeviceInfo,
-        entity_platform: str,
-        simple_naming: bool,
-        installation_id: str,
     ) -> None:
         """Initialize the entity."""
         self._device = device
         self._metric = metric
         self._device_info = device_info
-        if simple_naming:
-            entity_id = f"{entity_platform}.{ENTITY_PREFIX}_{metric.unique_id}"
-        else:
-            entity_id = f"{entity_platform}.{ENTITY_PREFIX}_{installation_id}_{metric.unique_id}"
-        self._attr_unique_id = entity_id
-        self.entity_id = entity_id
+        self._attr_unique_id = metric.unique_id
         self._attr_native_unit_of_measurement = self._map_metric_to_unit_of_measurement(
             metric
         )

@@ -30,7 +30,6 @@ from .const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_SIMPLE_NAMING,
     CONF_UPDATE_FREQUENCY_SECONDS,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
@@ -38,9 +37,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-NewMetricCallback = Callable[
-    [VictronVenusDevice, VictronVenusMetric, DeviceInfo, str], None
-]
+NewMetricCallback = Callable[[VictronVenusDevice, VictronVenusMetric, DeviceInfo], None]
 
 
 class Hub:
@@ -61,7 +58,6 @@ class Hub:
         self.id = entry.unique_id
 
         config = entry.data
-        self.simple_naming = config.get(CONF_SIMPLE_NAMING, False)
         host = config.get(CONF_HOST)
         assert host is not None
 
@@ -110,7 +106,7 @@ class Hub:
         device_info = Hub._map_device_info(device, hub.installation_id)
         callback = self.new_metric_callbacks.get(metric.metric_kind)
         if callback is not None:
-            callback(device, metric, device_info, hub.installation_id)
+            callback(device, metric, device_info)
 
     @staticmethod
     def _map_device_info(

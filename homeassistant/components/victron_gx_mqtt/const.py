@@ -2,7 +2,6 @@
 
 # Integration specific values (custom / builtin Home Assistant)
 DOMAIN = "victron_gx_mqtt"
-DEFAULT_SIMPLE_NAMING = True
 ENTITY_PREFIX = "victron"
 
 # generic config values
@@ -11,7 +10,6 @@ CONF_MODEL = "model"
 CONF_SERIAL = "serial"
 CONF_ROOT_TOPIC_PREFIX = "root_topic_prefix"
 CONF_UPDATE_FREQUENCY_SECONDS = "update_frequency"
-CONF_SIMPLE_NAMING = "simple_naming"
 
 DEVICE_MESSAGE = "device"
 SENSOR_MESSAGE = "sensor"

@@ -15,7 +15,7 @@ from victron_mqtt import (
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -35,7 +35,6 @@ async def async_setup_entry(
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
         device_info: DeviceInfo,
-        installation_id: str,
     ) -> None:
         """Handle new sensor metric discovery."""
         async_add_entities(
@@ -44,8 +43,6 @@ async def async_setup_entry(
                     device,
                     metric,
                     device_info,
-                    hub.simple_naming,
-                    installation_id,
                 )
             ]
         )
@@ -61,14 +58,10 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
         device_info: DeviceInfo,
-        simple_naming: bool,
-        installation_id: str,
     ) -> None:
         """Initialize the sensor."""
         self._attr_native_value = metric.value
-        super().__init__(
-            device, metric, device_info, "sensor", simple_naming, installation_id
-        )
+        super().__init__(device, metric, device_info)
 
     @callback
     def _on_update_task(self, value: Any) -> None:

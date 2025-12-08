@@ -15,7 +15,6 @@
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "Optional root topic prefix",
-          "simple_naming": "Simple naming (no installation id in entity ids)",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "update_frequency": "Update frequency (seconds)",
           "username": "[%key:common::config_flow::data::username%]"
@@ -26,7 +25,6 @@
           "password": "Password for the Victron Device, default is empty. This is not your VRM password.",
           "port": "The MQTT port on the host. Normally it is 1883.",
           "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
-          "simple_naming": "Use simple naming for entities, can work only when you have single Cerbo on the network.",
           "ssl": "Indicates whether to use SSL to connect to the Victron Device. Normally it is disabled.",
           "update_frequency": "Update frequency in seconds. Default is 30 seconds. Set to 0 to update always.",
           "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you use route your mqtt messages through non Victron server and it does require username."
@@ -1259,7 +1257,6 @@
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data::root_topic_prefix%]",
-          "simple_naming": "[%key:component::victron_gx_mqtt::config::step::user::data::simple_naming%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "update_frequency": "[%key:component::victron_gx_mqtt::config::step::user::data::update_frequency%]",
           "username": "[%key:common::config_flow::data::username%]"
@@ -1270,7 +1267,6 @@
           "password": "[%key:component::victron_gx_mqtt::config::step::user::data_description::password%]",
           "port": "[%key:component::victron_gx_mqtt::config::step::user::data_description::port%]",
           "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data_description::root_topic_prefix%]",
-          "simple_naming": "[%key:component::victron_gx_mqtt::config::step::user::data_description::simple_naming%]",
           "ssl": "[%key:component::victron_gx_mqtt::config::step::user::data_description::ssl%]",
           "update_frequency": "[%key:component::victron_gx_mqtt::config::step::user::data_description::update_frequency%]",
           "username": "[%key:component::victron_gx_mqtt::config::step::user::data_description::username%]"
