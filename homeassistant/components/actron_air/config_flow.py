@@ -95,6 +95,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="oauth2_error")
 
         unique_id = str(user_data["id"])
+        await self.async_set_unique_id(unique_id)
 
         # Check if this is a reauth flow
         if self.source == SOURCE_REAUTH:
@@ -104,7 +105,6 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_updates={CONF_API_TOKEN: self._api.refresh_token_value},
             )
 
-        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=user_data["email"],
