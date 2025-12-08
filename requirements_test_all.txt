@@ -22,7 +22,7 @@ HAP-python==5.0.0
 HATasmota==0.10.1
 
 # homeassistant.components.hue_ble
-HueBLE==1.0.8
+HueBLE==2.1.0
 
 # homeassistant.components.mastodon
 Mastodon.py==2.1.2
@@ -1065,7 +1065,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.1
+home-assistant-frontend==20251203.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
