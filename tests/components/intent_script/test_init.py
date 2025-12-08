@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config as hass_config
 from homeassistant.components.intent_script import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
@@ -297,6 +299,7 @@ async def test_intent_script_targets(
 async def test_intent_script_action_validation(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test action validation in intent scripts.
 
@@ -311,6 +314,9 @@ async def test_intent_script_action_validation(
         "binary_sensor", "test", "1234", suggested_object_id="test_sensor"
     )
     assert entry.entity_id == "binary_sensor.test_sensor"
+
+    # Use a non-existent entity registry ID to trigger validation error
+    non_existent_registry_id = "abcd1234abcd1234abcd1234abcd1234"
 
     await async_setup_component(
         hass,
@@ -349,10 +355,39 @@ async def test_intent_script_action_validation(
                         }
                     ],
                     "speech": {"text": "Done"},
-                }
+                },
+                # This intent has an invalid entity registry ID and should fail validation
+                "InvalidIntent": {
+                    "action": [
+                        {
+                            "choose": [
+                                {
+                                    "conditions": [
+                                        {
+                                            "condition": "state",
+                                            "entity_id": non_existent_registry_id,
+                                            "state": "on",
+                                        }
+                                    ],
+                                    "sequence": [
+                                        {"action": "test.service"},
+                                    ],
+                                }
+                            ],
+                        }
+                    ],
+                    "speech": {"text": "Invalid"},
+                },
             }
         },
     )
+
+    # Verify that the invalid intent logged an error
+    assert "Failed to validate actions for intent InvalidIntent" in caplog.text
+
+    # The invalid intent should not be registered
+    with pytest.raises(intent.UnknownIntent):
+        await intent.async_handle(hass, "test", "InvalidIntent")
 
     # Test when condition is true (sensor is "on")
     hass.states.async_set("binary_sensor.test_sensor", "on")
