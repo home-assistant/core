@@ -405,6 +405,9 @@ async def test_rest_command_get_response_json(
     assert response["headers"] == {"content-type": "application/json"}
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.rest_command.services."]
+)
 async def test_rest_command_get_response_malformed_json(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
