@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config as hass_config
 from homeassistant.components.intent_script import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
@@ -17,6 +19,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_mock_service, get_fixture_path
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_script(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
@@ -69,6 +72,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
@@ -124,6 +128,7 @@ async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_script_service_response(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(
@@ -156,6 +161,7 @@ async def test_intent_script_service_response(hass: HomeAssistant) -> None:
     assert response.speech["plain"]["speech"] == "The service returned some value"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
@@ -202,6 +208,7 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_intent_script_targets(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
