@@ -43,6 +43,10 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
         # Description needs to be empty string to be cleared
         "description": item.description or "",
     }
+
+    if item.labels is not None:
+        item_data["labels"] = [label.strip() for label in item.labels if label.strip()]
+
     if due := item.due:
         if isinstance(due, datetime.datetime):
             item_data["due_datetime"] = due
@@ -142,6 +146,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                     due=due,
                     description=task.description or None,
                     priority=define_priority_level(task.priority),
+                    labels=list(task.labels) if task.labels else None,
                 )
             )
 
