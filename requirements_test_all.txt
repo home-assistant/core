@@ -750,6 +750,9 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==2.1.2
 
+# homeassistant.components.egauge
+egauge-async==0.4.0
+
 # homeassistant.components.eheimdigital
 eheimdigital==1.4.0
 
@@ -1062,7 +1065,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.1
+home-assistant-frontend==20251203.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
@@ -2698,7 +2701,7 @@ youless-api==2.2.0
 youtubeaio==2.1.1
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.11.12
+yt-dlp[default]==2025.12.08
 
 # homeassistant.components.zamg
 zamg==0.3.6
