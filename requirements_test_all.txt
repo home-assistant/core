@@ -1608,7 +1608,7 @@ pyairobotrest==0.1.0
 pyairvisual==2023.08.1
 
 # homeassistant.components.anglian_water
-pyanglianwater==2.1.0
+pyanglianwater==3.0.0
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
