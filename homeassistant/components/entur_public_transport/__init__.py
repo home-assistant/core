@@ -12,16 +12,15 @@ from homeassistant.const import CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .sensor import (
+from .const import (
     API_CLIENT_NAME,
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
     CONF_WHITELIST_LINES,
-    DOMAIN,
-    EnturProxy,
 )
+from .sensor import EnturProxy
 
 PLATFORMS = [Platform.SENSOR]
 

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.entur_public_transport.sensor import (
+from homeassistant.components.entur_public_transport.const import (
     ATTR_DELAY,
     ATTR_EXPECTED_AT,
     ATTR_NEXT_UP_AT,

@@ -30,7 +30,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .sensor import (
+from .const import (
     API_CLIENT_NAME,
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
