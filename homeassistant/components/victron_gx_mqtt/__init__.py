@@ -22,6 +22,8 @@ PLATFORMS: list[Platform] = [
 
 __all__ = ["DOMAIN"]
 
+type VictronGxConfigEntry = ConfigEntry[Hub]
+
 
 async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
@@ -30,7 +32,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
     """Set up victronvenus from a config entry."""
     _LOGGER.debug("async_setup_entry called for entry: %s", entry.entry_id)
 
