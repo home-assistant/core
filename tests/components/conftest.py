@@ -947,13 +947,25 @@ async def _check_service_registration_translation(
     translation_errors: dict[str, str],
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
+    # `services.service.name` is required
     await _validate_translation(
         hass,
         translation_errors,
         ignore_translations_for_mock_domains,
         "services",
         domain,
-        f"{service_name}.description",
+        f"{service_name}.name",
+        description_placeholders,
+        translation_required=True,
+    )
+    # Use trailing . to check placeholders for all subkeys
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "services",
+        domain,
+        f"{service_name}.",
         description_placeholders,
     )
 
