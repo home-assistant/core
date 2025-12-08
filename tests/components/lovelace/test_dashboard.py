@@ -35,15 +35,16 @@ async def test_lovelace_from_storage_new_installation(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test new installation has no default lovelace panel."""
+    """Test new installation has default lovelace panel but no dashboard entry."""
     assert await async_setup_component(hass, "lovelace", {})
 
-    # No default lovelace panel for new installations
-    assert "lovelace" not in hass.data.get(frontend.DATA_PANELS, {})
+    # Default lovelace panel is registered for frontend availability
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
 
-    # Dashboards list should be empty
+    # Dashboards list should be empty (no dashboard entry created)
     await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
     response = await client.receive_json()
     assert response["success"]
@@ -463,8 +464,9 @@ async def test_storage_dashboards(
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
 
-    # New installations don't have default lovelace panel
-    assert "lovelace" not in hass.data.get(frontend.DATA_PANELS, {})
+    # Default lovelace panel is registered for frontend availability
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
 
