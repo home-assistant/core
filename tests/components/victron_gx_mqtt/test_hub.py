@@ -85,7 +85,7 @@ def mock_victron_hub():
 async def mqtt_test_setup(hass: HomeAssistant):
     """Set up MQTT testing with ALL platform callbacks."""
     victron_hub = await create_mocked_hub()
-    mock_async_add_entities = AsyncMock()
+    mock_async_add_entities = MagicMock()
 
     # Create a real Hub and config entry
     mock_config_entry = MagicMock(spec=ConfigEntry)
