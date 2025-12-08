@@ -128,13 +128,13 @@ async def __get_prices(
     data: Electricity | Gas
 
     if price_type == PriceType.GAS:
-        data = await coordinator.energyzero.gas_prices(
+        data = await coordinator.energyzero.get_gas_prices_legacy(
             start_date=start,
             end_date=end,
             vat=vat,
         )
     else:
-        data = await coordinator.energyzero.energy_prices(
+        data = await coordinator.energyzero.get_electricity_prices_legacy(
             start_date=start,
             end_date=end,
             vat=vat,
