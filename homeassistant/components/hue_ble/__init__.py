@@ -40,9 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 
     try:
         await light.connect()
-        await light.poll_state()
     except Exception as e:
         raise ConfigEntryNotReady("Device found but unable to connect.") from e
+
+    try:
+        await light.poll_state()
+    except Exception as e:
+        raise ConfigEntryNotReady(
+            "Device found and connected but unable to poll values from it."
+        ) from e
 
     entry.runtime_data = light
 
