@@ -130,6 +130,7 @@ class ReolinkHost:
         self._lost_subscription_start: bool = False
         self._lost_subscription: bool = False
         self.cancel_refresh_privacy_mode: CALLBACK_TYPE | None = None
+        self.cancel_first_firmware_check: CALLBACK_TYPE | None = None
 
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:

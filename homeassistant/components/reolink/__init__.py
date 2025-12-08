@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from time import time
 from typing import Any
@@ -138,6 +138,9 @@ async def async_setup_entry(
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
+    # retrieve the firmware store to keep track of the last time the firmware was checked
+    firmware_store = get_store(hass, f"{config_entry.entry_id}_firmware")
+
     min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
     update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
 
@@ -194,6 +197,7 @@ async def async_setup_entry(
                 ) from err
             finally:
                 host.starting = False
+                await firmware_store.async_save(datetime.now(UTC).isoformat())
 
     device_coordinator = DataUpdateCoordinator(
         hass,
@@ -212,15 +216,36 @@ async def async_setup_entry(
         config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}.firmware",
         update_method=async_check_firmware_update,
-        update_interval=FIRMWARE_UPDATE_INTERVAL,
+        update_interval=None,  # Do not fetch data automatically, resume 24h schedule
     )
 
+    async def first_firmware_check(*args: Any) -> None:
+        """Start first firmware check delayed to continue 24h schedule."""
+        firmware_coordinator.update_interval = FIRMWARE_UPDATE_INTERVAL
+        await firmware_coordinator.async_refresh()
+        host.cancel_first_firmware_check = None
+
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    config_entry.async_create_background_task(
-        hass,
-        firmware_coordinator.async_refresh(),
-        f"Reolink firmware check {config_entry.entry_id}",
+    firmware_check_delay: int | timedelta = 5
+    last_check = await firmware_store.async_load()
+    if last_check is not None:
+        firmware_check_delay = FIRMWARE_UPDATE_INTERVAL - (
+            datetime.now(UTC) - datetime.fromisoformat(last_check)
+        )
+        if (
+            firmware_check_delay < timedelta(0)
+            or firmware_check_delay > FIRMWARE_UPDATE_INTERVAL
+        ):
+            firmware_check_delay = 5
+    _LOGGER.debug(
+        "Scheduling first Reolink %s firmware check in %s",
+        host.api.nvr_name,
+        firmware_check_delay,
     )
+    host.cancel_first_firmware_check = async_call_later(
+        hass, firmware_check_delay, first_firmware_check
+    )
+
     # Fetch initial data so we have data when entities subscribe
     try:
         await device_coordinator.async_config_entry_first_refresh()
@@ -312,6 +337,8 @@ async def async_unload_entry(
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
     if host.cancel_refresh_privacy_mode is not None:
         host.cancel_refresh_privacy_mode()
+    if host.cancel_first_firmware_check is not None:
+        host.cancel_first_firmware_check()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
