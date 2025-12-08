@@ -30,14 +30,13 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .sensor import (
     API_CLIENT_NAME,
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
     CONF_WHITELIST_LINES,
-    DEFAULT_NUMBER_OF_DEPARTURES,
     DOMAIN,
 )
 
@@ -55,7 +54,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_OMIT_NON_BOARDING, default=True): BooleanSelector(),
         vol.Optional(
-            CONF_NUMBER_OF_DEPARTURES, default=DEFAULT_NUMBER_OF_DEPARTURES
+            CONF_NUMBER_OF_DEPARTURES, default=2
         ): NumberSelector(
             NumberSelectorConfig(min=2, max=10, mode=NumberSelectorMode.SLIDER)
         ),
@@ -94,9 +93,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             return stops, quays, "invalid_stop_id"
 
         omit_non_boarding = data.get(CONF_OMIT_NON_BOARDING, True)
-        number_of_departures = data.get(
-            CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
-        )
+        number_of_departures = data.get(CONF_NUMBER_OF_DEPARTURES, 2)
 
         try:
             client = EnturPublicTransportData(
@@ -168,9 +165,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SHOW_ON_MAP: import_data.get(CONF_SHOW_ON_MAP, False),
             CONF_WHITELIST_LINES: import_data.get(CONF_WHITELIST_LINES, []),
             CONF_OMIT_NON_BOARDING: import_data.get(CONF_OMIT_NON_BOARDING, True),
-            CONF_NUMBER_OF_DEPARTURES: import_data.get(
-                CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
-            ),
+            CONF_NUMBER_OF_DEPARTURES: import_data.get(CONF_NUMBER_OF_DEPARTURES, 2),
         }
 
         title = import_data.get(
@@ -221,9 +216,7 @@ class EnturOptionsFlow(OptionsFlow):
                 ): BooleanSelector(),
                 vol.Optional(
                     CONF_NUMBER_OF_DEPARTURES,
-                    default=current.get(
-                        CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
-                    ),
+                    default=current.get(CONF_NUMBER_OF_DEPARTURES, 2),
                 ): NumberSelector(
                     NumberSelectorConfig(min=2, max=10, mode=NumberSelectorMode.SLIDER)
                 ),

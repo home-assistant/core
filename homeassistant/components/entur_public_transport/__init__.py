@@ -8,22 +8,22 @@ from random import randint
 from enturclient import EnturPublicTransportData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
+from .sensor import (
     API_CLIENT_NAME,
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
     CONF_WHITELIST_LINES,
-    DEFAULT_NUMBER_OF_DEPARTURES,
     DOMAIN,
-    PLATFORMS,
+    EnturProxy,
 )
-from .sensor import EnturProxy
+
+PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
@@ -52,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnturConfigEntry) -> boo
         quays=quays,
         line_whitelist=config.get(CONF_WHITELIST_LINES) or [],
         omit_non_boarding=config.get(CONF_OMIT_NON_BOARDING, True),
-        number_of_departures=config.get(
-            CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
-        ),
+        number_of_departures=config.get(CONF_NUMBER_OF_DEPARTURES, 2),
         web_session=async_get_clientsession(hass),
     )
 
