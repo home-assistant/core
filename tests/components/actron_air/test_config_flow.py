@@ -148,17 +148,11 @@ async def test_user_flow_token_polling_error(
 
 
 async def test_user_flow_duplicate_account(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test duplicate account handling - should abort when same account is already configured."""
     # Create an existing config entry for the same user account
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={CONF_API_TOKEN: "existing_refresh_token"},
-        unique_id="test_user_id",
-    )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     # Start the config flow
     result = await hass.config_entries.flow.async_init(
@@ -185,27 +179,15 @@ async def test_user_flow_duplicate_account(
 
 
 async def test_reauth_flow_success(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful reauthentication flow."""
     # Create an existing config entry
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={CONF_API_TOKEN: "old_refresh_token"},
-        unique_id="test_user_id",
-    )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+    existing_entry = mock_config_entry
 
     # Start the reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": existing_entry.entry_id,
-        },
-        data=existing_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     # Should show the reauth confirmation form
     assert result["type"] is FlowResultType.FORM
@@ -232,17 +214,12 @@ async def test_reauth_flow_success(
 
 
 async def test_reauth_flow_wrong_account(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthentication flow with wrong account."""
     # Create an existing config entry
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={CONF_API_TOKEN: "old_refresh_token"},
-        unique_id="test_user_id",
-    )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+    existing_entry = mock_config_entry
 
     # Mock the API to return a different user ID
     mock_actron_api.get_user_info = AsyncMock(

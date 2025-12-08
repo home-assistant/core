@@ -9,7 +9,7 @@ from actron_neo_api import (
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import _LOGGER, DOMAIN
 from .coordinator import (
@@ -36,8 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
             translation_key="auth_error",
         ) from err
     except ActronAirAPIError as err:
-        _LOGGER.error("API error while setting up Actron Air integration: %s", err)
-        raise
+        raise ConfigEntryNotReady from err
 
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
