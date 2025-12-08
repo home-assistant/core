@@ -3228,7 +3228,7 @@ youless-api==2.2.0
 youtubeaio==2.1.1
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.11.12
+yt-dlp[default]==2025.12.08
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.3
