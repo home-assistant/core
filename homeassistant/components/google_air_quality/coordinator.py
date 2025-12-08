@@ -9,7 +9,10 @@ from typing import Final
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
-from google_air_quality_api.model import AirQualityCurrentConditionsData
+from google_air_quality_api.model import (
+    AirQualityCurrentConditionsData,
+    AirQualityForecastData,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -42,7 +45,7 @@ class GoogleAirQualityRuntimeData:
 type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityRuntimeData]
 
 
-class GoogleAirQualityUpdateCoordinator(
+class GoogleAirQualityCurrentConditionsCoordinator(
     DataUpdateCoordinator[AirQualityCurrentConditionsData]
 ):
     """Coordinator for fetching Google AirQuality data."""
