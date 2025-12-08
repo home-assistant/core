@@ -29,6 +29,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "automation")
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_exclude_attributes(
     recorder_mock: Recorder, hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
