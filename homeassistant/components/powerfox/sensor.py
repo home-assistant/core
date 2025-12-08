@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Generic
 
-from powerfox import Device, GasReport, HeatMeter, PowerMeter, WaterMeter
+from powerfox import Device, HeatMeter, PowerMeter, WaterMeter
+from powerfox.models import GasReport
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,7 +24,7 @@ from .coordinator import (
     PowerfoxDataUpdateCoordinator,
     PowerfoxReportDataUpdateCoordinator,
 )
-from .entity import PowerfoxEntity
+from .entity import CoordinatorT, PowerfoxEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -288,7 +290,26 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PowerfoxSensorEntity(PowerfoxEntity[PowerfoxDataUpdateCoordinator], SensorEntity):
+class BasePowerfoxSensorEntity(
+    PowerfoxEntity[CoordinatorT], SensorEntity, Generic[CoordinatorT]
+):
+    """Common base for Powerfox sensor entities."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: CoordinatorT,
+        device: Device,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the shared Powerfox sensor."""
+        super().__init__(coordinator, device)
+        self.entity_description = description
+        self._attr_unique_id = f"{device.id}_{description.key}"
+
+
+class PowerfoxSensorEntity(BasePowerfoxSensorEntity[PowerfoxDataUpdateCoordinator]):
     """Defines a powerfox poweropti sensor."""
 
     entity_description: PowerfoxSensorEntityDescription
@@ -300,9 +321,7 @@ class PowerfoxSensorEntity(PowerfoxEntity[PowerfoxDataUpdateCoordinator], Sensor
         description: PowerfoxSensorEntityDescription,
     ) -> None:
         """Initialize Powerfox poweropti sensor."""
-        super().__init__(coordinator, device)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
+        super().__init__(coordinator, device, description)
 
     @property
     def native_value(self) -> float | int | None:
@@ -311,7 +330,7 @@ class PowerfoxSensorEntity(PowerfoxEntity[PowerfoxDataUpdateCoordinator], Sensor
 
 
 class PowerfoxGasSensorEntity(
-    PowerfoxEntity[PowerfoxReportDataUpdateCoordinator], SensorEntity
+    BasePowerfoxSensorEntity[PowerfoxReportDataUpdateCoordinator]
 ):
     """Defines a powerfox gas meter sensor."""
 
@@ -324,14 +343,9 @@ class PowerfoxGasSensorEntity(
         description: PowerfoxReportSensorEntityDescription,
     ) -> None:
         """Initialize Powerfox gas meter sensor."""
-        super().__init__(coordinator, device)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
+        super().__init__(coordinator, device, description)
 
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
-        gas_report = self.coordinator.data.gas
-        if gas_report is None:
-            return None
-        return self.entity_description.value_fn(gas_report)
+        return self.entity_description.value_fn(self.coordinator.data.gas)

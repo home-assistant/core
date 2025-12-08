@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Generic, TypeVar
 
 from powerfox import (
     Device,
@@ -27,76 +28,65 @@ type PowerfoxCoordinator = (
 )
 type PowerfoxConfigEntry = ConfigEntry[list[PowerfoxCoordinator]]
 
+CoordinatorDataT = TypeVar("CoordinatorDataT")
 
-class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
+
+class PowerfoxBaseCoordinator(
+    DataUpdateCoordinator[CoordinatorDataT], Generic[CoordinatorDataT]
+):
+    """Base coordinator handling shared Powerfox logic."""
+
+    config_entry: PowerfoxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PowerfoxConfigEntry,
+        client: Powerfox,
+        device: Device,
+    ) -> None:
+        """Initialize shared Powerfox coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
+        self.client = client
+        self.device = device
+
+    async def _async_update_data(self) -> CoordinatorDataT:
+        """Fetch data and normalize Powerfox errors."""
+        try:
+            return await self._async_fetch_data()
+        except PowerfoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed(err) from err
+        except (PowerfoxConnectionError, PowerfoxNoDataError) as err:
+            raise UpdateFailed(err) from err
+
+    async def _async_fetch_data(self) -> CoordinatorDataT:
+        """Fetch data from the Powerfox API."""
+        raise NotImplementedError
+
+
+class PowerfoxDataUpdateCoordinator(PowerfoxBaseCoordinator[Poweropti]):
     """Class to manage fetching Powerfox data from the API."""
 
-    config_entry: PowerfoxConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: PowerfoxConfigEntry,
-        client: Powerfox,
-        device: Device,
-    ) -> None:
-        """Initialize global Powerfox data updater."""
-        super().__init__(
-            hass,
-            LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-        self.client = client
-        self.device = device
-
-    async def _async_update_data(self) -> Poweropti:
-        """Fetch data from Powerfox API."""
-        try:
-            return await self.client.device(device_id=self.device.id)
-        except PowerfoxAuthenticationError as err:
-            raise ConfigEntryAuthFailed(err) from err
-        except (PowerfoxConnectionError, PowerfoxNoDataError) as err:
-            raise UpdateFailed(err) from err
+    async def _async_fetch_data(self) -> Poweropti:
+        """Fetch live device data from the Powerfox API."""
+        return await self.client.device(device_id=self.device.id)
 
 
-class PowerfoxReportDataUpdateCoordinator(DataUpdateCoordinator[DeviceReport]):
+class PowerfoxReportDataUpdateCoordinator(PowerfoxBaseCoordinator[DeviceReport]):
     """Coordinator handling report data from the API."""
 
-    config_entry: PowerfoxConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: PowerfoxConfigEntry,
-        client: Powerfox,
-        device: Device,
-    ) -> None:
-        """Initialize Powerfox report data updater."""
-        super().__init__(
-            hass,
-            LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-        self.client = client
-        self.device = device
-
-    async def _async_update_data(self) -> DeviceReport:
+    async def _async_fetch_data(self) -> DeviceReport:
         """Fetch report data from the Powerfox API."""
-        try:
-            local_now = datetime.now(
-                tz=dt_util.get_time_zone(self.hass.config.time_zone)
-            )
-            return await self.client.report(
-                device_id=self.device.id,
-                year=local_now.year,
-                month=local_now.month,
-                day=local_now.day,
-            )
-        except PowerfoxAuthenticationError as err:
-            raise ConfigEntryAuthFailed(err) from err
-        except (PowerfoxConnectionError, PowerfoxNoDataError) as err:
-            raise UpdateFailed(err) from err
+        local_now = datetime.now(tz=dt_util.get_time_zone(self.hass.config.time_zone))
+        return await self.client.report(
+            device_id=self.device.id,
+            year=local_now.year,
+            month=local_now.month,
+            day=local_now.day,
+        )
