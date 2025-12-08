@@ -6,7 +6,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from HueBLE import HueBleLight
+from HueBLE import ConnectionError, HueBleError, HueBleLight, PairingError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -41,29 +41,22 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
 
     try:
         light = HueBleLight(ble_device)
-
         await light.connect()
-
-        if light.authenticated is None:
-            _LOGGER.warning(
-                "Unable to determine if light authenticated, proceeding anyway"
-            )
-        elif not light.authenticated:
-            return Error.INVALID_AUTH
-
-        if not light.connected:
-            return Error.CANNOT_CONNECT
-
-        try:
-            get_available_color_modes(light)
-        except HomeAssistantError:
-            return Error.NOT_SUPPORTED
-
+        get_available_color_modes(light)
         await light.poll_state()
 
-    except Exception:
+    except ConnectionError as e:
+        _LOGGER.exception("Error connecting to light")
+        return (
+            Error.INVALID_AUTH
+            if type(e.__cause__) is PairingError
+            else Error.CANNOT_CONNECT
+        )
+    except HueBleError:
         _LOGGER.exception("Unexpected error validating light connection")
         return Error.UNKNOWN
+    except HomeAssistantError:
+        return Error.NOT_SUPPORTED
     else:
         return None
     finally:

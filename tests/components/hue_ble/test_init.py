@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
+from HueBLE import ConnectionError, HueBleError
 import pytest
 
 from homeassistant.components.hue_ble.const import DOMAIN
@@ -43,15 +44,15 @@ from tests.components.bluetooth import generate_ble_device
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             2,
             False,
-            Exception,
+            ConnectionError,
             "Device found but unable to connect.",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             2,
             True,
-            Exception,
-            "Device found but unable to connect.",
+            HueBleError,
+            "Device found and connected but unable to poll values from it.",
         ),
     ],
     ids=["no_device", "no_scanners", "error_connect", "error_poll"],
