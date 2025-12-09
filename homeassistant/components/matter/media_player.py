@@ -53,7 +53,7 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
         max_level = self.get_matter_attribute_value(
             clusters.LevelControl.Attributes.MaxLevel
         )
-        if not isinstance(max_level, int) or max_level <= 0:
+        if max_level is None or max_level <= 0:
             max_level = 254
 
         if volume == 0:
@@ -107,7 +107,7 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
             max_level = self.get_matter_attribute_value(
                 clusters.LevelControl.Attributes.MaxLevel
             )
-            if not isinstance(max_level, int) or max_level <= 0:
+            if max_level is None or max_level <= 0:
                 max_level = 254
             self._attr_volume_level = matter_volume / float(max_level)
         # No state in the Speaker endpoint as it is dedicated to volume control
