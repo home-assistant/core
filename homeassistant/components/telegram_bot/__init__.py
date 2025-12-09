@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_API_KEY,
@@ -158,6 +159,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     },
@@ -420,14 +422,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             origin = service.context.origin_event
             if origin:
                 # script or automation
-                entity_id = origin.data["entity_id"]
+                entity_id = origin.data[ATTR_ENTITY_ID]
 
             ir.async_create_issue(
                 hass,
                 DOMAIN,
                 "deprecated_timeout_parameter",
-                breaks_in_ha_version="2026.5.0",
-                is_fixable=False,
+                breaks_in_ha_version="2026.7.0",
+                is_fixable=True,
+                is_persistent=True,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="deprecated_timeout_parameter",
                 translation_placeholders={

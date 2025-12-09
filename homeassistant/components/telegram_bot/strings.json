@@ -210,7 +210,14 @@
   },
   "issues": {
     "deprecated_timeout_parameter": {
-      "description": "Update all affected automations and scripts to remove the `timeout` parameter and then restart Home Assistant to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action in `{entity_id}`.",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then click SUBMIT to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action in `{entity_id}`.",
+            "title": "The `timeout` parameter for {integration_title} is being removed"
+          }
+        }
+      },
       "title": "The `timeout` parameter for {integration_title} is being removed"
     },
     "deprecated_yaml": {
