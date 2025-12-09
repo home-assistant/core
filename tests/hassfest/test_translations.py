@@ -25,7 +25,6 @@ def test_string_with_no_placeholders_in_single_quotes() -> None:
     "translation_string",
     [
         "An example is: https://example.com.",
-        "An image path like /config/www/image.jpg",
         "www.example.com",
     ],
 )

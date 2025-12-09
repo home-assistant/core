@@ -25,7 +25,7 @@ RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
 RE_COMBINED_REFERENCE = re.compile(r"(.+\[%)|(%\].+)")
 RE_PLACEHOLDER_IN_SINGLE_QUOTES = re.compile(r"'{\w+}'")
 RE_URL = re.compile(
-    r"(((homeassistant|ftp|ftps|scp|http|https|mqtt|mqtts|socket|socks5):\/\/|www.)"
+    r"(((homeassistant|ftp|ftps|scp|http|https|mqtt|mqtts|socket|socks5):\/\/|www\.)"
     r"[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?)"
 )
 
@@ -149,7 +149,7 @@ def translation_value_validator(value: Any) -> str:
         raise vol.Invalid("the string should not contain leading or trailing spaces")
     if RE_URL.search(string_value):
         raise vol.Invalid(
-            "the string should not contain URLs or file paths, "
+            "the string should not contain URLs, "
             "please use description placeholders instead"
         )
     return string_value
