@@ -3,14 +3,13 @@
 from dataclasses import dataclass
 import logging
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra.satel_integra import AlarmState, AsyncSatel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -19,7 +18,6 @@ from .const import (
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
     DOMAIN,
-    SIGNAL_PANEL_MESSAGE,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
@@ -38,6 +36,7 @@ class SatelIntegraData:
 
     zones: dict[int, int]
     outputs: dict[int, int]
+    partitions: dict[AlarmState, list[int]]
 
 
 class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
@@ -55,7 +54,7 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
             config_entry=entry,
         )
 
-        self.data = SatelIntegraData(zones={}, outputs={})
+        self.data = SatelIntegraData(zones={}, outputs={}, partitions={})
 
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
@@ -111,7 +110,11 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
     def alarm_status_update_callback(self):
         """Send status update received from alarm to Home Assistant."""
         _LOGGER.debug("Sending request to update panel state")
-        async_dispatcher_send(self.hass, SIGNAL_PANEL_MESSAGE)
+
+        data = self.data
+        data.partitions = self.controller.partition_states
+
+        self.async_set_updated_data(data)
 
     @callback
     def zones_update_callback(self, status: dict[str, dict[int, int]]):

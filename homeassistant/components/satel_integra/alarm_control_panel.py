@@ -15,15 +15,9 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_ARM_HOME_MODE,
-    CONF_PARTITION_NUMBER,
-    SIGNAL_PANEL_MESSAGE,
-    SUBENTRY_TYPE_PARTITION,
-)
+from .const import CONF_ARM_HOME_MODE, CONF_PARTITION_NUMBER, SUBENTRY_TYPE_PARTITION
 from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
 from .entity import SatelIntegraEntity
 
@@ -101,21 +95,11 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
 
         self._arm_home_mode = arm_home_mode
 
-    async def async_added_to_hass(self) -> None:
-        """Update alarm status and register callbacks for future updates."""
-        await super().async_added_to_hass()
-
         self._attr_alarm_state = self._read_alarm_state()
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
-            )
-        )
-
     @callback
-    def _update_alarm_status(self) -> None:
-        """Handle alarm status update."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         state = self._read_alarm_state()
 
         if state != self._attr_alarm_state:
@@ -131,9 +115,8 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
 
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
-                satel_state in self.coordinator.controller.partition_states
-                and self._device_number
-                in self.coordinator.controller.partition_states[satel_state]
+                satel_state in self.coordinator.data.partitions
+                and self._device_number in self.coordinator.data.partitions[satel_state]
             ):
                 return ha_state
 
