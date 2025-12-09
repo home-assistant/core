@@ -25,14 +25,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        },
-        "data_description": {
-          "url": "The remote MCP server URL, for example {example_url}."
-        }
-      },
       "credentials_choice": {
         "description": "You can either use existing credentials from another integration or set up new credentials.",
         "menu_option_descriptions": {
@@ -59,7 +51,7 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The remote MCP server URL for the SSE endpoint, for example {example_url}"
+          "url": "The remote MCP server URL, for example {example_url}."
         }
       }
     }
