@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import requests
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -47,7 +49,9 @@ async def test_setup_entry_connection_error(
     mock_hikcamera: MagicMock,
 ) -> None:
     """Test setup fails on connection error."""
-    mock_hikcamera.side_effect = Exception("Connection failed")
+    mock_hikcamera.side_effect = requests.exceptions.RequestException(
+        "Connection failed"
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
