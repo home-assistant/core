@@ -218,6 +218,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
+        self._video_source_id_map: dict[str, str] = {}
         self._sound_modes: dict[str, int] = {}
 
         # Beolink compatible sources
@@ -355,6 +356,9 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
                 and menu_item.label != "TV"
             ):
                 self._video_sources[key] = menu_item.label
+                self._video_source_id_map[
+                    menu_item.content.content_uri.removeprefix("tv://")
+                ] = menu_item.label
 
         # Combine the source dicts
         self._sources = self._audio_sources | self._video_sources
@@ -691,7 +695,11 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
 
     @property
     def source(self) -> str | None:
-        """Return the current audio source."""
+        """Return the current audio/video source."""
+        # Associate TV content ID with a video source
+        if self.media_content_id in self._video_source_id_map:
+            return self._video_source_id_map[self.media_content_id]
+
         return self._source_change.name
 
     @property
