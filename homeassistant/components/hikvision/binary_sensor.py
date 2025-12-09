@@ -172,7 +172,6 @@ class HikvisionBinarySensor(BinarySensorEntity):
         channel: int,
     ) -> None:
         """Initialize the binary sensor."""
-        self._entry = entry
         self._data = entry.runtime_data
         self._camera = self._data.camera
         self._sensor_type = sensor_type
