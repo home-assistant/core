@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from pyhik.hikvision import HikCamera
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -52,7 +53,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 device_id = camera.get_id()
                 device_name = camera.get_name
-            except Exception:
+            except requests.exceptions.RequestException:
                 _LOGGER.exception("Error connecting to Hikvision device")
                 errors["base"] = "cannot_connect"
             else:
@@ -161,7 +162,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             device_id = camera.get_id()
             device_name = camera.get_name
-        except Exception:
+        except requests.exceptions.RequestException:
             _LOGGER.exception(
                 "Error connecting to Hikvision device during import, aborting"
             )
