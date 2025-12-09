@@ -242,12 +242,15 @@
             "fan_feature_speed": "Speed support",
             "image_processing_mode": "Image processing mode",
             "options": "Add option",
+            "reports_position": "Reports position",
             "schema": "Schema",
             "state_class": "State class",
             "suggested_display_precision": "Suggested display precision",
             "supported_features": "Supported features",
             "temperature_unit": "Temperature unit",
-            "unit_of_measurement": "Unit of measurement"
+            "unit_of_measurement": "Unit of measurement",
+            "water_heater_feature_current_temperature": "[%key:component::mqtt::config_subentries::device::step::entity_platform_config::data::climate_feature_current_temperature%]",
+            "water_heater_feature_power": "[%key:component::mqtt::config_subentries::device::step::entity_platform_config::data::climate_feature_power%]"
           },
           "data_description": {
             "alarm_control_panel_code_mode": "Configures how the alarm control panel validates the code. A local code is configured with the entity and is validated by Home Assistant. A remote code is sent to the device and validated remotely. [Learn more.]({url}#code)",
@@ -269,12 +272,15 @@
             "fan_feature_speed": "The fan supports multiple speeds.",
             "image_processing_mode": "Select how the image data is received.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
+            "reports_position": "Set this option if the valve reports the position or supports setting the position. Enabling this option will cause the position to be published instead of a payload defined by payload \"open\", payload \"close\" or payload \"stop\". When receiving messages, state topic will accept numeric payloads or one of the configured state messages.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
-            "state_class": "The [State class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
+            "state_class": "The [state class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
             "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)",
             "supported_features": "The features that the entity supports.",
-            "temperature_unit": "This determines the native unit of measurement the MQTT climate device works with.",
-            "unit_of_measurement": "Defines the unit of measurement, if any."
+            "temperature_unit": "This determines the native unit of measurement the MQTT device works with.",
+            "unit_of_measurement": "Defines the unit of measurement, if any.",
+            "water_heater_feature_current_temperature": "The water heater supports reporting the current temperature.",
+            "water_heater_feature_power": "The water heater supports the power \"on\" and \"off\" commands."
           },
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "sections": {
@@ -356,6 +362,8 @@
             "payload_on": "Payload \"on\"",
             "payload_press": "Payload \"press\"",
             "payload_reset": "Payload \"reset\"",
+            "position_closed": "Position \"closed\"",
+            "position_open": "Position \"open\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -396,7 +404,7 @@
             "min": "Minimum value. [Learn more.]({url}#min)",
             "mode": "Control how the number should be displayed in the UI. [Learn more.]({url}#mode)",
             "mode_command_template": "[Template]({command_templating_url}) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
-            "mode_command_topic": "The MQTT topic to publish commands to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
+            "mode_command_topic": "The MQTT topic to publish commands to change the operation mode. [Learn more.]({url}#mode_command_topic)",
             "mode_state_template": "Defines a [template]({value_templating_url}) to extract the operation mode state. [Learn more.]({url}#mode_state_template)",
             "mode_state_topic": "The MQTT topic subscribed to receive operation mode state messages. [Learn more.]({url}#mode_state_topic)",
             "modes": "A list of supported operation modes. [Learn more.]({url}#modes)",
@@ -407,6 +415,8 @@
             "payload_on": "The payload that represents the \"on\" state.",
             "payload_press": "The payload to send when the button is triggered.",
             "payload_reset": "The payload received at the state topic that resets the entity to an unknown state.",
+            "position_closed": "Number which represents closed position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
+            "position_open": "Number which represents open position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template]({value_templating_url}) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
@@ -719,8 +729,8 @@
               "data_description": {
                 "payload_reset_percentage": "A special payload that resets the fan speed percentage state attribute to unknown when received at the percentage state topic.",
                 "percentage_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the percentage command topic.",
-                "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage. [Learn more.]({url}#percentage_command_topic)",
-                "percentage_state_topic": "The MQTT topic subscribed to receive fan speed based on percentage. [Learn more.]({url}#percentage_state_topic)",
+                "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage setting. The value shall be in the range from \"speed range min\" to \"speed range max\". [Learn more.]({url}#percentage_command_topic)",
+                "percentage_state_topic": "The MQTT topic subscribed to receive fan speed state. This is a value in the range from \"speed range min\" to \"speed range max\". [Learn more.]({url}#percentage_state_topic)",
                 "percentage_value_template": "Defines a [template]({value_templating_url}) to extract the speed percentage value.",
                 "speed_range_max": "The maximum of numeric output range (representing 100 %). The percentage step is 100 / number of speeds within the \"speed range\".",
                 "speed_range_min": "The minimum of numeric output range (off not included, so speed_range_min - 1 represents 0 %). The percentage step is 100 / the number of speeds within the \"speed range\"."
@@ -951,13 +961,13 @@
                 "temperature_state_topic": "Temperature state topic"
               },
               "data_description": {
-                "initial": "The climate initializes with this target temperature.",
+                "initial": "The device initializes with this target temperature.",
                 "max_temp": "The maximum target temperature that can be set.",
                 "min_temp": "The minimum target temperature that can be set.",
                 "precision": "The precision in degrees the thermostat is working at.",
                 "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
                 "temperature_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the temperature command topic.",
-                "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
+                "temperature_command_topic": "The MQTT topic to publish commands to change the target temperature. [Learn more.]({url}#temperature_command_topic)",
                 "temperature_high_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the upper temperature command topic.",
                 "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate upper target temperature. [Learn more.]({url}#temperature_high_command_topic)",
                 "temperature_high_state_template": "A [template]({value_templating_url}) to render the value received on the upper temperature state topic with.",
@@ -970,6 +980,57 @@
                 "temperature_state_topic": "The MQTT topic to subscribe for changes of the target temperature. [Learn more.]({url}#temperature_state_topic)"
               },
               "name": "Target temperature settings"
+            },
+            "text_advanced_settings": {
+              "data": {
+                "max": "Maximum length",
+                "min": "Minimum length",
+                "mode": "Mode",
+                "pattern": "Pattern"
+              },
+              "data_description": {
+                "max": "Maximum length of the text input",
+                "min": "Minimum length of the text input",
+                "mode": "Mode of the text input",
+                "pattern": "A valid regex pattern"
+              },
+              "name": "Advanced text entity settings"
+            },
+            "valve_payload_settings": {
+              "data": {
+                "payload_close": "Payload \"close\"",
+                "payload_open": "Payload \"open\"",
+                "payload_stop": "Payload \"stop\"",
+                "state_closed": "State \"closed\"",
+                "state_closing": "State \"closing\"",
+                "state_open": "State \"open\"",
+                "state_opening": "State \"opening\""
+              },
+              "data_description": {
+                "payload_close": "The payload sent when a \"close\" command is issued.",
+                "payload_open": "The payload sent when an \"open\" command is issued.",
+                "payload_stop": "The payload sent when a \"stop\" command is issued. Set this payload only if your valve supports the \"stop\" action.",
+                "state_closed": "The payload received at the state topic that represents the \"closed\" state.",
+                "state_closing": "The payload received at the state topic that represents the \"closing\" state.",
+                "state_open": "The payload received at the state topic that represents the \"open\" state.",
+                "state_opening": "The payload received at the state topic that represents the \"opening\" state."
+              },
+              "name": "Valve payload settings"
+            },
+            "water_heater_power_settings": {
+              "data": {
+                "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data::payload_off%]",
+                "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data::payload_on%]",
+                "power_command_template": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::sections::climate_power_settings::data::power_command_template%]",
+                "power_command_topic": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::sections::climate_power_settings::data::power_command_topic%]"
+              },
+              "data_description": {
+                "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
+                "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_on%]",
+                "power_command_template": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::sections::climate_power_settings::data_description::power_command_template%]",
+                "power_command_topic": "The MQTT topic to publish commands to change the water heater power state. Sends the payload configured with payload \"on\" or payload \"off\". [Learn more.]({url}#power_command_topic)"
+              },
+              "name": "Power settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -1312,6 +1373,7 @@
         "speed": "[%key:component::sensor::entity_component::speed::name%]",
         "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
@@ -1329,6 +1391,12 @@
       "options": {
         "outlet": "[%key:component::switch::entity_component::outlet::name%]",
         "switch": "[%key:component::switch::title%]"
+      }
+    },
+    "device_class_valve": {
+      "options": {
+        "gas": "[%key:component::valve::entity_component::gas::name%]",
+        "water": "[%key:component::valve::entity_component::water::name%]"
       }
     },
     "entity_category": {
@@ -1386,7 +1454,10 @@
         "select": "[%key:component::select::title%]",
         "sensor": "[%key:component::sensor::title%]",
         "siren": "[%key:component::siren::title%]",
-        "switch": "[%key:component::switch::title%]"
+        "switch": "[%key:component::switch::title%]",
+        "text": "[%key:component::text::title%]",
+        "valve": "[%key:component::valve::title%]",
+        "water_heater": "[%key:component::water_heater::title%]"
       }
     },
     "set_ca_cert": {
@@ -1422,6 +1493,24 @@
         "high_low": "Upper/lower target temperature",
         "none": "No target temperature",
         "single": "Single target temperature"
+      }
+    },
+    "text_mode": {
+      "options": {
+        "password": "[%key:common::config_flow::data::password%]",
+        "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+      }
+    },
+    "water_heater_modes": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "eco": "[%key:component::water_heater::entity_component::_::state::eco%]",
+        "electric": "[%key:component::water_heater::entity_component::_::state::electric%]",
+        "gas": "[%key:component::water_heater::entity_component::_::state::gas%]",
+        "heat_pump": "[%key:component::water_heater::entity_component::_::state::heat_pump%]",
+        "high_demand": "[%key:component::water_heater::entity_component::_::state::high_demand%]",
+        "off": "[%key:common::state::off%]",
+        "performance": "[%key:component::water_heater::entity_component::_::state::performance%]"
       }
     }
   },
@@ -1473,8 +1562,7 @@
   },
   "triggers": {
     "_": {
-      "description": "When a specific message is received on a given MQTT topic.",
-      "description_configured": "When an MQTT message has been received",
+      "description": "Triggers after a specific message is received on a given MQTT topic.",
       "fields": {
         "payload": {
           "description": "The payload to trigger on.",
@@ -1485,7 +1573,7 @@
           "name": "Topic"
         }
       },
-      "name": "MQTT"
+      "name": "MQTT message received"
     }
   }
 }

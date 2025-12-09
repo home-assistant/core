@@ -25,7 +25,7 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, IntegerTypeData
+from .models import DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -483,8 +483,6 @@ async def async_setup_entry(
 class TuyaNumberEntity(TuyaEntity, NumberEntity):
     """Tuya Number Entity."""
 
-    _number: IntegerTypeData | None = None
-
     def __init__(
         self,
         device: CustomerDevice,
@@ -502,14 +500,19 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_native_min_value = dpcode_wrapper.type_information.min_scaled
         self._attr_native_step = dpcode_wrapper.type_information.step_scaled
         if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = dpcode_wrapper.type_information.unit
+            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
+
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in NUMBER_DEVICE_CLASS_UNITS[self.device_class]
@@ -546,8 +549,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, value)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, value)

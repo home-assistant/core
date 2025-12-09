@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-from actron_neo_api import ActronNeoAPI, ActronNeoAuthError
+from actron_neo_api import ActronAirAPI, ActronAirAuthError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -17,7 +17,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._api: ActronNeoAPI | None = None
+        self._api: ActronAirAPI | None = None
         self._device_code: str | None = None
         self._user_code: str = ""
         self._verification_uri: str = ""
@@ -30,10 +30,10 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._api is None:
             _LOGGER.debug("Initiating device authorization")
-            self._api = ActronNeoAPI()
+            self._api = ActronAirAPI()
             try:
                 device_code_response = await self._api.request_device_code()
-            except ActronNeoAuthError as err:
+            except ActronAirAuthError as err:
                 _LOGGER.error("OAuth2 flow failed: %s", err)
                 return self.async_abort(reason="oauth2_error")
 
@@ -50,7 +50,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._api.poll_for_token(self._device_code)
                 _LOGGER.debug("Authorization successful")
-            except ActronNeoAuthError as ex:
+            except ActronAirAuthError as ex:
                 _LOGGER.exception("Error while waiting for device authorization")
                 raise CannotConnect from ex
 
@@ -89,7 +89,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             user_data = await self._api.get_user_info()
-        except ActronNeoAuthError as err:
+        except ActronAirAuthError as err:
             _LOGGER.error("Error getting user info: %s", err)
             return self.async_abort(reason="oauth2_error")
 

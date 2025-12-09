@@ -524,6 +524,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_send_telegram_message,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders={
+                "formatting_options_url": "https://core.telegram.org/bots/api#formatting-options"
+            },
         )
 
     return True

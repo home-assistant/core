@@ -388,7 +388,7 @@ async def test_water_valve(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_occupancy(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -414,3 +414,24 @@ async def test_thermostat_occupancy(
     state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_shutter"])
+async def test_shutter_problem(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test shutter problem."""
+    # Eve Shutter default state (ConfigStatus = 9)
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
+    assert state
+    assert state.state == "off"
+
+    # Eve Shutter ConfigStatus Operational bit not set
+    set_node_attribute(matter_node, 1, 258, 7, 8)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
+    assert state
+    assert state.state == "on"

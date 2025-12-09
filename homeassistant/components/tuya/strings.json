@@ -117,6 +117,12 @@
       }
     },
     "event": {
+      "doorbell_message": {
+        "name": "Doorbell message"
+      },
+      "doorbell_picture": {
+        "name": "Doorbell picture"
+      },
       "numbered_button": {
         "name": "Button {button_number}",
         "state_attributes": {
@@ -494,6 +500,15 @@
           "power_on": "[%key:common::state::on%]"
         }
       },
+      "siren_mode": {
+        "name": "Siren mode",
+        "state": {
+          "alarm_light": "Light",
+          "alarm_sound": "Sound",
+          "alarm_sound_light": "Sound & light",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
       "target_humidity": {
         "name": "Target humidity"
       },
@@ -608,6 +623,17 @@
       "carbon_monoxide": {
         "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
+      "cat_litter_box_status": {
+        "name": "[%key:component::tuya::entity::sensor::status::name%]",
+        "state": {
+          "clean": "Cleaning",
+          "empty": "Emptying",
+          "level": "Leveling",
+          "sleep": "Sleeping",
+          "standby": "[%key:common::state::standby%]",
+          "uv": "Sanitizing"
+        }
+      },
       "cat_weight": {
         "name": "Cat weight"
       },
@@ -636,7 +662,7 @@
         "name": "Duster cloth lifetime"
       },
       "excretion_time_day": {
-        "name": "Excretion time (day)"
+        "name": "Excretion duration"
       },
       "excretion_times_day": {
         "name": "Excretion times (day)"

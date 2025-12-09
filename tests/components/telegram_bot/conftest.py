@@ -307,18 +307,34 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             CONF_URL: "https://test",
-            CONF_TRUSTED_NETWORKS: ["149.154.160.0/20", "91.108.4.0/22"],
+            CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
             ConfigSubentryData(
-                unique_id="1234567890",
-                data={CONF_CHAT_ID: 1234567890},
+                unique_id="12345678",
+                data={CONF_CHAT_ID: 12345678},
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
                 title="mock chat",
             )
         ],
     )
+
+
+@pytest.fixture
+async def webhook_bot(
+    hass: HomeAssistant,
+    mock_webhooks_config_entry: MockConfigEntry,
+    mock_register_webhook: None,
+    mock_external_calls: None,
+    mock_generate_secret_token: str,
+) -> AsyncGenerator[None]:
+    """Fixture for setting up a webhook telegram bot."""
+    mock_webhooks_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+    await hass.async_block_till_done()
+    yield
+    await hass.async_stop()
 
 
 @pytest.fixture
