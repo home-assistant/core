@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from pyhik.hikvision import HikCamera
+import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -52,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         camera = await hass.async_add_executor_job(
             HikCamera, url, port, username, password
         )
-    except Exception as err:
+    except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady(f"Unable to connect to {host}") from err
 
     device_id = camera.get_id()
