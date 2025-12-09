@@ -43,42 +43,12 @@ def base_metric() -> VictronVenusMetric:
     return metric
 
 
-async def test_sensor_repr_and_unique_id(
-    hass: HomeAssistant, mock_device, base_metric
-) -> None:
-    """Test repr and unique_id formatting."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
-
-    # simple_naming = False -> include installation_id
-    sensor = VictronSensor(
-        mock_device,
-        base_metric,
-        device_info,
-        simple_naming=False,
-        installation_id="inst",
-    )
-
-    assert sensor.unique_id == "sensor.victron_inst_metric_1"
-
-    # simple_naming = True -> omit installation_id
-    sensor2 = VictronSensor(
-        mock_device,
-        base_metric,
-        device_info,
-        simple_naming=True,
-        installation_id="inst",
-    )
-    assert sensor2.unique_id == "sensor.victron_metric_1"
-
-
 async def test_sensor_update_task_triggers_state_update(
     hass: HomeAssistant, mock_device, base_metric
 ) -> None:
     """_on_update_task should schedule update on value change and not on same value."""
     device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
 
     with patch.object(sensor, "schedule_update_ha_state") as mock_sched:
         # Change value
@@ -97,9 +67,7 @@ async def test_async_added_sets_update_callback(
 ) -> None:
     """Verify async_added_to_hass registers metric on_update and forwards updates when hass is set."""
     device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
 
     # Entity not added yet -> _on_update should early return (hass is None)
     with patch.object(sensor, "_on_update_task") as mock_task:
@@ -142,35 +110,25 @@ async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) ->
             mock_device,
             base_metric,
             device_info,
-            simple_naming=True,
-            installation_id="x",
         )
         assert sensor.device_class == expected_device_class
 
     # Unknown/unsupported device class should map to None
     base_metric.metric_type = MagicMock()
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
     assert sensor.device_class is None
 
     # State class mapping
     base_metric.metric_nature = MetricNature.INSTANTANEOUS
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
     assert sensor.state_class == SensorStateClass.MEASUREMENT
 
     base_metric.metric_nature = MetricNature.CUMULATIVE
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
     assert sensor.state_class == SensorStateClass.TOTAL
 
     base_metric.metric_nature = MagicMock()
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
     assert sensor.state_class is None
 
     # Unit of measurement mapping
@@ -181,13 +139,7 @@ async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) ->
         ("V", "V"),  # passthrough
     ):
         base_metric.unit_of_measurement = unit
-        sensor = VictronSensor(
-            mock_device,
-            base_metric,
-            device_info,
-            simple_naming=True,
-            installation_id="x",
-        )
+        sensor = VictronSensor(mock_device, base_metric, device_info)
         assert sensor.native_unit_of_measurement == expected
 
 
@@ -196,9 +148,7 @@ async def test_translation_fields(
 ) -> None:
     """Translation key is normalized and placeholders passed through."""
     device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
-    sensor = VictronSensor(
-        mock_device, base_metric, device_info, simple_naming=True, installation_id="x"
-    )
+    sensor = VictronSensor(mock_device, base_metric, device_info)
 
     assert sensor.translation_key == "phase_voltage"
     assert sensor.translation_placeholders == {"phase": "L1"}

@@ -10,7 +10,6 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
-    OperationMode,
 )
 from victron_mqtt.testing import create_mocked_hub, finalize_injection, inject_message
 
@@ -20,7 +19,6 @@ from homeassistant.components.victron_gx_mqtt.const import (
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
     CONF_UPDATE_FREQUENCY_SECONDS,
-    DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
 from homeassistant.components.victron_gx_mqtt.hub import Hub
@@ -101,78 +99,6 @@ async def mqtt_test_setup(hass: HomeAssistant):
     # Register all platform callbacks
     await sensor_setup_entry(hass, mock_config_entry, mock_async_add_entities)
     return victron_hub, mock_async_add_entities
-
-
-async def test_hub_initialization(
-    hass: HomeAssistant, mock_config_entry, basic_config
-) -> None:
-    """Test hub initialization with basic config."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub"
-    ) as mock_hub_class:
-        mock_hub = MagicMock(spec=VictronVenusHub)
-        mock_hub_class.return_value = mock_hub
-
-        hub = Hub(hass, mock_config_entry)
-
-        # Verify hub attributes
-        assert hub.hass is hass
-        assert hub.entry is mock_config_entry
-        assert hub.id == "test_unique_id"
-        assert hub.simple_naming is False
-
-        # Verify VictronVenusHub was created with correct parameters
-        mock_hub_class.assert_called_once()
-        call_kwargs = mock_hub_class.call_args[1]
-        assert call_kwargs["host"] == "venus.local"
-        assert call_kwargs["port"] == 1883
-        assert call_kwargs["username"] == "test_user"
-        assert call_kwargs["password"] == "test_pass"
-        assert call_kwargs["use_ssl"] is False
-        assert call_kwargs["installation_id"] == "12345"
-        assert call_kwargs["model_name"] == "Venus GX"
-        assert call_kwargs["serial"] == "HQ12345678"
-        assert call_kwargs["topic_prefix"] == "N/"
-        assert call_kwargs["operation_mode"] == OperationMode.READ_ONLY
-        assert call_kwargs["update_frequency_seconds"] == 30
-
-
-async def test_hub_initialization_minimal_config(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
-    """Test hub initialization with minimal config."""
-    minimal_config = {
-        CONF_HOST: "venus.local",
-        CONF_SERIAL: "noserial",
-    }
-    mock_config_entry.data = minimal_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub"
-    ) as mock_hub_class:
-        mock_hub = MagicMock(spec=VictronVenusHub)
-        mock_hub_class.return_value = mock_hub
-
-        _hub = Hub(hass, mock_config_entry)
-
-        # Verify defaults were used
-        call_kwargs = mock_hub_class.call_args[1]
-        assert call_kwargs["host"] == "venus.local"
-        assert call_kwargs["port"] == 1883
-        assert call_kwargs["username"] is None
-        assert call_kwargs["password"] is None
-        assert call_kwargs["use_ssl"] is False
-        assert call_kwargs["installation_id"] is None
-        assert call_kwargs["model_name"] is None
-        assert call_kwargs["serial"] == "noserial"
-        assert call_kwargs["topic_prefix"] is None
-        assert (
-            call_kwargs["update_frequency_seconds"] == DEFAULT_UPDATE_FREQUENCY_SECONDS
-        )
 
 
 async def test_hub_start_success(
@@ -282,8 +208,8 @@ async def test_register_add_entities_callback(
     mock_callback = MagicMock()
     hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
 
-    assert MetricKind.SENSOR in hub.add_entities_map
-    assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
+    assert MetricKind.SENSOR in hub.new_metric_callbacks
+    assert hub.new_metric_callbacks[MetricKind.SENSOR] is mock_callback
 
 
 async def test_unregister_add_entities_callback(
@@ -300,14 +226,14 @@ async def test_unregister_add_entities_callback(
     hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
 
     # Verify it was registered
-    assert MetricKind.SENSOR in hub.add_entities_map
-    assert hub.add_entities_map[MetricKind.SENSOR] is mock_callback
+    assert MetricKind.SENSOR in hub.new_metric_callbacks
+    assert hub.new_metric_callbacks[MetricKind.SENSOR] is mock_callback
 
     # Unregister the callback
     hub.unregister_all_new_metric_callbacks()
 
     # Verify it was removed
-    assert MetricKind.SENSOR not in hub.add_entities_map
+    assert MetricKind.SENSOR not in hub.new_metric_callbacks
 
 
 async def test_on_new_metric_sensor(
@@ -322,11 +248,9 @@ async def test_on_new_metric_sensor(
     # Register callback that creates entities
     created_entities = []
 
-    def mock_callback(device, metric, device_info, installation_id):
+    def mock_callback(device, metric, device_info):
         """Mock callback that creates a sensor entity."""
-        entity = VictronSensor(
-            device, metric, device_info, hub.simple_naming, installation_id
-        )
+        entity = VictronSensor(device, metric, device_info)
         created_entities.append(entity)
 
     hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)

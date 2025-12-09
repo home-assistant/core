@@ -4,7 +4,7 @@
     _Call(
       tuple(
         list([
-          VictronBaseEntity(device=Battery, unique_id=sensor.victron_123_battery_0_battery_current, metric=battery_current, translation_key=battery_current, translation_placeholders={'installation_id': '123', 'device_id': '0'}),
+          VictronBaseEntity(device=Battery, unique_id=battery_0_battery_current, metric=battery_current, translation_key=battery_current, translation_placeholders={'installation_id': '123', 'device_id': '0'}),
         ]),
       ),
       dict({
