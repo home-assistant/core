@@ -79,6 +79,7 @@ PLAYER_SENSOR_DESCRIPTIONS: tuple[
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda player: player.playing_time,
+        entity_registry_enabled_default=False
     ),
 )
 
@@ -97,7 +98,7 @@ async def async_setup_entry(
     for device in entry.runtime_data.api.devices.values():
         async_add_entities(
             NintendoParentalControlsPlayerSensorEntity(
-                entry.runtime_data, device, player.player_id, sensor
+                entry.runtime_data, device, player, sensor
             )
             for player in device.players
             for sensor in PLAYER_SENSOR_DESCRIPTIONS
@@ -145,6 +146,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self._attr_translation_placeholders = {
             "nickname": device.get_player(player).nickname
         }
+        self._attr_unique_id = f"{player}_{description.key}"
 
     @property
     def entity_picture(self) -> str | None:
