@@ -21,9 +21,7 @@ def get_coord_entity(
 ) -> State | None:
     """Get the coordinated energy sensor entity."""
     unique_id = f"{mock_device.id}_{SensorDeviceClass.ENERGY}"
-    entity_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, unique_id
-    )
+    entity_entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     if entity_entry is None:
         return None
     return hass.states.get(entity_entry)
