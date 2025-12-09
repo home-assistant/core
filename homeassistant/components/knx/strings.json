@@ -593,6 +593,37 @@
             }
           }
         },
+        "sensor": {
+          "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
+          "knx": {
+            "always_callback": {
+              "description": "Write each update to the state machine, even if the data is the same.",
+              "label": "Force update"
+            },
+            "device_class": {
+              "description": "Override the DPTs default device class.",
+              "label": "Device class"
+            },
+            "ga_sensor": {
+              "description": "Group address representing state.",
+              "label": "State"
+            },
+            "section_advanced_options": {
+              "description": "Override default DPT based sensor attributes.",
+              "title": "Overrides"
+            },
+            "state_class": {
+              "description": "Override the DPTs default state class.",
+              "label": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
+              "options": {
+                "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+                "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
+                "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+                "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+              }
+            }
+          }
+        },
         "switch": {
           "description": "The KNX switch platform is used as an interface to switching actuators.",
           "knx": {

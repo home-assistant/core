@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -186,6 +187,7 @@ def ws_get_base_data(
         msg["id"],
         {
             "connection_info": connection_info,
+            "dpt_metadata": get_supported_dpts(),
             "project_info": _project_info,
             "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
         },

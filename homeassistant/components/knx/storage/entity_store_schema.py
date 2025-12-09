@@ -5,7 +5,13 @@ from enum import StrEnum, unique
 import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -32,6 +38,7 @@ from ..const import (
     FanZeroMode,
 )
 from .const import (
+    CONF_ALWAYS_CALLBACK,
     CONF_COLOR,
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
@@ -547,6 +554,32 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
     },
 )
 
+SENSOR_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_SENSOR): GASelector(
+            write=False, state_required=True, dpt=["numeric", "string"]
+        ),
+        "section_advanced_options": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(SensorDeviceClass),
+                translation_key="component.sensor.entity_component",
+            )
+        ),
+        vol.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(SensorStateClass),
+                translation_key="component.knx.config_panel.entities.create.sensor.knx.state_class",
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
+        vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
+            allow_false=True
+        ),
+    },
+)
+
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
     Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
@@ -555,6 +588,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
+    Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,
 }
