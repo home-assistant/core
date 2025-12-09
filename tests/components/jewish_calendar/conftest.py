@@ -236,7 +236,8 @@ def get_calendar_events():
         return response[entity_id]["events"]  # type: ignore[return-value]
 
     return _get_events
-  
+
+
 @pytest.fixture
 async def test_sequence(
     request: pytest.FixtureRequest,
