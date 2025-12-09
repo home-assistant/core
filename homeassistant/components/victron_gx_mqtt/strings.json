@@ -20,12 +20,12 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of Victron Device, usually mDNS name like 'venus.local'",
+          "host": "Hostname or IP address of Victron device, usually mDNS name like 'venus.local'",
           "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read_only' exposes only sensors and binary_sensors (no writable entities), 'full' exposes all entity types (sensors, binary_sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
           "password": "Password for the Victron Device, default is empty. This is not your VRM password.",
           "port": "The MQTT port on the host. Normally it is 1883.",
           "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
-          "ssl": "Indicates whether to use SSL to connect to the Victron Device. Normally it is disabled.",
+          "ssl": "Indicates whether to use SSL to connect to the Victron device. Normally it is disabled.",
           "update_frequency": "Update frequency in seconds. Default is 30 seconds. Set to 0 to update always.",
           "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you use route your mqtt messages through non Victron server and it does require username."
         }
@@ -1315,7 +1315,7 @@
   },
   "services": {
     "publish": {
-      "description": "Publish a value to a specific metric on a Victron device.",
+      "description": "Publishes a value to a specific metric on a Victron device.",
       "fields": {
         "device_id": {
           "description": "The device identifier to publish to.",
