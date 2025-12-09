@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
@@ -76,6 +77,12 @@ SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]]
 ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
+
+# batching type aliases for readability
+# need the quotes because of the if TYPE_CHECKING statement above
+_BatchGroup = tuple[list["Entity"], Callable]
+_BatchMapKey = tuple[type["Entity"], ConfigEntry | None]
+_BatchMap = dict[_BatchMapKey, _BatchGroup]
 
 
 @cache
@@ -721,6 +728,63 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
+# batching helper functions
+
+
+def _extract_batchable_entities(
+    entities: list[Entity], service_name: str
+) -> tuple[
+    list[Entity],
+    _BatchMap,
+]:
+    """Return non-batchable entities and a batch_map of batchable ones.
+
+    batch_map maps (cls, config_entry) -> (list of entities, bound batch classmethod)
+    """
+
+    def resolve_classmethod(cls: type[Entity]) -> Callable[..., Any] | None:
+        """Return the bound classmethod if defined anywhere in the MRO."""
+        for base in cls.__mro__:
+            attr = base.__dict__.get(f"async_batch_{service_name}")
+            if isinstance(attr, classmethod):
+                return cast(Callable[..., Any], getattr(cls, service_name))
+        return None
+
+    remaining: list[Entity] = []
+    batch_map: _BatchMap = {}
+
+    for entity in entities:
+        cls = type(entity)
+        config_entry = getattr(entity, "config_entry", None)
+        batcher = resolve_classmethod(cls)
+
+        if batcher:
+            key = (cls, config_entry)
+            if key not in batch_map:
+                batch_map[key] = ([], batcher)
+            batch_map[key][0].append(entity)
+        else:
+            remaining.append(entity)
+
+    return remaining, batch_map
+
+
+def _reinsert_batch_singletons(
+    remaining: list[Entity], batch_map: _BatchMap
+) -> tuple[
+    list[Entity],
+    _BatchMap,
+]:
+    """If a batch contains only one entity, move it back to the main list."""
+
+    for key, (batch_entities, _) in list(batch_map.items()):
+        if len(batch_entities) == 1:
+            remaining.append(batch_entities[0])
+            del batch_map[key]
+
+    return remaining, batch_map
+
+
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
@@ -787,7 +851,7 @@ async def entity_service_call(
             missing.discard(entity.entity_id)
         referenced.log_missing(missing, _LOGGER)
 
-    entities: list[Entity] = []
+    entities = []
     for entity in entity_candidates:
         if not entity.available:
             continue
@@ -829,26 +893,22 @@ async def entity_service_call(
     if len(entities) == 1:
         # Single entity case avoids creating task
         entity = entities[0]
-        single_response = await _handle_entity_call(
-            hass, entity, func, data, call.context
+        response = await _handle_entity_calls(
+            hass, None, entities, func, data, call.context
         )
         if entity.should_poll:
             # Context expires if the turn on commands took a long time.
             # Set context again so it's there when we update
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
-        return {entity.entity_id: single_response} if return_response else None
+        return {entity.entity_id: response[0]} if return_response else None
 
-    # Use asyncio.gather here to ensure the returned results
-    # are in the same order as the entities list
-    results: list[ServiceResponse | BaseException] = await asyncio.gather(
-        *[
-            entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, call.context)
-            )
-            for entity in entities
-        ],
-        return_exceptions=True,
+    # multiple entities -> apply batching
+    remaining, batch_map = _extract_batchable_entities(entities, call.service)
+    remaining, batch_map = _reinsert_batch_singletons(remaining, batch_map)
+
+    results = await _handle_entity_calls(
+        hass, batch_map, remaining, func, data, call.context
     )
 
     response_data: EntityServiceResponse = {}
@@ -877,44 +937,65 @@ async def entity_service_call(
     return response_data if return_response and response_data else None
 
 
-async def _handle_entity_call(
+async def _handle_entity_calls(
     hass: HomeAssistant,
-    entity: Entity,
+    batch_map: _BatchMap | None,
+    non_batchable: list[Entity] | None,
     func: str | HassJob,
     data: dict | ServiceCall,
     context: Context,
-) -> ServiceResponse:
-    """Handle calling service method."""
-    entity.async_set_context(context)
+) -> list[ServiceResponse]:
+    """Handle service calls for batchable and non-batchable entities."""
 
-    task: asyncio.Future[ServiceResponse] | None
-    if isinstance(func, str):
-        job = HassJob(
-            partial(getattr(entity, func), **data),  # type: ignore[arg-type]
-            job_type=entity.get_hassjob_type(func),
-        )
-        task = hass.async_run_hass_job(job)
-    else:
-        task = hass.async_run_hass_job(func, entity, data)
+    # Extract kwargs from data
+    kwargs = data.data if isinstance(data, ServiceCall) else data
 
-    # Guard because callback functions do not return a task when passed to
-    # async_run_job.
-    result: ServiceResponse = None
-    if task is not None:
-        result = await task
+    batch_map = batch_map or {}
+    non_batchable = non_batchable or []
 
-    if asyncio.iscoroutine(result):
-        _LOGGER.error(  # type: ignore[unreachable]
-            (
-                "Service %s for %s incorrectly returns a coroutine object. Await result"
-                " instead in service handler. Report bug to integration author"
-            ),
-            func,
-            entity.entity_id,
-        )
-        result = await result
+    # Set context on all entities
+    for entity in non_batchable:
+        entity.async_set_context(context)
+    for entities, _ in batch_map.values():
+        for entity in entities:
+            entity.async_set_context(context)
 
-    return result
+    tasks: list[asyncio.Future] = []
+
+    # Schedule batchable coroutines
+    for (_, config_entry), (entities, batcher) in batch_map.items():
+        tasks.append(batcher(entities, config_entry=config_entry, **kwargs))
+
+    # Schedule non-batchable coroutines
+    for entity in non_batchable:
+        if isinstance(func, str):
+            task = hass.async_run_hass_job(
+                HassJob(
+                    partial(getattr(entity, func), **data),  # type: ignore[arg-type]
+                    job_type=entity.get_hassjob_type(func),
+                )
+            )
+        else:
+            task = hass.async_run_hass_job(func, entity, data)
+
+        if task is not None:
+            tasks.append(task)
+
+    results = await asyncio.gather(*tasks)
+
+    # Guard against services incorrectly returning coroutines
+    for i, result in enumerate(results):
+        if asyncio.iscoroutine(result):
+            _LOGGER.error(
+                (
+                    "Service %s incorrectly returns a coroutine object. Await result"
+                    " instead in service handler"
+                ),
+                func,
+            )
+            results[i] = await result
+
+    return results
 
 
 async def _async_admin_handler(
