@@ -102,14 +102,20 @@ class SurePetcareIndoorModeSwitch(SurePetcareEntity, SwitchEntity):
         self._profile_id = pet_tag.get("profile", PROFILE_OUTDOOR)
         self._attr_is_on = self._profile_id == PROFILE_INDOOR
 
+    async def _async_update_tag_profile(self, profile: int) -> None:
+        """Call the API to set the pet's profile on this flap."""
+        result = await self.coordinator.surepy.sac.call(
+            method="PUT",
+            resource=f"{BASE_RESOURCE}/device/{self._flap.id}/tag/{self._pet.tag_id}",
+            json={"profile": profile},
+        )
+        if result is None:
+            raise SurePetcareError("Device tag API call returned None")
+
     async def _async_set_profile(self, profile: int) -> None:
         """Set the pet's profile on this flap."""
         try:
-            await self.coordinator.surepy.sac.call(
-                method="PUT",
-                resource=f"{BASE_RESOURCE}/device/{self._flap.id}/tag/{self._pet.tag_id}",
-                json={"profile": profile},
-            )
+            await self._async_update_tag_profile(profile)
         except SurePetcareError as err:
             await self.coordinator.async_request_refresh()
             mode = "indoor" if profile == PROFILE_INDOOR else "outdoor"

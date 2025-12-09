@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from surepy.const import BASE_RESOURCE, MESTART_RESOURCE
-from surepy.exceptions import SurePetcareError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.surepetcare.const import PROFILE_INDOOR, PROFILE_OUTDOOR
@@ -20,11 +19,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _mock_call_with_put_device_error(method, resource, json=None):
-    """Mock API call that fails on PUT to update device tags, succeeds on GET for refresh."""
-    # Fail on PUT to update device tags
+    """Mock API call that returns None on PUT (simulating 5XX error), succeeds on GET for refresh."""
     if method == "PUT" and "/tag/" in resource:
-        raise SurePetcareError("Test API error")
-    # Succeed on GET for refresh
+        return None
     if method == "GET" and resource == MESTART_RESOURCE:
         return {"data": MOCK_API_DATA}
     return None
