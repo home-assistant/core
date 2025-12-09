@@ -17,7 +17,7 @@ DEFAULT_UNIT_ID = "test_unit_001"
 
 
 @pytest.fixture(name="get_client")
-def mock_airpatrol_client_config_flow(get_data) -> Generator[AsyncMock]:
+def mock_airpatrol_client(get_data) -> Generator[AsyncMock]:
     """Mock an AirPatrol client and config."""
     with (
         patch(
@@ -49,7 +49,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "test_password",
             CONF_ACCESS_TOKEN: "test_access_token",
         },
-        entry_id=1,
         unique_id="test_user_id",
         title="test@example.com",
     )
@@ -69,7 +68,7 @@ async def load_integration(
 
 
 @pytest.fixture
-def get_data() -> list[dict[str, Any]]:
+def get_data(climate_data: dict[str, Any]) -> list[dict[str, Any]]:
     """Return data."""
     return [
         {
@@ -78,16 +77,22 @@ def get_data() -> list[dict[str, Any]]:
             "manufacturer": "AirPatrol",
             "model": "apw",
             "hwid": "hw01",
-            "climate": {
-                "ParametersData": {
-                    "PumpPower": "on",
-                    "PumpTemp": "22.000",
-                    "PumpMode": "cool",
-                    "FanSpeed": "max",
-                    "Swing": "off",
-                },
-                "RoomTemp": "22.5",
-                "RoomHumidity": "45",
-            },
+            "climate": climate_data,
         }
     ]
+
+
+@pytest.fixture
+def climate_data() -> dict[str, Any]:
+    """Return data."""
+    return {
+        "ParametersData": {
+            "PumpPower": "on",
+            "PumpTemp": "22.000",
+            "PumpMode": "cool",
+            "FanSpeed": "max",
+            "Swing": "off",
+        },
+        "RoomTemp": "22.5",
+        "RoomHumidity": "45",
+    }
