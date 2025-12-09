@@ -33,7 +33,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.9.6,source=/uv,target=/bin/uv \
         hassil==3.5.0 \
         home-assistant-intents==2025.12.2 \
         mutagen==1.47.0 \
-        pysilero-vad==3.0.0 \
+        pysilero-vad==3.0.1 \
         pyspeex-noise==1.0.2
 
 LABEL "name"="hassfest"
