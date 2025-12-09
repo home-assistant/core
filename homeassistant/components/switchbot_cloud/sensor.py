@@ -61,7 +61,7 @@ USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    suggested_display_precision=2,
+    suggested_display_precision=3,
     value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
 )
 
@@ -149,11 +149,13 @@ RELAY_SWITCH_2PM_CURRENT_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
 )
 
-RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION = SensorEntityDescription(
+RELAY_SWITCH_2PM_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=3,
+    value_fn=lambda data: int(data) / 60000,
 )
 
 LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
@@ -225,7 +227,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
         RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,
         RELAY_SWITCH_2PM_CURRENT_DESCRIPTION,
-        RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION,
+        RELAY_SWITCH_2PM_ELECTRICITY_DESCRIPTION,
     ),
     "Curtain": (BATTERY_DESCRIPTION,),
     "Curtain3": (BATTERY_DESCRIPTION,),
@@ -295,7 +297,14 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+        if isinstance(self.entity_description, SwitchbotCloudSensorEntityDescription):
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data
+            )
+        else:
+            self._attr_native_value = self.coordinator.data.get(
+                self.entity_description.key
+            )
 
 
 class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
@@ -327,9 +336,16 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(
-            f"switch{self._channel}{self.entity_description.key.strip()}"
-        )
+        if isinstance(self.entity_description, SwitchbotCloudSensorEntityDescription):
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data.get(
+                    f"switch{self._channel}{self.entity_description.key.strip()}"
+                )
+            )
+        else:
+            self._attr_native_value = self.coordinator.data.get(
+                f"switch{self._channel}{self.entity_description.key.strip()}"
+            )
 
 
 @callback
