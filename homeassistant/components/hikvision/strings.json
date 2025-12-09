@@ -40,5 +40,15 @@
         "title": "Set up Hikvision device"
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring {integration_title} using YAML is deprecated and will be removed in a future release. Your configuration has been automatically imported. Please remove the `{domain}` entry from your `configuration.yaml` file.",
+      "title": "YAML configuration is deprecated"
+    },
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring {integration_title} using YAML is deprecated and the import failed. Please remove the `{domain}` entry from your `configuration.yaml` file and set up the integration manually.",
+      "title": "YAML import failed"
+    }
   }
 }

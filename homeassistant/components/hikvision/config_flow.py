@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -141,4 +142,48 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
+        """Handle import from configuration.yaml."""
+        host = import_data[CONF_HOST]
+        port = import_data.get(CONF_PORT, DEFAULT_PORT)
+        username = import_data[CONF_USERNAME]
+        password = import_data[CONF_PASSWORD]
+        ssl = import_data.get(CONF_SSL, False)
+
+        protocol = "https" if ssl else "http"
+        url = f"{protocol}://{host}"
+
+        try:
+            camera = await self.hass.async_add_executor_job(
+                HikCamera, url, port, username, password
+            )
+            device_id = camera.get_id
+            device_name = camera.get_name
+        except Exception:
+            _LOGGER.exception(
+                "Error connecting to Hikvision device during import, aborting"
+            )
+            return self.async_abort(reason="cannot_connect")
+
+        if device_id is None:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured()
+
+        _LOGGER.warning(
+            "Importing Hikvision config from configuration.yaml for %s", host
+        )
+
+        return self.async_create_entry(
+            title=device_name or host,
+            data={
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_SSL: ssl,
+            },
         )
