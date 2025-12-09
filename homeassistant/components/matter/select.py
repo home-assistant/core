@@ -184,8 +184,14 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
 
 
 class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
-    """Representation of a Door Lock Operating Mode select entity."""
+    """Representation of a Door Lock Operating Mode select entity.
 
+    This entity dynamically filters available operating modes based on the device's
+    `SupportedOperatingModes` bitmap attribute. In this bitmap, bit=0 indicates a
+    supported mode and bit=1 indicates unsupported (inverted from typical bitmap conventions).
+    If the bitmap is unavailable, only mandatory modes are included. The mapping from
+    bitmap bits to operating mode values is defined by the Matter specification.
+    """
     entity_description: MatterMapSelectEntityDescription
 
     @callback
