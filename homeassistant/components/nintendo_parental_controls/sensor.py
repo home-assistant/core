@@ -79,7 +79,7 @@ PLAYER_SENSOR_DESCRIPTIONS: tuple[
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda player: player.playing_time,
-        entity_registry_enabled_default=False
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -144,7 +144,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self.entity_description = description
         self.player_id = player
         self._attr_translation_placeholders = {
-            "nickname": device.get_player(player).nickname
+            "nickname": device.get_player(player).nickname  # type: ignore[dict-item]
         }
         self._attr_unique_id = f"{player}_{description.key}"
 
