@@ -183,6 +183,46 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             self._attr_name = desc
 
 
+class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
+    """Representation of a Door Lock Operating Mode select entity."""
+
+    entity_description: MatterMapSelectEntityDescription
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        # Get the bitmap of supported operating modes
+        supported_modes_bitmap = self.get_matter_attribute_value(
+            self.entity_description.list_attribute
+        )
+
+        # Convert bitmap to list of supported mode values
+        # Mandatory modes are bits 0 (Normal) and 3 (NoRemoteLockUnlock)
+        # If a bit is not set in the bitmap, it means the mode is NOT supported
+        # However, mandatory modes should always be included
+        if supported_modes_bitmap is not None:
+            supported_modes = []
+            for bit_position in range(5):  # Operating modes are bits 0-4
+                is_set = bool(supported_modes_bitmap & (1 << bit_position))
+                is_mandatory = bit_position in (0, 3)  # Normal and NoRemoteLockUnlock
+                # Include if set OR if mandatory
+                if is_set or is_mandatory:
+                    supported_modes.append(bit_position)
+        else:
+            # If bitmap not available, include all mandatory modes
+            supported_modes = [0, 3]
+
+        # Map supported mode values to their string representations
+        self._attr_options = [
+            mapped_value
+            for mode_value in supported_modes
+            if (mapped_value := self.entity_description.device_to_ha(mode_value))
+        ]
+
+        # Use base implementation to set the current option
+        super()._update_from_device()
+
+
 class MatterListSelectEntity(MatterEntity, SelectEntity):
     """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
 
@@ -594,15 +634,18 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
+        entity_description=MatterMapSelectEntityDescription(
             key="DoorLockOperatingMode",
             entity_category=EntityCategory.CONFIG,
             translation_key="door_lock_operating_mode",
-            options=list(DOOR_LOCK_OPERATING_MODE_MAP.values()),
+            list_attribute=clusters.DoorLock.Attributes.SupportedOperatingModes,
             device_to_ha=DOOR_LOCK_OPERATING_MODE_MAP.get,
             ha_to_device=DOOR_LOCK_OPERATING_MODE_MAP_REVERSE.get,
         ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(clusters.DoorLock.Attributes.OperatingMode,),
+        entity_class=MatterDoorLockOperatingModeSelectEntity,
+        required_attributes=(
+            clusters.DoorLock.Attributes.OperatingMode,
+            clusters.DoorLock.Attributes.SupportedOperatingModes,
+        ),
     ),
 ]
