@@ -2,8 +2,7 @@
 
 from collections.abc import Callable
 
-from aiobmsble import BMSMode
-from aiobmsble.basebms import BMSSample
+from aiobmsble import BMSMode, BMSSample
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
