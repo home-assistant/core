@@ -155,7 +155,7 @@ RELAY_SWITCH_2PM_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     suggested_display_precision=3,
-    value_fn=lambda data: int(data) / 60000,
+    value_fn=lambda data: (0 if data is None else int(data)) / 60000,
 )
 
 LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
