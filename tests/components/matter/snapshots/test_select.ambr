@@ -3658,7 +3658,6 @@
       'options': list([
         'normal',
         'vacation',
-        'privacy',
         'no_remote_lock_unlock',
         'passage',
       ]),
@@ -3699,7 +3698,6 @@
       'options': list([
         'normal',
         'vacation',
-        'privacy',
         'no_remote_lock_unlock',
         'passage',
       ]),
