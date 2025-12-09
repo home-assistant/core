@@ -1,164 +1,62 @@
 rules:
   # Bronze
-  action-setup:
-    status: done
-    comment: Services are registered in async_setup via async_setup_services(hass) in __init__.py.
+  action-setup: done
   appropriate-polling:
     status: exempt
-    comment: Integration is push-based using WebSockets (iot_class local_push), no polling needed.
-  brands:
-    status: done
-    comment: UniFi Protect has branding assets in the brands repository.
-  common-modules:
-    status: done
-    comment: Uses data.py for data coordination and entity.py for base entity class.
-  config-flow-test-coverage:
-    status: done
-    comment: test_config_flow.py provides comprehensive coverage of all config flow paths.
-  config-flow:
-    status: done
-    comment: Full config flow implementation in config_flow.py with VERSION = 2.
-  dependency-transparency:
-    status: done
-    comment: uiprotect library is open source on PyPI with tagged releases.
-  docs-actions:
-    status: done
-    comment: All 5 service actions documented at home-assistant.io/integrations/unifiprotect.
-  docs-high-level-description:
-    status: done
-    comment: Documentation describes UniFi Protect integration.
-  docs-installation-instructions:
-    status: done
-    comment: Prerequisites section with Local User setup, Camera Streams, API key creation.
-  docs-removal-instructions:
-    status: done
-    comment: Standard removal process applies, no special steps needed.
-  entity-event-setup:
-    status: done
-    comment: Uses async_on_remove pattern and entry.async_on_unload for cleanup.
-  entity-unique-id:
-    status: done
-    comment: All entities have unique_id based on device MAC and description key.
-  has-entity-name:
-    status: done
-    comment: BaseProtectEntity sets _attr_has_entity_name = True in entity.py.
-  runtime-data:
-    status: done
-    comment: Uses entry.runtime_data with typed UFPConfigEntry.
-  test-before-configure:
-    status: done
-    comment: Config flow validates connection via _async_get_nvr_data before entry creation.
-  test-before-setup:
-    status: done
-    comment: async_setup_entry calls protect.update() and raises ConfigEntryNotReady/AuthFailed.
-  unique-config-entry:
-    status: done
-    comment: Uses async_set_unique_id(nvr_data.mac) and _abort_if_unique_id_configured().
+    comment: Integration is push-based using WebSockets (iot_class local_push).
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: done
-    comment: Services raise HomeAssistantError and ServiceValidationError appropriately.
-  config-entry-unloading:
-    status: done
-    comment: async_unload_entry implemented with platform unloading and data_service.async_stop().
-  docs-configuration-parameters:
-    status: done
-    comment: Options flow parameters documented (RTSP, realtime metrics, max media).
-  docs-installation-parameters:
-    status: done
-    comment: Hardware/software requirements and prerequisites fully documented.
-  entity-unavailable:
-    status: done
-    comment: WebSocket state handling marks entities unavailable on connection loss.
-  integration-owner:
-    status: done
-    comment: "@RaHehl listed as codeowner in manifest.json."
-  log-when-unavailable:
-    status: done
-    comment: _async_update_change logs connection loss and restoration in data.py.
-  parallel-updates:
-    status: done
-    comment: All platform files set PARALLEL_UPDATES = 0 for coordinator-based updates.
-  reauthentication-flow:
-    status: done
-    comment: async_step_reauth and async_step_reauth_confirm implemented in config_flow.py.
-  test-coverage:
-    status: done
-    comment: Test coverage is 99% across all modules, exceeding 95% requirement.
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
 
   # Gold
-  devices:
-    status: done
-    comment: All entities provide DeviceInfo with comprehensive device metadata.
-  diagnostics:
-    status: done
-    comment: diagnostics.py implements async_get_config_entry_diagnostics with anonymized data.
-  discovery-update-info:
-    status: done
-    comment: Discovery updates IP via _abort_if_unique_id_configured(updates={CONF_HOST}).
-  discovery:
-    status: done
-    comment: Supports DHCP, SSDP, and integration_discovery via unifi-discovery library.
-  docs-data-update:
-    status: done
-    comment: Documentation mentions Local Push via WebSockets for real-time updates.
-  docs-examples:
-    status: done
-    comment: Multiple automation examples for notifications, doorbell, NFC, fingerprint events.
-  docs-known-limitations:
-    status: done
-    comment: EA versions not supported, Package Camera FPS limitations documented.
-  docs-supported-devices:
-    status: done
-    comment: All device types documented (Cameras, Floodlights, Sensors, Viewers, Locks, Chimes, NVR).
-  docs-supported-functions:
-    status: done
-    comment: All entities and features per device type fully documented.
-  docs-troubleshooting:
-    status: done
-    comment: Troubleshooting section covers video delay, audio, liveview, NVR errors.
-  docs-use-cases:
-    status: done
-    comment: Media source, proxy views, and event entities documented with examples.
-  dynamic-devices:
-    status: done
-    comment: _async_add_device in data.py dispatches signals for newly adopted devices.
-  entity-category:
-    status: done
-    comment: Entities use EntityCategory.CONFIG and EntityCategory.DIAGNOSTIC appropriately.
-  entity-device-class:
-    status: done
-    comment: Extensive use of device classes (motion, door, temperature, signal_strength, etc.).
-  entity-disabled-by-default:
-    status: done
-    comment: Diagnostic and less common entities use entity_registry_enabled_default=False.
-  entity-translations:
-    status: done
-    comment: All entities use translation_key with translations in strings.json.
-  exception-translations:
-    status: done
-    comment: Exceptions use translation_key for api_key_required, cloud_user, protect_version.
-  icon-translations:
-    status: done
-    comment: Entities use device classes for icons or have static icons that don't require state-based changes.
-  reconfiguration-flow:
-    status: done
-    comment: async_step_reconfigure implemented in config_flow.py.
-  repair-issues:
-    status: done
-    comment: repairs.py implements RepairsFlow for cloud_user and RTSP issues.
-  stale-devices:
-    status: done
-    comment: _async_remove_device in data.py removes devices from registry when unadopted.
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: done
 
   # Platinum
-  async-dependency:
-    status: done
-    comment: uiprotect library is fully async using aiohttp.
-  inject-websession:
-    status: done
-    comment: Uses async_create_clientsession and async_get_clientsession for API client.
-  strict-typing:
-    status: done
-    comment: Listed in .strict-typing file, uses typed UFPConfigEntry throughout.
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
