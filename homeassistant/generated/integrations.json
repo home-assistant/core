@@ -7102,6 +7102,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "uhooair": {
+      "name": "uHoo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "uk_transport": {
       "name": "UK Transport",
       "integration_type": "hub",
