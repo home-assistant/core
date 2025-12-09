@@ -275,20 +275,23 @@ async def test_on_new_metric_sensor(
     entity = created_entities[0]
     assert isinstance(entity, VictronSensor)
 
-    # Patch schedule_update_ha_state and call _on_update_task
-    with patch.object(entity, "schedule_update_ha_state") as mock_schedule_update:
+    # Set the entity's hass instance for testing
+    entity.hass = hass
+
+    # Patch async_write_ha_state and call _on_update_task
+    with patch.object(entity, "async_write_ha_state") as mock_write_state:
         # Call with a value that should trigger an update
         entity._on_update_task(42)
-        mock_schedule_update.assert_called_once()
+        mock_write_state.assert_called_once()
         assert entity._attr_native_value == 42
 
         # Call with same value that should not trigger an update
         entity._on_update_task(42)
-        mock_schedule_update.assert_called_once()
+        mock_write_state.assert_called_once()
         assert entity._attr_native_value == 42
 
         entity._on_update_task(100)
-        assert mock_schedule_update.call_count == 2
+        assert mock_write_state.call_count == 2
         assert entity._attr_native_value == 100
 
 
