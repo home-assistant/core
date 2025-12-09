@@ -46,6 +46,12 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
 
     entity_description: MatterMediaPlayerEntityDescription
     _platform_translation_key = "media_player"
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+    )
+    _attr_volume_step = 0.01
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
@@ -87,7 +93,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._calculate_features()
         matter_volume = self.get_matter_attribute_value(
             clusters.LevelControl.Attributes.CurrentLevel
         )
@@ -112,17 +117,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
             self._attr_volume_level = matter_volume / float(max_level)
         # No state in the Speaker endpoint as it is dedicated to volume control
         self._attr_state = MediaPlayerState.ON
-
-    @callback
-    def _calculate_features(self) -> None:
-        """Calculate features for HA MediaPlayer platform."""
-        supported_features = (
-            MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.VOLUME_STEP
-        )
-        self._attr_supported_features = supported_features
-        self._attr_volume_step = 0.01  # Matter uses 0-254 for volume levels
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
