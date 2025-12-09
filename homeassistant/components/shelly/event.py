@@ -18,7 +18,6 @@ from homeassistant.components.event import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
@@ -26,12 +25,11 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyBlockEntity, get_entity_rpc_device_info
+from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_block_channel,
-    get_block_channel_name,
     get_block_custom_name,
     get_block_number_of_channels,
     get_device_entry_gen,
@@ -137,7 +135,7 @@ def _async_setup_rpc_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    entities: list[ShellyRpcEvent] = []
+    entities: list[ShellyRpcEvent | ShellyRpcScriptEvent] = []
 
     coordinator = config_entry.runtime_data.rpc
     if TYPE_CHECKING:
@@ -163,7 +161,9 @@ def _async_setup_rpc_entry(
             continue
 
         if script_events and (event_types := script_events[get_rpc_key_id(script)]):
-            entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
+            entities.append(
+                ShellyRpcScriptEvent(coordinator, script, SCRIPT_EVENT, event_types)
+            )
 
     # If a script is removed, from the device configuration, we need to remove orphaned entities
     async_remove_orphaned_entities(
@@ -211,7 +211,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
                 else ""
             }
         else:
-            self._attr_name = get_block_channel_name(coordinator.device, block)
+            self._attr_name = get_block_custom_name(coordinator.device, block)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -228,7 +228,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self.async_write_ha_state()
 
 
-class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
+class ShellyRpcEvent(ShellyRpcEntity, EventEntity):
     """Represent RPC event entity."""
 
     _attr_has_entity_name = True
@@ -241,25 +241,19 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         description: ShellyRpcEventDescription,
     ) -> None:
         """Initialize Shelly entity."""
-        super().__init__(coordinator)
-        self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
-        self._attr_unique_id = f"{coordinator.mac}-{key}"
+        super().__init__(coordinator, key)
         self.entity_description = description
 
-        if description.key == "input":
-            _, component, component_id = get_rpc_key(key)
-            if custom_name := get_rpc_custom_name(coordinator.device, key):
-                self._attr_name = custom_name
-            else:
-                self._attr_translation_placeholders = {
-                    "input_number": component_id
-                    if get_rpc_number_of_channels(coordinator.device, component) > 1
-                    else ""
-                }
-            self.event_id = int(component_id)
-        elif description.key == "script":
-            self._attr_name = get_rpc_custom_name(coordinator.device, key)
-            self.event_id = get_rpc_key_id(key)
+        _, component, component_id = get_rpc_key(key)
+        if custom_name := get_rpc_custom_name(coordinator.device, key):
+            self._attr_name = custom_name
+        else:
+            self._attr_translation_placeholders = {
+                "input_number": component_id
+                if get_rpc_number_of_channels(coordinator.device, component) > 1
+                else ""
+            }
+        self.event_id = int(component_id)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -271,30 +265,36 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
 
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
-        """Handle the demo button event."""
+        """Handle the event."""
         if event["id"] == self.event_id:
             self._trigger_event(event["event"])
             self.async_write_ha_state()
 
 
-class ShellyRpcScriptEvent(ShellyRpcEvent):
+class ShellyRpcScriptEvent(ShellyRpcEntity, EventEntity):
     """Represent RPC script event entity."""
+
+    _attr_has_entity_name = True
+    entity_description: ShellyRpcEventDescription
 
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
         key: str,
+        description: ShellyRpcEventDescription,
         event_types: list[str],
     ) -> None:
         """Initialize Shelly script event entity."""
-        super().__init__(coordinator, key, SCRIPT_EVENT)
-
-        self.component = key
+        super().__init__(coordinator, key)
+        self.entity_description = description
         self._attr_event_types = event_types
+
+        self._attr_name = get_rpc_custom_name(coordinator.device, key)
+        self.event_id = get_rpc_key_id(key)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
-        await super(CoordinatorEntity, self).async_added_to_hass()
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             self.coordinator.async_subscribe_events(self._async_handle_event)
@@ -303,7 +303,7 @@ class ShellyRpcScriptEvent(ShellyRpcEvent):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle script event."""
-        if event.get("component") == self.component:
+        if event.get("component") == self.key:
             event_type = event.get("event")
             if event_type not in self.event_types:
                 # This can happen if we didn't find this event type in the script

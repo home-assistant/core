@@ -192,9 +192,7 @@ async def test_block_number_set_value(
         {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
         blocking=True,
     )
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"pos": 30.0}
-    )
+    mock_block_device.set_thermostat_state.assert_called_once_with(0, pos=30.0)
 
 
 async def test_block_set_value_connection_error(
@@ -208,7 +206,7 @@ async def test_block_set_value_connection_error(
     )
     monkeypatch.setattr(
         mock_block_device,
-        "http_request",
+        "set_thermostat_state",
         AsyncMock(side_effect=DeviceConnectionError),
     )
     await init_integration(hass, 1, sleep_period=3600)
@@ -240,7 +238,7 @@ async def test_block_set_value_auth_error(
     )
     monkeypatch.setattr(
         mock_block_device,
-        "http_request",
+        "set_thermostat_state",
         AsyncMock(side_effect=InvalidAuthError),
     )
     entry = await init_integration(hass, 1, sleep_period=3600)
