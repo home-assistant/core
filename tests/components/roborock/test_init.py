@@ -333,15 +333,6 @@ async def test_cloud_api_repair(
     assert len(issue_registry.issues) == 0
 
 
-EXPECTED_DEVICES = {
-    "Roborock S7 MaxV",
-    "Roborock S7 MaxV Dock",
-    "Roborock S7 2",
-    "Roborock S7 2 Dock",
-    "Dyad Pro",
-}
-
-
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_zeo_device_fails_setup(
     hass: HomeAssistant,
