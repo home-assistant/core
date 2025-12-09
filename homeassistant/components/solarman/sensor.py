@@ -270,11 +270,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors from a config entry."""
     async_add_entities(
-        [
-            SolarmanSensorEntity(entry.runtime_data, description)
-            for description in SENSORS
-            if entry.runtime_data.data.get(description.key) is not None
-        ]
+        SolarmanSensorEntity(entry.runtime_data, description)
+        for description in SENSORS
+        if entry.runtime_data.data.get(description.key) is not None
     )
 
 
@@ -296,8 +294,3 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.coordinator.data.get(self.entity_description.key)
-
-    @property
-    def available(self) -> bool:
-        """Return availability of sensor."""
-        return super().available and self.native_value is not None

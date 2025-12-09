@@ -14,7 +14,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 8080
 TEST_DEVICE_SN = "SN1234567890"
-TEST_FW_VERSION = "LSW3_01_E030_SS_00_00.00.00.03"
 TEST_MODEL = "SP-2W-EU"
 
 @pytest.fixture
@@ -32,7 +31,6 @@ def mock_config_entry(device_fixture: str) -> MockConfigEntry:
             "host": TEST_HOST,
             "port": TEST_PORT,
             "sn": TEST_DEVICE_SN,
-            "fw_version": TEST_FW_VERSION,
             "model": device_fixture,
         },
         source="user",

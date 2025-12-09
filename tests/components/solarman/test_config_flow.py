@@ -13,7 +13,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 # Configure test constants
 TEST_HOST = "192.168.1.100"
-TEST_PORT = 8080
 TEST_DEVICE_SN = "SN1234567890"
 TEST_FW_VERSION = "LSW3_01_E030_SS_00_00.00.00.03"
 TEST_MODEL = "SP-2W-EU"
@@ -40,7 +39,7 @@ async def test_flow_success(hass: HomeAssistant):
         # Submit valid data
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
+            {"host": TEST_HOST},
         )
 
     # Verify entry creation
@@ -50,9 +49,7 @@ async def test_flow_success(hass: HomeAssistant):
     # Verify configuration data.
     data = result["data"]
     assert data["host"] == TEST_HOST
-    assert data["port"] == TEST_PORT
     assert data["sn"] == "SN2345678901"
-    assert data["fw_version"] == TEST_FW_VERSION
     assert data["model"] == "P1-2W"
 
 @pytest.mark.parametrize(
@@ -83,7 +80,7 @@ async def test_flow_error(
         # Submit config flow
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
+            {"host": TEST_HOST},
         )
 
     # Verify error form display.
@@ -112,132 +109,12 @@ async def test_flow_duplicate_entry(
         )
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": TEST_HOST, "port": TEST_PORT}
+            result["flow_id"], {"host": TEST_HOST}
         )
 
     # Verify flow abort
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-@pytest.mark.parametrize(
-    "device_fixture", ["SP-2W-EU"], indirect=True
-)
-async def test_reconfigure_success(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguration."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {}
-
-    # original entry
-    assert mock_config_entry.data["host"] == TEST_HOST
-
-    with patch(
-        "homeassistant.components.solarman.config_flow.Solarman.get_config",
-        new_callable=AsyncMock,
-        return_value=load_json_object_fixture("SP-2W-EU/config.json", DOMAIN)
-    ):
-        # Submit valid data
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "192.168.1.10", "port": TEST_PORT},
-        )
-
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    # changed entry
-    assert mock_config_entry.data["host"] == "192.168.1.10"
-
-
-@pytest.mark.parametrize(
-    "device_fixture", ["SP-2W-EU"], indirect=True
-)
-async def test_reconfigure_another_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguration."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {}
-
-    # original entry
-    assert mock_config_entry.data["host"] == TEST_HOST
-
-    with patch(
-        "homeassistant.components.solarman.config_flow.Solarman.get_config",
-        new_callable=AsyncMock,
-        return_value=load_json_object_fixture("P1-2W/config.json", DOMAIN)
-    ):
-        # Submit valid data
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "192.168.1.10", "port": TEST_PORT},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "another_device"
-
-
-@pytest.mark.parametrize(
-    "exception, expected_error",
-    [
-        (TimeoutError, "timeout"),
-        (ConnectionError, "cannot_connect"),
-        (Exception("Some unknown error"), "unknown"),
-    ],
-)
-@pytest.mark.parametrize(
-    "device_fixture", ["SP-2W-EU"], indirect=True
-)
-async def test_reconfigure_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    expected_error: str
-) -> None:
-    """Test reconfiguration."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    with patch(
-        "homeassistant.components.solarman.config_flow.Solarman.get_config",
-        new_callable=AsyncMock,
-        side_effect=exception,
-    ):
-        # Submit config flow
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
-        )
-        
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
-
-    with patch(
-        "homeassistant.components.solarman.config_flow.Solarman.get_config",
-        new_callable=AsyncMock,
-        return_value=load_json_object_fixture("SP-2W-EU/config.json", DOMAIN)
-    ):
-        # Submit valid data
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
 
 @pytest.mark.parametrize(
     "device_fixture", ["SP-2W-EU"], indirect=True
@@ -274,9 +151,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_solarman: AsyncMock) -> None:
 
     data = result["data"]
     assert data["host"] == TEST_HOST
-    assert data["port"] == TEST_PORT
     assert data["sn"] == TEST_DEVICE_SN
-    assert data["fw_version"] == TEST_FW_VERSION
     assert data["model"] == TEST_MODEL
 
 @pytest.mark.parametrize(
@@ -402,25 +277,3 @@ async def test_zeroconf_error(
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == expected_error
-
-async def test_zeroconf_invalid(hass: HomeAssistant) -> None:
-    """Test discovery detecting missing discovery info."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address(TEST_HOST),
-            ip_addresses=[ip_address(TEST_HOST)],
-            name="mock_name",
-            port=8080,
-            hostname="mock_hostname",
-            type="_solarman._tcp.local.",
-            properties={
-                "product_type": "SP-2W-EU",
-                "fw_version": TEST_FW_VERSION
-            },
-        ),
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_parameters"

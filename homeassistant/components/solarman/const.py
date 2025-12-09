@@ -16,3 +16,9 @@ CONF_SN = "sn"
 CONF_FW_VERSION = "fw_version"
 CONF_FW = "fw"
 CONF_PRODUCT_TYPE = "product_type"
+
+MODEL_NAME_MAP = {
+    "SP-2W-EU": "Smart Plug",
+    "P1-2W": "P1 Meter Reader",
+    "gl meter": "Smart Meter",
+}
