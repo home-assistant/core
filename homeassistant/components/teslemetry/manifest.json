@@ -4,6 +4,7 @@
   "codeowners": ["@Bre77"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/teslemetry",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["tesla-fleet-api"],
   "requirements": ["tesla-fleet-api==1.2.5", "teslemetry-stream==0.7.10"]

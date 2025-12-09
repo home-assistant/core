@@ -11,6 +11,8 @@ from mozart_api.models import (
     ListeningMode,
     ListeningModeFeatures,
     ListeningModeRef,
+    PairedRemote,
+    PairedRemoteResponse,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
@@ -35,6 +37,7 @@ from .const import (
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
     TEST_DATA_CREATE_ENTRY_3,
+    TEST_DATA_CREATE_ENTRY_4,
     TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
@@ -46,9 +49,12 @@ from .const import (
     TEST_NAME,
     TEST_NAME_2,
     TEST_NAME_3,
+    TEST_NAME_4,
+    TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
     TEST_SERIAL_NUMBER_3,
+    TEST_SERIAL_NUMBER_4,
     TEST_SOUND_MODE,
     TEST_SOUND_MODE_2,
     TEST_SOUND_MODE_NAME,
@@ -87,6 +93,17 @@ def mock_config_entry_premiere() -> MockConfigEntry:
         unique_id=TEST_SERIAL_NUMBER_3,
         data=TEST_DATA_CREATE_ENTRY_3,
         title=TEST_NAME_3,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_a5() -> MockConfigEntry:
+    """Mock config entry for Beosound A5."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_4,
+        data=TEST_DATA_CREATE_ENTRY_4,
+        title=TEST_NAME_4,
     )
 
 
@@ -373,7 +390,19 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             repeat="none",
             shuffle=False,
         )
-
+        client.get_bluetooth_remotes = AsyncMock()
+        client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+            items=[
+                PairedRemote(
+                    address="",
+                    app_version="1.0.0",
+                    battery_level=50,
+                    connected=True,
+                    serial_number=TEST_REMOTE_SERIAL,
+                    name="BEORC",
+                )
+            ]
+        )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()

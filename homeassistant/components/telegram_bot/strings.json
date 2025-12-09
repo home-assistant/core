@@ -60,7 +60,7 @@
               "proxy_url": "Proxy URL"
             },
             "data_description": {
-              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             },
             "name": "Advanced settings"
           }
@@ -400,7 +400,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the media.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "chat_id": {
@@ -495,7 +495,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the animation.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -592,7 +592,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the document.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -729,7 +729,7 @@
           "name": "Keyboard"
         },
         "message": {
-          "description": "Message body of the notification.",
+          "description": "Message body of the notification.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
           "name": "Message"
         },
         "message_tag": {
@@ -741,7 +741,7 @@
           "name": "Message thread ID"
         },
         "parse_mode": {
-          "description": "Parser for the message text.",
+          "description": "Parser for the message text.\nSee [formatting options]({formatting_options_url}) for more details.",
           "name": "Parse mode"
         },
         "reply_to_message_id": {
@@ -767,7 +767,7 @@
           "name": "Authentication method"
         },
         "caption": {
-          "description": "The title of the image.",
+          "description": "The title of the media.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
           "name": "Caption"
         },
         "config_entry_id": {
@@ -959,7 +959,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the video.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -1034,7 +1034,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the voice message.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {

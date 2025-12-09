@@ -25,7 +25,7 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, IntegerTypeData
+from .models import DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -483,8 +483,6 @@ async def async_setup_entry(
 class TuyaNumberEntity(TuyaEntity, NumberEntity):
     """Tuya Number Entity."""
 
-    _number: IntegerTypeData | None = None
-
     def __init__(
         self,
         device: CustomerDevice,
@@ -551,8 +549,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, value)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, value)
