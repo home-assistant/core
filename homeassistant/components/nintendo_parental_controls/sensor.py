@@ -79,7 +79,6 @@ PLAYER_SENSOR_DESCRIPTIONS: tuple[
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda player: player.playing_time,
-        entity_registry_enabled_default=False,
     ),
 )
 

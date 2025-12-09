@@ -68,7 +68,7 @@ def mock_nintendo_device(mock_nintendo_player: Player) -> Device:
     mock.forced_termination_mode = True
     mock.model = "Test Model"
     mock.generation = "P00"
-    mock.players = [mock_nintendo_player]
+    mock.players = {mock_nintendo_player.player_id: mock_nintendo_player}
     mock.get_player = MagicMock()
     mock.get_player.return_value = mock_nintendo_player
     return mock

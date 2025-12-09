@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <NintendoParentalControlsSensor.PLAYER_PLAYING_TIME: 'player_playing_time'>,
-    'unique_id': 'testdevid_player_playing_time',
+    'unique_id': 'testplayerid_player_playing_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
