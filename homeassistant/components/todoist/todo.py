@@ -99,7 +99,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                 if task.parent_id is not None:
                     # Filter out sub-tasks until they are supported by the UI.
                     continue
-                if task.completed_at is not None:
+                if task.is_completed:
                     status = TodoItemStatus.COMPLETED
                 else:
                     status = TodoItemStatus.NEEDS_ACTION
@@ -147,9 +147,9 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
 
                 if item.status != existing_item.status:
                     if item.status == TodoItemStatus.COMPLETED:
-                        await self.coordinator.api.complete_task(task_id=uid)
+                        await self.coordinator.api.close_task(task_id=uid)
                     else:
-                        await self.coordinator.api.uncomplete_task(task_id=uid)
+                        await self.coordinator.api.reopen_task(task_id=uid)
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:

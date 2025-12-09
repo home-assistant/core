@@ -54,6 +54,8 @@ def make_api_task(
     return Task(
         assignee_id="1",
         assigner_id="1",
+        comment_count=0,
+        is_completed=is_completed,
         content=content or SUMMARY,
         created_at="2021-10-01T00:00:00.000000Z",
         creator_id="1",
@@ -68,10 +70,6 @@ def make_api_task(
         section_id=None,
         url="https://todoist.com",
         duration=None,
-        completed_at="2021-10-01T00:00:00.000000Z" if is_completed else None,
-        is_collapsed=False,
-        updated_at="2021-10-01T00:00:00.000000Z",
-        deadline=None,
     )
 
 
@@ -89,6 +87,7 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
         Project(
             id=PROJECT_ID,
             color="blue",
+            comment_count=0,
             is_favorite=False,
             name="Name",
             is_shared=False,
@@ -107,7 +106,6 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
             project_id=PROJECT_ID,
             name="Section Name",
             order=1,
-            is_collapsed=False,
         )
     ]
     api.get_labels.return_value = [

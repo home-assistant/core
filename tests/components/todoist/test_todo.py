@@ -222,8 +222,8 @@ async def test_update_todo_item_status(
     assert state
     assert state.state == "1"
 
-    api.complete_task = AsyncMock()
-    api.uncomplete_task = AsyncMock()
+    api.close_task = AsyncMock()
+    api.reopen_task = AsyncMock()
 
     # Fake API response when state is refreshed after complete
     api.get_tasks.return_value = [
@@ -237,18 +237,18 @@ async def test_update_todo_item_status(
         target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
-    assert api.complete_task.called
-    args = api.complete_task.call_args
+    assert api.close_task.called
+    args = api.close_task.call_args
     assert args
     assert args.kwargs.get("task_id") == "task-id-1"
-    assert not api.uncomplete_task.called
+    assert not api.reopen_task.called
 
     # Verify state is refreshed
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "0"
 
-    # Fake API response when state is refreshed after uncomplete
+    # Fake API response when state is refreshed after reopen
     api.get_tasks.return_value = [
         make_api_task(id="task-id-1", content="Soda", is_completed=False)
     ]
@@ -260,8 +260,8 @@ async def test_update_todo_item_status(
         target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
-    assert api.uncomplete_task.called
-    args = api.uncomplete_task.call_args
+    assert api.reopen_task.called
+    args = api.reopen_task.call_args
     assert args
     assert args.kwargs.get("task_id") == "task-id-1"
 
