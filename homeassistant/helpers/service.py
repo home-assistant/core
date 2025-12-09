@@ -893,7 +893,7 @@ async def entity_service_call(
     if len(entities) == 1:
         # Single entity case avoids creating task
         entity = entities[0]
-        response = await _handle_entity_calls(
+        response = await _handle_entity_call(
             hass, None, entities, func, data, call.context
         )
         if entity.should_poll:
@@ -907,7 +907,7 @@ async def entity_service_call(
     remaining, batch_map = _extract_batchable_entities(entities, call.service)
     remaining, batch_map = _reinsert_batch_singletons(remaining, batch_map)
 
-    results = await _handle_entity_calls(
+    results = await _handle_entity_call(
         hass, batch_map, remaining, func, data, call.context
     )
 
@@ -937,7 +937,7 @@ async def entity_service_call(
     return response_data if return_response and response_data else None
 
 
-async def _handle_entity_calls(
+async def _handle_entity_call(
     hass: HomeAssistant,
     batch_map: _BatchMap | None,
     non_batchable: list[Entity] | None,
