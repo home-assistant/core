@@ -627,10 +627,11 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
     def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
         content_type = {
-            BeoSource.URI_STREAMER.id: MediaType.URL,
             BeoSource.DEEZER.id: BeoMediaType.DEEZER,
-            BeoSource.TIDAL.id: BeoMediaType.TIDAL,
             BeoSource.NET_RADIO.id: BeoMediaType.RADIO,
+            BeoSource.TIDAL.id: BeoMediaType.TIDAL,
+            BeoSource.TV.id: BeoMediaType.TV,
+            BeoSource.URI_STREAMER.id: MediaType.URL,
         }
         # Hard to determine content type.
         if self._source_change.id in content_type:
