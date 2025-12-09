@@ -1597,7 +1597,7 @@ async def test_deprecated_timeout_parameter_script(
     assert issue.translation_placeholders == {
         "integration_title": "Telegram Bot",
         "action": "telegram_bot.send_message",
-        "entity_id": "script.mock_script",
+        "action_origin": "script.mock_script",
     }
 
 
@@ -1629,5 +1629,5 @@ async def test_deprecated_timeout_parameter_call_service(
     assert issue.translation_placeholders == {
         "integration_title": "Telegram Bot",
         "action": "telegram_bot.send_message",
-        "entity_id": "call_service",
+        "action_origin": "call_service",
     }
