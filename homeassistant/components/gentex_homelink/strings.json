@@ -31,8 +31,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Email address associated with your HomeLink account",
-          "password": "Password associated with your HomeLink account"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "description": "The HomeLink integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
@@ -43,8 +43,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Email address associated with your HomeLink account",
-          "password": "Password associated with your HomeLink account"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     }
