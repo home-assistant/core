@@ -1,8 +1,11 @@
 """Test the AirPatrol climate platform."""
 
 from datetime import timedelta
+from typing import Any
 
+from airpatrol.api import AirPatrolAPI
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.airpatrol.climate import (
     HA_TO_AP_FAN_MODES,
@@ -39,60 +42,79 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import SnapshotAssertion, async_fire_time_changed, snapshot_platform
+from .conftest import DEFAULT_UNIT_ID
+
+from tests.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 
-async def test_async_setup_entry_adds_entities(
+@pytest.mark.parametrize(
+    "get_data",
+    [
+        [
+            {
+                "unit_id": DEFAULT_UNIT_ID,
+                "name": "living room",
+                "manufacturer": "AirPatrol",
+                "model": "apw",
+                "hwid": "hw01",
+                "climate": {
+                    "ParametersData": {
+                        "PumpPower": "on",
+                        "PumpTemp": "22.000",
+                        "PumpMode": "cool",
+                        "FanSpeed": "max",
+                        "Swing": "off",
+                    },
+                    "RoomTemp": "22.5",
+                    "RoomHumidity": "45",
+                },
+            },
+            {
+                "unit_id": "test_unit_002",
+                "name": "Kitchen",
+                "manufacturer": "AirPatrol",
+                "model": "apw",
+                "hwid": "hw01",
+                "climate": None,
+            },
+        ]
+    ],
+)
+async def test_climate_entities(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
     entity_registry: er.EntityRegistry,
-    get_data,
+    get_data: dict[str, Any],
     snapshot: SnapshotAssertion,
-    mock_config_entry,
 ) -> None:
-    """Test async_setup_entry creates and adds AirPatrolClimate entities that have climate data."""
-    unit_with_climate = get_data(unit_id="unit1", name="Unit 1")
-    unit_without_climate = get_data(unit_id="unit2", name="Unit 2", climate=None)
-    mock_airpatrol_client.get_data.return_value = [
-        unit_with_climate[0],
-        unit_without_climate[0],
-    ]
-    await load_integration()
-
+    """Test climate."""
     await snapshot_platform(
         hass,
         entity_registry,
         snapshot,
-        mock_config_entry.entry_id,
+        load_integration.entry_id,
     )
-
-
-async def test_climate_entity_initialization(
-    hass: HomeAssistant, load_integration, mock_airpatrol_client, get_data
-) -> None:
-    """Test climate entity initialization."""
-    await load_integration()
-
-    state = hass.states.get("climate.living_room")
-    assert state
-    assert state.state == "cool"
 
 
 async def test_climate_entity_unavailable(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test climate entity when climate data is missing."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state
+    assert state.state == HVACMode.COOL
 
-    mock_airpatrol_client.get_data.return_value = get_data(climate=None)
+    get_data[0]["climate"] = None
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -103,11 +125,12 @@ async def test_climate_entity_unavailable(
 
 
 async def test_climate_hvac_modes(
-    hass: HomeAssistant, load_integration, mock_airpatrol_client
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test climate HVAC modes."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state
     assert state.attributes[ATTR_HVAC_MODES] == [
@@ -118,33 +141,36 @@ async def test_climate_hvac_modes(
 
 
 async def test_climate_fan_modes(
-    hass: HomeAssistant, load_integration, mock_airpatrol_client
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test climate fan modes."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state
     assert state.attributes[ATTR_FAN_MODES] == [FAN_LOW, FAN_HIGH, FAN_AUTO]
 
 
 async def test_climate_swing_modes(
-    hass: HomeAssistant, load_integration, mock_airpatrol_client
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test climate swing modes."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state
     assert state.attributes[ATTR_SWING_MODES] == [SWING_ON, SWING_OFF]
 
 
 async def test_climate_temperature_range(
-    hass: HomeAssistant, load_integration, mock_airpatrol_client
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test climate temperature range."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state
     assert state.attributes[ATTR_MIN_TEMP] == 16.0
@@ -153,19 +179,17 @@ async def test_climate_temperature_range(
 
 async def test_climate_set_temperature(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test setting temperature."""
-    await load_integration()
-
     TARGET_TEMP = 25.0
 
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
-    mock_airpatrol_client.get_data.return_value = get_data(target_temp=TARGET_TEMP)
+    get_data[0]["climate"]["ParametersData"]["PumpTemp"] = f"{TARGET_TEMP:.3f}"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -175,26 +199,24 @@ async def test_climate_set_temperature(
         },
     )
 
-    mock_airpatrol_client.set_unit_climate_data.assert_called_once()
+    get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_TEMPERATURE] == TARGET_TEMP
 
 
 async def test_climate_set_hvac_mode(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test setting HVAC mode."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.COOL
 
-    mock_airpatrol_client.get_data.return_value = get_data(
-        mode=HA_TO_AP_HVAC_MODES[HVACMode.HEAT]
-    )
+    get_data[0]["climate"]["ParametersData"]["PumpMode"] = HA_TO_AP_HVAC_MODES[
+        HVACMode.HEAT
+    ]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -204,26 +226,22 @@ async def test_climate_set_hvac_mode(
         },
     )
 
-    mock_airpatrol_client.set_unit_climate_data.assert_called_once()
+    get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.HEAT
 
 
 async def test_climate_set_fan_mode(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test setting fan mode."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
 
-    mock_airpatrol_client.get_data.return_value = get_data(
-        fan_speed=HA_TO_AP_FAN_MODES[FAN_LOW]
-    )
+    get_data[0]["climate"]["ParametersData"]["FanSpeed"] = HA_TO_AP_FAN_MODES[FAN_LOW]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
@@ -233,26 +251,22 @@ async def test_climate_set_fan_mode(
         },
     )
 
-    mock_airpatrol_client.set_unit_climate_data.assert_called_once()
+    get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
 
 
 async def test_climate_set_swing_mode(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test setting swing mode."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_SWING_MODE] == SWING_OFF
 
-    mock_airpatrol_client.get_data.return_value = get_data(
-        swing=HA_TO_AP_SWING_MODES[SWING_ON]
-    )
+    get_data[0]["climate"]["ParametersData"]["Swing"] = HA_TO_AP_SWING_MODES[SWING_ON]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
@@ -262,27 +276,47 @@ async def test_climate_set_swing_mode(
         },
     )
 
-    mock_airpatrol_client.set_unit_climate_data.assert_called_once()
+    get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_SWING_MODE] == SWING_ON
 
 
+@pytest.mark.parametrize(
+    "get_data",
+    [
+        [
+            {
+                "unit_id": DEFAULT_UNIT_ID,
+                "name": "living room",
+                "manufacturer": "AirPatrol",
+                "model": "apw",
+                "hwid": "hw01",
+                "climate": {
+                    "ParametersData": {
+                        "PumpPower": "off",
+                        "PumpTemp": "22.000",
+                        "PumpMode": "cool",
+                        "FanSpeed": "max",
+                        "Swing": "off",
+                    },
+                    "RoomTemp": "22.5",
+                    "RoomHumidity": "45",
+                },
+            },
+        ]
+    ],
+)
 async def test_climate_turn_on(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test turning climate on."""
-    mock_airpatrol_client.get_data.return_value = get_data(power="off")
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.OFF
 
-    expected_data = get_data(power="on")
-
-    mock_airpatrol_client.get_data.return_value = expected_data
+    get_data[0]["climate"]["ParametersData"]["PumpPower"] = "on"
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -292,28 +326,22 @@ async def test_climate_turn_on(
         },
     )
 
-    mock_airpatrol_client.set_unit_climate_data.assert_called_once_with(
-        expected_data[0]["unit_id"], expected_data[0]["climate"]
-    )
+    get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.COOL
 
 
 async def test_climate_turn_off(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test turning climate off."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.COOL
 
-    # Mock the API call to return expected response data
-    expected_data = get_data(power="off")
-    mock_airpatrol_client.get_data.return_value = expected_data
+    get_data[0]["climate"]["ParametersData"]["PumpPower"] = "off"
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -323,40 +351,57 @@ async def test_climate_turn_off(
         },
     )
 
-    mock_airpatrol_client.set_unit_climate_data.assert_called_once_with(
-        expected_data[0]["unit_id"], expected_data[0]["climate"]
-    )
-
+    get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.OFF
 
 
+@pytest.mark.parametrize(
+    "get_data",
+    [
+        [
+            {
+                "unit_id": DEFAULT_UNIT_ID,
+                "name": "living room",
+                "manufacturer": "AirPatrol",
+                "model": "apw",
+                "hwid": "hw01",
+                "climate": {
+                    "ParametersData": {
+                        "PumpPower": "on",
+                        "PumpTemp": "22.000",
+                        "PumpMode": "heat",
+                        "FanSpeed": "max",
+                        "Swing": "off",
+                    },
+                    "RoomTemp": "22.5",
+                    "RoomHumidity": "45",
+                },
+            },
+        ]
+    ],
+)
 async def test_climate_heat_mode(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-    get_data,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
 ) -> None:
     """Test climate in heat mode."""
-    mock_airpatrol_client.get_data.return_value = get_data(mode="heat", power="on")
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.state == HVACMode.HEAT
 
 
 async def test_climate_set_temperature_api_error(
     hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
 ) -> None:
     """Test async_set_temperature handles API error."""
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
-    mock_airpatrol_client.set_unit_climate_data.side_effect = Exception("API Error")
+    get_client.set_unit_climate_data.side_effect = Exception("API Error")
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -371,29 +416,73 @@ async def test_climate_set_temperature_api_error(
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
 
+@pytest.mark.parametrize(
+    "get_data",
+    [
+        [
+            {
+                "unit_id": DEFAULT_UNIT_ID,
+                "name": "living room",
+                "manufacturer": "AirPatrol",
+                "model": "apw",
+                "hwid": "hw01",
+                "climate": {
+                    "ParametersData": {
+                        "PumpPower": "off",
+                        "PumpTemp": "22.000",
+                        "PumpMode": "cool",
+                        "FanSpeed": "sideways",
+                        "Swing": "off",
+                    },
+                    "RoomTemp": "22.5",
+                    "RoomHumidity": "45",
+                },
+            },
+        ]
+    ],
+)
 async def test_climate_fan_mode_invalid(
     hass: HomeAssistant,
-    mock_airpatrol_client,
-    get_data,
-    load_integration,
+    get_client: AirPatrolAPI,
+    get_data: dict[str, Any],
+    load_integration: MockConfigEntry,
 ) -> None:
     """Test fan_mode with unexpected value."""
-    mock_airpatrol_client.get_data.return_value = get_data(fan_speed="sideways")
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_FAN_MODE] is None
 
 
+@pytest.mark.parametrize(
+    "get_data",
+    [
+        [
+            {
+                "unit_id": DEFAULT_UNIT_ID,
+                "name": "living room",
+                "manufacturer": "AirPatrol",
+                "model": "apw",
+                "hwid": "hw01",
+                "climate": {
+                    "ParametersData": {
+                        "PumpPower": "off",
+                        "PumpTemp": "22.000",
+                        "PumpMode": "cool",
+                        "FanSpeed": "max",
+                        "Swing": "sideways",
+                    },
+                    "RoomTemp": "22.5",
+                    "RoomHumidity": "45",
+                },
+            },
+        ]
+    ],
+)
 async def test_climate_swing_mode_invalid(
     hass: HomeAssistant,
-    get_data,
-    load_integration,
-    mock_airpatrol_client,
+    get_data: dict[str, Any],
+    load_integration: MockConfigEntry,
+    get_client: AirPatrolAPI,
 ) -> None:
     """Test swing_mode with unexpected value."""
-    mock_airpatrol_client.get_data.return_value = get_data(swing="sideways")
-    await load_integration()
-
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_SWING_MODE] is None
