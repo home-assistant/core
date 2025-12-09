@@ -422,6 +422,8 @@ class ReolinkHost:
                     "name": self._api.nvr_name,
                     "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
+                    "example_ip": "192.168.1.10",
+                    "example_url": "http://192.168.1.10:8123",
                 },
             )
 
@@ -436,6 +438,8 @@ class ReolinkHost:
                     translation_placeholders={
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "example_ip": "192.168.1.10",
+                        "example_url": "http://192.168.1.10:8123",
                     },
                 )
             else:

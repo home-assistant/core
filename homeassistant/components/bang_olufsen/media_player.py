@@ -583,7 +583,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
         for sound_mode in sound_modes:
             label = f"{sound_mode.name} ({sound_mode.id})"
 
-            self._sound_modes[label] = sound_mode.id
+            self._sound_modes[label] = cast(int, sound_mode.id)
 
             if sound_mode.id == active_sound_mode.id:
                 self._attr_sound_mode = label
