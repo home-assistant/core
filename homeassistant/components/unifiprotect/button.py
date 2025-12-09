@@ -27,7 +27,7 @@ from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectSetableKeysMixin,
+    ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
@@ -38,7 +38,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectButtonEntityDescription(
-    ProtectSetableKeysMixin[T], ButtonEntityDescription
+    ProtectSettableKeysMixin[T], ButtonEntityDescription
 ):
     """Describes UniFi Protect Button entity."""
 
