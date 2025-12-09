@@ -64,12 +64,12 @@ SENSORS: Final = (
     ),
     SensorEntityDescription(
         key="SN",
-        translation_key="sn",
+        translation_key="meter_sn",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="device_version",
-        translation_key="device_version",
+        translation_key="meter_version",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(

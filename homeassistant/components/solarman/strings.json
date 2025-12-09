@@ -48,11 +48,11 @@
       "reverse_active_energy": {
         "name": "Reverse active energy"
       },
-      "sn": {
+      "meter_sn": {
         "name": "Meter SN"
       },
-      "device_version": {
-        "name": "Device version"
+      "meter_version": {
+        "name": "Meter version"
       },
       "total_act_energy_lt": {
         "name": "Total actual energy low tariff"
