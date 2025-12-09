@@ -36,9 +36,9 @@ class AirPatrolEntity(CoordinatorEntity[AirPatrolDataUpdateCoordinator]):
     @property
     def device_data(self) -> dict[str, Any]:
         """Return the device data."""
-        return self.coordinator.data.get(self._unit_id) or {}
+        return self.coordinator.data[self._unit_id]
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and bool(self.device_data)
+        return super().available and self._unit_id in self.coordinator.data
