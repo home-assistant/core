@@ -91,11 +91,13 @@ async def _async_extract_color_from_url(
         return _get_color(_file)
 
 
-def _extract_color_from_path(hass: HomeAssistant, file_path: str):
+def _extract_color_from_path(
+    hass: HomeAssistant, file_path: str
+) -> tuple[int, int, int] | None:
     """Handle call for local file based image."""
     if not hass.config.is_allowed_path(file_path):
         _LOGGER.error(
-            ("File path '%s' is not allowed, please add to 'allowlist_external_dirs'"),
+            "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
             file_path,
         )
         return None
