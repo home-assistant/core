@@ -31,22 +31,7 @@ async def async_get_config_entry_diagnostics(
         }
 
     return {
-        "config_entry": {
-            "title": entry.title,
-            "state": entry.state.value,
-            "version": entry.version,
-            "minor_version": entry.minor_version,
-            "unique_id": entry.unique_id,
-        },
         "entry_data": async_redact_data(entry.data, TO_REDACT_CONFIG),
-        "coordinator": {
-            "last_update_success": coordinator.last_update_success,
-            "update_interval": (
-                coordinator.update_interval.total_seconds()
-                if coordinator.update_interval
-                else None
-            ),
-        },
         "device_capabilities": device_capabilities,
         "status": asdict(coordinator.data.status) if coordinator.data else None,
         "settings": asdict(coordinator.data.settings) if coordinator.data else None,

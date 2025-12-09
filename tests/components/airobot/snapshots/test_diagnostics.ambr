@@ -1,17 +1,6 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
-    'config_entry': dict({
-      'minor_version': 1,
-      'state': 'loaded',
-      'title': 'Mock Title',
-      'unique_id': 'T01A1B2C3',
-      'version': 1,
-    }),
-    'coordinator': dict({
-      'last_update_success': True,
-      'update_interval': 30.0,
-    }),
     'device_capabilities': dict({
       'fw_version': 300,
       'has_co2_sensor': False,
