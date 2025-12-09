@@ -52,7 +52,7 @@ class StateConditionBase(Condition):
         self, hass: HomeAssistant, config: ConditionConfig, state: str
     ) -> None:
         """Initialize condition."""
-        self._hass = hass
+        super().__init__(hass, config)
         if TYPE_CHECKING:
             assert config.target
             assert config.options
