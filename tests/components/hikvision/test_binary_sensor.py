@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.hikvision.const import DOMAIN
 from homeassistant.const import (
@@ -16,7 +19,11 @@ from homeassistant.const import (
     STATE_OFF,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -29,7 +36,20 @@ from .conftest import (
     TEST_USERNAME,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all binary sensor entities."""
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_binary_sensors_created(
