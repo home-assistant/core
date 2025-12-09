@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -83,63 +82,6 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_SSL, default=False): bool,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthorization request."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthorization confirmation."""
-        errors: dict[str, str] = {}
-
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            host = reauth_entry.data[CONF_HOST]
-            port = reauth_entry.data[CONF_PORT]
-            ssl = reauth_entry.data[CONF_SSL]
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-
-            protocol = "https" if ssl else "http"
-            url = f"{protocol}://{host}"
-
-            try:
-                camera = await self.hass.async_add_executor_job(
-                    HikCamera, url, port, username, password
-                )
-                device_id = camera.get_id()
-            except Exception:
-                _LOGGER.exception("Error connecting to Hikvision device")
-                errors["base"] = "cannot_connect"
-            else:
-                if device_id is None:
-                    errors["base"] = "cannot_connect"
-                elif device_id != reauth_entry.unique_id:
-                    errors["base"] = "wrong_device"
-                else:
-                    return self.async_update_reload_and_abort(
-                        reauth_entry,
-                        data_updates={
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                    )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
