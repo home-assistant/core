@@ -54,8 +54,11 @@ from .const import (
 )
 from .coordinator import RainMachineDataUpdateCoordinator
 
-DEFAULT_SSL = True
+API_URL_REFERENCE = (
+    "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post"
+)
 
+DEFAULT_SSL = True
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -455,7 +458,15 @@ async def async_setup_entry(  # noqa: C901
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
-        hass.services.async_register(DOMAIN, service_name, method, schema=schema)
+        hass.services.async_register(
+            DOMAIN,
+            service_name,
+            method,
+            schema=schema,
+            description_placeholders={
+                "api_url": API_URL_REFERENCE,
+            },
+        )
 
     return True
 

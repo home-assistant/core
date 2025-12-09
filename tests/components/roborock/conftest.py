@@ -21,10 +21,12 @@ from roborock.data import (
     NetworkInfo,
     RoborockBase,
     RoborockDyadStateCode,
+    ValleyElectricityTimer,
     ZeoError,
     ZeoState,
 )
 from roborock.devices.device import RoborockDevice
+from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
@@ -39,6 +41,9 @@ from roborock.devices.traits.v1.network_info import NetworkInfoTrait
 from roborock.devices.traits.v1.routines import RoutinesTrait
 from roborock.devices.traits.v1.smart_wash_params import SmartWashParamsTrait
 from roborock.devices.traits.v1.status import StatusTrait
+from roborock.devices.traits.v1.valley_electricity_timer import (
+    ValleyElectricityTimerTrait,
+)
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -67,6 +72,7 @@ from .mock_data import (
     STATUS,
     USER_DATA,
     USER_EMAIL,
+    VALLEY_ELECTRICITY_TIMER,
 )
 
 from tests.common import MockConfigEntry
@@ -134,18 +140,6 @@ class FakeDevice(RoborockDevice):
         """Close the device."""
 
 
-class FakeDeviceManager:
-    """A fake device manager that returns a list of devices."""
-
-    def __init__(self, devices: list[RoborockDevice]) -> None:
-        """Initialize the fake device manager."""
-        self._devices = devices
-
-    async def get_devices(self) -> list[RoborockDevice]:
-        """Return the list of devices."""
-        return self._devices
-
-
 def make_mock_trait(
     trait_spec: type[V1TraitMixin] | None = None,
     dataclass_template: RoborockBase | None = None,
@@ -197,6 +191,25 @@ def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
     dnd_trait.set_dnd_timer = AsyncMock()
     dnd_trait.set_dnd_timer.side_effect = set_dnd_timer
     return dnd_trait
+
+
+def make_valley_electric_timer(dataclass_template: RoborockBase) -> AsyncMock:
+    """Make a function for the fake timer trait that emulates the real behavior."""
+    valley_electric_timer_trait = make_mock_switch(
+        trait_spec=ValleyElectricityTimerTrait,
+        dataclass_template=dataclass_template,
+    )
+
+    async def set_timer(timer: ValleyElectricityTimer) -> None:
+        setattr(valley_electric_timer_trait, "start_hour", timer.start_hour)
+        setattr(valley_electric_timer_trait, "start_minute", timer.start_minute)
+        setattr(valley_electric_timer_trait, "end_hour", timer.end_hour)
+        setattr(valley_electric_timer_trait, "end_minute", timer.end_minute)
+        setattr(valley_electric_timer_trait, "enabled", timer.enabled)
+
+    valley_electric_timer_trait.set_timer = AsyncMock()
+    valley_electric_timer_trait.set_timer.side_effect = set_timer
+    return valley_electric_timer_trait
 
 
 def make_home_trait(
@@ -268,7 +281,9 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.child_lock = make_mock_switch()
     v1_properties.led_status = make_mock_switch()
     v1_properties.flow_led_status = make_mock_switch()
-    v1_properties.valley_electricity_timer = make_mock_switch()
+    v1_properties.valley_electricity_timer = make_valley_electric_timer(
+        dataclass_template=VALLEY_ELECTRICITY_TIMER,
+    )
     v1_properties.dust_collection_mode = make_mock_trait(
         trait_spec=DustCollectionModeTrait
     )
@@ -348,16 +363,26 @@ def fake_vacuum_command_fixture(
     return command_trait
 
 
+@pytest.fixture(name="device_manager")
+def device_manager_fixture(
+    fake_devices: list[FakeDevice],
+) -> AsyncMock:
+    """Fixture to create a fake device manager."""
+    device_manager = AsyncMock(spec=DeviceManager)
+    device_manager.get_devices = AsyncMock(return_value=fake_devices)
+    return device_manager
+
+
 @pytest.fixture(name="fake_create_device_manager", autouse=True)
 def fake_create_device_manager_fixture(
-    fake_devices: list[FakeDevice],
-) -> Generator[Mock]:
+    device_manager: AsyncMock,
+) -> None:
     """Fixture to create a fake device manager."""
     with patch(
         "homeassistant.components.roborock.create_device_manager",
     ) as mock_create_device_manager:
-        mock_create_device_manager.return_value = FakeDeviceManager(fake_devices)
-        yield mock_create_device_manager
+        mock_create_device_manager.return_value = device_manager
+        yield
 
 
 @pytest.fixture(name="config_entry_data")

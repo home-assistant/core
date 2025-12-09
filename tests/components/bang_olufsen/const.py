@@ -29,7 +29,7 @@ from homeassistant.components.bang_olufsen.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     CONF_BEOLINK_JID,
-    BangOlufsenSource,
+    BeoSource,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -42,6 +42,7 @@ TEST_MODEL_CORE = "Beoconnect Core"
 TEST_MODEL_PREMIERE = "Beosound Premiere"
 TEST_MODEL_THEATRE = "Beosound Theatre"
 TEST_MODEL_LEVEL = "Beosound Level"
+TEST_MODEL_A5 = "Beosound A5"
 TEST_SERIAL_NUMBER = "11111111"
 TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
 TEST_FRIENDLY_NAME = "Living room Balance"
@@ -64,9 +65,11 @@ TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_3}@prod
 TEST_MEDIA_PLAYER_ENTITY_ID_3 = f"media_player.beosound_premiere_{TEST_SERIAL_NUMBER_3}"
 TEST_HOST_3 = "192.168.0.3"
 
-TEST_FRIENDLY_NAME_4 = "Lounge room Balance"
-TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
+TEST_FRIENDLY_NAME_4 = "Lounge room A5"
+TEST_SERIAL_NUMBER_4 = "44444444"
+TEST_NAME_4 = f"{TEST_MODEL_A5}-{TEST_SERIAL_NUMBER_4}"
+TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
+TEST_MEDIA_PLAYER_ENTITY_ID_4 = f"media_player.beosound_a5_{TEST_SERIAL_NUMBER_4}"
 TEST_HOST_4 = "192.168.0.4"
 
 # Beoremote One
@@ -103,6 +106,13 @@ TEST_DATA_CREATE_ENTRY_3 = {
     CONF_MODEL: TEST_MODEL_PREMIERE,
     CONF_BEOLINK_JID: TEST_JID_3,
     CONF_NAME: TEST_NAME_3,
+}
+
+TEST_DATA_CREATE_ENTRY_4 = {
+    CONF_HOST: TEST_HOST_4,
+    CONF_MODEL: TEST_MODEL_A5,
+    CONF_BEOLINK_JID: TEST_JID_4,
+    CONF_NAME: TEST_NAME_4,
 }
 
 TEST_DATA_ZEROCONF = ZeroconfServiceInfo(
@@ -148,7 +158,7 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
 TEST_SOURCE = Source(
     name="Tidal", id="tidal", is_seekable=True, is_enabled=True, is_playable=True
 )
-TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BangOlufsenSource.LINE_IN.name]
+TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BeoSource.LINE_IN.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [

@@ -40,13 +40,13 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> list[str]:
     """Create multiple light entities associated with different targets."""
-    return await target_entities(hass, "light")
+    return (await target_entities(hass, "light"))["included"]
 
 
 @pytest.fixture
 async def target_switches(hass: HomeAssistant) -> list[str]:
     """Create multiple switch entities associated with different targets."""
-    return await target_entities(hass, "switch")
+    return (await target_entities(hass, "switch"))["included"]
 
 
 async def setup_automation_with_light_condition(
@@ -152,8 +152,6 @@ async def test_light_state_condition_behavior_any(
     other_state: str,
 ) -> None:
     """Test the light state condition with the 'any' behavior."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
@@ -235,8 +233,6 @@ async def test_light_state_condition_behavior_all(
     other_state: str,
 ) -> None:
     """Test the light state condition with the 'all' behavior."""
-    await async_setup_component(hass, "light", {})
-
     # Set state for two switches to ensure that they don't impact the condition
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
