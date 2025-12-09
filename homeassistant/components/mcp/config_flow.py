@@ -29,9 +29,7 @@ from .const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
-    CONF_TRANSPORT,
     DOMAIN,
-    TRANSPORT_SSE,
 )
 from .coordinator import TokenManager, mcp_client
 
@@ -324,7 +322,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
-        self.data.setdefault(CONF_TRANSPORT, TRANSPORT_SSE)
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry
         )
