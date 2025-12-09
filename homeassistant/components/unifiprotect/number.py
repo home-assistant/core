@@ -29,6 +29,8 @@ from .entity import (
     async_all_device_entities,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectNumberEntityDescription(
@@ -88,6 +90,36 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_value="mic_volume",
         ufp_enabled="feature_flags.has_mic",
         ufp_set_method="set_mic_volume",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectNumberEntityDescription(
+        key="system_sounds_volume",
+        translation_key="system_sounds_volume",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        ufp_min=0,
+        ufp_max=100,
+        ufp_step=1,
+        ufp_required_field="feature_flags.has_speaker",
+        ufp_value="speaker_settings.volume",
+        ufp_enabled="feature_flags.has_speaker",
+        ufp_set_method="set_volume",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectNumberEntityDescription(
+        key="doorbell_ring_volume",
+        translation_key="doorbell_ring_volume",
+        icon="mdi:bell-ring",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        ufp_min=0,
+        ufp_max=100,
+        ufp_step=1,
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_value="speaker_settings.ring_volume",
+        ufp_enabled="feature_flags.is_doorbell",
+        ufp_set_method="set_ring_volume",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(

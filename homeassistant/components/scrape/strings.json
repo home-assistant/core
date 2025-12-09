@@ -186,6 +186,7 @@
         "speed": "[%key:component::sensor::entity_component::speed::name%]",
         "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",

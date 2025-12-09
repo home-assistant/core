@@ -338,6 +338,13 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.pop(CONF_CODE_INTERPRETER)
 
         if model.startswith(("o", "gpt-5")) and not model.startswith("gpt-5-pro"):
+            if model.startswith("gpt-5.1"):
+                reasoning_options = ["none", "low", "medium", "high"]
+            elif model.startswith("gpt-5"):
+                reasoning_options = ["minimal", "low", "medium", "high"]
+            else:
+                reasoning_options = ["low", "medium", "high"]
+
             step_schema.update(
                 {
                     vol.Optional(
@@ -345,9 +352,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         default=RECOMMENDED_REASONING_EFFORT,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["low", "medium", "high"]
-                            if model.startswith("o")
-                            else ["minimal", "low", "medium", "high"],
+                            options=reasoning_options,
                             translation_key=CONF_REASONING_EFFORT,
                             mode=SelectSelectorMode.DROPDOWN,
                         )

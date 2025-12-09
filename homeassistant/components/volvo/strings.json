@@ -208,6 +208,9 @@
       },
       "honk_flash": {
         "name": "Honk & flash"
+      },
+      "lock_reduced_guard": {
+        "name": "Lock reduced guard"
       }
     },
     "device_tracker": {
@@ -363,7 +366,7 @@
       "message": "Unable to retrieve vehicle details."
     },
     "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation unavailable, will retry"
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "unauthorized": {
       "message": "Authentication failed. {message}"

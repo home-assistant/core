@@ -4,13 +4,16 @@ from datetime import timedelta
 from math import sin
 import random
 from typing import Any
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
 
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
+    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfPower,
@@ -31,6 +34,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    get_fixture_path,
     mock_restore_cache_with_extra_data,
 )
 
@@ -998,3 +1002,85 @@ async def test_source_unit_change(
         state = hass.states.get(entity_id)
         assert state.state == "8.000"
         assert state.attributes.get("unit_of_measurement") == "dogs/s"
+
+
+async def test_reload(hass: HomeAssistant) -> None:
+    """Test hot-reloading derivative YAML sensors."""
+    hass.state = ha.CoreState.not_running
+    hass.states.async_set("sensor.energy", "0.0")
+
+    config = {
+        "sensor": [
+            {
+                "platform": "derivative",
+                "name": "derivative",
+                "source": "sensor.energy",
+                "unit": "kW",
+            },
+            {
+                "platform": "derivative",
+                "name": "derivative_remove",
+                "source": "sensor.energy",
+                "unit": "kW",
+            },
+        ]
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+    state = hass.states.get("sensor.derivative")
+    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "kW"
+    assert hass.states.get("sensor.derivative_remove")
+
+    yaml_path = get_fixture_path("configuration.yaml", "derivative")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    # Check that we can change the unit of an existing sensor
+    state = hass.states.get("sensor.derivative")
+    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "W"
+
+    # Check that we can remove a derivative sensor
+    assert hass.states.get("sensor.derivative_remove") is None
+
+    # Check that we can add a new derivative sensor
+    assert hass.states.get("sensor.derivative_new")
+
+
+async def test_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test YAML-based derivative with unique id."""
+    source_id = "sensor.source"
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": source_id,
+            "unique_id": "my unique id",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    entity_id = "sensor.derivative"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "my unique id"

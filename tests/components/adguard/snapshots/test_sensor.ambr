@@ -1,0 +1,393 @@
+# serializer version: 1
+# name: test_sensors[sensor.adguard_home_average_processing_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_average_processing_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Average processing speed',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_processing_speed',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_average_speed',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_average_processing_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home Average processing speed',
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_average_processing_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31.41',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_dns_queries-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_dns_queries',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DNS queries',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dns_queries',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_dns_queries',
+    'unit_of_measurement': 'queries',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_dns_queries-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home DNS queries',
+      'unit_of_measurement': 'queries',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_dns_queries',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '666',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_dns_queries_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_dns_queries_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DNS queries blocked',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dns_queries_blocked',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_filtering',
+    'unit_of_measurement': 'queries',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_dns_queries_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home DNS queries blocked',
+      'unit_of_measurement': 'queries',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_dns_queries_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1337',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_dns_queries_blocked_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_dns_queries_blocked_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DNS queries blocked ratio',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dns_queries_blocked_ratio',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_dns_queries_blocked_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home DNS queries blocked ratio',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_dns_queries_blocked_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200.75',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_parental_control_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_parental_control_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Parental control blocked',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'parental_control_blocked',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_parental',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_parental_control_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home Parental control blocked',
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_parental_control_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_rules_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_rules_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rules count',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rules_count',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_rules_count',
+    'unit_of_measurement': 'rules',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_rules_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home Rules count',
+      'unit_of_measurement': 'rules',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_rules_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_safe_browsing_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_safe_browsing_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Safe browsing blocked',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'safe_browsing_blocked',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_safebrowsing',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_safe_browsing_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home Safe browsing blocked',
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_safe_browsing_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_safe_searches_enforced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.adguard_home_safe_searches_enforced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Safe searches enforced',
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'safe_searches_enforced',
+    'unique_id': 'adguard_127.0.0.1_3000_sensor_enforced_safesearch',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_sensors[sensor.adguard_home_safe_searches_enforced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AdGuard Home Safe searches enforced',
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.adguard_home_safe_searches_enforced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18',
+  })
+# ---
