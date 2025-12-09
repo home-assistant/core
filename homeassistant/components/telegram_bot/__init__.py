@@ -12,11 +12,14 @@ from telegram.constants import InputMediaType
 from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_SOURCE,
@@ -417,29 +420,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
-        if ATTR_TIMEOUT in kwargs:
-            entity_id = "fragment"
-            origin = service.context.origin_event
-            if origin:
-                # script or automation
-                entity_id = origin.data[ATTR_ENTITY_ID]
-
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_timeout_parameter",
-                breaks_in_ha_version="2026.7.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_timeout_parameter",
-                translation_placeholders={
-                    "integration_title": "Telegram Bot",
-                    "action": f"{DOMAIN}.{msgtype}",
-                    "entity_id": entity_id,
-                },
-                learn_more_url="https://github.com/home-assistant/core/pull/155198",
-            )
+        if ATTR_TIMEOUT in service.data:
+            _deprecate_timeout(hass, service)
 
         config_entry_id: str | None = service.data.get(CONF_CONFIG_ENTRY_ID)
         config_entry: TelegramBotConfigEntry | None = None
@@ -571,6 +553,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
+
+
+def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
+    # default: service was called using frontend such as developer tools or automation editor
+    entity_id = "call_service"
+
+    origin = service.context.origin_event
+    if origin and ATTR_ENTITY_ID in origin.data:
+        # automation
+        entity_id = origin.data[ATTR_ENTITY_ID]
+    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
+        # script
+        entity_id = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_timeout_parameter",
+        breaks_in_ha_version="2026.7.0",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_timeout_parameter",
+        translation_placeholders={
+            "integration_title": "Telegram Bot",
+            "action": f"{DOMAIN}.{service.service}",
+            "entity_id": entity_id,
+        },
+        learn_more_url="https://github.com/home-assistant/core/pull/155198",
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:

@@ -17,7 +17,7 @@ from telegram.error import (
     TimedOut,
 )
 
-from homeassistant.components import automation
+from homeassistant.components import script
 from homeassistant.components.telegram_bot import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -76,13 +76,15 @@ from homeassistant.components.telegram_bot.const import (
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -1545,42 +1547,44 @@ async def test_send_message_multi_target(
     assert response == {"chats": [{"chat_id": 654321, "message_id": 12345}]}
 
 
-async def test_deprecated_timeout_parameter(
+async def test_deprecated_timeout_parameter_script(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
     issue_registry: IssueRegistry,
 ) -> None:
-    """Test send message using the deprecated timeout parameter."""
+    """Test send message using the deprecated timeout parameter via script."""
 
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # create automation that uses the deprecated parameter
+    # create script that uses the deprecated parameter
     assert await async_setup_component(
         hass,
-        automation.DOMAIN,
+        script.DOMAIN,
         {
-            automation.DOMAIN: [
-                {
-                    "trigger": {
-                        "platform": "event",
-                        "event_type": "test_event_deprecated_timeout_parameter",
-                    },
-                    "action": {
-                        "service": "telegram_bot.send_message",
-                        "data": {"message": "test message", "timeout": 5},
-                    },
+            script.DOMAIN: {
+                "mock_script": {
+                    "sequence": [
+                        {
+                            "action": "telegram_bot.send_message",
+                            "data": {"message": "test message", "timeout": 5},
+                        },
+                    ],
                 }
-            ]
+            }
         },
     )
-    await hass.async_block_till_done()
 
-    # trigger the automation
-    hass.bus.async_fire("test_event_deprecated_timeout_parameter")
-    await hass.async_block_till_done()
+    # trigger the script
+    context = Context()
+    context.origin_event = Event(
+        "call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}
+    )
+    await hass.services.async_call(
+        script.DOMAIN, "mock_script", blocking=True, context=context
+    )
 
     # check issue is created correctly
     issue = issue_registry.async_get_issue(
@@ -1593,5 +1597,37 @@ async def test_deprecated_timeout_parameter(
     assert issue.translation_placeholders == {
         "integration_title": "Telegram Bot",
         "action": "telegram_bot.send_message",
-        "entity_id": "fragment",
+        "entity_id": "script.mock_script",
+    }
+
+
+async def test_deprecated_timeout_parameter_call_service(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test send message using the deprecated timeout parameter."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # trigger service call
+    await hass.services.async_call(
+        DOMAIN, "send_message", {"message": "test message", "timeout": 5}, blocking=True
+    )
+
+    # check issue is created correctly
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="deprecated_timeout_parameter",
+    )
+    assert issue is not None
+    assert issue.domain == DOMAIN
+    assert issue.translation_key == "deprecated_timeout_parameter"
+    assert issue.translation_placeholders == {
+        "integration_title": "Telegram Bot",
+        "action": "telegram_bot.send_message",
+        "entity_id": "call_service",
     }
