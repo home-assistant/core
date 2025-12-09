@@ -506,7 +506,7 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
                 self._apparent_temperature_template,
                 on_update=self._update_apparent_temperature,
             )
-        if self._ozone_template:
+        if self._attribution_template:
             self.add_template_attribute(
                 "_attribution",
                 self._attribution_template,
@@ -546,8 +546,10 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
             )
         if self._forecast_twice_daily_template:
             self.add_template_attribute(
-                "_wind_speed",
-                self._wind_speed_template,
+                "_forecast_twice_daily",
+                self._forecast_twice_daily_template,
+                on_update=partial(self._update_forecast, "twice_daily"),
+                validator=partial(self._validate_forecast, "twice_daily"),
             )
         if self._humidity_template:
             self.add_template_attribute(
