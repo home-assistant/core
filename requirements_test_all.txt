@@ -507,7 +507,7 @@ aranet4==2.5.1
 arcam-fmj==1.8.2
 
 # homeassistant.components.asuswrt
-asusrouter==1.21.1
+asusrouter==1.21.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
