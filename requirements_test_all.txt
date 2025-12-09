@@ -22,7 +22,7 @@ HAP-python==5.0.0
 HATasmota==0.10.1
 
 # homeassistant.components.hue_ble
-HueBLE==1.0.8
+HueBLE==2.1.0
 
 # homeassistant.components.mastodon
 Mastodon.py==2.1.2
@@ -504,7 +504,7 @@ aranet4==2.5.1
 arcam-fmj==1.8.2
 
 # homeassistant.components.asuswrt
-asusrouter==1.21.0
+asusrouter==1.21.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -750,6 +750,9 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==2.1.2
 
+# homeassistant.components.egauge
+egauge-async==0.4.0
+
 # homeassistant.components.eheimdigital
 eheimdigital==1.4.0
 
@@ -972,7 +975,7 @@ google-nest-sdm==9.1.2
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==1.1.3
+google_air_quality_api==2.0.0
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1062,7 +1065,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.1
+home-assistant-frontend==20251203.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
@@ -1848,9 +1851,6 @@ pymata-express==1.19
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
-# homeassistant.components.assist_pipeline
-pymicro-vad==1.0.1
-
 # homeassistant.components.miele
 pymiele==0.6.1
 
@@ -2015,6 +2015,9 @@ pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
+
+# homeassistant.components.assist_pipeline
+pysilero-vad==3.0.0
 
 # homeassistant.components.sma
 pysma==1.0.2
@@ -2698,7 +2701,7 @@ youless-api==2.2.0
 youtubeaio==2.1.1
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.11.12
+yt-dlp[default]==2025.12.08
 
 # homeassistant.components.zamg
 zamg==0.3.6
