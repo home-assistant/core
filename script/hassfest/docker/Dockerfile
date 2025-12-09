@@ -30,10 +30,10 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.9.6,source=/uv,target=/bin/uv \
         ruff==0.13.0 \
         PyTurboJPEG==1.8.0 \
         ha-ffmpeg==3.2.2 \
-        hassil==3.4.0 \
-        home-assistant-intents==2025.11.24 \
+        hassil==3.5.0 \
+        home-assistant-intents==2025.12.2 \
         mutagen==1.47.0 \
-        pymicro-vad==1.0.1 \
+        pysilero-vad==3.0.0 \
         pyspeex-noise==1.0.2
 
 LABEL "name"="hassfest"
