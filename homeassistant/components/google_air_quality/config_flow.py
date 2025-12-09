@@ -79,6 +79,15 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
                     CONF_LONGITUDE: hass.config.longitude,
                 },
             ): LocationSelector(LocationSelectorConfig(radius=False)),
+        }
+    )
+
+
+def _get_forecast_schema(hass: HomeAssistant) -> vol.Schema:
+    """Return the extended schema including forecast."""
+    base = _get_location_schema(hass)
+    return base.extend(
+        {
             vol.Optional("forecast"): int,
         }
     )
@@ -140,12 +149,6 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
                             "title": user_input[CONF_NAME],
                             "unique_id": None,
                         },
-                        {
-                            "subentry_type": "forecast",
-                            "data": user_input[CONF_LOCATION],
-                            "title": user_input[CONF_NAME],
-                            "unique_id": None,
-                        },
                     ],
                 )
         else:
@@ -167,7 +170,10 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"location": LocationSubentryFlowHandler}
+        return {
+            "location": LocationSubentryFlowHandler,
+            "forecast": ForecastSubentryFlowHandler,
+        }
 
 
 class LocationSubentryFlowHandler(ConfigSubentryFlow):
@@ -178,14 +184,13 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the location step."""
+        _LOGGER.debug("current conditions")
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
-                return self.async_abort(reason="already_configured")
             api: GoogleAirQualityApi = self._get_entry().runtime_data.api
             if await _validate_input(user_input, api, errors, description_placeholders):
                 return self.async_create_entry(
@@ -205,8 +210,39 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
 
     async_step_user = async_step_location
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+
+class ForecastSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for forecast."""
+
+    async def async_step_forecast(
+        self,
+        user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
-        """Reconfigure a sensor subentry."""
-        return await self.async_step_location()
+        """Handle the forecast step."""
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        if user_input is not None:
+            api: GoogleAirQualityApi = self._get_entry().runtime_data.api
+            if await _validate_input(user_input, api, errors, description_placeholders):
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={
+                        CONF_LOCATION: user_input[CONF_LOCATION],
+                        "forecast": user_input["forecast"],
+                    },
+                )
+        else:
+            user_input = {}
+        return self.async_show_form(
+            step_id="forecast",
+            data_schema=self.add_suggested_values_to_schema(
+                _get_forecast_schema(self.hass), user_input
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async_step_user = async_step_forecast

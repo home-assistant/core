@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -214,7 +214,7 @@ class AirQualitySensorEntity(
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
             },
-            name=subentry.title,
+            name=subentry.subentry_type,
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:
@@ -259,12 +259,12 @@ class AirQualityForecastSensorEntity(
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}_forecast"
+        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LOCATION][CONF_LATITUDE]}_{subentry.data[CONF_LOCATION][CONF_LONGITUDE]}_forecast"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
             },
-            name=subentry.title,
+            name=subentry.subentry_type,
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:
