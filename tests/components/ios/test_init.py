@@ -1,6 +1,7 @@
 """Tests for the iOS init file."""
 
 import json
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.components import ios
 from homeassistant.components.ios import iOSConfigView
 from homeassistant.components.ios.storage import CarPlayStore, async_get_carplay_store
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component
@@ -203,3 +205,279 @@ async def test_carplay_api_validation(
 
     resp = await client.post("/api/ios/carplay/update", json=missing_entity_data)
     assert resp.status == 400
+
+
+async def test_carplay_store_subscriptions(hass: HomeAssistant) -> None:
+    """Test CarPlay store subscription functionality."""
+    store = CarPlayStore(hass)
+
+    # Track callback calls
+    callback_called = False
+
+    def callback() -> None:
+        nonlocal callback_called
+        callback_called = True
+
+    # Subscribe to changes
+    unsubscribe = store.async_subscribe(callback)
+
+    # Make a change that triggers save
+    await store.async_set_data({"enabled": False, "quick_access": []})
+
+    # Verify callback was called
+    assert callback_called
+
+    # Reset and test unsubscribe
+    callback_called = False
+    unsubscribe()
+
+    # Make another change
+    await store.async_set_data({"enabled": True, "quick_access": []})
+
+    # Verify callback was not called after unsubscribe
+    assert not callback_called
+
+
+async def test_carplay_store_individual_setters(hass: HomeAssistant) -> None:
+    """Test individual setter methods in CarPlay store."""
+    store = CarPlayStore(hass)
+
+    # Test async_set_enabled
+    await store.async_set_enabled(False)
+    data = await store.async_get_data()
+    assert data["enabled"] is False
+
+    # Test async_set_quick_access
+    quick_access = [{"entity_id": "light.test", "display_name": "Test Light"}]
+    await store.async_set_quick_access(quick_access)
+    data = await store.async_get_data()
+    assert data["quick_access"] == quick_access
+
+
+async def test_carplay_store_async_get_function(hass: HomeAssistant) -> None:
+    """Test the async_get_carplay_store function reuses store instances."""
+    # Get store first time - should create new instance
+    store1 = await async_get_carplay_store(hass)
+
+    # Get store second time - should reuse existing instance
+    store2 = await async_get_carplay_store(hass)
+
+    # Should be the same instance
+    assert store1 is store2
+
+
+async def test_carplay_api_error_handling(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test CarPlay API error handling for various invalid inputs."""
+    # Setup the component
+    await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
+
+    client = await hass_client()
+
+    # Test invalid JSON
+    resp = await client.post(
+        "/api/ios/carplay/update",
+        data="invalid json",
+        headers={"Content-Type": "application/json"},
+    )
+    assert resp.status == 400
+
+    # Test non-object data
+    resp = await client.post("/api/ios/carplay/update", json="not an object")
+    assert resp.status == 400
+
+    # Test invalid enabled type
+    resp = await client.post("/api/ios/carplay/update", json={"enabled": "not_bool"})
+    assert resp.status == 400
+
+    # Test invalid quick_access type
+    resp = await client.post(
+        "/api/ios/carplay/update", json={"quick_access": "not_array"}
+    )
+    assert resp.status == 400
+
+    # Test invalid quick_access item type
+    resp = await client.post(
+        "/api/ios/carplay/update", json={"quick_access": ["not_object"]}
+    )
+    assert resp.status == 400
+
+    # Test invalid entity_id type
+    resp = await client.post(
+        "/api/ios/carplay/update", json={"quick_access": [{"entity_id": 123}]}
+    )
+    assert resp.status == 400
+
+    # Test invalid display_name type
+    resp = await client.post(
+        "/api/ios/carplay/update",
+        json={"quick_access": [{"entity_id": "light.test", "display_name": 123}]},
+    )
+    assert resp.status == 400
+
+
+async def test_ios_utility_functions(hass: HomeAssistant) -> None:
+    """Test iOS utility functions."""
+    # Set up test data
+    hass.data[ios.DOMAIN] = {
+        ios.ATTR_DEVICES: {
+            "device1": {ios.ATTR_PUSH_ID: "push_id_1"},
+            "device2": {ios.ATTR_PUSH_ID: "push_id_2"},
+            "device3": {},  # No push ID
+        }
+    }
+
+    # Test devices_with_push
+    push_devices = ios.devices_with_push(hass)
+    assert push_devices == {"device1": "push_id_1", "device2": "push_id_2"}
+
+    # Test enabled_push_ids
+    push_ids = ios.enabled_push_ids(hass)
+    assert set(push_ids) == {"push_id_1", "push_id_2"}
+
+    # Test devices
+    all_devices = ios.devices(hass)
+    assert len(all_devices) == 3
+
+    # Test device_name_for_push_id
+    device_name = ios.device_name_for_push_id(hass, "push_id_1")
+    assert device_name == "device1"
+
+    device_name = ios.device_name_for_push_id(hass, "nonexistent")
+    assert device_name is None
+
+
+async def test_ios_push_config_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test iOS push configuration view."""
+    push_config = {
+        "categories": [{"name": "test", "identifier": "test", "actions": []}]
+    }
+
+    # Setup the component with push config
+    await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {"push": push_config}})
+
+    client = await hass_client()
+
+    # Test push config endpoint
+    resp = await client.get("/api/ios/push")
+    assert resp.status == 200
+    data = await resp.json()
+    assert data == push_config
+
+
+async def test_ios_identify_device_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, tmp_path: Path
+) -> None:
+    """Test iOS device identification view."""
+    config_file = tmp_path / ".ios.conf"
+
+    # Set up initial data in hass
+    hass.data[ios.DOMAIN] = {ios.ATTR_DEVICES: {}}
+
+    # Setup the component
+    await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
+
+    # Mock the config file path
+    with patch.object(hass.config, "path", return_value=str(config_file)):
+        client = await hass_client()
+
+        device_data = {
+            ios.ATTR_DEVICE_ID: "test_device_id",
+            ios.ATTR_DEVICE: {
+                ios.ATTR_DEVICE_NAME: "Test Device",
+                ios.ATTR_DEVICE_LOCALIZED_MODEL: "iPhone",
+                ios.ATTR_DEVICE_MODEL: "iPhone15,2",
+                ios.ATTR_DEVICE_PERMANENT_ID: "ABC123",
+                ios.ATTR_DEVICE_SYSTEM_VERSION: "17.0",
+                ios.ATTR_DEVICE_TYPE: "Phone",
+                ios.ATTR_DEVICE_SYSTEM_NAME: "iOS",
+            },
+            ios.ATTR_BATTERY: {
+                ios.ATTR_BATTERY_LEVEL: 85,
+                ios.ATTR_BATTERY_STATE: "Unplugged",
+            },
+            ios.ATTR_PUSH_TOKEN: "test_token",
+            ios.ATTR_APP: {
+                ios.ATTR_APP_BUNDLE_IDENTIFIER: "io.robbie.HomeAssistant",
+                ios.ATTR_APP_BUILD_NUMBER: 1234,
+                ios.ATTR_APP_VERSION_NUMBER: "2023.1",
+            },
+            ios.ATTR_PERMISSIONS: ["location", "notifications"],
+            ios.ATTR_PUSH_ID: "test_push_id",
+        }
+
+        # Test device identification
+        resp = await client.post("/api/ios/identify", json=device_data)
+        assert resp.status == 200
+        result = await resp.json()
+        assert result["status"] == "registered"
+
+        # Verify device was stored
+        assert "test_device_id" in hass.data[ios.DOMAIN][ios.ATTR_DEVICES]
+        stored_device = hass.data[ios.DOMAIN][ios.ATTR_DEVICES]["test_device_id"]
+        assert ios.ATTR_LAST_SEEN_AT in stored_device
+
+        # Test invalid JSON
+        resp = await client.post(
+            "/api/ios/identify",
+            data="invalid json",
+            headers={"Content-Type": "application/json"},
+        )
+        assert resp.status == 400
+
+
+async def test_ios_identify_device_save_error(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, tmp_path: Path
+) -> None:
+    """Test iOS device identification view with save error."""
+    config_file = tmp_path / ".ios.conf"
+
+    # Set up initial data in hass
+    hass.data[ios.DOMAIN] = {ios.ATTR_DEVICES: {}}
+
+    # Setup the component
+    await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
+
+    # Mock the config file path and save_json to raise an error
+    with (
+        patch.object(hass.config, "path", return_value=str(config_file)),
+        patch(
+            "homeassistant.components.ios.save_json",
+            side_effect=HomeAssistantError("Save failed"),
+        ),
+    ):
+        client = await hass_client()
+
+        device_data = {
+            ios.ATTR_DEVICE_ID: "test_device_id",
+            ios.ATTR_DEVICE: {
+                ios.ATTR_DEVICE_NAME: "Test Device",
+                ios.ATTR_DEVICE_LOCALIZED_MODEL: "iPhone",
+                ios.ATTR_DEVICE_MODEL: "iPhone15,2",
+                ios.ATTR_DEVICE_PERMANENT_ID: "ABC123",
+                ios.ATTR_DEVICE_SYSTEM_VERSION: "17.0",
+                ios.ATTR_DEVICE_TYPE: "Phone",
+                ios.ATTR_DEVICE_SYSTEM_NAME: "iOS",
+            },
+            ios.ATTR_BATTERY: {
+                ios.ATTR_BATTERY_LEVEL: 85,
+                ios.ATTR_BATTERY_STATE: "Unplugged",
+            },
+            ios.ATTR_PUSH_TOKEN: "test_token",
+            ios.ATTR_APP: {
+                ios.ATTR_APP_BUNDLE_IDENTIFIER: "io.robbie.HomeAssistant",
+                ios.ATTR_APP_BUILD_NUMBER: 1234,
+                ios.ATTR_APP_VERSION_NUMBER: "2023.1",
+            },
+            ios.ATTR_PERMISSIONS: ["location", "notifications"],
+            ios.ATTR_PUSH_ID: "test_push_id",
+        }
+
+        # Test device identification with save error
+        resp = await client.post("/api/ios/identify", json=device_data)
+        assert resp.status == 500
+        result = await resp.json()
+        assert result["message"] == "Error saving device."
