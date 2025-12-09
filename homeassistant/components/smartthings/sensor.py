@@ -912,8 +912,9 @@ CAPABILITY_TO_SENSORS: dict[
                     if Capability.CUSTOM_OUTING_MODE in status
                     else None
                 ),
-                component_fn=lambda component: component
-                in {"freezer", "cooler", "onedoor"},
+                component_fn=(
+                    lambda component: component in {"freezer", "cooler", "onedoor"}
+                ),
                 component_translation_key={
                     "freezer": "freezer_temperature",
                     "cooler": "cooler_temperature",
