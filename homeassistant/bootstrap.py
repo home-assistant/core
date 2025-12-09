@@ -176,6 +176,8 @@ FRONTEND_INTEGRATIONS = {
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup labs for preview features
+    ("labs", {"labs"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
@@ -212,6 +214,7 @@ DEFAULT_INTEGRATIONS = {
     "backup",
     "frontend",
     "hardware",
+    "labs",
     "logger",
     "network",
     "system_health",
@@ -635,25 +638,15 @@ async def async_enable_logging(
         err_log_path = os.path.abspath(log_file)
 
     if err_log_path:
-        err_path_exists = os.path.isfile(err_log_path)
-        err_dir = os.path.dirname(err_log_path)
+        err_handler = await hass.async_add_executor_job(
+            _create_log_file, err_log_path, log_rotate_days
+        )
 
-        # Check if we can write to the error log if it exists or that
-        # we can create files in the containing directory if not.
-        if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
-            not err_path_exists and os.access(err_dir, os.W_OK)
-        ):
-            err_handler = await hass.async_add_executor_job(
-                _create_log_file, err_log_path, log_rotate_days
-            )
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+        logger.addHandler(err_handler)
 
-            err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
-            logger.addHandler(err_handler)
-
-            # Save the log file location for access by other components.
-            hass.data[DATA_LOGGING] = err_log_path
-        else:
-            _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
+        # Save the log file location for access by other components.
+        hass.data[DATA_LOGGING] = err_log_path
 
     async_activate_log_queue_handler(hass)
 
@@ -1007,7 +1000,7 @@ class _WatchPendingSetups:
             # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
             # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
+                "Waiting for integrations to complete setup: %s",
                 self._setup_started,
             )
 

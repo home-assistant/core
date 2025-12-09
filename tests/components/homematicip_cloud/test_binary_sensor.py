@@ -565,8 +565,8 @@ async def test_hmip_multi_contact_interface(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipMultiContactInterface."""
-    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
-    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel10"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel10"
     device_model = "HmIPW-DRI32"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Eingangsmodul – 32-fach", "Licht Flur"]
@@ -578,14 +578,24 @@ async def test_hmip_multi_contact_interface(
 
     assert ha_state.state == STATE_OFF
     await async_manipulate_test_data(
-        hass, hmip_device, "windowState", WindowState.OPEN, channel=5
+        hass, hmip_device, "windowState", WindowState.OPEN, channel_real_index=10
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
-    await async_manipulate_test_data(hass, hmip_device, "windowState", None, channel=5)
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", None, channel_real_index=10
+    )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNKNOWN
+
+    # Test channel 32 of device
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel32"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel32"
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+    assert ha_state.state == STATE_OFF
 
     ha_state, hmip_device = get_and_check_entity_basics(
         hass,

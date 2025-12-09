@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
+    VadSensitivity,
     VadSensitivitySelect,
 )
-from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory

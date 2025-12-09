@@ -18,6 +18,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_create_floor)
     websocket_api.async_register_command(hass, websocket_delete_floor)
     websocket_api.async_register_command(hass, websocket_update_floor)
+    websocket_api.async_register_command(hass, websocket_reorder_floors)
     return True
 
 
@@ -125,6 +126,28 @@ def websocket_update_floor(
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
         connection.send_result(msg["id"], _entry_dict(entry))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/floor_registry/reorder",
+        vol.Required("floor_ids"): [str],
+    }
+)
+@websocket_api.require_admin
+@callback
+def websocket_reorder_floors(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle reorder floors websocket command."""
+    registry = fr.async_get(hass)
+
+    try:
+        registry.async_reorder(msg["floor_ids"])
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+    else:
+        connection.send_result(msg["id"])
 
 
 @callback

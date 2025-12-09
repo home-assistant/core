@@ -6,7 +6,7 @@ from dataclasses import replace
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
