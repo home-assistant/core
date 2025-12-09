@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
+from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 from urllib.parse import quote
@@ -19,11 +20,14 @@ from yarl import URL
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.async_ import create_eager_task
 
-from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .const import DATA_COMPONENT, X_HASS_SOURCE, X_INGRESS_PATH
 from .http import should_compress
+
+INGRESS_SESSION_COOKIE = "ingress_session"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +59,7 @@ def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
     """Auth setup."""
     websession = async_get_clientsession(hass)
 
-    hassio_ingress = HassIOIngress(host, websession)
+    hassio_ingress = HassIOIngress(hass, host, websession)
     hass.http.register_view(hassio_ingress)
 
 
@@ -66,8 +70,11 @@ class HassIOIngress(HomeAssistantView):
     url = "/api/hassio_ingress/{token}/{path:.*}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, websession: aiohttp.ClientSession
+    ) -> None:
         """Initialize a Hass.io ingress view."""
+        self._hass = hass
         self._host = host
         self._websession = websession
         self._url = URL(f"http://{host}")
@@ -87,11 +94,51 @@ class HassIOIngress(HomeAssistantView):
 
         return target_url
 
+    async def _validate_session(self, request: web.Request) -> bool:
+        """Validate the ingress session.
+
+        Returns True if session is valid, False otherwise.
+        """
+        session_cookie = request.cookies.get(INGRESS_SESSION_COOKIE)
+        if not session_cookie:
+            return False
+
+        hassio = self._hass.data[DATA_COMPONENT]
+        try:
+            response = await hassio.send_command(
+                "/ingress/validate_session",
+                method="post",
+                payload={"session": session_cookie},
+                timeout=10,
+                source="core.ingress",
+            )
+            return response.get("result") == "ok"
+        except Exception:
+            _LOGGER.debug("Failed to validate ingress session")
+            return False
+
+    def _build_redirect_url(self, request: web.Request, token: str, path: str) -> str:
+        """Build the redirect URL for session validation."""
+        # Build the original URL that the user was trying to access
+        original_url = f"/api/hassio_ingress/{token}/{path}"
+        if request.query_string:
+            original_url = f"{original_url}?{request.query_string}"
+
+        # Build the redirect URL with the original URL as a properly encoded parameter
+        # Using quote with safe='' to ensure all special characters are encoded
+        return f"/ingress/validate?redirect={quote(original_url, safe='')}"
+
     async def _handle(
         self, request: web.Request, token: str, path: str
     ) -> web.Response | web.StreamResponse | web.WebSocketResponse:
         """Route data to Hass.io ingress service."""
         try:
+            # Validate session for non-websocket requests
+            if not _is_websocket(request):
+                if not await self._validate_session(request):
+                    redirect_url = self._build_redirect_url(request, token, path)
+                    raise web.HTTPSeeOther(location=redirect_url)
+
             # Websocket
             if _is_websocket(request):
                 return await self._handle_websocket(request, token, path)

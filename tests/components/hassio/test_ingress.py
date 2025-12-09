@@ -26,6 +26,10 @@ async def test_ingress_request_get(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test no auth needed for ."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -37,7 +41,11 @@ async def test_ingress_request_get(
     resp = await hassio_noauth_client.get(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
         headers=CIMultiDict(
-            [("X-Test-Header", "beer"), ("X-Test-Header", "more beer")]
+            [
+                ("X-Test-Header", "beer"),
+                ("X-Test-Header", "more beer"),
+                ("Cookie", "ingress_session=test_session"),
+            ]
         ),
     )
 
@@ -48,8 +56,8 @@ async def test_ingress_request_get(
     body = await resp.text()
     assert body == "test"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -81,13 +89,17 @@ async def test_ingress_request_post(
 ) -> None:
     """Test no auth needed for ."""
     aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
+    aioclient_mock.post(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
     )
 
     resp = await hassio_noauth_client.post(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
     )
 
     # Check we got right response
@@ -95,8 +107,8 @@ async def test_ingress_request_post(
     body = await resp.text()
     assert body == "test"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -123,6 +135,10 @@ async def test_ingress_request_put(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test no auth needed for ."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.put(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -130,7 +146,7 @@ async def test_ingress_request_put(
 
     resp = await hassio_noauth_client.put(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
     )
 
     # Check we got right response
@@ -138,8 +154,8 @@ async def test_ingress_request_put(
     body = await resp.text()
     assert body == "test"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -166,6 +182,10 @@ async def test_ingress_request_delete(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test no auth needed for ."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.delete(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -173,7 +193,7 @@ async def test_ingress_request_delete(
 
     resp = await hassio_noauth_client.delete(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
     )
 
     # Check we got right response
@@ -181,8 +201,8 @@ async def test_ingress_request_delete(
     body = await resp.text()
     assert body == "test"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -209,6 +229,10 @@ async def test_ingress_request_patch(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test no auth needed for ."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.patch(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -216,7 +240,7 @@ async def test_ingress_request_patch(
 
     resp = await hassio_noauth_client.patch(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
     )
 
     # Check we got right response
@@ -224,8 +248,8 @@ async def test_ingress_request_patch(
     body = await resp.text()
     assert body == "test"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -252,6 +276,10 @@ async def test_ingress_request_options(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test no auth needed for ."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.options(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -259,7 +287,7 @@ async def test_ingress_request_options(
 
     resp = await hassio_noauth_client.options(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
     )
 
     # Check we got right response
@@ -267,8 +295,8 @@ async def test_ingress_request_options(
     body = await resp.text()
     assert body == "test"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -295,6 +323,10 @@ async def test_ingress_request_head(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test no auth needed for ."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.head(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -302,7 +334,7 @@ async def test_ingress_request_head(
 
     resp = await hassio_noauth_client.head(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
     )
 
     # Check we got right response
@@ -310,8 +342,8 @@ async def test_ingress_request_head(
     body = await resp.text()
     assert body == ""  # head does not return a body
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -337,16 +369,17 @@ async def test_ingress_request_head(
 async def test_ingress_websocket(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test no auth needed for ."""
+    """Test no auth needed for websocket (bypasses session validation)."""
     aioclient_mock.get(f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}")
 
     # Ignore error because we can setup a full IO infrastructure
+    # WebSocket connections bypass session validation
     await hassio_noauth_client.ws_connect(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
         headers={"X-Test-Header": "beer"},
     )
 
-    # Check we forwarded command
+    # Check we forwarded command (no validate_session call for WebSockets)
     assert len(aioclient_mock.mock_calls) == 1
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
@@ -366,6 +399,10 @@ async def test_ingress_missing_peername(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of missing peername."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/lorem/ipsum",
         text="test",
@@ -381,7 +418,7 @@ async def test_ingress_missing_peername(
         transport_mock.get_extra_info = get_extra_info
         resp = await hassio_noauth_client.get(
             "/api/hassio_ingress/lorem/ipsum",
-            headers={"X-Test-Header": "beer"},
+            headers={"X-Test-Header": "beer", "Cookie": "ingress_session=test_session"},
         )
 
     assert "Can't set forward_for header, missing peername" in caplog.text
@@ -394,6 +431,10 @@ async def test_forwarding_paths_as_requested(
     hassio_noauth_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test incomnig URLs with double encoding go out as dobule encoded."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     # This double encoded string should be forwarded double-encoded too.
     aioclient_mock.get(
         "http://127.0.0.1/ingress/mock-token/hello/%252e./world",
@@ -402,6 +443,7 @@ async def test_forwarding_paths_as_requested(
 
     resp = await hassio_noauth_client.get(
         "/api/hassio_ingress/mock-token/hello/%252e./world",
+        headers={"Cookie": "ingress_session=test_session"},
     )
     assert await resp.text() == "test"
 
@@ -420,6 +462,10 @@ async def test_ingress_request_get_compressed(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test ingress compressed."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     body = "this_is_long_enough_to_be_compressed" * 100
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -429,7 +475,11 @@ async def test_ingress_request_get_compressed(
 
     resp = await hassio_noauth_client.get(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+        headers={
+            "X-Test-Header": "beer",
+            "Accept-Encoding": "gzip, deflate",
+            "Cookie": "ingress_session=test_session",
+        },
     )
 
     # Check we got right response
@@ -438,8 +488,8 @@ async def test_ingress_request_get_compressed(
     assert resp_body == body
     assert resp.headers["Content-Encoding"] == "deflate"
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -466,6 +516,10 @@ async def test_ingress_request_not_compressed(
     hassio_noauth_client, content_type: str, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test ingress does not compress images."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     body = b"this_is_long_enough_to_be_compressed" * 100
     aioclient_mock.get(
         "http://127.0.0.1/ingress/core/x.any",
@@ -475,7 +529,11 @@ async def test_ingress_request_not_compressed(
 
     resp = await hassio_noauth_client.get(
         "/api/hassio_ingress/core/x.any",
-        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+        headers={
+            "X-Test-Header": "beer",
+            "Accept-Encoding": "gzip, deflate",
+            "Cookie": "ingress_session=test_session",
+        },
     )
 
     # Check we got right response
@@ -488,6 +546,10 @@ async def test_ingress_request_with_charset_in_content_type(
     hassio_noauth_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test ingress passes content type."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     body = b"this_is_long_enough_to_be_compressed" * 100
     aioclient_mock.get(
         "http://127.0.0.1/ingress/core/x.any",
@@ -500,7 +562,11 @@ async def test_ingress_request_with_charset_in_content_type(
 
     resp = await hassio_noauth_client.get(
         "/api/hassio_ingress/core/x.any",
-        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+        headers={
+            "X-Test-Header": "beer",
+            "Accept-Encoding": "gzip, deflate",
+            "Cookie": "ingress_session=test_session",
+        },
     )
 
     # Check we got right response
@@ -522,6 +588,10 @@ async def test_ingress_request_compressed(
     hassio_noauth_client, content_type: str, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test ingress compresses text."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     body = b"this_is_long_enough_to_be_compressed" * 100
     aioclient_mock.get(
         "http://127.0.0.1/ingress/core/x.any",
@@ -531,7 +601,11 @@ async def test_ingress_request_compressed(
 
     resp = await hassio_noauth_client.get(
         "/api/hassio_ingress/core/x.any",
-        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+        headers={
+            "X-Test-Header": "beer",
+            "Accept-Encoding": "gzip, deflate",
+            "Cookie": "ingress_session=test_session",
+        },
     )
 
     # Check we got right response
@@ -554,6 +628,10 @@ async def test_ingress_request_get_not_changed(
     hassio_noauth_client, build_type, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test ingress compressed and not modified."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
@@ -562,7 +640,11 @@ async def test_ingress_request_get_not_changed(
 
     resp = await hassio_noauth_client.get(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+        headers={
+            "X-Test-Header": "beer",
+            "Accept-Encoding": "gzip, deflate",
+            "Cookie": "ingress_session=test_session",
+        },
     )
 
     # Check we got right response
@@ -571,8 +653,8 @@ async def test_ingress_request_get_not_changed(
     assert body == ""
     assert "Content-Encoding" not in resp.headers  # too small to compress
 
-    # Check we forwarded command
-    assert len(aioclient_mock.mock_calls) == 1
+    # Check we forwarded command (after session validation)
+    assert len(aioclient_mock.mock_calls) == 2
     assert X_AUTH_TOKEN not in aioclient_mock.mock_calls[-1][3]
     assert aioclient_mock.mock_calls[-1][3]["X-Hass-Source"] == "core.ingress"
     assert (
@@ -583,3 +665,94 @@ async def test_ingress_request_get_not_changed(
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
+
+
+async def test_ingress_redirect_no_session_cookie(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test redirect when no session cookie is present."""
+    # Don't set up session validation mock - should redirect without cookie
+
+    resp = await hassio_noauth_client.get(
+        "/api/hassio_ingress/test_token/some/path",
+        allow_redirects=False,
+    )
+
+    # Should redirect to validation page
+    # Note: aiohttp normalizes URLs, so slashes are not encoded in the Location header
+    assert resp.status == HTTPStatus.SEE_OTHER
+    assert (
+        resp.headers["Location"]
+        == "/ingress/validate?redirect=/api/hassio_ingress/test_token/some/path"
+    )
+
+
+async def test_ingress_redirect_invalid_session(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test redirect when session validation fails."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "error", "message": "Invalid session"},
+    )
+
+    resp = await hassio_noauth_client.get(
+        "/api/hassio_ingress/test_token/some/path?foo=bar",
+        headers={"Cookie": "ingress_session=invalid_session_token"},
+        allow_redirects=False,
+    )
+
+    # Should redirect to validation page with full original URL including query string
+    # Note: aiohttp normalizes URLs, so slashes are not encoded, but ? and = are
+    assert resp.status == HTTPStatus.SEE_OTHER
+    assert (
+        resp.headers["Location"]
+        == "/ingress/validate?redirect=/api/hassio_ingress/test_token/some/path?foo%3Dbar"
+    )
+
+
+async def test_ingress_request_valid_session(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test successful proxy when session is valid."""
+    aioclient_mock.post(
+        "http://127.0.0.1/ingress/validate_session",
+        json={"result": "ok", "data": {}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/test_token/some/path",
+        text="success",
+    )
+
+    resp = await hassio_noauth_client.get(
+        "/api/hassio_ingress/test_token/some/path",
+        headers={"Cookie": "ingress_session=valid_session_token"},
+    )
+
+    # Should proxy successfully
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "success"
+
+    # Verify validate_session was called
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][1].path == "/ingress/validate_session"
+
+
+async def test_ingress_websocket_bypasses_session_validation(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test websocket requests bypass session validation."""
+    # Set up the websocket endpoint (session validation should be bypassed)
+    aioclient_mock.get("http://127.0.0.1/ingress/ws_token/ws")
+
+    # Attempt websocket connection without session cookie
+    await hassio_noauth_client.ws_connect(
+        "/api/hassio_ingress/ws_token/ws",
+        headers={"X-Test-Header": "beer"},
+    )
+
+    # Check we forwarded command without calling validate_session
+    assert len(aioclient_mock.mock_calls) == 1
+    # The only call should be to the ingress endpoint, not validate_session
+    assert aioclient_mock.mock_calls[0][1].path == "/ingress/ws_token/ws"
