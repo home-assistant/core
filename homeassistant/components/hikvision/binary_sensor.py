@@ -148,20 +148,15 @@ async def async_setup_entry(
         _LOGGER.warning("Hikvision device has no sensors available")
         return
 
-    entities: list[HikvisionBinarySensor] = []
-
-    for sensor_type, channel_list in sensors.items():
-        for channel_info in channel_list:
-            channel = channel_info[1]
-            entities.append(
-                HikvisionBinarySensor(
-                    entry=entry,
-                    sensor_type=sensor_type,
-                    channel=channel,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        HikvisionBinarySensor(
+            entry=entry,
+            sensor_type=sensor_type,
+            channel=channel_info[1],
+        )
+        for sensor_type, channel_list in sensors.items()
+        for channel_info in channel_list
+    )
 
 
 class HikvisionBinarySensor(BinarySensorEntity):
