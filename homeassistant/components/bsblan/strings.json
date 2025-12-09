@@ -130,10 +130,6 @@
           "description": "Time periods for Saturday. Add multiple slots for different heating periods throughout the day.",
           "name": "Saturday time slots"
         },
-        "standard_values_slots": {
-          "description": "Default time periods that apply to days without specific slots configured.",
-          "name": "Default time slots"
-        },
         "sunday_slots": {
           "description": "Time periods for Sunday. Add multiple slots for different heating periods throughout the day.",
           "name": "Sunday time slots"

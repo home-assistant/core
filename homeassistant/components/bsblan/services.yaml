@@ -111,18 +111,3 @@ set_hot_water_schedule:
               required: true
               selector:
                 time:
-    standard_values_slots:
-      selector:
-        object:
-          multiple: true
-          label_field: start_time
-          description_field: end_time
-          fields:
-            start_time:
-              required: true
-              selector:
-                time:
-            end_time:
-              required: true
-              selector:
-                time:

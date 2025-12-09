@@ -6,7 +6,7 @@ from datetime import time
 import logging
 from typing import TYPE_CHECKING
 
-from bsblan import BSBLANError, DHWTimeSwitchPrograms
+from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -28,89 +28,82 @@ ATTR_THURSDAY_SLOTS = "thursday_slots"
 ATTR_FRIDAY_SLOTS = "friday_slots"
 ATTR_SATURDAY_SLOTS = "saturday_slots"
 ATTR_SUNDAY_SLOTS = "sunday_slots"
-ATTR_STANDARD_VALUES_SLOTS = "standard_values_slots"
 
 # Service name
 SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 
 
-def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str | None:
-    """Convert list of time slot dicts to BSB-LAN format string.
+def _parse_time_value(value: time | str) -> time:
+    """Parse a time value from either a time object or string.
 
-    Example: [{"start_time": "06:00", "end_time": "08:00"}, {"start_time": "17:00", "end_time": "21:00"}]
-    becomes: "06:00-08:00 17:00-21:00"
+    Raises ServiceValidationError if the format is invalid.
+    """
+    if isinstance(value, time):
+        return value
+
+    if isinstance(value, str):
+        try:
+            parts = value.split(":")
+            return time(int(parts[0]), int(parts[1]))
+        except (ValueError, IndexError):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_time_format",
+            ) from None
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_time_format",
+    )
+
+
+def _convert_time_slots_to_day_schedule(
+    slots: list[dict[str, time]] | None,
+) -> DaySchedule | None:
+    """Convert list of time slot dicts to a DaySchedule object.
+
+    Example: [{"start_time": "06:00", "end_time": "08:00"},
+              {"start_time": "17:00", "end_time": "21:00"}]
+    becomes: DaySchedule with two TimeSlot objects
 
     None returns None (don't modify this day).
-    Empty list returns empty string (clear this day).
+    Empty list returns DaySchedule with empty slots (clear this day).
     """
     if slots is None:
         return None
 
     if not slots:
-        return ""
+        return DaySchedule(slots=[])
 
-    time_periods = []
+    time_slots = []
     for slot in slots:
         start = slot.get("start_time")
         end = slot.get("end_time")
 
         if start and end:
-            # Convert time objects to HH:MM format (no seconds!)
-            if isinstance(start, time):
-                start_str = start.strftime("%H:%M")
-                start_time_obj = start
-            elif isinstance(start, str):
-                # If it's already a string, strip seconds if present
-                start_str = start[:5] if len(start) >= 5 else start
-                # Parse string to time object for validation
-                try:
-                    parts = start.split(":")
-                    start_time_obj = time(int(parts[0]), int(parts[1]))
-                except (ValueError, IndexError):
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_time_format",
-                    ) from None
-            else:
-                start_str = str(start)
-                start_time_obj = None
-
-            if isinstance(end, time):
-                end_str = end.strftime("%H:%M")
-                end_time_obj = end
-            elif isinstance(end, str):
-                # If it's already a string, strip seconds if present
-                end_str = end[:5] if len(end) >= 5 else end
-                # Parse string to time object for validation
-                try:
-                    parts = end.split(":")
-                    end_time_obj = time(int(parts[0]), int(parts[1]))
-                except (ValueError, IndexError):
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_time_format",
-                    ) from None
-            else:
-                end_str = str(end)
-                end_time_obj = None
+            start_time = _parse_time_value(start)
+            end_time = _parse_time_value(end)
 
             # Validate that end time is after start time
-            if start_time_obj and end_time_obj and end_time_obj <= start_time_obj:
+            if end_time <= start_time:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="end_time_before_start_time",
                     translation_placeholders={
-                        "start_time": start_str,
-                        "end_time": end_str,
+                        "start_time": start_time.strftime("%H:%M"),
+                        "end_time": end_time.strftime("%H:%M"),
                     },
                 )
 
-            time_periods.append(f"{start_str}-{end_str}")
-            LOGGER.debug("Created time period: %s-%s", start_str, end_str)
+            time_slots.append(TimeSlot(start=start_time, end=end_time))
+            LOGGER.debug(
+                "Created time slot: %s-%s",
+                start_time.strftime("%H:%M"),
+                end_time.strftime("%H:%M"),
+            )
 
-    result = " ".join(time_periods) if time_periods else ""
-    LOGGER.debug("Final converted string: %s", result)
-    return result
+    LOGGER.debug("Created DaySchedule with %d slots", len(time_slots))
+    return DaySchedule(slots=time_slots)
 
 
 async def set_hot_water_schedule(service_call: ServiceCall) -> None:
@@ -154,54 +147,55 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
 
     client = entry.runtime_data.client
 
-    # Convert time slots to BSB-LAN format strings
-    monday_str = _convert_time_slots_to_string(service_call.data.get(ATTR_MONDAY_SLOTS))
-    tuesday_str = _convert_time_slots_to_string(
+    # Convert time slots to DaySchedule objects
+    monday = _convert_time_slots_to_day_schedule(
+        service_call.data.get(ATTR_MONDAY_SLOTS)
+    )
+    tuesday = _convert_time_slots_to_day_schedule(
         service_call.data.get(ATTR_TUESDAY_SLOTS)
     )
-    wednesday_str = _convert_time_slots_to_string(
+    wednesday = _convert_time_slots_to_day_schedule(
         service_call.data.get(ATTR_WEDNESDAY_SLOTS)
     )
-    thursday_str = _convert_time_slots_to_string(
+    thursday = _convert_time_slots_to_day_schedule(
         service_call.data.get(ATTR_THURSDAY_SLOTS)
     )
-    friday_str = _convert_time_slots_to_string(service_call.data.get(ATTR_FRIDAY_SLOTS))
-    saturday_str = _convert_time_slots_to_string(
+    friday = _convert_time_slots_to_day_schedule(
+        service_call.data.get(ATTR_FRIDAY_SLOTS)
+    )
+    saturday = _convert_time_slots_to_day_schedule(
         service_call.data.get(ATTR_SATURDAY_SLOTS)
     )
-    sunday_str = _convert_time_slots_to_string(service_call.data.get(ATTR_SUNDAY_SLOTS))
-    standard_values_str = _convert_time_slots_to_string(
-        service_call.data.get(ATTR_STANDARD_VALUES_SLOTS)
+    sunday = _convert_time_slots_to_day_schedule(
+        service_call.data.get(ATTR_SUNDAY_SLOTS)
     )
 
-    # Create the DHWTimeSwitchPrograms object
-    dhw_programs = DHWTimeSwitchPrograms(
-        monday=monday_str,
-        tuesday=tuesday_str,
-        wednesday=wednesday_str,
-        thursday=thursday_str,
-        friday=friday_str,
-        saturday=saturday_str,
-        sunday=sunday_str,
-        standard_values=standard_values_str,
+    # Create the DHWSchedule object
+    dhw_schedule = DHWSchedule(
+        monday=monday,
+        tuesday=tuesday,
+        wednesday=wednesday,
+        thursday=thursday,
+        friday=friday,
+        saturday=saturday,
+        sunday=sunday,
     )
 
     LOGGER.debug(
         "Setting hot water schedule - Monday: %s, Tuesday: %s, Wednesday: %s, "
-        "Thursday: %s, Friday: %s, Saturday: %s, Sunday: %s, Standard: %s",
-        monday_str,
-        tuesday_str,
-        wednesday_str,
-        thursday_str,
-        friday_str,
-        saturday_str,
-        sunday_str,
-        standard_values_str,
+        "Thursday: %s, Friday: %s, Saturday: %s, Sunday: %s",
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+        saturday,
+        sunday,
     )
 
     try:
         # Call the BSB-Lan API to set the schedule
-        await client.set_hot_water(dhw_time_programs=dhw_programs)
+        await client.set_hot_water_schedule(dhw_schedule)
     except BSBLANError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
