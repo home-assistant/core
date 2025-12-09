@@ -40,12 +40,5 @@
         "title": "Set up Hikvision device"
       }
     }
-  },
-  "entity": {
-    "binary_sensor": {
-      "event_sensor": {
-        "name": "{sensor_type} {channel}"
-      }
-    }
   }
 }

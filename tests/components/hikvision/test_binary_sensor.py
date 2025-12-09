@@ -22,14 +22,14 @@ async def test_binary_sensors_created(
     """Test binary sensors are created for each event type."""
     await setup_integration(hass, mock_config_entry)
 
-    # Check Motion sensor
-    state = hass.states.get("binary_sensor.front_camera_motion_1")
+    # Check Motion sensor (camera type doesn't include channel in name)
+    state = hass.states.get("binary_sensor.front_camera_motion")
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
 
     # Check Line Crossing sensor
-    state = hass.states.get("binary_sensor.front_camera_line_crossing_1")
+    state = hass.states.get("binary_sensor.front_camera_line_crossing")
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
@@ -44,7 +44,7 @@ async def test_binary_sensor_unique_id(
     """Test binary sensors have correct unique IDs."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_entry = entity_registry.async_get("binary_sensor.front_camera_motion_1")
+    entity_entry = entity_registry.async_get("binary_sensor.front_camera_motion")
     assert entity_entry is not None
     assert entity_entry.unique_id == f"{TEST_DEVICE_ID}_Motion_1"
 
@@ -75,7 +75,7 @@ async def test_binary_sensor_attributes(
     """Test binary sensor extra state attributes."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("binary_sensor.front_camera_motion_1")
+    state = hass.states.get("binary_sensor.front_camera_motion")
     assert state is not None
     assert ATTR_LAST_TRIP_TIME in state.attributes
     assert state.attributes[ATTR_LAST_TRIP_TIME] == "2024-01-01T00:00:00Z"
@@ -146,7 +146,7 @@ async def test_binary_sensor_state_on(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("binary_sensor.front_camera_motion_1")
+    state = hass.states.get("binary_sensor.front_camera_motion")
     assert state is not None
     assert state.state == "on"
 
@@ -163,6 +163,6 @@ async def test_binary_sensor_device_class_unknown(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("binary_sensor.front_camera_unknown_event_1")
+    state = hass.states.get("binary_sensor.front_camera_unknown_event")
     assert state is not None
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None

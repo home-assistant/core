@@ -72,12 +72,11 @@ class HikvisionBinarySensor(BinarySensorEntity):
         # Build unique ID
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Set translation key for entity name
-        self._attr_translation_key = "event_sensor"
-        self._attr_translation_placeholders = {
-            "sensor_type": sensor_type,
-            "channel": str(channel),
-        }
+        # Build entity name based on device type
+        if self._data.device_type == "NVR":
+            self._attr_name = f"{sensor_type} {channel}"
+        else:
+            self._attr_name = sensor_type
 
         # Device info for device registry
         self._attr_device_info = DeviceInfo(
