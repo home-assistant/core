@@ -79,7 +79,13 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
-        self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
+        speaker_settings = updated_device.speaker_settings
+        volume = (
+            speaker_settings.speaker_volume
+            if speaker_settings.speaker_volume is not None
+            else speaker_settings.volume
+        )
+        self._attr_volume_level = float(volume / 100)
 
         if (
             updated_device.talkback_stream is not None

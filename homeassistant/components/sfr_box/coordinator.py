@@ -16,6 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 _SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -63,5 +65,12 @@ class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             if data := await self._method(self.box):
                 return data
         except SFRBoxError as err:
-            raise UpdateFailed from err
-        raise UpdateFailed("No data received from SFR Box")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="no_data",
+        )
