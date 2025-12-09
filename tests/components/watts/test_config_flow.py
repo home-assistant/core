@@ -1,7 +1,6 @@
 """Test the Watts Vision config flow."""
 
-from types import MappingProxyType
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -11,11 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -53,21 +53,17 @@ async def test_full_flow(
         },
     )
 
-    with (
-        patch(
-            "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
-            return_value="user123",
-        ),
-        patch(
-            "homeassistant.components.watts.WattsVisionHubCoordinator.async_config_entry_first_refresh",
-            return_value=AsyncMock(),
-        ),
+    with patch(
+        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
+        return_value="user123",
     ):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result2.get("type") is FlowResultType.CREATE_ENTRY
-        assert result2.get("title") == "Watts Vision +"
-        assert "token" in result2.get("data", {})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
+        assert result.get("title") == "Watts Vision +"
+        assert "token" in result.get("data", {})
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+        assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "user123"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -103,12 +99,12 @@ async def test_invalid_token_flow(
     )
 
     with patch(
-        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
+        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
         return_value=None,
     ):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result2.get("type") is FlowResultType.ABORT
-        assert result2.get("reason") == "invalid_token"
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result.get("type") is FlowResultType.ABORT
+        assert result.get("reason") == "invalid_token"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -138,9 +134,9 @@ async def test_oauth_error(
         json={"error": "invalid_grant"},
     )
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "oauth_error"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "oauth_error"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -167,9 +163,9 @@ async def test_oauth_timeout(
 
     aioclient_mock.post(OAUTH2_TOKEN, exc=TimeoutError())
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "oauth_timeout"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "oauth_timeout"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -196,9 +192,9 @@ async def test_oauth_invalid_response(
 
     aioclient_mock.post(OAUTH2_TOKEN, status=500, text="invalid json")
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "oauth_failed"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "oauth_failed"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -208,23 +204,14 @@ async def test_unique_config_entry(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that duplicate config entries are not allowed."""
-    mock_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Watts Vision +",
-        data={"token": {"refresh_token": "mock-refresh-token"}},
-        source=config_entries.SOURCE_USER,
         unique_id="user123",
-        entry_id="test_entry",
-        options={},
-        discovery_keys=MappingProxyType({}),
-        subentries_data=MappingProxyType({}),
     )
-    await hass.config_entries.async_add(mock_entry)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
+        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
         return_value="user123",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -261,101 +248,16 @@ async def test_unique_config_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_unique_config_entry_full_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test that a full flow after an existing entry aborts due to uniqueness."""
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-        },
-    )
-
-    with (
-        patch(
-            "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
-            return_value="user123",
-        ),
-        patch(
-            "homeassistant.components.watts.WattsVisionHubCoordinator.async_config_entry_first_refresh",
-            return_value=AsyncMock(),
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result2.get("type") is FlowResultType.CREATE_ENTRY
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    result3 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result3.get("type") is FlowResultType.EXTERNAL_STEP
-
-    state2 = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result3["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-    resp2 = await client.get(f"/auth/external/callback?code=efgh&state={state2}")
-    assert resp2.status == 200
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token-2",
-            "access_token": "mock-access-token-2",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-        },
-    )
-
-    with patch(
-        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
-        return_value="user123",
-    ):
-        result4 = await hass.config_entries.flow.async_configure(result3["flow_id"])
-        assert result4.get("type") is FlowResultType.ABORT
-        assert result4.get("reason") == "already_configured"
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reauthentication flow."""
-    mock_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Watts Vision +",
+        unique_id="user123",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -366,16 +268,10 @@ async def test_reauth_flow(
                 "expires_at": 0,
             },
         },
-        source=config_entries.SOURCE_USER,
-        unique_id="user123",
-        entry_id="test_entry",
-        options={},
-        discovery_keys=MappingProxyType({}),
-        subentries_data=MappingProxyType({}),
     )
-    await hass.config_entries.async_add(mock_entry)
+    mock_config_entry.add_to_hass(hass)
 
-    mock_entry.async_start_reauth(hass)
+    mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -406,22 +302,16 @@ async def test_reauth_flow(
         },
     )
 
-    with (
-        patch(
-            "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
-            return_value="user123",
-        ),
-        patch(
-            "homeassistant.components.watts.WattsVisionHubCoordinator.async_config_entry_first_refresh",
-            return_value=AsyncMock(),
-        ),
+    with patch(
+        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
+        return_value="user123",
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
         assert result.get("type") is FlowResultType.ABORT
         assert result.get("reason") == "reauth_successful"
-        assert mock_entry.data["token"]["refresh_token"] == "new-refresh-token"
+        assert mock_config_entry.data["token"]["refresh_token"] == "new-refresh-token"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -431,11 +321,9 @@ async def test_reauth_wrong_account(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reauthentication with wrong account."""
-    mock_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Watts Vision +",
+        unique_id="user123",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -446,16 +334,10 @@ async def test_reauth_wrong_account(
                 "expires_at": 0,
             },
         },
-        source=config_entries.SOURCE_USER,
-        unique_id="user123",
-        entry_id="test_entry",
-        options={},
-        discovery_keys=MappingProxyType({}),
-        subentries_data=MappingProxyType({}),
     )
-    await hass.config_entries.async_add(mock_entry)
+    mock_config_entry.add_to_hass(hass)
 
-    mock_entry.async_start_reauth(hass)
+    mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -487,7 +369,7 @@ async def test_reauth_wrong_account(
     )
 
     with patch(
-        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
+        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
         return_value="different_user",
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

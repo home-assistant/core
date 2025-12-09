@@ -41,7 +41,7 @@ rules:
     comment: Integration does not support discovery.
   discovery:
     status: exempt
-    comment: Integration does not support discovery.
+    comment: Integration is a cloud service and does not support discovery.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: todo
@@ -58,9 +58,7 @@ rules:
     comment: No entity required translations.
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow:
-    status: exempt
-    comment: Integration uses OAuth2 authentication which is managed by application credentials.
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
 

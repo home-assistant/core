@@ -1,8 +1,8 @@
 """Test the Watts Vision integration initialization."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 import pytest
 from visionpluspython.exceptions import (
     WattsVisionAuthError,
@@ -12,12 +12,14 @@ from visionpluspython.exceptions import (
     WattsVisionTimeoutError,
 )
 
+from homeassistant.components.watts.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_entry_success(
@@ -39,75 +41,64 @@ async def test_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup with authentication failure."""
+    config_entry = MockConfigEntry(
+        domain="watts",
+        unique_id="test-device-id",
+        data={
+            "device_id": "test-device-id",
+            "auth_implementation": "watts",
+            "token": {
+                "access_token": "test-access-token",
+                "refresh_token": "test-refresh-token",
+                "expires_at": 0,  # Expired token to force refresh
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
 
-    mock_config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, status=401)
 
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ) as mock_get_implementation,
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
-        ) as mock_session,
-    ):
-        mock_implementation = AsyncMock()
-        mock_implementation.client_id = "test-client-id"
-        mock_implementation.client_secret = "test-client-secret"
-        mock_get_implementation.return_value = mock_implementation
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        # Raise 401 error
-        mock_session_instance = AsyncMock()
-        mock_session_instance.async_ensure_token_valid.side_effect = (
-            ClientResponseError(Mock(), Mock(), status=401, message="Unauthorized")
-        )
-        mock_session_instance.token = mock_config_entry.data["token"]
-        mock_session.return_value = mock_session_instance
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert result is False
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup when network is temporarily unavailable."""
+    config_entry = MockConfigEntry(
+        domain="watts",
+        unique_id="test-device-id",
+        data={
+            "device_id": "test-device-id",
+            "auth_implementation": "watts",
+            "token": {
+                "access_token": "test-access-token",
+                "refresh_token": "test-refresh-token",
+                "expires_at": 0,  # Expired token to force refresh
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
 
-    mock_config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, exc=ClientError("Connection timeout"))
 
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ) as mock_get_implementation,
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
-        ) as mock_session,
-    ):
-        mock_implementation = AsyncMock()
-        mock_implementation.client_id = "test-client-id"
-        mock_implementation.client_secret = "test-client-secret"
-        mock_get_implementation.return_value = mock_implementation
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        mock_session_instance = AsyncMock()
-        mock_session_instance.async_ensure_token_valid.side_effect = ClientError(
-            "Connection timeout"
-        )
-        mock_session_instance.token = mock_config_entry.data["token"]
-        mock_session.return_value = mock_session_instance
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert result is False
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_hub_coordinator_update_failed(
@@ -129,41 +120,34 @@ async def test_setup_entry_hub_coordinator_update_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_server_error_5xx(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup when server returns error."""
+    config_entry = MockConfigEntry(
+        domain="watts",
+        unique_id="test-device-id",
+        data={
+            "device_id": "test-device-id",
+            "auth_implementation": "watts",
+            "token": {
+                "access_token": "test-access-token",
+                "refresh_token": "test-refresh-token",
+                "expires_at": 0,  # Expired token to force refresh
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
 
-    mock_config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, status=500)
 
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ) as mock_get_implementation,
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
-        ) as mock_session,
-    ):
-        mock_implementation = AsyncMock()
-        mock_implementation.client_id = "test-client-id"
-        mock_implementation.client_secret = "test-client-secret"
-        mock_get_implementation.return_value = mock_implementation
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        mock_session_instance = AsyncMock()
-        mock_session_instance.async_ensure_token_valid.side_effect = (
-            ClientResponseError(
-                Mock(), Mock(), status=500, message="Internal Server Error"
-            )
-        )
-        mock_session_instance.token = mock_config_entry.data["token"]
-        mock_session.return_value = mock_session_instance
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert result is False
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(

@@ -64,19 +64,21 @@ def mock_watts_client() -> Generator[AsyncMock]:
         device_detail_data = load_json_object_fixture("device_detail.json", DOMAIN)
 
         discovered_devices = [
-            create_device_from_data(device_data) for device_data in discover_data
+            create_device_from_data(device_data)
+            for device_data in discover_data
+            if isinstance(device_data, dict)
         ]
         device_report = {
             device_id: create_device_from_data(device_data)
             for device_id, device_data in device_report_data.items()
+            if isinstance(device_data, dict)
         }
+        assert isinstance(device_detail_data, dict)
         device_detail = create_device_from_data(device_detail_data)
 
         client.discover_devices.return_value = discovered_devices
         client.get_devices_report.return_value = device_report
         client.get_device.return_value = device_detail
-        client.set_thermostat_temperature = AsyncMock()
-        client.set_thermostat_mode = AsyncMock()
 
         yield client
 
