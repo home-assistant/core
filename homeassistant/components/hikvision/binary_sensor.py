@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -31,7 +32,32 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import HikvisionConfigEntry
-from .const import DEFAULT_PORT, DEVICE_CLASS_MAP, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
+
+# Device class mapping for Hikvision event types
+DEVICE_CLASS_MAP: dict[str, BinarySensorDeviceClass | None] = {
+    "Motion": BinarySensorDeviceClass.MOTION,
+    "Line Crossing": BinarySensorDeviceClass.MOTION,
+    "Field Detection": BinarySensorDeviceClass.MOTION,
+    "Tamper Detection": BinarySensorDeviceClass.MOTION,
+    "Shelter Alarm": None,
+    "Disk Full": None,
+    "Disk Error": None,
+    "Net Interface Broken": BinarySensorDeviceClass.CONNECTIVITY,
+    "IP Conflict": BinarySensorDeviceClass.CONNECTIVITY,
+    "Illegal Access": None,
+    "Video Mismatch": None,
+    "Bad Video": None,
+    "PIR Alarm": BinarySensorDeviceClass.MOTION,
+    "Face Detection": BinarySensorDeviceClass.MOTION,
+    "Scene Change Detection": BinarySensorDeviceClass.MOTION,
+    "I/O": None,
+    "Unattended Baggage": BinarySensorDeviceClass.MOTION,
+    "Attended Baggage": BinarySensorDeviceClass.MOTION,
+    "Recording Failure": None,
+    "Exiting Region": BinarySensorDeviceClass.MOTION,
+    "Entering Region": BinarySensorDeviceClass.MOTION,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
