@@ -478,7 +478,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        # If the switch is off, we can ignore hvac mode.
+        # If the switch is off, hvac mode is off.
         switch_status: bool | None
         if (switch_status := self._read_wrapper(self._switch_wrapper)) is False:
             return HVACMode.OFF
