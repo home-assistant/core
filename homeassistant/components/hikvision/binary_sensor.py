@@ -89,7 +89,6 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
