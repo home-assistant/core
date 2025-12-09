@@ -15,8 +15,11 @@ from homeassistant.const import (
     STATE_OFF,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
