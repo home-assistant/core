@@ -94,26 +94,6 @@ def mock_hikcamera_config_flow() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_get_nvr_events() -> Generator[MagicMock]:
-    """Return a mocked get_nvr_events function."""
-    with patch(
-        "homeassistant.components.hikvision.get_nvr_events",
-    ) as mock_get_nvr:
-        # By default, return empty dict (no additional events)
-        mock_get_nvr.return_value = {}
-        yield mock_get_nvr
-
-
-@pytest.fixture
-def mock_inject_events() -> Generator[MagicMock]:
-    """Return a mocked inject_events_into_camera function."""
-    with patch(
-        "homeassistant.components.hikvision.inject_events_into_camera",
-    ) as mock_inject:
-        yield mock_inject
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_hikcamera: MagicMock
 ) -> MockConfigEntry:

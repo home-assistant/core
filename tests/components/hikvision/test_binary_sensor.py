@@ -130,8 +130,6 @@ async def test_binary_sensor_nvr_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
-    mock_get_nvr_events: MagicMock,
-    mock_inject_events: MagicMock,
 ) -> None:
     """Test binary sensor naming for NVR devices."""
     mock_hikcamera.return_value.get_type = "NVR"
