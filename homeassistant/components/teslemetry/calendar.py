@@ -84,12 +84,12 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
             for period_def in period_group.get("periods", []):
                 # Check if today is within the period's day of week range
                 day_of_week = now.weekday()  # Monday is 0, Sunday is 6
-                from_day = period_def.get("fromDayOfWeek", 0)
-                to_day = period_def.get("toDayOfWeek", 6)
+                from_day = period_def.get("fromDayOfWeek", 0)  # Default is Monday
+                to_day = period_def.get("toDayOfWeek", 6)  # Default is Sunday
                 if from_day > day_of_week > to_day:
                     continue
 
-                # Calculate start and end times for today
+                # Calculate start and end times for today (default is midnight)
                 from_hour = period_def.get("fromHour", 0) % 24
                 from_minute = period_def.get("fromMinute", 0) % 60
                 to_hour = period_def.get("toHour", 0) % 24
@@ -160,12 +160,12 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
             for period_name, period_group in tou_periods.items():
                 for period_def in period_group.get("periods", []):
                     # Check if current day falls within the period's day range
-                    from_day = period_def.get("fromDayOfWeek", 0)
-                    to_day = period_def.get("toDayOfWeek", 6)
+                    from_day = period_def.get("fromDayOfWeek", 0)  # Default is Monday
+                    to_day = period_def.get("toDayOfWeek", 6)  # Default is Sunday
                     if from_day > day_of_week > to_day:
                         continue
 
-                    # Extract period timing for current day
+                    # Extract period timing for current day (default is midnight)
                     from_hour = period_def.get("fromHour", 0) % 24
                     from_minute = period_def.get("fromMinute", 0) % 60
                     to_hour = period_def.get("toHour", 0) % 24
