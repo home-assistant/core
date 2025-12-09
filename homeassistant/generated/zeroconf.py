@@ -948,11 +948,6 @@ ZEROCONF = {
             "domain": "vegehub",
         },
     ],
-    "_vitrea._tcp.local.": [
-        {
-            "domain": "vitrea",
-        },
-    ],
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",

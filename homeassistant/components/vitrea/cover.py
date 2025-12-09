@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover entities from a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     # Add initial entities discovered during setup
     # entities = []

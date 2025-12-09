@@ -131,17 +131,9 @@ class VitreaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Set up the coordinator."""
         try:
             await self.client.connect()
-        except Exception as err:
+        except (ConnectionError, TimeoutError, OSError) as err:
             _LOGGER.error("Failed to setup Vitrea coordinator: %s", err)
             raise
-
-    async def async_platforms_ready(self) -> None:
-        """Called after platforms have completed setup and attached callbacks."""
-        try:
-            # Now request status to discover entities
-            await self.client.status_request()
-        except (ConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.error("Failed to request initial status: %s", err)
 
     async def async_shutdown(self) -> None:
         """Clean up the coordinator."""

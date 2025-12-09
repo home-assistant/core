@@ -21,11 +21,6 @@ rules:
   unique-config-entry: done
 
   # Silver level rules
-  entity-unavailable: done
-  parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: Integration uses local push communication, no authentication credentials that can expire.
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
@@ -34,6 +29,11 @@ rules:
   docs-installation-parameters:
     status: exempt
     comment: Integration uses standard Home Assistant installation via UI configuration flow.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration uses local push communication, no authentication credentials that can expire.
   test-coverage: done

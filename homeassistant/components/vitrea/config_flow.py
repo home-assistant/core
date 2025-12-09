@@ -1,33 +1,26 @@
-"""Vitrea config flow for UI setup."""
+"""Config flow for Vitrea integration."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 from vitreaclient import VitreaClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class VitreaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VitreaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vitrea."""
 
     VERSION = 1
     MINOR_VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._errors: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -39,47 +32,77 @@ class VitreaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            # Validate host
-            if not host or host.strip() == "":
-                errors["host"] = "invalid_host"
+            # Set unique_id to prevent duplicates based on host
+            await self.async_set_unique_id(host)
+            self._abort_if_unique_id_configured()
 
-            if not errors:
-                # Always use _async_test_connection for patchable connection test
-                try:
-                    await self._async_test_connection(host, port)
-                except ConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception:  # noqa: BLE001
-                    errors["base"] = "unknown"
-                else:
-                    await self.async_set_unique_id(f"vitrea_{host}_{port}")
-                    self._abort_if_unique_id_configured()
+            try:
+                # Test connection
+                client = VitreaClient(host, port)
+                await client.connect()
+                await client.disconnect()
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except TimeoutError:
+                errors["base"] = "timeout_connect"
+            except Exception:  # Allowed in config flow
+                _LOGGER.exception("Unexpected exception during Vitrea setup")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=f"Vitrea ({host})",
+                    data=user_input,
+                )
 
-                    return self.async_create_entry(
-                        title=f"Vitrea {host}:{port}", data=user_input
-                    )
-
-        # Always return a FlowResult, even after errors
-        data_schema = self._get_schema()
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                }
+            ),
             errors=errors,
         )
 
-    def _get_schema(self) -> vol.Schema:
-        """Get the schema for the user step."""
-        return vol.Schema(
-            {
-                vol.Required(CONF_HOST, default="192.168.1.136"): cv.string,
-                vol.Required(CONF_PORT, default=11502): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=65535)
-                ),
-            }
-        )
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
 
-    async def _async_test_connection(self, host: str, port: int) -> None:
-        """Test connection to the Vitrea device using VitreaClient with a timeout."""
-        client = VitreaClient(host, port)
-        # Use a timeout to avoid hanging the config flow on unresponsive devices
-        await asyncio.wait_for(client.connect(), timeout=5)
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+
+            try:
+                # Test connection
+                client = VitreaClient(host, port)
+                await client.connect()
+                await client.disconnect()
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except TimeoutError:
+                errors["base"] = "timeout_connect"
+            except Exception:  # Allowed in config flow
+                _LOGGER.exception("Unexpected exception during Vitrea reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str,
+                    vol.Optional(
+                        CONF_PORT, default=entry.data.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                }
+            ),
+            errors=errors,
+        )

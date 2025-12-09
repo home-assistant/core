@@ -55,10 +55,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         assert result2["type"] == FlowResultType.CREATE_ENTRY, (
             f"Unexpected result: {result2}"
         )
-        assert (
-            result2["title"]
-            == f"Vitrea {TEST_USER_INPUT[CONF_HOST]}:{TEST_USER_INPUT[CONF_PORT]}"
-        )
+        assert result2["title"] == f"Vitrea ({TEST_USER_INPUT[CONF_HOST]})"
         assert result2["data"] == TEST_USER_INPUT
 
 
@@ -87,7 +84,7 @@ async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_USER_INPUT,
-        unique_id=f"vitrea_{TEST_USER_INPUT[CONF_HOST]}_{TEST_USER_INPUT[CONF_PORT]}",
+        unique_id=TEST_USER_INPUT[CONF_HOST],  # Use host as unique_id
     )
     entry.add_to_hass(hass)
 

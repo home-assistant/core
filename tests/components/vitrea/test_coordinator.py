@@ -125,28 +125,6 @@ async def test_coordinator_async_setup_error(
         await coordinator.async_setup()
 
 
-async def test_coordinator_async_platforms_ready_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vitrea_client: MagicMock,
-) -> None:
-    """Test coordinator handles error during platforms ready."""
-    coordinator = VitreaCoordinator(hass, mock_vitrea_client, mock_config_entry)
-
-    # Make status_request raise an error
-    mock_vitrea_client.status_request.side_effect = ConnectionError(
-        "Status request failed"
-    )
-
-    # Should log error but not raise
-    with patch("homeassistant.components.vitrea.coordinator._LOGGER") as mock_logger:
-        await coordinator.async_platforms_ready()
-        mock_logger.error.assert_called_once_with(
-            "Failed to request initial status: %s",
-            mock_vitrea_client.status_request.side_effect,
-        )
-
-
 async def test_coordinator_async_shutdown_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

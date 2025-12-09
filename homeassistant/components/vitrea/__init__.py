@@ -8,10 +8,10 @@ from vitreaclient import VitreaClient
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import VitreaCoordinator
-from .models import VitreaConfigEntry, VitreaRuntimeData
+from .models import VitreaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,15 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
     coordinator = VitreaCoordinator(hass, client, entry)
     try:
         await coordinator.async_setup()
-        # Initialize runtime data with the client and coordinator
-        entry.runtime_data = VitreaRuntimeData(
-            client=client, coordinator=coordinator, hass=hass
-        )
+        # Store coordinator as runtime data
+        entry.runtime_data = coordinator
 
-        # Set up platforms
+        # Set up platforms (this registers the entity add callbacks)
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-        # After platforms are set up, trigger status request
-        await coordinator.async_platforms_ready()
+
+        # Perform first refresh to discover entities
+        # This ensures callbacks are attached before status request is sent
+        # triggers the coordinator to fetch initial data (with _async_update_data)
+        await coordinator.async_config_entry_first_refresh()
+
         _LOGGER.info("Vitrea integration setup complete")
 
     except ConnectionError as ex:
@@ -51,10 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"Timeout connecting to Vitrea at {host}:{port}"
         ) from ex
-    except Exception as ex:
-        # Unexpected error during setup
-        _LOGGER.exception("Unexpected error setting up Vitrea integration")
-        raise ConfigEntryError(f"Unknown error connecting to Vitrea: {ex}") from ex
 
     return True
 
@@ -65,6 +63,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> b
 
     # Clean up coordinator
     if unload_ok and hasattr(entry, "runtime_data"):
-        await entry.runtime_data.coordinator.async_shutdown()
+        await entry.runtime_data.async_shutdown()
 
     return unload_ok

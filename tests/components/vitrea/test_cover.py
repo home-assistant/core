@@ -16,9 +16,9 @@ async def test_cover_entities(
     init_integration: MockConfigEntry,
     mock_vitrea_client: MagicMock,
 ) -> None:
-    """Test cover entities are created and handled properly."""
+    """Test cover entities are created correctly."""
     # Get the coordinator from runtime data
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator = init_integration.runtime_data
 
     # Verify the coordinator is set up properly
     assert coordinator is not None
@@ -278,7 +278,7 @@ async def test_cover_position_no_coordinator_data(
     assert entity is not None
 
     # Clear the coordinator data
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator = init_integration.runtime_data
     coordinator.data = None
 
     # Access current_cover_position - should return None (line 94)
@@ -303,7 +303,7 @@ async def test_cover_position_entity_not_in_data(
     entity = hass.data["entity_components"]["cover"].get_entity(entity_id)
     assert entity is not None
 
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator = init_integration.runtime_data
 
     # Set data but remove our entity
     coordinator.data = {"99_99": {"position": 50}}

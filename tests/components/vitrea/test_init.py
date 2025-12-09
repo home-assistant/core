@@ -27,10 +27,11 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_vitrea_client.connect.assert_called_once()
 
-    # Verify runtime data is set up correctly
+    # Verify runtime data is set up correctly (coordinator is stored directly)
     assert hasattr(mock_config_entry, "runtime_data")
-    assert mock_config_entry.runtime_data.client == mock_vitrea_client
-    assert mock_config_entry.runtime_data.coordinator is not None
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator is not None
+    assert coordinator.client == mock_vitrea_client
 
     # Verify only cover platform is loaded (simplified integration)
     assert len(hass.config_entries.async_entries("vitrea")) == 1
