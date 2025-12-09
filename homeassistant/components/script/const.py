@@ -7,6 +7,7 @@ DOMAIN = "script"
 ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
+ATTR_WAIT_FOR_START = "wait_for_start"
 
 CONF_ADVANCED = "advanced"
 CONF_EXAMPLE = "example"
