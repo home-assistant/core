@@ -696,7 +696,6 @@ debugpy==1.8.17
 # homeassistant.components.ecovacs
 deebot-client==17.0.0
 
-# homeassistant.components.hikvision
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
