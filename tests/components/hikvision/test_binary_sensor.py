@@ -1,15 +1,33 @@
 """Test Hikvision binary sensors."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_LAST_TRIP_TIME, STATE_OFF
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_LAST_TRIP_TIME,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME
+from .conftest import (
+    TEST_DEVICE_ID,
+    TEST_DEVICE_NAME,
+    TEST_HOST,
+    TEST_PASSWORD,
+    TEST_PORT,
+    TEST_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -166,3 +184,111 @@ async def test_binary_sensor_device_class_unknown(
     state = hass.states.get("binary_sensor.front_camera_unknown_event")
     assert state is not None
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+
+async def test_yaml_import_creates_deprecation_issue(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test YAML import creates deprecation issue."""
+    with patch(
+        "homeassistant.components.hikvision.config_flow.HikCamera",
+        autospec=True,
+    ) as hikcamera_mock:
+        camera = hikcamera_mock.return_value
+        camera.get_id = TEST_DEVICE_ID
+        camera.get_name = TEST_DEVICE_NAME
+
+        await async_setup_component(
+            hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": DOMAIN,
+                    CONF_HOST: TEST_HOST,
+                    CONF_PORT: TEST_PORT,
+                    CONF_USERNAME: TEST_USERNAME,
+                    CONF_PASSWORD: TEST_PASSWORD,
+                    CONF_SSL: False,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Check that deprecation issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_yaml_import_creates_failure_issue_on_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML import creates failure issue when import fails."""
+    with patch(
+        "homeassistant.components.hikvision.config_flow.HikCamera",
+        autospec=True,
+    ) as hikcamera_mock:
+        hikcamera_mock.side_effect = Exception("Connection failed")
+
+        await async_setup_component(
+            hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": DOMAIN,
+                    CONF_HOST: TEST_HOST,
+                    CONF_PORT: TEST_PORT,
+                    CONF_USERNAME: TEST_USERNAME,
+                    CONF_PASSWORD: TEST_PASSWORD,
+                    CONF_SSL: False,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Check that failure issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_yaml_import_no_issue_on_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test YAML import creates deprecation issue even when already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.hikvision.config_flow.HikCamera",
+        autospec=True,
+    ) as hikcamera_mock:
+        camera = hikcamera_mock.return_value
+        camera.get_id = TEST_DEVICE_ID
+        camera.get_name = TEST_DEVICE_NAME
+
+        await async_setup_component(
+            hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": DOMAIN,
+                    CONF_HOST: TEST_HOST,
+                    CONF_PORT: TEST_PORT,
+                    CONF_USERNAME: TEST_USERNAME,
+                    CONF_PASSWORD: TEST_PASSWORD,
+                    CONF_SSL: False,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Check that deprecation issue was created (not a failure issue)
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert issue is not None

@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -315,3 +315,129 @@ async def test_recovery_from_error(
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_import_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera_config_flow: MagicMock,
+) -> None:
+    """Test YAML import flow creates config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_DEVICE_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_SSL: False,
+    }
+
+
+async def test_import_flow_with_defaults(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera_config_flow: MagicMock,
+) -> None:
+    """Test YAML import flow uses default values."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Default port (80) and SSL (False) should be used
+    assert result["data"][CONF_PORT] == 80
+    assert result["data"][CONF_SSL] is False
+
+
+async def test_import_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera_config_flow: MagicMock,
+) -> None:
+    """Test YAML import flow aborts on connection error."""
+    mock_hikcamera_config_flow.side_effect = Exception("Connection failed")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_no_device_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera_config_flow: MagicMock,
+) -> None:
+    """Test YAML import flow aborts when device ID is unavailable."""
+    mock_hikcamera_config_flow.return_value.get_id = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test YAML import flow aborts when device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
