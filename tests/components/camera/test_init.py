@@ -352,15 +352,17 @@ async def test_websocket_camera_stream(
     await async_setup_component(hass, "camera", {})
 
     with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-            return_value="http://home.assistant/playlist.m3u8",
-        ) as mock_stream_view_url,
+        patch("homeassistant.components.camera.create_stream") as mock_create_stream,
         patch(
             "homeassistant.components.demo.camera.DemoCamera.stream_source",
             return_value="http://example.com",
         ),
     ):
+        mock_stream = Mock()
+        mock_stream.endpoint_url.return_value = "http://home.assistant/playlist.m3u8"
+        mock_stream.start = AsyncMock()
+        mock_create_stream.return_value = mock_stream
+
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
         await client.send_json(
@@ -369,7 +371,7 @@ async def test_websocket_camera_stream(
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_stream_view_url.called
+        assert mock_create_stream.called
         assert msg["id"] == 6
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
