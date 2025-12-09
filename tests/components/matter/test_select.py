@@ -320,37 +320,38 @@ async def test_door_lock_operating_mode_select(
     entity_id = "select.secuyou_smart_lock_operating_mode"
     state = hass.states.get(entity_id)
     assert state, "Missing operating mode select entity"
-    # Options should include mandatory modes (Normal=bit 0, NoRemoteLockUnlock=bit 3)
-    # plus any optional modes set in the bitmap (bits 1 and 4 = vacation and passage)
+    # According to the spec, bit=0 means supported and bit=1 means not supported.
+    # The fixture bitmap clears bits 0, 2, and 3, so the supported modes are
+    # Normal, Privacy, and NoRemoteLockUnlock; the other bits are set (not
+    # supported).
     assert set(state.attributes["options"]) == {
         "normal",
-        "vacation",
+        "privacy",
         "no_remote_lock_unlock",
-        "passage",
     }
 
     # Dynamically obtain ids instead of hardcoding
     door_lock_cluster_id = clusters.DoorLock.Attributes.OperatingMode.cluster_id
     operating_mode_attr_id = clusters.DoorLock.Attributes.OperatingMode.attribute_id
 
-    # Change OperatingMode attribute on the node to 'vacation'
+    # Change OperatingMode attribute on the node to a supported mode ('privacy')
     set_node_attribute(
         matter_node,
         1,
         door_lock_cluster_id,
         operating_mode_attr_id,
-        clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+        clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy,
     )
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
-    assert state.state == "vacation"
+    assert state.state == "privacy"
 
-    # Select another option (passage) via service to validate mapping
+    # Select another supported option (NoRemoteLockUnlock) via service to validate mapping
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": entity_id, "option": "passage"},
+        {"entity_id": entity_id, "option": "no_remote_lock_unlock"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -360,5 +361,5 @@ async def test_door_lock_operating_mode_select(
             endpoint_id=1,
             attribute=clusters.DoorLock.Attributes.OperatingMode,
         ),
-        value=clusters.DoorLock.Enums.OperatingModeEnum.kPassage,
+        value=clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock,
     )

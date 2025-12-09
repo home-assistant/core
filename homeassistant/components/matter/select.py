@@ -197,17 +197,18 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
         )
 
         # Convert bitmap to list of supported mode values
-        # Mandatory modes are bits 0 (Normal) and 3 (NoRemoteLockUnlock)
-        # If a bit is not set in the bitmap, it means the mode is NOT supported
-        # However, mandatory modes should always be included
+        # NOTE: The Matter spec inverts the usual meaning: bit=0 means supported,
+        # bit=1 means not supported, undefined bits must be 1. Mandatory modes are
+        # bits 0 (Normal) and 3 (NoRemoteLockUnlock).
         if supported_modes_bitmap is not None:
-            supported_modes = []
-            for bit_position in range(5):  # Operating modes are bits 0-4
-                is_set = bool(supported_modes_bitmap & (1 << bit_position))
-                is_mandatory = bit_position in (0, 3)  # Normal and NoRemoteLockUnlock
-                # Include if set OR if mandatory
-                if is_set or is_mandatory:
-                    supported_modes.append(bit_position)
+            supported_modes = [
+                bit_position
+                for bit_position in range(5)  # Operating modes are bits 0-4
+                if not supported_modes_bitmap & (1 << bit_position)
+            ]
+            # Fall back to mandatory modes if the bitmap yields no supported entries
+            if not supported_modes:
+                supported_modes = [0, 3]
         else:
             # If bitmap not available, include all mandatory modes
             supported_modes = [0, 3]
