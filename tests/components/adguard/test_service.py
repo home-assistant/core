@@ -40,25 +40,6 @@ async def test_service_registration(
     assert SERVICE_REMOVE_URL in services
 
 
-async def test_service_unregistration(
-    hass: HomeAssistant,
-    mock_adguard: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the adguard services be unregistered with unloading last entry."""
-    with patch("homeassistant.components.adguard.PLATFORMS", []):
-        await setup_integration(hass, mock_config_entry, mock_adguard)
-
-    services = hass.services.async_services_for_domain(DOMAIN)
-    assert len(services) == 5
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    services = hass.services.async_services_for_domain(DOMAIN)
-    assert len(services) == 0
-
-
 @pytest.mark.parametrize(
     ("service", "service_call_data", "call_assertion"),
     [

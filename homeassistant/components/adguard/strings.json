@@ -76,6 +76,11 @@
       }
     }
   },
+  "exceptions": {
+    "single_loaded_instance_only": {
+      "message": "Could not identify AdGuard Home instance to use. Only a single loaded instance is supported for this service."
+    }
+  },
   "services": {
     "add_url": {
       "description": "Adds a new filter subscription to AdGuard Home.",
