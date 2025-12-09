@@ -233,3 +233,68 @@ async def test_yaml_import_with_name(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].title == "Custom Camera Name"
+
+
+async def test_yaml_import_abort_creates_issue(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import creates issue when import is aborted."""
+    mock_hikcamera.return_value.get_id.return_value = None
+
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": DOMAIN,
+                CONF_HOST: TEST_HOST,
+                CONF_PORT: TEST_PORT,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Check that import failure issue was created
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_binary_sensor_update_callback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test binary sensor state updates via callback."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.front_camera_motion")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Simulate state change via callback
+    mock_hikcamera.return_value.fetch_attributes.return_value = (
+        True,
+        None,
+        None,
+        "2024-01-01T12:00:00Z",
+    )
+
+    # Get the registered callback and call it
+    add_callback_call = mock_hikcamera.return_value.add_update_callback.call_args_list[
+        0
+    ]
+    callback_func = add_callback_call[0][0]
+    callback_func("motion detected")
+
+    # Verify state was updated
+    state = hass.states.get("binary_sensor.front_camera_motion")
+    assert state is not None
+    assert state.state == "on"

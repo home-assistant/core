@@ -24,12 +24,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -209,7 +204,6 @@ class HikvisionBinarySensor(BinarySensorEntity):
 
         # Callback ID for pyhik
         self._callback_id = f"{self._data.device_id}.{sensor_type}.{channel}"
-        self._cancel_timer: CALLBACK_TYPE | None = None
 
     def _get_sensor_attributes(self) -> tuple[bool, Any, Any, Any]:
         """Get sensor attributes from camera."""
@@ -232,17 +226,6 @@ class HikvisionBinarySensor(BinarySensorEntity):
 
         # Register callback with pyhik
         self._camera.add_update_callback(self._update_callback, self._callback_id)
-
-        # Register cleanup
-        self.async_on_remove(self._remove_callback)
-
-    @callback
-    def _remove_callback(self) -> None:
-        """Remove the callback from pyhik."""
-        # Cancel any pending timer
-        if self._cancel_timer is not None:
-            self._cancel_timer()
-            self._cancel_timer = None
 
     @callback
     def _update_callback(self, msg: str) -> None:

@@ -263,6 +263,30 @@ async def test_import_flow_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_import_flow_no_device_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test YAML import flow aborts when device_id is None."""
+    mock_hikcamera.return_value.get_id.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_import_flow_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
