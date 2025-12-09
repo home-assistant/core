@@ -58,10 +58,16 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_hikcamera() -> Generator[MagicMock]:
     """Return a mocked HikCamera."""
-    with patch(
-        "homeassistant.components.hikvision.HikCamera",
-        autospec=True,
-    ) as hikcamera_mock:
+    with (
+        patch(
+            "homeassistant.components.hikvision.HikCamera",
+            autospec=True,
+        ) as hikcamera_mock,
+        patch(
+            "homeassistant.components.hikvision.config_flow.HikCamera",
+            new=hikcamera_mock,
+        ),
+    ):
         camera = hikcamera_mock.return_value
         camera.get_id.return_value = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
@@ -70,26 +76,12 @@ def mock_hikcamera() -> Generator[MagicMock]:
             "Motion": [(True, 1)],
             "Line Crossing": [(False, 1)],
         }
-        camera.start_stream = MagicMock()
-        camera.disconnect = MagicMock()
-        camera.add_update_callback = MagicMock()
-        camera.fetch_attributes = MagicMock(
-            return_value=(False, None, None, "2024-01-01T00:00:00Z")
+        camera.fetch_attributes.return_value = (
+            False,
+            None,
+            None,
+            "2024-01-01T00:00:00Z",
         )
-        yield hikcamera_mock
-
-
-@pytest.fixture
-def mock_hikcamera_config_flow() -> Generator[MagicMock]:
-    """Return a mocked HikCamera for config flow."""
-    with patch(
-        "homeassistant.components.hikvision.config_flow.HikCamera",
-        autospec=True,
-    ) as hikcamera_mock:
-        camera = hikcamera_mock.return_value
-        camera.get_id.return_value = TEST_DEVICE_ID
-        camera.get_name = TEST_DEVICE_NAME
-        camera.get_type = "Camera"
         yield hikcamera_mock
 
 
