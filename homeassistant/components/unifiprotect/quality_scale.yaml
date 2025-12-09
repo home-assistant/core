@@ -6,9 +6,7 @@ rules:
     comment: Integration is push-based using WebSockets (iot_class local_push).
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: done
-    comment: Some tests could be improved to end in create_entry or abort.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -34,7 +32,7 @@ rules:
   parallel-updates: done
   reauthentication-flow: done
   test-coverage:
-    status: done
+    status: todo
     comment: Diagnostics tests could use snapshot testing.
 
   # Gold
@@ -54,11 +52,11 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations:
-    status: done
+    status: todo
     comment: Some entity names could be improved for clarity.
   exception-translations: done
   icon-translations:
-    status: done
+    status: todo
     comment: Icons in binary_sensor.py could be migrated to icons.json.
   reconfiguration-flow: done
   repair-issues: done
@@ -68,5 +66,5 @@ rules:
   async-dependency: done
   inject-websession: done
   strict-typing:
-    status: done
+    status: todo
     comment: Could use HassKey for typed hass.data access.
