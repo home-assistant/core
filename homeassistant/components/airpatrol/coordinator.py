@@ -87,7 +87,6 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, A
 
     async def _setup_client(self) -> None:
         """Set up the AirPatrol API client from stored access_token."""
-        # Assuming that access token and unique_id has already been set in the config step.
         session = async_get_clientsession(self.hass)
         api = AirPatrolAPI(
             session,
