@@ -387,7 +387,7 @@ async def test_dyad_device_fails_setup(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    # The current behavior is that we do not add the Zeo device if it fails to setup
+    # The current behavior is that we do not add the Dyad device if it fails to setup
     found_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
     )
