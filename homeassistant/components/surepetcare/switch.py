@@ -84,15 +84,6 @@ class SurePetcareIndoorModeSwitch(SurePetcareEntity, SwitchEntity):
         """Return true if entity is available."""
         return self._available and super().available
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "pet_name": self._pet.name,
-            "flap_name": self._flap.name,
-            "profile_id": self._profile_id,
-        }
-
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state from the flap's tag data."""

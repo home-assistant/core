@@ -37,10 +37,7 @@
 # name: test_switches[switch.cat_flap_pet_indoor_only_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'flap_name': 'Cat Flap',
       'friendly_name': 'Cat flap Pet indoor only mode',
-      'pet_name': 'Pet',
-      'profile_id': 3,
     }),
     'context': <ANY>,
     'entity_id': 'switch.cat_flap_pet_indoor_only_mode',
@@ -88,10 +85,7 @@
 # name: test_switches[switch.pet_flap_pet_indoor_only_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'flap_name': 'Pet Flap',
       'friendly_name': 'Pet flap Pet indoor only mode',
-      'pet_name': 'Pet',
-      'profile_id': 2,
     }),
     'context': <ANY>,
     'entity_id': 'switch.pet_flap_pet_indoor_only_mode',
