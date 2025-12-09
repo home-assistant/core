@@ -8,14 +8,9 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_SWITCHABLE_OUTPUT_NUMBER,
-    SIGNAL_OUTPUTS_UPDATED,
-    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-)
+from .const import CONF_SWITCHABLE_OUTPUT_NUMBER, SUBENTRY_TYPE_SWITCHABLE_OUTPUT
 from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
 from .entity import SatelIntegraEntity
 
@@ -72,28 +67,13 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
         self._code = code
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        self._attr_is_on = (
-            self._device_number in self.coordinator.controller.violated_outputs
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
-            )
-        )
+        self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
 
     @callback
-    def _devices_updated(self, outputs: dict[int, int]) -> None:
-        """Update switch state, if needed."""
-        if self._device_number in outputs:
-            new_state = outputs[self._device_number] == 1
-            if new_state != self._attr_is_on:
-                self._attr_is_on = new_state
-                self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

@@ -1,5 +1,6 @@
 """Coordinator for Satel Integra."""
 
+from dataclasses import dataclass
 import logging
 
 from satel_integra.satel_integra import AsyncSatel
@@ -18,9 +19,7 @@ from .const import (
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
     DOMAIN,
-    SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_PANEL_MESSAGE,
-    SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
@@ -33,10 +32,16 @@ type SatelConfigEntry = ConfigEntry[SatelIntegraCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-class SatelIntegraCoordinator(DataUpdateCoordinator[None]):
-    """Coordinator for Satel Integra."""
+@dataclass
+class SatelIntegraData:
+    """Class for Satel Integra data."""
 
-    # _hw_version: str
+    zones: dict[int, int]
+    outputs: dict[int, int]
+
+
+class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
+    """Coordinator for Satel Integra."""
 
     controller: AsyncSatel
 
@@ -49,6 +54,8 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             config_entry=entry,
         )
+
+        self.data = SatelIntegraData(zones={}, outputs={})
 
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
@@ -96,11 +103,8 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[None]):
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, entry.entry_id)},
-            # model=device,
-            # name=entry.get,
             name="Satel Integra",
             manufacturer="Satel",
-            # hw_version=self._hw_version,
         )
 
     @callback
@@ -110,16 +114,24 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[None]):
         async_dispatcher_send(self.hass, SIGNAL_PANEL_MESSAGE)
 
     @callback
-    def zones_update_callback(self, status):
+    def zones_update_callback(self, status: dict[str, dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback, status: %s", status)
-        async_dispatcher_send(self.hass, SIGNAL_ZONES_UPDATED, status[ZONES])
+
+        data = self.data
+        data.zones = status[ZONES]
+
+        self.async_set_updated_data(data)
 
     @callback
-    def outputs_update_callback(self, status):
+    def outputs_update_callback(self, status: dict[str, dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Outputs updated callback , status: %s", status)
-        async_dispatcher_send(self.hass, SIGNAL_OUTPUTS_UPDATED, status["outputs"])
+
+        data = self.data
+        data.outputs = status["outputs"]
+
+        self.async_set_updated_data(data)
 
     async def start_controller(self) -> None:
         """Start controller connection."""
