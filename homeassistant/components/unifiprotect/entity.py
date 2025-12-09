@@ -438,7 +438,7 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectSetableKeysMixin(ProtectEntityDescription[T]):
+class ProtectSettableKeysMixin(ProtectEntityDescription[T]):
     """Mixin for settable values."""
 
     ufp_set_method: str | None = None
