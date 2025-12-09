@@ -123,16 +123,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "airpatrol": {
-      "name": "AirPatrol",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     "airobot": {
       "name": "Airobot",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "airpatrol": {
+      "name": "AirPatrol",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "airq": {
       "name": "air-Q",
