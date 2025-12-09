@@ -12,7 +12,10 @@ from .const import DOMAIN, LOGGER
 
 
 def flatten(
-    data: dict[str, Any], parent: str | None = None, skip_keys: list[str] | None = None
+    data: dict[str, Any],
+    parent: str | None = None,
+    *,
+    skip_keys: list[str] | None = None,
 ) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
@@ -21,7 +24,7 @@ def flatten(
         if parent:
             key = f"{parent}_{key}"
         if isinstance(value, dict) and not skip:
-            result.update(flatten(value, key, skip_keys))
+            result.update(flatten(value, key, skip_keys=skip_keys))
         else:
             result[key] = value
     return result
