@@ -195,7 +195,7 @@ def matter_epoch_seconds_to_utc(x: int | None) -> datetime | None:
 
     Returns None for non-positive or None values (represents unknown/absent).
     """
-    if not x or x <= 0:
+    if x is None or x <= 0:
         return None
     return dt_util.utc_from_timestamp(x + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
 
@@ -206,7 +206,7 @@ def matter_epoch_microseconds_to_utc(x: int | None) -> datetime | None:
     The value is in microseconds; convert to seconds before applying offset.
     Returns None for non-positive or None values.
     """
-    if not x or x <= 0:
+    if x is None or x <= 0:
         return None
     seconds = x // 1_000_000
     return dt_util.utc_from_timestamp(seconds + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
