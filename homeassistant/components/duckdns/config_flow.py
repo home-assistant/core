@@ -16,8 +16,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import _update_duckdns
 from .const import DOMAIN
+from .helpers import update_duckdns
 from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_DOMAIN: user_input[CONF_DOMAIN]})
             session = async_get_clientsession(self.hass)
             try:
-                if not await _update_duckdns(
+                if not await update_duckdns(
                     session,
                     user_input[CONF_DOMAIN],
                     user_input[CONF_ACCESS_TOKEN],
@@ -93,7 +93,7 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             try:
-                if not await _update_duckdns(
+                if not await update_duckdns(
                     session,
                     entry.data[CONF_DOMAIN],
                     user_input[CONF_ACCESS_TOKEN],
