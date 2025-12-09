@@ -15,7 +15,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
+    CONF_CUSTOMIZE,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -61,13 +63,24 @@ DEVICE_CLASS_MAP: dict[str, BinarySensorDeviceClass | None] = {
 
 _LOGGER = logging.getLogger(__name__)
 
+CUSTOMIZE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("ignored", default=False): cv.boolean,
+        vol.Optional("delay", default=0): cv.positive_int,
+    }
+)
+
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema(
+            {cv.string: CUSTOMIZE_SCHEMA}
+        ),
     }
 )
 
