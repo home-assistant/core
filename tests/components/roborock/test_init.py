@@ -2,7 +2,7 @@
 
 import pathlib
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from roborock import (
@@ -26,13 +26,41 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_unload_entry(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
-    """Test unloading roboorck integration."""
+async def test_unload_entry(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test unloading roborock integration."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert device_manager.get_devices.called
+    assert not device_manager.close.called
+
+    # Unload the config entry and verify that the device manager is closed
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
     assert setup_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert device_manager.close.called
+
+
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test shutting down Home Assistant."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert not device_manager.close.called
+
+    # Perform Home Assistant stop and verify that device manager is closed
+    await hass.async_stop()
+
+    assert device_manager.close.called
 
 
 async def test_reauth_started(
