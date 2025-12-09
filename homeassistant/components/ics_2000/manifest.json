@@ -1,0 +1,11 @@
+{
+  "domain": "ics_2000",
+  "name": "KlikAanKlikUit ICS-2000",
+  "codeowners": ["@zefanjajobse"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ics_2000",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["ics-2000-python==0.1.3"]
+}

@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "home": {
+        "data": {
+          "description": "Select a home to connect with",
+          "home_id": "Specific home"
+        }
+      },
+      "user": {
+        "data": {
+          "ip_address": "IP address to connect with the ICS-2000 locally (optional)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Connect with your KlikAanKlikUit account",
+        "title": "[%key:common::action::connect%]"
+      }
+    }
+  }
+}
