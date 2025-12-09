@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
@@ -69,7 +69,7 @@ class DiyanetApiClient:
                 self._refresh_token = data["data"]["refreshToken"]
 
                 # Set token expiry times according to documentation
-                now = datetime.now()
+                now = datetime.now(UTC)
                 self._access_token_expiry = now + ACCESS_TOKEN_EXPIRY
                 self._refresh_token_expiry = now + REFRESH_TOKEN_EXPIRY
 
@@ -107,7 +107,7 @@ class DiyanetApiClient:
                 self._refresh_token = data["data"]["refreshToken"]
 
                 # Update token expiry times
-                now = datetime.now()
+                now = datetime.now(UTC)
                 self._access_token_expiry = now + ACCESS_TOKEN_EXPIRY
                 self._refresh_token_expiry = now + REFRESH_TOKEN_EXPIRY
 
@@ -121,7 +121,7 @@ class DiyanetApiClient:
 
     async def _ensure_authenticated(self) -> None:
         """Ensure we have a valid access token."""
-        now = datetime.now()
+        now = datetime.now(UTC)
 
         # If no tokens or refresh token expired, do full authentication
         if (

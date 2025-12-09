@@ -109,14 +109,16 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select a country to narrow down states."""
-        assert self._client is not None  # nosec - set after auth
+        if self._client is None:
+            raise AbortFlow("missing_context")
+        client = self._client
         errors: dict[str, str] = {}
 
         if user_input is not None:
             self._country_id = int(user_input["country_id"])
             # Store country name for display
             try:
-                countries = await self._client.get_countries()
+                countries = await client.get_countries()
                 for country in countries:
                     if country.get("id") == self._country_id:
                         self._country_name = str(
@@ -131,7 +133,7 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_select_state()
 
         try:
-            countries = await self._client.get_countries()
+            countries = await client.get_countries()
         except DiyanetConnectionError:
             errors["base"] = "cannot_connect"
             countries = []
@@ -168,14 +170,17 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select a state within the chosen country."""
-        assert self._client is not None and self._country_id is not None
+        if self._client is None or self._country_id is None:
+            raise AbortFlow("missing_context")
+        client = self._client
+        country_id = self._country_id
         errors: dict[str, str] = {}
 
         if user_input is not None:
             self._state_id = int(user_input["state_id"])
             # Store state name for display
             try:
-                states = await self._client.get_states(self._country_id)
+                states = await client.get_states(country_id)
                 for state in states:
                     if state.get("id") == self._state_id:
                         self._state_name = str(
@@ -190,7 +195,7 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_select_city()
 
         try:
-            states = await self._client.get_states(self._country_id)
+            states = await client.get_states(country_id)
         except DiyanetConnectionError:
             errors["base"] = "cannot_connect"
             states = []
@@ -226,14 +231,24 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select a city within the chosen state and finish."""
-        assert self._client is not None and self._state_id is not None
+        if (
+            self._client is None
+            or self._state_id is None
+            or self._email is None
+            or self._password is None
+        ):
+            raise AbortFlow("missing_context")
+        client = self._client
+        state_id = self._state_id
+        email = self._email
+        password = self._password
         errors: dict[str, str] = {}
 
         if user_input is not None:
             city_id = int(user_input["city_id"])
             # Store city name for display
             try:
-                cities = await self._client.get_cities(self._state_id)
+                cities = await client.get_cities(state_id)
                 for city in cities:
                     if city.get("id") == city_id:
                         code = (
@@ -258,7 +273,7 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 # Validate city works by fetching prayer times
-                await self._client.get_prayer_times(city_id)
+                await client.get_prayer_times(city_id)
             except DiyanetConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -278,14 +293,14 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 title = f"Diyanet ({location_str})"
                 data = {
-                    CONF_EMAIL: self._email,
-                    CONF_PASSWORD: self._password,
+                    CONF_EMAIL: email,
+                    CONF_PASSWORD: password,
                     CONF_LOCATION_ID: city_id,
                 }
                 return self.async_create_entry(title=title, data=data)
 
         try:
-            cities = await self._client.get_cities(self._state_id)
+            cities = await client.get_cities(state_id)
         except DiyanetConnectionError:
             errors["base"] = "cannot_connect"
             cities = []

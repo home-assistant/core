@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "missing_context": "Required setup data is missing. Please restart the configuration."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

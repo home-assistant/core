@@ -9,8 +9,6 @@ from homeassistant.components.diyanet.coordinator import DiyanetCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-pytest_plugins = ["pytest_asyncio"]
-
 
 @pytest.fixture
 async def mock_coordinator(hass: HomeAssistant):
@@ -27,7 +25,6 @@ async def mock_coordinator(hass: HomeAssistant):
     return DiyanetCoordinator(hass, api_client, 12345, config_entry)
 
 
-@pytest.mark.asyncio
 async def test_cache_used_for_today(mock_coordinator) -> None:
     """Test that cached data for today is used and no API call is made."""
     today_str = datetime.now().strftime("%d %B %Y")
@@ -38,12 +35,12 @@ async def test_cache_used_for_today(mock_coordinator) -> None:
             mock_coordinator.client, "get_prayer_times", new_callable=AsyncMock
         ) as mock_api,
     ):
-        data = await mock_coordinator._async_update_data()
-        assert data["gregorianDateLong"] == today_str
+        await mock_coordinator.async_refresh()
+
+        assert mock_coordinator.data["gregorianDateLong"] == today_str
         assert not mock_api.called
 
 
-@pytest.mark.asyncio
 async def test_cache_outdated_triggers_fetch(mock_coordinator) -> None:
     """Test that outdated cached data triggers API fetch and cache update."""
     yesterday = datetime.now() - timedelta(days=1)
@@ -60,7 +57,8 @@ async def test_cache_outdated_triggers_fetch(mock_coordinator) -> None:
             "gregorianDateLong": datetime.now().strftime("%d %B %Y"),
             "fajr": "06:00",
         }
-        data = await mock_coordinator._async_update_data()
-        assert data["gregorianDateLong"] != yesterday_str
+        await mock_coordinator.async_refresh()
+
+        assert mock_coordinator.data["gregorianDateLong"] != yesterday_str
         assert mock_api.called
         assert mock_save.called
