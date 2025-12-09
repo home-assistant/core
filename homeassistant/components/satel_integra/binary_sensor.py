@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from satel_integra.satel_integra import AsyncSatel
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -21,8 +19,8 @@ from .const import (
     SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
 from .entity import SatelIntegraEntity
 
 
@@ -33,7 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
 
-    controller = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     zone_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,
@@ -47,7 +45,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraBinarySensor(
-                    controller,
+                    coordinator,
                     config_entry.entry_id,
                     subentry,
                     zone_num,
@@ -70,7 +68,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraBinarySensor(
-                    controller,
+                    coordinator,
                     config_entry.entry_id,
                     subentry,
                     output_num,
@@ -87,7 +85,7 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        controller: AsyncSatel,
+        coordinator: SatelIntegraCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
@@ -96,7 +94,7 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the binary_sensor."""
         super().__init__(
-            controller,
+            coordinator,
             config_entry_id,
             subentry,
             device_number,
@@ -107,10 +105,16 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
+
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
-            self._attr_is_on = self._device_number in self._satel.violated_outputs
+            self._attr_is_on = (
+                self._device_number in self.coordinator.controller.violated_outputs
+            )
         else:
-            self._attr_is_on = self._device_number in self._satel.violated_zones
+            self._attr_is_on = (
+                self._device_number in self.coordinator.controller.violated_zones
+            )
 
         self.async_on_remove(
             async_dispatcher_connect(

@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from satel_integra.satel_integra import AsyncSatel
-
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -18,6 +16,7 @@ from .const import (
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
+from .coordinator import SatelIntegraCoordinator
 
 SubentryTypeToEntityType: dict[str, str] = {
     SUBENTRY_TYPE_PARTITION: "alarm_panel",
@@ -27,7 +26,7 @@ SubentryTypeToEntityType: dict[str, str] = {
 }
 
 
-class SatelIntegraEntity(Entity):
+class SatelIntegraEntity(CoordinatorEntity[SatelIntegraCoordinator]):
     """Defines a base Satel Integra entity."""
 
     _attr_should_poll = False
@@ -36,14 +35,14 @@ class SatelIntegraEntity(Entity):
 
     def __init__(
         self,
-        controller: AsyncSatel,
+        coordinator: SatelIntegraCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
     ) -> None:
         """Initialize the Satel Integra entity."""
+        super().__init__(coordinator)
 
-        self._satel = controller
         self._device_number = device_number
 
         entity_type = SubentryTypeToEntityType[subentry.subentry_type]
@@ -54,5 +53,7 @@ class SatelIntegraEntity(Entity):
         self._attr_unique_id = f"{config_entry_id}_{entity_type}_{device_number}"
 
         self._attr_device_info = DeviceInfo(
-            name=subentry.data[CONF_NAME], identifiers={(DOMAIN, self._attr_unique_id)}
+            name=subentry.data[CONF_NAME],
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, config_entry_id),
         )

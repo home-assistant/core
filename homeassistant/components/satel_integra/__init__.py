@@ -2,23 +2,13 @@
 
 import logging
 
-from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 
@@ -37,16 +27,12 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
-    SIGNAL_OUTPUTS_UPDATED,
-    SIGNAL_PANEL_MESSAGE,
-    SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
-    ZONES,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,80 +141,14 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
     """Set up  Satel Integra from a config entry."""
 
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
+    coordinator = SatelIntegraCoordinator(hass, entry)
+    entry.runtime_data = coordinator
 
-    # Make sure we initialize the Satel controller with the configured entries to monitor
-    partitions = [
-        subentry.data[CONF_PARTITION_NUMBER]
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_TYPE_PARTITION
-    ]
-
-    zones = [
-        subentry.data[CONF_ZONE_NUMBER]
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_TYPE_ZONE
-    ]
-
-    outputs = [
-        subentry.data[CONF_OUTPUT_NUMBER]
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_TYPE_OUTPUT
-    ]
-
-    switchable_outputs = [
-        subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT
-    ]
-
-    monitored_outputs = outputs + switchable_outputs
-
-    controller = AsyncSatel(host, port, hass.loop, zones, monitored_outputs, partitions)
-
-    result = await controller.connect()
-
-    if not result:
-        raise ConfigEntryNotReady("Controller failed to connect")
-
-    entry.runtime_data = controller
-
-    @callback
-    def _close(*_):
-        controller.close()
+    await coordinator.start_controller()
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    @callback
-    def alarm_status_update_callback():
-        """Send status update received from alarm to Home Assistant."""
-        _LOGGER.debug("Sending request to update panel state")
-        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE)
-
-    @callback
-    def zones_update_callback(status):
-        """Update zone objects as per notification from the alarm."""
-        _LOGGER.debug("Zones callback, status: %s", status)
-        async_dispatcher_send(hass, SIGNAL_ZONES_UPDATED, status[ZONES])
-
-    @callback
-    def outputs_update_callback(status):
-        """Update zone objects as per notification from the alarm."""
-        _LOGGER.debug("Outputs updated callback , status: %s", status)
-        async_dispatcher_send(hass, SIGNAL_OUTPUTS_UPDATED, status["outputs"])
-
-    # Create a task instead of adding a tracking job, since this task will
-    # run until the connection to satel_integra is closed.
-    hass.loop.create_task(controller.keep_alive())
-    hass.loop.create_task(
-        controller.monitor_status(
-            alarm_status_update_callback, zones_update_callback, outputs_update_callback
-        )
-    )
 
     return True
 
@@ -237,8 +157,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
     """Unloading the Satel platforms."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        controller = entry.runtime_data
-        controller.close()
+        coordinator = entry.runtime_data
+        coordinator.controller.close()
 
     return unload_ok
 

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from satel_integra.satel_integra import AsyncSatel
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE
@@ -17,8 +15,8 @@ from .const import (
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     SIGNAL_OUTPUTS_UPDATED,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
 from .entity import SatelIntegraEntity
 
 
@@ -58,7 +56,7 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
     def __init__(
         self,
-        controller: AsyncSatel,
+        controller: SatelIntegraCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
@@ -76,7 +74,11 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._attr_is_on = self._device_number in self._satel.violated_outputs
+        await super().async_added_to_hass()
+
+        self._attr_is_on = (
+            self._device_number in self.coordinator.controller.violated_outputs
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -95,12 +97,16 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._satel.set_output(self._code, self._device_number, True)
+        await self.coordinator.controller.set_output(
+            self._code, self._device_number, True
+        )
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._satel.set_output(self._code, self._device_number, False)
+        await self.coordinator.controller.set_output(
+            self._code, self._device_number, False
+        )
         self._attr_is_on = False
         self.async_write_ha_state()
