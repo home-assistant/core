@@ -192,6 +192,7 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
     If the bitmap is unavailable, only mandatory modes are included. The mapping from
     bitmap bits to operating mode values is defined by the Matter specification.
     """
+
     entity_description: MatterMapSelectEntityDescription
 
     @callback
@@ -206,18 +207,11 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
         # NOTE: The Matter spec inverts the usual meaning: bit=0 means supported,
         # bit=1 means not supported, undefined bits must be 1. Mandatory modes are
         # bits 0 (Normal) and 3 (NoRemoteLockUnlock).
-        if supported_modes_bitmap is not None:
-            supported_modes = [
-                bit_position
-                for bit_position in range(5)  # Operating modes are bits 0-4
-                if not supported_modes_bitmap & (1 << bit_position)
-            ]
-            # Fall back to mandatory modes if the bitmap yields no supported entries
-            if not supported_modes:
-                supported_modes = [0, 3]
-        else:
-            # If bitmap not available, include all mandatory modes
-            supported_modes = [0, 3]
+        supported_modes = [
+            bit_position
+            for bit_position in range(5)  # Operating modes are bits 0-4
+            if not supported_modes_bitmap & (1 << bit_position)
+        ]
 
         # Map supported mode values to their string representations
         self._attr_options = [
