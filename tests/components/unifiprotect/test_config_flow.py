@@ -218,10 +218,10 @@ async def test_form_version_too_old(
         result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-                "api_key": "test-api-key",
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
             },
         )
 
@@ -274,10 +274,10 @@ async def test_form_invalid_auth_password(
         result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
                 "password": "correct-password",
-                "api_key": "test-api-key",
+                "api_key": DEFAULT_API_KEY,
             },
         )
 
@@ -330,9 +330,9 @@ async def test_form_invalid_auth_api_key(
         result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
                 "api_key": "correct-api-key",
             },
         )
@@ -395,10 +395,10 @@ async def test_form_cloud_user(
         result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "host": "1.1.1.1",
+                "host": DEFAULT_HOST,
                 "username": "local-username",
-                "password": "test-password",
-                "api_key": "test-api-key",
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
             },
         )
 
@@ -451,10 +451,10 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-                "api_key": "test-api-key",
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
             },
         )
 
@@ -1269,9 +1269,9 @@ async def test_discovery_with_both_ignored_and_normal_entry(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
-                "api_key": "test-api-key",
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
             },
         )
         await hass.async_block_till_done()
