@@ -265,6 +265,11 @@ async def test_select_hdmi_output(
     assert writes[0] == command.HDMIOutput(command.HDMIOutput.Param.BOTH)
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_query_state_task(
     read_queue: asyncio.Queue, writes: list[Instruction]
 ) -> None:
@@ -296,6 +301,11 @@ async def test_query_state_task(
     assert len(queries) == 1
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_query_av_info_task(
     read_queue: asyncio.Queue, writes: list[Instruction]
 ) -> None:
