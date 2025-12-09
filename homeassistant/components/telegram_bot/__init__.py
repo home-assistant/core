@@ -557,15 +557,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
     # default: service was called using frontend such as developer tools or automation editor
-    entity_id = "call_service"
+    service_call_origin = "call_service"
 
     origin = service.context.origin_event
     if origin and ATTR_ENTITY_ID in origin.data:
         # automation
-        entity_id = origin.data[ATTR_ENTITY_ID]
+        service_call_origin = origin.data[ATTR_ENTITY_ID]
     elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
         # script
-        entity_id = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
 
     ir.async_create_issue(
         hass,
@@ -579,7 +579,7 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
         translation_placeholders={
             "integration_title": "Telegram Bot",
             "action": f"{DOMAIN}.{service.service}",
-            "entity_id": entity_id,
+            "action_origin": service_call_origin,
         },
         learn_more_url="https://github.com/home-assistant/core/pull/155198",
     )

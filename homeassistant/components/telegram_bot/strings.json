@@ -213,7 +213,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then click SUBMIT to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action in `{entity_id}`.",
+            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then click SUBMIT to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
             "title": "The `timeout` parameter for {integration_title} is being removed"
           }
         }
