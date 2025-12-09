@@ -184,20 +184,20 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Last change triggered by."""
         if self._changed_by_wrapper is None:
             return None
-        return self._changed_by_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._changed_by_wrapper)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "disarm")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "disarm")
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send Home command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "arm_home")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "arm_home")
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send Arm command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "arm_away")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "arm_away")
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "trigger")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "trigger")

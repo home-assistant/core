@@ -41,8 +41,8 @@ env:
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2026.1"
-  DEFAULT_PYTHON: "3.13"
-  ALL_PYTHON_VERSIONS: "['3.13', '3.14']"
+  DEFAULT_PYTHON: "3.13.11"
+  ALL_PYTHON_VERSIONS: "['3.13.11', '3.14.2']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -99,7 +99,7 @@ jobs:
     steps:
       - &checkout
         name: Check out code from GitHub
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |

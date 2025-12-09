@@ -560,6 +560,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_cooktop_000001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'MediaTek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5c202ad1-d112-d746-50b8-bd76a554b362',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP2X_DA-KS-COOKTOP-000001',
+    'model_id': None,
+    'name': 'Table de cuisson',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AKS-WW-TP2X-20-COOKTOP_40230515',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_cooktop_31001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -588,6 +619,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_hood_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'fa5fca25-fa7a-1807-030a-2f72ee0f7bff',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'AHD-WW-TP1-22-COMMON',
+    'model_id': None,
+    'name': 'Range hood',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AHD-WW-TP1-22-COMMON_40230419',
     'via_device_id': None,
   })
 # ---
@@ -712,6 +774,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP1-20-OVEN-3-CR_40240205',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_walloven_0107x]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '1c77a562-df00-7d6a-ca73-b67f6d4c4607',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'LCD_S905D3_COMBI_PP_US_23K',
+    'model_id': None,
+    'name': 'Four',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '20230413.181729',
     'via_device_id': None,
   })
 # ---
