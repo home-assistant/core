@@ -8,8 +8,8 @@ from typing import Any
 import uuid
 
 from todoist_api_python.api_async import TodoistAPIAsync
-from todoist_api_python.endpoints import get_sync_url
-from todoist_api_python.headers import create_headers
+from todoist_api_python._core.endpoints import get_sync_url
+from todoist_api_python._core.headers import create_headers
 from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
@@ -527,7 +527,7 @@ class TodoistProjectData:
         """
         task: TodoistEvent = {
             ALL_DAY: False,
-            COMPLETED: data.is_completed,
+            COMPLETED: data.completed_at is not None,
             DESCRIPTION: f"https://todoist.com/showTask?id={data.id}",
             DUE_TODAY: False,
             END: None,
