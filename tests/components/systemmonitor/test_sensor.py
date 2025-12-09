@@ -408,9 +408,9 @@ async def test_exception_handling_battery_sensor(
     await hass.async_block_till_done()
 
     assert (temp_entity := hass.states.get("sensor.system_monitor_battery"))
-    assert temp_entity.state == "unavailable"
+    assert temp_entity.state == STATE_UNAVAILABLE
     assert (temp_entity := hass.states.get("sensor.system_monitor_battery_empty"))
-    assert temp_entity.state == "unavailable"
+    assert temp_entity.state == STATE_UNAVAILABLE
 
     assert "OS error when accessing battery sensors" in caplog.text
 
