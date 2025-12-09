@@ -1651,7 +1651,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==2.8.0
+openai==2.9.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
