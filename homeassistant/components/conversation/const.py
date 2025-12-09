@@ -36,6 +36,13 @@ METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
 
+class IntentSource(StrEnum):
+    """Source of intents."""
+
+    CONFIG = "config"
+    TRIGGER = "trigger"
+
+
 class ChatLogEventType(StrEnum):
     """Chat log event type."""
 
