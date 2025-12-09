@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
-
-__all__ = ["DOMAIN"]
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
 

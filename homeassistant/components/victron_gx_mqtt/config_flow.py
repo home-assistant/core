@@ -1,19 +1,15 @@
 """Config flow for victron mqtt integration."""
 
-# Future imports
 from __future__ import annotations
 
-# Standard library imports
 from collections.abc import Sequence
 import logging
 from typing import Any
 from urllib.parse import urlparse
 
-# Third-party imports
 from victron_mqtt import CannotConnectError, DeviceType, Hub as VictronVenusHub
 import voluptuous as vol
 
-# Home Assistant imports
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -30,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.helpers.selector import SelectOptionDict
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-# Local application imports
 from .const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
