@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components import ios
 from homeassistant.components.ios import iOSConfigView
-from homeassistant.components.ios.storage import CarPlayStore
+from homeassistant.components.ios.storage import CarPlayStore, async_get_carplay_store
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -77,7 +77,7 @@ async def test_ios_config_view_includes_carplay(hass: HomeAssistant) -> None:
     request.app = mock_app
 
     # Initialize CarPlay store with test data
-    store = CarPlayStore(hass)
+    store = await async_get_carplay_store(hass)
     await store.async_set_data(
         {
             "enabled": True,
@@ -86,9 +86,7 @@ async def test_ios_config_view_includes_carplay(hass: HomeAssistant) -> None:
             ],
         }
     )
-    hass.data[ios.DOMAIN] = {"carplay_store": store}
-
-    # Test with iOS carplay data from storage
+    hass.data[ios.DOMAIN] = {}  # Test with iOS carplay data from storage
     response = await view.get(request)
     assert response.status == 200
     response_text = response.text
@@ -109,10 +107,9 @@ async def test_carplay_storage_setup(hass: HomeAssistant) -> None:
 
     # Verify carplay store is created and accessible
     assert ios.DOMAIN in hass.data
-    assert "carplay_store" in hass.data[ios.DOMAIN]
 
-    # Verify default data is loaded
-    store = hass.data[ios.DOMAIN]["carplay_store"]
+    # Verify store can be accessed through the proper function
+    store = await async_get_carplay_store(hass)
     data = await store.async_get_data()
     assert data == {"enabled": True, "quick_access": []}
 

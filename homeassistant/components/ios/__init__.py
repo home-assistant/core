@@ -267,8 +267,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = ios_config
 
     # Initialize CarPlay storage and register API endpoints always
-    store = await async_get_carplay_store(hass)
-    hass.data[DOMAIN]["carplay_store"] = store
+    await async_get_carplay_store(hass)
 
     # Register CarPlay API endpoints - always available regardless of config entries
     hass.http.register_view(iOSCarPlayConfigView())
@@ -291,13 +290,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up an iOS entry."""
-    # CarPlay store should already be initialized in async_setup
-    if "carplay_store" not in hass.data.get(DOMAIN, {}):
-        store = await async_get_carplay_store(hass)
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = {}
-        hass.data[DOMAIN]["carplay_store"] = store
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
@@ -341,11 +333,10 @@ class iOSConfigView(HomeAssistantView):
         # Include carplay config from storage
         response_config = self.config.copy()
 
-        # Add carplay config if store exists
-        if DOMAIN in hass.data and "carplay_store" in hass.data[DOMAIN]:
-            store = hass.data[DOMAIN]["carplay_store"]
-            carplay_config = await store.async_get_data()
-            response_config["carplay"] = carplay_config
+        # Add carplay config from store
+        store = await async_get_carplay_store(hass)
+        carplay_config = await store.async_get_data()
+        response_config["carplay"] = carplay_config
 
         return self.json(response_config)
 
