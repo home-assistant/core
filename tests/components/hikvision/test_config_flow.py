@@ -95,7 +95,7 @@ async def test_form_cannot_connect(
     mock_hikcamera_config_flow: MagicMock,
 ) -> None:
     """Test we handle cannot connect error."""
-    mock_hikcamera_config_flow.return_value.get_id = None
+    mock_hikcamera_config_flow.return_value.get_id.return_value = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -209,7 +209,7 @@ async def test_reauth_flow_cannot_connect(
 ) -> None:
     """Test reauth flow with connection error."""
     mock_config_entry.add_to_hass(hass)
-    mock_hikcamera_config_flow.return_value.get_id = None
+    mock_hikcamera_config_flow.return_value.get_id.return_value = None
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -233,7 +233,7 @@ async def test_reauth_flow_wrong_device(
 ) -> None:
     """Test reauth flow with wrong device ID."""
     mock_config_entry.add_to_hass(hass)
-    mock_hikcamera_config_flow.return_value.get_id = "different_device_id"
+    mock_hikcamera_config_flow.return_value.get_id.return_value = "different_device_id"
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -279,7 +279,7 @@ async def test_recovery_from_error(
     mock_hikcamera_config_flow: MagicMock,
 ) -> None:
     """Test we can recover from a connection error."""
-    mock_hikcamera_config_flow.return_value.get_id = None
+    mock_hikcamera_config_flow.return_value.get_id.return_value = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -300,7 +300,7 @@ async def test_recovery_from_error(
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Now recover
-    mock_hikcamera_config_flow.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera_config_flow.return_value.get_id.return_value = TEST_DEVICE_ID
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -400,7 +400,7 @@ async def test_import_flow_no_device_id(
     mock_hikcamera_config_flow: MagicMock,
 ) -> None:
     """Test YAML import flow aborts when device ID is unavailable."""
-    mock_hikcamera_config_flow.return_value.get_id = None
+    mock_hikcamera_config_flow.return_value.get_id.return_value = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

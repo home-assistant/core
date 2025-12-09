@@ -63,7 +63,7 @@ def mock_hikcamera() -> Generator[MagicMock]:
         autospec=True,
     ) as hikcamera_mock:
         camera = hikcamera_mock.return_value
-        camera.get_id = TEST_DEVICE_ID
+        camera.get_id.return_value = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
         camera.current_event_states = {
@@ -87,7 +87,7 @@ def mock_hikcamera_config_flow() -> Generator[MagicMock]:
         autospec=True,
     ) as hikcamera_mock:
         camera = hikcamera_mock.return_value
-        camera.get_id = TEST_DEVICE_ID
+        camera.get_id.return_value = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
         yield hikcamera_mock

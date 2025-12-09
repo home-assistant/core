@@ -197,7 +197,7 @@ async def test_yaml_import_creates_deprecation_issue(
         autospec=True,
     ) as hikcamera_mock:
         camera = hikcamera_mock.return_value
-        camera.get_id = TEST_DEVICE_ID
+        camera.get_id.return_value = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
 
         await async_setup_component(
@@ -270,7 +270,7 @@ async def test_yaml_import_no_issue_on_already_configured(
         autospec=True,
     ) as hikcamera_mock:
         camera = hikcamera_mock.return_value
-        camera.get_id = TEST_DEVICE_ID
+        camera.get_id.return_value = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
 
         await async_setup_component(

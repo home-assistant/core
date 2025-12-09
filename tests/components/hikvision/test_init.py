@@ -32,7 +32,7 @@ async def test_setup_entry_no_device_id(
     mock_hikcamera: MagicMock,
 ) -> None:
     """Test setup fails when device ID is not available."""
-    mock_hikcamera.return_value.get_id = None
+    mock_hikcamera.return_value.get_id.return_value = None
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
