@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.35
 Adax-local==0.2.0
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.8
+DoorBirdPy==3.0.11
 
 # homeassistant.components.homekit
 HAP-python==5.0.0
@@ -1179,7 +1179,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.heatmiser
-heatmiserV3==2.0.3
+heatmiserV3==2.0.4
 
 # homeassistant.components.here_travel_time
 here-routing==1.2.0
@@ -2229,7 +2229,7 @@ pynetio==0.1.9.1
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==1.1.3
+pynintendoparental==2.0.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
