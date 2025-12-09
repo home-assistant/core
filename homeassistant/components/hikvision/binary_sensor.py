@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
+    CONF_DELAY,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -40,6 +41,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import HikvisionConfigEntry
 from .const import DEFAULT_PORT, DOMAIN
+
+CONF_IGNORED = "ignored"
+
+DEFAULT_DELAY = 0
+DEFAULT_IGNORED = False
 
 # Device class mapping for Hikvision event types
 DEVICE_CLASS_MAP: dict[str, BinarySensorDeviceClass | None] = {
@@ -70,8 +76,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {
-        vol.Optional("ignored", default=False): cv.boolean,
-        vol.Optional("delay", default=0): cv.positive_int,
+        vol.Optional(CONF_IGNORED, default=DEFAULT_IGNORED): cv.boolean,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
     }
 )
 
