@@ -27,6 +27,8 @@ from .entity import (
     async_all_device_entities,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectTextEntityDescription(ProtectSetableKeysMixin[T], TextEntityDescription):

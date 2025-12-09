@@ -510,6 +510,9 @@ class OpenAIBaseLLMEntity(Entity):
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
 
+        if model_args["model"].startswith("gpt-5.1"):
+            model_args["prompt_cache_retention"] = "24h"
+
         tools: list[ToolParam] = []
         if chat_log.llm_api:
             tools = [

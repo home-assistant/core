@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_device_entry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '256',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'airobot',
+        'T01A1B2C3',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Airobot',
+    'model': 'Thermostat',
+    'model_id': 'TE1',
+    'name': 'Test Thermostat',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '300',
+    'via_device_id': None,
+  })
+# ---
