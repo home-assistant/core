@@ -5,10 +5,11 @@ from unittest.mock import patch
 
 from homelink.model.button import Button
 from homelink.model.device import Device
+from homelink.settings import OAUTH2_TOKEN_URL
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.gentex_homelink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
@@ -60,7 +61,7 @@ async def test_setup_config(
 
         aioclient_mock.clear_requests()
         aioclient_mock.post(
-            OAUTH2_TOKEN,
+            OAUTH2_TOKEN_URL,
             json={
                 "access_token": "updated-access-token",
                 "refresh_token": "updated-refresh-token",

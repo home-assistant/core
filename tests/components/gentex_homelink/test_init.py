@@ -3,8 +3,10 @@
 import time
 from unittest.mock import patch
 
+from homelink.settings import OAUTH2_TOKEN_URL
+
 from homeassistant.components import gentex_homelink
-from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.gentex_homelink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +32,7 @@ async def test_load_unload_entry(
 
         aioclient_mock.clear_requests()
         aioclient_mock.post(
-            OAUTH2_TOKEN,
+            OAUTH2_TOKEN_URL,
             json={
                 "access_token": "updated-access-token",
                 "refresh_token": "updated-refresh-token",

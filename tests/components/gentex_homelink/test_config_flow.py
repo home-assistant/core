@@ -5,9 +5,10 @@ import time
 from unittest.mock import patch
 
 import botocore.exceptions
+from homelink.settings import OAUTH2_TOKEN_URL
 
 from homeassistant import config_entries
-from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.gentex_homelink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -51,7 +52,7 @@ async def test_full_flow(
         )
         aioclient_mock.clear_requests()
         aioclient_mock.post(
-            OAUTH2_TOKEN,
+            OAUTH2_TOKEN_URL,
             json={
                 "access_token": "access",
                 "refresh_token": "refresh",
@@ -86,7 +87,7 @@ async def test_auth_error(
             }
         }
         aioclient_mock.clear_requests()
-        aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.UNAUTHORIZED)
+        aioclient_mock.post(OAUTH2_TOKEN_URL, status=HTTPStatus.UNAUTHORIZED)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -103,7 +104,7 @@ async def test_reauth_flow(
     """Test the reauth flow."""
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        OAUTH2_TOKEN,
+        OAUTH2_TOKEN_URL,
         json={
             "access_token": "access",
             "refresh_token": "refresh",

@@ -7,14 +7,12 @@ from typing import cast
 
 from aiohttp import ClientError, ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
-from homelink.settings import COGNITO_CLIENT_ID
+from homelink.settings import COGNITO_CLIENT_ID, OAUTH2_TOKEN_URL
 
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .const import OAUTH2_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +62,8 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
 
         data["client_id"] = self.client_id
 
-        _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN)
-        resp = await session.post(OAUTH2_TOKEN, data=data)
+        _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN_URL)
+        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
