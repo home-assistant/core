@@ -73,6 +73,8 @@ build.json @home-assistant/supervisor
 /tests/components/airobot/ @mettolen
 /homeassistant/components/airos/ @CoMPaTech
 /tests/components/airos/ @CoMPaTech
+/homeassistant/components/airpatrol/ @antondalgren
+/tests/components/airpatrol/ @antondalgren
 /homeassistant/components/airq/ @Sibgatulin @dl2080
 /tests/components/airq/ @Sibgatulin @dl2080
 /homeassistant/components/airthings/ @danielhiversen @LaStrada

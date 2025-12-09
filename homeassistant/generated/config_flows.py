@@ -40,6 +40,7 @@ FLOWS = {
         "airnow",
         "airobot",
         "airos",
+        "airpatrol",
         "airq",
         "airthings",
         "airthings_ble",
