@@ -8,9 +8,9 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
-  docs-high-level-description: todo
+  docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: No events used.
