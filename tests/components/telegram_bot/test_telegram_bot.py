@@ -1570,7 +1570,7 @@ async def test_deprecated_timeout_parameter(
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
     issue_registry: IssueRegistry,
-    event: Event,
+    event: Event | None,
     expected_action_origin: str,
 ) -> None:
     """Test send message using the deprecated timeout parameter."""
