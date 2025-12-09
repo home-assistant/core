@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -94,6 +95,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
         username = import_data[CONF_USERNAME]
         password = import_data[CONF_PASSWORD]
         ssl = import_data.get(CONF_SSL, False)
+        name = import_data.get(CONF_NAME)
 
         protocol = "https" if ssl else "http"
         url = f"{protocol}://{host}"
@@ -121,7 +123,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_create_entry(
-            title=device_name or host,
+            title=name or device_name or host,
             data={
                 CONF_HOST: host,
                 CONF_PORT: port,
