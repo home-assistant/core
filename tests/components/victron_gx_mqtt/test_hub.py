@@ -19,7 +19,6 @@ from homeassistant.components.victron_gx_mqtt.const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_SIMPLE_NAMING,
     CONF_UPDATE_FREQUENCY_SECONDS,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
@@ -61,7 +60,6 @@ def basic_config():
         CONF_MODEL: "Venus GX",
         CONF_SERIAL: "HQ12345678",
         CONF_ROOT_TOPIC_PREFIX: "N/",
-        CONF_SIMPLE_NAMING: False,
         CONF_UPDATE_FREQUENCY_SECONDS: 30,
     }
 
@@ -387,19 +385,6 @@ async def test_hub_registers_stop_listener(
 
     # Verify disconnect was called when stop event fired
     mock_victron_hub.disconnect.assert_called_once()
-
-
-async def test_simple_naming_enabled(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test hub with simple naming enabled."""
-    basic_config[CONF_SIMPLE_NAMING] = True
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    assert hub.simple_naming is True
 
 
 async def test_victron_battery_sensor(

@@ -10,7 +10,6 @@ from homeassistant.components.victron_gx_mqtt.const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_SIMPLE_NAMING,
     CONF_UPDATE_FREQUENCY_SECONDS,
     DEFAULT_PORT,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
@@ -70,7 +69,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: True,
             CONF_ROOT_TOPIC_PREFIX: "N/test",
             CONF_UPDATE_FREQUENCY_SECONDS: 60,
         },
@@ -84,7 +82,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_SSL: False,
-        CONF_SIMPLE_NAMING: True,
         CONF_ROOT_TOPIC_PREFIX: "N/test",
         CONF_UPDATE_FREQUENCY_SECONDS: 60,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
@@ -106,7 +103,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -117,7 +113,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_PORT,
         CONF_SSL: False,
-        CONF_SIMPLE_NAMING: False,
         CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
@@ -139,7 +134,6 @@ async def test_user_flow_cannot_connect(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -157,7 +151,6 @@ async def test_user_flow_cannot_connect(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -181,7 +174,6 @@ async def test_user_flow_unknown_error(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -199,7 +191,6 @@ async def test_user_flow_unknown_error(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -231,7 +222,6 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -354,7 +344,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
             CONF_SERIAL: MOCK_SERIAL,
             CONF_MODEL: MOCK_MODEL,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -376,7 +365,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
                 CONF_USERNAME: "new-user",
                 CONF_PASSWORD: "new-pass",
                 CONF_SSL: True,
-                CONF_SIMPLE_NAMING: True,
                 CONF_ROOT_TOPIC_PREFIX: "N/updated",
                 CONF_UPDATE_FREQUENCY_SECONDS: 45,
             },
@@ -389,7 +377,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
             CONF_USERNAME: "new-user",
             CONF_PASSWORD: "new-pass",
             CONF_SSL: True,
-            CONF_SIMPLE_NAMING: True,
             CONF_ROOT_TOPIC_PREFIX: "N/updated",
             CONF_UPDATE_FREQUENCY_SECONDS: 45,
         }
@@ -408,7 +395,6 @@ async def test_options_flow_cannot_connect(
             CONF_PORT: DEFAULT_PORT,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -424,7 +410,6 @@ async def test_options_flow_cannot_connect(
             CONF_HOST: "192.168.1.200",
             CONF_PORT: 1883,
             CONF_SSL: False,
-            CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
