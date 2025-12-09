@@ -5,20 +5,21 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 from laundrify_aio import exceptions
 
-from homeassistant.components.laundrify.const import DEFAULT_POLL_INTERVAL
+from homeassistant.components.laundrify.const import DEFAULT_POLL_INTERVAL, DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_fire_time_changed
 
-# The energy sensor entity_id based on the device name "Demo Waschmaschine"
-# from fixtures/machines.json. It gets "_2" suffix as it's registered after
-# the power sensor which takes the base name.
-ENERGY_SENSOR_ENTITY_ID = "sensor.demo_waschmaschine_2"
+# Device ID from fixtures/machines.json
+DEVICE_ID = "14"
 
 
 async def test_coordinator_update_success(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     laundrify_config_entry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -27,13 +28,17 @@ async def test_coordinator_update_success(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENERGY_SENSOR_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{DEVICE_ID}_{SensorDeviceClass.ENERGY}"
+    )
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
 
 async def test_coordinator_update_unauthorized(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     laundrify_config_entry,
     laundrify_api_mock,
     freezer: FrozenDateTimeFactory,
@@ -45,13 +50,17 @@ async def test_coordinator_update_unauthorized(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENERGY_SENSOR_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{DEVICE_ID}_{SensorDeviceClass.ENERGY}"
+    )
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_update_connection_failed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     laundrify_config_entry,
     laundrify_api_mock,
     freezer: FrozenDateTimeFactory,
@@ -63,6 +72,9 @@ async def test_coordinator_update_connection_failed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENERGY_SENSOR_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{DEVICE_ID}_{SensorDeviceClass.ENERGY}"
+    )
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
