@@ -1,4 +1,4 @@
-"""Integrate with DuckDNS."""
+"""Service registration and handlers for the DuckDNS integration."""
 
 from __future__ import annotations
 
