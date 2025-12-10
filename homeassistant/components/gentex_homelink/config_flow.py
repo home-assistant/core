@@ -8,7 +8,7 @@ import botocore.exceptions
 from homelink.auth.srp_auth import SRPAuth
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -35,7 +35,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Ask for username and password."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -71,13 +71,13 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -88,12 +88,10 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         return await self.async_step_user(user_input)
 
-    async def async_oauth_create_entry(
-        self, data: dict
-    ) -> config_entries.ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         await self.async_set_unique_id(self.external_data[CONF_EMAIL])
-        if self.source == config_entries.SOURCE_REAUTH:
+        if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),

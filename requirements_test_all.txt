@@ -1036,7 +1036,7 @@ habiticalib==0.4.6
 habluetooth==5.8.0
 
 # homeassistant.components.hanna
-hanna-cloud==0.0.6
+hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
 hass-nabucasa==1.7.0
@@ -1497,7 +1497,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.10.0
+plugwise==1.11.0
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -2156,7 +2156,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.10.10
+python-roborock==3.12.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
