@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBase64Wrapper, DPCodeEnumWrapper
+from .models import DPCodeEnumWrapper, DPCodeRawWrapper
 
 ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
     DeviceCategory.MAL: (
@@ -32,7 +32,7 @@ ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
 }
 
 
-class _AlarmChangedByWrapper(DPCodeBase64Wrapper):
+class _AlarmChangedByWrapper(DPCodeRawWrapper):
     """Wrapper for changed_by.
 
     Decode base64 to utf-16be string, but only if alarm has been triggered.
@@ -42,10 +42,10 @@ class _AlarmChangedByWrapper(DPCodeBase64Wrapper):
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"
-            or (data := self.read_bytes(device)) is None
+            or (status := super().read_device_status(device)) is None
         ):
             return None
-        return data.decode("utf-16be")
+        return status.decode("utf-16be")
 
 
 class _AlarmModeWrapper(DPCodeEnumWrapper):
