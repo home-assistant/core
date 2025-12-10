@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -267,8 +268,11 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
         else:
             self._attr_state_class = dpt_info["sensor_state_class"]
 
+        self._attr_native_unit_of_measurement = (
+            knx_conf.get(CONF_UNIT_OF_MEASUREMENT) or dpt_info["unit"]
+        )
+
         self._attr_force_update = knx_conf.get(CONF_ALWAYS_CALLBACK, default=False)
-        self._attr_native_unit_of_measurement = dpt_info["unit"]
         self._attr_extra_state_attributes = {}
 
 

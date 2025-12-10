@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -16,6 +17,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_PLATFORM,
+    CONF_UNIT_OF_MEASUREMENT,
     Platform,
 )
 from homeassistant.helpers import config_validation as cv, selector
@@ -560,16 +562,37 @@ SENSOR_KNX_SCHEMA = vol.Schema(
             write=False, state_required=True, dpt=["numeric", "string"]
         ),
         "section_advanced_options": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(
+                    {
+                        str(unit)
+                        for units in DEVICE_CLASS_UNITS.values()
+                        for unit in units
+                        if unit is not None
+                    }
+                ),
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="component.knx.selector.sensor_unit_of_measurement",
+                custom_value=True,
+                sort=True,
+            ),
+        ),
         vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=list(SensorDeviceClass),
-                translation_key="component.sensor.entity_component",
+                options=[
+                    cls.value
+                    for cls in SensorDeviceClass
+                    if cls != SensorDeviceClass.ENUM
+                ],
+                translation_key="component.knx.selector.sensor_device_class",
+                sort=True,
             )
         ),
         vol.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=list(SensorStateClass),
-                translation_key="component.knx.config_panel.entities.create.sensor.knx.state_class",
+                translation_key="component.knx.selector.sensor_state_class",
                 mode=selector.SelectSelectorMode.DROPDOWN,
             )
         ),
