@@ -25,6 +25,8 @@ CLIENT_SECRET = "test_client_secret"
 TEST_DEVICE_ID = "test-device-id"
 TEST_ACCESS_TOKEN = "test-access-token"
 TEST_REFRESH_TOKEN = "test-refresh-token"
+TEST_ID_TOKEN = "test-id-token"
+TEST_PROFILE_INFO = "test-profile-info"
 TEST_EXPIRES_AT = 9999999999
 
 
@@ -95,6 +97,8 @@ def mock_config_entry() -> MockConfigEntry:
             "token": {
                 "access_token": TEST_ACCESS_TOKEN,
                 "refresh_token": TEST_REFRESH_TOKEN,
+                "id_token": TEST_ID_TOKEN,
+                "profile_info": TEST_PROFILE_INFO,
                 "expires_at": TEST_EXPIRES_AT,
             },
         },
