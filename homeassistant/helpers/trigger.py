@@ -394,7 +394,7 @@ class EntityTriggerBase(Trigger):
             if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return
 
-            # The trigger should never fire if the new state not valid
+            # The trigger should never fire if the new state is not valid
             if not to_state or not self.is_valid_state(to_state):
                 return
 
