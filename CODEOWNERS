@@ -73,6 +73,8 @@ build.json @home-assistant/supervisor
 /tests/components/airobot/ @mettolen
 /homeassistant/components/airos/ @CoMPaTech
 /tests/components/airos/ @CoMPaTech
+/homeassistant/components/airpatrol/ @antondalgren
+/tests/components/airpatrol/ @antondalgren
 /homeassistant/components/airq/ @Sibgatulin @dl2080
 /tests/components/airq/ @Sibgatulin @dl2080
 /homeassistant/components/airthings/ @danielhiversen @LaStrada
@@ -418,6 +420,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
+/homeassistant/components/egauge/ @neggert
+/tests/components/egauge/ @neggert
 /homeassistant/components/eheimdigital/ @autinerd
 /tests/components/eheimdigital/ @autinerd
 /homeassistant/components/ekeybionyx/ @richardpolzer
