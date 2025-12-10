@@ -102,43 +102,42 @@ async def test_reauth_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the reauth flow."""
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        OAUTH2_TOKEN_URL,
-        json={
-            "access_token": "access",
-            "refresh_token": "refresh",
-            "expires_at": time.time() + 3600,
-            "expires_in": 3600,
-        },
-    )
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test@test.com",
-        version=1,
-        data={
-            "auth_implementation": "gentex_homelink",
-            "token": {
-                "expires_at": time.time() + 10000,
-                "access_token": "",
-                "refresh_token": "",
+    with patch(
+        "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
+    ) as MockSRPAuth:
+        instance = MockSRPAuth.return_value
+        instance.async_get_access_token.return_value = {
+            "AuthenticationResult": {
+                "AccessToken": "access",
+                "RefreshToken": "refresh",
+                "TokenType": "bearer",
+                "ExpiresIn": 3600,
+            }
+        }
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="test@test.com",
+            version=1,
+            data={
+                "auth_implementation": "gentex_homelink",
+                "token": {
+                    "expires_at": time.time() + 10000,
+                    "access_token": "",
+                    "refresh_token": "",
+                },
+                "last_update_id": None,
             },
-            "last_update_id": None,
-        },
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"email": "test@test.com", "password": "SomePassword"},
-    )
+            state=config_entries.ConfigEntryState.LOADED,
+        )
+        config_entry.add_to_hass(hass)
+        result = await config_entry.start_reauth_flow(hass)
+        assert result["step_id"] == "reauth_confirm"
+        assert result["type"] == FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"email": "test@test.com", "password": "SomePassword"},
+        )
+        assert result["reason"] == "reauth_successful"
 
 
 async def test_boto_error(hass: HomeAssistant) -> None:
