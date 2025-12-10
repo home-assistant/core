@@ -609,7 +609,7 @@
               "label": "State"
             },
             "section_advanced_options": {
-              "description": "Override default DPT based sensor attributes.",
+              "description": "Override default DPT-based sensor attributes.",
               "title": "Overrides"
             },
             "state_class": {
