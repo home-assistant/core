@@ -3,6 +3,8 @@
 import asyncio
 import contextlib
 
+import pytest
+
 from homeassistant.components.script import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -318,3 +320,80 @@ async def test_wait_for_start_multiple_scripts(hass: HomeAssistant) -> None:
     # Now the task should be done
     assert task.done()
     await task
+
+
+async def test_wait_for_start_failure_single_mode(hass: HomeAssistant) -> None:
+    """Test wait_for_start does not hang when script cannot start (single mode)."""
+    calls = async_mock_service(hass, "test", "script")
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "mode": "single",
+                    "sequence": [
+                        {"action": "test.script", "data": {"value": "start"}},
+                        {"wait_template": "{{ is_state('input_boolean.wait', 'on') }}"},
+                    ],
+                }
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass, "input_boolean", {"input_boolean": {"wait": {}}}
+    )
+
+    # Start the first run (background)
+    hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN, "turn_on", {ATTR_ENTITY_ID: "script.test_script"}
+        )
+    )
+
+    # Wait for it to start
+    await asyncio.sleep(0.1)
+    assert len(calls) == 1
+
+    # Try to start the second run with wait_for_start=True
+    # This should fail immediately because mode is single and it's already running
+    # It should NOT hang
+    try:
+        await asyncio.wait_for(
+            hass.services.async_call(
+                DOMAIN,
+                "turn_on",
+                {
+                    ATTR_ENTITY_ID: "script.test_script",
+                    "wait_for_start": True,
+                },
+                blocking=True,
+            ),
+            timeout=1.0,
+        )
+    except TimeoutError:
+        pytest.fail("wait_for_start hung when script could not start")
+
+    # Try to start the third run with wait_for_start=False (default)
+    # This should also NOT hang
+    try:
+        await asyncio.wait_for(
+            hass.services.async_call(
+                DOMAIN,
+                "turn_on",
+                {
+                    ATTR_ENTITY_ID: "script.test_script",
+                    "wait_for_start": False,
+                },
+                blocking=True,
+            ),
+            timeout=1.0,
+        )
+    except TimeoutError:
+        pytest.fail("turn_on hung when script could not start")
+
+    # Clean up
+    hass.states.async_set("input_boolean.wait", "on")
+    await asyncio.sleep(0.1)

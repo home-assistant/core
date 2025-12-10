@@ -717,16 +717,21 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._changed.clear()
         started_event = asyncio.Event() if wait_for_start else None
 
-        self.hass.async_create_task(
+        task = self.hass.async_create_task(
             self._async_run(variables, context, started_event=started_event),
             eager_start=True,
         )
         # Wait for first state change so we can guarantee that
         # it is written to the State Machine before we return.
-        if started_event:
-            await started_event.wait()
-        else:
-            await self._changed.wait()
+        # Also monitor the task in case it finishes early (e.g., script cannot start).
+        wait_event = started_event if started_event else self._changed
+        wait_task = self.hass.async_create_task(wait_event.wait())
+        done, _ = await asyncio.wait(
+            [task, wait_task], return_when=asyncio.FIRST_COMPLETED
+        )
+        if wait_task not in done:
+            wait_task.cancel()
+
         return None
 
     async def _async_run(
