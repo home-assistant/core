@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -612,6 +612,8 @@ async def async_get_all_descriptions(
             # Don't warn for missing services, because it triggers false
             # positives for things like scripts, that register as a service
             description = {"fields": yaml_description.get("fields", {})}
+            if description_placeholders := service.description_placeholders:
+                description["description_placeholders"] = description_placeholders
 
             for item in ("description", "name", "target"):
                 if item in yaml_description:
@@ -955,6 +957,8 @@ def async_register_admin_service(
     ],
     schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
     supports_response: SupportsResponse = SupportsResponse.NONE,
+    *,
+    description_placeholders: Mapping[str, str] | None = None,
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -967,6 +971,7 @@ def async_register_admin_service(
         ),
         schema,
         supports_response,
+        description_placeholders=description_placeholders,
     )
 
 
@@ -1112,6 +1117,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entities: dict[str, Entity],
     func: str | Callable[..., Any],
@@ -1145,6 +1151,7 @@ def async_register_entity_service(
         schema,
         supports_response,
         job_type=job_type,
+        description_placeholders=description_placeholders,
     )
 
 
@@ -1154,6 +1161,7 @@ def async_register_platform_entity_service(
     service_domain: str,
     service_name: str,
     *,
+    description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
     func: str | Callable[..., Any],
@@ -1191,4 +1199,5 @@ def async_register_platform_entity_service(
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction,
+        description_placeholders=description_placeholders,
     )

@@ -165,6 +165,12 @@ async def test_save_preferences(
                 "stat_rate": "sensor.some_device_power",
             }
         ],
+        "device_consumption_water": [
+            {
+                "stat_consumption": "sensor.water_meter",
+                "name": "Water Meter",
+            }
+        ],
     }
 
     await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})
@@ -290,6 +296,7 @@ async def test_validate(
     assert msg["result"] == {
         "energy_sources": [],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 

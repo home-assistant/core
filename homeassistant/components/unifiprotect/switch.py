@@ -29,18 +29,19 @@ from .entity import (
     ProtectEntityDescription,
     ProtectIsOnEntity,
     ProtectNVREntity,
-    ProtectSetableKeysMixin,
+    ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
 
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectSwitchEntityDescription(
-    ProtectSetableKeysMixin[T], SwitchEntityDescription
+    ProtectSettableKeysMixin[T], SwitchEntityDescription
 ):
     """Describes UniFi Protect Switch entity."""
 
@@ -551,7 +552,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         await self.device.set_privacy(False, prev_mic, prev_record)
 
     async def async_added_to_hass(self) -> None:
-        """Restore extra state attributes on startp up."""
+        """Restore extra state attributes on startup."""
         await super().async_added_to_hass()
         if not (last_state := await self.async_get_last_state()):
             return

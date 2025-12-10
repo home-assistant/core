@@ -131,6 +131,26 @@
       }
     }
   },
+  "exceptions": {
+    "auth_client_error": {
+      "message": "Client error during authentication, please check your network connection."
+    },
+    "auth_server_error": {
+      "message": "Error response from authentication server, please see logs for details."
+    },
+    "device_api_error": {
+      "message": "Error communicating with the Device Access API, please see logs for details."
+    },
+    "reauth_required": {
+      "message": "Reauthentication is required, please follow the instructions in the UI to reauthenticate your account."
+    },
+    "subscriber_error": {
+      "message": "Subscriber failed to connect to Google, please see logs for details."
+    },
+    "subscriber_timeout": {
+      "message": "Subscriber timed out while attempting to connect to Google. Please check your network connection and IPv6 configuration if applicable."
+    }
+  },
   "selector": {
     "subscription_name": {
       "options": {

@@ -841,6 +841,44 @@ async def test_climate(
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_climate_mode(
+    hass: HomeAssistant,
+    client: ClientSessionGenerator,
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
+    """Test prometheus metrics for climate mode enum."""
+    data = {**climate_entities}
+
+    # Set climate_2 to a specific HVAC mode from its available modes
+    set_state_with_entry(
+        hass,
+        data["climate_2"],
+        "heat",
+        data["climate_2_attributes"],
+    )
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    # Current mode should be 1 for heat and 0 for others (e.g., cool)
+    EntityMetric(
+        metric_name="climate_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="heat",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="cool",
+    ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_humidifier(
     client: ClientSessionGenerator,
     humidifier_entities: dict[str, er.RegistryEntry | dict[str, Any]],

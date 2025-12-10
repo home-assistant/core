@@ -23,12 +23,7 @@ rules:
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  test-before-setup:
-    status: todo
-    comment: |
-      The integration does tests on setup, however the most common issues
-      observed are related to ipv6 misconfigurations and the error messages
-      are not self explanatory and can be improved.
+  test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done

@@ -39,6 +39,7 @@ from .entity import (
 )
 
 _KEY_DOOR = "door"
+PARALLEL_UPDATES = 0
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -673,7 +674,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         available = self.data.last_update_success
 
         # should not be possible since it would require user to
-        # _downgrade_ to make ustorage disppear
+        # _downgrade_ to make ustorage disappear
         assert self.device.system_info.ustorage is not None
         for disk in self.device.system_info.ustorage.disks:
             if disk.slot == slot:
