@@ -20,6 +20,8 @@ from homeassistant.util import dt as dt_util
 
 from . import assert_entities, setup_platform
 
+TZ = dt_util.get_default_time_zone()
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_calendar(
@@ -40,10 +42,18 @@ async def test_calendar(
 
 
 @pytest.mark.parametrize(
-    "entity_id",
+    ("entity_id"),
     [
         "calendar.energy_site_buy_tariff",
         "calendar.energy_site_sell_tariff",
+    ],
+)
+@pytest.mark.parametrize(
+    ("time"),
+    [
+        datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ),  # Starts Yesterday
+        datetime(2024, 1, 1, 20, 0, 0, tzinfo=TZ),  # Both Today
+        datetime(2024, 1, 1, 22, 0, 0, tzinfo=TZ),  # Ends Tomorrow
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -54,13 +64,18 @@ async def test_calendar_events(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
     entity_id: str,
+    time: datetime,
 ) -> None:
     """Tests that the energy tariff calendar entity events are correct."""
 
-    TZ = dt_util.get_default_time_zone()
-    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ))
+    freezer.move_to(time)
 
     await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes == snapshot(name="event")
+
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
@@ -72,4 +87,4 @@ async def test_calendar_events(
         blocking=True,
         return_response=True,
     )
-    assert result == snapshot()
+    assert result == snapshot(name="events")
