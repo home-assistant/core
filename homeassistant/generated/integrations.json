@@ -1776,7 +1776,7 @@
     },
     "entur_public_transport": {
       "name": "Entur",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
