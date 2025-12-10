@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypedDict
 
 from homelink.model.device import Device
 from homelink.mqtt_provider import MQTTProvider
@@ -14,9 +14,6 @@ from homelink.mqtt_provider import MQTTProvider
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.ssl import get_default_context
-
-if TYPE_CHECKING:
-    from .event import HomeLinkEventEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +58,6 @@ class HomeLinkCoordinator:
         self.config_entry = config_entry
         self.provider = provider
         self.device_data: list[Device] = []
-        self.buttons: list[HomeLinkEventEntity] = []
         self._listeners: dict[str, EventCallback] = {}
 
     @callback
@@ -76,7 +72,7 @@ class HomeLinkCoordinator:
         del self._listeners[listener_id]
 
     @callback
-    def async_handle_state_data(self, data: dict[str, HomeLinkEventData]):
+    def async_handle_state_data(self, data: dict[str, HomeLinkEventData]) -> None:
         """Notify listeners."""
         for button_id, event in data.items():
             if listener := self._listeners.get(button_id):
@@ -86,7 +82,7 @@ class HomeLinkCoordinator:
         """Refresh data for the first time when a config entry is setup."""
         await self._async_setup()
 
-    async def async_on_unload(self, _event):
+    async def async_on_unload(self, _event) -> None:
         """Disconnect and unregister when unloaded."""
         await self.provider.disable()
 
@@ -100,10 +96,8 @@ class HomeLinkCoordinator:
         """Discover devices and build the Entities."""
         self.device_data = await self.provider.discover()
 
-    def on_message(
-        self: HomeLinkCoordinator, _topic: str, message: HomeLinkMQTTMessage
-    ):
-        "MQTT Callback function."
+    def on_message(self, _topic: str, message: HomeLinkMQTTMessage) -> None:
+        """MQTT Callback function."""
         if message["type"] == "state":
             self.hass.add_job(self.async_handle_state_data, message["data"])
         if message["type"] == "requestSync":
