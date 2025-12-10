@@ -21,7 +21,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
-from .coordinator import WLEDConfigEntry
+from .coordinator import WLEDConfigEntry, normalize_mac_address
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -54,7 +54,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                mac_address = format_mac(device.info.mac_address)
+                mac_address = normalize_mac_address(device.info.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
                 if self.source == SOURCE_RECONFIGURE:
                     entry = self._get_reconfigure_entry()
@@ -104,7 +104,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         # Abort quick if the mac address is provided by discovery info
         if mac := discovery_info.properties.get(CONF_MAC):
-            await self.async_set_unique_id(format_mac(mac))
+            await self.async_set_unique_id(normalize_mac_address(mac))
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: discovery_info.host}
             )
@@ -117,7 +117,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        device_mac_address = format_mac(self.discovered_device.info.mac_address)
+        device_mac_address = normalize_mac_address(
+            self.discovered_device.info.mac_address
+        )
         await self.async_set_unique_id(device_mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 

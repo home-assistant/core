@@ -34,7 +34,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     assert result.get("title") == "WLED RGB Light"
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.123"
-    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aabbccddeeff"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -166,7 +166,7 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
     assert "result" in result2
-    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result2["result"].unique_id == "aabbccddeeff"
 
 
 @pytest.mark.usefixtures("mock_wled")
@@ -195,7 +195,7 @@ async def test_zeroconf_during_onboarding(
 
     assert result.get("data") == {CONF_HOST: "192.168.1.123"}
     assert "result" in result
-    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1

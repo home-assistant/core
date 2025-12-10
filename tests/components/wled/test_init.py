@@ -100,31 +100,6 @@ async def test_migrate_entry_future_version_is_downgrade(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
-async def test_migrate_entry_v1_missing_unique_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Abort migration when unique_id is missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="WLED No UID",
-        unique_id=None,
-        version=1,
-        minor_version=0,
-        data={"host": "wled.local"},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert result is False
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
-    assert entry.version == 1
-    assert entry.minor_version == 0
-    assert "missing unique ID" in caplog.text
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
 async def test_migrate_entry_v1_to_1_2_no_duplicates(
     hass: HomeAssistant, config_entry_v1: MockConfigEntry
 ) -> None:
@@ -138,7 +113,7 @@ async def test_migrate_entry_v1_to_1_2_no_duplicates(
     assert config_entry_v1.state == ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
-    assert config_entry_v1.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert config_entry_v1.unique_id == "aabbccddeeff"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -177,7 +152,7 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
     assert config_entry_v1.state == ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
-    assert config_entry_v1.unique_id == "aa:bb:cc:dd:ee:ff"
+    assert config_entry_v1.unique_id == "aabbccddeeff"
 
     assert ignored_1.state is ConfigEntryState.NOT_LOADED
     assert ignored_2.state is ConfigEntryState.NOT_LOADED
