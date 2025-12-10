@@ -59,9 +59,14 @@
         "user": "Add location"
       },
       "step": {
-        "user": {
+        "location": {
           "data": {
-            "location": "[%key:common::config_flow::data::location%]"
+            "location": "[%key:common::config_flow::data::location%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "location": "[%key:component::google_air_quality::config::step::user::data_description::location%]",
+            "name": "[%key:component::google_air_quality::config::step::user::data_description::name%]"
           },
           "description": "Select the coordinates for which you want to create an entry.",
           "title": "Air quality data location"
@@ -132,7 +137,6 @@
           "heavily_polluted": "Heavily polluted",
           "heavy_air_pollution": "Heavy air pollution",
           "high_air_pollution": "High air pollution",
-          "high_air_quality": "High air pollution",
           "high_health_risk": "High health risk",
           "horrible_air_quality": "Horrible air quality",
           "light_air_pollution": "Light air pollution",
@@ -165,20 +169,18 @@
           "slightly_polluted": "Slightly polluted",
           "sufficient_air_quality": "Sufficient air quality",
           "unfavorable_air_quality": "Unfavorable air quality",
-          "unfavorable_sensitive": "Unfavorable air quality for sensitive groups",
+          "unfavorable_air_quality_for_sensitive_groups": "Unfavorable air quality for sensitive groups",
           "unhealthy_air_quality": "Unhealthy air quality",
           "unhealthy_sensitive": "Unhealthy air quality for sensitive groups",
           "unsatisfactory_air_quality": "Unsatisfactory air quality",
           "very_bad_air_quality": "Very bad air quality",
           "very_good_air_quality": "Very good air quality",
           "very_high_air_pollution": "Very high air pollution",
-          "very_high_air_quality": "Very High air pollution",
           "very_high_health_risk": "Very high health risk",
           "very_low_air_pollution": "Very low air pollution",
           "very_polluted": "Very polluted",
           "very_poor_air_quality": "Very poor air quality",
           "very_unfavorable_air_quality": "Very unfavorable air quality",
-          "very_unhealthy": "Very unhealthy air quality",
           "very_unhealthy_air_quality": "Very unhealthy air quality",
           "warning_air_pollution": "Warning level air pollution"
         }

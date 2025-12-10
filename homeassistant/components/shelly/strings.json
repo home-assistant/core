@@ -557,6 +557,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "cury_away_mode": {
+        "name": "Away mode"
+      },
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
       },
@@ -588,6 +591,11 @@
     "update": {
       "beta_firmware": {
         "name": "Beta firmware"
+      }
+    },
+    "valve": {
+      "gas_valve": {
+        "name": "Valve"
       }
     }
   },

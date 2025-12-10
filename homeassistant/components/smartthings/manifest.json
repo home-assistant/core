@@ -27,6 +27,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
   "quality_scale": "bronze",

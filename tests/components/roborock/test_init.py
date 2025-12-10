@@ -2,7 +2,7 @@
 
 import pathlib
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from roborock import (
@@ -26,13 +26,41 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_unload_entry(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
-    """Test unloading roboorck integration."""
+async def test_unload_entry(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test unloading roborock integration."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert device_manager.get_devices.called
+    assert not device_manager.close.called
+
+    # Unload the config entry and verify that the device manager is closed
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
     assert setup_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert device_manager.close.called
+
+
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test shutting down Home Assistant."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert not device_manager.close.called
+
+    # Perform Home Assistant stop and verify that device manager is closed
+    await hass.async_stop()
+
+    assert device_manager.close.called
 
 
 async def test_reauth_started(
@@ -52,25 +80,77 @@ async def test_reauth_started(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
-async def test_oserror_remove_image(
+@pytest.mark.parametrize(
+    ("exists", "is_dir", "rmtree_called"),
+    [
+        (True, True, True),
+        (False, False, False),
+        (True, False, False),
+    ],
+    ids=[
+        "old_storage_removed",
+        "new_storage_ignored",
+        "no_existing_storage",
+    ],
+)
+async def test_remove_old_storage_directory(
     hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
+    mock_roborock_entry: MockConfigEntry,
+    storage_path: pathlib.Path,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    exists: bool,
+    is_dir: bool,
+    rmtree_called: bool,
+) -> None:
+    """Test cleanup of old old map storage."""
+    with (
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.exists",
+            return_value=exists,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.is_dir",
+            return_value=is_dir,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
+        ) as mock_rmtree,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    assert mock_rmtree.called == rmtree_called
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
+async def test_oserror_remove_storage_directory(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
     storage_path: pathlib.Path,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we gracefully handle failing to remove old map storage."""
-
     with (
         patch(
             "homeassistant.components.roborock.roborock_storage.Path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.is_dir",
+            return_value=True,
         ),
         patch(
             "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
             side_effect=OSError,
         ) as mock_rmtree,
     ):
-        await hass.config_entries.async_remove(setup_entry.entry_id)
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
     assert mock_rmtree.called
     assert "Unable to remove map files" in caplog.text
 

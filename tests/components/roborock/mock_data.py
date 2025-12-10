@@ -14,6 +14,7 @@ from roborock.data import (
     NetworkInfo,
     S7Status,
     UserData,
+    ValleyElectricityTimer,
 )
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
@@ -1072,6 +1073,16 @@ DND_TIMER = DnDTimer.from_dict(
     }
 )
 
+VALLEY_ELECTRICITY_TIMER = ValleyElectricityTimer.from_dict(
+    {
+        "start_hour": 23,
+        "start_minute": 0,
+        "end_hour": 7,
+        "end_minute": 0,
+        "enabled": 1,
+    }
+)
+
 STATUS = S7Status.from_dict(
     {
         "msg_ver": 2,
@@ -1148,6 +1159,29 @@ MULTI_MAP_LIST = MultiMapsList.from_dict(
                 "addTime": 1697579901,
                 "length": 10,
                 "name": "Downstairs",
+                "bakMaps": [{"addTime": 1695521431}],
+            },
+        ],
+    }
+)
+MULTI_MAP_LIST_NO_MAP_NAMES = MultiMapsList.from_dict(
+    {
+        "maxMultiMap": 4,
+        "maxBakMap": 1,
+        "multiMapCount": 2,
+        "mapInfo": [
+            {
+                "mapFlag": 0,
+                "addTime": 1686235489,
+                "length": 0,
+                "name": "",
+                "bakMaps": [{"addTime": 1673304288}],
+            },
+            {
+                "mapFlag": 1,
+                "addTime": 1697579901,
+                "length": 0,
+                "name": "",
                 "bakMaps": [{"addTime": 1695521431}],
             },
         ],

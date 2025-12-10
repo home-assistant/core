@@ -55,6 +55,7 @@ from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

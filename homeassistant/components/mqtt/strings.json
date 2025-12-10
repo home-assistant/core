@@ -729,8 +729,8 @@
               "data_description": {
                 "payload_reset_percentage": "A special payload that resets the fan speed percentage state attribute to unknown when received at the percentage state topic.",
                 "percentage_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the percentage command topic.",
-                "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage. [Learn more.]({url}#percentage_command_topic)",
-                "percentage_state_topic": "The MQTT topic subscribed to receive fan speed based on percentage. [Learn more.]({url}#percentage_state_topic)",
+                "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage setting. The value shall be in the range from \"speed range min\" to \"speed range max\". [Learn more.]({url}#percentage_command_topic)",
+                "percentage_state_topic": "The MQTT topic subscribed to receive fan speed state. This is a value in the range from \"speed range min\" to \"speed range max\". [Learn more.]({url}#percentage_state_topic)",
                 "percentage_value_template": "Defines a [template]({value_templating_url}) to extract the speed percentage value.",
                 "speed_range_max": "The maximum of numeric output range (representing 100 %). The percentage step is 100 / number of speeds within the \"speed range\".",
                 "speed_range_min": "The minimum of numeric output range (off not included, so speed_range_min - 1 represents 0 %). The percentage step is 100 / the number of speeds within the \"speed range\"."
@@ -1562,8 +1562,7 @@
   },
   "triggers": {
     "_": {
-      "description": "When a specific message is received on a given MQTT topic.",
-      "description_configured": "When an MQTT message has been received",
+      "description": "Triggers after a specific message is received on a given MQTT topic.",
       "fields": {
         "payload": {
           "description": "The payload to trigger on.",
@@ -1574,7 +1573,7 @@
           "name": "Topic"
         }
       },
-      "name": "MQTT"
+      "name": "MQTT message received"
     }
   }
 }

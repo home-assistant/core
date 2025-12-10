@@ -86,7 +86,7 @@ async def test_update_success(
     ],
 )
 @pytest.mark.parametrize(
-    "send_message_side_effect", [roborock.exceptions.RoborockTimeout]
+    "send_message_exception", [roborock.exceptions.RoborockTimeout]
 )
 async def test_update_failed(
     hass: HomeAssistant,
