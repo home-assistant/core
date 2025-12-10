@@ -21,7 +21,7 @@
         },
         "data_description": {
           "host": "Hostname or IP address of Victron device, usually mDNS name like 'venus.local'",
-          "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read only' exposes only sensors and binary sensors (no writable entities), 'full' exposes all entity types (sensors, binary sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
+          "operation_mode": "Operation mode controls which Home Assistant entity types are created.",
           "password": "Password for the Victron device, default is empty. This is not your VRM password.",
           "port": "The MQTT port on the host. Normally it is 1883.",
           "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
@@ -1307,7 +1307,6 @@
   "selector": {
     "operation_mode": {
       "options": {
-        "experimental": "Experimental (may be unstable)",
         "full": "Full (sensors + controllable entities)",
         "read_only": "Read-only (sensors & binary sensors only)"
       }
