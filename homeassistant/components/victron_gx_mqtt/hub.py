@@ -58,11 +58,8 @@ class Hub:
         self.id = entry.unique_id
 
         config = entry.data
-        host = config.get(CONF_HOST)
-        assert host is not None
-
         self._hub: VictronVenusHub = VictronVenusHub(
-            host=host,
+            host=config[CONF_HOST],
             port=config.get(CONF_PORT, 1883),
             username=config.get(CONF_USERNAME) or None,
             password=config.get(CONF_PASSWORD) or None,

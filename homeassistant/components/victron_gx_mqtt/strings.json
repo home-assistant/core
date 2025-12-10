@@ -137,7 +137,7 @@
         "name": "Inverter connected"
       },
       "vebus_inverter_ignoreacin1_onoff_control": {
-        "name": "Control ignore Ac-in-1"
+        "name": "Control ignore AC-in-1"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Loss of grid alarm setting"
@@ -769,10 +769,10 @@
         "name": "Total PV yield"
       },
       "platform_venus_firmware_available_version": {
-        "name": "Firmware Venus available version"
+        "name": "Venus OS - available version"
       },
       "platform_venus_firmware_installed_version": {
-        "name": "Firmware Venus installed version"
+        "name": "Venus OS - installed version"
       },
       "pvinverter_current_phase": {
         "name": "Current {phase}"
@@ -1090,28 +1090,28 @@
         "name": "VE.Bus device {device_number} power assist enabled"
       },
       "vebus_energy_ac_in1_to_ac_out": {
-        "name": "Energy from Ac-in-1 to AC-out"
+        "name": "Energy from AC-in-1 to AC-out"
       },
       "vebus_energy_ac_in1_to_inverter": {
-        "name": "Energy from Ac-in-1 to inverter"
+        "name": "Energy from AC-in-1 to inverter"
       },
       "vebus_energy_ac_in2_to_ac_out": {
-        "name": "Energy from Ac-in-2 to AC-out"
+        "name": "Energy from AC-in-2 to AC-out"
       },
       "vebus_energy_ac_in2_to_inverter": {
-        "name": "Energy from Ac-in-2 to inverter"
+        "name": "Energy from AC-in-2 to inverter"
       },
       "vebus_energy_ac_out_to_ac_in1": {
-        "name": "Energy from AC-out to Ac-in-1"
+        "name": "Energy from AC-out to AC-in-1"
       },
       "vebus_energy_ac_out_to_ac_in2": {
-        "name": "Energy from AC-out to Ac-in-2"
+        "name": "Energy from AC-out to AC-in-2"
       },
       "vebus_energy_inverter_to_ac_in1": {
-        "name": "Energy from inverter to Ac-in-1"
+        "name": "Energy from inverter to AC-in-1"
       },
       "vebus_energy_inverter_to_ac_in2": {
-        "name": "Energy from inverter to Ac-in-2"
+        "name": "Energy from inverter to AC-in-2"
       },
       "vebus_energy_inverter_to_ac_out": {
         "name": "Energy from inverter to AC-out"
@@ -1165,7 +1165,7 @@
         "name": "Inverter DC temperature"
       },
       "vebus_inverter_ignoreacin1_state": {
-        "name": "State of ignore Ac-in-1"
+        "name": "State of ignore AC-in-1"
       },
       "vebus_inverter_input_apparent_power_phase": {
         "name": "Inverter input apparent power {phase}"
@@ -1257,7 +1257,7 @@
         "name": "PV DC overvoltage feed-in"
       },
       "vebus_inverter_ignoreacin1_onoff_control": {
-        "name": "Control ignore Ac-in-1"
+        "name": "Control ignore AC-in-1"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Loss of grid alarm setting"
