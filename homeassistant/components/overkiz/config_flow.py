@@ -347,7 +347,8 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        gateway_id = _get_gateway_id_from_unique_id(self.unique_id)
+        if not (gateway_id := _get_gateway_id_from_unique_id(self.unique_id)):
+            raise ValueError("Reauth flow requires a valid unique_id")
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
