@@ -42,7 +42,7 @@ def mock_mqtt_provider(mock_device: AsyncMock) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_device() -> Generator[AsyncMock]:
+def mock_device() -> AsyncMock:
     """Mock MQTT provider."""
     device = AsyncMock(spec=homelink.model.device.Device, autospec=True)
     buttons = [
