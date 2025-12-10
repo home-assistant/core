@@ -50,8 +50,14 @@
       }
     },
     "sensor": {
+      "audio_issues": {
+        "name": "Audio issues"
+      },
       "available_requests": {
         "name": "Available requests"
+      },
+      "closed_issues": {
+        "name": "Closed issues"
       },
       "declined_requests": {
         "name": "Declined requests"
@@ -59,17 +65,29 @@
       "movie_requests": {
         "name": "Movie requests"
       },
+      "open_issues": {
+        "name": "Open issues"
+      },
       "pending_requests": {
         "name": "Pending requests"
       },
       "processing_requests": {
         "name": "Processing requests"
       },
+      "subtitle_issues": {
+        "name": "Subtitle issues"
+      },
+      "total_issues": {
+        "name": "Total issues"
+      },
       "total_requests": {
         "name": "Total requests"
       },
       "tv_requests": {
         "name": "TV requests"
+      },
+      "video_issues": {
+        "name": "Video issues"
       }
     }
   },
@@ -88,6 +106,32 @@
     }
   },
   "selector": {
+    "issue_sort_order": {
+      "options": {
+        "added": "Added",
+        "modified": "Modified"
+      }
+    },
+    "issue_status": {
+      "options": {
+        "open": "Open",
+        "resolved": "Resolved"
+      }
+    },
+    "issue_status_update": {
+      "options": {
+        "1": "Open",
+        "2": "Resolved"
+      }
+    },
+    "issue_type": {
+      "options": {
+        "1": "Video",
+        "2": "Audio",
+        "3": "Subtitles",
+        "4": "Other"
+      }
+    },
     "request_sort_order": {
       "options": {
         "added": "Added",
@@ -106,6 +150,72 @@
     }
   },
   "services": {
+    "create_issue": {
+      "description": "Creates a new issue in Overseerr for a specific media item.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to create the issue in.",
+          "name": "Overseerr instance"
+        },
+        "issue_type": {
+          "description": "The type of issue being reported.",
+          "name": "Issue type"
+        },
+        "media_id": {
+          "description": "The TMDB ID of the media item.",
+          "name": "Media ID"
+        },
+        "message": {
+          "description": "Description of the issue.",
+          "name": "Message"
+        },
+        "problem_episode": {
+          "description": "The episode number with the issue (for TV shows).",
+          "name": "Problem episode"
+        },
+        "problem_season": {
+          "description": "The season number with the issue (for TV shows).",
+          "name": "Problem season"
+        }
+      },
+      "name": "Create issue"
+    },
+    "delete_issue": {
+      "description": "Deletes an issue from Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance containing the issue.",
+          "name": "Overseerr instance"
+        },
+        "issue_id": {
+          "description": "The ID of the issue to delete.",
+          "name": "Issue ID"
+        }
+      },
+      "name": "Delete issue"
+    },
+    "get_issues": {
+      "description": "Retrieves a list of issues from Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to get issues from.",
+          "name": "Overseerr instance"
+        },
+        "issue_status": {
+          "description": "Filter the issues by status.",
+          "name": "Issue status"
+        },
+        "requested_by": {
+          "description": "Filter the issues by the user ID that reported them.",
+          "name": "Reported by"
+        },
+        "sort_order": {
+          "description": "Sort the issues by added or modified date.",
+          "name": "Sort order"
+        }
+      },
+      "name": "Get issues"
+    },
     "get_requests": {
       "description": "Retrieves a list of media requests from Overseerr.",
       "fields": {
@@ -127,6 +237,28 @@
         }
       },
       "name": "Get requests"
+    },
+    "update_issue": {
+      "description": "Updates an existing issue in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance containing the issue.",
+          "name": "Overseerr instance"
+        },
+        "issue_id": {
+          "description": "The ID of the issue to update.",
+          "name": "Issue ID"
+        },
+        "issue_status": {
+          "description": "The new status for the issue.",
+          "name": "Status"
+        },
+        "message": {
+          "description": "Add a comment to the issue.",
+          "name": "Comment"
+        }
+      },
+      "name": "Update issue"
     }
   }
 }

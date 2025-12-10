@@ -1,4 +1,5 @@
 get_requests:
+  target:
   fields:
     config_entry_id:
       required: true
@@ -27,4 +28,119 @@ get_requests:
       selector:
         number:
           min: 0
+          mode: box
+
+get_issues:
+  target:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_status:
+      selector:
+        select:
+          options:
+            - open
+            - resolved
+          translation_key: issue_status
+    sort_order:
+      selector:
+        select:
+          options:
+            - added
+            - modified
+          translation_key: issue_sort_order
+    requested_by:
+      selector:
+        number:
+          min: 0
+          mode: box
+
+create_issue:
+  target:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_type:
+      required: true
+      selector:
+        select:
+          options:
+            - label: Video
+              value: "1"
+            - label: Audio
+              value: "2"
+            - label: Subtitles
+              value: "3"
+            - label: Other
+              value: "4"
+          translation_key: issue_type
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    media_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    problem_season:
+      selector:
+        number:
+          min: 0
+          mode: box
+    problem_episode:
+      selector:
+        number:
+          min: 0
+          mode: box
+
+update_issue:
+  target:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    issue_status:
+      selector:
+        select:
+          options:
+            - label: Open
+              value: "1"
+            - label: Resolved
+              value: "2"
+          translation_key: issue_status_update
+    message:
+      selector:
+        text:
+          multiline: true
+
+delete_issue:
+  target:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_id:
+      required: true
+      selector:
+        number:
+          min: 1
           mode: box
