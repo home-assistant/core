@@ -102,13 +102,23 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
             self._attr_latest_version = self._attr_installed_version
 
         # In Progress
-        if self._value in (
-            SCHEDULED,
-            INSTALLING,
-        ):
+        if self._value == INSTALLING:
             self._attr_in_progress = True
             if install_perc := self.get("vehicle_state_software_update_install_perc"):
                 self._attr_update_percentage = install_perc
         else:
             self._attr_in_progress = False
             self._attr_update_percentage = None
+
+        # Release Summary - show when update is scheduled
+        if self._value == SCHEDULED:
+            self._attr_release_summary = "Update scheduled"
+        else:
+            self._attr_release_summary = None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return extra state attributes."""
+        if self._value:
+            return {"update_status": self._value}
+        return None

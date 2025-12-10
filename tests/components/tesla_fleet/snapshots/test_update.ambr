@@ -50,6 +50,7 @@
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
       'update_percentage': None,
+      'update_status': 'available',
     }),
     'context': <ANY>,
     'entity_id': 'update.test_update',

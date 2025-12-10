@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.components.tesla_fleet.update import INSTALLING
+from homeassistant.components.tesla_fleet.update import AVAILABLE, INSTALLING, SCHEDULED
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -81,3 +81,39 @@ async def test_update_services(
 
     state = hass.states.get(entity_id)
     assert state.attributes["in_progress"] is True  # type: ignore[union-attr]
+    assert state.attributes["update_status"] == INSTALLING  # type: ignore[union-attr]
+
+
+async def test_update_scheduled_not_in_progress(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Tests that a scheduled update is not shown as in_progress."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.UPDATE])
+
+    entity_id = "update.test_update"
+
+    # Verify initial state (available) is not in_progress and shows correct status
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is False  # type: ignore[union-attr]
+    assert state.attributes["update_status"] == AVAILABLE  # type: ignore[union-attr]
+    assert state.attributes["release_summary"] is None  # type: ignore[union-attr]
+
+    # Simulate update being scheduled for later
+    vehicle_scheduled = copy.deepcopy(VEHICLE_DATA)
+    vehicle_scheduled["response"]["vehicle_state"]["software_update"]["status"] = (  # type: ignore[index]
+        SCHEDULED
+    )
+    mock_vehicle_data.return_value = vehicle_scheduled
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Scheduled update should NOT be in_progress but should show scheduled status
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is False  # type: ignore[union-attr]
+    assert state.attributes["update_status"] == SCHEDULED  # type: ignore[union-attr]
+    assert state.attributes["release_summary"] == "Update scheduled"  # type: ignore[union-attr]
