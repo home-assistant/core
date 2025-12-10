@@ -7,7 +7,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
-from pyanglianwater.auth import BaseAuth, MSOB2CAuth
+from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     InvalidAccountIdError,
     SelfAssertedError,
@@ -35,7 +35,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
+async def validate_credentials(
+    auth: MSOB2CAuth, account_number: str
+) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
@@ -46,7 +48,7 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
         return "unknown"
     _aw = AnglianWater(authenticator=auth)
     try:
-        await _aw.validate_smart_meter()
+        await _aw.validate_smart_meter(account_number)
     except (InvalidAccountIdError, SmartMeterUnavailableError):
         return "smart_meter_unavailable"
     return auth
@@ -69,10 +71,12 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass,
                         cookie_jar=CookieJar(quote_cookie=False),
                     ),
-                    account_number=user_input[CONF_ACCOUNT_NUMBER],
-                )
+                ),
+                user_input[CONF_ACCOUNT_NUMBER],
             )
-            if isinstance(validation_response, BaseAuth):
+            if isinstance(validation_response, str):
+                errors["base"] = validation_response
+            else:
                 await self.async_set_unique_id(user_input[CONF_ACCOUNT_NUMBER])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -82,7 +86,6 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_ACCESS_TOKEN: validation_response.refresh_token,
                     },
                 )
-            errors["base"] = validation_response
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
