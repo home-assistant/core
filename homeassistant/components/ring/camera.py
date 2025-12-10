@@ -131,8 +131,11 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._device.device_api_id
         )
 
-        # Live stream entities only process recording history if device has
-        # subscription to avoid repeated warning logs from ring_doorbell library
+        # Live stream entities are primarily for WebRTC live viewing, which works
+        # without a subscription. Recording history (for still images/MJPEG) requires
+        # a Ring Protect subscription. Skip processing recording history when there's
+        # no subscription since: 1) no recordings exist to display, 2) the ring_doorbell
+        # library logs warnings when attempting to fetch recording URLs without one.
         if self.entity_description.live_stream and not self._device.has_subscription:
             self.async_write_ha_state()
             return
