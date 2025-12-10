@@ -87,6 +87,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 from_day = period_def.get("fromDayOfWeek", 0)  # Default is Monday
                 to_day = period_def.get("toDayOfWeek", 6)  # Default is Sunday
                 if from_day > day_of_week > to_day:
+                    # This period doesn't occur today
                     continue
 
                 # Calculate start and end times for today (default is midnight)
@@ -104,14 +105,18 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
                 # Handle periods that cross midnight
                 if end_time <= start_time:
+                    # The period does cross midnight, check both sides
                     potential_end_time = end_time + timedelta(days=1)
                     if start_time <= now < potential_end_time:
+                        # Period matches and ends tomorrow
                         end_time = potential_end_time
                     elif (start_time - timedelta(days=1)) <= now < end_time:
+                        # Period matches and started yesterday
                         start_time -= timedelta(days=1)
                     else:
                         continue
                 elif not (start_time <= now < end_time):
+                    # This period doesn't occur now
                     continue
 
                 # Create calendar event for the active period

@@ -164,6 +164,7 @@
             "OFF_PEAK": {
               "periods": [
                 {
+                  "fromDayOfWeek": 0,
                   "toDayOfWeek": 6,
                   "fromHour": 21,
                   "toHour": 16
@@ -173,6 +174,7 @@
             "ON_PEAK": {
               "periods": [
                 {
+                  "fromDayOfWeek": 0,
                   "toDayOfWeek": 6,
                   "fromHour": 16,
                   "toHour": 21
