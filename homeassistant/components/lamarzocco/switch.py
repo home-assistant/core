@@ -167,9 +167,11 @@ class LaMarzoccoMainSwitchEntity(LaMarzoccoSwitchEntity):
     """Switch representing espresso machine main power."""
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return the entity picture."""
-        return self.coordinator.device.dashboard.image_url
+
+        image_url = self.coordinator.device.dashboard.image_url
+        return image_url if image_url else None  # image URL can be empty string
 
 
 class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
