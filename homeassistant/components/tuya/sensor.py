@@ -90,9 +90,9 @@ class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("electricCurrent")
+        return status.get("electricCurrent")
 
 
 class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
@@ -102,9 +102,9 @@ class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("power")
+        return status.get("power")
 
 
 class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
@@ -114,9 +114,9 @@ class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("voltage")
+        return status.get("voltage")
 
 
 class _RawElectricityDataWrapper(DPCodeBase64Wrapper):
