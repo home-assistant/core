@@ -257,6 +257,39 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
 }
 
+# Rain count sensors can be rolling windows or reset periodically
+# Only those that reset get marked as TOTAL_INCREASING
+_TOTAL_INCREASING_RAIN_COUNT_SENSORS: Final = {
+    # Lifetime total rain sensors
+    "totalrainin",
+    "totalrainmm",
+    # Yearly, resets 1st day of the year
+    "yearlyrainin",
+    "yearlyrainmm",
+    "yrain_piezo",
+    "yrain_piezomm",
+    # Monthly, resets 1st day of the month
+    "monthlyrainin",
+    "monthlyrainmm",
+    "mrain_piezo",
+    "mrain_piezomm",
+    # Weekly, resets 1st day of the week
+    "weeklyrainin",
+    "weeklyrainmm",
+    "wrain_piezo",
+    "wrain_piezomm",
+    # Daily, resets at midnight
+    "dailyrainin",
+    "dailyrainmm",
+    "drain_piezo",
+    "drain_piezomm",
+    # Event, resets after 24hrs without rain
+    "eventrainin",
+    "eventrainmm",
+    "erain_piezo",
+    "erain_piezomm",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -285,11 +318,7 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Only total rain needs state class for long-term statistics
-        if sensor.key in (
-            "totalrainin",
-            "totalrainmm",
-        ):
+        if sensor.key in _TOTAL_INCREASING_RAIN_COUNT_SENSORS:
             description = dataclasses.replace(
                 description,
                 state_class=SensorStateClass.TOTAL_INCREASING,
