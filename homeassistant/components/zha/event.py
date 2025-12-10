@@ -64,5 +64,6 @@ class Event(ZHAEntity, EventEntity):
         self.debug("Handling event from entity: %s", event)
         if isinstance(event, EntityStateChangedEvent) and event.event == STATE_CHANGED:
             state = self.entity_data.entity.state
-            self._trigger_event(state["event_type"], state["event_attributes"])
-            self.async_write_ha_state()
+            if event_type := state.get("event_type"):
+                self._trigger_event(event_type, state.get("event_attributes"))
+                self.async_write_ha_state()
