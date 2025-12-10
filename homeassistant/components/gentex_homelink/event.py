@@ -16,7 +16,7 @@ async def async_setup_entry(
     config_entry: HomeLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the entities for the binary sensor."""
+    """Add the entities for the event platform."""
     coordinator = config_entry.runtime_data
 
     async_add_entities(
