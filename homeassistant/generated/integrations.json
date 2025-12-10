@@ -129,6 +129,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airpatrol": {
+      "name": "AirPatrol",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "airq": {
       "name": "air-Q",
       "integration_type": "hub",
@@ -1589,6 +1595,12 @@
       "name": "Egardia",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "egauge": {
+      "name": "eGauge",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "eheimdigital": {
