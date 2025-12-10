@@ -172,7 +172,6 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             "location": LocationSubentryFlowHandler,
-            "forecast": ForecastSubentryFlowHandler,
         }
 
 
@@ -210,39 +209,32 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
 
     async_step_user = async_step_location
 
-
-class ForecastSubentryFlowHandler(ConfigSubentryFlow):
-    """Handle a subentry flow for forecast."""
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a sensor subentry."""
+        return await self.async_step_forecast()
 
     async def async_step_forecast(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the forecast step."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
-
-        errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            api: GoogleAirQualityApi = self._get_entry().runtime_data.api
-            if await _validate_input(user_input, api, errors, description_placeholders):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data={
-                        CONF_LOCATION: user_input[CONF_LOCATION],
-                        "forecast": user_input["forecast"],
-                    },
-                )
-        else:
-            user_input = {}
+            title = user_input.pop("name")
+            return self.async_update_reload_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+                title=title,
+            )
+
         return self.async_show_form(
             step_id="forecast",
-            data_schema=self.add_suggested_values_to_schema(
-                _get_forecast_schema(self.hass), user_input
+            data_schema=vol.Schema(
+                {
+                    vol.Required("name"): str,
+                    vol.Required("state"): int,
+                }
             ),
-            errors=errors,
-            description_placeholders=description_placeholders,
         )
-
-    async_step_user = async_step_forecast
