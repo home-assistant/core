@@ -436,7 +436,7 @@ class TibberSensorElPrice(TibberSensor):
         ):
             return False
 
-        time_since_last_update = now - self._last_updated
+        time_since_last_update = now - self._last_updated  # type: ignore[operator]
         # If last_updated is in the future, don't skip
         if time_since_last_update.total_seconds() < 0:
             return False
@@ -460,12 +460,14 @@ class TibberSensorElPrice(TibberSensor):
         # Get hourly price data
         hourly_data = getattr(self._tibber_home, "price_info_today", None)
         if hourly_data and isinstance(hourly_data, list):
-            return hourly_data
+            return hourly_data  # type: ignore[no-any-return]
 
         # Fallback to current price if no historical data available
         try:
             if hasattr(self._tibber_home, "current_price_data"):
-                current_price, timestamp, level = self._tibber_home.current_price_data()
+                current_price, _timestamp, level = (
+                    self._tibber_home.current_price_data()
+                )
                 if current_price is not None:
                     return [
                         {
@@ -474,7 +476,7 @@ class TibberSensorElPrice(TibberSensor):
                             "level": level or "NORMAL",
                         }
                     ]
-        except Exception as exc:
+        except (AttributeError, TypeError, ValueError) as exc:
             _LOGGER.debug("Failed to get current price data: %s", exc)
 
         return []
@@ -504,10 +506,11 @@ class TibberSensorElPrice(TibberSensor):
                         }
                     )
 
-            return fifteen_min_data
-        except Exception as err:
+        except (AttributeError, TypeError, ValueError, KeyError) as err:
             _LOGGER.warning("Error generating 15-minute price data: %s", err)
-            return []
+        else:
+            return fifteen_min_data
+        return []
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
@@ -544,7 +547,7 @@ class TibberSensorElPrice(TibberSensor):
                 )
                 return
 
-        except Exception as exc:
+        except (AttributeError, TypeError, ValueError) as exc:
             _LOGGER.warning("Error determining update interval, using default: %s", exc)
             update_interval_minutes = UPDATE_INTERVAL_HOURLY
 
@@ -631,10 +634,11 @@ class TibberSensorElPrice(TibberSensor):
                         "Could not extract additional attributes from Tibber data"
                     )
 
-            return True
-        except Exception as exc:
+        except (AttributeError, TypeError, ValueError, KeyError) as exc:
             _LOGGER.error("Failed to fetch Tibber data: %s", exc)
-            return False
+        else:
+            return True
+        return False
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
