@@ -11147,6 +11147,55 @@
     'state': 'stopped',
   })
 # ---
+# name: test_sensors[valve][sensor.valve_auto_close_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.valve_auto_close_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Auto-close time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_close_time',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[valve][sensor.valve_auto_close_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Valve Auto-close time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.valve_auto_close_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
