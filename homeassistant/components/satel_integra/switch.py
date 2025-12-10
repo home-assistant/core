@@ -67,19 +67,20 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
         self._code = code
 
-        self._attr_is_on = (
-            self.coordinator.data.outputs[self._device_number] == 1
-            if self._device_number in self.coordinator.data.outputs
-            else False
-        )
+        self._attr_is_on = self._get_status_from_coordinator()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._attr_is_on = self._get_status_from_coordinator()
+        self.async_write_ha_state()
 
+    def _get_status_from_coordinator(self) -> bool | None:
+        """Method to get sensor status from coordinator data."""
         if self._device_number in self.coordinator.data.outputs:
-            self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
-            self.async_write_ha_state()
+            return self.coordinator.data.outputs[self._device_number] == 1
+
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
