@@ -349,8 +349,12 @@ async def test_camera_live_view_no_subscription(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # For live_view without subscription, recording URL should NOT be fetched
+    # For cameras without subscription, recording URL should NOT be fetched
     front_camera_mock.async_recording_url.assert_not_called()
+
+    # Requesting an image without subscription should raise an error
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.front_live_view")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

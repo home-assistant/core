@@ -96,8 +96,6 @@ async def async_setup_entry(
 class RingCam(RingEntity[RingDoorBell], Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    entity_description: RingCameraEntityDescription
-
     def __init__(
         self,
         device: RingDoorBell,
@@ -131,17 +129,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._device.device_api_id
         )
 
-        # Live stream entities are primarily for WebRTC live viewing, which works
-        # without a subscription. Recording history (for still images/MJPEG) requires
-        # a Ring Protect subscription. Skip processing recording history when there's
-        # no subscription since: 1) no recordings exist to display, 2) the ring_doorbell
-        # library logs warnings when attempting to fetch recording URLs without one.
-        if self.entity_description.live_stream and not self._device.has_subscription:
-            self.async_write_ha_state()
-            return
-
         history_data = self._device.last_history
-        if history_data:
+        if history_data and self._device.has_subscription:
             self._last_event = history_data[0]
             # will call async_update to update the attributes and get the
             # video url from the api
@@ -166,8 +155,16 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        if self._video_url is None:
+            if not self._device.has_subscription:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="no_subscription",
+                )
+            return None
+
         key = (width, height)
-        if not (image := self._images.get(key)) and self._video_url is not None:
+        if not (image := self._images.get(key)):
             image = await ffmpeg.async_get_image(
                 self.hass,
                 self._video_url,
