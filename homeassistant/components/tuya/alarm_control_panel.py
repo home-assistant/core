@@ -50,7 +50,7 @@ class _AlarmChangedByWrapper(DPCodeRawWrapper):
 
 
 class _AlarmStateWrapper(DPCodeEnumWrapper):
-    """Wrapper for the alarm mode of a device.
+    """Wrapper for the alarm state of a device.
 
     Handles alarm mode enum values and determines the alarm state,
     including logic for detecting when the alarm is triggered and
