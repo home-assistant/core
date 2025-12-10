@@ -111,7 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
                         filtered_count,
                     )
 
-
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
         if api_type == APIType.CLOUD:
@@ -367,4 +366,3 @@ def _hybrid_filter_local_devices(
         return devices
 
     return [d for d in devices if d.device_url not in local_device_urls]
-
