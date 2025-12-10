@@ -28,7 +28,7 @@
   "entity": {
     "switch": {
       "indoor_mode": {
-        "name": "{pet_name} indoor only mode"
+        "name": "{pet_name} indoor-only mode"
       }
     }
   },
