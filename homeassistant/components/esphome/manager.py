@@ -692,6 +692,11 @@ class ESPHomeManager:
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
 
+        if device_info.infrared_proxy_feature_flags:
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_infrared_proxy_receive(self._async_infrared_proxy_receive)
+            )
+
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
@@ -721,6 +726,10 @@ class ESPHomeManager:
         self.entry_data.async_create_zwave_js_flow(
             self.hass, self.entry_data.device_info, zwave_home_id
         )
+
+    def _async_infrared_proxy_receive(self, receive_event: Any) -> None:
+        """Handle an infrared proxy receive event."""
+        self.entry_data.async_on_infrared_proxy_receive(self.hass, receive_event)
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""

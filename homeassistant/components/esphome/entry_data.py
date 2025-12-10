@@ -29,6 +29,7 @@ from aioesphomeapi import (
     Event,
     EventInfo,
     FanInfo,
+    InfraredProxyInfo,
     LightInfo,
     LockInfo,
     MediaPlayerInfo,
@@ -84,6 +85,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     DateTimeInfo: Platform.DATETIME,
     EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
+    InfraredProxyInfo: Platform.REMOTE,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
     MediaPlayerInfo: Platform.MEDIA_PLAYER,
@@ -187,6 +189,7 @@ class RuntimeEntryData:
     entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
         default_factory=dict
     )
+    infrared_proxy_receive_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
 
     @property
     def name(self) -> str:
@@ -516,6 +519,27 @@ class RuntimeEntryData:
                 key=device_info.mac_address,
                 version=1,
             ),
+        )
+
+    @callback
+    def async_on_infrared_proxy_receive(
+        self, hass: HomeAssistant, receive_event: Any
+    ) -> None:
+        """Handle an infrared proxy receive event."""
+        # Fire a Home Assistant event with the infrared data
+        device_info = self.device_info
+        if not device_info:
+            return
+
+        hass.bus.async_fire(
+            f"{DOMAIN}_infrared_proxy_received",
+            {
+                "device_name": device_info.name,
+                "device_mac": device_info.mac_address,
+                "entry_id": self.entry_id,
+                "key": receive_event.key,
+                "timings": receive_event.timings,
+            },
         )
 
     @callback
