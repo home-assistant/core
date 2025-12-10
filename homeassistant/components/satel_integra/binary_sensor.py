@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -75,71 +77,57 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraZoneBinarySensor(SatelIntegraEntity, BinarySensorEntity):
+class SatelIntegraBaseBinarySensor(SatelIntegraEntity, BinarySensorEntity):
+    """Base binary sensor for Satel Integra."""
+
+    def __init__(
+        self,
+        coordinator: SatelIntegraCoordinator,
+        config_entry_id: str,
+        subentry: ConfigSubentry,
+        device_number: int,
+        device_class: BinarySensorDeviceClass,
+    ) -> None:
+        """Initialize the binary_sensor."""
+        super().__init__(
+            coordinator,
+            config_entry_id,
+            subentry,
+            device_number,
+        )
+
+        self._attr_device_class = device_class
+
+        self._attr_is_on = self._get_status_from_coordinator()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self._get_status_from_coordinator()
+        self.async_write_ha_state()
+
+    @abstractmethod
+    def _get_status_from_coordinator(self) -> bool | None:
+        """Method to get sensor status from coordinator data."""
+
+
+class SatelIntegraZoneBinarySensor(SatelIntegraBaseBinarySensor):
     """Representation of an Satel Integra binary sensor for zones."""
 
-    def __init__(
-        self,
-        coordinator: SatelIntegraCoordinator,
-        config_entry_id: str,
-        subentry: ConfigSubentry,
-        device_number: int,
-        device_class: BinarySensorDeviceClass,
-    ) -> None:
-        """Initialize the binary_sensor."""
-        super().__init__(
-            coordinator,
-            config_entry_id,
-            subentry,
-            device_number,
-        )
-
-        self._attr_device_class = device_class
-
-        self._attr_is_on = (
-            self.coordinator.data.zones[self._device_number] == 1
-            if self._device_number in self.coordinator.data.zones
-            else False
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _get_status_from_coordinator(self) -> bool | None:
+        """Method to get sensor status from coordinator data."""
         if self._device_number in self.coordinator.data.zones:
-            self._attr_is_on = self.coordinator.data.zones[self._device_number] == 1
-            self.async_write_ha_state()
+            return self.coordinator.data.zones[self._device_number] == 1
+
+        return None
 
 
-class SatelIntegraOutputBinarySensor(SatelIntegraEntity, BinarySensorEntity):
+class SatelIntegraOutputBinarySensor(SatelIntegraBaseBinarySensor):
     """Representation of an Satel Integra binary sensor for outputs."""
 
-    def __init__(
-        self,
-        coordinator: SatelIntegraCoordinator,
-        config_entry_id: str,
-        subentry: ConfigSubentry,
-        device_number: int,
-        device_class: BinarySensorDeviceClass,
-    ) -> None:
-        """Initialize the binary_sensor."""
-        super().__init__(
-            coordinator,
-            config_entry_id,
-            subentry,
-            device_number,
-        )
-
-        self._attr_device_class = device_class
-
-        self._attr_is_on = (
-            self.coordinator.data.zones[self._device_number] == 1
-            if self._device_number in self.coordinator.data.zones
-            else False
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _get_status_from_coordinator(self) -> bool | None:
+        """Method to get sensor status from coordinator data."""
         if self._device_number in self.coordinator.data.outputs:
-            self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
-            self.async_write_ha_state()
+            return self.coordinator.data.outputs[self._device_number] == 1
+
+        return None
