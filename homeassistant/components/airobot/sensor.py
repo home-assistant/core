@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from pyairobotrest.models import ThermostatStatus
 
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+import homeassistant.util.dt as dt_util
 
 from . import AirobotConfigEntry
 from .entity import AirobotEntity
@@ -96,6 +98,14 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.errors,
     ),
+    AirobotSensorEntityDescription(
+        key="device_uptime",
+        translation_key="device_uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: status.device_uptime,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -129,6 +139,13 @@ class AirobotSensor(AirobotEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
+        if self.entity_description.key == "device_uptime":
+            # Convert device uptime in seconds to timestamp
+            return dt_util.as_utc(
+                self.coordinator.get_device_uptime(
+                    self.coordinator.data.status.device_uptime
+                )
+            )
         return self.entity_description.value_fn(self.coordinator.data.status)
