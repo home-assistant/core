@@ -200,6 +200,7 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 },
                 "state_class": "total_increasing",
                 "device_class": "energy",
+                "unit_of_measurement": "Mcal",
                 "sync_state": True,
             },
             (1, 2, 3, 4),
@@ -244,3 +245,60 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
         state_class="measurement",
         unit_of_measurement="K",
     )
+
+
+@pytest.mark.parametrize(
+    "knx_config",
+    [
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "state_class": "totoal_increasing",  # invalid for temperature
+            }
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "12",  # generic 4byte uint
+                },
+                "state_class": "total_increasing",
+                "device_class": "energy",  # requires unit_of_measurement
+                "sync_state": True,
+            }
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "state_class": "measurement_angle",  # requires degree unit
+                "sync_state": True,
+            }
+        ),
+    ],
+)
+async def test_sensor_ui_create_attribute_validation(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_config: dict[str, Any],
+) -> None:
+    """Test creating a sensor with invalid unit, state_class or device_class."""
+    await knx.setup_integration()
+    with pytest.raises(AssertionError) as err:
+        await create_ui_entity(
+            platform=Platform.SENSOR,
+            entity_data={"name": "test"},
+            knx_data=knx_config,
+        )
+    assert "success" in err.value.args[0]
+    assert "error_base" in err.value.args[0]
+    assert "path" in err.value.args[0]
