@@ -89,6 +89,8 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
+            # 1.2: Normalize unique ID to be lowercase MAC address without separators.
+            # This matches the format used by WLED firmware.
             if TYPE_CHECKING:
                 assert config_entry.unique_id
             normalized_mac_address = normalize_mac_address(config_entry.unique_id)
