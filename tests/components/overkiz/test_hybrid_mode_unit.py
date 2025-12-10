@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.overkiz import (
+    _find_hybrid_local_entry,
     _get_gateway_id_from_unique_id,
     _hybrid_filter_local_devices,
     async_migrate_entry,
@@ -317,3 +318,123 @@ def test_get_gateway_id_from_unique_id() -> None:
 
     # Test with empty string
     assert _get_gateway_id_from_unique_id("") is None
+
+
+def test_hybrid_filter_local_devices_returns_all_when_empty_local_devices() -> None:
+    """Test that _hybrid_filter_local_devices returns all devices when local has no devices."""
+    # Local entry with runtime_data but empty devices dict
+    local_entry = Mock()
+    local_entry.runtime_data = Mock()
+    local_entry.runtime_data.coordinator = Mock()
+    local_entry.runtime_data.coordinator.devices = {}
+
+    cloud_devices = [
+        Mock(device_url="io://1234-5678-9012/device_a"),
+        Mock(device_url="io://1234-5678-9012/device_b"),
+    ]
+
+    filtered = _hybrid_filter_local_devices(local_entry, cloud_devices)
+
+    # Should return all devices since local entry has no devices
+    assert len(filtered) == 2
+
+
+async def test_find_hybrid_local_entry_skips_cloud_entries(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _find_hybrid_local_entry skips entries with cloud api_type."""
+    # Create a cloud entry for the same gateway (should be skipped)
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
+    ).add_to_hass(hass)
+
+    # Create the entry we're searching from (another cloud entry)
+    current_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{TEST_GATEWAY_ID}-cloud2",
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
+    )
+    current_entry.add_to_hass(hass)
+
+    # Should return None since there's no local entry
+    result = _find_hybrid_local_entry(hass, current_entry)
+    assert result is None
+
+
+async def test_find_hybrid_local_entry_skips_different_gateway(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _find_hybrid_local_entry skips entries for different gateways."""
+    # Create a local entry for a DIFFERENT gateway
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="different-gateway-id-local",
+        version=2,
+        data={
+            "host": TEST_HOST,
+            "token": TEST_TOKEN,
+            "verify_ssl": True,
+            "hub": TEST_SERVER,
+            "api_type": "local",
+        },
+    ).add_to_hass(hass)
+
+    # Create a cloud entry for our gateway
+    current_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{TEST_GATEWAY_ID}-cloud",
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
+    )
+    current_entry.add_to_hass(hass)
+
+    # Should return None since the local entry is for a different gateway
+    result = _find_hybrid_local_entry(hass, current_entry)
+    assert result is None
+
+
+async def test_reauth_flow_with_invalid_unique_id(hass: HomeAssistant) -> None:
+    """Test that reauth flow raises ValueError when unique_id is invalid."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,  # Invalid - no unique_id
+        version=2,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "api_type": "cloud",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Start reauth flow - should raise ValueError
+    with pytest.raises(ValueError, match="Reauth flow requires a valid unique_id"):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_entry.entry_id,
+                "unique_id": mock_entry.unique_id,
+            },
+            data=mock_entry.data,
+        )
