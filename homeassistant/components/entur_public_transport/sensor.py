@@ -102,7 +102,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "deprecated_yaml_import_issue",
-            breaks_in_ha_version="2027.1.0",
+            breaks_in_ha_version="2026.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
