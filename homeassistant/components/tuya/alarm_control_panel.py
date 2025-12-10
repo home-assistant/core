@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBase64Wrapper, DPCodeEnumWrapper
+from .models import DPCodeEnumWrapper, DPCodeRawWrapper
 
 ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
     DeviceCategory.MAL: (
@@ -32,7 +32,7 @@ ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
 }
 
 
-class _AlarmChangedByWrapper(DPCodeBase64Wrapper):
+class _AlarmChangedByWrapper(DPCodeRawWrapper):
     """Wrapper for changed_by.
 
     Decode base64 to utf-16be string, but only if alarm has been triggered.
@@ -42,10 +42,10 @@ class _AlarmChangedByWrapper(DPCodeBase64Wrapper):
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"
-            or (data := self.read_bytes(device)) is None
+            or (status := super().read_device_status(device)) is None
         ):
             return None
-        return data.decode("utf-16be")
+        return status.decode("utf-16be")
 
 
 class _AlarmModeWrapper(DPCodeEnumWrapper):
@@ -182,22 +182,20 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        if self._changed_by_wrapper is None:
-            return None
-        return self._changed_by_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._changed_by_wrapper)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "disarm")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "disarm")
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send Home command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "arm_home")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "arm_home")
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send Arm command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "arm_away")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "arm_away")
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
-        await self._async_send_dpcode_update(self._mode_wrapper, "trigger")
+        await self._async_send_wrapper_updates(self._mode_wrapper, "trigger")

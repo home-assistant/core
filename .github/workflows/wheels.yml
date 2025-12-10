@@ -31,7 +31,7 @@ jobs:
     steps:
       - &checkout
         name: Checkout the repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
@@ -136,7 +136,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: &home-assistant-wheels home-assistant/wheels@6066c17a2a4aafcf7bdfeae01717f63adfcdba98 # 2025.11.0
+        uses: &home-assistant-wheels home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
