@@ -624,8 +624,11 @@ async def async_enable_logging(
 
     if log_file is None:
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if "SUPERVISOR" in os.environ:
-            _LOGGER.info("Running in Supervisor, not logging to file")
+        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
+            _LOGGER.info(
+                "Running in Supervisor without the duplicate log option,"
+                "not logging to file"
+            )
             # Rename the default log file if it exists, since previous versions created
             # it even on Supervisor
             if os.path.isfile(default_log_path):
