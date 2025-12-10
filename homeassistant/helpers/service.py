@@ -749,6 +749,7 @@ def _extract_batchable_entities(
     batch_map maps (cls, config_entry) -> (list of entities, bound batch classmethod)
     """
 
+    @cache
     def resolve_classmethod(cls: type[Entity]) -> Callable[..., Any] | None:
         """Return the bound classmethod if defined anywhere in the MRO."""
         for base in cls.__mro__:
@@ -944,6 +945,17 @@ async def _handle_entity_call(
     Returns a dict mapping entity_id -> ServiceResponse | None.
     """
 
+    # helper wrapper functions for HassJob
+    async def wrap_batch(
+        future: Awaitable[EntityServiceResponse | None], ents: list[Entity]
+    ) -> EntityServiceResponse:
+        resp = await future
+        return resp or {}
+
+    async def wrap_single(future: Awaitable[Any], ent: Entity) -> EntityServiceResponse:
+        result = await future
+        return {ent.entity_id: result} if result is not None else {}
+
     # Extract kwargs from ServiceCall or use dict directly
     kwargs: dict[str, Any] = data.data if isinstance(data, ServiceCall) else data
 
@@ -973,14 +985,6 @@ async def _handle_entity_call(
         )
         fut = hass.async_run_hass_job(job)
         if fut is not None:
-
-            async def wrap_batch(
-                future: Awaitable[Any],
-                ents: list[Entity],
-            ) -> EntityServiceResponse:
-                resp = await future
-                return resp or {}  # normalize
-
             tasks.append(create_eager_task(wrap_batch(fut, valid_entities)))
 
     #
@@ -997,15 +1001,6 @@ async def _handle_entity_call(
             fut = hass.async_run_hass_job(func, entity, data)
 
         if fut is not None:
-
-            async def wrap_single(
-                future: Awaitable[Any],
-                ent: Entity,
-            ) -> EntityServiceResponse:
-                result = await future
-                # normalize to a dict
-                return {ent.entity_id: result} if result is not None else {}
-
             tasks.append(create_eager_task(wrap_single(fut, entity)))
 
     #
