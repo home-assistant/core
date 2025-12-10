@@ -55,5 +55,15 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Switch"
+  "title": "Switch",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more switches turned off.",
+      "name": "Switch turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more switches turned on.",
+      "name": "Switch turned on"
+    }
+  }
 }
