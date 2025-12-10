@@ -564,7 +564,7 @@ SENSOR_KNX_SCHEMA = vol.Schema(
         "section_advanced_options": KNXSectionFlat(collapsible=True),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=list(
+                options=sorted(
                     {
                         str(unit)
                         for units in DEVICE_CLASS_UNITS.values()
@@ -575,7 +575,6 @@ SENSOR_KNX_SCHEMA = vol.Schema(
                 mode=selector.SelectSelectorMode.DROPDOWN,
                 translation_key="component.knx.selector.sensor_unit_of_measurement",
                 custom_value=True,
-                sort=True,
             ),
         ),
         vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
