@@ -258,7 +258,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
 }
 
 # Rain count sensors can be rolling windows or reset periodically
-# Only those that reset get marked as TOTAL_INCREASING
+# Only those that reset should get marked as TOTAL_INCREASING
 _TOTAL_INCREASING_RAIN_COUNT_SENSORS: Final = {
     # Lifetime total rain sensors
     "totalrainin",
