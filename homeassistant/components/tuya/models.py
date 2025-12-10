@@ -6,8 +6,6 @@ from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.util.json import json_loads
-
 from .type_information import (
     BitmapTypeInformation,
     BooleanTypeInformation,
@@ -136,12 +134,6 @@ class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
     """Wrapper to extract information from a JSON value."""
 
     _DPTYPE = JsonTypeInformation
-
-    def read_json(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return json_loads(raw_value)
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
