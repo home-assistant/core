@@ -154,7 +154,7 @@ def websocket_get_entities(
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("aliases"): list,
+        vol.Optional("aliases"): [vol.Any(str, None)],
         vol.Optional("area_id"): vol.Any(str, None),
         # Categories is a mapping of key/value (scope/category_id) pairs.
         # If passed in, we update/adjust only the provided scope(s).
@@ -225,10 +225,15 @@ def websocket_update_entity(
             changes[key] = msg[key]
 
     if "aliases" in msg:
-        # Create a set for the aliases without:
+        # Create aliases without:
         #   - Empty strings
         #   - Trailing and leading whitespace characters in the individual aliases
-        changes["aliases"] = {s_strip for s in msg["aliases"] if (s_strip := s.strip())}
+        changes["aliases"] = aliases = []
+        for alias in msg["aliases"]:
+            if alias is not None:
+                if not (alias := alias.strip()):
+                    continue
+            aliases.append(alias)
 
     if "labels" in msg:
         # Convert labels to a set

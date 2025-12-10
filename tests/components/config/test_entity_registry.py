@@ -589,7 +589,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
@@ -673,7 +673,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
@@ -720,7 +720,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
@@ -766,7 +766,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
@@ -812,7 +812,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
@@ -858,7 +858,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
@@ -892,7 +892,7 @@ async def test_update_entity(
         {
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
-            "aliases": ["alias_1", "alias_2", "", " alias_3 ", " "],
+            "aliases": [None, "alias_1", "alias_2", "", " alias_3 ", " "],
         }
     )
 
@@ -901,7 +901,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2", "alias_3"]),
+            "aliases": [None, "alias_1", "alias_2", "alias_3"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
@@ -964,7 +964,7 @@ async def test_update_entity_require_restart(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": [],
+            "aliases": [None],
             "area_id": None,
             "capabilities": None,
             "categories": {},

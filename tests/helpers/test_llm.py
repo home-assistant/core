@@ -509,7 +509,7 @@ async def test_assist_api_prompt(
             model="Test Model",
             suggested_area="Test Area",
         ),
-        aliases={"my test light"},
+        aliases=[None, "my test light"],
     )
     for i in range(3):
         create_entity(
@@ -775,6 +775,7 @@ async def test_script_tool(
         {
             "script": {
                 "test_script": {
+                    "alias": "test script",
                     "description": "This is a test script",
                     "sequence": [
                         {"variables": {"result": {"drinks": 2}}},
@@ -791,6 +792,7 @@ async def test_script_tool(
                     },
                 },
                 "script_with_no_fields": {
+                    "alias": "test script 2",
                     "description": "This is another test script",
                     "sequence": [],
                 },
@@ -804,7 +806,7 @@ async def test_script_tool(
     async_expose_entity(hass, "conversation", "script.script_with_no_fields", True)
 
     entity_registry.async_update_entity(
-        "script.test_script", name="script name", aliases={"script alias"}
+        "script.test_script", name="script name", aliases=[None, "script alias"]
     )
 
     area = area_registry.async_create("Living room")
@@ -839,7 +841,10 @@ async def test_script_tool(
             "This is a test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
         ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "script_with_no_fields": (
+            "This is another test script. Aliases: ['test script 2']",
+            vol.Schema({}),
+        ),
     }
 
     # Test script with response
@@ -952,7 +957,10 @@ async def test_script_tool(
             "This is a new test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
         ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "script_with_no_fields": (
+            "This is another test script. Aliases: ['test script 2']",
+            vol.Schema({}),
+        ),
     }
 
 
