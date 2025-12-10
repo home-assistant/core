@@ -57,3 +57,8 @@ class SatelIntegraEntity(CoordinatorEntity[SatelIntegraCoordinator]):
             identifiers={(DOMAIN, self._attr_unique_id)},
             via_device=(DOMAIN, config_entry_id),
         )
+
+    @property
+    def available(self) -> bool:
+        """Whether the entity is available or not."""
+        return bool(self.coordinator.controller.connected)
