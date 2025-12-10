@@ -167,14 +167,6 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
     s_type = DEFAULT_S_TYPE
     v_type = DEFAULT_V_TYPE
 
-    def read_device_status(self, device: CustomerDevice) -> dict[str, Any] | None:
-        """Read the color data for the dpcode."""
-        if (status_data := self._read_device_status_raw(device)) is None or not (
-            status := json_loads_object(status_data)
-        ):
-            return None
-        return status
-
     def read_hs_color(self, device: CustomerDevice) -> tuple[float, float] | None:
         """Get the HS value from this color data."""
         if (status := self.read_device_status(device)) is None:
