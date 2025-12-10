@@ -1,8 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This device is already configured.",
-      "reauth_successful": "Reauthentication successful."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "add_sensor_mapping_hint": "You can now add mappings from any sensor in Home Assistant to {integration_name} using the '+ add sensor mapping' button."
