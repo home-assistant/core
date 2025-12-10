@@ -108,12 +108,11 @@ async def async_setup_entry(
     """Set up switch entities and services."""
 
     coordinator = entry.runtime_data.config_coordinator
+    bluetooth_coordinator = entry.runtime_data.bluetooth_coordinator
 
     entities: list[SwitchEntity] = []
     entities.extend(
-        LaMarzoccoSwitchEntity(
-            coordinator, description, entry.runtime_data.bluetooth_coordinator
-        )
+        LaMarzoccoSwitchEntity(coordinator, description, bluetooth_coordinator)
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )
@@ -123,7 +122,9 @@ async def async_setup_entry(
         for wake_up_sleep_entry in coordinator.device.schedule.smart_wake_up_sleep.schedules
     )
 
-    entities.append(LaMarzoccoMainSwitchEntity(coordinator, SWITCH_ENTITY))
+    entities.append(
+        LaMarzoccoMainSwitchEntity(coordinator, SWITCH_ENTITY, bluetooth_coordinator)
+    )
 
     async_add_entities(entities)
 
