@@ -1,6 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted switch to trigger on.",
+    "trigger_behavior_description": "The behavior of the targeted switches to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "device_automation": {
