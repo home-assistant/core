@@ -21,13 +21,13 @@
         },
         "data_description": {
           "host": "Hostname or IP address of Victron device, usually mDNS name like 'venus.local'",
-          "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read_only' exposes only sensors and binary_sensors (no writable entities), 'full' exposes all entity types (sensors, binary_sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
+          "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read only' exposes only sensors and binary sensors (no writable entities), 'full' exposes all entity types (sensors, binary sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
           "password": "Password for the Victron device, default is empty. This is not your VRM password.",
           "port": "The MQTT port on the host. Normally it is 1883.",
           "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
           "ssl": "Indicates whether to use SSL to connect to the Victron device. Normally it is disabled.",
           "update_frequency": "Update frequency in seconds. Default is 30 seconds. Set to 0 to update always.",
-          "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you route your MQTT messages through a non Victron server and it does require a username."
+          "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you route your MQTT messages through a non-Victron server and it does require a username."
         }
       }
     }
@@ -77,7 +77,7 @@
         "name": "Inverter high voltage alarm"
       },
       "inverter_alarm_high_voltage_ac_out": {
-        "name": "Inverter high voltage AC out alarm"
+        "name": "Inverter high voltage AC-out alarm"
       },
       "inverter_alarm_low_temperature": {
         "name": "Inverter low temperature alarm"
@@ -86,7 +86,7 @@
         "name": "Inverter low voltage alarm"
       },
       "inverter_alarm_low_voltage_ac_out": {
-        "name": "Inverter low voltage AC out alarm"
+        "name": "Inverter low voltage AC-out alarm"
       },
       "inverter_alarm_overload": {
         "name": "Inverter overload alarm"
@@ -137,7 +137,7 @@
         "name": "Inverter connected"
       },
       "vebus_inverter_ignoreacin1_onoff_control": {
-        "name": "Control ignore AcIn1"
+        "name": "Control ignore Ac-in-1"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Loss of grid alarm setting"
@@ -679,16 +679,16 @@
         "name": "Inverter state"
       },
       "multi_acin1_to_acout": {
-        "name": "ACin1 to ACout"
+        "name": "AC-in-1 to AC-out"
       },
       "multi_acin1_to_inverter": {
-        "name": "ACin1 to inverter"
+        "name": "AC-in-1 to inverter"
       },
       "multi_acout_to_acin1": {
-        "name": "ACout to ACin1"
+        "name": "AC-out to AC-in-1"
       },
       "multi_acout_to_inverter": {
-        "name": "ACout to inverter"
+        "name": "AC-out to inverter"
       },
       "multi_active_input": {
         "name": "Active AC input"
@@ -700,10 +700,10 @@
         "name": "ESS minimum SoC limit"
       },
       "multi_inverter_to_acin1": {
-        "name": "Inverter to ACin1"
+        "name": "Inverter to AC-in-1"
       },
       "multi_inverter_to_acout": {
-        "name": "Inverter to ACout"
+        "name": "Inverter to AC-out"
       },
       "multi_mppt_mppt_id_yield_today": {
         "name": "MPPT {mppt_id} yield today"
@@ -712,10 +712,10 @@
         "name": "MPPT {mppt_id} yield yesterday"
       },
       "multi_solar_to_acin1": {
-        "name": "Solar to ACin1"
+        "name": "Solar to AC-in-1"
       },
       "multi_solar_to_acout": {
-        "name": "Solar to ACout"
+        "name": "Solar to AC-out"
       },
       "multi_solar_to_battery": {
         "name": "Solar to battery"
@@ -733,13 +733,13 @@
         "name": "Voltage on {phase}"
       },
       "multirssolar_acout_output_current_phase": {
-        "name": "AC Out {output} current on {phase}"
+        "name": "AC-out-{output} current on {phase}"
       },
       "multirssolar_acout_output_power_phase": {
-        "name": "AC Out {output} power on {phase}"
+        "name": "AC-out-{output} power on {phase}"
       },
       "multirssolar_acout_output_voltage_phase": {
-        "name": "AC Out {output} voltage on {phase}"
+        "name": "AC-out-{output} voltage on {phase}"
       },
       "multirssolar_ess_mode": {
         "name": "ESS mode"
@@ -1090,31 +1090,31 @@
         "name": "VE.Bus device {device_number} power assist enabled"
       },
       "vebus_energy_ac_in1_to_ac_out": {
-        "name": "Energy from AcIn1 to AcOut"
+        "name": "Energy from Ac-in-1 to AC-out"
       },
       "vebus_energy_ac_in1_to_inverter": {
-        "name": "Energy from AcIn1 to inverter"
+        "name": "Energy from Ac-in-1 to inverter"
       },
       "vebus_energy_ac_in2_to_ac_out": {
-        "name": "Energy from AcIn2 to AcOut"
+        "name": "Energy from Ac-in-2 to AC-out"
       },
       "vebus_energy_ac_in2_to_inverter": {
-        "name": "Energy from AcIn2 to inverter"
+        "name": "Energy from Ac-in-2 to inverter"
       },
       "vebus_energy_ac_out_to_ac_in1": {
-        "name": "Energy from AcOut to AcIn1"
+        "name": "Energy from AC-out to Ac-in-1"
       },
       "vebus_energy_ac_out_to_ac_in2": {
-        "name": "Energy from AcOut to AcIn2"
+        "name": "Energy from AC-out to Ac-in-2"
       },
       "vebus_energy_inverter_to_ac_in1": {
-        "name": "Energy from inverter to AcIn1"
+        "name": "Energy from inverter to Ac-in-1"
       },
       "vebus_energy_inverter_to_ac_in2": {
-        "name": "Energy from inverter to AcIn2"
+        "name": "Energy from inverter to Ac-in-2"
       },
       "vebus_energy_inverter_to_ac_out": {
-        "name": "Energy from inverter to AcOut"
+        "name": "Energy from inverter to AC-out"
       },
       "vebus_energy_out_to_inverter": {
         "name": "Energy from out to inverter"
@@ -1165,7 +1165,7 @@
         "name": "Inverter DC temperature"
       },
       "vebus_inverter_ignoreacin1_state": {
-        "name": "State of ignore AcIn1"
+        "name": "State of ignore Ac-in-1"
       },
       "vebus_inverter_input_apparent_power_phase": {
         "name": "Inverter input apparent power {phase}"
@@ -1257,7 +1257,7 @@
         "name": "PV DC overvoltage feed-in"
       },
       "vebus_inverter_ignoreacin1_onoff_control": {
-        "name": "Control ignore AcIn1"
+        "name": "Control ignore Ac-in-1"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Loss of grid alarm setting"
