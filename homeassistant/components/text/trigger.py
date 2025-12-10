@@ -18,11 +18,11 @@ class TextChangedTrigger(EntityTriggerBase):
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
+        """Check if the old and new states are different."""
         return from_state.state != to_state.state
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+        """Check if the new state is not invalid."""
         return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 

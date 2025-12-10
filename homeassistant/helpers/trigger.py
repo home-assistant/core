@@ -338,12 +338,12 @@ class EntityTriggerBase(Trigger):
         self._target = config.target
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
+        """Check if the origin state is not an expected target states."""
         return not self.is_valid_state(from_state)
 
     @abc.abstractmethod
     def is_valid_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+        """Check if the new state matches the expected state(s)."""
 
     def check_all_match(self, entity_ids: set[str]) -> bool:
         """Check if all entity states match."""
@@ -434,7 +434,7 @@ class EntityStateTriggerBase(EntityTriggerBase):
     _to_state: str
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+        """Check if the new state matches the expected state."""
         return state.state == self._to_state
 
 
@@ -445,11 +445,11 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
     _to_states: set[str]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
+        """Check if the origin state matches the expected ones."""
         return from_state.state in self._from_states
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+        """Check if the new state matches the expected states."""
         return state.state in self._to_states
 
 
@@ -460,7 +460,7 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
     _attribute_to_state: str
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+        """Check if the new state attribute matches the expected one."""
         return state.attributes.get(self._attribute) == self._attribute_to_state
 
 
