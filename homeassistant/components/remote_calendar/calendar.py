@@ -57,11 +57,17 @@ class RemoteCalendarEntity(
         if self._timeline is None:
             return None
         now = dt_util.now()
-        # First check for currently active events
-        active_events = list(self._timeline.overlapping(now, now))
-        if active_events:
-            return _get_calendar_event(active_events[0])
-        # If no active event, get the next upcoming event
+        
+        # Fallback for same-day DTEND all-day events bug
+        # Only check all-day events where DTSTART == DTEND
+        today = now.date()
+        for event in self._timeline:
+            # Only handle all-day events (date objects without time) with same-day DTEND
+            if (not hasattr(event.dtstart, 'hour') and 
+                event.dtstart == event.dtend and 
+                event.dtstart == today):
+                return _get_calendar_event(event)
+        
         events = self._timeline.active_after(now)
         if event := next(events, None):
             return _get_calendar_event(event)
