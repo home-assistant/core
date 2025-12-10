@@ -21,7 +21,7 @@ async def test_device(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the entry can be loaded and unloaded."""
+    """Test device is registered correctly."""
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(
