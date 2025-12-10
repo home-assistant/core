@@ -1,4 +1,4 @@
-"""The tests for the Script component wait_for_queue feature."""
+"""The tests for the Script component wait_for_start feature."""
 
 import asyncio
 import contextlib
