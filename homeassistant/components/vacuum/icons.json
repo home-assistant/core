@@ -52,11 +52,11 @@
     "paused_cleaning": {
       "trigger": "mdi:pause"
     },
-    "returning": {
-      "trigger": "mdi:home-import-outline"
-    },
     "started_cleaning": {
       "trigger": "mdi:play"
+    },
+    "started_returning": {
+      "trigger": "mdi:home-import-outline"
     }
   }
 }

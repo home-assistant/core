@@ -9,8 +9,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "docked": make_entity_state_trigger(DOMAIN, VacuumActivity.DOCKED),
     "errored": make_entity_state_trigger(DOMAIN, VacuumActivity.ERROR),
     "paused_cleaning": make_entity_state_trigger(DOMAIN, VacuumActivity.PAUSED),
-    "returning": make_entity_state_trigger(DOMAIN, VacuumActivity.RETURNING),
     "started_cleaning": make_entity_state_trigger(DOMAIN, VacuumActivity.CLEANING),
+    "started_returning": make_entity_state_trigger(DOMAIN, VacuumActivity.RETURNING),
 }
 
 
