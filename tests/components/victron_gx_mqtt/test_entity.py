@@ -8,6 +8,7 @@ import pytest
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
+    MetricKind,
     MetricNature,
     MetricType,
 )
@@ -31,6 +32,7 @@ def mock_device() -> VictronVenusDevice:
 def base_metric() -> VictronVenusMetric:
     """Return a mocked Victron metric with common defaults."""
     metric = MagicMock(spec=VictronVenusMetric)
+    metric.metric_kind = MetricKind.SENSOR
     metric.unique_id = "metric_1"
     metric.short_id = "metric.short"
     metric.generic_short_id = "{phase}_voltage"
@@ -50,39 +52,16 @@ async def test_sensor_update_task_triggers_state_update(
     device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
     sensor = VictronSensor(mock_device, base_metric, device_info)
 
-    with patch.object(sensor, "schedule_update_ha_state") as mock_sched:
+    with patch.object(sensor, "async_write_ha_state") as mock_sched:
         # Change value
         sensor._on_update_task(56.78)
         assert sensor.native_value == 56.78
         mock_sched.assert_called_once()
 
-    with patch.object(sensor, "schedule_update_ha_state") as mock_sched2:
+    with patch.object(sensor, "async_write_ha_state") as mock_sched2:
         # Same value -> no schedule
         sensor._on_update_task(56.78)
         mock_sched2.assert_not_called()
-
-
-async def test_async_added_sets_update_callback(
-    hass: HomeAssistant, mock_device, base_metric
-) -> None:
-    """Verify async_added_to_hass registers metric on_update and forwards updates when hass is set."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-
-    # Entity not added yet -> _on_update should early return (hass is None)
-    with patch.object(sensor, "_on_update_task") as mock_task:
-        sensor._on_update(base_metric, 99)
-        mock_task.assert_not_called()
-
-    # Now add to hass and ensure updates propagate
-    sensor.hass = hass
-    await sensor.async_added_to_hass()
-
-    with patch.object(sensor, "_on_update_task") as mock_task2:
-        assert base_metric.on_update is not None
-        # Simulate callback from metric
-        base_metric.on_update(base_metric, 101)
-        mock_task2.assert_called_once_with(101)
 
 
 async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) -> None:

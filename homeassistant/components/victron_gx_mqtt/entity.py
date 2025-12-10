@@ -7,6 +7,7 @@ from typing import Any
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
+    MetricKind,
     MetricNature,
     MetricType,
 )
@@ -42,8 +43,6 @@ class VictronBaseEntity(Entity):
         self._attr_native_unit_of_measurement = self._map_metric_to_unit_of_measurement(
             metric
         )
-        self._attr_device_class = self._map_metric_to_device_class(metric)
-        self._attr_state_class = self._map_metric_to_stateclass(metric)
         self._attr_should_poll = False
         self._attr_has_entity_name = True
         self._attr_suggested_display_precision = metric.precision
@@ -51,7 +50,13 @@ class VictronBaseEntity(Entity):
             "}", ""
         )  # same as in merge_topics.py
         self._attr_translation_placeholders = metric.key_values
+
         # Specific changes related to HA
+        # device class and state class are relevant only for certain metric kinds
+        if metric.metric_kind in [MetricKind.SENSOR, MetricKind.NUMBER]:
+            self._attr_device_class = self._map_metric_to_device_class(metric)
+            self._attr_state_class = self._map_metric_to_stateclass(metric)
+
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC
             if metric.generic_short_id in ENTITIES_CATEGORY_DIAGNOSTIC
@@ -60,8 +65,6 @@ class VictronBaseEntity(Entity):
         self._attr_entity_registry_enabled_default = (
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
-
-        _LOGGER.info("%s %s added. Based on: %s", type, self, repr(metric))
 
     def __repr__(self) -> str:
         """Return a string representation of the entity."""

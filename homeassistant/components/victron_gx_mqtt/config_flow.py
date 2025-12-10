@@ -69,10 +69,8 @@ async def validate_input(data: dict[str, Any]) -> str:
     Returns the installation id upon success.
     """
     _LOGGER.info("Validating input: %s", data)
-    host = data.get(CONF_HOST)
-    assert host is not None
     hub = VictronVenusHub(
-        host=host,
+        host=data[CONF_HOST],
         port=data.get(CONF_PORT, DEFAULT_PORT),
         username=data.get(CONF_USERNAME) or None,
         password=data.get(CONF_PASSWORD) or None,
@@ -180,7 +178,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             assert sensed_installation_id == self.installation_id
         except CannotConnectError:
-            return await self.async_step_user()
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=str(self.friendly_name),

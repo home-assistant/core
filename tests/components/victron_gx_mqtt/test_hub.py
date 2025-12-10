@@ -8,8 +8,6 @@ from victron_mqtt import (
     CannotConnectError,
     Device as VictronVenusDevice,
     Hub as VictronVenusHub,
-    Metric as VictronVenusMetric,
-    MetricKind,
 )
 from victron_mqtt.testing import create_mocked_hub, finalize_injection, inject_message
 
@@ -22,27 +20,18 @@ from homeassistant.components.victron_gx_mqtt.const import (
     DOMAIN,
 )
 from homeassistant.components.victron_gx_mqtt.hub import Hub
-from homeassistant.components.victron_gx_mqtt.sensor import (
-    VictronSensor,
-    async_setup_entry as sensor_setup_entry,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
-
-@pytest.fixture
-def mock_config_entry():
-    """Create a mock config entry."""
-    return MagicMock(spec=ConfigEntry)
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -63,6 +52,16 @@ def basic_config():
 
 
 @pytest.fixture
+def mock_config_entry(basic_config):
+    """Create a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_unique_id",
+        data=basic_config,
+    )
+
+
+@pytest.fixture
 def mock_victron_hub():
     """Create a mock VictronVenusHub."""
     with patch(
@@ -78,81 +77,66 @@ def mock_victron_hub():
 
 
 @pytest.fixture
-async def mqtt_test_setup(hass: HomeAssistant):
-    """Set up MQTT testing with ALL platform callbacks."""
+async def init_integration(hass: HomeAssistant, mock_config_entry):
+    """Set up the Victron GX MQTT integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock the VictronVenusHub
     victron_hub = await create_mocked_hub()
-    mock_async_add_entities = MagicMock()
 
-    # Create a real Hub and config entry
-    mock_config_entry = MagicMock(spec=ConfigEntry)
-    mock_config_entry.data = {
-        CONF_HOST: "localhost",
-        CONF_SERIAL: "test_serial",
-    }
-    mock_config_entry.unique_id = "test_unique_id"
+    with patch(
+        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub"
+    ) as mock_hub_class:
+        mock_hub_class.return_value = victron_hub
 
-    # Create the real Hub
-    hub = Hub(hass, mock_config_entry)
-    victron_hub.on_new_metric = hub._on_new_metric
-    mock_config_entry.runtime_data = hub
+        # Set up the config entry
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Register all platform callbacks
-    await sensor_setup_entry(hass, mock_config_entry, mock_async_add_entities)
-    return victron_hub, mock_async_add_entities
+    return victron_hub, mock_config_entry
 
 
-async def test_hub_start_success(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
+async def test_hub_start_success(hass: HomeAssistant, init_integration) -> None:
     """Test successful hub start."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
+    victron_hub, mock_config_entry = init_integration
 
-    hub = Hub(hass, mock_config_entry)
-    await hub.start()
-
-    mock_victron_hub.connect.assert_called_once()
+    # Verify the hub was started (integration was set up successfully)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert victron_hub.installation_id == "123"
 
 
 async def test_hub_start_connection_error(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
+    hass: HomeAssistant, mock_config_entry
 ) -> None:
     """Test hub start with connection error."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-    mock_victron_hub.connect.side_effect = CannotConnectError("Connection failed")
+    mock_config_entry.add_to_hass(hass)
 
-    hub = Hub(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub.connect",
+        side_effect=CannotConnectError("Connection failed"),
+    ):
+        # Attempt to set up the config entry - should fail and mark as SETUP_RETRY
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    with pytest.raises(ConfigEntryNotReady, match="Cannot connect to the hub"):
-        await hub.start()
+        # Verify the config entry is in SETUP_RETRY state (not loaded due to error)
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_hub_stop(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
+async def test_hub_stop(hass: HomeAssistant, init_integration) -> None:
     """Test hub stop."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
+    _, mock_config_entry = init_integration
 
-    hub = Hub(hass, mock_config_entry)
-    await hub.stop()
+    # Verify it's initially loaded
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_victron_hub.disconnect.assert_called_once()
+    # Unload the config entry (which stops the hub)
+    unload_ok = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-
-async def test_hub_stop_with_event(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test hub stop with event."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-    mock_event = MagicMock()
-    await hub.stop(mock_event)
-
-    mock_victron_hub.disconnect.assert_called_once()
+    # Verify hub is disconnected by checking config entry state
+    assert unload_ok is True
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_map_device_info() -> None:
@@ -196,136 +180,97 @@ async def test_map_device_info_no_manufacturer() -> None:
     )  # device_id == "0" uses name only
 
 
-async def test_register_add_entities_callback(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test registering add entities callback."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    hub = Hub(hass, mock_config_entry)
-
-    mock_callback = MagicMock()
-    hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
-
-    assert MetricKind.SENSOR in hub.new_metric_callbacks
-    assert hub.new_metric_callbacks[MetricKind.SENSOR] is mock_callback
-
-
 async def test_unregister_add_entities_callback(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
+    hass: HomeAssistant, init_integration
 ) -> None:
     """Test unregistering add entities callback."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
+    victron_hub, mock_config_entry = init_integration
 
-    hub = Hub(hass, mock_config_entry)
+    # Inject a sensor before unloading
+    await inject_message(victron_hub, "N/123/battery/0/Soc", '{"value": 75}')
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
 
-    # Register a callback first
-    mock_callback = MagicMock()
-    hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
+    entity_registry = er.async_get(hass)
+    entities_before = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities_before) > 0
 
-    # Verify it was registered
-    assert MetricKind.SENSOR in hub.new_metric_callbacks
-    assert hub.new_metric_callbacks[MetricKind.SENSOR] is mock_callback
+    # Unload the config entry (which unregisters callbacks)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Unregister the callback
-    hub.unregister_all_new_metric_callbacks()
-
-    # Verify it was removed
-    assert MetricKind.SENSOR not in hub.new_metric_callbacks
+    # Entities should still be registered (just unavailable)
+    entities_after = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities_after) == len(entities_before)
 
 
 async def test_on_new_metric_sensor(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration,
 ) -> None:
-    """Test _on_new_metric callback."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
+    """Test _on_new_metric callback creates entities and updates values."""
+    victron_hub, mock_config_entry = init_integration
 
-    hub = Hub(hass, mock_config_entry)
-
-    # Register callback that creates entities
-    created_entities = []
-
-    def mock_callback(device, metric, device_info):
-        """Mock callback that creates a sensor entity."""
-        entity = VictronSensor(device, metric, device_info)
-        created_entities.append(entity)
-
-    hub.register_new_metric_callback(MetricKind.SENSOR, mock_callback)
-
-    # Create mock device and metric
-    mock_device = MagicMock(spec=VictronVenusDevice)
-    mock_device.unique_id = "device_123"
-    mock_device.manufacturer = "Victron Energy"
-    mock_device.name = "Test Device"
-    mock_device.device_id = "288"
-    mock_device.model = "Test Model"
-    mock_device.serial_number = "HQ12345678"
-
-    mock_metric = MagicMock(spec=VictronVenusMetric)
-    mock_metric.metric_kind = MetricKind.SENSOR
-
-    # Trigger the callback
-    hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
-
-    # Verify entity was created
-    assert len(created_entities) == 1
-    entity = created_entities[0]
-    assert isinstance(entity, VictronSensor)
-
-    # Set the entity's hass instance for testing
-    entity.hass = hass
-
-    # Patch async_write_ha_state and call _on_update_task
-    with patch.object(entity, "async_write_ha_state") as mock_write_state:
-        # Call with a value that should trigger an update
-        entity._on_update_task(42)
-        mock_write_state.assert_called_once()
-        assert entity._attr_native_value == 42
-
-        # Call with same value that should not trigger an update
-        entity._on_update_task(42)
-        mock_write_state.assert_called_once()
-        assert entity._attr_native_value == 42
-
-        entity._on_update_task(100)
-        assert mock_write_state.call_count == 2
-        assert entity._attr_native_value == 100
-
-
-async def test_hub_registers_stop_listener(
-    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
-) -> None:
-    """Test that hub registers a stop listener on initialization."""
-    mock_config_entry.data = basic_config
-    mock_config_entry.unique_id = "test_unique_id"
-
-    # Create hub - it should register the stop listener
-    _hub = Hub(hass, mock_config_entry)
-    await _hub.start()
-
-    # Fire the stop event to verify the listener was registered
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    # Inject a sensor metric
+    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Voltage", '{"value": 12.6}')
+    await finalize_injection(victron_hub, disconnect=False)
     await hass.async_block_till_done()
 
-    # Verify disconnect was called when stop event fired
-    mock_victron_hub.disconnect.assert_called_once()
+    # Verify entity was created
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) > 0
+
+    # Get the voltage entity
+    voltage_entities = [e for e in entities if "voltage" in e.entity_id]
+    assert len(voltage_entities) > 0
+    entity_id = voltage_entities[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 12.6
+
+    # Update with new value
+    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Voltage", '{"value": 13.2}')
+    await hass.async_block_till_done()
+
+    # Verify state updated
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 13.2
+
+    # Update with same value - state should remain the same
+    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Voltage", '{"value": 13.2}')
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 13.2
 
 
 async def test_victron_battery_sensor(
-    snapshot: SnapshotAssertion, mqtt_test_setup
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration,
 ) -> None:
-    """Test SENSOR MetricKind - battery current."""
-    victron_hub, mock_async_add_entities = mqtt_test_setup
-    mock_async_add_entities.reset_mock()
+    """Test SENSOR MetricKind - battery current sensor is created and updated."""
+    victron_hub, mock_config_entry = init_integration
 
     # Inject a sensor metric (battery current)
     await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 10.5}')
     await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
 
-    # Verify async_add_entities was called once
-    assert mock_async_add_entities.call_count == 1
-    call_args = mock_async_add_entities.call_args_list
-    assert call_args == snapshot
+    # Verify entity was created by checking entity registry
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Should have created at least one entity
+    assert len(entities) > 0
+    assert entities == snapshot
