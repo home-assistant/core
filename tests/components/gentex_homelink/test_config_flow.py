@@ -89,6 +89,7 @@ async def test_auth_error(
         aioclient_mock.clear_requests()
         aioclient_mock.post(OAUTH2_TOKEN_URL, status=HTTPStatus.UNAUTHORIZED)
 
+        assert len(aioclient_mock.mock_calls) == 0
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -96,6 +97,8 @@ async def test_auth_error(
             result["flow_id"],
             user_input={"email": "test@test.com", "password": "SomePassword"},
         )
+        assert len(aioclient_mock.mock_calls) == 1
+        assert aioclient_mock.mock_calls[0][0] == "POST"
 
 
 async def test_reauth_flow(
