@@ -634,7 +634,7 @@ class TibberSensorElPrice(TibberSensor):
                         "Could not extract additional attributes from Tibber data"
                     )
 
-        except (AttributeError, TypeError, ValueError, KeyError) as exc:
+        except (AttributeError, TypeError, ValueError, KeyError, Exception) as exc:  # noqa: BLE001
             _LOGGER.error("Failed to fetch Tibber data: %s", exc)
         else:
             return True
