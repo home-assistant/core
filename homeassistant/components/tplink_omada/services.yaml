@@ -5,3 +5,17 @@ reconnect_client:
       example: "01-23-45-67-89-AB"
       selector:
         text:
+block_client:
+  fields:
+    mac:
+      required: true
+      example: "01-23-45-67-89-AB"
+      selector:
+        text:
+unblock_client:
+  fields:
+    mac:
+      required: true
+      example: "01-23-45-67-89-AB"
+      selector:
+        text:

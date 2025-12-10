@@ -29,7 +29,6 @@ PLATFORMS: list[Platform] = [
     Platform.UPDATE,
 ]
 
-
 type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 
 
@@ -68,7 +67,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
         await site_client.reconnect_client(mac)
 
+    async def handle_block_client(call: ServiceCall) -> None:
+        """Handle the service action call."""
+        mac: str | None = call.data.get("mac")
+        if not mac:
+            return
+
+        await site_client.block_client(mac)
+
+    async def handle_unblock_client(call: ServiceCall) -> None:
+        """Handle the service action call."""
+        mac: str | None = call.data.get("mac")
+        if not mac:
+            return
+
+        await site_client.unblock_client(mac)
+
     hass.services.async_register(DOMAIN, "reconnect_client", handle_reconnect_client)
+    hass.services.async_register(DOMAIN, "block_client", handle_block_client)
+    hass.services.async_register(DOMAIN, "unblock_client", handle_unblock_client)
 
     _remove_old_devices(hass, entry, controller.devices_coordinator.data)
 
@@ -83,6 +100,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bo
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # This is the last loaded instance of Omada, deregister any services
         hass.services.async_remove(DOMAIN, "reconnect_client")
+        hass.services.async_remove(DOMAIN, "block_client")
+        hass.services.async_remove(DOMAIN, "unblock_client")
 
     return unload_ok
 
