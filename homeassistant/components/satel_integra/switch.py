@@ -72,9 +72,9 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        is_on = self._get_status_from_coordinator()
-        if is_on != self._attr_is_on:
-            self._attr_is_on = is_on
+        new_state = self._get_status_from_coordinator()
+        if new_state != self._attr_is_on:
+            self._attr_is_on = new_state
             self.async_write_ha_state()
 
     def _get_status_from_coordinator(self) -> bool | None:
