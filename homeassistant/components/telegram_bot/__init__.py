@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from ipaddress import IPv4Network, ip_network
+from ipaddress import ip_network
 import logging
 from types import ModuleType
-from typing import Any
 
 from telegram import Bot
 from telegram.constants import InputMediaType
@@ -13,7 +12,6 @@ from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -22,7 +20,6 @@ from homeassistant.const import (
     ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,
-    CONF_SOURCE,
     CONF_URL,
     Platform,
 )
@@ -90,7 +87,6 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
     CONF_ALLOWED_CHAT_IDS,
-    CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
@@ -384,34 +380,6 @@ PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
-
-    # import the last YAML config since existing behavior only works with the last config
-    domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
-    if domain_config:
-        trusted_networks: list[IPv4Network] = domain_config[-1].get(
-            CONF_TRUSTED_NETWORKS, []
-        )
-        trusted_networks_str: list[str] = (
-            [str(trusted_network) for trusted_network in trusted_networks]
-            if trusted_networks
-            else []
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={CONF_SOURCE: SOURCE_IMPORT},
-                data={
-                    CONF_PLATFORM: domain_config[-1][CONF_PLATFORM],
-                    CONF_API_KEY: domain_config[-1][CONF_API_KEY],
-                    CONF_ALLOWED_CHAT_IDS: domain_config[-1][CONF_ALLOWED_CHAT_IDS],
-                    ATTR_PARSER: domain_config[-1][ATTR_PARSER],
-                    CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
-                    CONF_URL: domain_config[-1].get(CONF_URL),
-                    CONF_TRUSTED_NETWORKS: trusted_networks_str,
-                    CONF_BOT_COUNT: len(domain_config),
-                },
-            )
-        )
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
