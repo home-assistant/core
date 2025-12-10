@@ -1730,7 +1730,7 @@ async def test_call_context_target_all(
         )
 
     assert len(mock_handle_entity_call.mock_calls) == 1
-    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    assert mock_handle_entity_call.mock_calls[0][1][1][0].entity_id == "light.kitchen"
 
 
 async def test_call_context_target_specific(
@@ -1759,7 +1759,7 @@ async def test_call_context_target_specific(
         )
 
     assert len(mock_handle_entity_call.mock_calls) == 1
-    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    assert mock_handle_entity_call.mock_calls[0][1][1][0].entity_id == "light.kitchen"
 
 
 async def test_call_context_target_specific_no_auth(
@@ -1803,10 +1803,10 @@ async def test_call_no_context_target_all(
         ),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 4
-    assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
-        mock_entities.values()
-    )
+    # we only call _handle_entity_call once since it handles batching
+    assert len(mock_handle_entity_call.mock_calls) == 1
+    # The second positional argument (index 1) is the list of entities passed
+    assert mock_handle_entity_call.mock_calls[0][1][1] == list(mock_entities.values())
 
 
 async def test_call_no_context_target_specific(
@@ -1826,7 +1826,7 @@ async def test_call_no_context_target_specific(
     )
 
     assert len(mock_handle_entity_call.mock_calls) == 1
-    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    assert mock_handle_entity_call.mock_calls[0][1][1][0].entity_id == "light.kitchen"
 
 
 async def test_call_with_match_all(
@@ -1843,10 +1843,9 @@ async def test_call_with_match_all(
         ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 4
-    assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
-        mock_entities.values()
-    )
+    assert len(mock_handle_entity_call.mock_calls) == 1
+    # The second positional argument (index 1) is the list of entities passed
+    assert mock_handle_entity_call.mock_calls[0][1][1] == list(mock_entities.values())
 
 
 async def test_call_with_omit_entity_id(

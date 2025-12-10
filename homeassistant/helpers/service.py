@@ -749,13 +749,15 @@ def _extract_batchable_entities(
     batch_map maps (cls, config_entry) -> (list of entities, bound batch classmethod)
     """
 
+    batch_service_name = f"async_batch_{service_name}"
+
     @cache
-    def resolve_classmethod(cls: type[Entity]) -> Callable[..., Any] | None:
+    def resolve_classmethod(cls: type[Entity]) -> _BatchMethodType | None:
         """Return the bound classmethod if defined anywhere in the MRO."""
         for base in cls.__mro__:
-            attr = base.__dict__.get(f"async_batch_{service_name}")
+            attr = base.__dict__.get(batch_service_name)
             if isinstance(attr, classmethod):
-                return cast(Callable[..., Any], getattr(cls, service_name))
+                return cast(_BatchMethodType, getattr(cls, batch_service_name))
         return None
 
     remaining: list[Entity] = []
@@ -900,11 +902,10 @@ async def entity_service_call(
     # single entity case removed because we create tasks anyway
     remaining, batch_map = _extract_batchable_entities(entities, call.service)
     remaining, batch_map = _reinsert_batch_singletons(remaining, batch_map)
-
     response_data = await _handle_entity_call(
         hass,
-        batch_map,
         remaining,
+        batch_map,
         func,
         data,
         call.context,
@@ -933,8 +934,8 @@ async def entity_service_call(
 
 async def _handle_entity_call(
     hass: HomeAssistant,
-    batch_map: _BatchMap | None,
     non_batchable: list[Entity] | None,
+    batch_map: _BatchMap | None,
     func: str | HassJob,
     data: dict[str, Any] | ServiceCall,
     context: Context,
@@ -1017,9 +1018,13 @@ async def _handle_entity_call(
     response_data: EntityServiceResponse = {}
 
     for batch_results in all_results:
+        # Exceptions from service calls raise immediately
+        if isinstance(batch_results, BaseException):
+            raise batch_results from None
+
         # Invalid type → log but skip
         if not isinstance(batch_results, dict):
-            _LOGGER.error(
+            _LOGGER.error(  # type: ignore[unreachable]
                 "Batch method returned invalid type %r; expected dict or None",
                 batch_results,
             )
@@ -1034,6 +1039,7 @@ async def _handle_entity_call(
             # Exceptions from batch → raise (matches original)
             if isinstance(result, BaseException):
                 raise result from None
+            response_data[eid] = result
 
             # Per-entity None → valid, include it
             if result is None:
