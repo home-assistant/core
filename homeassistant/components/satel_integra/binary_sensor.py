@@ -96,13 +96,18 @@ class SatelIntegraZoneBinarySensor(SatelIntegraEntity, BinarySensorEntity):
 
         self._attr_device_class = device_class
 
-        self._attr_is_on = self.coordinator.data.zones[self._device_number] == 1
+        self._attr_is_on = (
+            self.coordinator.data.zones[self._device_number] == 1
+            if self._device_number in self.coordinator.data.zones
+            else False
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self.coordinator.data.zones[self._device_number] == 1
-        self.async_write_ha_state()
+        if self._device_number in self.coordinator.data.zones:
+            self._attr_is_on = self.coordinator.data.zones[self._device_number] == 1
+            self.async_write_ha_state()
 
 
 class SatelIntegraOutputBinarySensor(SatelIntegraEntity, BinarySensorEntity):
@@ -126,10 +131,15 @@ class SatelIntegraOutputBinarySensor(SatelIntegraEntity, BinarySensorEntity):
 
         self._attr_device_class = device_class
 
-        self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
+        self._attr_is_on = (
+            self.coordinator.data.zones[self._device_number] == 1
+            if self._device_number in self.coordinator.data.zones
+            else False
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
-        self.async_write_ha_state()
+        if self._device_number in self.coordinator.data.outputs:
+            self._attr_is_on = self.coordinator.data.outputs[self._device_number] == 1
+            self.async_write_ha_state()
