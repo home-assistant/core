@@ -59,7 +59,7 @@ class SwitchbotCloudSensorEntityDescription(SensorEntityDescription):
 USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_USED_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
-    state_class=SensorStateClass.MEASUREMENT,
+    state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     suggested_display_precision=3,
     value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
@@ -152,7 +152,7 @@ RELAY_SWITCH_2PM_CURRENT_DESCRIPTION = SensorEntityDescription(
 RELAY_SWITCH_2PM_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
-    state_class=SensorStateClass.MEASUREMENT,
+    state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     suggested_display_precision=3,
     value_fn=lambda data: (0 if data is None else int(data)) / 60000,
