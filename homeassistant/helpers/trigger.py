@@ -453,19 +453,19 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
         return state.state in self._to_states
 
 
-class FromEntityStateTriggerBase(EntityTriggerBase):
+class EntityFromStateTriggerBase(EntityTriggerBase):
     """Class for entity state changes from a specific state."""
 
     _from_state: str
 
-    def is_from_state(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state matches the expected one and that the state changed."""
         return (
             from_state.state == self._from_state and to_state.state != self._from_state
         )
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state is not the same as the expected origin state."""
         return state.state != self._from_state
 
 
@@ -511,10 +511,10 @@ def make_conditional_entity_state_trigger(
 
 def make_from_entity_state_trigger(
     domain: str, *, from_state: str
-) -> type[FromEntityStateTriggerBase]:
+) -> type[EntityFromStateTriggerBase]:
     """Create a "from" entity state trigger class."""
 
-    class CustomTrigger(FromEntityStateTriggerBase):
+    class CustomTrigger(EntityFromStateTriggerBase):
         """Trigger for "from" entity state changes."""
 
         _domain = domain
