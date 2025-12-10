@@ -40,19 +40,6 @@ class LaMarzoccoSwitchEntityDescription(
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
-        key="main",
-        translation_key="main",
-        name=None,
-        control_fn=lambda machine, state: machine.set_power(state),
-        is_on_fn=(
-            lambda machine: cast(
-                MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
-            ).mode
-            is MachineMode.BREWING_MODE
-        ),
-        bt_offline_mode=True,
-    ),
-    LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),
@@ -98,6 +85,20 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     ),
 )
 
+SWITCH_ENTITY = LaMarzoccoSwitchEntityDescription(
+    key="main",
+    translation_key="main",
+    name=None,
+    control_fn=lambda machine, state: machine.set_power(state),
+    is_on_fn=(
+        lambda machine: cast(
+            MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+        ).mode
+        is MachineMode.BREWING_MODE
+    ),
+    bt_offline_mode=True,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -121,6 +122,8 @@ async def async_setup_entry(
         LaMarzoccoAutoOnOffSwitchEntity(coordinator, wake_up_sleep_entry)
         for wake_up_sleep_entry in coordinator.device.schedule.smart_wake_up_sleep.schedules
     )
+
+    entities.append(LaMarzoccoMainSwitchEntity(coordinator, SWITCH_ENTITY))
 
     async_add_entities(entities)
 
@@ -158,6 +161,15 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.is_on_fn(self.coordinator.device)
+
+
+class LaMarzoccoMainSwitchEntity(LaMarzoccoSwitchEntity):
+    """Switch representing espresso machine main power."""
+
+    @property
+    def entity_picture(self) -> str:
+        """Return the entity picture."""
+        return self.coordinator.device.dashboard.image_url
 
 
 class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
