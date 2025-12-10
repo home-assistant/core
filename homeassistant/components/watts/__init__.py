@@ -39,11 +39,16 @@ type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) -> bool:
     """Set up Watts Vision from a config entry."""
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            "OAuth2 implementation temporarily unavailable"
+        ) from err
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
