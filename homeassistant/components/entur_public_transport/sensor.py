@@ -119,7 +119,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2027.1.0",
+        breaks_in_ha_version="2026.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
