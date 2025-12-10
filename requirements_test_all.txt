@@ -2597,7 +2597,7 @@ venstarcolortouch==0.21
 victron-ble-ha-parser==0.4.9
 
 # homeassistant.components.victron_gx_mqtt
-victron-mqtt==2025.12.3
+victron-mqtt==2025.12.5
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
