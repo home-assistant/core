@@ -10,7 +10,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, P
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
-from .const import CONF_HOME_ID
+from .const import CONF_HOME_ID, DOMAIN
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
@@ -29,7 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
     if home_id is not None:
         await hass.async_add_executor_job(hub.select_home, home_id)
     else:
-        raise ConfigEntryError
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="home_id_not_set"
+        )
     await hass.async_add_executor_job(hub.get_devices)
     entry.runtime_data = hub
 

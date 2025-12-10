@@ -29,7 +29,7 @@ async def async_setup_entry(
         [
             Switch(entity, entry.runtime_data.local_address)
             for entity in entry.runtime_data.devices
-            if type(entity) is switch_device.SwitchDevice
+            if isinstance(entity, switch_device.SwitchDevice)
         ]
     )
 
@@ -46,7 +46,7 @@ class Switch(SwitchEntity):
         """Initialize an switch."""
         self._switch = switch
         self._name = str(switch.name)
-        self._state = False  # self._switch.get_on_status()
+        self._state = False
         self._local_address = local_address
 
     @property

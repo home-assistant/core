@@ -25,5 +25,10 @@
         "title": "[%key:common::action::connect%]"
       }
     }
+  },
+  "exceptions": {
+    "home_id_not_set": {
+      "message": "The config is missing a home id"
+    }
   }
 }

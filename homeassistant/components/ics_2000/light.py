@@ -28,7 +28,7 @@ async def async_setup_entry(
         [
             DimmableLight(entity, entry.runtime_data.local_address)
             for entity in entry.runtime_data.devices
-            if type(entity) is dim_device.DimDevice
+            if isinstance(entity, dim_device.DimDevice)
         ]
     )
 
@@ -43,8 +43,8 @@ class DimmableLight(LightEntity):
         """Initialize an dimmable light."""
         self._light = light
         self._name = str(light.name)
-        self._state = False  # self._light.get_on_status()
-        self._brightness = 255  # self._light.get_dim_level()
+        self._state = False
+        self._brightness = 255
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._local_address = local_address
 
