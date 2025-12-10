@@ -19,14 +19,12 @@ async def async_setup_entry(
 ) -> None:
     """Add the entities for the binary sensor."""
     coordinator = config_entry.runtime_data.coordinator
-    for device in coordinator.device_data:
-        buttons = [
-            HomeLinkEventEntity(b.id, b.name, device.id, device.name, coordinator)
-            for b in device.buttons
-        ]
-        coordinator.buttons.extend(buttons)
 
-    async_add_entities(coordinator.buttons)
+    async_add_entities(
+        HomeLinkEventEntity(button.id, button.name, device.id, device.name, coordinator)
+        for device in coordinator.device_data
+        for button in device.buttons
+    )
 
 
 # Updates are centralized by the coordinator.
@@ -42,7 +40,7 @@ class HomeLinkEventEntity(EventEntity):
 
     def __init__(
         self,
-        id: str,
+        button_id: str,
         param_name: str,
         device_id: str,
         device_name: str,
@@ -50,9 +48,9 @@ class HomeLinkEventEntity(EventEntity):
     ) -> None:
         """Initialize the event entity."""
 
-        self.id: str = id
-        self._attr_name: str = param_name
-        self._attr_unique_id: str = id
+        self.button_id = button_id
+        self._attr_name = param_name
+        self._attr_unique_id = button_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device_name,
@@ -65,7 +63,7 @@ class HomeLinkEventEntity(EventEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_add_event_listener(
-                self._handle_event_data_update, self.id
+                self._handle_event_data_update, self.button_id
             )
         )
 
@@ -78,6 +76,3 @@ class HomeLinkEventEntity(EventEntity):
             self.last_request_id = update_data["requestId"]
 
         self.async_write_ha_state()
-
-    async def async_update(self):
-        """Request early polling. Left intentionally blank because it's not possible in this implementation."""
