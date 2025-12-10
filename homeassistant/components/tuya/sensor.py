@@ -39,10 +39,10 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import (
-    DPCodeBase64Wrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
+    DPCodeRawWrapper,
     DPCodeTypeInformationWrapper,
     DPCodeWrapper,
 )
@@ -119,7 +119,7 @@ class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
         return raw_value.get("voltage")
 
 
-class _RawElectricityDataWrapper(DPCodeBase64Wrapper):
+class _RawElectricityDataWrapper(DPCodeRawWrapper):
     """Custom DPCode Wrapper for extracting ElectricityData from base64."""
 
     def _convert(self, value: ElectricityData) -> float:
@@ -128,7 +128,7 @@ class _RawElectricityDataWrapper(DPCodeBase64Wrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None or (
+        if (raw_value := super().read_device_status(device)) is None or (
             value := ElectricityData.from_bytes(raw_value)
         ) is None:
             return None
