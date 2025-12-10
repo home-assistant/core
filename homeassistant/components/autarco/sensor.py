@@ -18,10 +18,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
+from .entity import AutarcoEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -204,13 +204,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AutarcoBatterySensorEntity(
-    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
-):
+class AutarcoBatterySensorEntity(AutarcoEntity, SensorEntity):
     """Defines an Autarco battery sensor."""
 
     entity_description: AutarcoBatterySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -239,13 +236,10 @@ class AutarcoBatterySensorEntity(
         return self.entity_description.value_fn(self.coordinator.data.battery)
 
 
-class AutarcoSolarSensorEntity(
-    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
-):
+class AutarcoSolarSensorEntity(AutarcoEntity, SensorEntity):
     """Defines an Autarco solar sensor."""
 
     entity_description: AutarcoSolarSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -273,13 +267,10 @@ class AutarcoSolarSensorEntity(
         return self.entity_description.value_fn(self.coordinator.data.solar)
 
 
-class AutarcoInverterSensorEntity(
-    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
-):
+class AutarcoInverterSensorEntity(AutarcoEntity, SensorEntity):
     """Defines an Autarco inverter sensor."""
 
     entity_description: AutarcoInverterSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
