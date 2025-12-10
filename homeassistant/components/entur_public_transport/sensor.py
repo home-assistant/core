@@ -182,11 +182,7 @@ class EnturPublicTransportSensor(SensorEntity):
     _attr_attribution = "Data provided by entur.org under NLOD"
 
     def __init__(
-        self,
-        api: EnturProxy,
-        name: str,
-        stop: str,
-        show_on_map: bool,
+        self, api: EnturProxy, name: str, stop: str, show_on_map: bool
     ) -> None:
         """Initialize the sensor."""
         self.api = api
