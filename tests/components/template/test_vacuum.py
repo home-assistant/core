@@ -594,16 +594,17 @@ async def test_battery_level_template(
     [(1, "{{ states('sensor.test_state') }}", {}, "{{ 50 }}")],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
+    ("style", "attribute", "issue_count"),
     [
-        (ConfigurationStyle.LEGACY, "battery_level_template"),
-        (ConfigurationStyle.MODERN, "battery_level"),
-        (ConfigurationStyle.TRIGGER, "battery_level"),
+        (ConfigurationStyle.LEGACY, "battery_level_template", 2),
+        (ConfigurationStyle.MODERN, "battery_level", 1),
+        (ConfigurationStyle.TRIGGER, "battery_level", 1),
     ],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_battery_level_template_repair(
     hass: HomeAssistant,
+    issue_count: int,
     issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -612,7 +613,7 @@ async def test_battery_level_template_repair(
     hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
     await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 1
+    assert len(issue_registry.issues) == issue_count
     issue = issue_registry.async_get_issue(
         "template", f"deprecated_battery_level_{TEST_ENTITY_ID}"
     )

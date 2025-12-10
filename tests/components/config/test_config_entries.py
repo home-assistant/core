@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
@@ -1000,6 +1000,36 @@ async def test_get_progress_subscribe(
             "id": 1,
             "type": "event",
         }
+
+
+async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
+    """Test flows creating entry immediately don't trigger subscription notification."""
+    assert await async_setup_component(hass, "config", {})
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_import(
+            self, user_input: dict[str, Any]
+        ) -> ConfigFlowResult:
+            """Handle import - creates entry immediately."""
+            return self.async_create_entry(title="Test", data={})
+
+    subscription_mock = Mock()
+    hass.config_entries.flow.async_subscribe_flow(subscription_mock)
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_IMPORT}, data={}
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert len(subscription_mock.mock_calls) == 0
 
 
 async def test_get_progress_subscribe_in_progress(

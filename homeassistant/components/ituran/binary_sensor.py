@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from propcache.api import cached_property
 from pyituran import Vehicle
 
 from homeassistant.components.binary_sensor import (
@@ -69,7 +68,7 @@ class IturanBinarySensor(IturanBaseEntity, BinarySensorEntity):
         super().__init__(coordinator, license_plate, description.key)
         self.entity_description = description
 
-    @cached_property
+    @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.vehicle)

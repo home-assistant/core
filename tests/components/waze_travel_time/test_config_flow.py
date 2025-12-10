@@ -93,6 +93,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_update")
 async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
     entry = MockConfigEntry(

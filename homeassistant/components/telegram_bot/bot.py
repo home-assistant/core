@@ -108,8 +108,8 @@ from .const import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
-    SIGNAL_UPDATE_EVENT,
 )
+from .helpers import signal
 
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
@@ -169,7 +169,7 @@ class BaseTelegramBot:
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_EVENT, event_type, event_data)
+        async_dispatcher_send(self.hass, signal(self._bot), event_type, event_data)
         return True
 
     @staticmethod
@@ -448,7 +448,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
@@ -551,7 +551,7 @@ class TelegramNotificationService:
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
                 async_dispatcher_send(
-                    self.hass, SIGNAL_UPDATE_EVENT, EVENT_TELEGRAM_SENT, event_data
+                    self.hass, signal(self.bot), EVENT_TELEGRAM_SENT, event_data
                 )
         except TelegramError as exc:
             if not suppress_error:
@@ -923,6 +923,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 sticker=stickerid,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -949,6 +950,7 @@ class TelegramNotificationService:
             self.bot.send_location,
             "Error sending location",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             latitude=latitude,
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -975,6 +977,7 @@ class TelegramNotificationService:
             self.bot.send_poll,
             "Error sending poll",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             question=question,
             options=options,
             is_anonymous=is_anonymous,

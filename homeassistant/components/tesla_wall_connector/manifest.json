@@ -20,5 +20,5 @@
   "documentation": "https://www.home-assistant.io/integrations/tesla_wall_connector",
   "iot_class": "local_polling",
   "loggers": ["tesla_wall_connector"],
-  "requirements": ["tesla-wall-connector==1.0.2"]
+  "requirements": ["tesla-wall-connector==1.1.0"]
 }

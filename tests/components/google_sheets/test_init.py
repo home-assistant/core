@@ -6,6 +6,7 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
@@ -17,8 +18,11 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
+    ADD_CREATED_COLUMN,
+    DATA,
     DATA_CONFIG_ENTRY,
     ROWS,
+    SERVICE_APPEND_SHEET,
     SERVICE_GET_SHEET,
     WORKSHEET,
 )
@@ -194,12 +198,24 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
+@pytest.mark.parametrize(
+    ("add_created_column_param", "expected_row"),
+    [
+        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
+        ({}, ["bar", "2024-01-15 12:30:45.123456"]),
+    ],
+    ids=["created_column_true", "created_column_false", "created_column_default"],
+)
+@freeze_time("2024-01-15 12:30:45.123456")
 async def test_append_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
+    add_created_column_param: dict[str, bool],
+    expected_row: list[str],
 ) -> None:
-    """Test service call appending to a sheet."""
+    """Test created column behavior based on add_created_column parameter."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -207,17 +223,26 @@ async def test_append_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo", "created"]]
+
         await hass.services.async_call(
             DOMAIN,
-            "append_sheet",
+            SERVICE_APPEND_SHEET,
             {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                DATA: {"foo": "bar"},
+                **add_created_column_param,
             },
             blocking=True,
         )
-    assert len(mock_client.mock_calls) == 8
+
+        mock_worksheet.append_rows.assert_called_once()
+        rows_data = mock_worksheet.append_rows.call_args[0][0]
+        assert rows_data[0] == expected_row
 
 
 async def test_get_sheet(
