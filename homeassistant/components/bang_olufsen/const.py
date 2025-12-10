@@ -32,7 +32,7 @@ BEO_STATES: dict[str, MediaPlayerState] = {
     "buffering": MediaPlayerState.PLAYING,
     "idle": MediaPlayerState.IDLE,
     "paused": MediaPlayerState.PAUSED,
-    "stopped": MediaPlayerState.PAUSED,
+    "stopped": MediaPlayerState.IDLE,
     "ended": MediaPlayerState.PAUSED,
     "error": MediaPlayerState.IDLE,
     # A device's initial state is "unknown" and should be treated as "idle"
