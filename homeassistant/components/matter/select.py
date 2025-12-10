@@ -207,16 +207,17 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
         # NOTE: The Matter spec inverts the usual meaning: bit=0 means supported,
         # bit=1 means not supported, undefined bits must be 1. Mandatory modes are
         # bits 0 (Normal) and 3 (NoRemoteLockUnlock).
-        supported_modes = [
+        num_mode_bits = supported_modes_bitmap.bit_length()
+        supported_mode_values = [
             bit_position
-            for bit_position in range(5)  # Operating modes are bits 0-4
+            for bit_position in range(num_mode_bits)
             if not supported_modes_bitmap & (1 << bit_position)
         ]
 
         # Map supported mode values to their string representations
         self._attr_options = [
             mapped_value
-            for mode_value in supported_modes
+            for mode_value in supported_mode_values
             if (mapped_value := self.entity_description.device_to_ha(mode_value))
         ]
 
