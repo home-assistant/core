@@ -38,9 +38,9 @@
   "selector": {
     "trigger_behavior": {
       "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
+        "any": "[%key:common::selector::trigger_behavior::options::any%]",
+        "first": "[%key:common::selector::trigger_behavior::options::first%]",
+        "last": "[%key:common::selector::trigger_behavior::options::last%]"
       }
     }
   },
