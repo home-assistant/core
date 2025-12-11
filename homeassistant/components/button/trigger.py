@@ -1,4 +1,4 @@
-"""Provides triggers for binary sensors."""
+"""Provides triggers for buttons."""
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
