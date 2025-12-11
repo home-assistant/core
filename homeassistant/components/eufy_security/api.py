@@ -5,11 +5,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
 
 _LOGGER = logging.getLogger(__name__)
 
 API_BASE_URL = "https://mysecurity.eufylife.com/api/v1"
+
+# Headers required by the Eufy API
+DEFAULT_HEADERS = {
+    "User-Agent": "EufySecurity/1.0",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+}
 
 
 class EufySecurityError(Exception):
@@ -70,23 +77,45 @@ class EufySecurityAPI:
         url = f"{API_BASE_URL}/passport/login"
         payload = {"email": email, "password": password}
 
-        async with self._session.post(url, json=payload) as response:
-            data = await response.json()
+        try:
+            async with self._session.post(
+                url, json=payload, headers=DEFAULT_HEADERS
+            ) as response:
+                # Check for non-JSON response (blocked/rate limited)
+                content_type = response.headers.get("Content-Type", "")
+                if "application/json" not in content_type:
+                    text = await response.text()
+                    _LOGGER.debug("Non-JSON response: %s", text[:500])
+                    if response.status == 403:
+                        raise AuthenticationError(
+                            "Access forbidden - the API may be blocking requests. "
+                            "Try using the eufy-security-ws add-on instead."
+                        )
+                    raise AuthenticationError(
+                        f"Unexpected response type: {content_type}"
+                    )
 
-            if response.status != 200:
-                raise AuthenticationError(f"Authentication failed: {response.status}")
+                data = await response.json()
 
-            if data.get("code") != 0:
-                error_msg = data.get("msg", "Unknown error")
-                if "invalid" in error_msg.lower() or "incorrect" in error_msg.lower():
-                    raise InvalidCredentialsError(error_msg)
-                raise AuthenticationError(error_msg)
+                if response.status != 200:
+                    raise AuthenticationError(
+                        f"Authentication failed: {response.status}"
+                    )
 
-            auth_data = data.get("data", {})
-            self._token = auth_data.get("auth_token")
+                if data.get("code") != 0:
+                    error_msg = data.get("msg", "Unknown error")
+                    if "invalid" in error_msg.lower() or "incorrect" in error_msg.lower():
+                        raise InvalidCredentialsError(error_msg)
+                    raise AuthenticationError(error_msg)
 
-            if not self._token:
-                raise AuthenticationError("No auth token received")
+                auth_data = data.get("data", {})
+                self._token = auth_data.get("auth_token")
+
+                if not self._token:
+                    raise AuthenticationError("No auth token received")
+
+        except ClientError as err:
+            raise EufySecurityError(f"Connection error: {err}") from err
 
     async def async_update_device_info(self) -> None:
         """Update device information from the API."""
@@ -97,52 +126,58 @@ class EufySecurityAPI:
         """Get list of stations/hubs."""
         url = f"{API_BASE_URL}/app/get_hub_list"
 
-        async with self._session.post(
-            url, json={}, headers=self._auth_headers
-        ) as response:
-            data = await response.json()
+        try:
+            async with self._session.post(
+                url, json={}, headers=self._request_headers
+            ) as response:
+                data = await response.json()
 
-            if data.get("code") != 0:
-                raise EufySecurityError(f"Failed to get stations: {data.get('msg')}")
+                if data.get("code") != 0:
+                    raise EufySecurityError(f"Failed to get stations: {data.get('msg')}")
 
-            self.stations = {}
-            for station_data in data.get("data", []):
-                station = Station(
-                    serial=station_data.get("station_sn", ""),
-                    name=station_data.get("station_name", "Unknown"),
-                    model=station_data.get("station_model", "Unknown"),
-                )
-                self.stations[station.serial] = station
+                self.stations = {}
+                for station_data in data.get("data", []):
+                    station = Station(
+                        serial=station_data.get("station_sn", ""),
+                        name=station_data.get("station_name", "Unknown"),
+                        model=station_data.get("station_model", "Unknown"),
+                    )
+                    self.stations[station.serial] = station
+        except ClientError as err:
+            raise EufySecurityError(f"Connection error: {err}") from err
 
     async def _async_get_devices(self) -> None:
         """Get list of devices/cameras."""
         url = f"{API_BASE_URL}/app/get_devs_list"
 
-        async with self._session.post(
-            url, json={}, headers=self._auth_headers
-        ) as response:
-            data = await response.json()
+        try:
+            async with self._session.post(
+                url, json={}, headers=self._request_headers
+            ) as response:
+                data = await response.json()
 
-            if data.get("code") != 0:
-                raise EufySecurityError(f"Failed to get devices: {data.get('msg')}")
+                if data.get("code") != 0:
+                    raise EufySecurityError(f"Failed to get devices: {data.get('msg')}")
 
-            self.cameras = {}
-            for device_data in data.get("data", []):
-                # Filter for camera devices
-                device_type = device_data.get("device_type", 0)
-                # Camera device types are typically 1-31 based on eufy documentation
-                if device_type > 0:
-                    camera = Camera(
-                        serial=device_data.get("device_sn", ""),
-                        name=device_data.get("device_name", "Unknown"),
-                        model=device_data.get("device_model", "Unknown"),
-                        station_serial=device_data.get("station_sn", ""),
-                        hardware_version=device_data.get("main_hw_version", ""),
-                        software_version=device_data.get("main_sw_version", ""),
-                        last_camera_image_url=device_data.get("cover_path"),
-                        _api=self,
-                    )
-                    self.cameras[camera.serial] = camera
+                self.cameras = {}
+                for device_data in data.get("data", []):
+                    # Filter for camera devices
+                    device_type = device_data.get("device_type", 0)
+                    # Camera device types are typically 1-31 based on eufy documentation
+                    if device_type > 0:
+                        camera = Camera(
+                            serial=device_data.get("device_sn", ""),
+                            name=device_data.get("device_name", "Unknown"),
+                            model=device_data.get("device_model", "Unknown"),
+                            station_serial=device_data.get("station_sn", ""),
+                            hardware_version=device_data.get("main_hw_version", ""),
+                            software_version=device_data.get("main_sw_version", ""),
+                            last_camera_image_url=device_data.get("cover_path"),
+                            _api=self,
+                        )
+                        self.cameras[camera.serial] = camera
+        except ClientError as err:
+            raise EufySecurityError(f"Connection error: {err}") from err
 
     async def async_start_stream(self, device_serial: str) -> str | None:
         """Start RTSP stream for a device."""
@@ -153,16 +188,20 @@ class EufySecurityAPI:
             "proto": 2,  # RTSP protocol
         }
 
-        async with self._session.post(
-            url, json=payload, headers=self._auth_headers
-        ) as response:
-            data = await response.json()
+        try:
+            async with self._session.post(
+                url, json=payload, headers=self._request_headers
+            ) as response:
+                data = await response.json()
 
-            if data.get("code") != 0:
-                _LOGGER.warning("Failed to start stream: %s", data.get("msg"))
-                return None
+                if data.get("code") != 0:
+                    _LOGGER.warning("Failed to start stream: %s", data.get("msg"))
+                    return None
 
-            return data.get("data", {}).get("url")
+                return data.get("data", {}).get("url")
+        except ClientError as err:
+            _LOGGER.warning("Failed to start stream: %s", err)
+            return None
 
     async def async_stop_stream(self, device_serial: str) -> None:
         """Stop RTSP stream for a device."""
@@ -172,18 +211,24 @@ class EufySecurityAPI:
             "station_sn": self.cameras[device_serial].station_serial,
         }
 
-        async with self._session.post(
-            url, json=payload, headers=self._auth_headers
-        ) as response:
-            data = await response.json()
+        try:
+            async with self._session.post(
+                url, json=payload, headers=self._request_headers
+            ) as response:
+                data = await response.json()
 
-            if data.get("code") != 0:
-                _LOGGER.warning("Failed to stop stream: %s", data.get("msg"))
+                if data.get("code") != 0:
+                    _LOGGER.warning("Failed to stop stream: %s", data.get("msg"))
+        except ClientError as err:
+            _LOGGER.warning("Failed to stop stream: %s", err)
 
     @property
-    def _auth_headers(self) -> dict[str, str]:
-        """Return authentication headers."""
-        return {"x-auth-token": self._token or ""}
+    def _request_headers(self) -> dict[str, str]:
+        """Return headers for API requests."""
+        headers = DEFAULT_HEADERS.copy()
+        if self._token:
+            headers["x-auth-token"] = self._token
+        return headers
 
 
 async def async_login(
