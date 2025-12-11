@@ -39,7 +39,7 @@ class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
         """Check if the position and direction should be reversed."""
         return False
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:
+    def read_device_status(self, device: CustomerDevice) -> float | None:
         if (value := device.status.get(self.dpcode)) is None:
             return None
 
@@ -49,7 +49,7 @@ class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
             )
         )
 
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> int:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         return round(
             self._remap_helper.remap_value_from(
                 value, reverse=self._position_reversed(device)
