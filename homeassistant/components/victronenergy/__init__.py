@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import json
 import logging
 import ssl
@@ -38,43 +39,40 @@ _MQTT_ERROR_MESSAGES = {
 
 
 # Platform configuration: entity factory and Platform enum for each supported platform
-def _make_factory(entity_cls):
+def _make_factory(
+    entity_cls: type[VictronBaseEntity],
+) -> Callable[
+    [VictronMqttManager, DeviceKey, dict[str, Any], str, dict[str, Any]],
+    VictronBaseEntity,
+]:
     def factory(
-        manager,
+        manager: VictronMqttManager,
         device_key: DeviceKey,
         device_info: dict[str, Any],
         unique_id: str,
         config: dict[str, Any],
-    ):
+    ) -> VictronBaseEntity:
         # Factory parameter order now matches entity constructor
         return entity_cls(manager, device_key, device_info, unique_id, config)
 
     return factory
 
 
-_PLATFORM_CONFIG = {
-    "binary_sensor": {
-        "factory": _make_factory(MQTTDiscoveredBinarySensor),
-        "platform": Platform.BINARY_SENSOR,
-    },
-    "number": {
-        "factory": _make_factory(MQTTDiscoveredNumber),
-        "platform": Platform.NUMBER,
-    },
-    "sensor": {
-        "factory": _make_factory(MQTTDiscoveredSensor),
-        "platform": Platform.SENSOR,
-    },
-    "switch": {
-        "factory": _make_factory(MQTTDiscoveredSwitch),
-        "platform": Platform.SWITCH,
-    },
+_PLATFORM_CONFIG: dict[
+    Platform,
+    Callable[
+        [VictronMqttManager, DeviceKey, dict[str, Any], str, dict[str, Any]],
+        VictronBaseEntity,
+    ],
+] = {
+    Platform.BINARY_SENSOR: _make_factory(MQTTDiscoveredBinarySensor),
+    Platform.NUMBER: _make_factory(MQTTDiscoveredNumber),
+    Platform.SENSOR: _make_factory(MQTTDiscoveredSensor),
+    Platform.SWITCH: _make_factory(MQTTDiscoveredSwitch),
 }
 
 # Derived platforms list
-_PLATFORMS: list[Platform] = [
-    config["platform"] for config in _PLATFORM_CONFIG.values()
-]
+_PLATFORMS: list[Platform] = list(_PLATFORM_CONFIG.keys())
 
 
 def _extract_device_key_from_discovery(device_info: dict[str, Any]) -> DeviceKey | None:
@@ -294,7 +292,7 @@ class VictronMqttManager:
             return
 
         # Entity doesn't exist, validate platform and create entity directly
-        if platform not in _PLATFORM_CONFIG:
+        if not platform or platform not in _PLATFORM_CONFIG:
             _LOGGER.warning(
                 "Missing or unknown platform %s for entity %s, skipping",
                 platform,
@@ -318,12 +316,13 @@ class VictronMqttManager:
 
         # Create entity
         _LOGGER.debug("Creating entity: unique_id=%s, platform=%s", unique_id, platform)
-        entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-        # This invokes the factory lambda to create the entity
+        # This invokes the registered factory callable to create the entity
+        entity_factory = _PLATFORM_CONFIG[platform]
         entity = entity_factory(self, device_key, device_info, unique_id, component_cfg)
         if entity:
             # Store entity in nested registry structure
-            device_entities[entity.unique_id] = entity
+            if entity.unique_id:
+                device_entities[entity.unique_id] = entity
             # This registers the entity with Home Assistant
             callback([entity])
         else:
@@ -721,6 +720,8 @@ class VictronMqttManager:
         """Unregister an entity from the manager."""
         self.unsubscribe_entity(entity)
 
+        if not entity.unique_id:
+            return
         # Remove entity from device-specific registry
         device_key = entity.device_key
         if device_key not in self._entity_registry:
