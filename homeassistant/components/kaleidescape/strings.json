@@ -73,5 +73,27 @@
         "name": "Video mode"
       }
     }
+  },
+  "services": {
+    "send_volume_level": {
+      "description": "Send current volume level to any listening Kaleidescape apps.",
+      "fields": {
+        "level": {
+          "description": "Current volume level from 0.0 (muted) to 1.0 (maximum).",
+          "name": "Volume level"
+        }
+      },
+      "name": "Send sound"
+    },
+    "send_volume_muted": {
+      "description": "Send current mute state to any listening Kaleidescape apps.",
+      "fields": {
+        "muted": {
+          "description": "Current muted state.",
+          "name": "Volume muted"
+        }
+      },
+      "name": "Send sound"
+    }
   }
 }
