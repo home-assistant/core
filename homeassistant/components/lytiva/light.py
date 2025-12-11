@@ -115,17 +115,10 @@ class LytivaLight(LightEntity):
         self._attr_brightness = 255
         self._attr_rgb_color = [255, 255, 255]
 
-        # CCT temperature: device uses mireds internally. Keep original mired ranges,
-        # but expose Kelvin attributes for HA.
-        self._attr_min_mireds = cfg.get("min_mireds", 154)  # warmest (mireds)
-        self._attr_max_mireds = cfg.get("max_mireds", 370)  # coldest (mireds)
-        # Current color temp stored internally as mireds; default warmest
-        self._internal_color_temp_mired = self._attr_min_mireds
-
-        # Expose Kelvin equivalents required by HA:
-        self._attr_min_color_temp_kelvin = mireds_to_kelvin(self._attr_max_mireds)  # note: min kelvin = max mired
-        self._attr_max_color_temp_kelvin = mireds_to_kelvin(self._attr_min_mireds)  # max kelvin = min mired
-        self._attr_color_temp_kelvin = mireds_to_kelvin(self._internal_color_temp_mired)
+        # State memory
+        self._last_brightness = 255
+        self._last_color_temp_kelvin = self._attr_min_color_temp_kelvin
+        self._last_rgb = [255, 255, 255]
 
         # Type detect
         typ = cfg.get("type", "")
@@ -249,9 +242,12 @@ class LytivaLight(LightEntity):
         payload = {"version": "v1.0", "address": self.address}
 
         # store last state
-        self._last_brightness = self._attr_brightness
-        self._last_color_temp_kelvin = getattr(self, "_attr_color_temp_kelvin", None)
-        self._last_rgb = list(self._attr_rgb_color)
+        if self._attr_brightness:
+            self._last_brightness = self._attr_brightness
+        if hasattr(self, "_attr_color_temp_kelvin") and self._attr_color_temp_kelvin:
+            self._last_color_temp_kelvin = self._attr_color_temp_kelvin
+        if self._attr_rgb_color:
+            self._last_rgb = list(self._attr_rgb_color)
 
         if self.light_type == "dimmer":
             payload.update({"type": "dimmer", "dimming": 0})
@@ -307,11 +303,7 @@ class LytivaLight(LightEntity):
                     self._attr_is_on = any([r, g, b])
             
             # Thread-safety: ensure write happens on HA event loop
-            try:
-                self.hass.add_job(self.async_write_ha_state)
-            except Exception:
-                # fallback
-                self.async_write_ha_state()
+            self.async_write_ha_state()
                 
         except Exception as e:
             _LOGGER.exception("Light update error: %s", e)

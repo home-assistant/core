@@ -268,7 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 client.publish("homeassistant/status", "online", qos=1, retain=True)
             except Exception:
-                pass
+                _LOGGER.exception("Failed to publish online status")
             # subscribe discovery + status topics via message_callback_add (single owner)
             try:
                 client.subscribe(f"{discovery_prefix}/+/+/config")
