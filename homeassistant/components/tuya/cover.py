@@ -24,7 +24,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 from .type_information import IntegerTypeInformation
-from .utils import RemapHelper
+from .util import RemapHelper
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
