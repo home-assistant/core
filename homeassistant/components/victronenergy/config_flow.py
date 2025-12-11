@@ -12,8 +12,8 @@ import json
 import logging
 import re
 import ssl
-import uuid
 from typing import Any
+import uuid
 
 import aiohttp
 import paho.mqtt.client as mqtt
@@ -27,7 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_BROKER, CONF_PORT, DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 

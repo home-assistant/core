@@ -7,7 +7,6 @@ from collections.abc import Callable, Sequence
 import json
 import logging
 import ssl
-import time
 from typing import Any
 
 import paho.mqtt.client as mqtt
@@ -19,8 +18,8 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
 from .binary_sensor import MQTTDiscoveredBinarySensor
+from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
 from .number import MQTTDiscoveredNumber
 from .sensor import MQTTDiscoveredSensor
 from .switch import MQTTDiscoveredSwitch
