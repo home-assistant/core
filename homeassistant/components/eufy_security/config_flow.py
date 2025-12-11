@@ -2,46 +2,55 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import CannotConnectError, EufySecurityError, async_connect
-from .const import CONF_CONFIG_ENTRY_MINOR_VERSION, DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .api import (
+    CannotConnectError,
+    EufySecurityError,
+    InvalidCredentialsError,
+    async_login,
+)
+from .const import CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_EMAIL): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
 
-async def validate_input(hass, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass, data: dict[str, str]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     session = async_get_clientsession(hass)
-    api = await async_connect(
-        data[CONF_HOST],
-        data[CONF_PORT],
+    api = await async_login(
+        data[CONF_EMAIL],
+        data[CONF_PASSWORD],
         session,
     )
 
-    # Disconnect after validation
-    await api.async_disconnect()
-
     # Return info that you want to store in the config entry.
     return {
-        "title": f"Eufy Security ({data[CONF_HOST]}:{data[CONF_PORT]})",
+        "title": data[CONF_EMAIL],
         "cameras": len(api.cameras),
     }
 
@@ -59,13 +68,13 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Use host:port as unique identifier
-            unique_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
             self._abort_if_unique_id_configured()
 
             try:
                 info = await validate_input(self.hass, user_input)
+            except InvalidCredentialsError:
+                errors["base"] = "invalid_auth"
             except CannotConnectError:
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
@@ -77,8 +86,8 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=info["title"],
                     data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 
@@ -86,4 +95,53 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await validate_input(
+                    self.hass,
+                    {
+                        CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+            except InvalidCredentialsError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except EufySecurityError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={
+                        CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+            },
         )

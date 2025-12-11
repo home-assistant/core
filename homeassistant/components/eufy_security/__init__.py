@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import CannotConnectError, EufySecurityError, async_connect
+from .api import (
+    CannotConnectError,
+    EufySecurityError,
+    InvalidCredentialsError,
+    async_login,
+)
 from .const import DOMAIN, PLATFORMS
 from .coordinator import (
     EufySecurityConfigEntry,
@@ -27,11 +32,16 @@ async def async_setup_entry(
     session = async_get_clientsession(hass)
 
     try:
-        api = await async_connect(
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
+        api = await async_login(
+            entry.data[CONF_EMAIL],
+            entry.data[CONF_PASSWORD],
             session,
         )
+    except InvalidCredentialsError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
     except CannotConnectError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -64,10 +74,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: EufySecurityConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        # Disconnect from WebSocket server
-        await entry.runtime_data.api.async_disconnect()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
