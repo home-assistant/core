@@ -60,10 +60,30 @@ async def async_setup_entry(
     data = entry.runtime_data
     coordinator = data.coordinator
 
+    known_cameras: set[str] = set()
+
+    @callback
+    def _check_new_cameras() -> None:
+        """Check for new cameras and add them."""
+        cameras = coordinator.data.get("cameras", {})
+        new_cameras = set(cameras.keys()) - known_cameras
+        if new_cameras:
+            known_cameras.update(new_cameras)
+            async_add_entities(
+                EufySecurityCamera(coordinator, cameras[serial], CAMERA_DESCRIPTION)
+                for serial in new_cameras
+            )
+
+    # Add initial cameras
+    for camera in data.devices.get("cameras", {}).values():
+        known_cameras.add(camera.serial)
     async_add_entities(
         EufySecurityCamera(coordinator, camera, CAMERA_DESCRIPTION)
         for camera in data.devices.get("cameras", {}).values()
     )
+
+    # Listen for new cameras added after setup
+    entry.async_on_unload(coordinator.async_add_listener(_check_new_cameras))
 
 
 class EufySecurityCamera(EufySecurityEntity, CameraEntity):

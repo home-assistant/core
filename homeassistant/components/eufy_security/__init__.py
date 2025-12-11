@@ -9,6 +9,7 @@ import logging
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import (
@@ -193,3 +194,31 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: EufySecurityConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device.
+
+    Allow removal of stale devices that are no longer present in the Eufy account.
+    """
+    # Get current device serials from runtime data
+    current_serials: set[str] = set()
+    runtime_data = getattr(config_entry, "runtime_data", None)
+    if runtime_data:
+        cameras = runtime_data.devices.get("cameras", {})
+        stations = runtime_data.devices.get("stations", {})
+        current_serials.update(cameras.keys())
+        current_serials.update(stations.keys())
+
+    # Check if the device is still present
+    for identifier in device_entry.identifiers:
+        if identifier[0] == DOMAIN and identifier[1] in current_serials:
+            # Device is still present, don't allow removal
+            return False
+
+    # Device is no longer present in the account, allow removal
+    return True
