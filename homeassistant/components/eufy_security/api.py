@@ -152,32 +152,32 @@ class Camera:
     @property
     def serial(self) -> str:
         """Return the camera serial number."""
-        return self.camera_info.get("device_sn", "")
+        return str(self.camera_info.get("device_sn", ""))
 
     @property
     def name(self) -> str:
         """Return the camera name."""
-        return self.camera_info.get("device_name", "Unknown")
+        return str(self.camera_info.get("device_name", "Unknown"))
 
     @property
     def model(self) -> str:
         """Return the camera model."""
-        return self.camera_info.get("device_model", "Unknown")
+        return str(self.camera_info.get("device_model", "Unknown"))
 
     @property
     def station_serial(self) -> str:
         """Return the station serial number."""
-        return self.camera_info.get("station_sn", "")
+        return str(self.camera_info.get("station_sn", ""))
 
     @property
     def hardware_version(self) -> str:
         """Return the hardware version."""
-        return self.camera_info.get("main_hw_version", "")
+        return str(self.camera_info.get("main_hw_version", ""))
 
     @property
     def software_version(self) -> str:
         """Return the software version."""
-        return self.camera_info.get("main_sw_version", "")
+        return str(self.camera_info.get("main_sw_version", ""))
 
     @property
     def ip_address(self) -> str | None:
@@ -234,7 +234,8 @@ class Camera:
                     "proto": 2,
                 },
             )
-            return resp.get("data", {}).get("url")
+            url = resp.get("data", {}).get("url")
+            return str(url) if url else None
         except EufySecurityError as err:
             _LOGGER.warning("Failed to start stream: %s", err)
             return None
