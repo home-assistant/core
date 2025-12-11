@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     try:
         api = await async_login(
-            entry.data[CONF_USERNAME],
+            entry.data[CONF_EMAIL],
             entry.data[CONF_PASSWORD],
             session,
         )
