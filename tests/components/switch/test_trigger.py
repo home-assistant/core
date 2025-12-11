@@ -137,7 +137,7 @@ async def test_switch_state_trigger_behavior_any(
         ),
     ],
 )
-async def test_switches_state_trigger_behavior_first(
+async def test_switch_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_switches: list[str],
