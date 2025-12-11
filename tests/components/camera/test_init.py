@@ -344,26 +344,16 @@ async def test_websocket_stream_no_source(
     assert not msg["success"]
 
 
-@pytest.mark.usefixtures("mock_camera", "mock_stream")
+@pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_create_stream")
 async def test_websocket_camera_stream(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
     """Test camera/stream websocket command."""
     await async_setup_component(hass, "camera", {})
 
-    mock_stream = Mock()
-    mock_stream.endpoint_url.return_value = "http://home.assistant/playlist.m3u8"
-    mock_stream.start = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.camera.create_stream",
-            return_value=mock_stream,
-        ),
-        patch(
-            "homeassistant.components.demo.camera.DemoCamera.stream_source",
-            return_value="http://example.com",
-        ),
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
     ):
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
@@ -373,7 +363,7 @@ async def test_websocket_camera_stream(
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_stream.endpoint_url.called
+        assert mock_create_stream.endpoint_url.called
         assert msg["id"] == 6
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
@@ -508,22 +498,19 @@ async def test_play_stream_service_no_source(hass: HomeAssistant) -> None:
         )
 
 
-@pytest.mark.usefixtures("mock_camera", "mock_stream")
-async def test_handle_play_stream_service(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_create_stream")
+async def test_handle_play_stream_service(
+    hass: HomeAssistant, mock_create_stream: Mock
+) -> None:
     """Test camera play_stream service."""
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://example.com"},
     )
     await async_setup_component(hass, "media_player", {})
-    with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-        ) as mock_request_stream,
-        patch(
-            "homeassistant.components.demo.camera.DemoCamera.stream_source",
-            return_value="http://example.com",
-        ),
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
     ):
         # Call service
         await hass.services.async_call(
@@ -537,7 +524,7 @@ async def test_handle_play_stream_service(hass: HomeAssistant) -> None:
         )
         # So long as we request the stream, the rest should be covered
         # by the play_media service tests.
-        assert mock_request_stream.called
+        assert mock_create_stream.endpoint_url.called
 
 
 @pytest.mark.usefixtures("mock_stream")
