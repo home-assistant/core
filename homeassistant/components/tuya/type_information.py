@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, cast
 
@@ -105,12 +106,12 @@ class BitmapTypeInformation(TypeInformation[int]):
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json_loads_object(type_data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
         return cls(
             dpcode=dpcode,
             type_data=type_data,
-            **cast(dict[str, list[str]], parsed),
+            label=parsed["label"],
         )
 
 
@@ -285,17 +286,33 @@ class IntegerTypeInformation(TypeInformation[float]):
 
 
 @dataclass(kw_only=True)
-class JsonTypeInformation(TypeInformation[Any]):
+class JsonTypeInformation(TypeInformation[dict[str, Any]]):
     """Json type information."""
 
     _DPTYPE = DPType.JSON
 
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> dict[str, Any] | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return json_loads_object(raw_value)
+
 
 @dataclass(kw_only=True)
-class RawTypeInformation(TypeInformation[Any]):
+class RawTypeInformation(TypeInformation[bytes]):
     """Raw type information."""
 
     _DPTYPE = DPType.RAW
+
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> bytes | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return base64.b64decode(raw_value)
 
 
 @dataclass(kw_only=True)
