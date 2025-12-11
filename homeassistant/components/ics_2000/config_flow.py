@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if home_id is not None and home_id in homes:
         await hass.async_add_executor_job(hub.select_home, home_id)
     else:
-        raise CannotConnect
+        raise HomeNotFound
 
     # Return info that you want to store in the config entry.
     return {"title": homes[home_id], "id": home_id}
@@ -88,16 +88,21 @@ class Ics2000ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             combined_input = {**self._existing_entry_data, **user_input}
-            if combined_input.get(CONF_HOME_ID) is None:
-                self._existing_entry_data = {**user_input}
-                _, homes = await validate_auth(self.hass, combined_input)
-                if len(homes) > 1:
-                    return await self._async_select_home(homes)
-                combined_input[CONF_HOME_ID] = next(iter(homes))
             try:
+                if combined_input.get(CONF_HOME_ID) is None:
+                    self._existing_entry_data = {**user_input}
+                    _, homes = await validate_auth(self.hass, combined_input)
+                    if len(homes) > 1:
+                        return await self._async_select_home(homes)
+                    if len(homes) == 1:
+                        combined_input[CONF_HOME_ID] = next(iter(homes))
+                    else:
+                        raise AccountHasNoHomes  # noqa: TRY301
                 info = await validate_input(self.hass, combined_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            except AccountHasNoHomes:
+                errors["base"] = "account_has_no_homes"
+            except HomeNotFound:
+                errors["base"] = "home_not_found"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:
@@ -125,7 +130,11 @@ class Ics2000ConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._validate_and_create_entry(user_input)
 
 
-class CannotConnect(HomeAssistantError):
+class AccountHasNoHomes(HomeAssistantError):
+    """Error to indicate the account has no homes."""
+
+
+class HomeNotFound(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
