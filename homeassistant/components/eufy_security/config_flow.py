@@ -30,6 +30,8 @@ from .const import (
     CONF_API_BASE,
     CONF_CONFIG_ENTRY_MINOR_VERSION,
     CONF_PRIVATE_KEY,
+    CONF_RTSP_PASSWORD,
+    CONF_RTSP_USERNAME,
     CONF_SERVER_PUBLIC_KEY,
     CONF_TOKEN,
     CONF_TOKEN_EXPIRATION,
@@ -365,10 +367,6 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 "captcha_img": self._get_captcha_img_tag(self._captcha_image),
             },
         )
-
-
-CONF_RTSP_USERNAME = "rtsp_username"
-CONF_RTSP_PASSWORD = "rtsp_password"
 
 
 class EufySecurityOptionsFlowHandler(OptionsFlow):
