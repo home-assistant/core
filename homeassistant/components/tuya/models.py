@@ -75,7 +75,7 @@ class DPCodeWrapper(DeviceWrapper):
         """
         return device.status.get(self.dpcode)
 
-    def _convert_value_to_raw_value(self, value: Any) -> Any:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert display value back to a raw device value.
 
         Base implementation does no validation, subclasses may override to provide
@@ -93,7 +93,7 @@ class DPCodeWrapper(DeviceWrapper):
         return [
             {
                 "code": self.dpcode,
-                "value": self._convert_value_to_raw_value(value),
+                "value": self._convert_value_to_raw_value(device, value),
             }
         ]
 
@@ -113,7 +113,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         """Read the device value for the dpcode."""
         return device.status.get(self.dpcode)
 
-    def _convert_value_to_raw_value(self, value: Any) -> Any:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
         return value
 
@@ -161,7 +161,9 @@ class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation])
             return None
         return raw_value
 
-    def _convert_value_to_raw_value(self, value: bool) -> Any | None:
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: bool
+    ) -> Any | None:
         """Convert a Home Assistant value back to a raw device value."""
         if value in (True, False):
             return value
@@ -196,7 +198,9 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
             return None
         return raw_value
 
-    def _convert_value_to_raw_value(self, value: str) -> Any | None:
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: str
+    ) -> Any | None:
         """Convert a Home Assistant value back to a raw device value."""
         if value in self.type_information.range:
             return value
@@ -245,7 +249,7 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
             return None
         return self.type_information.scale_value(raw_value)
 
-    def _convert_value_to_raw_value(self, value: float) -> int:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: float) -> int:
         """Convert a Home Assistant value back to a raw device value."""
         new_value = self.type_information.scale_value_back(value)
         if self.type_information.min <= new_value <= self.type_information.max:
