@@ -15,12 +15,18 @@
         "data": {
           "captcha_code": "CAPTCHA code"
         },
+        "data_description": {
+          "captcha_code": "Enter the CAPTCHA code shown in the image above."
+        },
         "description": "{captcha_img}",
         "title": "CAPTCHA verification"
       },
       "reauth_captcha": {
         "data": {
           "captcha_code": "CAPTCHA code"
+        },
+        "data_description": {
+          "captcha_code": "Enter the CAPTCHA code shown in the image above."
         },
         "description": "{captcha_img}",
         "title": "CAPTCHA verification"

@@ -1,9 +1,13 @@
 """Test the Eufy Security camera platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
+
+from homeassistant.components.camera import CameraEntityFeature
+from homeassistant.components.eufy_security.api import EufySecurityError
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -46,8 +50,283 @@ async def test_camera_device_info(
     init_integration: MockConfigEntry,
     mock_camera: MagicMock,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test camera device info."""
     entry = entity_registry.async_get("camera.front_door_camera")
     assert entry is not None
     assert entry.device_id is not None
+
+    # Check device registry
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.manufacturer == "Eufy"
+    assert device.model == "eufyCam 2"
+    assert device.name == "Front Door Camera"
+
+
+async def test_camera_stream_source_local_rtsp(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera stream source returns local RTSP when credentials are set."""
+    # Set RTSP credentials
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password123"
+
+    state = hass.states.get("camera.front_door_camera")
+    assert state is not None
+
+    # Get the entity
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    assert entity is not None
+
+    # Call stream_source - should return local RTSP
+    stream_url = await entity.stream_source()
+    assert stream_url == "rtsp://admin:password123@192.168.1.100:554/live0"
+
+
+async def test_camera_stream_source_cloud_fallback(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera stream source falls back to cloud when no RTSP credentials."""
+    # No RTSP credentials set
+    mock_camera.rtsp_username = None
+    mock_camera.rtsp_password = None
+    mock_camera.async_start_stream = AsyncMock(
+        return_value="rtsp://cloud.eufy.com/stream123"
+    )
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    stream_url = await entity.stream_source()
+
+    assert stream_url == "rtsp://cloud.eufy.com/stream123"
+    mock_camera.async_start_stream.assert_called_once()
+
+
+async def test_camera_image_from_cloud_thumbnail(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera image returns cloud thumbnail."""
+    mock_camera.last_camera_image_url = "https://eufy.com/thumbnail.jpg"
+    mock_camera.rtsp_username = None
+    mock_camera.rtsp_password = None
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Mock aiohttp response
+    with patch(
+        "homeassistant.components.eufy_security.camera.async_get_clientsession"
+    ) as mock_session:
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.read = AsyncMock(return_value=b"fake_image_data")
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
+
+        session = MagicMock()
+        session.get = MagicMock(return_value=mock_response)
+        mock_session.return_value = session
+
+        image = await entity.async_camera_image()
+        assert image == b"fake_image_data"
+
+
+async def test_camera_image_cloud_failure_returns_cached(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera image returns cached image on cloud failure."""
+    mock_camera.last_camera_image_url = "https://eufy.com/thumbnail.jpg"
+    mock_camera.rtsp_username = None
+    mock_camera.rtsp_password = None
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Set a cached image first
+    entity._last_image = b"cached_image"
+
+    # Mock aiohttp to fail
+    with patch(
+        "homeassistant.components.eufy_security.camera.async_get_clientsession"
+    ) as mock_session:
+        mock_response = MagicMock()
+        mock_response.__aenter__ = AsyncMock(side_effect=ClientError())
+        session = MagicMock()
+        session.get = MagicMock(return_value=mock_response)
+        mock_session.return_value = session
+
+        image = await entity.async_camera_image()
+        assert image == b"cached_image"
+
+
+async def test_camera_image_no_url_returns_cached(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera image returns cached when no URL available."""
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = None
+    mock_camera.rtsp_password = None
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._last_image = b"old_cached_image"
+
+    image = await entity.async_camera_image()
+    assert image == b"old_cached_image"
+
+
+async def test_camera_will_remove_from_hass(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera cleanup when removed from Home Assistant."""
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Set a stream URL to simulate active stream
+    entity._stream_url = "rtsp://stream.url"
+
+    # Mock the camera's async_stop_stream
+    mock_camera.async_stop_stream = AsyncMock()
+
+    await entity.async_will_remove_from_hass()
+
+    mock_camera.async_stop_stream.assert_called_once()
+    assert entity._stream_url is None
+
+
+async def test_camera_will_remove_stop_stream_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera cleanup handles stop stream error gracefully."""
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._stream_url = "rtsp://stream.url"
+
+    # Mock stop stream to fail
+    mock_camera.async_stop_stream = AsyncMock(
+        side_effect=EufySecurityError("Stop failed")
+    )
+
+    # Should not raise
+    await entity.async_will_remove_from_hass()
+    assert entity._stream_url is None
+
+
+async def test_camera_availability(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera availability based on coordinator data."""
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Camera should be available when in coordinator data
+    assert entity.available is True
+
+
+async def test_camera_unavailable_when_not_in_data(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera becomes unavailable when removed from coordinator data."""
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Remove camera from coordinator data
+    entity.coordinator.data = {"cameras": {}}
+
+    assert entity.available is False
+
+
+async def test_camera_coordinator_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test camera updates from coordinator."""
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Update coordinator data with new camera info
+    updated_camera = MagicMock()
+    updated_camera.serial = "T1234567890"
+    updated_camera.name = "Updated Camera Name"
+    entity.coordinator.data = {"cameras": {"T1234567890": updated_camera}}
+
+    entity._handle_coordinator_update()
+
+    assert entity._camera == updated_camera
+
+
+async def test_camera_supported_features(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test camera has stream support."""
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    assert entity.supported_features & CameraEntityFeature.STREAM
+
+
+async def test_camera_rtsp_url_special_chars(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test RTSP URL properly encodes special characters in credentials."""
+    # Set credentials with special characters
+    mock_camera.rtsp_username = "user@test"
+    mock_camera.rtsp_password = "pass/word#123"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    stream_url = await entity.stream_source()
+
+    # Special characters should be URL encoded
+    assert "user%40test" in stream_url
+    assert "pass%2Fword%23123" in stream_url
+
+
+async def test_camera_rtsp_snapshot_throttling(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test RTSP snapshot is throttled to prevent overwhelming cameras."""
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    # Mock ffmpeg
+    with patch(
+        "homeassistant.components.eufy_security.camera.get_ffmpeg_manager"
+    ) as mock_ffmpeg_mgr:
+        mock_mgr = MagicMock()
+        mock_mgr.binary = "/usr/bin/ffmpeg"
+        mock_ffmpeg_mgr.return_value = mock_mgr
+
+        # First call should capture
+        with patch("asyncio.create_subprocess_exec") as mock_subprocess:
+            mock_process = AsyncMock()
+            mock_process.communicate = AsyncMock(return_value=(b"image_data", b""))
+            mock_process.returncode = 0
+            mock_subprocess.return_value = mock_process
+
+            image1 = await entity.async_camera_image()
+            assert image1 == b"image_data"
+
+        # Second call immediately after should use cached (throttled)
+        with patch("asyncio.create_subprocess_exec") as mock_subprocess2:
+            mock_subprocess2.return_value = mock_process
+            image2 = await entity.async_camera_image()
+            # Should return cached image without calling ffmpeg again
+            assert image2 == b"image_data"

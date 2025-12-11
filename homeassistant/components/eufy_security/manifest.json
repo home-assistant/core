@@ -1,7 +1,7 @@
 {
   "domain": "eufy_security",
   "name": "Eufy Security",
-  "codeowners": [],
+  "codeowners": ["@ptarjan"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "stream"],
   "documentation": "https://www.home-assistant.io/integrations/eufy_security",
