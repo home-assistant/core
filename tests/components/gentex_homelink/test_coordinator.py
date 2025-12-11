@@ -6,11 +6,13 @@ from unittest.mock import patch
 
 from homelink.model.button import Button
 from homelink.model.device import Device
-from homelink.settings import OAUTH2_TOKEN_URL
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import EVENT_PRESSED
+from homeassistant.components.gentex_homelink.const import (
+    EVENT_PRESSED,
+    OAUTH2_TOKEN_URL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant

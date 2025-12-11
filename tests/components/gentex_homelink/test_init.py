@@ -3,10 +3,8 @@
 import time
 from unittest.mock import patch
 
-from homelink.settings import OAUTH2_TOKEN_URL
-
 from homeassistant.components import gentex_homelink
-from homeassistant.components.gentex_homelink.const import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

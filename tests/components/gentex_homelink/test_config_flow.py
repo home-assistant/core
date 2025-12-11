@@ -5,10 +5,9 @@ import time
 from unittest.mock import AsyncMock
 
 import botocore.exceptions
-from homelink.settings import OAUTH2_TOKEN_URL
 import pytest
 
-from homeassistant.components.gentex_homelink.const import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant

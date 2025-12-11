@@ -7,11 +7,13 @@ from typing import cast
 
 from aiohttp import ClientError, ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
-from homelink.settings import COGNITO_CLIENT_ID, OAUTH2_TOKEN_URL
+from homelink.settings import COGNITO_CLIENT_ID
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import OAUTH2_TOKEN_URL
 
 _LOGGER = logging.getLogger(__name__)
 

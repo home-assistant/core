@@ -5,11 +5,10 @@ from unittest.mock import patch
 
 from homelink.model.button import Button
 from homelink.model.device import Device
-from homelink.settings import OAUTH2_TOKEN_URL
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
