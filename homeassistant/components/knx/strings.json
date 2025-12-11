@@ -757,6 +757,12 @@
     }
   },
   "selector": {
+    "dpt": {
+      "fields": {
+        "label": "Select a datapoint type",
+        "no_selection": "No DPT selected"
+      }
+    },
     "sensor_device_class": {
       "options": {
         "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
