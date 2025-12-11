@@ -2159,7 +2159,7 @@ python-rabbitair==0.0.8
 python-roborock==3.12.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.45
+python-smarttub==0.0.46
 
 # homeassistant.components.snoo
 python-snoo==0.8.3
