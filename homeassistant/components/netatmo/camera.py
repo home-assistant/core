@@ -146,12 +146,19 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id
         ):
-            if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
+            if data[WEBHOOK_PUSH_TYPE] in (
+                "NACamera-off",
+                "NOCamera-off",
+                "NACamera-disconnection",
+                "NOCamera-disconnection",
+            ):
                 self._attr_is_streaming = False
                 self._monitoring = False
             elif data[WEBHOOK_PUSH_TYPE] in (
                 "NACamera-on",
+                "NOCamera-on",
                 WEBHOOK_NACAMERA_CONNECTION,
+                "NOCamera-connection",
             ):
                 self._attr_is_streaming = True
                 self._monitoring = True

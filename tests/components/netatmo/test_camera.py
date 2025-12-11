@@ -89,7 +89,6 @@ async def test_setup_component_with_webhook(
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
 
-    # Test outdoor camera events - not yet supported
     assert hass.states.get(camera_entity_outdoor).state == "streaming"
     response = {
         "event_type": "off",
@@ -100,8 +99,7 @@ async def test_setup_component_with_webhook(
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    # The NOCamera-off push_type is not yet supported (assert should be "idle" when supported)
-    assert hass.states.get(camera_entity_outdoor).state == "streaming"
+    assert hass.states.get(camera_entity_outdoor).state == "idle"
 
     response = {
         "event_type": "on",
