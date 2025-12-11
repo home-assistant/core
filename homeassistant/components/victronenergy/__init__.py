@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Sequence
 import json
 import logging
 import ssl
@@ -16,13 +15,15 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .binary_sensor import MQTTDiscoveredBinarySensor
 from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
+from .entity import VictronBaseEntity
 from .number import MQTTDiscoveredNumber
 from .sensor import MQTTDiscoveredSensor
 from .switch import MQTTDiscoveredSwitch
+from .types import DeviceKey
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,31 +36,38 @@ _MQTT_ERROR_MESSAGES = {
     5: "Connection refused: Not authorized. Check username/token configuration.",
 }
 
+
 # Platform configuration: entity factory and Platform enum for each supported platform
+def _make_factory(entity_cls):
+    def factory(
+        manager,
+        device_key: DeviceKey,
+        device_info: dict[str, Any],
+        unique_id: str,
+        config: dict[str, Any],
+    ):
+        # Factory parameter order now matches entity constructor
+        return entity_cls(manager, device_key, device_info, unique_id, config)
+
+    return factory
+
+
 _PLATFORM_CONFIG = {
-    "sensor": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredSensor(
-            config, unique_id, manager
-        ),
-        "platform": Platform.SENSOR,
-    },
     "binary_sensor": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredBinarySensor(
-            config, unique_id, manager
-        ),
+        "factory": _make_factory(MQTTDiscoveredBinarySensor),
         "platform": Platform.BINARY_SENSOR,
     },
-    "switch": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredSwitch(
-            config, unique_id, manager
-        ),
-        "platform": Platform.SWITCH,
-    },
     "number": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredNumber(
-            config, unique_id, manager
-        ),
+        "factory": _make_factory(MQTTDiscoveredNumber),
         "platform": Platform.NUMBER,
+    },
+    "sensor": {
+        "factory": _make_factory(MQTTDiscoveredSensor),
+        "platform": Platform.SENSOR,
+    },
+    "switch": {
+        "factory": _make_factory(MQTTDiscoveredSwitch),
+        "platform": Platform.SWITCH,
     },
 }
 
@@ -69,8 +77,9 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-def _extract_device_key_from_identifiers(identifiers) -> tuple[str, str] | None:
+def _extract_device_key_from_discovery(device_info: dict[str, Any]) -> DeviceKey | None:
     """Extract device key tuple from identifiers list."""
+    identifiers = device_info.get("identifiers")
     if not identifiers or not isinstance(identifiers, list) or len(identifiers) == 0:
         return None
 
@@ -78,9 +87,7 @@ def _extract_device_key_from_identifiers(identifiers) -> tuple[str, str] | None:
     return (DOMAIN, str(identifiers[0]))
 
 
-def _extract_via_device_from_discovery(
-    device_info: dict[str, Any],
-) -> tuple[str, str] | None:
+def _extract_via_device_from_discovery(device_info: dict[str, Any]) -> DeviceKey | None:
     """Extract via_device as tuple from MQTT discovery message device info."""
     via_device = device_info.get("via_device")
     if not via_device:
@@ -98,18 +105,20 @@ class VictronMqttManager:
         self.entry = entry
         self.client: mqtt.Client | None = None
         # Platform entity management
-        self._platform_callbacks: dict[
-            str, Callable[[Sequence[Entity]], None] | None
-        ] = {platform: None for platform in _PLATFORM_CONFIG}
-        self._pending_entities: dict[str, list[Entity]] = {
+        self._platform_callbacks: dict[str, AddConfigEntryEntitiesCallback | None] = (
+            dict.fromkeys(_PLATFORM_CONFIG)
+        )
+        self._pending_entities: dict[str, list[VictronBaseEntity]] = {
             platform: [] for platform in _PLATFORM_CONFIG
         }
         self._connected = asyncio.Event()
         self._subscribed_topics: set[str] = set()
-        self._topic_entity_map: dict[str, list[Entity]] = {}
-        self._entity_registry: dict[str, Entity] = {}  # Track entities by unique_id
+        self._topic_entity_map: dict[str, list[VictronBaseEntity]] = {}
+        self._entity_registry: dict[
+            str, VictronBaseEntity
+        ] = {}  # Track entities by unique_id
         self._device_registry: dict[
-            tuple[str, str], dict[str, Any]
+            DeviceKey, dict[str, Any]
         ] = {}  # Track device info by identifiers
         self._pending_via_device_entities: list[
             tuple[dict[str, Any], str, str]
@@ -128,7 +137,7 @@ class VictronMqttManager:
         self._platforms_setup_complete = False
 
     def set_platform_add_entities(
-        self, platform: str, add_entities: Callable[[Sequence[Entity]], None]
+        self, platform: str, add_entities: AddConfigEntryEntitiesCallback
     ) -> None:
         """Set the callback to add entities for a specific platform."""
         if platform not in self._platform_callbacks:
@@ -136,27 +145,6 @@ class VictronMqttManager:
             return
 
         self._platform_callbacks[platform] = add_entities
-
-    # Legacy methods for backward compatibility
-    def set_sensor_add_entities(
-        self, add_entities: Callable[[Sequence[Entity]], None]
-    ) -> None:
-        self.set_platform_add_entities("sensor", add_entities)
-
-    def set_binary_sensor_add_entities(
-        self, add_entities: Callable[[Sequence[Entity]], None]
-    ) -> None:
-        self.set_platform_add_entities("binary_sensor", add_entities)
-
-    def set_switch_add_entities(
-        self, add_entities: Callable[[Sequence[Entity]], None]
-    ) -> None:
-        self.set_platform_add_entities("switch", add_entities)
-
-    def set_number_add_entities(
-        self, add_entities: Callable[[Sequence[Entity]], None]
-    ) -> None:
-        self.set_platform_add_entities("number", add_entities)
 
     def start(self) -> None:
         """Start the MQTT client in a background thread and prepare keepalive publishing."""
@@ -392,8 +380,20 @@ class VictronMqttManager:
             # Via_device is available or not needed, create entities and add to platforms immediately
             new_entities = []
             for component_cfg, unique_id, platform in new_entity_configs:
+                device_key = _extract_device_key_from_discovery(
+                    component_cfg.get("device", {})
+                )
+                if not device_key:
+                    _LOGGER.warning(
+                        "Cannot create entity %s: invalid device identifiers",
+                        unique_id,
+                    )
+                    continue
+
                 entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-                entity = entity_factory(component_cfg, unique_id, self)
+                entity = entity_factory(
+                    self, device_key, device_info, unique_id, component_cfg
+                )
                 if entity:
                     new_entities.append((entity, platform))
                     if platform in new_entities_by_platform:
@@ -437,26 +437,15 @@ class VictronMqttManager:
 
     def _store_device_info(self, device_info: dict[str, Any]) -> None:
         """Store device information for via_device dependency resolution."""
-        identifiers = device_info.get("identifiers")
-        device_key = _extract_device_key_from_identifiers(identifiers)
+        device_key = _extract_device_key_from_discovery(device_info)
 
         if device_key:
             self._device_registry[device_key] = device_info
-            _LOGGER.info(
-                "STORED device info: identifiers=%s -> device_key=%s, via_device=%s. Total devices stored: %d",
-                identifiers,
-                device_key,
-                device_info.get("via_device"),
-                len(self._device_registry),
-            )
+            _LOGGER.info("Stored device info - %s", device_info)
         else:
-            _LOGGER.warning(
-                "Cannot store device info - invalid identifiers: %s (type: %s)",
-                identifiers,
-                type(identifiers),
-            )
+            _LOGGER.warning("Cannot store device info - %s", device_info)
 
-    def _is_via_device_available(self, via_device: tuple[str, str]) -> bool:
+    def _is_via_device_available(self, via_device: DeviceKey) -> bool:
         """Check if a via_device is available in our stored device registry."""
         _LOGGER.info(
             "Checking via_device '%s' (type: %s) availability. Local registry: %s",
@@ -514,7 +503,7 @@ class VictronMqttManager:
             self._keepalive_timer_handle = None
 
     def _add_entities_to_platforms(
-        self, new_entities_by_platform: dict[str, list[Entity]]
+        self, new_entities_by_platform: dict[str, list[VictronBaseEntity]]
     ) -> None:
         """Add entities to their respective platforms."""
         for platform, entities in new_entities_by_platform.items():
@@ -528,7 +517,7 @@ class VictronMqttManager:
                 self._pending_entities[platform].extend(entities)
 
     async def _process_pending_via_device_entities(
-        self, new_entities_by_platform: dict[str, list[Entity]]
+        self, new_entities_by_platform: dict[str, list[VictronBaseEntity]]
     ) -> None:
         """Process entity configurations that were waiting for their via_device to become available."""
         if not self._pending_via_device_entities:
@@ -543,22 +532,49 @@ class VictronMqttManager:
 
         for component_cfg, unique_id, platform in self._pending_via_device_entities:
             # Get the via_device from the component's device info
+            if "device" not in component_cfg:
+                _LOGGER.warning(
+                    "Pending entity config %s (%s) missing device info, skipping",
+                    unique_id,
+                    platform,
+                )
+                continue
+
             device_info = component_cfg.get("device")
-            via_device_tuple = (
-                _extract_via_device_from_discovery(device_info) if device_info else None
-            )
-            if via_device_tuple:
+            if not isinstance(device_info, dict):
+                _LOGGER.warning(
+                    "Pending entity config %s (%s) has invalid device info type, skipping",
+                    unique_id,
+                    platform,
+                )
+                continue
+
+            via_device_key = _extract_via_device_from_discovery(device_info)
+            if via_device_key:
                 _LOGGER.info(
                     "Checking deferred entity config %s (%s): via_device='%s'",
                     unique_id,
                     platform,
-                    via_device_tuple,
+                    via_device_key,
                 )
 
-                if self._is_via_device_available(via_device_tuple):
+                if self._is_via_device_available(via_device_key):
                     # Via device is now available, create entity and add to platform
+                    device_key = _extract_device_key_from_discovery(
+                        component_cfg.get("device", {})
+                    )
+                    if not device_key:
+                        _LOGGER.warning(
+                            "Cannot create deferred entity %s (%s): invalid device identifiers",
+                            unique_id,
+                            platform,
+                        )
+                        continue
+
                     entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-                    entity = entity_factory(component_cfg, unique_id, self)
+                    entity = entity_factory(
+                        self, device_key, device_info, unique_id, component_cfg
+                    )
                     if entity:
                         if platform not in new_entities_by_platform:
                             new_entities_by_platform[platform] = []
@@ -569,7 +585,7 @@ class VictronMqttManager:
                             "✅ CREATED and ADDING deferred entity %s (%s) to platform: via_device '%s' is now available",
                             unique_id,
                             platform,
-                            via_device_tuple,
+                            via_device_key,
                         )
                 else:
                     # Via device still not available, keep waiting
@@ -578,12 +594,25 @@ class VictronMqttManager:
                         "⏳ STILL WAITING for entity %s (%s): via_device '%s' not yet available",
                         unique_id,
                         platform,
-                        via_device_tuple,
+                        via_device_key,
                     )
             else:
                 # Entity config no longer has via_device dependency, create entity and add to platform
                 entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-                entity = entity_factory(component_cfg, unique_id, self)
+                device_key = _extract_device_key_from_discovery(
+                    component_cfg.get("device") or {}
+                )
+                if not device_key:
+                    _LOGGER.warning(
+                        "Cannot create deferred entity %s (%s): invalid device identifiers",
+                        unique_id,
+                        platform,
+                    )
+                    continue
+
+                entity = entity_factory(
+                    self, device_key, device_info, unique_id, component_cfg
+                )
                 if entity:
                     if platform not in new_entities_by_platform:
                         new_entities_by_platform[platform] = []
@@ -660,7 +689,7 @@ class VictronMqttManager:
 
         self._retry_pending_task = None
 
-    def register_entity_for_topic(self, topic: str, entity: Entity) -> None:
+    def register_entity_for_topic(self, topic: str, entity: VictronBaseEntity) -> None:
         """Register an entity for a topic."""
         if topic not in self._topic_entity_map:
             self._topic_entity_map[topic] = []

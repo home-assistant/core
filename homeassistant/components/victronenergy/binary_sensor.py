@@ -6,16 +6,16 @@ import json
 import logging
 from typing import Any
 
+from paho.mqtt.client import MQTTMessage
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
+from .entity import VictronBaseEntity
+from .types import DeviceKey
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,98 +30,35 @@ async def async_setup_entry(
     manager.set_platform_add_entities("binary_sensor", async_add_entities)
 
 
-class MQTTDiscoveredBinarySensor(BinarySensorEntity):
+class MQTTDiscoveredBinarySensor(VictronBaseEntity, BinarySensorEntity):
     """Representation of a discovered MQTT binary sensor."""
 
-    def __init__(self, config: dict[str, Any], unique_id: str, manager) -> None:
-        """Initialize the binary sensor."""
-        self._manager = manager
-        self._attr_name = config.get("name")
-        self._state_topic = config.get("state_topic")
-        self._value_template = config.get("value_template")
-        self._attr_unique_id = unique_id
-        self._desired_entity_id = f"binary_sensor.{unique_id}"
-        self._attr_entity_id = f"binary_sensor.{unique_id}"
-        self._attr_device_class = config.get("device_class")
-        self._attr_enabled_by_default = config.get("enabled_by_default", True)
-        self._attr_entity_category = None
+    _payload_on: str
+    _payload_off: str
+
+    def _parse_config(self, config: dict[str, Any]) -> None:
+        """Parse configuration fields from the config dictionary."""
         self._payload_on = config.get("payload_on", "ON")
         self._payload_off = config.get("payload_off", "OFF")
 
-        # Handle entity category
-        entity_category_str = config.get("entity_category")
-        if entity_category_str:
-            try:
-                self._attr_entity_category = EntityCategory(entity_category_str)
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid entity_category '%s' for binary sensor %s",
-                    entity_category_str,
-                    unique_id,
-                )
+    def __init__(
+        self,
+        manager,
+        device_key: DeviceKey,
+        device_info: dict[str, Any],
+        unique_id: str,
+        config: dict[str, Any],
+    ) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(manager, device_key, device_info, unique_id, config)
+        self._parse_config(config)
 
-        # Store raw device info for device_info property
-        self._device_info_raw = config.get("device")
+    def update_config(self, config: dict[str, Any]) -> None:
+        """Update the binary sensor configuration."""
+        super().update_config(config)
+        self._parse_config(config)
 
-        # Create template if provided
-        if self._value_template:
-            try:
-                self._template = Template(self._value_template, self._manager.hass)
-            except Exception as err:
-                _LOGGER.error(
-                    "Failed to create value template for binary sensor %s: %s",
-                    unique_id,
-                    err,
-                )
-                self._template = None
-        else:
-            self._template = None
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information for grouping entities."""
-        if not self._device_info_raw:
-            return None
-        device = self._device_info_raw
-        identifiers: set[tuple[str, str]] = set()
-        raw_identifiers = device.get("identifiers")
-        if isinstance(raw_identifiers, list) and len(raw_identifiers) >= 1:
-            # Always use DOMAIN as first element, device identifier as second
-            identifiers.add((DOMAIN, str(raw_identifiers[0])))
-
-        via_device = device.get("via_device")
-        if via_device is not None:
-            return DeviceInfo(
-                identifiers=identifiers,
-                manufacturer=str(device.get("manufacturer", "")),
-                model=str(device.get("model", "")),
-                name=str(device.get("name", "")),
-                via_device=(DOMAIN, str(via_device)),
-            )
-
-        return DeviceInfo(
-            identifiers=identifiers,
-            manufacturer=str(device.get("manufacturer", "")),
-            model=str(device.get("model", "")),
-            name=str(device.get("name", "")),
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the binary sensor."""
-        return self._attr_unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as this entity is updated via MQTT messages."""
-        return False
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self._attr_is_on
-
-    def handle_mqtt_message(self, msg) -> None:
+    def handle_mqtt_message(self, msg: MQTTMessage) -> None:
         """Handle new MQTT message."""
         try:
             payload = msg.payload.decode()
@@ -132,15 +69,19 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                 self.schedule_update_ha_state()
                 return
 
-            if self._template:
+            if self._value_template:
                 # Use template to process the payload
                 try:
                     processed_value = (
-                        self._template.async_render_with_possible_json_value(payload)
+                        self._value_template.async_render_with_possible_json_value(
+                            payload
+                        )
                     )
-                except Exception as err:
-                    _LOGGER.error(
-                        "Template error for binary sensor %s: %s", self.unique_id, err
+                except Exception:
+                    _LOGGER.warning(
+                        "Template error for binary sensor %s",
+                        self.unique_id,
+                        exc_info=True,
                     )
                     return
             else:
@@ -203,79 +144,8 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                 self._attr_is_on,
                 payload,
             )
-        except Exception as err:
-            _LOGGER.error(
-                "Error handling MQTT message for binary sensor %s: %s",
+        except Exception:
+            _LOGGER.exception(
+                "Error handling MQTT message for binary sensor %s",
                 self.unique_id,
-                err,
             )
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to MQTT topic when added to Home Assistant."""
-        manager = self._manager
-        if self._state_topic is not None:
-            manager.register_entity_for_topic(str(self._state_topic), self)
-            manager.subscribe_topic(str(self._state_topic))
-
-        # Ensure device is created in the device registry
-        await self._ensure_device_registered()
-
-        # Set the entity_id explicitly to match the unique_id using correct registry access
-        entity_registry = er.async_get(self.hass)
-        entity_registry.async_update_entity(
-            self.entity_id, new_entity_id=self._desired_entity_id
-        )
-
-    async def _ensure_device_registered(self) -> None:
-        """Ensure the device is registered in the device registry."""
-        device_info = self.device_info
-        if not device_info:
-            return
-
-        device_registry = dr.async_get(self.hass)
-        config_entry_id = self.platform.config_entry.entry_id
-
-        # Home Assistant automatically handles via_device dependencies
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry_id, **device_info
-        )
-
-    def update_config(self, config: dict[str, Any]) -> None:
-        """Update the binary sensor configuration."""
-        self._attr_name = config.get("name", self._attr_name)
-        self._value_template = config.get("value_template")
-        self._attr_device_class = config.get("device_class")
-        self._attr_enabled_by_default = config.get("enabled_by_default", True)
-        self._payload_on = config.get("payload_on", "ON")
-        self._payload_off = config.get("payload_off", "OFF")
-
-        # Handle entity category update
-        entity_category_str = config.get("entity_category")
-        if entity_category_str:
-            try:
-                self._attr_entity_category = EntityCategory(entity_category_str)
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid entity_category '%s' for binary sensor %s",
-                    entity_category_str,
-                    self.unique_id,
-                )
-        else:
-            self._attr_entity_category = None
-
-        # Update template if provided
-        if self._value_template:
-            try:
-                self._template = Template(self._value_template, self._manager.hass)
-            except Exception as err:
-                _LOGGER.error(
-                    "Failed to create value template for binary sensor %s: %s",
-                    self.unique_id,
-                    err,
-                )
-                self._template = None
-        else:
-            self._template = None
-
-        # Update device info
-        self._device_info_raw = config.get("device")
