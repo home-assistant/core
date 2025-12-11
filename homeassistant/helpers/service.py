@@ -910,7 +910,6 @@ async def entity_service_call(
         func,
         data,
         call.context,
-        return_response,
     )
 
     tasks: list[asyncio.Task[None]] = []
@@ -940,7 +939,6 @@ async def _handle_entity_call(
     func: str | HassJob,
     data: dict[str, Any] | ServiceCall,
     context: Context,
-    return_response: bool = True,
 ) -> EntityServiceResponse | None:
     """Handle service calls for batchable and non-batchable entities.
 
@@ -1009,10 +1007,6 @@ async def _handle_entity_call(
     # --- Gather results ---
     #
     all_results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    if not return_response:
-        return None
-
     #
     # --- Flatten into EntityServiceResponse ---
     #
