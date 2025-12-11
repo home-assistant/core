@@ -37,23 +37,3 @@ async def test_sensor_availability_without_optional_sensors(
     assert hass.states.get("sensor.test_thermostat_floor_temperature") is None
     assert hass.states.get("sensor.test_thermostat_carbon_dioxide") is None
     assert hass.states.get("sensor.test_thermostat_air_quality_index") is None
-
-
-@pytest.mark.freeze_time("2024-01-01 00:00:00+00:00")
-@pytest.mark.usefixtures("init_integration")
-async def test_device_uptime_caching(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test device uptime sensor uses cached value when within deviation."""
-    coordinator = mock_config_entry.runtime_data
-
-    # First call should set the cached value
-    first_result = coordinator.get_device_uptime(10000)
-
-    # Second call with same uptime should return cached value (within 5 second deviation)
-    second_result = coordinator.get_device_uptime(10000)
-
-    # Both should be the same datetime object (cached)
-    assert first_result == second_result
-    assert coordinator.last_uptime == first_result

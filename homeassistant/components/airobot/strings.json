@@ -45,9 +45,6 @@
   },
   "entity": {
     "sensor": {
-      "air_temperature": {
-        "name": "Air temperature"
-      },
       "device_uptime": {
         "name": "Device uptime"
       },
@@ -59,6 +56,9 @@
       },
       "heating_uptime": {
         "name": "Heating uptime"
+      },
+      "last_restart": {
+        "name": "Last restart"
       }
     }
   },

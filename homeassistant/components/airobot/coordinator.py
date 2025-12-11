@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from pyairobotrest import AirobotClient
@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
 from .models import AirobotData
@@ -23,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Update interval - thermostat measures air every 30 seconds
 UPDATE_INTERVAL = timedelta(seconds=30)
-UPTIME_DEVIATION = timedelta(seconds=5)
 
 type AirobotConfigEntry = ConfigEntry[AirobotDataUpdateCoordinator]
 
@@ -32,7 +30,6 @@ class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
     """Class to manage fetching Airobot data."""
 
     config_entry: AirobotConfigEntry
-    last_uptime: datetime | None = None
 
     def __init__(self, hass: HomeAssistant, entry: AirobotConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -51,19 +48,6 @@ class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
             password=entry.data[CONF_PASSWORD],
             session=session,
         )
-
-    def get_device_uptime(self, uptime: int) -> datetime:
-        """Return device uptime timestamp, tolerate up to 5 seconds deviation."""
-        delta_uptime = utcnow() - timedelta(seconds=uptime)
-
-        if (
-            not self.last_uptime
-            or abs(delta_uptime - self.last_uptime) > UPTIME_DEVIATION
-        ):
-            self.last_uptime = delta_uptime
-            return delta_uptime
-
-        return self.last_uptime
 
     async def _async_update_data(self) -> AirobotData:
         """Fetch data from API endpoint."""

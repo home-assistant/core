@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pyairobotrest.models import ThermostatStatus
 
@@ -24,7 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
 from . import AirobotConfigEntry
 from .entity import AirobotEntity
@@ -36,9 +37,14 @@ PARALLEL_UPDATES = 0
 class AirobotSensorEntityDescription(SensorEntityDescription):
     """Describes Airobot sensor entity."""
 
-    value_fn: Callable[[ThermostatStatus], StateType]
+    value_fn: Callable[[ThermostatStatus], StateType | datetime]
     supported_fn: Callable[[ThermostatStatus], bool] = lambda _: True
 
+
+uptime_to_stable_datetime = ignore_variance(
+    lambda value: utcnow().replace(microsecond=0) - timedelta(seconds=value),
+    timedelta(minutes=2),
+)
 
 SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
     AirobotSensorEntityDescription(
@@ -99,11 +105,11 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         value_fn=lambda status: status.errors,
     ),
     AirobotSensorEntityDescription(
-        key="device_uptime",
-        translation_key="device_uptime",
+        key="last_boot_time",
+        translation_key="last_restart",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: status.device_uptime,
+        value_fn=lambda status: uptime_to_stable_datetime(status.device_uptime),
         entity_registry_enabled_default=False,
     ),
 )
@@ -141,11 +147,4 @@ class AirobotSensor(AirobotEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        if self.entity_description.key == "device_uptime":
-            # Convert device uptime in seconds to timestamp
-            return dt_util.as_utc(
-                self.coordinator.get_device_uptime(
-                    self.coordinator.data.status.device_uptime
-                )
-            )
         return self.entity_description.value_fn(self.coordinator.data.status)
