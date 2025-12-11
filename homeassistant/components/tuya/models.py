@@ -46,13 +46,6 @@ class DPCodeWrapper(DeviceWrapper):
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
 
-    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the raw device status for the DPCode.
-
-        Private helper method for `read_device_status`.
-        """
-        return device.status.get(self.dpcode)
-
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
 
@@ -90,7 +83,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
         return self.type_information.process_raw_value(
-            self._read_device_status_raw(device), device
+            device.status.get(self.dpcode), device
         )
 
     @classmethod
@@ -197,7 +190,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
         """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return (raw_value & (1 << self._mask)) != 0
 
