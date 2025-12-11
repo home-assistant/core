@@ -133,6 +133,9 @@
       "system_settings_overvoltage_feedin": {
         "name": "PV DC overvoltage feed-in"
       },
+      "vebus_device_device_number_power_assist_enabled": {
+        "name": "VE.Bus device {device_number} power assist enabled"
+      },
       "vebus_inverter_connected": {
         "name": "Inverter connected"
       },
@@ -140,7 +143,7 @@
         "name": "Control ignore AC-in-1"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
-        "name": "Loss of grid alarm setting"
+        "name": "Grid lost alarm setting"
       }
     },
     "button": {
@@ -1095,9 +1098,6 @@
       "vebus_device_device_number_output_power_phase": {
         "name": "VE.Bus device {device_number} line {phase} output power"
       },
-      "vebus_device_device_number_power_assist_enabled": {
-        "name": "VE.Bus device {device_number} power assist enabled"
-      },
       "vebus_energy_ac_in1_to_ac_out": {
         "name": "Energy from AC-in-1 to AC-out"
       },
@@ -1132,7 +1132,7 @@
         "name": "Inverter active AC input"
       },
       "vebus_inverter_alarm_grid_lost": {
-        "name": "Loss of grid alarm"
+        "name": "Grid lost alarm"
       },
       "vebus_inverter_alarm_high_dc_current": {
         "name": "Inverter high DC current alarm"
@@ -1268,11 +1268,14 @@
       "system_settings_overvoltage_feedin": {
         "name": "PV DC overvoltage feed-in"
       },
+      "vebus_device_device_number_power_assist_enabled": {
+        "name": "VE.Bus device {device_number} power assist enabled"
+      },
       "vebus_inverter_ignoreacin1_onoff_control": {
         "name": "Control ignore AC-in-1"
       },
       "vebus_inverter_setting_alarm_grid_lost": {
-        "name": "Loss of grid alarm setting"
+        "name": "Grid lost alarm setting"
       }
     },
     "time": {
