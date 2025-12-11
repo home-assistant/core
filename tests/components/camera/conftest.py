@@ -155,6 +155,8 @@ def mock_create_stream_fixture() -> Generator[Mock]:
     mock_stream.add_provider = Mock()
     mock_stream.start = AsyncMock()
     mock_stream.endpoint_url = Mock(return_value="http://home.assistant/playlist.m3u8")
+    mock_stream.set_update_callback = Mock()
+    mock_stream.available = True
     with patch(
         "homeassistant.components.camera.create_stream",
         return_value=mock_stream,

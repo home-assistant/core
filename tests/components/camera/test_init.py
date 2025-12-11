@@ -685,25 +685,16 @@ async def test_state_streaming(hass: HomeAssistant) -> None:
     assert demo_camera.state == camera.CameraState.STREAMING
 
 
-@pytest.mark.usefixtures("mock_camera", "mock_stream")
+@pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_create_stream")
 async def test_stream_unavailable(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
     """Camera state."""
     await async_setup_component(hass, "camera", {})
 
-    with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-            return_value="http://home.assistant/playlist.m3u8",
-        ),
-        patch(
-            "homeassistant.components.demo.camera.DemoCamera.stream_source",
-            return_value="http://example.com",
-        ),
-        patch(
-            "homeassistant.components.camera.Stream.set_update_callback",
-        ) as mock_update_callback,
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
     ):
         # Request playlist through WebSocket. We just want to create the stream
         # but don't care about the result.
@@ -712,26 +703,22 @@ async def test_stream_unavailable(
             {"id": 10, "type": "camera/stream", "entity_id": "camera.demo_camera"}
         )
         await client.receive_json()
-        assert mock_update_callback.called
+        assert mock_create_stream.set_update_callback.called
 
     # Simulate the stream going unavailable
-    callback = mock_update_callback.call_args.args[0]
-    with patch(
-        "homeassistant.components.camera.Stream.available", new_callable=lambda: False
-    ):
-        callback()
-        await hass.async_block_till_done()
+    callback = mock_create_stream.set_update_callback.call_args.args[0]
+    mock_create_stream.available = False
+    callback()
+    await hass.async_block_till_done()
 
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
     assert demo_camera.state == STATE_UNAVAILABLE
 
     # Simulate stream becomes available
-    with patch(
-        "homeassistant.components.camera.Stream.available", new_callable=lambda: True
-    ):
-        callback()
-        await hass.async_block_till_done()
+    mock_create_stream.available = True
+    callback()
+    await hass.async_block_till_done()
 
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
