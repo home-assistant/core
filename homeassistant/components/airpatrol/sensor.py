@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    StateType,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class AirPatrolSensorEntityDescription(SensorEntityDescription):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes AirPatrol sensor entity."""
 
     data_field: str
 
@@ -32,15 +32,15 @@ class AirPatrolSensorEntityDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS = (
     AirPatrolSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         data_field="RoomTemp",
     ),
     AirPatrolSensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         data_field="RoomHumidity",
     ),
@@ -57,14 +57,14 @@ async def async_setup_entry(
     units = coordinator.data
 
     async_add_entities(
-        AirPatrolTemperatureSensor(coordinator, unit_id, description)
+        AirPatrolSensor(coordinator, unit_id, description)
         for unit_id, unit in units.items()
         for description in SENSOR_DESCRIPTIONS
         if "climate" in unit
     )
 
 
-class AirPatrolTemperatureSensor(AirPatrolEntity, SensorEntity):
+class AirPatrolSensor(AirPatrolEntity, SensorEntity):
     """AirPatrol sensor entity."""
 
     entity_description: AirPatrolSensorEntityDescription
@@ -93,7 +93,7 @@ class AirPatrolTemperatureSensor(AirPatrolEntity, SensorEntity):
         return super().available and bool(self.climate_data)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if value := self.climate_data.get(self.entity_description.data_field):
             return float(value)

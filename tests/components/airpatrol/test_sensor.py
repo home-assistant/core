@@ -38,7 +38,7 @@ async def test_sensor(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test climate."""
+    """Test sensor entities."""
     await snapshot_platform(
         hass,
         entity_registry,
