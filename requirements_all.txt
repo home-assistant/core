@@ -464,6 +464,9 @@ airly==1.1.0
 # homeassistant.components.airos
 airos==0.6.0
 
+# homeassistant.components.airpatrol
+airpatrol==0.1.0
+
 # homeassistant.components.airthings_ble
 airthings-ble==1.2.0
 
@@ -537,7 +540,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.21.1
+asusrouter==1.21.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -648,7 +651,7 @@ bleak==2.0.0
 blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
-blinkpy==0.24.1
+blinkpy==0.25.1
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1163,7 +1166,7 @@ habiticalib==0.4.6
 habluetooth==5.8.0
 
 # homeassistant.components.hanna
-hanna-cloud==0.0.6
+hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
 hass-nabucasa==1.7.0
@@ -1745,7 +1748,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.10.0
+plugwise==1.11.0
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -1958,7 +1961,7 @@ pycountry==24.6.1
 pycsspeechtts==1.0.8
 
 # homeassistant.components.cync
-pycync==0.4.3
+pycync==0.5.0
 
 # homeassistant.components.daikin
 pydaikin==2.17.1
@@ -2133,7 +2136,7 @@ pyituran==0.1.5
 pyjvcprojector==1.1.2
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.0.1
+pykaleidescape==1.0.2
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -2232,7 +2235,10 @@ pynetio==0.1.9.1
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.0.0
+pynintendoauth==1.0.0
+
+# homeassistant.components.nintendo_parental_controls
+pynintendoparental==2.1.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2400,7 +2406,7 @@ pysiaalarm==3.1.1
 pysignalclirestapi==0.3.24
 
 # homeassistant.components.assist_pipeline
-pysilero-vad==3.0.0
+pysilero-vad==3.0.1
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2572,10 +2578,10 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.10.10
+python-roborock==3.12.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.45
+python-smarttub==0.0.46
 
 # homeassistant.components.snoo
 python-snoo==0.8.3
