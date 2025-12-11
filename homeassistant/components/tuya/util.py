@@ -6,20 +6,28 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import DOMAIN, DPCode
+from .const import DOMAIN, DPCode, DPType
+
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "bitmap": DPType.BITMAP,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
+    "raw": DPType.RAW,
+    "string": DPType.STRING,
+    "value": DPType.INTEGER,
+}
 
 
 def get_dpcode(
-    device: CustomerDevice, dpcodes: str | DPCode | tuple[DPCode, ...] | None
-) -> DPCode | None:
+    device: CustomerDevice, dpcodes: str | tuple[str, ...] | None
+) -> str | None:
     """Get the first matching DPCode from the device or return None."""
     if dpcodes is None:
         return None
 
-    if isinstance(dpcodes, DPCode):
+    if not isinstance(dpcodes, tuple):
         dpcodes = (dpcodes,)
-    elif isinstance(dpcodes, str):
-        dpcodes = (DPCode(dpcodes),)
 
     for dpcode in dpcodes:
         if (
@@ -30,6 +38,16 @@ def get_dpcode(
             return dpcode
 
     return None
+
+
+def parse_dptype(dptype: str) -> DPType | None:
+    """Parse DPType from device DPCode information."""
+    try:
+        return DPType(dptype)
+    except ValueError:
+        # Sometimes, we get ill-formed DPTypes from the cloud,
+        # this fixes them and maps them to the correct DPType.
+        return _DPTYPE_MAPPING.get(dptype)
 
 
 def remap_value(
@@ -50,19 +68,23 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
     """Custom exception for action DP code not found errors."""
 
     def __init__(
-        self, device: CustomerDevice, expected: str | DPCode | tuple[DPCode, ...] | None
+        self, device: CustomerDevice, expected: str | tuple[str, ...] | None
     ) -> None:
         """Initialize the error with device and expected DP codes."""
         if expected is None:
             expected = ()  # empty tuple for no expected codes
-        elif isinstance(expected, str):
-            expected = (DPCode(expected),)
+        elif not isinstance(expected, tuple):
+            expected = (expected,)
 
         super().__init__(
             translation_domain=DOMAIN,
             translation_key="action_dpcode_not_found",
             translation_placeholders={
-                "expected": str(sorted([dp.value for dp in expected])),
+                "expected": str(
+                    sorted(
+                        [dp.value if isinstance(dp, DPCode) else dp for dp in expected]
+                    )
+                ),
                 "available": str(sorted(device.function.keys())),
             },
         )

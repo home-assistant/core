@@ -42,6 +42,7 @@ EDIT_INPUT = {
 }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_form(hass: HomeAssistant) -> None:
     """Test we can configure options."""
     entry = MockConfigEntry(

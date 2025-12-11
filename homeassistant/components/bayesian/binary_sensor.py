@@ -272,6 +272,13 @@ async def async_setup_entry(
     observations: list[ConfigType] = [
         dict(subentry.data) for subentry in config_entry.subentries.values()
     ]
+
+    for observation in observations:
+        if observation[CONF_PLATFORM] == CONF_TEMPLATE:
+            observation[CONF_VALUE_TEMPLATE] = Template(
+                observation[CONF_VALUE_TEMPLATE], hass
+            )
+
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
