@@ -56,7 +56,8 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
             except ValueError:
                 _LOGGER.warning(
                     "Invalid entity_category '%s' for binary sensor %s",
-                    entity_category_str, unique_id
+                    entity_category_str,
+                    unique_id,
                 )
 
         # Store raw device info for device_info property
@@ -68,7 +69,9 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                 self._template = Template(self._value_template, self._manager.hass)
             except Exception as err:
                 _LOGGER.error(
-                    "Failed to create value template for binary sensor %s: %s", unique_id, err
+                    "Failed to create value template for binary sensor %s: %s",
+                    unique_id,
+                    err,
                 )
                 self._template = None
         else:
@@ -132,9 +135,13 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
             if self._template:
                 # Use template to process the payload
                 try:
-                    processed_value = self._template.async_render_with_possible_json_value(payload)
+                    processed_value = (
+                        self._template.async_render_with_possible_json_value(payload)
+                    )
                 except Exception as err:
-                    _LOGGER.error("Template error for binary sensor %s: %s", self.unique_id, err)
+                    _LOGGER.error(
+                        "Template error for binary sensor %s: %s", self.unique_id, err
+                    )
                     return
             else:
                 # No template, use payload directly
@@ -143,9 +150,22 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
             # Handle disconnected/invalid states first (including template result of None)
             if processed_value is None:
                 self._attr_is_on = None
-            elif processed_value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
+            elif processed_value in (
+                "unknown",
+                "None",
+                "null",
+                "",
+                "unavailable",
+                "disconnected",
+            ):
                 self._attr_is_on = None
-            elif isinstance(processed_value, str) and processed_value.lower() in ("none", "null", "n/a", "na", "unavailable"):
+            elif isinstance(processed_value, str) and processed_value.lower() in (
+                "none",
+                "null",
+                "n/a",
+                "na",
+                "unavailable",
+            ):
                 self._attr_is_on = None
             # Convert to boolean based on payload_on/payload_off
             elif processed_value == self._payload_on:
@@ -163,13 +183,15 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                     else:
                         _LOGGER.debug(
                             "Binary sensor %s received unexpected payload: %s",
-                            self.unique_id, processed_value
+                            self.unique_id,
+                            processed_value,
                         )
                         return
                 except json.JSONDecodeError:
                     _LOGGER.debug(
                         "Binary sensor %s received unexpected payload: %s",
-                        self.unique_id, processed_value
+                        self.unique_id,
+                        processed_value,
                     )
                     return
 
@@ -177,10 +199,16 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
             self.schedule_update_ha_state()
             _LOGGER.debug(
                 "Binary sensor %s updated to: %s (from payload: %s)",
-                self.unique_id, self._attr_is_on, payload
+                self.unique_id,
+                self._attr_is_on,
+                payload,
             )
         except Exception as err:
-            _LOGGER.error("Error handling MQTT message for binary sensor %s: %s", self.unique_id, err)
+            _LOGGER.error(
+                "Error handling MQTT message for binary sensor %s: %s",
+                self.unique_id,
+                err,
+            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
@@ -209,8 +237,7 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
 
         # Home Assistant automatically handles via_device dependencies
         device_registry.async_get_or_create(
-            config_entry_id=config_entry_id,
-            **device_info
+            config_entry_id=config_entry_id, **device_info
         )
 
     def update_config(self, config: dict[str, Any]) -> None:
@@ -230,7 +257,8 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
             except ValueError:
                 _LOGGER.warning(
                     "Invalid entity_category '%s' for binary sensor %s",
-                    entity_category_str, self.unique_id
+                    entity_category_str,
+                    self.unique_id,
                 )
         else:
             self._attr_entity_category = None
@@ -241,7 +269,9 @@ class MQTTDiscoveredBinarySensor(BinarySensorEntity):
                 self._template = Template(self._value_template, self._manager.hass)
             except Exception as err:
                 _LOGGER.error(
-                    "Failed to create value template for binary sensor %s: %s", self.unique_id, err
+                    "Failed to create value template for binary sensor %s: %s",
+                    self.unique_id,
+                    err,
                 )
                 self._template = None
         else:

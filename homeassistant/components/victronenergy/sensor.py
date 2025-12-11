@@ -145,8 +145,7 @@ class MQTTDiscoveredSensor(SensorEntity):
 
         # Home Assistant automatically handles via_device dependencies
         device_registry.async_get_or_create(
-            config_entry_id=config_entry_id,
-            **device_info
+            config_entry_id=config_entry_id, **device_info
         )
 
     def update_config(self, config: dict[str, Any]) -> None:
@@ -213,7 +212,13 @@ class MQTTDiscoveredSensor(SensorEntity):
             value = None
         elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
             value = None
-        elif isinstance(value, str) and value.lower() in ("none", "null", "n/a", "na", "unavailable"):
+        elif isinstance(value, str) and value.lower() in (
+            "none",
+            "null",
+            "n/a",
+            "na",
+            "unavailable",
+        ):
             value = None
 
         # Try to cast to float if the unit is set (for measurements)
@@ -221,7 +226,10 @@ class MQTTDiscoveredSensor(SensorEntity):
             try:
                 value = float(value)
             except (ValueError, TypeError):
-                _LOGGER.debug("Failed to convert sensor value to float: %s, setting to None", value)
+                _LOGGER.debug(
+                    "Failed to convert sensor value to float: %s, setting to None",
+                    value,
+                )
                 value = None
 
         _LOGGER.debug(

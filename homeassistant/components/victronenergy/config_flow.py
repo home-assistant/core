@@ -103,7 +103,12 @@ def _create_ssl_context() -> ssl.SSLContext:
 
 
 async def _detect_discovery_topics(
-    hass: HomeAssistant, broker: str, port: int = 1883, username: str = None, password: str = None, use_ssl: bool = False
+    hass: HomeAssistant,
+    broker: str,
+    port: int = 1883,
+    username: str = None,
+    password: str = None,
+    use_ssl: bool = False,
 ) -> str | None:
     """Connect to MQTT and wait for Home Assistant discovery topics to detect unique_id."""
     discovered_unique_id = None
@@ -130,12 +135,14 @@ async def _detect_discovery_topics(
             # We want to extract "28ede02ceff6" as the unique_id
             if topic.startswith("homeassistant/device/") and topic.endswith("/config"):
                 # Extract the device identifier part
-                device_part = topic.replace("homeassistant/device/", "").replace("/config", "")
+                device_part = topic.replace("homeassistant/device/", "").replace(
+                    "/config", ""
+                )
                 _LOGGER.debug("Extracted device part from topic: %s", device_part)
 
                 # Extract the portal ID (first part before underscore)
-                if '_' in device_part:
-                    portal_id = device_part.split('_')[0]
+                if "_" in device_part:
+                    portal_id = device_part.split("_")[0]
                     if discovered_unique_id is None:
                         discovered_unique_id = portal_id
                         _LOGGER.info("Extracted portal_id from topic: %s", portal_id)
@@ -185,12 +192,18 @@ async def _detect_discovery_topics(
         client.loop_stop()
         client.disconnect()
 
+
 async def _generate_victron_token(
     hass: HomeAssistant, broker: str, password: str, ha_device_id: str
 ) -> str:
     """Generate authentication token from Victron device."""
     url = f"https://{broker}/auth/generate-token/"
-    _LOGGER.info("Starting token generation for broker %s with device_id %s (length: %d)", broker, ha_device_id, len(ha_device_id))
+    _LOGGER.info(
+        "Starting token generation for broker %s with device_id %s (length: %d)",
+        broker,
+        ha_device_id,
+        len(ha_device_id),
+    )
     _LOGGER.info("Device ID validation - alphanumeric only: %s", ha_device_id.isalnum())
 
     # Create form data as application/x-www-form-urlencoded (like curl -d)
@@ -211,30 +224,47 @@ async def _generate_victron_token(
 
         # Create HTTP Basic Auth credentials (same as curl --user)
         auth = aiohttp.BasicAuth("remoteconsole", password)
-        _LOGGER.info("Created Basic Auth for user 'remoteconsole' with provided password")
+        _LOGGER.info(
+            "Created Basic Auth for user 'remoteconsole' with provided password"
+        )
 
-        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+        async with aiohttp.ClientSession(
+            connector=connector, timeout=timeout
+        ) as session:
             _LOGGER.info("Making POST request to %s", url)
             # Send as form data, not JSON (like curl -d)
             async with session.post(url, data=data, auth=auth) as response:
                 _LOGGER.info("Token generation response status: %s", response.status)
-                _LOGGER.info("Token generation response headers: %s", dict(response.headers))
+                _LOGGER.info(
+                    "Token generation response headers: %s", dict(response.headers)
+                )
 
                 if response.status != 200:
                     response_text = await response.text()
-                    _LOGGER.error("Token generation failed with status %s, response: %s", response.status, response_text)
-                    raise InvalidAuth(f"Token generation failed: HTTP {response.status}")
+                    _LOGGER.error(
+                        "Token generation failed with status %s, response: %s",
+                        response.status,
+                        response_text,
+                    )
+                    raise InvalidAuth(
+                        f"Token generation failed: HTTP {response.status}"
+                    )
 
                 result = await response.json()
                 _LOGGER.info("Token generation response JSON: %s", result)
 
                 # Victron returns "password" field, not "token"
                 if "password" not in result:
-                    _LOGGER.error("No 'password' field in token response. Available fields: %s", list(result.keys()))
+                    _LOGGER.error(
+                        "No 'password' field in token response. Available fields: %s",
+                        list(result.keys()),
+                    )
                     raise InvalidAuth("No password/token in response")
 
                 token = result["password"]
-                _LOGGER.info("Successfully generated token (length: %d characters)", len(token))
+                _LOGGER.info(
+                    "Successfully generated token (length: %d characters)", len(token)
+                )
                 return token
 
     except aiohttp.ClientError as err:
@@ -286,9 +316,7 @@ async def _test_secure_mqtt_connection(
         _LOGGER.info("Attempting secure MQTT connection on port 8883")
 
         # Connect over secure MQTT
-        await hass.async_add_executor_job(
-            client.connect, broker, 8883, 10
-        )
+        await hass.async_add_executor_job(client.connect, broker, 8883, 10)
         client.loop_start()
 
         # Wait for connection result
@@ -366,7 +394,6 @@ async def validate_secure_mqtt_connection(
         raise InvalidAuth("Invalid response from device") from err
 
 
-
 class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Victron Energy."""
 
@@ -391,10 +418,14 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except InvalidHost as ex:
-            return self.async_abort(reason="invalid_host", description_placeholders={"error": str(ex)})
+            return self.async_abort(
+                reason="invalid_host", description_placeholders={"error": str(ex)}
+            )
         except Exception as ex:
             _LOGGER.exception("Unexpected exception during validation: %s", ex)
-            return self.async_abort(reason="unknown", description_placeholders={"error": str(ex)})
+            return self.async_abort(
+                reason="unknown", description_placeholders={"error": str(ex)}
+            )
 
         # Store broker in context for later use
         self.context["broker"] = broker
@@ -402,7 +433,9 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         # Try unsecure MQTT connection first (port 1883)
         _LOGGER.info("Trying unsecure MQTT connection to %s:1883", broker)
         if await _test_basic_mqtt_connection(self.hass, broker):
-            _LOGGER.info("Unsecure MQTT connection successful, detecting discovery topics")
+            _LOGGER.info(
+                "Unsecure MQTT connection successful, detecting discovery topics"
+            )
 
             # Listen for discovery topics
             unique_id = await _detect_discovery_topics(self.hass, broker, 1883)
@@ -417,7 +450,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_BROKER: broker,
                         CONF_PORT: 1883,
-                    }
+                    },
                 )
 
             _LOGGER.warning("Home assistant discovery topics not found")
@@ -439,20 +472,26 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="password",
                 data_schema=STEP_PASSWORD_DATA_SCHEMA,
                 errors=errors,
-                description_placeholders={"host": broker if broker else "unknown"}
+                description_placeholders={"host": broker if broker else "unknown"},
             )
 
         try:
             # Generate token and test secure connection
             ha_device_id = _generate_ha_device_id()
-            token = await _generate_victron_token(self.hass, broker, user_input[CONF_PASSWORD], ha_device_id)
+            token = await _generate_victron_token(
+                self.hass, broker, user_input[CONF_PASSWORD], ha_device_id
+            )
 
-            if not await _test_secure_mqtt_connection(self.hass, broker, token, ha_device_id):
+            if not await _test_secure_mqtt_connection(
+                self.hass, broker, token, ha_device_id
+            ):
                 return self.async_abort(reason="cannot_connect")
 
             # Listen for discovery topics on secure MQTT
             username = f"token/homeassistant/{ha_device_id}"
-            unique_id = await _detect_discovery_topics(self.hass, broker, 8883, username, token, True)
+            unique_id = await _detect_discovery_topics(
+                self.hass, broker, 8883, username, token, True
+            )
 
             if unique_id:
                 # Check if already configured - let config flow exceptions propagate
@@ -467,7 +506,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: username,
                         CONF_TOKEN: token,
                         "ha_device_id": ha_device_id,
-                    }
+                    },
                 )
 
             _LOGGER.warning("Home assistant discovery topics not found")
@@ -491,13 +530,15 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle password step for SSDP discovered device."""
         broker = self.context.get("broker")
-        friendly_name = self.context.get("title_placeholders", {}).get("name", "Victron Energy")
+        friendly_name = self.context.get("title_placeholders", {}).get(
+            "name", "Victron Energy"
+        )
 
         if user_input is None:
             return self.async_show_form(
                 step_id="ssdp_password",
                 data_schema=STEP_PASSWORD_DATA_SCHEMA,
-                description_placeholders=self.context.get("title_placeholders", {})
+                description_placeholders=self.context.get("title_placeholders", {}),
             )
 
         try:
@@ -514,7 +555,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: f"token/homeassistant/{info['ha_device_id']}",
                     CONF_TOKEN: info["token"],
                     "ha_device_id": info["ha_device_id"],
-                }
+                },
             )
 
         except CannotConnect:
@@ -534,13 +575,15 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.info("ssdp_confirm called with input: %s", user_input)
 
         broker = self.context.get("broker")
-        friendly_name = self.context.get("title_placeholders", {}).get("name", "Victron Energy")
+        friendly_name = self.context.get("title_placeholders", {}).get(
+            "name", "Victron Energy"
+        )
 
         if user_input is None:
             return self.async_show_form(
                 step_id="ssdp_confirm",
                 data_schema=STEP_SSDP_CONFIRM_SCHEMA,
-                description_placeholders=self.context.get("title_placeholders", {})
+                description_placeholders=self.context.get("title_placeholders", {}),
             )
 
         # Now test basic MQTT connection after user confirmation
@@ -551,7 +594,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_BROKER: broker,
                     CONF_PORT: 1883,
-                }
+                },
             )
 
         # Basic MQTT failed, ask for password for token auth
@@ -580,9 +623,13 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Checking if unique_id %s is already configured", unique_id)
         try:
             self._abort_if_unique_id_configured()
-            _LOGGER.debug("Unique_id %s is not configured, proceeding with flow", unique_id)
+            _LOGGER.debug(
+                "Unique_id %s is not configured, proceeding with flow", unique_id
+            )
         except Exception as ex:
-            _LOGGER.debug("Unique_id %s already configured, aborting flow: %s", unique_id, ex)
+            _LOGGER.debug(
+                "Unique_id %s already configured, aborting flow: %s", unique_id, ex
+            )
             raise
 
         self.context["title_placeholders"] = {
@@ -595,7 +642,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="ssdp_confirm",
             data_schema=STEP_SSDP_CONFIRM_SCHEMA,
-            description_placeholders=self.context["title_placeholders"]
+            description_placeholders=self.context["title_placeholders"],
         )
 
 

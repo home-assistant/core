@@ -156,8 +156,7 @@ class MQTTDiscoveredNumber(NumberEntity):
 
         # Home Assistant automatically handles via_device dependencies
         device_registry.async_get_or_create(
-            config_entry_id=config_entry_id,
-            **device_info
+            config_entry_id=config_entry_id, **device_info
         )
 
     def update_config(self, config: dict[str, Any]) -> None:
@@ -235,7 +234,13 @@ class MQTTDiscoveredNumber(NumberEntity):
             value = None
         elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
             value = None
-        elif isinstance(value, str) and value.lower() in ("none", "null", "n/a", "na", "unavailable"):
+        elif isinstance(value, str) and value.lower() in (
+            "none",
+            "null",
+            "n/a",
+            "na",
+            "unavailable",
+        ):
             value = None
 
         # Try to cast to float
@@ -248,7 +253,10 @@ class MQTTDiscoveredNumber(NumberEntity):
                 elif value > self._attr_native_max_value:
                     value = self._attr_native_max_value
             except (ValueError, TypeError):
-                _LOGGER.debug("Failed to convert number value to float: %s, setting to None", value)
+                _LOGGER.debug(
+                    "Failed to convert number value to float: %s, setting to None",
+                    value,
+                )
                 value = None
 
         _LOGGER.debug(
@@ -278,7 +286,9 @@ class MQTTDiscoveredNumber(NumberEntity):
             manager = self._manager
             if manager.client:
                 # Ensure value is within bounds
-                value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))
+                value = max(
+                    self._attr_native_min_value, min(self._attr_native_max_value, value)
+                )
 
                 # Apply command template if specified
                 payload = str(value)
@@ -287,7 +297,11 @@ class MQTTDiscoveredNumber(NumberEntity):
                     try:
                         rendered_value = template.async_render({"value": value})
                         # Ensure the rendered value is converted to string for MQTT
-                        payload = str(rendered_value) if rendered_value is not None else str(value)
+                        payload = (
+                            str(rendered_value)
+                            if rendered_value is not None
+                            else str(value)
+                        )
                         _LOGGER.debug(
                             "Applied command_template for %s: %s -> %s (type: %s)",
                             self._attr_name,
@@ -314,4 +328,6 @@ class MQTTDiscoveredNumber(NumberEntity):
                     self._command_topic, payload, qos=0, retain=False
                 )
             else:
-                _LOGGER.error("MQTT client not available for number %s", self._attr_name)
+                _LOGGER.error(
+                    "MQTT client not available for number %s", self._attr_name
+                )

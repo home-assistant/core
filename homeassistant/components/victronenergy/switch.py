@@ -120,7 +120,9 @@ class MQTTDiscoveredSwitch(SwitchEntity):
         """Subscribe to MQTT topic and set entity_id when the entity is added to Home Assistant."""
         manager = self._manager
         _LOGGER.debug(
-            "Registering switch entity for topic %s (id: %s)", self._state_topic, id(self)
+            "Registering switch entity for topic %s (id: %s)",
+            self._state_topic,
+            id(self),
         )
         if self._state_topic is not None:
             manager.register_entity_for_topic(str(self._state_topic), self)
@@ -146,8 +148,7 @@ class MQTTDiscoveredSwitch(SwitchEntity):
 
         # Home Assistant automatically handles via_device dependencies
         device_registry.async_get_or_create(
-            config_entry_id=config_entry_id,
-            **device_info
+            config_entry_id=config_entry_id, **device_info
         )
 
     def update_config(self, config: dict[str, Any]) -> None:
@@ -215,7 +216,13 @@ class MQTTDiscoveredSwitch(SwitchEntity):
             self._attr_is_on = None
         elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
             self._attr_is_on = None
-        elif isinstance(value, str) and value.lower() in ("none", "null", "n/a", "na", "unavailable"):
+        elif isinstance(value, str) and value.lower() in (
+            "none",
+            "null",
+            "n/a",
+            "na",
+            "unavailable",
+        ):
             self._attr_is_on = None
         # Determine switch state based on payload
         elif value == self._state_on:
@@ -264,7 +271,9 @@ class MQTTDiscoveredSwitch(SwitchEntity):
                     self._command_topic, self._payload_on, qos=0, retain=False
                 )
             else:
-                _LOGGER.error("MQTT client not available for switch %s", self._attr_name)
+                _LOGGER.error(
+                    "MQTT client not available for switch %s", self._attr_name
+                )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -281,4 +290,6 @@ class MQTTDiscoveredSwitch(SwitchEntity):
                     self._command_topic, self._payload_off, qos=0, retain=False
                 )
             else:
-                _LOGGER.error("MQTT client not available for switch %s", self._attr_name)
+                _LOGGER.error(
+                    "MQTT client not available for switch %s", self._attr_name
+                )

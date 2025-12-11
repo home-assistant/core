@@ -33,31 +33,42 @@ _MQTT_ERROR_MESSAGES = {
     2: "Connection refused: Bad client identifier.",
     3: "Connection refused: Server unavailable.",
     4: "Connection refused: Bad username or password.",
-    5: "Connection refused: Not authorized. Check username/token configuration."
+    5: "Connection refused: Not authorized. Check username/token configuration.",
 }
 
 # Platform configuration: entity factory and Platform enum for each supported platform
 _PLATFORM_CONFIG = {
     "sensor": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredSensor(config, unique_id, manager),
-        "platform": Platform.SENSOR
+        "factory": lambda config, unique_id, manager: MQTTDiscoveredSensor(
+            config, unique_id, manager
+        ),
+        "platform": Platform.SENSOR,
     },
     "binary_sensor": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredBinarySensor(config, unique_id, manager),
-        "platform": Platform.BINARY_SENSOR
+        "factory": lambda config, unique_id, manager: MQTTDiscoveredBinarySensor(
+            config, unique_id, manager
+        ),
+        "platform": Platform.BINARY_SENSOR,
     },
     "switch": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredSwitch(config, unique_id, manager),
-        "platform": Platform.SWITCH
+        "factory": lambda config, unique_id, manager: MQTTDiscoveredSwitch(
+            config, unique_id, manager
+        ),
+        "platform": Platform.SWITCH,
     },
     "number": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredNumber(config, unique_id, manager),
-        "platform": Platform.NUMBER
-    }
+        "factory": lambda config, unique_id, manager: MQTTDiscoveredNumber(
+            config, unique_id, manager
+        ),
+        "platform": Platform.NUMBER,
+    },
 }
 
 # Derived platforms list
-_PLATFORMS: list[Platform] = [config["platform"] for config in _PLATFORM_CONFIG.values()]
+_PLATFORMS: list[Platform] = [
+    config["platform"] for config in _PLATFORM_CONFIG.values()
+]
+
 
 def _extract_device_key_from_identifiers(identifiers) -> tuple[str, str] | None:
     """Extract device key tuple from identifiers list."""
@@ -67,7 +78,10 @@ def _extract_device_key_from_identifiers(identifiers) -> tuple[str, str] | None:
     # Use domain and first identifier as the device key
     return (DOMAIN, str(identifiers[0]))
 
-def _extract_via_device_from_discovery(device_info: dict[str, Any]) -> tuple[str, str] | None:
+
+def _extract_via_device_from_discovery(
+    device_info: dict[str, Any],
+) -> tuple[str, str] | None:
     """Extract via_device as tuple from MQTT discovery message device info."""
     via_device = device_info.get("via_device")
     if not via_device:
@@ -85,9 +99,9 @@ class VictronMqttManager:
         self.entry = entry
         self.client: mqtt.Client | None = None
         # Platform entity management
-        self._platform_callbacks: dict[str, Callable[[Sequence[Entity]], None] | None] = {
-            platform: None for platform in _PLATFORM_CONFIG
-        }
+        self._platform_callbacks: dict[
+            str, Callable[[Sequence[Entity]], None] | None
+        ] = {platform: None for platform in _PLATFORM_CONFIG}
         self._pending_entities: dict[str, list[Entity]] = {
             platform: [] for platform in _PLATFORM_CONFIG
         }
@@ -95,11 +109,21 @@ class VictronMqttManager:
         self._subscribed_topics: set[str] = set()
         self._topic_entity_map: dict[str, list[Entity]] = {}
         self._entity_registry: dict[str, Entity] = {}  # Track entities by unique_id
-        self._device_registry: dict[tuple[str, str], dict[str, Any]] = {}  # Track device info by identifiers
-        self._pending_via_device_entities: list[tuple[dict[str, Any], str, str]] = []  # Entity configs waiting for via_device
-        self._via_device_lock = asyncio.Lock()  # Synchronize via_device dependency operations
-        self._keepalive_timer_handle: asyncio.TimerHandle | None = None  # Resettable keepalive timer
-        self._retry_pending_task: asyncio.Task | None = None  # Task for retrying pending entities
+        self._device_registry: dict[
+            tuple[str, str], dict[str, Any]
+        ] = {}  # Track device info by identifiers
+        self._pending_via_device_entities: list[
+            tuple[dict[str, Any], str, str]
+        ] = []  # Entity configs waiting for via_device
+        self._via_device_lock = (
+            asyncio.Lock()
+        )  # Synchronize via_device dependency operations
+        self._keepalive_timer_handle: asyncio.TimerHandle | None = (
+            None  # Resettable keepalive timer
+        )
+        self._retry_pending_task: asyncio.Task | None = (
+            None  # Task for retrying pending entities
+        )
         self._unique_id: str | None = None
         self._keepalive_task_started = False
         self._platforms_setup_complete = False
@@ -115,16 +139,24 @@ class VictronMqttManager:
         self._platform_callbacks[platform] = add_entities
 
     # Legacy methods for backward compatibility
-    def set_sensor_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
+    def set_sensor_add_entities(
+        self, add_entities: Callable[[Sequence[Entity]], None]
+    ) -> None:
         self.set_platform_add_entities("sensor", add_entities)
 
-    def set_binary_sensor_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
+    def set_binary_sensor_add_entities(
+        self, add_entities: Callable[[Sequence[Entity]], None]
+    ) -> None:
         self.set_platform_add_entities("binary_sensor", add_entities)
 
-    def set_switch_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
+    def set_switch_add_entities(
+        self, add_entities: Callable[[Sequence[Entity]], None]
+    ) -> None:
         self.set_platform_add_entities("switch", add_entities)
 
-    def set_number_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
+    def set_number_add_entities(
+        self, add_entities: Callable[[Sequence[Entity]], None]
+    ) -> None:
         self.set_platform_add_entities("number", add_entities)
 
     def start(self) -> None:
@@ -160,9 +192,14 @@ class VictronMqttManager:
 
     def _configure_tls(self, client: mqtt.Client) -> None:
         """Configure TLS settings for the MQTT client."""
-        client.tls_set(ca_certs=None, certfile=None, keyfile=None,
-                      cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLS,
-                      ciphers=None)
+        client.tls_set(
+            ca_certs=None,
+            certfile=None,
+            keyfile=None,
+            cert_reqs=ssl.CERT_NONE,
+            tls_version=ssl.PROTOCOL_TLS,
+            ciphers=None,
+        )
         client.tls_insecure_set(True)  # Allow self-signed certificates
         _LOGGER.info("TLS configured for secure MQTT")
 
@@ -189,7 +226,9 @@ class VictronMqttManager:
             )
             # Subscribe to all discovery topics
             result = client.subscribe("homeassistant/#")
-            _LOGGER.info("Subscribed to homeassistant/# discovery topics, result: %s", result)
+            _LOGGER.info(
+                "Subscribed to homeassistant/# discovery topics, result: %s", result
+            )
 
             # Re-subscribe to all state topics
             for topic in self._subscribed_topics:
@@ -217,7 +256,9 @@ class VictronMqttManager:
             error_msg = _MQTT_ERROR_MESSAGES.get(rc, f"Unknown error (code {rc})")
             _LOGGER.error(
                 "Failed to connect to MQTT broker - result code %s: %s. %s",
-                rc, mqtt.connack_string(rc), error_msg
+                rc,
+                mqtt.connack_string(rc),
+                error_msg,
             )
 
     async def _publish_keepalive_task(self) -> None:
@@ -274,12 +315,19 @@ class VictronMqttManager:
 
         # Check via_device availability once for the entire device (not per component)
         via_device_raw = device_info.get("via_device")
-        via_device = _extract_via_device_from_discovery(device_info) if via_device_raw else None
-        via_device_available = not via_device or self._is_via_device_available(via_device)
+        via_device = (
+            _extract_via_device_from_discovery(device_info) if via_device_raw else None
+        )
+        via_device_available = not via_device or self._is_via_device_available(
+            via_device
+        )
 
         _LOGGER.info(
             "Processing discovery message with %d components for device: %s (via_device: %s, available: %s)",
-            len(components), device_info.get("identifiers"), via_device, via_device_available
+            len(components),
+            device_info.get("identifiers"),
+            via_device,
+            via_device_available,
         )
 
         # Process all components to prepare entity configurations for creation
@@ -290,7 +338,8 @@ class VictronMqttManager:
             component_unique_id = component_cfg.get("unique_id")
             if not component_unique_id or not str(component_unique_id).strip():
                 _LOGGER.info(
-                    "Component missing or has empty unique_id attribute, skipping: %s", component_cfg
+                    "Component missing or has empty unique_id attribute, skipping: %s",
+                    component_cfg,
                 )
                 continue
 
@@ -301,15 +350,14 @@ class VictronMqttManager:
 
             # Validate platform is present and supported
             if not platform:
-                _LOGGER.warning(
-                    "Missing platform for entity %s, skipping", unique_id
-                )
+                _LOGGER.warning("Missing platform for entity %s, skipping", unique_id)
                 continue
 
             if platform not in _PLATFORM_CONFIG:
                 _LOGGER.warning(
                     "Unsupported platform '%s' for entity %s, skipping",
-                    platform, unique_id
+                    platform,
+                    unique_id,
                 )
                 continue
 
@@ -332,10 +380,14 @@ class VictronMqttManager:
         if not via_device_available:
             # All entities depend on via_device that doesn't exist yet, defer entity creation entirely
             for component_cfg, unique_id, platform in new_entity_configs:
-                self._pending_via_device_entities.append((component_cfg, unique_id, platform))
+                self._pending_via_device_entities.append(
+                    (component_cfg, unique_id, platform)
+                )
             _LOGGER.info(
                 "DEFERRING %d entity configs: waiting for via_device '%s' to become available. Current pending count: %d",
-                len(new_entity_configs), via_device, len(self._pending_via_device_entities)
+                len(new_entity_configs),
+                via_device,
+                len(self._pending_via_device_entities),
             )
         else:
             # Via_device is available or not needed, create entities and add to platforms immediately
@@ -353,17 +405,19 @@ class VictronMqttManager:
                 if via_device:
                     _LOGGER.info(
                         "CREATED and ADDING %d entities to platforms: via_device '%s' is available",
-                        len(new_entities), via_device
+                        len(new_entities),
+                        via_device,
                     )
                 else:
                     _LOGGER.info(
                         "CREATED and ADDING %d entities to platforms: no via_device dependency",
-                        len(new_entities)
+                        len(new_entities),
                     )
 
             if updated_entities:
                 _LOGGER.info(
-                    "Updated configuration for %d existing entities", len(updated_entities)
+                    "Updated configuration for %d existing entities",
+                    len(updated_entities),
                 )
 
             # Check if any pending via_device entities can now be added to platforms
@@ -371,7 +425,9 @@ class VictronMqttManager:
 
             # Schedule a retry for remaining pending entities in case of timing issues
             if self._pending_via_device_entities and not self._retry_pending_task:
-                self._retry_pending_task = asyncio.create_task(self._retry_pending_entities())
+                self._retry_pending_task = asyncio.create_task(
+                    self._retry_pending_entities()
+                )
 
         # Add entities to platforms outside the lock to prevent deadlock
         self._add_entities_to_platforms(new_entities_by_platform)
@@ -389,18 +445,26 @@ class VictronMqttManager:
             self._device_registry[device_key] = device_info
             _LOGGER.info(
                 "STORED device info: identifiers=%s -> device_key=%s, via_device=%s. Total devices stored: %d",
-                identifiers, device_key, device_info.get("via_device"), len(self._device_registry)
+                identifiers,
+                device_key,
+                device_info.get("via_device"),
+                len(self._device_registry),
             )
         else:
             _LOGGER.warning(
                 "Cannot store device info - invalid identifiers: %s (type: %s)",
-                identifiers, type(identifiers)
+                identifiers,
+                type(identifiers),
             )
 
     def _is_via_device_available(self, via_device: tuple[str, str]) -> bool:
         """Check if a via_device is available in our stored device registry."""
-        _LOGGER.info("Checking via_device '%s' (type: %s) availability. Local registry: %s",
-                    via_device, type(via_device), list(self._device_registry.keys()))
+        _LOGGER.info(
+            "Checking via_device '%s' (type: %s) availability. Local registry: %s",
+            via_device,
+            type(via_device),
+            list(self._device_registry.keys()),
+        )
 
         # Check if device exists in our local registry
         if via_device in self._device_registry:
@@ -409,7 +473,8 @@ class VictronMqttManager:
 
         _LOGGER.debug(
             "❌ Via device '%s' NOT found. Checked local registry (%d devices)",
-            via_device, len(self._device_registry)
+            via_device,
+            len(self._device_registry),
         )
 
         return False
@@ -440,16 +505,18 @@ class VictronMqttManager:
                 self.client.publish(topic, payload=payload, qos=0, retain=False)
                 _LOGGER.info("Sent batched keepalive to topic %s", topic)
             else:
-                _LOGGER.warning("Cannot send keepalive - client or unique_id not available")
+                _LOGGER.warning(
+                    "Cannot send keepalive - client or unique_id not available"
+                )
 
         except Exception as err:
             _LOGGER.error("Error sending keepalive: %s", err)
         finally:
             self._keepalive_timer_handle = None
 
-
-
-    def _add_entities_to_platforms(self, new_entities_by_platform: dict[str, list[Entity]]) -> None:
+    def _add_entities_to_platforms(
+        self, new_entities_by_platform: dict[str, list[Entity]]
+    ) -> None:
         """Add entities to their respective platforms."""
         for platform, entities in new_entities_by_platform.items():
             if not entities:
@@ -462,25 +529,31 @@ class VictronMqttManager:
                 self._pending_entities[platform].extend(entities)
 
     async def _process_pending_via_device_entities(
-        self,
-        new_entities_by_platform: dict[str, list[Entity]]
+        self, new_entities_by_platform: dict[str, list[Entity]]
     ) -> None:
         """Process entity configurations that were waiting for their via_device to become available."""
         if not self._pending_via_device_entities:
             return
 
-        _LOGGER.info("Processing %d pending via_device entity configs", len(self._pending_via_device_entities))
+        _LOGGER.info(
+            "Processing %d pending via_device entity configs",
+            len(self._pending_via_device_entities),
+        )
         remaining_pending = []
         created_count = 0
 
         for component_cfg, unique_id, platform in self._pending_via_device_entities:
             # Get the via_device from the component's device info
             device_info = component_cfg.get("device")
-            via_device_tuple = _extract_via_device_from_discovery(device_info) if device_info else None
+            via_device_tuple = (
+                _extract_via_device_from_discovery(device_info) if device_info else None
+            )
             if via_device_tuple:
                 _LOGGER.info(
                     "Checking deferred entity config %s (%s): via_device='%s'",
-                    unique_id, platform, via_device_tuple
+                    unique_id,
+                    platform,
+                    via_device_tuple,
                 )
 
                 if self._is_via_device_available(via_device_tuple):
@@ -495,14 +568,18 @@ class VictronMqttManager:
                         created_count += 1
                         _LOGGER.info(
                             "✅ CREATED and ADDING deferred entity %s (%s) to platform: via_device '%s' is now available",
-                            unique_id, platform, via_device_tuple
+                            unique_id,
+                            platform,
+                            via_device_tuple,
                         )
                 else:
                     # Via device still not available, keep waiting
                     remaining_pending.append((component_cfg, unique_id, platform))
                     _LOGGER.debug(
                         "⏳ STILL WAITING for entity %s (%s): via_device '%s' not yet available",
-                        unique_id, platform, via_device_tuple
+                        unique_id,
+                        platform,
+                        via_device_tuple,
                     )
             else:
                 # Entity config no longer has via_device dependency, create entity and add to platform
@@ -514,14 +591,18 @@ class VictronMqttManager:
                     new_entities_by_platform[platform].append(entity)
                     self._entity_registry[entity.unique_id] = entity
                     created_count += 1
-                    _LOGGER.info("CREATED and ADDING entity %s to platform (no longer has via_device dependency)", unique_id)
+                    _LOGGER.info(
+                        "CREATED and ADDING entity %s to platform (no longer has via_device dependency)",
+                        unique_id,
+                    )
 
         self._pending_via_device_entities = remaining_pending
 
         _LOGGER.info(
             "Pending entity processing complete: %d created and added to platforms, %d configs still waiting. Remaining configs: %s",
-            created_count, len(remaining_pending),
-            [(unique_id, p) for cfg, unique_id, p in remaining_pending]
+            created_count,
+            len(remaining_pending),
+            [(unique_id, p) for cfg, unique_id, p in remaining_pending],
         )
 
     async def _retry_pending_entities(self) -> None:
@@ -535,23 +616,33 @@ class VictronMqttManager:
 
             async with self._via_device_lock:
                 if not self._pending_via_device_entities:
-                    _LOGGER.info("No more pending via_device entities, stopping retry task")
+                    _LOGGER.info(
+                        "No more pending via_device entities, stopping retry task"
+                    )
                     self._retry_pending_task = None
                     return
 
                 _LOGGER.info(
                     "Retry %d/%d: Attempting to process %d pending via_device entities",
-                    retry_count, max_retries, len(self._pending_via_device_entities)
+                    retry_count,
+                    max_retries,
+                    len(self._pending_via_device_entities),
                 )
 
-                new_entities_by_platform = {platform: [] for platform in _PLATFORM_CONFIG}
-                await self._process_pending_via_device_entities(new_entities_by_platform)
+                new_entities_by_platform = {
+                    platform: [] for platform in _PLATFORM_CONFIG
+                }
+                await self._process_pending_via_device_entities(
+                    new_entities_by_platform
+                )
 
             # Add any newly created entities outside the lock
             self._add_entities_to_platforms(new_entities_by_platform)
             for platform, entities in new_entities_by_platform.items():
                 if entities:
-                    _LOGGER.info("Added %d deferred %ss during retry", len(entities), platform)
+                    _LOGGER.info(
+                        "Added %d deferred %ss during retry", len(entities), platform
+                    )
 
             # If no pending entities remain, we're done
             if not self._pending_via_device_entities:
@@ -560,8 +651,12 @@ class VictronMqttManager:
         if self._pending_via_device_entities:
             _LOGGER.error(
                 "Failed to resolve %d via_device dependencies after %d retries: %s",
-                len(self._pending_via_device_entities), max_retries,
-                [(unique_id, p) for cfg, unique_id, p in self._pending_via_device_entities]
+                len(self._pending_via_device_entities),
+                max_retries,
+                [
+                    (unique_id, p)
+                    for cfg, unique_id, p in self._pending_via_device_entities
+                ],
             )
 
         self._retry_pending_task = None
@@ -609,13 +704,16 @@ class VictronMqttManager:
             device_identifiers = None
             for identifier_set in device.identifiers:
                 if identifier_set[0] == DOMAIN:  # Our domain
-                    device_identifiers = [identifier_set[1]]  # Store as list for consistency
+                    device_identifiers = [
+                        identifier_set[1]
+                    ]  # Store as list for consistency
                     break
 
             if not device_identifiers:
                 _LOGGER.warning(
                     "Device %s has no valid identifiers for domain %s, skipping restoration",
-                    device.name, DOMAIN
+                    device.name,
+                    DOMAIN,
                 )
                 continue
 
@@ -637,10 +735,18 @@ class VictronMqttManager:
                     # Extract via_device identifier
                     _LOGGER.debug("Via device identifiers: %s", via_device.identifiers)
                     for identifier_set in via_device.identifiers:
-                        _LOGGER.debug("Checking identifier_set: %s (type: %s)", identifier_set, type(identifier_set))
+                        _LOGGER.debug(
+                            "Checking identifier_set: %s (type: %s)",
+                            identifier_set,
+                            type(identifier_set),
+                        )
                         if identifier_set[0] == DOMAIN:
                             via_device_id = identifier_set[1]
-                            _LOGGER.debug("Extracted via_device_id: %s (type: %s)", via_device_id, type(via_device_id))
+                            _LOGGER.debug(
+                                "Extracted via_device_id: %s (type: %s)",
+                                via_device_id,
+                                type(via_device_id),
+                            )
                             device_info["via_device"] = str(via_device_id)
                             break
 
@@ -650,13 +756,15 @@ class VictronMqttManager:
 
             _LOGGER.debug(
                 "Restored device from registry: %s (identifiers: %s, via_device: %s)",
-                device.name, device_identifiers, device_info.get("via_device")
+                device.name,
+                device_identifiers,
+                device_info.get("via_device"),
             )
 
         _LOGGER.info(
             "Restored %d devices from Home Assistant device registry. "
             "Entities will be created when MQTT discovery messages are received.",
-            restored_count
+            restored_count,
         )
 
     def reconnect_mqtt(self) -> None:
@@ -714,7 +822,7 @@ class VictronMqttManager:
             self._device_registry,
             self._pending_via_device_entities,
             self._topic_entity_map,
-            self._subscribed_topics
+            self._subscribed_topics,
         ]
         for registry in registries_to_clear:
             registry.clear()
@@ -763,5 +871,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Clean up all manager resources
     await manager.cleanup()
 
-    _LOGGER.info("Victron Energy integration unloaded successfully for entry %s", entry.entry_id)
+    _LOGGER.info(
+        "Victron Energy integration unloaded successfully for entry %s", entry.entry_id
+    )
     return True
