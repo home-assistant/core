@@ -738,6 +738,18 @@ def _get_permissible_entity_candidates(
 # batching helper functions
 
 
+@cache
+def _resolve_classmethod(
+    cls: type[Entity], batch_service_name: str
+) -> _BatchMethodType | None:
+    """Return the bound classmethod if defined anywhere in the MRO."""
+    for base in cls.__mro__:
+        attr = base.__dict__.get(batch_service_name)
+        if isinstance(attr, classmethod):
+            return cast(_BatchMethodType, getattr(cls, batch_service_name))
+    return None
+
+
 def _extract_batchable_entities(
     entities: list[Entity], service_name: str
 ) -> tuple[
@@ -749,24 +761,13 @@ def _extract_batchable_entities(
     batch_map maps (cls, config_entry) -> (list of entities, bound batch classmethod)
     """
 
-    batch_service_name = f"async_batch_{service_name}"
-
-    @cache
-    def resolve_classmethod(cls: type[Entity]) -> _BatchMethodType | None:
-        """Return the bound classmethod if defined anywhere in the MRO."""
-        for base in cls.__mro__:
-            attr = base.__dict__.get(batch_service_name)
-            if isinstance(attr, classmethod):
-                return cast(_BatchMethodType, getattr(cls, batch_service_name))
-        return None
-
     remaining: list[Entity] = []
     batch_map: _BatchMap = {}
 
     for entity in entities:
         cls = type(entity)
         config_entry = getattr(entity, "config_entry", None)
-        batcher = resolve_classmethod(cls)
+        batcher = _resolve_classmethod(cls, f"async_batch_{service_name}")
 
         if batcher:
             key = (cls, config_entry)
