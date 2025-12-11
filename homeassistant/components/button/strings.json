@@ -27,5 +27,11 @@
       "name": "Press"
     }
   },
-  "title": "Button"
+  "title": "Button",
+  "triggers": {
+    "pressed": {
+      "description": "Triggers after one or several buttons were pressed.",
+      "name": "Button pressed"
+    }
+  }
 }
