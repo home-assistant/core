@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, cast
 
@@ -285,17 +286,33 @@ class IntegerTypeInformation(TypeInformation[float]):
 
 
 @dataclass(kw_only=True)
-class JsonTypeInformation(TypeInformation[Any]):
+class JsonTypeInformation(TypeInformation[dict[str, Any]]):
     """Json type information."""
 
     _DPTYPE = DPType.JSON
 
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> dict[str, Any] | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return json_loads_object(raw_value)
+
 
 @dataclass(kw_only=True)
-class RawTypeInformation(TypeInformation[Any]):
+class RawTypeInformation(TypeInformation[bytes]):
     """Raw type information."""
 
     _DPTYPE = DPType.RAW
+
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> bytes | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return base64.b64decode(raw_value)
 
 
 @dataclass(kw_only=True)
