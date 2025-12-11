@@ -90,9 +90,11 @@ async def async_setup_entry(
         SERVICE_CLEAR_TIMER, None, "async_clear_timer"
     )
     platform.async_register_entity_service(
-        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_bluesound_join"
     )
-    platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
+    platform.async_register_entity_service(
+        SERVICE_UNJOIN, None, "async_bluesound_unjoin"
+    )
 
     async_add_entities([bluesound_player], update_before_add=True)
 
@@ -465,20 +467,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self.async_unjoin()
-
-    async def async_join(self, master: str) -> None:
-        """Join the player to a group."""
-        if master == self.entity_id:
-            raise ServiceValidationError("Cannot join player to itself")
-
-        _LOGGER.debug("Trying to join player: %s", self.id)
-        async_dispatcher_send(
-            self.hass, dispatcher_join_signal(master), self.host, self.port
-        )
-
-    async def async_unjoin(self) -> None:
-        """Unjoin the player from a group."""
         if self._sync_status.leader is not None:
             leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
             async_dispatcher_send(
@@ -487,6 +475,48 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         if self._sync_status.followers is not None:
             await self._player.remove_follower(self.host, self.port)
+
+    async def async_bluesound_join(self, master: str) -> None:
+        """Join the player to a group."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_JOIN}",
+            is_fixable=False,
+            breaks_in_ha_version="2026.12.0",
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_join",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
+
+        if master == self.entity_id:
+            raise ServiceValidationError("Cannot join player to itself")
+
+        _LOGGER.debug("Trying to join player: %s", self.id)
+        async_dispatcher_send(
+            self.hass, dispatcher_join_signal(master), self.host, self.port
+        )
+
+    async def async_bluesound_unjoin(self) -> None:
+        """Unjoin the player from a group."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_UNJOIN}",
+            is_fixable=False,
+            breaks_in_ha_version="2026.12.0",
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_unjoin",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
+
+        await self.async_unjoin_player()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
