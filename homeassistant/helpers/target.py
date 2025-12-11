@@ -8,7 +8,7 @@ import logging
 from logging import Logger
 from typing import Any, TypeGuard
 
-from deprecation import deprecated_class
+from .deprecation import deprecated_class
 
 from homeassistant.const import (
     ATTR_AREA_ID,
