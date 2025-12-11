@@ -14,8 +14,9 @@ from typing import Any
 import mpd
 from mpd.asyncio import MPDClient
 import voluptuous as vol
+from zeroconf.asyncio import AsyncServiceInfo
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, zeroconf
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseMedia,
@@ -77,6 +78,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             MpdDevice(
+                hass,
                 entry.data[CONF_HOST],
                 entry.data[CONF_PORT],
                 entry.data.get(CONF_PASSWORD),
@@ -95,9 +97,15 @@ class MpdDevice(MediaPlayerEntity):
     _attr_name = None
 
     def __init__(
-        self, server: str, port: int, password: str | None, unique_id: str
+        self,
+        hass: HomeAssistant,
+        server: str,
+        port: int,
+        password: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize the MPD device."""
+        self.hass = hass
         self.server = server
         self.port = port
         self._attr_unique_id = unique_id
@@ -121,6 +129,29 @@ class MpdDevice(MediaPlayerEntity):
         self._client.idletimeout = 10
         self._client_lock = asyncio.Lock()
 
+    async def _async_resolve_host(self, host: str) -> str:
+        """Resolve hostname using zeroconf if it's a .local domain."""
+        if not host.endswith(".local"):
+            return host
+
+        try:
+            aiozc = await zeroconf.async_get_async_instance(self.hass)
+            # Query for the A/AAAA records
+            info = AsyncServiceInfo(
+                "_mpd._tcp.local.",
+                f"{host.removesuffix('.local')}._mpd._tcp.local.",
+            )
+            await info.async_request(aiozc.zeroconf, 3000)
+            
+            if info.parsed_addresses():
+                resolved = info.parsed_addresses()[0]
+                LOGGER.debug("Resolved %s to %s via zeroconf", host, resolved)
+                return resolved
+        except Exception as ex:  # noqa: BLE001
+            LOGGER.debug("Failed to resolve %s via zeroconf: %s", host, ex)
+
+        return host
+
     # Instead of relying on python-mpd2 to maintain a (persistent) connection to
     # MPD, the below explicitly sets up a *non*-persistent connection. This is
     # done to workaround the issue as described in:
@@ -130,12 +161,15 @@ class MpdDevice(MediaPlayerEntity):
         """Handle MPD connect and disconnect."""
         async with self._client_lock:
             try:
+                # Resolve hostname using zeroconf if needed
+                resolved_host = await self._async_resolve_host(self.server)
+                
                 # MPDClient.connect() doesn't always respect its timeout. To
                 # prevent a deadlock, enforce an additional (slightly longer)
                 # timeout on the coroutine itself.
                 try:
                     async with asyncio.timeout(self._client.timeout + 5):
-                        await self._client.connect(self.server, self.port)
+                        await self._client.connect(resolved_host, self.port)
                 except TimeoutError as error:
                     # TimeoutError has no message (which hinders logging further
                     # down the line), so provide one.
