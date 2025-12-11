@@ -42,7 +42,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
         self._device: str = ""
-        self._vlp_file: str = ""
+        self._vlp_file: str | None = None
         self._title: str = ""
 
     def _create_device(self) -> ConfigFlowResult:
@@ -181,7 +181,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if CONF_VLP_FILE not in user_input or user_input[CONF_VLP_FILE] == "":
                 # The VLP file is optional, so allow skipping it
-                self._vlp_file = ""
+                self._vlp_file = None
             else:
                 try:
                     # handle the file upload
