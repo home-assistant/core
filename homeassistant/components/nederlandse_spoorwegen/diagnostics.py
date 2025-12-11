@@ -1,4 +1,5 @@
 """Diagnostics support for Nederlandse Spoorwegen."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,6 +16,7 @@ TO_REDACT = [
     CONF_API_KEY,
 ]
 
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: NSConfigEntry
 ) -> dict[str, Any]:
@@ -30,20 +32,25 @@ async def async_get_config_entry_diagnostics(
                 "destination": coordinator.destination,
                 "via": coordinator.via,
                 "departure_time": coordinator.departure_time,
-                "last_update_success": coordinator.last_update_success,
-                "update_interval": str(coordinator.update_interval),
             },
             "route_data": {
                 "trips_count": len(coordinator.data.trips) if coordinator.data else 0,
-                "has_first_trip": coordinator.data.first_trip is not None if coordinator.data else False,
-                "has_next_trip": coordinator.data.next_trip is not None if coordinator.data else False,
-            } if coordinator.data else None,
+                "has_first_trip": coordinator.data.first_trip is not None
+                if coordinator.data
+                else False,
+                "has_next_trip": coordinator.data.next_trip is not None
+                if coordinator.data
+                else False,
+            }
+            if coordinator.data
+            else None,
         }
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
         "coordinators": coordinators_data,
     }
+
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: NSConfigEntry, device: DeviceEntry
@@ -74,9 +81,6 @@ async def async_get_device_diagnostics(
             "destination": coordinator.destination,
             "via": coordinator.via,
             "departure_time": coordinator.departure_time,
-            "last_update_success": coordinator.last_update_success,
-            "last_exception": str(coordinator.last_exception) if coordinator.last_exception else None,
-            "update_interval": str(coordinator.update_interval),
         },
     }
 
@@ -92,10 +96,18 @@ async def async_get_device_diagnostics(
         if coordinator.data.first_trip:
             first_trip = coordinator.data.first_trip
             device_data["first_trip"] = {
-                "departure_time_planned": str(first_trip.departure_time_planned) if first_trip.departure_time_planned else None,
-                "departure_time_actual": str(first_trip.departure_time_actual) if first_trip.departure_time_actual else None,
-                "arrival_time_planned": str(first_trip.arrival_time_planned) if first_trip.arrival_time_planned else None,
-                "arrival_time_actual": str(first_trip.arrival_time_actual) if first_trip.arrival_time_actual else None,
+                "departure_time_planned": str(first_trip.departure_time_planned)
+                if first_trip.departure_time_planned
+                else None,
+                "departure_time_actual": str(first_trip.departure_time_actual)
+                if first_trip.departure_time_actual
+                else None,
+                "arrival_time_planned": str(first_trip.arrival_time_planned)
+                if first_trip.arrival_time_planned
+                else None,
+                "arrival_time_actual": str(first_trip.arrival_time_actual)
+                if first_trip.arrival_time_actual
+                else None,
                 "departure_platform_planned": first_trip.departure_platform_planned,
                 "departure_platform_actual": first_trip.departure_platform_actual,
                 "arrival_platform_planned": first_trip.arrival_platform_planned,
@@ -106,4 +118,3 @@ async def async_get_device_diagnostics(
             }
 
     return device_data
-

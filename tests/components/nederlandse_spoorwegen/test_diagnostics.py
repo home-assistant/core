@@ -42,6 +42,7 @@ async def test_entry_diagnostics(
     )
     assert result == snapshot(exclude=props("created_at", "modified_at"))
 
+
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
 async def test_device_diagnostics(
     hass: HomeAssistant,
@@ -55,9 +56,7 @@ async def test_device_diagnostics(
     # Ensure integration is set up so device exists
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, SUBENTRY_ID_1)}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, SUBENTRY_ID_1)})
     assert device is not None
 
     # Trigger update for the coordinator before diagnostics

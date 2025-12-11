@@ -5,10 +5,7 @@
       'departure': 'Ams',
       'departure_time': None,
       'destination': 'Rot',
-      'last_exception': None,
-      'last_update_success': True,
       'name': 'To work',
-      'update_interval': '0:02:00',
       'via': 'Ht',
     }),
     'device_info': dict({
@@ -45,9 +42,7 @@
           'departure': 'Ams',
           'departure_time': None,
           'destination': 'Rot',
-          'last_update_success': True,
           'name': 'To work',
-          'update_interval': '0:02:00',
           'via': 'Ht',
         }),
         'route_data': dict({
@@ -61,9 +56,7 @@
           'departure': 'Hag',
           'departure_time': '08:00',
           'destination': 'Utr',
-          'last_update_success': True,
           'name': 'To home',
-          'update_interval': '0:02:00',
           'via': None,
         }),
         'route_data': dict({
