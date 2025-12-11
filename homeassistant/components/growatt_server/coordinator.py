@@ -113,9 +113,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
-                _LOGGER.error(
-                    "Error fetching min device data for %s: %s", self.device_id, err
-                )
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
 
             min_info = {**min_details, **min_settings, **min_energy}
@@ -180,7 +177,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self._sync_update_data)
         except json.decoder.JSONDecodeError as err:
-            _LOGGER.error("Unable to fetch data from Growatt server: %s", err)
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
     def get_currency(self):

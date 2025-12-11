@@ -6,6 +6,7 @@
   "config_flow": true,
   "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": [
     "aiosqlite",
