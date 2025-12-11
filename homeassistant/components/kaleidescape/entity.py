@@ -44,8 +44,15 @@ class KaleidescapeEntity(Entity):
         """Register update listener."""
 
         @callback
-        def _update(event: str) -> None:
+        def _update(event: str, params: list[str] | None = None) -> None:
             """Handle device state changes."""
             self.async_write_ha_state()
 
+            self.hass.async_create_task(self.async_handle_device_event(event, params))
+
         self.async_on_remove(self._device.dispatcher.connect(_update).disconnect)
+
+    async def async_handle_device_event(
+        self, event: str, params: list[str] | None = None
+    ) -> None:
+        """Abstract method to handle device events."""
