@@ -14,12 +14,13 @@ async def test_camera_entity(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test camera entity is created."""
-    state = hass.states.get("camera.front_door_camera_camera")
+    # With _attr_name = None, entity uses device name only
+    state = hass.states.get("camera.front_door_camera")
     assert state is not None
     assert state.state == "idle"
 
     # Check entity registry
-    entry = entity_registry.async_get("camera.front_door_camera_camera")
+    entry = entity_registry.async_get("camera.front_door_camera")
     assert entry is not None
     assert entry.unique_id == "T1234567890-camera"
 
@@ -29,7 +30,7 @@ async def test_camera_attributes(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test camera entity attributes."""
-    state = hass.states.get("camera.front_door_camera_camera")
+    state = hass.states.get("camera.front_door_camera")
     assert state is not None
 
     attributes = state.attributes
@@ -37,6 +38,7 @@ async def test_camera_attributes(
     assert attributes["station_serial"] == "T0987654321"
     assert attributes["hardware_version"] == "2.2"
     assert attributes["software_version"] == "2.0.7.6"
+    assert attributes["ip_address"] == "192.168.1.100"
 
 
 async def test_camera_device_info(
@@ -46,6 +48,6 @@ async def test_camera_device_info(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test camera device info."""
-    entry = entity_registry.async_get("camera.front_door_camera_camera")
+    entry = entity_registry.async_get("camera.front_door_camera")
     assert entry is not None
     assert entry.device_id is not None

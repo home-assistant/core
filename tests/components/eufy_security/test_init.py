@@ -2,18 +2,15 @@
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.eufy_security.api import (
+    CannotConnectError,
+    EufySecurityError,
+    InvalidCredentialsError,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-class MockInvalidCredentialsError(Exception):
-    """Mock InvalidCredentialsError for testing."""
-
-
-class MockEufySecurityError(Exception):
-    """Mock EufySecurityError for testing."""
 
 
 async def test_setup_entry(
@@ -34,16 +31,16 @@ async def test_setup_entry_auth_failed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup fails with invalid credentials."""
-    with (
-        patch(
-            "homeassistant.components.eufy_security.async_login",
-            side_effect=MockInvalidCredentialsError,
-        ),
-        patch(
-            "homeassistant.components.eufy_security.InvalidCredentialsError",
-            MockInvalidCredentialsError,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.eufy_security.EufySecurityAPI"
+    ) as mock_api_class:
+        api = MagicMock()
+        api.restore_crypto_state = MagicMock(return_value=False)
+        api.async_authenticate = MagicMock(
+            side_effect=InvalidCredentialsError("Invalid credentials")
+        )
+        mock_api_class.return_value = api
+
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -51,21 +48,41 @@ async def test_setup_entry_auth_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_entry_connection_error(
+async def test_setup_entry_cannot_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup retries on connection error."""
-    with (
-        patch(
-            "homeassistant.components.eufy_security.async_login",
-            side_effect=MockEufySecurityError,
-        ),
-        patch(
-            "homeassistant.components.eufy_security.EufySecurityError",
-            MockEufySecurityError,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.eufy_security.EufySecurityAPI"
+    ) as mock_api_class:
+        api = MagicMock()
+        api.restore_crypto_state = MagicMock(return_value=False)
+        api.async_authenticate = MagicMock(
+            side_effect=CannotConnectError("Connection failed")
+        )
+        mock_api_class.return_value = api
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries on generic API error."""
+    with patch(
+        "homeassistant.components.eufy_security.EufySecurityAPI"
+    ) as mock_api_class:
+        api = MagicMock()
+        api.restore_crypto_state = MagicMock(return_value=False)
+        api.async_authenticate = MagicMock(side_effect=EufySecurityError("API error"))
+        mock_api_class.return_value = api
+
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
