@@ -1,21 +1,21 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured",
-      "reauth_successful": "Re-authentication successful",
-      "reconfigure_successful": "Reconfiguration successful"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Cannot connect",
-      "invalid_auth": "Invalid or Expired API key! Kindly generate new one",
-      "no_devices": "No devices found; make sure devices are set up in the Cielo Home App",
+      "invalid_auth": "Invalid or expired API key! Kindly generate a new one",
+      "no_devices": "No devices found; make sure devices are set up in the Cielo Home app",
       "no_username": "No valid user information found for the API key",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Follow the [documentation]({url}) to get your API key"
@@ -24,7 +24,7 @@
       },
       "user": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Follow the [documentation]({url}) to get your API key"

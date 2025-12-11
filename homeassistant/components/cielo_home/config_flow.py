@@ -86,12 +86,9 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception during config flow validation")
                 errors["base"] = "unknown"
             else:
-                # Set the unique ID using the validated token
-                await self.async_set_unique_id(token)
-                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"Cielo Home ({api_key[:4]}*****************{api_key[-4:]})",
+                    title=f"Cielo Home ({api_key[-4:]})",
                     data=user_input,
                 )
 

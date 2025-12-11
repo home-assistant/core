@@ -213,11 +213,3 @@ class CieloDeviceBaseEntity(CieloBaseEntity):
             suggested_area=dev_data.name,
         )
 
-    # Lifecycle methods
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to any client/library events after entity is registered."""
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run on entity removal."""
-        await super().async_will_remove_from_hass()
