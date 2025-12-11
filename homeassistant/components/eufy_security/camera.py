@@ -112,7 +112,14 @@ class EufySecurityCamera(EufySecurityEntity, CameraEntity):
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if self._stream_url is None:
-            self._stream_url = await self._camera.async_start_stream()
+            # Try RTSP first, fall back to P2P livestream
+            self._stream_url = await self.coordinator.api.async_start_rtsp_livestream(
+                self._camera.serial
+            )
+            if self._stream_url is None:
+                self._stream_url = await self.coordinator.api.async_start_livestream(
+                    self._camera.serial
+                )
         return self._stream_url
 
     async def async_will_remove_from_hass(self) -> None:
@@ -120,7 +127,10 @@ class EufySecurityCamera(EufySecurityEntity, CameraEntity):
         await super().async_will_remove_from_hass()
         if self._stream_url is not None:
             try:
-                await self._camera.async_stop_stream()
+                await self.coordinator.api.async_stop_rtsp_livestream(
+                    self._camera.serial
+                )
+                await self.coordinator.api.async_stop_livestream(self._camera.serial)
             except EufySecurityError:
                 _LOGGER.debug(
                     "Failed to stop stream for camera %s",

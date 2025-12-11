@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import Camera, EufySecurityError, InvalidCredentialsError
+from .api import Camera, EufySecurityError
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import EufySecurityCoordinator
 
@@ -25,12 +25,6 @@ def exception_wrap[_EufyEntityT: EufySecurityEntity, **_P, _R](
     async def _wrap(self: _EufyEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await async_func(self, *args, **kwargs)
-        except InvalidCredentialsError as err:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
         except EufySecurityError as err:
             _LOGGER.debug(
                 "Error calling %s in platform %s: %s",
