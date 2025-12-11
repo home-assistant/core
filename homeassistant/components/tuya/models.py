@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import base64
 from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
-
-from homeassistant.util.json import json_loads
 
 from .type_information import (
     BitmapTypeInformation,
@@ -114,20 +111,6 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         return None
 
 
-class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
-    """Wrapper to extract information from a RAW/binary value."""
-
-    _DPTYPE = RawTypeInformation
-
-    def read_bytes(self, device: CustomerDevice) -> bytes | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None or (
-            len(decoded := base64.b64decode(raw_value)) == 0
-        ):
-            return None
-        return decoded
-
-
 class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation]):
     """Simple wrapper for boolean values.
 
@@ -151,12 +134,6 @@ class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
     """Wrapper to extract information from a JSON value."""
 
     _DPTYPE = JsonTypeInformation
-
-    def read_json(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return json_loads(raw_value)
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
@@ -196,6 +173,12 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
             f"Value `{new_value}` (converted from `{value}`) out of range:"
             f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
+    """Wrapper to extract information from a RAW/binary value."""
+
+    _DPTYPE = RawTypeInformation
 
 
 class DPCodeStringWrapper(DPCodeTypeInformationWrapper[StringTypeInformation]):
