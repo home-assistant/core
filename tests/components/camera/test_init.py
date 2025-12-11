@@ -528,13 +528,10 @@ async def test_handle_play_stream_service(
 
 
 @pytest.mark.usefixtures("mock_stream")
-async def test_no_preload_stream(hass: HomeAssistant) -> None:
+async def test_no_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> None:
     """Test camera preload preference."""
     demo_settings = camera.DynamicStreamSettings()
     with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-        ) as mock_request_stream,
         patch(
             "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
             return_value=demo_settings,
@@ -548,15 +545,14 @@ async def test_no_preload_stream(hass: HomeAssistant) -> None:
         await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert not mock_request_stream.called
+        assert not mock_create_stream.endpoint_url.called
 
 
 @pytest.mark.usefixtures("mock_stream")
-async def test_preload_stream(hass: HomeAssistant) -> None:
+async def test_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> None:
     """Test camera preload preference."""
     demo_settings = camera.DynamicStreamSettings(preload_stream=True)
     with (
-        patch("homeassistant.components.camera.create_stream") as mock_create_stream,
         patch(
             "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
             return_value=demo_settings,
@@ -566,14 +562,13 @@ async def test_preload_stream(hass: HomeAssistant) -> None:
             return_value="http://example.com",
         ),
     ):
-        mock_create_stream.return_value.start = AsyncMock()
         assert await async_setup_component(
             hass, "camera", {DOMAIN: {"platform": "demo"}}
         )
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert mock_create_stream.called
+        assert mock_create_stream.start.called
 
 
 @pytest.mark.usefixtures("mock_camera")
