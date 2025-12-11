@@ -338,7 +338,7 @@ class EntityTriggerBase(Trigger):
         self._target = config.target
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is not an expected target states."""
+        """Check if the origin state is valid and the state has changed."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
@@ -465,7 +465,7 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
     _attribute_to_state: str
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is not an expected target states."""
+        """Check if the origin state is valid and the state has changed."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
