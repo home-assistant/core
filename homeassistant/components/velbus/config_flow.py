@@ -41,7 +41,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
-        self._errors: dict[str, str] = {}
         self._device: str = ""
         self._vlp_file: str = ""
         self._title: str = ""
@@ -60,7 +59,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             await controller.connect()
             await controller.stop()
         except VelbusConnectionFailed:
-            self._errors[CONF_PORT] = "cannot_connect"
             return False
         return True
 
@@ -76,6 +74,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle network step."""
+        step_errors: dict[str, str] = {}
         if user_input is not None:
             self._title = "Velbus Network"
             if user_input[CONF_TLS]:
@@ -88,6 +87,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_PORT: self._device})
             if await self._test_connection():
                 return await self.async_step_vlp()
+            step_errors[CONF_HOST] = "cannot_connect"
         else:
             user_input = {
                 CONF_TLS: True,
@@ -107,13 +107,14 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 suggested_values=user_input,
             ),
-            errors=self._errors,
+            errors=step_errors,
         )
 
     async def async_step_usbselect(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle usb select step."""
+        step_errors: dict[str, str] = {}
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = [
             f"{p}{', s/n: ' + p.serial_number if p.serial_number else ''}"
@@ -127,6 +128,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_PORT: self._device})
             if await self._test_connection():
                 return await self.async_step_vlp()
+            step_errors[CONF_PORT] = "cannot_connect"
         else:
             user_input = {}
             user_input[CONF_PORT] = ""
@@ -137,7 +139,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Schema({vol.Required(CONF_PORT): vol.In(list_of_ports)}),
                 suggested_values=user_input,
             ),
-            errors=self._errors,
+            errors=step_errors,
         )
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
@@ -168,13 +170,14 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate VLP file and raise exception if invalid."""
         vlpfile = VlpFile(file_path)
         await vlpfile.read()
-        if len(vlpfile.get()) == 0:
+        if not vlpfile.get():
             raise InvalidVlpFile("no_modules")
 
     async def async_step_vlp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step when user wants to use the VLP file."""
+        step_errors: dict[str, str] = {}
         if user_input is not None:
             if CONF_VLP_FILE not in user_input or user_input[CONF_VLP_FILE] == "":
                 # The VLP file is optional, so allow skipping it
@@ -188,7 +191,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     # validate it
                     await self._validate_vlp_file(self._vlp_file)
                 except InvalidVlpFile as e:
-                    self._errors[CONF_VLP_FILE] = str(e)
+                    step_errors[CONF_VLP_FILE] = str(e)
             if self.source == SOURCE_RECONFIGURE:
                 old_entry = self._get_reconfigure_entry()
                 return self.async_update_reload_and_abort(
@@ -198,7 +201,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: old_entry.data.get(CONF_PORT),
                     },
                 )
-            if not self._errors:
+            if not step_errors:
                 return self._create_device()
 
         return self.async_show_form(
@@ -213,7 +216,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 suggested_values=user_input,
             ),
-            errors=self._errors,
+            errors=step_errors,
         )
 
     async def async_step_reconfigure(
