@@ -28,3 +28,10 @@ CONF_SERVER_PUBLIC_KEY: Final = "server_public_key"
 # RTSP streaming credentials (configured via options flow)
 CONF_RTSP_USERNAME: Final = "rtsp_username"
 CONF_RTSP_PASSWORD: Final = "rtsp_password"
+
+# State attributes
+ATTR_SERIAL_NUMBER: Final = "serial_number"
+ATTR_STATION_SERIAL: Final = "station_serial"
+ATTR_HARDWARE_VERSION: Final = "hardware_version"
+ATTR_SOFTWARE_VERSION: Final = "software_version"
+ATTR_IP_ADDRESS: Final = "ip_address"
