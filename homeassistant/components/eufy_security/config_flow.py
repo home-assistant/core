@@ -6,14 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from eufy_security import async_login
-from eufy_security.errors import EufySecurityError, InvalidCredentialsError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import EufySecurityError, InvalidCredentialsError, async_login
 from .const import CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

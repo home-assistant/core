@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import logging
 
-from eufy_security import async_login
-from eufy_security.errors import EufySecurityError, InvalidCredentialsError
-
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import EufySecurityError, InvalidCredentialsError, async_login
 from .const import DOMAIN, PLATFORMS
 from .coordinator import (
     EufySecurityConfigEntry,
