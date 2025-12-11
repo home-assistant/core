@@ -4,13 +4,12 @@ import logging
 import re
 from typing import Any
 
-from rebooterpro_async import RebooterConnectionError, RebooterHttpError
-
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .coordinator import ConnectSenseCoordinator
 from .device_client import async_close_client, async_get_client, build_probe_client
 from .models import ConnectSenseConfigEntry, ConnectSenseRuntimeData
 
@@ -68,18 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConnectSenseConfigEntry)
     except Exception as exc:  # pragma: no cover - defensive logging only
         _LOGGER.debug("Unique_id migration via /info skipped: %s", exc)
 
-    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
+    store = hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     client = await async_get_client(hass, entry)
+    coordinator = ConnectSenseCoordinator(hass, entry, client)
     try:
-        await client.get_info()
-    except (RebooterConnectionError, RebooterHttpError) as exc:
-        raise ConfigEntryNotReady from exc
-    except Exception as exc:  # pragma: no cover - defensive
-        _LOGGER.debug("Device health check failed: %s", exc)
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        raise
+    except Exception as exc:  # pragma: no cover - defensive logging only
+        _LOGGER.debug("Coordinator refresh failed: %s", exc)
         raise ConfigEntryNotReady from exc
 
-    entry.runtime_data = ConnectSenseRuntimeData(hass.data[DOMAIN][entry.entry_id])
+    store["coordinator"] = coordinator
+    entry.runtime_data = ConnectSenseRuntimeData(store=store, coordinator=coordinator, client=client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
