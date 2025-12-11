@@ -1,4 +1,4 @@
-"""Constants for the MPD integration."""
+"""Utility functions for the MPD integration."""
 
 from zeroconf.asyncio import AsyncServiceInfo
 
