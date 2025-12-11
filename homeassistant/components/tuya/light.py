@@ -53,7 +53,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Return the brightness of this light between 0..255."""
-        if (brightness := self._read_device_status_raw(device)) is None:
+        if (brightness := device.status.get(self.dpcode)) is None:
             return None
 
         # Remap value to our scale
@@ -114,7 +114,7 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Return the color temperature value in Kelvin."""
-        if (temperature := self._read_device_status_raw(device)) is None:
+        if (temperature := device.status.get(self.dpcode)) is None:
             return None
 
         return color_util.color_temperature_mired_to_kelvin(
