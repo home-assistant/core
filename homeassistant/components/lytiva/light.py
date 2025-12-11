@@ -115,7 +115,17 @@ class LytivaLight(LightEntity):
         self._attr_brightness = 255
         self._attr_rgb_color = [255, 255, 255]
 
-        # State memory
+        # CCT temperature: device uses mireds internally
+        self._attr_min_mireds = cfg.get("min_mireds", 154)
+        self._attr_max_mireds = cfg.get("max_mireds", 370)
+        self._internal_color_temp_mired = self._attr_min_mireds
+
+        # Expose Kelvin equivalents
+        self._attr_min_color_temp_kelvin = mireds_to_kelvin(self._attr_max_mireds)
+        self._attr_max_color_temp_kelvin = mireds_to_kelvin(self._attr_min_mireds)
+        self._attr_color_temp_kelvin = mireds_to_kelvin(self._internal_color_temp_mired)
+
+        # State memory (after CCT attributes are defined)
         self._last_brightness = 255
         self._last_color_temp_kelvin = self._attr_min_color_temp_kelvin
         self._last_rgb = [255, 255, 255]

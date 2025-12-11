@@ -95,9 +95,7 @@ async def test_mqtt_subscriptions(
         await hass.async_block_till_done()
 
         # Trigger on_connect callback manually to fire subscriptions
-        if hasattr(mock_mqtt_client, "on_connect"):
-            # signature: client, userdata, flags, rc, *args
-            mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
+        mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
     
     # Verify discovery and status topics are subscribed
     subscribe_calls = [call[0][0] for call in mock_mqtt_client.subscribe.call_args_list]
@@ -129,8 +127,7 @@ async def test_discovery_prefix_option(
         await hass.async_block_till_done()
 
         # Trigger on_connect callback manually
-        if hasattr(mock_mqtt_client, "on_connect"):
-            mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
+        mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
     
     # Verify custom discovery prefix is used
     subscribe_calls = [call[0][0] for call in mock_mqtt_client.subscribe.call_args_list]

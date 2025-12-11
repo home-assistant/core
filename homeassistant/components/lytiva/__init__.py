@@ -1,333 +1,343 @@
 """Lytiva integration with independent MQTT connection (single platform - light only)."""
 from __future__ import annotations
-import logging
-import json
+
 import asyncio
-from typing import Any, Callable, Dict, List
+import json
+import logging
+from typing import Any, Callable
 
 import paho.mqtt.client as mqtt_client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+
 from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Lytiva integration with a single, central MQTT handler."""
-    hass.data.setdefault(DOMAIN, {})
+class LytivaMQTTHandler:
+    """Handle MQTT connection and message routing for Lytiva integration."""
 
-    broker = entry.data.get("broker")
-    port = entry.data.get("port", 1883)
-    username = entry.data.get("username")
-    password = entry.data.get("password")
-    discovery_prefix = entry.options.get("discovery_prefix", "homeassistant") if entry.options else "homeassistant"
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        broker: str,
+        port: int,
+        username: str | None,
+        password: str | None,
+        discovery_prefix: str,
+    ) -> None:
+        """Initialize the MQTT handler."""
+        self.hass = hass
+        self.entry = entry
+        self.broker = broker
+        self.port = port
+        self.discovery_prefix = discovery_prefix
 
-    client_id = f"lytiva_{entry.entry_id}"
-    mqtt = mqtt_client.Client(
-        client_id=client_id,
-        callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
-    )
+        # Create MQTT client
+        client_id = f"lytiva_{entry.entry_id}"
+        self.client = mqtt_client.Client(
+            client_id=client_id,
+            callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
+        )
 
-    if username:
-        mqtt.username_pw_set(username, password)
+        if username:
+            self.client.username_pw_set(username, password)
 
-    # Integration shared storage
-    hass.data[DOMAIN][entry.entry_id] = {
-        "mqtt_client": mqtt,
-        "broker": broker,
-        "port": port,
-        "discovery_prefix": discovery_prefix,
-        # discovered payloads (raw discovery payloads by unique_id/address)
-        "discovered_payloads": {},  # type: Dict[str, Dict[str, Any]]
-        # entity objects created by platforms (map unique_id -> entity)
-        "entities_by_unique_id": {},  # type: Dict[str, Any]
-        # quick lookup by address (address may be int or str) -> entity
-        "entities_by_address": {},  # type: Dict[str, Any]
-        # platform registration callbacks
-        "light_callbacks": [],  # type: List[Callable[[dict], None]]
-    }
+        # Set up callbacks
+        self.client.on_connect = self._on_connect
+        self.client.on_message = self._on_message_fallback
 
-    # Helper: registration function for light platform to register discovery callback
-    def register_light_callback(callback: Callable[[dict], None]) -> None:
-        hass.data[DOMAIN][entry.entry_id]["light_callbacks"].append(callback)
+        # Storage for entities and callbacks
+        self.discovered_payloads: dict[str, dict[str, Any]] = {}
+        self.entities_by_unique_id: dict[str, Any] = {}
+        self.entities_by_address: dict[str, Any] = {}
+        self.light_callbacks: list[Callable[[dict], None]] = []
 
-    # expose registration helper to hass.data for platform to call
-    hass.data[DOMAIN][entry.entry_id]["register_light_callback"] = register_light_callback
-
-    #
-    # Central STATUS handler: updates entity objects (by address or unique_id)
-    #
-    def _schedule_entity_update(entity, payload):
-        """Schedule entity._update_from_payload(payload). Works for async/sync methods."""
+    async def async_connect(self) -> bool:
+        """Connect to MQTT broker."""
         try:
-            if hasattr(entity, "_update_from_payload"):
-                fn = getattr(entity, "_update_from_payload")
-                if asyncio.iscoroutinefunction(fn):
-                    # schedule coroutine on hass loop
-                    asyncio.run_coroutine_threadsafe(fn(payload), hass.loop)
-                    return
-                else:
-                    # sync function - schedule in executor to avoid blocking
-                    hass.async_add_executor_job(fn, payload)
-                    return
+            await self.hass.async_add_executor_job(
+                self.client.connect, self.broker, self.port, 60
+            )
+            await self.hass.async_add_executor_job(self.client.loop_start)
+            return True
         except Exception as e:
-            _LOGGER.exception("Error scheduling update for entity %s: %s", getattr(entity, "name", "<unknown>"), e)
+            _LOGGER.error("Could not connect/start MQTT: %s", e)
+            return False
 
-    async def handle_status_message(message):
-        """Coroutine handling an incoming STATUS payload (called from thread callback)."""
+    async def async_disconnect(self) -> None:
+        """Disconnect from MQTT broker."""
         try:
-            raw = message.payload
-            if isinstance(raw, (bytes, bytearray)):
-                text = raw.decode("utf-8", errors="ignore")
-            else:
-                text = str(raw)
+            self.client.publish("homeassistant/status", "offline", qos=1, retain=True)
+        except Exception:
+            pass
 
-            payload = json.loads(text)
+        try:
+            await self.hass.async_add_executor_job(self.client.loop_stop)
+        except Exception:
+            pass
+
+        try:
+            await self.hass.async_add_executor_job(self.client.disconnect)
+        except Exception:
+            pass
+
+    def register_light_callback(self, callback: Callable[[dict], None]) -> None:
+        """Register a callback for light platform discovery."""
+        self.light_callbacks.append(callback)
+
+    def _on_connect(
+        self, client: mqtt_client.Client, userdata: Any, flags: dict, reason_code: int, *args: Any
+    ) -> None:
+        """Handle MQTT connection."""
+        if reason_code != 0:
+            _LOGGER.error("MQTT connection failed: %s", reason_code)
+            return
+
+        _LOGGER.info("Connected to MQTT %s:%s", self.broker, self.port)
+
+        try:
+            client.publish("homeassistant/status", "online", qos=1, retain=True)
+        except Exception:
+            _LOGGER.exception("Failed to publish online status")
+
+        # Subscribe to discovery and status topics
+        self._subscribe_topics()
+
+    def _subscribe_topics(self) -> None:
+        """Subscribe to MQTT topics."""
+        try:
+            self.client.subscribe(f"{self.discovery_prefix}/+/+/config")
+            self.client.message_callback_add(
+                f"{self.discovery_prefix}/+/+/config", self._on_discovery
+            )
+        except Exception as e:
+            _LOGGER.exception("Failed to subscribe discovery topic: %s", e)
+
+        try:
+            self.client.subscribe("LYT/+/NODE/E/STATUS")
+            self.client.message_callback_add("LYT/+/NODE/E/STATUS", self._on_status)
+            self.client.subscribe("LYT/+/GROUP/E/STATUS")
+            self.client.message_callback_add("LYT/+/GROUP/E/STATUS", self._on_status)
+        except Exception as e:
+            _LOGGER.exception("Failed to subscribe STATUS topics: %s", e)
+
+    def _on_message_fallback(
+        self, client: mqtt_client.Client, userdata: Any, msg: mqtt_client.MQTTMessage
+    ) -> None:
+        """Fallback message handler."""
+        _LOGGER.debug("Fallback on_message for topic %s", msg.topic)
+
+    def _on_status(
+        self, client: mqtt_client.Client, userdata: Any, message: mqtt_client.MQTTMessage
+    ) -> None:
+        """Handle status messages."""
+        asyncio.run_coroutine_threadsafe(
+            self._async_handle_status(message), self.hass.loop
+        )
+
+    async def _async_handle_status(self, message: mqtt_client.MQTTMessage) -> None:
+        """Process status message asynchronously."""
+        try:
+            payload = json.loads(message.payload.decode("utf-8", errors="ignore"))
         except json.JSONDecodeError:
-            _LOGGER.debug("Received non-JSON status payload on %s", getattr(message, "topic", "<unknown>"))
+            _LOGGER.debug("Received non-JSON status payload on %s", message.topic)
             return
         except Exception as e:
             _LOGGER.exception("Error decoding status payload: %s", e)
             return
 
-        # address or unique id is necessary to map to entity
+        # Find entity by address or unique_id
+        entity = self._find_entity(payload)
+        if entity and hasattr(entity, "_update_from_payload"):
+            await entity._update_from_payload(payload)
+
+    def _find_entity(self, payload: dict[str, Any]) -> Any | None:
+        """Find entity by address or unique_id from payload."""
         address = payload.get("address")
-        unique = payload.get("unique_id") or payload.get("uniqueId") or payload.get("uniqueid")
+        unique_id = payload.get("unique_id") or payload.get("uniqueId") or payload.get("uniqueid")
 
-        entities_by_address = hass.data[DOMAIN][entry.entry_id]["entities_by_address"]
-        entities_by_unique_id = hass.data[DOMAIN][entry.entry_id]["entities_by_unique_id"]
-
-        # Try address lookup (address might be int or string)
+        # Try address lookup
         if address is not None:
-            # try both direct and stringified matching
-            ent = entities_by_address.get(address) or entities_by_address.get(str(address))
-            if ent:
-                _schedule_entity_update(ent, payload)
-                return
+            entity = self.entities_by_address.get(address) or self.entities_by_address.get(str(address))
+            if entity:
+                return entity
 
         # Try unique_id lookup
-        if unique:
-            ent = entities_by_unique_id.get(str(unique))
-            if ent:
-                _schedule_entity_update(ent, payload)
-                return
+        if unique_id:
+            entity = self.entities_by_unique_id.get(str(unique_id))
+            if entity:
+                return entity
 
-        # If not found, try scanning all entities (fallback)
-        for ent in list(entities_by_unique_id.values()):
-            try:
-                ent_addr = getattr(ent, "address", None)
-                ent_uid = getattr(ent, "_attr_unique_id", None) or getattr(ent, "unique_id", None)
-                if ent_addr is not None and str(ent_addr) == str(address):
-                    _schedule_entity_update(ent, payload)
-                    return
-                if ent_uid is not None and str(ent_uid) == str(unique):
-                    _schedule_entity_update(ent, payload)
-                    return
-            except Exception:
-                continue
+        return None
 
-        # no entity matched
-        _LOGGER.debug("Status received but no matching entity found (address=%s unique=%s)", address, unique)
-
-    # Thread callback for paho -> schedule coroutine on hass loop
-    def on_status(client, userdata, message):
+    def _on_discovery(
+        self, client: mqtt_client.Client, userdata: Any, message: mqtt_client.MQTTMessage
+    ) -> None:
+        """Handle discovery messages."""
         try:
-            # schedule the coroutine to run safely on hass loop
-            asyncio.run_coroutine_threadsafe(handle_status_message(message), hass.loop)
-        except Exception as e:
-            _LOGGER.exception("Failed to schedule status handler: %s", e)
-
-    #
-    # Discovery (homeassistant/+/+/config) handler: store payload and call registered callbacks
-    #
-    def on_discovery(client, userdata, message):
-        try:
-            raw = message.payload
-            if isinstance(raw, (bytes, bytearray)):
-                text = raw.decode("utf-8", errors="ignore")
-            else:
-                text = str(raw)
-            payload = json.loads(text)
+            payload = json.loads(message.payload.decode("utf-8", errors="ignore"))
         except Exception:
-            _LOGGER.exception("Invalid discovery JSON on %s", getattr(message, "topic", "<unknown>"))
+            _LOGGER.exception("Invalid discovery JSON on %s", message.topic)
             return
 
-        if payload == {}:
-            topic_parts = message.topic.split("/")
-            if len(topic_parts) >= 4:
-                platform = topic_parts[1]
-                object_id = topic_parts[2]
-
-                _LOGGER.warning(
-                    "Removing entity %s (platform %s) and its device immediately due to empty discovery payload.",
-                    object_id, platform
-                )
-
-                def remove_entity_and_device(hass: HomeAssistant, entry_id: str, object_id: str):
-                    """Remove an entity and its device safely from MQTT thread."""
-                    entity_registry = async_get_entity_registry(hass)
-                    device_registry = async_get_device_registry(hass)
-
-                    if entity_registry is None:
-                        _LOGGER.error("Entity registry not available")
-                        return
-                    if device_registry is None:
-                        _LOGGER.error("Device registry not available")
-                        return
-                    
-                    # Find the entity entry by checking all entities from this integration
-                    entity_entry = None
-                    for entity_id, ent in list(entity_registry.entities.items()):
-                        if (ent.unique_id == object_id or 
-                            ent.unique_id == str(object_id) or
-                            ent.unique_id.endswith(f"_{object_id}") or
-                            ent.unique_id.endswith(f"_{str(object_id)}")):  
-                            entity_entry = ent
-                            entity_registry.async_remove(entity_id)
-                            break
-                    
-                    if not entity_entry:
-                        _LOGGER.error("Could not find entity with object_id %s in registry", object_id)
-                        # Still try to clean up internal caches
-                        data = hass.data[DOMAIN][entry_id]
-                        data["entities_by_unique_id"].pop(object_id, None)
-                        data["entities_by_unique_id"].pop(str(object_id), None)
-                        data["entities_by_address"].pop(object_id, None)
-                        data["entities_by_address"].pop(str(object_id), None)
-                        data["discovered_payloads"].pop(object_id, None)
-                        data["discovered_payloads"].pop(str(object_id), None)
-                        return
-
-                    # Remove the device if it has no other entities
-                    if entity_entry and entity_entry.device_id:
-                        device_id = entity_entry.device_id
-                        # get all entities linked to this device
-                        linked_entities = [
-                            e for e in entity_registry.entities.values() if e.device_id == device_id
-                        ]
-                        if len(linked_entities) == 0:
-                            try:
-                                device_registry.async_remove_device(device_id)
-                            except Exception as e:
-                                _LOGGER.error("Failed to remove device: %s", e)
-
-                    # Remove from integration caches (try multiple formats)
-                    data = hass.data[DOMAIN][entry_id]
-                    data["entities_by_unique_id"].pop(object_id, None)
-                    data["entities_by_unique_id"].pop(str(object_id), None)
-                    data["entities_by_address"].pop(object_id, None)
-                    data["entities_by_address"].pop(str(object_id), None)
-                    data["discovered_payloads"].pop(object_id, None)
-                    data["discovered_payloads"].pop(str(object_id), None)
-                    _LOGGER.warning("Entity %s and its device removed fully.", object_id)
-
-                # Schedule safely from MQTT thread
-                hass.loop.call_soon_threadsafe(
-                    lambda: remove_entity_and_device(hass, entry.entry_id, object_id)
-                )
+        # Handle empty payload (device removal)
+        if not payload:
+            self._handle_device_removal(message.topic)
             return
 
-        unique_id = payload.get("unique_id") or payload.get("uniqueId") or payload.get("uniqueid") or payload.get("address")
-        if unique_id is None:
+        # Extract unique_id and platform
+        unique_id = str(
+            payload.get("unique_id")
+            or payload.get("uniqueId")
+            or payload.get("uniqueid")
+            or payload.get("address")
+        )
+        if not unique_id:
             _LOGGER.debug("Discovery payload without unique id: %s", payload)
             return
 
-        # Determine platform from topic or payload
-        topic_parts = message.topic.split("/") if message.topic else []
-        platform = None
-        # typical discovery topic: homeassistant/<platform>/<node>/<object>/config
-        if len(topic_parts) >= 2:
-            platform = topic_parts[1]
+        topic_parts = message.topic.split("/")
+        platform = topic_parts[1] if len(topic_parts) >= 2 else None
 
-        unique_id = str(unique_id)
-        # Store both payload and platform
-        hass.data[DOMAIN][entry.entry_id]["discovered_payloads"][unique_id] = {
+        # Store discovery payload
+        self.discovered_payloads[unique_id] = {
             "payload": payload,
-            "platform": platform
+            "platform": platform,
         }
-        _LOGGER.debug("Discovery payload stored for unique_id=%s platform=%s", unique_id, platform)
+        _LOGGER.debug(
+            "Discovery payload stored for unique_id=%s platform=%s", unique_id, platform
+        )
 
-        # Call appropriate callbacks (only light for now)
-        try:
-            if platform == "light":
-                for cb in list(hass.data[DOMAIN][entry.entry_id]["light_callbacks"]):
-                    hass.loop.call_soon_threadsafe(cb, payload)
-        except Exception as e:
-            _LOGGER.exception("Error calling discovery callbacks: %s", e)
+        # Notify platform callbacks
+        if platform == "light":
+            for callback in self.light_callbacks:
+                self.hass.loop.call_soon_threadsafe(callback, payload)
 
-    #
-    # Paho MQTT connect/message handlers
-    #
-    def on_connect(client, userdata, flags, reason_code, *args):
-        if reason_code == 0:
-            _LOGGER.info("Connected to MQTT %s:%s", broker, port)
-            try:
-                client.publish("homeassistant/status", "online", qos=1, retain=True)
-            except Exception:
-                _LOGGER.exception("Failed to publish online status")
-            # subscribe discovery + status topics via message_callback_add (single owner)
-            try:
-                client.subscribe(f"{discovery_prefix}/+/+/config")
-                client.message_callback_add(f"{discovery_prefix}/+/+/config", on_discovery)
-            except Exception as e:
-                _LOGGER.exception("Failed to subscribe discovery topic: %s", e)
+    def _handle_device_removal(self, topic: str) -> None:
+        """Handle device removal from empty discovery payload."""
+        topic_parts = topic.split("/")
+        if len(topic_parts) < 4:
+            return
 
-            try:
-                client.subscribe("LYT/+/NODE/E/STATUS")
-                client.message_callback_add("LYT/+/NODE/E/STATUS", on_status)
-                client.subscribe("LYT/+/GROUP/E/STATUS")
-                client.message_callback_add("LYT/+/GROUP/E/STATUS", on_status)
-            except Exception as e:
-                _LOGGER.exception("Failed to subscribe STATUS topics: %s", e)
-        else:
-            _LOGGER.error("MQTT connection failed: %s", reason_code)
+        platform = topic_parts[1]
+        object_id = topic_parts[2]
 
-    def on_message_fallback(client, userdata, msg):
-        # fallback - we mainly rely on message_callback_add handlers above
-        _LOGGER.debug("Fallback on_message for topic %s", msg.topic)
+        _LOGGER.warning(
+            "Removing entity %s (platform %s) due to empty discovery payload",
+            object_id,
+            platform,
+        )
 
-    mqtt.on_connect = on_connect
-    mqtt.on_message = on_message_fallback
-    mqtt.will_set("homeassistant/status", "offline", qos=1, retain=True)
+        self.hass.loop.call_soon_threadsafe(
+            self._remove_entity_and_device, object_id
+        )
 
-    # Connect (in executor) and start loop
-    try:
-        await hass.async_add_executor_job(mqtt.connect, broker, port, 60)
-        await hass.async_add_executor_job(mqtt.loop_start)
-    except Exception as e:
-        _LOGGER.error("Could not connect/start MQTT: %s", e)
+    def _remove_entity_and_device(self, object_id: str) -> None:
+        """Remove entity and its device from registries."""
+        entity_registry = async_get_entity_registry(self.hass)
+        device_registry = async_get_device_registry(self.hass)
+
+        # Find and remove entity
+        entity_entry = None
+        for entity_id, ent in list(entity_registry.entities.items()):
+            if (
+                ent.unique_id == object_id
+                or ent.unique_id == str(object_id)
+                or ent.unique_id.endswith(f"_{object_id}")
+            ):
+                entity_entry = ent
+                entity_registry.async_remove(entity_id)
+                break
+
+        if not entity_entry:
+            _LOGGER.error("Could not find entity with object_id %s", object_id)
+            return
+
+        # Remove device if no other entities
+        if entity_entry.device_id:
+            linked_entities = [
+                e
+                for e in entity_registry.entities.values()
+                if e.device_id == entity_entry.device_id
+            ]
+            if not linked_entities:
+                try:
+                    device_registry.async_remove_device(entity_entry.device_id)
+                except Exception as e:
+                    _LOGGER.error("Failed to remove device: %s", e)
+
+        # Clean up internal caches
+        self.entities_by_unique_id.pop(object_id, None)
+        self.entities_by_unique_id.pop(str(object_id), None)
+        self.entities_by_address.pop(object_id, None)
+        self.entities_by_address.pop(str(object_id), None)
+        self.discovered_payloads.pop(object_id, None)
+        self.discovered_payloads.pop(str(object_id), None)
+
+    def dispatch_discovered_payloads(self) -> None:
+        """Dispatch already discovered payloads to platform callbacks."""
+        for item in list(self.discovered_payloads.values()):
+            payload = item.get("payload")
+            platform = item.get("platform")
+
+            if platform == "light" and payload:
+                for callback in self.light_callbacks:
+                    self.hass.loop.call_soon_threadsafe(callback, payload)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Lytiva integration from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    # Extract configuration
+    broker = entry.data.get("broker")
+    port = entry.data.get("port", 1883)
+    username = entry.data.get("username")
+    password = entry.data.get("password")
+    discovery_prefix = (
+        entry.options.get("discovery_prefix", "homeassistant")
+        if entry.options
+        else "homeassistant"
+    )
+
+    # Create MQTT handler
+    mqtt_handler = LytivaMQTTHandler(
+        hass, entry, broker, port, username, password, discovery_prefix
+    )
+
+    # Store handler and data
+    hass.data[DOMAIN][entry.entry_id] = {
+        "mqtt_handler": mqtt_handler,
+        "mqtt_client": mqtt_handler.client,  # For backward compatibility
+        "broker": broker,
+        "port": port,
+        "discovery_prefix": discovery_prefix,
+        "discovered_payloads": mqtt_handler.discovered_payloads,
+        "entities_by_unique_id": mqtt_handler.entities_by_unique_id,
+        "entities_by_address": mqtt_handler.entities_by_address,
+        "light_callbacks": mqtt_handler.light_callbacks,
+        "register_light_callback": mqtt_handler.register_light_callback,
+    }
+
+    # Connect to MQTT
+    if not await mqtt_handler.async_connect():
         return False
 
-    # Forward platforms (only light for initial submission)
+    # Set up platforms
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception as e:
         _LOGGER.exception("Error forwarding platforms: %s", e)
+        return False
 
-    # After platform is loaded, force-call callbacks for any already discovered payloads
-    try:
-        discovered_items = list(hass.data[DOMAIN][entry.entry_id]["discovered_payloads"].values())
-        for item in discovered_items:
-            # Check if we have the new structure with platform
-            if isinstance(item, dict) and "platform" in item and "payload" in item:
-                payload = item["payload"]
-                platform = item["platform"]
-            else:
-                # Fallback for old structure
-                payload = item
-                platform = None
-            
-            # Dispatch only to light platform
-            if platform == "light":
-                callbacks = hass.data[DOMAIN][entry.entry_id]["light_callbacks"]
-                for cb in callbacks:
-                    hass.loop.call_soon_threadsafe(cb, payload)
-    except Exception as e:
-        _LOGGER.exception("Error during initial dispatch of discovered payloads: %s", e)
+    # Dispatch any already-discovered payloads
+    mqtt_handler.dispatch_discovered_payloads()
 
     _LOGGER.info("Lytiva integration setup complete for entry %s", entry.entry_id)
     return True
@@ -335,23 +345,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the integration and stop MQTT client."""
-    unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload:
-        mqtt = hass.data[DOMAIN][entry.entry_id]["mqtt_client"]
-        try:
-            mqtt.publish("homeassistant/status", "offline", qos=1, retain=True)
-        except Exception:
-            pass
-        try:
-            await hass.async_add_executor_job(mqtt.loop_stop)
-        except Exception:
-            pass
-        try:
-            await hass.async_add_executor_job(mqtt.disconnect)
-        except Exception:
-            pass
+    if unload_ok:
+        mqtt_handler = hass.data[DOMAIN][entry.entry_id].get("mqtt_handler")
+        if mqtt_handler:
+            await mqtt_handler.async_disconnect()
 
         hass.data[DOMAIN].pop(entry.entry_id, None)
 
-    return unload
+    return unload_ok
