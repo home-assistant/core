@@ -3,10 +3,15 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
+import pytest
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.eufy_security.api import EufySecurityError
+from homeassistant.components.eufy_security.api import (
+    EufySecurityError,
+    InvalidCredentialsError,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -330,3 +335,204 @@ async def test_camera_rtsp_snapshot_throttling(
             image2 = await entity.async_camera_image()
             # Should return cached image without calling ffmpeg again
             assert image2 == b"image_data"
+
+
+async def test_camera_stream_source_invalid_credentials(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test stream_source handles InvalidCredentialsError and triggers reauth."""
+    # No RTSP credentials, so it will try cloud streaming
+    mock_camera.rtsp_username = None
+    mock_camera.rtsp_password = None
+    mock_camera.async_start_stream = AsyncMock(
+        side_effect=InvalidCredentialsError("Invalid credentials")
+    )
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    with pytest.raises(HomeAssistantError):
+        await entity.stream_source()
+
+
+async def test_camera_stream_source_api_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test stream_source handles EufySecurityError."""
+    # No RTSP credentials, so it will try cloud streaming
+    mock_camera.rtsp_username = None
+    mock_camera.rtsp_password = None
+    mock_camera.async_start_stream = AsyncMock(
+        side_effect=EufySecurityError("API error")
+    )
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+
+    with pytest.raises(HomeAssistantError):
+        await entity.stream_source()
+
+    # Check debug logging
+    assert "Error calling stream_source" in caplog.text
+
+
+async def test_camera_snapshot_lock_returns_cached(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test snapshot returns cached image when lock is held by another capture."""
+
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._last_image = b"cached_image"
+    entity._last_snapshot_time = 0  # Allow capture based on time
+
+    # Simulate lock being held
+    async with entity._snapshot_lock:
+        # Now calling async_camera_image while lock is held should return cached
+        image = await entity.async_camera_image()
+        assert image == b"cached_image"
+
+
+async def test_camera_ffmpeg_stderr_logging(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ffmpeg stderr is logged at debug level."""
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._last_snapshot_time = 0  # Allow capture
+
+    with (
+        patch(
+            "homeassistant.components.eufy_security.camera.get_ffmpeg_manager"
+        ) as mock_ffmpeg_mgr,
+        patch("asyncio.create_subprocess_exec") as mock_subprocess,
+    ):
+        mock_mgr = MagicMock()
+        mock_mgr.binary = "/usr/bin/ffmpeg"
+        mock_ffmpeg_mgr.return_value = mock_mgr
+
+        mock_process = AsyncMock()
+        mock_process.communicate = AsyncMock(return_value=(b"", b"Connection refused"))
+        mock_process.returncode = 1
+        mock_subprocess.return_value = mock_process
+
+        image = await entity.async_camera_image()
+        assert image is None
+        assert "ffmpeg failed" in caplog.text
+
+
+async def test_camera_ffmpeg_timeout(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ffmpeg timeout is handled gracefully."""
+
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._last_snapshot_time = 0  # Allow capture
+
+    with (
+        patch(
+            "homeassistant.components.eufy_security.camera.get_ffmpeg_manager"
+        ) as mock_ffmpeg_mgr,
+        patch("asyncio.create_subprocess_exec") as mock_subprocess,
+    ):
+        mock_mgr = MagicMock()
+        mock_mgr.binary = "/usr/bin/ffmpeg"
+        mock_ffmpeg_mgr.return_value = mock_mgr
+
+        mock_process = AsyncMock()
+        mock_process.communicate = AsyncMock(side_effect=TimeoutError())
+        mock_process.returncode = None
+        mock_process.kill = MagicMock()
+        mock_process.wait = AsyncMock()
+        mock_subprocess.return_value = mock_process
+
+        image = await entity.async_camera_image()
+        assert image is None
+        assert "Timeout capturing frame" in caplog.text
+        mock_process.kill.assert_called_once()
+
+
+async def test_camera_ffmpeg_timeout_process_already_dead(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+) -> None:
+    """Test ffmpeg timeout handles ProcessLookupError when killing."""
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._last_snapshot_time = 0  # Allow capture
+
+    with (
+        patch(
+            "homeassistant.components.eufy_security.camera.get_ffmpeg_manager"
+        ) as mock_ffmpeg_mgr,
+        patch("asyncio.create_subprocess_exec") as mock_subprocess,
+    ):
+        mock_mgr = MagicMock()
+        mock_mgr.binary = "/usr/bin/ffmpeg"
+        mock_ffmpeg_mgr.return_value = mock_mgr
+
+        mock_process = AsyncMock()
+        mock_process.communicate = AsyncMock(side_effect=TimeoutError())
+        mock_process.returncode = None
+        mock_process.kill = MagicMock(side_effect=ProcessLookupError())
+        mock_subprocess.return_value = mock_process
+
+        # Should not raise despite ProcessLookupError
+        image = await entity.async_camera_image()
+        assert image is None
+
+
+async def test_camera_ffmpeg_oserror(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ffmpeg OSError is handled gracefully."""
+    mock_camera.last_camera_image_url = None
+    mock_camera.rtsp_username = "admin"
+    mock_camera.rtsp_password = "password"
+
+    entity = hass.data["camera"].get_entity("camera.front_door_camera")
+    entity._last_snapshot_time = 0  # Allow capture
+
+    with (
+        patch(
+            "homeassistant.components.eufy_security.camera.get_ffmpeg_manager"
+        ) as mock_ffmpeg_mgr,
+        patch("asyncio.create_subprocess_exec") as mock_subprocess,
+    ):
+        mock_mgr = MagicMock()
+        mock_mgr.binary = "/usr/bin/ffmpeg"
+        mock_ffmpeg_mgr.return_value = mock_mgr
+
+        mock_subprocess.side_effect = OSError("ffmpeg not found")
+
+        image = await entity.async_camera_image()
+        assert image is None
+        assert "Failed to capture frame" in caplog.text

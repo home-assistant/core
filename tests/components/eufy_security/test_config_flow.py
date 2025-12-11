@@ -11,6 +11,7 @@ from homeassistant.components.eufy_security.api import (
     InvalidCaptchaError,
     InvalidCredentialsError,
 )
+from homeassistant.components.eufy_security.config_flow import EufySecurityConfigFlow
 from homeassistant.components.eufy_security.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -768,3 +769,309 @@ async def test_options_flow_clear_existing_credentials(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert "T1234567890" not in result2["data"].get("rtsp_credentials", {})
+
+
+async def test_captcha_img_tag_none(
+    hass: HomeAssistant,
+) -> None:
+    """Test _get_captcha_img_tag returns empty string for None."""
+    flow = EufySecurityConfigFlow()
+    assert flow._get_captcha_img_tag(None) == ""
+
+
+async def test_captcha_step_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test CAPTCHA step handles CannotConnectError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_api = MagicMock()
+
+    # First attempt triggers CAPTCHA
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha123",
+            captcha_image="data:image/png;base64,ABC123",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    # CAPTCHA step - CannotConnectError
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CannotConnectError("Connection failed"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "12345"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+
+async def test_captcha_step_eufy_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test CAPTCHA step handles EufySecurityError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_api = MagicMock()
+
+    # First attempt triggers CAPTCHA
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha123",
+            captcha_image="data:image/png;base64,ABC123",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    # CAPTCHA step - EufySecurityError
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=EufySecurityError("API error"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "12345"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+
+async def test_captcha_step_unknown_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test CAPTCHA step handles unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_api = MagicMock()
+
+    # First attempt triggers CAPTCHA
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha123",
+            captcha_image="data:image/png;base64,ABC123",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    # CAPTCHA step - Unknown error
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=RuntimeError("Unexpected"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "12345"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "unknown"}
+
+
+async def test_captcha_step_invalid_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test CAPTCHA step handles InvalidCredentialsError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_api = MagicMock()
+
+    # First attempt triggers CAPTCHA
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha123",
+            captcha_image="data:image/png;base64,ABC123",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    # CAPTCHA step - InvalidCredentialsError
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=InvalidCredentialsError("Bad credentials"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "12345"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_captcha_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test reauth CAPTCHA step handles CannotConnectError."""
+    init_integration.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    [result] = flows
+
+    mock_api = MagicMock()
+
+    # Trigger CAPTCHA step
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha",
+            captcha_image="data:image/png;base64,IMG",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "password"},
+        )
+
+    # Test CannotConnectError
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CannotConnectError("Connection failed"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "code"},
+        )
+
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_captcha_eufy_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test reauth CAPTCHA step handles EufySecurityError."""
+    init_integration.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    [result] = flows
+
+    mock_api = MagicMock()
+
+    # Trigger CAPTCHA step
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha",
+            captcha_image="data:image/png;base64,IMG",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "password"},
+        )
+
+    # Test EufySecurityError
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=EufySecurityError("API error"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "code"},
+        )
+
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_captcha_unknown_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test reauth CAPTCHA step handles unknown errors."""
+    init_integration.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    [result] = flows
+
+    mock_api = MagicMock()
+
+    # Trigger CAPTCHA step
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CaptchaRequiredError(
+            "CAPTCHA required",
+            captcha_id="captcha",
+            captcha_image="data:image/png;base64,IMG",
+            api=mock_api,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "password"},
+        )
+
+    # Test unknown error
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=RuntimeError("Unexpected"),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"captcha_code": "code"},
+        )
+
+    assert result3["errors"] == {"base": "unknown"}
