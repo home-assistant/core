@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, Concatenate
 
@@ -42,19 +42,6 @@ def exception_wrap[_EufyEntityT: EufySecurityEntity, **_P, _R](
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
-
-    return _wrap
-
-
-def refresh_after[_EufyEntityT: EufySecurityEntity, **_P](
-    func: Callable[Concatenate[_EufyEntityT, _P], Awaitable[None]],
-) -> Callable[Concatenate[_EufyEntityT, _P], Coroutine[Any, Any, None]]:
-    """Define a wrapper to refresh data after an API call."""
-
-    @exception_wrap
-    async def _wrap(self: _EufyEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        await func(self, *args, **kwargs)
-        await self.coordinator.async_request_refresh()
 
     return _wrap
 
