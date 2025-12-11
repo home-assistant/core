@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.eufy_security.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -34,7 +34,7 @@ async def test_form(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USERNAME: "test@example.com",
+            CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )
@@ -43,7 +43,7 @@ async def test_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test@example.com"
     assert result2["data"] == {
-        CONF_USERNAME: "test@example.com",
+        CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -71,7 +71,7 @@ async def test_form_invalid_auth(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test@example.com",
+                CONF_EMAIL: "test@example.com",
                 CONF_PASSWORD: "wrong-password",
             },
         )
@@ -102,7 +102,7 @@ async def test_form_cannot_connect(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test@example.com",
+                CONF_EMAIL: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
@@ -127,7 +127,7 @@ async def test_form_unknown_error(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test@example.com",
+                CONF_EMAIL: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
@@ -153,7 +153,7 @@ async def test_form_already_configured(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USERNAME: "test@example.com",
+            CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )
