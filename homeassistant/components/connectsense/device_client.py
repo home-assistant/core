@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import ipaddress
+import ssl
 from functools import lru_cache
 from pathlib import Path
 
 from rebooterpro_async import RebooterProClient
+from rebooterpro_async.client import DEFAULT_CA_BUNDLE
 
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .ssl_utils import get_aiohttp_ssl
 
 
 async def async_get_client(hass, entry) -> RebooterProClient:
@@ -17,8 +19,9 @@ async def async_get_client(hass, entry) -> RebooterProClient:
     store = hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
     if (client := store.get("client")) is None:
         session = async_get_clientsession(hass)
-        ssl_ctx = await get_aiohttp_ssl(hass, entry)
-        client = RebooterProClient(entry.data[CONF_HOST], session=session, ssl_context=ssl_ctx)
+        ssl_ctx = await _get_ssl_for_host(hass, entry.data[CONF_HOST])
+        # Pass pre-built SSL to avoid blocking load_verify_locations on the event loop.
+        client = RebooterProClient(entry.data[CONF_HOST], session=session, ssl_context=ssl_ctx, ca_bundle=None)
         store["client"] = client
     return client
 
@@ -53,3 +56,27 @@ def _cached_ca_path() -> Path | None:
 async def _get_ca_bundle_offthread(hass) -> Path | None:
     """Load the embedded CA path off the event loop."""
     return await hass.async_add_executor_job(_cached_ca_path)
+
+
+def _build_ctx_from_ca(ca_path: Path) -> ssl.SSLContext:
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    ctx.check_hostname = True
+    ctx.load_verify_locations(cafile=str(ca_path))
+    return ctx
+
+
+async def _get_ssl_for_host(hass, host: str) -> ssl.SSLContext | bool | None:
+    """Return ssl= value for aiohttp built off-thread to avoid loop blocking."""
+    host = (host or "").strip()
+    try:
+        if host:
+            ipaddress.ip_address(host)
+            return False
+    except ValueError:
+        pass
+
+    if DEFAULT_CA_BUNDLE and DEFAULT_CA_BUNDLE.exists():
+        return await hass.async_add_executor_job(_build_ctx_from_ca, DEFAULT_CA_BUNDLE)
+
+    return None

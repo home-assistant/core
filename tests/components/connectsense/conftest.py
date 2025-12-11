@@ -1,12 +1,8 @@
-import ipaddress
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 DOMAIN = "connectsense"
@@ -33,23 +29,6 @@ def device_display_name(serial: str) -> str:
 
 
 @pytest.fixture
-def mock_ssl_utils():
-    """Patch ssl_utils.get_aiohttp_ssl to avoid real CA/verification during tests."""
-    from homeassistant.components.connectsense import ssl_utils as ssl_mod
-
-    def _fake_get_aiohttp_ssl(hass, entry):
-        h = (entry.data.get(CONF_HOST) or "").strip()
-        try:
-            ipaddress.ip_address(h)
-            return False
-        except ValueError:
-            return None
-
-    with patch.object(ssl_mod, "get_aiohttp_ssl", side_effect=_fake_get_aiohttp_ssl):
-        yield
-
-
-@pytest.fixture
 def mock_http(aioclient_mock, host: str, serial: str):
     """Mock the device HTTPS endpoints used by the integration."""
     base = f"https://{host}:443"
@@ -72,7 +51,6 @@ async def setup_entry(
     domain: str,
     host: str,
     serial: str,
-    mock_ssl_utils,
     mock_http,
 ):
     """Create and set up a real ConfigEntry for the integration."""
