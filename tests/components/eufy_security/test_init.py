@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.eufy_security import async_remove_config_entry_device
 from homeassistant.components.eufy_security.api import (
     CannotConnectError,
     CaptchaRequiredError,
@@ -20,6 +21,7 @@ from homeassistant.components.eufy_security.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -469,3 +471,75 @@ async def test_options_update_reloads_entry(
 
     # Entry should have been reloaded
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_remove_stale_device(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that stale devices can be removed."""
+    device_registry = dr.async_get(hass)
+
+    # Create a stale device that is no longer in the account
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, "STALE_SERIAL_123")},
+        name="Stale Camera",
+    )
+
+    # The stale device should be removable (return True)
+    result = await async_remove_config_entry_device(
+        hass, init_integration, stale_device
+    )
+    assert result is True
+
+
+async def test_remove_active_device_blocked(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that active devices cannot be removed."""
+    device_registry = dr.async_get(hass)
+
+    # Get the active device (should already exist from init_integration)
+    active_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "T1234567890")}
+    )
+    assert active_device is not None
+
+    # The active device should NOT be removable (return False)
+    result = await async_remove_config_entry_device(
+        hass, init_integration, active_device
+    )
+    assert result is False
+
+
+async def test_remove_device_no_runtime_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test device removal when runtime_data is not available."""
+    device_registry = dr.async_get(hass)
+
+    # Create a config entry without runtime data
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test@example.com",
+        data={
+            CONF_EMAIL: "test@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+        unique_id="test@example.com",
+    )
+    entry.add_to_hass(hass)
+    # Don't set up the entry - runtime_data will be None
+
+    # Create a device
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "SOME_SERIAL")},
+        name="Some Camera",
+    )
+
+    # Without runtime_data, any device can be removed
+    result = await async_remove_config_entry_device(hass, entry, device)
+    assert result is True

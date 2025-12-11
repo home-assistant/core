@@ -536,3 +536,58 @@ async def test_camera_ffmpeg_oserror(
         image = await entity.async_camera_image()
         assert image is None
         assert "Failed to capture frame" in caplog.text
+
+
+async def test_camera_dynamic_addition(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_camera: MagicMock,
+    mock_eufy_api: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dynamic camera addition when coordinator detects new cameras."""
+    # Initial setup should have one camera
+    assert hass.states.get("camera.front_door_camera") is not None
+    assert hass.states.get("camera.back_yard_camera") is None
+
+    # Create a new camera
+    new_camera = MagicMock()
+    new_camera.serial = "T9999999999"
+    new_camera.station_serial = "T0987654321"
+    new_camera.name = "Back Yard Camera"
+    new_camera.model = "eufyCam 3"
+    new_camera.hardware_version = "3.0"
+    new_camera.software_version = "3.0.1.0"
+    new_camera.ip_address = "192.168.1.101"
+    new_camera.last_camera_image_url = "https://example.com/image2.jpg"
+    new_camera.rtsp_username = None
+    new_camera.rtsp_password = None
+    new_camera.async_start_stream = AsyncMock(return_value="rtsp://example.com/stream2")
+    new_camera.async_stop_stream = AsyncMock()
+
+    # Add new camera to the API
+    mock_eufy_api.cameras[new_camera.serial] = new_camera
+
+    # Simulate coordinator update by updating the data and triggering listeners
+    coordinator = init_integration.runtime_data.coordinator
+    coordinator.data = {
+        "cameras": {
+            mock_camera.serial: mock_camera,
+            new_camera.serial: new_camera,
+        },
+        "stations": coordinator.data.get("stations", {}),
+    }
+
+    # Trigger the coordinator listeners
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    # New camera should now exist
+    state = hass.states.get("camera.back_yard_camera")
+    assert state is not None
+    assert state.state == "idle"
+
+    # Verify entity registry
+    entry = entity_registry.async_get("camera.back_yard_camera")
+    assert entry is not None
+    assert entry.unique_id == "T9999999999-camera"
