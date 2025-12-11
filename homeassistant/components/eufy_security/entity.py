@@ -6,13 +6,11 @@ from collections.abc import Awaitable, Callable, Coroutine
 import logging
 from typing import Any, Concatenate
 
-from eufy_security import Camera
-from eufy_security.errors import EufySecurityError, InvalidCredentialsError
-
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import Camera, EufySecurityError, InvalidCredentialsError
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import EufySecurityCoordinator
 

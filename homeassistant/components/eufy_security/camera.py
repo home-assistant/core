@@ -7,8 +7,6 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from eufy_security import Camera
-from eufy_security.errors import EufySecurityError
 
 from homeassistant.components.camera import (
     Camera as CameraEntity,
@@ -19,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .api import Camera, EufySecurityError
 from .coordinator import EufySecurityConfigEntry, EufySecurityCoordinator
 from .entity import EufySecurityEntity, exception_wrap
 
