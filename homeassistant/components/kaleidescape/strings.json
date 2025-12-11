@@ -83,7 +83,7 @@
           "name": "Volume level"
         }
       },
-      "name": "Send sound"
+      "name": "Send volume level"
     },
     "send_volume_muted": {
       "description": "Send current mute state to any listening Kaleidescape apps.",
@@ -93,7 +93,7 @@
           "name": "Volume muted"
         }
       },
-      "name": "Send sound"
+      "name": "Send volume muted"
     }
   }
 }
