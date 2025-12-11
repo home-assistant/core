@@ -1,5 +1,6 @@
 """Base entity class and helpers for Victron Energy Home Assistant integration."""
 
+import json
 import logging
 from typing import Any
 
@@ -118,6 +119,66 @@ class VictronBaseEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT topic when removed from Home Assistant."""
         self._manager.unregister_entity(self)
+
+    def _parse_payload(self, payload: bytes) -> Any:
+        """Try to convert the payload to a usable value.
+
+        Parses the payload using the value template if defined. If there is no template,
+        attempt to parse the payload as JSON and extract the 'value' field. If that fails,
+        return the raw payload.
+
+        Args:
+            payload: The raw MQTT payload as a string.
+
+        Returns:
+            The parsed value after applying the value template, or the raw payload.
+
+        """
+        try:
+            payload_str = payload.decode()
+        except (UnicodeDecodeError, AttributeError):
+            _LOGGER.error(
+                "Unable to decode payload for binary sensor %s: %s",
+                self.unique_id,
+                payload,
+            )
+            return None
+
+        _LOGGER.debug(
+            "Received MQTT message for %s / %s: %s",
+            self._attr_name,
+            self._attr_unique_id,
+            payload_str,
+        )
+        # Handle empty payload immediately - set entity to unknown
+        if not payload_str.strip():
+            return None
+
+        # Try to parse the _value_template when it is set
+        if self._value_template:
+            try:
+                return self._value_template.async_render_with_possible_json_value(
+                    payload_str
+                )
+            except (ValueError, TypeError):
+                _LOGGER.warning(
+                    "Failed to render value template for entity %s with payload: %s",
+                    self._attr_unique_id,
+                    payload_str,
+                )
+
+        # Try to parse the payload as JSON and extract the 'value' field
+        try:
+            json_payload = json.loads(payload_str)
+            if isinstance(json_payload, dict):
+                return json_payload.get("value", payload_str)
+        except json.JSONDecodeError as err:
+            _LOGGER.debug("Failed to decode message JSON: %s", err)
+        else:
+            return json_payload
+
+        # End with returning the raw payload string when no other parsing succeeded
+        return payload_str
 
     @property
     def should_poll(self) -> bool:

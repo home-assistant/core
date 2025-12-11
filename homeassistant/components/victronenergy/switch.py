@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
@@ -64,49 +63,9 @@ class MQTTDiscoveredSwitch(VictronBaseEntity, SwitchEntity):
 
     def handle_mqtt_message(self, topic: str, payload: bytes) -> None:
         """Handle incoming MQTT message for this switch."""
-        payload_str = payload.decode()
-
-        # Handle empty payload immediately - set entity to unknown
-        if not payload_str.strip():
-            self._attr_is_on = None
-            self.schedule_update_ha_state()
-            return
-
-        value = None
-        try:
-            json_payload = json.loads(payload_str)
-        except json.JSONDecodeError:
-            _LOGGER.debug("Failed to decode switch message JSON", exc_info=True)
-            json_payload = None
-
-        if self._value_template:
-            try:
-                value = self._value_template.async_render_with_possible_json_value(
-                    payload_str, None
-                )
-            except (TypeError, ValueError):
-                _LOGGER.debug("Failed to render value_template", exc_info=True)
-                value = payload_str
-        elif json_payload is not None and "value" in json_payload:
-            value = json_payload["value"]
-        else:
-            value = payload_str
-
-        # Handle disconnected/invalid states first (including template result of None)
-        if value is None:
-            self._attr_is_on = None
-        elif value in ("unknown", "None", "null", "", "unavailable", "disconnected"):
-            self._attr_is_on = None
-        elif isinstance(value, str) and value.lower() in (
-            "none",
-            "null",
-            "n/a",
-            "na",
-            "unavailable",
-        ):
-            self._attr_is_on = None
+        value = self._parse_payload(payload)
         # Determine switch state based on payload
-        elif value == self._state_on:
+        if value == self._state_on:
             self._attr_is_on = True
         elif value == self._state_off:
             self._attr_is_on = False
@@ -115,7 +74,7 @@ class MQTTDiscoveredSwitch(VictronBaseEntity, SwitchEntity):
         elif str(value).lower() in ("false", "0", "off", "no"):
             self._attr_is_on = False
         else:
-            _LOGGER.debug("Unknown switch state value: %s", value)
+            _LOGGER.warning("Unknown switch state value: %s", value)
             self._attr_is_on = None
 
         _LOGGER.debug(

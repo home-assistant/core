@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
@@ -58,92 +57,23 @@ class MQTTDiscoveredBinarySensor(VictronBaseEntity, BinarySensorEntity):
 
     def handle_mqtt_message(self, topic: str, payload: bytes) -> None:
         """Handle new MQTT message."""
-        try:
-            payload_str = payload.decode()
+        value = self._parse_payload(payload)
+        if value == self._payload_on:
+            self._attr_is_on = True
+        elif value == self._payload_off:
+            self._attr_is_on = False
+        elif isinstance(value, bool):
+            self._attr_is_on = value
+        elif isinstance(value, (int, float)):
+            self._attr_is_on = bool(value)
+        else:
+            _LOGGER.warning("Unknown binary_sensor state value: %s", value)
+            self._attr_is_on = None
 
-            # Handle empty payload immediately - set entity to unknown
-            if not payload_str.strip():
-                self._attr_is_on = None
-                self.schedule_update_ha_state()
-                return
-
-            if self._value_template:
-                # Use template to process the payload
-                try:
-                    processed_value = (
-                        self._value_template.async_render_with_possible_json_value(
-                            payload_str
-                        )
-                    )
-                except Exception:
-                    _LOGGER.warning(
-                        "Template error for binary sensor %s",
-                        self.unique_id,
-                        exc_info=True,
-                    )
-                    return
-            else:
-                # No template, use payload directly
-                processed_value = payload_str
-
-            # Handle disconnected/invalid states first (including template result of None)
-            if processed_value is None:
-                self._attr_is_on = None
-            elif processed_value in (
-                "unknown",
-                "None",
-                "null",
-                "",
-                "unavailable",
-                "disconnected",
-            ):
-                self._attr_is_on = None
-            elif isinstance(processed_value, str) and processed_value.lower() in (
-                "none",
-                "null",
-                "n/a",
-                "na",
-                "unavailable",
-            ):
-                self._attr_is_on = None
-            # Convert to boolean based on payload_on/payload_off
-            elif processed_value == self._payload_on:
-                self._attr_is_on = True
-            elif processed_value == self._payload_off:
-                self._attr_is_on = False
-            else:
-                # Try to parse as JSON boolean or numeric
-                try:
-                    json_value = json.loads(processed_value)
-                    if isinstance(json_value, bool):
-                        self._attr_is_on = json_value
-                    elif isinstance(json_value, (int, float)):
-                        self._attr_is_on = bool(json_value)
-                    else:
-                        _LOGGER.debug(
-                            "Binary sensor %s received unexpected payload: %s",
-                            self.unique_id,
-                            processed_value,
-                        )
-                        return
-                except json.JSONDecodeError:
-                    _LOGGER.debug(
-                        "Binary sensor %s received unexpected payload: %s",
-                        self.unique_id,
-                        processed_value,
-                    )
-                    return
-
-            # Schedule state update
-            self.schedule_update_ha_state()
-            _LOGGER.debug(
-                "Binary sensor %s updated to: %s (from payload: %s)",
-                self.unique_id,
-                self._attr_is_on,
-                payload,
-            )
-        except Exception:
-            _LOGGER.exception(
-                "Error handling MQTT message for binary sensor %s",
-                self.unique_id,
-            )
+        _LOGGER.debug(
+            "Binary sensor %s updated to: %s (from payload: %s)",
+            self.unique_id,
+            self._attr_is_on,
+            payload,
+        )
+        self.schedule_update_ha_state()
