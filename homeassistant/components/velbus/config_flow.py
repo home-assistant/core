@@ -220,7 +220,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_vlp(user_input)
+        return await self.async_step_vlp()
 
 
 def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:

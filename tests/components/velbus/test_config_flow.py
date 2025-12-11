@@ -151,6 +151,9 @@ async def test_user_network_succes(
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    data = result.get("data")
+    assert data
+    assert data[CONF_PORT] == expected
 
 
 @pytest.mark.usefixtures("controller")
