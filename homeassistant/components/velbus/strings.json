@@ -51,7 +51,7 @@
         "data_description": {
           "vlp_file": "Select the VLP file from your filesystem."
         },
-        "description": "You can optionally provide a VLP file to improve module detection. The VLP file is the config file from VelbusLink that contains all module information. If you do not provide it now, you can always add it later in the integration options. Without this file, Home Assistant will try to detect the modules automatically, but this can take longer and some modules might not be detected correctly.",
+        "description": "You can optionally provide a VLP file to improve module detection. The VLP file is the config file from VelbusLink that contains all module information. If you do not provide it now, you can always add it later in the integration options. Without this file, Home Assistant will try to detect the modules automatically, but this can take longer time and some modules might not be detected correctly.",
         "title": "Optional VLP file"
       }
     }

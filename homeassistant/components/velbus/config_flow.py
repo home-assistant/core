@@ -195,7 +195,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     old_entry,
                     data={
                         CONF_VLP_FILE: self._vlp_file,
-                        CONF_PORT: old_entry.data.get(CONF_PORT, None),
+                        CONF_PORT: old_entry.data.get(CONF_PORT),
                     },
                 )
             if not self._errors:

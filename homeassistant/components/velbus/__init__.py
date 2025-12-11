@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     controller = Velbus(
         dsn=entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
-        vlp_file=entry.data.get(CONF_VLP_FILE, None),
+        vlp_file=entry.data.get(CONF_VLP_FILE),
     )
     try:
         await controller.connect()
