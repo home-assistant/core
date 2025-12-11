@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -60,6 +61,10 @@ from tests.common import (
         },
         None,
     ],
+)
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.CLIMATE]],
 )
 async def test_climate_entities(
     hass: HomeAssistant,
