@@ -216,7 +216,7 @@ async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("controller")
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_user_usb_succes(hass: HomeAssistant) -> None:
+async def test_user_usb_success(hass: HomeAssistant) -> None:
     """Test user usb step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -241,6 +241,10 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Velbus USB"
+    data = result.get("data")
+    assert data
+    assert data[CONF_PORT] == PORT_SERIAL
 
 
 @pytest.mark.usefixtures("controller")
@@ -295,7 +299,7 @@ async def test_vlp_step_no_modules(
 
 
 @pytest.mark.usefixtures("controller")
-async def test_vlp_step_succes(
+async def test_vlp_step_success(
     hass: HomeAssistant,
     mock_process_uploaded_file: MagicMock,
 ) -> None:
