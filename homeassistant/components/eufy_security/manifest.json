@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/eufy_security",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "platinum",
   "requirements": []
 }
