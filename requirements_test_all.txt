@@ -1497,7 +1497,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.10.0
+plugwise==1.11.0
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -2156,10 +2156,10 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.10.10
+python-roborock==3.12.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.45
+python-smarttub==0.0.46
 
 # homeassistant.components.snoo
 python-snoo==0.8.3
