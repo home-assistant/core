@@ -344,7 +344,7 @@ async def test_websocket_stream_no_source(
     assert not msg["success"]
 
 
-@pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_create_stream")
+@pytest.mark.usefixtures("mock_camera", "mock_stream")
 async def test_websocket_camera_stream(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
@@ -498,7 +498,7 @@ async def test_play_stream_service_no_source(hass: HomeAssistant) -> None:
         )
 
 
-@pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_create_stream")
+@pytest.mark.usefixtures("mock_camera", "mock_stream")
 async def test_handle_play_stream_service(
     hass: HomeAssistant, mock_create_stream: Mock
 ) -> None:
