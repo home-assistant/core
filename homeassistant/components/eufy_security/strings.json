@@ -48,13 +48,6 @@
       }
     }
   },
-  "entity": {
-    "camera": {
-      "camera": {
-        "name": "[%key:component::camera::title%]"
-      }
-    }
-  },
   "exceptions": {
     "api_error": {
       "message": "Error communicating with Eufy Security API"

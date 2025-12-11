@@ -22,6 +22,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import Camera, EufySecurityError
+from .const import (
+    ATTR_HARDWARE_VERSION,
+    ATTR_IP_ADDRESS,
+    ATTR_SERIAL_NUMBER,
+    ATTR_SOFTWARE_VERSION,
+    ATTR_STATION_SERIAL,
+)
 from .coordinator import EufySecurityConfigEntry, EufySecurityCoordinator
 from .entity import EufySecurityEntity, exception_wrap
 
@@ -41,7 +48,6 @@ class EufySecurityCameraEntityDescription(CameraEntityDescription):
 
 CAMERA_DESCRIPTION = EufySecurityCameraEntityDescription(
     key="camera",
-    translation_key="camera",
 )
 
 
@@ -76,6 +82,7 @@ class EufySecurityCamera(EufySecurityEntity, CameraEntity):
         CameraEntity.__init__(self)
         self.entity_description = description
         self._attr_unique_id = f"{camera.serial}-{description.key}"
+        self._attr_name = None  # Use device name only
         self._attr_supported_features = CameraEntityFeature.STREAM
         self._stream_url: str | None = None
         self._last_image: bytes | None = None
@@ -93,14 +100,14 @@ class EufySecurityCamera(EufySecurityEntity, CameraEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
-            "serial_number": self._camera.serial,
-            "station_serial": self._camera.station_serial,
-            "hardware_version": self._camera.hardware_version,
-            "software_version": self._camera.software_version,
+        attrs: dict[str, Any] = {
+            ATTR_SERIAL_NUMBER: self._camera.serial,
+            ATTR_STATION_SERIAL: self._camera.station_serial,
+            ATTR_HARDWARE_VERSION: self._camera.hardware_version,
+            ATTR_SOFTWARE_VERSION: self._camera.software_version,
         }
         if self._camera.ip_address:
-            attrs["ip_address"] = self._camera.ip_address
+            attrs[ATTR_IP_ADDRESS] = self._camera.ip_address
         return attrs
 
     async def async_camera_image(
@@ -228,15 +235,21 @@ class EufySecurityCamera(EufySecurityEntity, CameraEntity):
 
     @exception_wrap
     async def stream_source(self) -> str | None:
-        """Return the source of the stream."""
+        """Return the source of the stream.
+
+        Prefers local RTSP streaming when credentials are configured.
+        Falls back to cloud streaming if local RTSP is not available.
+        """
+        # Always prefer local RTSP if credentials are configured
+        # Generate fresh each time since IP could have changed
+        local_rtsp = self._get_rtsp_url()
+        if local_rtsp:
+            return local_rtsp
+
+        # Fall back to cloud streaming (cached to avoid repeated API calls)
         if self._stream_url is None:
-            _LOGGER.debug("Starting stream for camera %s", self._camera.name)
+            _LOGGER.debug("Starting cloud stream for camera %s", self._camera.name)
             self._stream_url = await self._camera.async_start_stream()
-            _LOGGER.debug(
-                "Stream URL for camera %s: %s",
-                self._camera.name,
-                self._stream_url[:50] if self._stream_url else "None",
-            )
         return self._stream_url
 
     async def async_will_remove_from_hass(self) -> None:
