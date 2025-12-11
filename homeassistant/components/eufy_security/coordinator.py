@@ -54,6 +54,7 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.api = api
+        self._unavailable_logged = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
@@ -71,10 +72,21 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="invalid_auth",
             ) from err
         except EufySecurityError as err:
+            if not self._unavailable_logged:
+                _LOGGER.warning(
+                    "Eufy Security API is unavailable: %s",
+                    err,
+                )
+                self._unavailable_logged = True
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
+
+        # Log recovery if we were previously unavailable
+        if self._unavailable_logged:
+            _LOGGER.info("Eufy Security API connection restored")
+            self._unavailable_logged = False
 
         return {
             "cameras": {camera.serial: camera for camera in self.api.cameras.values()},
