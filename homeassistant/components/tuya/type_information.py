@@ -53,6 +53,14 @@ class TypeInformation[T]:
         """
         return raw_value
 
+    def process_value_back(self, value: T) -> Any:
+        """Convert display value back to a raw device value.
+
+        Base implementation does no validation, subclasses may override to provide
+        specific validation.
+        """
+        return value
+
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
@@ -144,6 +152,14 @@ class BooleanTypeInformation(TypeInformation[bool]):
             return None
         return raw_value
 
+    def process_value_back(self, value: bool) -> Any | None:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in (True, False):
+            return value
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        raise ValueError(f"Invalid boolean value `{value}`")
+
 
 @dataclass(kw_only=True)
 class EnumTypeInformation(TypeInformation[str]):
@@ -175,6 +191,14 @@ class EnumTypeInformation(TypeInformation[str]):
                 )
             return None
         return raw_value
+
+    def process_value_back(self, value: str) -> Any | None:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in self.range:
+            return value
+        # Guarded by select option validation
+        # Safety net in case of future changes
+        raise ValueError(f"Enum value `{value}` out of range: {self.range}")
 
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
@@ -266,7 +290,19 @@ class IntegerTypeInformation(TypeInformation[float]):
                 )
 
             return None
-        return raw_value / (10**self.scale)
+        return self.scale_value(raw_value)
+
+    def process_value_back(self, value: float) -> int:
+        """Convert a Home Assistant value back to a raw device value."""
+        new_value = self.scale_value_back(value)
+        if self.min <= new_value <= self.max:
+            return new_value
+        # Guarded by number validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Value `{new_value}` (converted from `{value}`) out of range:"
+            f" ({self.min}-{self.max})"
+        )
 
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
