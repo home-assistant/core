@@ -12,9 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to events.
