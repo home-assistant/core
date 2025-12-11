@@ -290,11 +290,11 @@ class IntegerTypeInformation(TypeInformation[float]):
                 )
 
             return None
-        return self.scale_value(raw_value)
+        return raw_value / (10**self.scale)
 
     def process_value_back(self, value: float) -> int:
         """Convert a Home Assistant value back to a raw device value."""
-        new_value = self.scale_value_back(value)
+        new_value = round(value * (10**self.scale))
         if self.min <= new_value <= self.max:
             return new_value
         # Guarded by number validation
