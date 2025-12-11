@@ -6,14 +6,12 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from eufy_security import API
-from eufy_security.errors import EufySecurityError, InvalidCredentialsError
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .api import EufySecurityAPI, EufySecurityError, InvalidCredentialsError
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class EufySecurityData:
     """Class to support type hinting of Eufy Security data collection."""
 
-    api: API
+    api: EufySecurityAPI
     devices: dict[str, Any]
     coordinator: EufySecurityCoordinator
 
@@ -40,7 +38,7 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: EufySecurityConfigEntry,
-        api: API,
+        api: EufySecurityAPI,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
