@@ -48,7 +48,7 @@ async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
-    mock_config_entry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_nsapi: AsyncMock,
 ) -> None:
