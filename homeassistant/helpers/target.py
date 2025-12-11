@@ -8,8 +8,6 @@ import logging
 from logging import Logger
 from typing import Any, TypeGuard
 
-from .deprecation import deprecated_class
-
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -36,6 +34,7 @@ from . import (
     group,
     label_registry as lr,
 )
+from .deprecation import deprecated_class
 from .event import async_track_state_change_event
 from .typing import ConfigType
 
