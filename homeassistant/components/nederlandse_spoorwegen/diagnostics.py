@@ -81,11 +81,13 @@ async def async_get_device_diagnostics(
             "destination": coordinator.destination,
             "via": coordinator.via,
             "departure_time": coordinator.departure_time,
-        },
+        }
+        if coordinator
+        else None,
     }
 
     # Add detailed trip data if available
-    if coordinator.data:
+    if coordinator and coordinator.data:
         device_data["trip_details"] = {
             "trips_count": len(coordinator.data.trips),
             "has_first_trip": coordinator.data.first_trip is not None,
