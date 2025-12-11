@@ -2,6 +2,7 @@
 
 import base64
 from datetime import datetime, timedelta
+import json as json_module
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
@@ -16,10 +17,12 @@ from homeassistant.components.eufy_security.api import (
     EufySecurityError,
     InvalidCaptchaError,
     InvalidCredentialsError,
+    RequestError,
     Station,
     _decrypt_api_data,
     _encrypt_api_data,
     _raise_on_error,
+    async_login,
 )
 
 
@@ -526,3 +529,1224 @@ class TestEufySecurityAPI:
 
         with pytest.raises(CannotConnectError, match="Connection error"):
             await api._async_get_api_base()
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_success(self, session_mock: MagicMock) -> None:
+        """Test successful API request."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": "test"})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        result = await api.async_request("post", "v1/test/endpoint")
+
+        assert result == {"code": 0, "data": "test"}
+        session_mock.request.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_non_json_response(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test handling of non-JSON response."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "text/html"}
+        mock_response.text = AsyncMock(return_value="<html>Blocked</html>")
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+
+        with pytest.raises(CannotConnectError, match="Unexpected response type"):
+            await api.async_request("post", "v1/test/endpoint")
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_empty_response(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test handling of empty response."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value=None)
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+
+        with pytest.raises(RequestError, match="No response"):
+            await api.async_request("post", "v1/test/endpoint")
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_401_retry(self, session_mock: MagicMock) -> None:
+        """Test 401 response triggers re-authentication."""
+        # First call returns 401
+        error_401 = ClientError("401 Unauthorized")
+
+        # Second call after re-auth succeeds
+        success_response = AsyncMock()
+        success_response.status = 200
+        success_response.headers = {"Content-Type": "application/json"}
+        success_response.json = AsyncMock(return_value={"code": 0, "data": "success"})
+        success_response.raise_for_status = MagicMock()
+
+        call_count = 0
+
+        def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise error_401
+            return AsyncMock(__aenter__=AsyncMock(return_value=success_response))
+
+        session_mock.request = mock_request
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        # Mock async_authenticate to avoid actual auth
+        api.async_authenticate = AsyncMock()
+
+        result = await api.async_request("post", "v1/test/endpoint")
+
+        assert result == {"code": 0, "data": "success"}
+        api.async_authenticate.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_connection_error(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test handling of connection error."""
+        session_mock.request = MagicMock(side_effect=ClientError("Connection refused"))
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+
+        with pytest.raises(CannotConnectError, match="Request error"):
+            await api.async_request("post", "v1/test/endpoint")
+
+    @pytest.mark.asyncio
+    async def test_api_async_update_device_info(self, session_mock: MagicMock) -> None:
+        """Test updating device info."""
+        # Mock response for get_devs_list
+        devices_response = {
+            "code": 0,
+            "data": [
+                {
+                    "device_sn": "T1234567890",
+                    "device_name": "Front Door",
+                    "device_model": "eufyCam 2",
+                }
+            ],
+        }
+        # Mock response for get_hub_list
+        hubs_response = {
+            "code": 0,
+            "data": [
+                {
+                    "station_sn": "T0987654321",
+                    "station_name": "Home Base",
+                    "station_model": "HomeBase 2",
+                }
+            ],
+        }
+        # Mock response for events
+        events_response = {"code": 0, "data": []}
+
+        call_count = 0
+
+        def mock_request_responses(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_resp.headers = {"Content-Type": "application/json"}
+            mock_resp.raise_for_status = MagicMock()
+            if call_count == 1:
+                mock_resp.json = AsyncMock(return_value=devices_response)
+            elif call_count == 2:
+                mock_resp.json = AsyncMock(return_value=hubs_response)
+            else:
+                mock_resp.json = AsyncMock(return_value=events_response)
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_resp))
+
+        session_mock.request = mock_request_responses
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        await api.async_update_device_info()
+
+        assert "T1234567890" in api.cameras
+        assert api.cameras["T1234567890"].name == "Front Door"
+        assert "T0987654321" in api.stations
+        assert api.stations["T0987654321"].name == "Home Base"
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events(self, session_mock: MagicMock) -> None:
+        """Test getting latest events."""
+        events_response = {
+            "code": 0,
+            "data": [
+                {
+                    "device_sn": "T1234567890",
+                    "pic_url": "https://example.com/thumb.jpg",
+                    "event_time": 1234567890,
+                },
+                {
+                    "device_sn": "T9999999999",
+                    "pic_url": "https://example.com/thumb2.jpg",
+                    "event_time": 1234567891,
+                },
+            ],
+        }
+
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value=events_response)
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        result = await api.async_get_latest_events()
+
+        assert "T1234567890" in result
+        assert result["T1234567890"]["pic_url"] == "https://example.com/thumb.jpg"
+        assert "T9999999999" in result
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events_failure(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test handling of events API failure."""
+        session_mock.request = MagicMock(side_effect=EufySecurityError("API error"))
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+
+        result = await api.async_get_latest_events()
+
+        # Should return empty dict on failure
+        assert result == {}
+
+    def test_api_decrypt_response_no_key(self, session_mock: MagicMock) -> None:
+        """Test _decrypt_response_data raises error when no key available."""
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._response_shared_secret = None
+
+        with pytest.raises(EufySecurityError, match="No decryption key"):
+            api._decrypt_response_data("encrypted_data")
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_success(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test successful authentication."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": {
+                    "auth_token": "test-token-123",
+                    "token_expires_at": 9999999999,
+                    "domain": "mysecurity.eufylife.com",
+                    "server_secret_info": {
+                        "public_key": SERVER_PUBLIC_KEY.hex(),
+                    },
+                },
+            }
+        )
+
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "mysecurity.eufylife.com"}}
+        )
+
+        call_count = 0
+
+        def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+
+        session_mock.get = mock_request
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        await api.async_authenticate()
+
+        assert api.token == "test-token-123"
+        assert api._api_base == "https://mysecurity.eufylife.com"
+        assert api._response_shared_secret is not None
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_captcha_required(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test authentication when CAPTCHA is required."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(
+            return_value={
+                "code": 100032,
+                "data": {
+                    "captcha_id": "captcha123",
+                    "item": "data:image/png;base64,abc",
+                },
+            }
+        )
+
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        with pytest.raises(CaptchaRequiredError) as exc_info:
+            await api.async_authenticate()
+
+        assert exc_info.value.captcha_id == "captcha123"
+        assert exc_info.value.captcha_image == "data:image/png;base64,abc"
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_invalid_credentials(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test authentication with invalid credentials."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(
+            return_value={
+                "code": 26006,
+                "msg": "Invalid credentials",
+            }
+        )
+
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        with pytest.raises(InvalidCredentialsError, match="Invalid credentials"):
+            await api.async_authenticate()
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_no_token(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test authentication when no token received."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": {},  # No auth_token
+            }
+        )
+
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        with pytest.raises(InvalidCredentialsError, match="No auth token"):
+            await api.async_authenticate()
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_connection_error(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test authentication with connection error."""
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(side_effect=ClientError("Connection failed"))
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        with pytest.raises(CannotConnectError, match="Connection error"):
+            await api.async_authenticate()
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_non_json_response(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test authentication with non-JSON response."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "text/html"}
+        mock_response.text = AsyncMock(return_value="<html>Blocked</html>")
+
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        with pytest.raises(CannotConnectError, match="Unexpected response type"):
+            await api.async_authenticate()
+
+    @pytest.mark.asyncio
+    async def test_api_async_authenticate_with_captcha(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test authentication with CAPTCHA code."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": {
+                    "auth_token": "test-token-456",
+                    "token_expires_at": 9999999999,
+                },
+            }
+        )
+
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+
+        await api.async_authenticate(captcha_id="captcha123", captcha_code="ABC123")
+
+        assert api.token == "test-token-456"
+        # Verify the payload included captcha data
+        call_args = session_mock.post.call_args
+        assert call_args is not None
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_token_expired_refresh(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test that expired token triggers re-authentication."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": "success"})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "old-token"
+        # Set expiration to the past
+        api._token_expiration = datetime(2020, 1, 1)
+
+        # Mock async_authenticate
+        api.async_authenticate = AsyncMock()
+
+        await api.async_request("post", "v1/test/endpoint")
+
+        # Should have called authenticate due to expired token
+        api.async_authenticate.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events_encrypted_response(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test getting latest events with encrypted response."""
+        # Create a mock encrypted response
+        key = b"0123456789abcdef0123456789abcdef"
+        events_data = [
+            {"device_sn": "T1234567890", "pic_url": "https://example.com/thumb.jpg"}
+        ]
+        encrypted = _encrypt_api_data(json_module.dumps(events_data), key)
+
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": encrypted})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        api._response_shared_secret = key
+
+        result = await api.async_get_latest_events()
+
+        assert "T1234567890" in result
+        assert result["T1234567890"]["pic_url"] == "https://example.com/thumb.jpg"
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events_dict_response(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test getting latest events with dict response containing data key."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": {
+                    "data": [
+                        {
+                            "device_sn": "T1234567890",
+                            "pic_url": "https://example.com/thumb.jpg",
+                        }
+                    ]
+                },
+            }
+        )
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        result = await api.async_get_latest_events()
+
+        assert "T1234567890" in result
+
+    @pytest.mark.asyncio
+    async def test_api_async_update_device_info_encrypted_response(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test updating device info with encrypted response."""
+        # Create mock encrypted responses
+        key = b"0123456789abcdef0123456789abcdef"
+        devices_data = [
+            {
+                "device_sn": "T1234567890",
+                "device_name": "Front Door",
+                "device_model": "eufyCam 2",
+            }
+        ]
+        stations_data = [
+            {
+                "station_sn": "T0987654321",
+                "station_name": "Home Base",
+                "station_model": "HomeBase 2",
+            }
+        ]
+        encrypted_devices = _encrypt_api_data(json_module.dumps(devices_data), key)
+        encrypted_stations = _encrypt_api_data(json_module.dumps(stations_data), key)
+
+        call_count = 0
+
+        def mock_request_responses(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_resp.headers = {"Content-Type": "application/json"}
+            mock_resp.raise_for_status = MagicMock()
+            if call_count == 1:
+                # Devices response (encrypted)
+                mock_resp.json = AsyncMock(
+                    return_value={"code": 0, "data": encrypted_devices}
+                )
+            elif call_count == 2:
+                # Stations response (encrypted)
+                mock_resp.json = AsyncMock(
+                    return_value={"code": 0, "data": encrypted_stations}
+                )
+            else:
+                # Events response
+                mock_resp.json = AsyncMock(return_value={"code": 0, "data": []})
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_resp))
+
+        session_mock.request = mock_request_responses
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        api._response_shared_secret = key
+
+        await api.async_update_device_info()
+
+        assert "T1234567890" in api.cameras
+        assert api.cameras["T1234567890"].name == "Front Door"
+        assert "T0987654321" in api.stations
+        assert api.stations["T0987654321"].name == "Home Base"
+
+    @pytest.mark.asyncio
+    async def test_api_async_update_device_info_stations_error(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test updating device info when stations API fails."""
+        call_count = 0
+
+        def mock_request_responses(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 2:
+                # Stations request fails
+                raise EufySecurityError("Stations API failed")
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_resp.headers = {"Content-Type": "application/json"}
+            mock_resp.raise_for_status = MagicMock()
+            if call_count == 1:
+                mock_resp.json = AsyncMock(
+                    return_value={
+                        "code": 0,
+                        "data": [
+                            {
+                                "device_sn": "T1234567890",
+                                "device_name": "Front Door",
+                                "device_model": "eufyCam 2",
+                            }
+                        ],
+                    }
+                )
+            else:
+                mock_resp.json = AsyncMock(return_value={"code": 0, "data": []})
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_resp))
+
+        session_mock.request = mock_request_responses
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        # Should not raise, just skip stations
+        await api.async_update_device_info()
+
+        assert "T1234567890" in api.cameras
+        assert len(api.stations) == 0
+
+    @pytest.mark.asyncio
+    async def test_api_async_update_existing_camera(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test updating existing camera info."""
+        devices_response = {
+            "code": 0,
+            "data": [
+                {
+                    "device_sn": "T1234567890",
+                    "device_name": "Updated Name",
+                    "device_model": "eufyCam 2",
+                }
+            ],
+        }
+        hubs_response = {"code": 0, "data": []}
+        events_response = {"code": 0, "data": []}
+
+        call_count = 0
+
+        def mock_request_responses(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_resp.headers = {"Content-Type": "application/json"}
+            mock_resp.raise_for_status = MagicMock()
+            if call_count == 1:
+                mock_resp.json = AsyncMock(return_value=devices_response)
+            elif call_count == 2:
+                mock_resp.json = AsyncMock(return_value=hubs_response)
+            else:
+                mock_resp.json = AsyncMock(return_value=events_response)
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_resp))
+
+        session_mock.request = mock_request_responses
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        # Pre-create camera
+        existing_camera = Camera(
+            _api=api,
+            camera_info={
+                "device_sn": "T1234567890",
+                "device_name": "Old Name",
+                "device_model": "eufyCam 2",
+            },
+        )
+        api.cameras["T1234567890"] = existing_camera
+
+        await api.async_update_device_info()
+
+        # Camera should be updated, not replaced
+        assert api.cameras["T1234567890"] is existing_camera
+        assert api.cameras["T1234567890"].name == "Updated Name"
+
+
+class TestAsyncLogin:
+    """Tests for the async_login function."""
+
+    @pytest.fixture
+    def session_mock(self) -> MagicMock:
+        """Create a mock aiohttp session."""
+        return MagicMock()
+
+    @pytest.mark.asyncio
+    async def test_async_login_success(self, session_mock: MagicMock) -> None:
+        """Test successful login creates and returns API instance."""
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        # Mock login response
+        login_response = AsyncMock()
+        login_response.status = 200
+        login_response.headers = {"Content-Type": "application/json"}
+        login_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": {
+                    "auth_token": "test-token",
+                    "token_expires_at": 9999999999,
+                    "server_secret_info": {"public_key": SERVER_PUBLIC_KEY.hex()},
+                },
+            }
+        )
+
+        # Mock device list response
+        devices_response = AsyncMock()
+        devices_response.status = 200
+        devices_response.headers = {"Content-Type": "application/json"}
+        devices_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": [
+                    {
+                        "device_sn": "T1234567890",
+                        "device_name": "Front Door",
+                        "device_model": "eufyCam 2",
+                    }
+                ],
+            }
+        )
+        devices_response.raise_for_status = MagicMock()
+
+        # Mock stations response
+        stations_response = AsyncMock()
+        stations_response.status = 200
+        stations_response.headers = {"Content-Type": "application/json"}
+        stations_response.json = AsyncMock(return_value={"code": 0, "data": []})
+        stations_response.raise_for_status = MagicMock()
+
+        # Mock events response
+        events_response = AsyncMock()
+        events_response.status = 200
+        events_response.headers = {"Content-Type": "application/json"}
+        events_response.json = AsyncMock(return_value={"code": 0, "data": []})
+        events_response.raise_for_status = MagicMock()
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=login_response))
+        )
+
+        call_count = 0
+
+        def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return AsyncMock(__aenter__=AsyncMock(return_value=devices_response))
+            if call_count == 2:
+                return AsyncMock(__aenter__=AsyncMock(return_value=stations_response))
+            return AsyncMock(__aenter__=AsyncMock(return_value=events_response))
+
+        session_mock.request = mock_request
+
+        api = await async_login(
+            email="test@example.com",
+            password="secret",
+            session=session_mock,
+            country="US",
+        )
+
+        assert api is not None
+        assert api.token == "test-token"
+        assert "T1234567890" in api.cameras
+
+    @pytest.mark.asyncio
+    async def test_async_login_captcha_required(self, session_mock: MagicMock) -> None:
+        """Test login raises CaptchaRequiredError with API instance."""
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        # Mock login response with CAPTCHA required
+        login_response = AsyncMock()
+        login_response.status = 200
+        login_response.headers = {"Content-Type": "application/json"}
+        login_response.json = AsyncMock(
+            return_value={
+                "code": 100032,
+                "data": {
+                    "captcha_id": "captcha123",
+                    "item": "data:image/png;base64,abc",
+                },
+            }
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=login_response))
+        )
+
+        with pytest.raises(CaptchaRequiredError) as exc_info:
+            await async_login(
+                email="test@example.com",
+                password="secret",
+                session=session_mock,
+            )
+
+        # The error should include the API instance for retry
+        assert exc_info.value.api is not None
+        assert exc_info.value.captcha_id == "captcha123"
+        assert exc_info.value.captcha_image == "data:image/png;base64,abc"
+
+    @pytest.mark.asyncio
+    async def test_async_login_reuse_api_instance(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test login with existing API instance (CAPTCHA retry)."""
+        # Create an existing API instance
+        existing_api = EufySecurityAPI(session_mock, "test@example.com", "secret", "US")
+        existing_api._api_base = "https://security.eufylife.com"
+
+        # Mock login response (success with CAPTCHA)
+        login_response = AsyncMock()
+        login_response.status = 200
+        login_response.headers = {"Content-Type": "application/json"}
+        login_response.json = AsyncMock(
+            return_value={
+                "code": 0,
+                "data": {
+                    "auth_token": "test-token-after-captcha",
+                    "token_expires_at": 9999999999,
+                    "server_secret_info": {"public_key": SERVER_PUBLIC_KEY.hex()},
+                },
+            }
+        )
+
+        # Mock device list response
+        devices_response = AsyncMock()
+        devices_response.status = 200
+        devices_response.headers = {"Content-Type": "application/json"}
+        devices_response.json = AsyncMock(return_value={"code": 0, "data": []})
+        devices_response.raise_for_status = MagicMock()
+
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=login_response))
+        )
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=devices_response))
+        )
+
+        api = await async_login(
+            email="test@example.com",
+            password="secret",
+            session=session_mock,
+            captcha_id="captcha123",
+            captcha_code="ABC123",
+            api=existing_api,
+        )
+
+        # Should return the same API instance
+        assert api is existing_api
+        assert api.token == "test-token-after-captcha"
+
+    @pytest.mark.asyncio
+    async def test_async_login_invalid_credentials(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test login with invalid credentials."""
+        # Mock domain lookup
+        domain_response = AsyncMock()
+        domain_response.status = 200
+        domain_response.json = AsyncMock(
+            return_value={"code": 0, "data": {"domain": "security.eufylife.com"}}
+        )
+
+        # Mock login response
+        login_response = AsyncMock()
+        login_response.status = 200
+        login_response.headers = {"Content-Type": "application/json"}
+        login_response.json = AsyncMock(
+            return_value={
+                "code": 26006,
+                "msg": "Invalid credentials",
+            }
+        )
+
+        session_mock.get = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=domain_response))
+        )
+        session_mock.post = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=login_response))
+        )
+
+        with pytest.raises(InvalidCredentialsError, match="Invalid credentials"):
+            await async_login(
+                email="test@example.com",
+                password="wrong",
+                session=session_mock,
+            )
+
+
+class TestEdgeCases:
+    """Tests for edge cases to improve coverage."""
+
+    @pytest.fixture
+    def session_mock(self) -> MagicMock:
+        """Create a mock aiohttp session."""
+        return MagicMock()
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events_encrypted_null(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test getting latest events when decrypted response is null."""
+        key = b"0123456789abcdef0123456789abcdef"
+        # Encrypt null value
+        encrypted = _encrypt_api_data("null", key)
+
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": encrypted})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        api._response_shared_secret = key
+
+        result = await api.async_get_latest_events()
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events_encrypted_dict_with_data(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test getting latest events when decrypted response is dict with data key."""
+        key = b"0123456789abcdef0123456789abcdef"
+        # Encrypt dict with data key
+        events_data = {
+            "data": [
+                {"device_sn": "T1234567890", "pic_url": "https://example.com/thumb.jpg"}
+            ]
+        }
+        encrypted = _encrypt_api_data(json_module.dumps(events_data), key)
+
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": encrypted})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        api._response_shared_secret = key
+
+        result = await api.async_get_latest_events()
+        assert "T1234567890" in result
+
+    @pytest.mark.asyncio
+    async def test_api_async_get_latest_events_encrypted_invalid_type(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test getting latest events when decrypted response is unexpected type."""
+        key = b"0123456789abcdef0123456789abcdef"
+        # Encrypt just a string (not list/dict/null)
+        encrypted = _encrypt_api_data('"just a string"', key)
+
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": encrypted})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        api._response_shared_secret = key
+
+        result = await api.async_get_latest_events()
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_api_async_update_device_info_skip_device_without_sn(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test that devices without device_sn are skipped."""
+        devices_response = {
+            "code": 0,
+            "data": [
+                {
+                    # No device_sn
+                    "device_name": "Bad Device",
+                    "device_model": "Unknown",
+                },
+                {
+                    "device_sn": "T1234567890",
+                    "device_name": "Good Device",
+                    "device_model": "eufyCam 2",
+                },
+            ],
+        }
+        hubs_response = {"code": 0, "data": []}
+        events_response = {"code": 0, "data": []}
+
+        call_count = 0
+
+        def mock_request_responses(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_resp.headers = {"Content-Type": "application/json"}
+            mock_resp.raise_for_status = MagicMock()
+            if call_count == 1:
+                mock_resp.json = AsyncMock(return_value=devices_response)
+            elif call_count == 2:
+                mock_resp.json = AsyncMock(return_value=hubs_response)
+            else:
+                mock_resp.json = AsyncMock(return_value=events_response)
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_resp))
+
+        session_mock.request = mock_request_responses
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        await api.async_update_device_info()
+
+        # Only the device with serial should be added
+        assert len(api.cameras) == 1
+        assert "T1234567890" in api.cameras
+
+    @pytest.mark.asyncio
+    async def test_api_async_update_device_info_updates_camera_events(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test that camera events are updated from latest events."""
+        devices_response = {
+            "code": 0,
+            "data": [
+                {
+                    "device_sn": "T1234567890",
+                    "device_name": "Front Door",
+                    "device_model": "eufyCam 2",
+                }
+            ],
+        }
+        hubs_response = {"code": 0, "data": []}
+        events_response = {
+            "code": 0,
+            "data": [
+                {
+                    "device_sn": "T1234567890",
+                    "pic_url": "https://example.com/event_thumb.jpg",
+                }
+            ],
+        }
+
+        call_count = 0
+
+        def mock_request_responses(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_resp.headers = {"Content-Type": "application/json"}
+            mock_resp.raise_for_status = MagicMock()
+            if call_count == 1:
+                mock_resp.json = AsyncMock(return_value=devices_response)
+            elif call_count == 2:
+                mock_resp.json = AsyncMock(return_value=hubs_response)
+            else:
+                mock_resp.json = AsyncMock(return_value=events_response)
+            return AsyncMock(__aenter__=AsyncMock(return_value=mock_resp))
+
+        session_mock.request = mock_request_responses
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        await api.async_update_device_info()
+
+        # Camera should have event thumbnail
+        assert api.cameras["T1234567890"].last_camera_image_url == (
+            "https://example.com/event_thumb.jpg"
+        )
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_with_custom_headers(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test API request with custom headers."""
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json = AsyncMock(return_value={"code": 0, "data": "success"})
+        mock_response.raise_for_status = MagicMock()
+
+        session_mock.request = MagicMock(
+            return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+        )
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+
+        await api.async_request(
+            "post", "v1/test/endpoint", headers={"Custom-Header": "test-value"}
+        )
+
+        # Verify custom header was included
+        call_args = session_mock.request.call_args
+        assert "Custom-Header" in call_args.kwargs["headers"]
+        assert call_args.kwargs["headers"]["Custom-Header"] == "test-value"
+
+    @pytest.mark.asyncio
+    async def test_api_async_request_401_retry_twice_fails(
+        self, session_mock: MagicMock
+    ) -> None:
+        """Test 401 response after retry raises InvalidCredentialsError."""
+        # Always return 401
+        session_mock.request = MagicMock(side_effect=ClientError("401 Unauthorized"))
+
+        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api._api_base = "https://api.eufy.com"
+        api._token = "test-token"
+        api._retry_on_401 = True  # Already retried once
+        # Mock async_authenticate to avoid actual auth
+        api.async_authenticate = AsyncMock()
+
+        with pytest.raises(InvalidCredentialsError, match="Authentication failed"):
+            await api.async_request("post", "v1/test/endpoint")
