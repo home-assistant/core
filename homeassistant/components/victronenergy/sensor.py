@@ -6,8 +6,6 @@ import json
 import logging
 from typing import Any
 
-from paho.mqtt.client import MQTTMessage
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -58,25 +56,19 @@ class MQTTDiscoveredSensor(VictronBaseEntity, SensorEntity):
         super().update_config(config)
         self._parse_config(config)
 
-    def handle_mqtt_message(self, msg: MQTTMessage) -> None:
+    def handle_mqtt_message(self, topic: str, payload: bytes) -> None:
         """Handle incoming MQTT message for this sensor."""
-        payload = msg.payload.decode()
-        _LOGGER.debug(
-            "Received MQTT message for %s (id: %s): %s",
-            self._attr_name,
-            id(self),
-            payload,
-        )
+        payload_str = payload.decode()
 
         # Handle empty payload immediately - set entity to unknown
-        if not payload.strip():
+        if not payload_str.strip():
             self._attr_native_value = None
             self.schedule_update_ha_state()
             return
 
         value = None
         try:
-            json_payload = json.loads(payload)
+            json_payload = json.loads(payload_str)
         except json.JSONDecodeError:
             _LOGGER.debug("Failed to decode sensor message JSON", exc_info=True)
             json_payload = None
@@ -84,15 +76,15 @@ class MQTTDiscoveredSensor(VictronBaseEntity, SensorEntity):
         if self._value_template:
             try:
                 value = self._value_template.async_render_with_possible_json_value(
-                    payload, None
+                    payload_str, None
                 )
             except (TypeError, ValueError):
                 _LOGGER.debug("Failed to render value_template", exc_info=True)
-                value = payload
+                value = payload_str
         elif json_payload is not None and "value" in json_payload:
             value = json_payload["value"]
         else:
-            value = payload
+            value = payload_str
 
         # Handle disconnected/invalid states (including template result of None)
         if value is None:

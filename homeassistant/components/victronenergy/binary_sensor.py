@@ -6,8 +6,6 @@ import json
 import logging
 from typing import Any
 
-from paho.mqtt.client import MQTTMessage
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -58,13 +56,13 @@ class MQTTDiscoveredBinarySensor(VictronBaseEntity, BinarySensorEntity):
         super().update_config(config)
         self._parse_config(config)
 
-    def handle_mqtt_message(self, msg: MQTTMessage) -> None:
+    def handle_mqtt_message(self, topic: str, payload: bytes) -> None:
         """Handle new MQTT message."""
         try:
-            payload = msg.payload.decode()
+            payload_str = payload.decode()
 
             # Handle empty payload immediately - set entity to unknown
-            if not payload.strip():
+            if not payload_str.strip():
                 self._attr_is_on = None
                 self.schedule_update_ha_state()
                 return
@@ -74,7 +72,7 @@ class MQTTDiscoveredBinarySensor(VictronBaseEntity, BinarySensorEntity):
                 try:
                     processed_value = (
                         self._value_template.async_render_with_possible_json_value(
-                            payload
+                            payload_str
                         )
                     )
                 except Exception:
@@ -86,7 +84,7 @@ class MQTTDiscoveredBinarySensor(VictronBaseEntity, BinarySensorEntity):
                     return
             else:
                 # No template, use payload directly
-                processed_value = payload
+                processed_value = payload_str
 
             # Handle disconnected/invalid states first (including template result of None)
             if processed_value is None:

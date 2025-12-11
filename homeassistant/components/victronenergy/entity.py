@@ -3,9 +3,7 @@
 import logging
 from typing import Any
 
-from paho.mqtt.client import MQTTMessage
-
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.template import Template
@@ -88,29 +86,38 @@ class VictronBaseEntity(Entity):
 
     def update_config(self, config: dict[str, Any]) -> None:
         """Update the entity configuration. Override in subclasses for more fields."""
+        prev_state_topic = self._state_topic
         self._parse_base_config(config)
+        if self._state_topic != prev_state_topic:
+            self._manager.unsubscribe_entity(self)
 
-    def handle_mqtt_message(self, msg: MQTTMessage) -> None:
+        # This will also subscribe to the state topic
+        self.set_available(True)
+
+    def handle_mqtt_message(self, topic: str, payload: bytes) -> None:
         """Handle new MQTT message. Override in subclasses."""
 
+    def set_available(self, available: bool) -> None:
+        """Set entity availability state."""
+        if self._attr_available != available:
+            self._attr_available = available
+            self.schedule_update_ha_state()
+            if available:
+                self._manager.subscribe_entity(self)
+            else:
+                self._manager.unsubscribe_entity(self)
+
     async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added to hass."""
-        if self._state_topic is not None:
-            self._manager.register_entity_for_topic(str(self._state_topic), self)
-            self._manager.subscribe_topic(str(self._state_topic))
-
-        # Ensure device is created in the device registry
-        device_info = self.device_info
-        device_registry = dr.async_get(self.hass)
-        config_entry_id = self.platform.config_entry.entry_id
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry_id, **device_info
-        )
-
+        """Subscribe to MQTT topic when added to Home Assistant."""
+        self._manager.register_entity(self)
         entity_registry = er.async_get(self.hass)
         entity_registry.async_update_entity(
             self.entity_id, new_entity_id=f"{self._platform}.{self._attr_unique_id}"
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT topic when removed from Home Assistant."""
+        self._manager.unregister_entity(self)
 
     @property
     def should_poll(self) -> bool:
@@ -135,3 +142,13 @@ class VictronBaseEntity(Entity):
             model=str(self._device_info.get("model", "")),
             name=str(self._device_info.get("name", "")),
         )
+
+    @property
+    def state_topic(self) -> str | None:
+        """Return the MQTT state topic for this entity."""
+        return self._state_topic
+
+    @property
+    def device_key(self) -> DeviceKey:
+        """Return the device key for this entity."""
+        return self._device_key
