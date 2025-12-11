@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The account does not match the previously configured account. Please reconfigure with the same account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -40,6 +42,28 @@
         },
         "description": "The Eufy Security integration needs to re-authenticate your account {email}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::eufy_security::config::step::user::data_description::email%]",
+          "password": "[%key:component::eufy_security::config::step::user::data_description::password%]"
+        },
+        "description": "Update your Eufy Security account credentials.",
+        "title": "Reconfigure Eufy Security"
+      },
+      "reconfigure_captcha": {
+        "data": {
+          "captcha_code": "CAPTCHA code"
+        },
+        "data_description": {
+          "captcha_code": "[%key:component::eufy_security::config::step::captcha::data_description::captcha_code%]"
+        },
+        "description": "{captcha_img}",
+        "title": "CAPTCHA verification"
       },
       "user": {
         "data": {

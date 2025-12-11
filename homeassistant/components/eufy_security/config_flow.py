@@ -368,6 +368,156 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            try:
+                api = await async_login(
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
+                    session,
+                )
+            except CaptchaRequiredError as err:
+                # Store credentials and API instance for CAPTCHA retry
+                self._pending_credentials = user_input
+                self._captcha_id = err.captcha_id
+                self._captcha_image = err.captcha_image
+                self._pending_api = err.api
+                return await self.async_step_reconfigure_captcha()
+            except InvalidCredentialsError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except EufySecurityError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Update unique ID if email changed
+                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+                self._abort_if_unique_id_mismatch()
+
+                # Include token and crypto state in update
+                token_exp = api.token_expiration
+                crypto_state = api.get_crypto_state()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_TOKEN: api.token,
+                        CONF_TOKEN_EXPIRATION: (
+                            token_exp.isoformat() if token_exp else None
+                        ),
+                        CONF_API_BASE: api.api_base,
+                        CONF_PRIVATE_KEY: crypto_state["private_key"],
+                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_EMAIL, default=reconfigure_entry.data.get(CONF_EMAIL, "")
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure_captcha(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle CAPTCHA verification during reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            try:
+                # Reuse the stored API instance to maintain the same ECDH keys
+                api = await async_login(
+                    self._pending_credentials[CONF_EMAIL],
+                    self._pending_credentials[CONF_PASSWORD],
+                    session,
+                    captcha_id=self._captcha_id,
+                    captcha_code=user_input[CONF_CAPTCHA_CODE],
+                    api=self._pending_api,
+                )
+            except CaptchaRequiredError as err:
+                # CAPTCHA was wrong, try again with new image
+                self._captcha_id = err.captcha_id
+                self._captcha_image = err.captcha_image
+                self._pending_api = err.api
+                errors["base"] = "invalid_captcha"
+            except InvalidCaptchaError:
+                # CAPTCHA was wrong but server didn't provide new one - request fresh
+                _LOGGER.debug("Invalid CAPTCHA, requesting new one")
+                try:
+                    await async_login(
+                        self._pending_credentials[CONF_EMAIL],
+                        self._pending_credentials[CONF_PASSWORD],
+                        session,
+                    )
+                except CaptchaRequiredError as err:
+                    self._captcha_id = err.captcha_id
+                    self._captcha_image = err.captcha_image
+                    self._pending_api = err.api
+                errors["base"] = "invalid_captcha"
+            except InvalidCredentialsError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except EufySecurityError as err:
+                _LOGGER.warning("Eufy API error: %s", err)
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Update unique ID if email changed
+                await self.async_set_unique_id(
+                    self._pending_credentials[CONF_EMAIL].lower()
+                )
+                self._abort_if_unique_id_mismatch()
+
+                # Include token and crypto state in update
+                token_exp = api.token_expiration
+                crypto_state = api.get_crypto_state()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={
+                        CONF_EMAIL: self._pending_credentials[CONF_EMAIL],
+                        CONF_PASSWORD: self._pending_credentials[CONF_PASSWORD],
+                        CONF_TOKEN: api.token,
+                        CONF_TOKEN_EXPIRATION: (
+                            token_exp.isoformat() if token_exp else None
+                        ),
+                        CONF_API_BASE: api.api_base,
+                        CONF_PRIVATE_KEY: crypto_state["private_key"],
+                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_captcha",
+            data_schema=STEP_CAPTCHA_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "captcha_img": self._get_captcha_img_tag(self._captcha_image),
+            },
+        )
+
 
 class EufySecurityOptionsFlowHandler(OptionsFlow):
     """Handle Eufy Security options."""
