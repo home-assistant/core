@@ -23,35 +23,36 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
+from .type_information import IntegerTypeInformation
+from .utils import RemapHelper
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
     """Wrapper for DPCode position values mapping to 0-100 range."""
 
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(type_information, 0, 100)
+
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
         return False
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         if (value := device.status.get(self.dpcode)) is None:
             return None
 
         return round(
-            self.type_information.remap_value_to(
-                value,
-                0,
-                100,
-                self._position_reversed(device),
+            self._remap_helper.remap_value_to(
+                value, reverse=self._position_reversed(device)
             )
         )
 
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> int:
         return round(
-            self.type_information.remap_value_from(
-                value,
-                0,
-                100,
-                self._position_reversed(device),
+            self._remap_helper.remap_value_from(
+                value, reverse=self._position_reversed(device)
             )
         )
 
