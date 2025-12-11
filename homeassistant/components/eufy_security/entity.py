@@ -22,7 +22,7 @@ def exception_wrap[_EufyEntityT: EufySecurityEntity, **_P, _R](
 ) -> Callable[Concatenate[_EufyEntityT, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
 
-    async def _wrap(self: _EufyEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+    async def _wrap(self: _EufyEntityT, /, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await async_func(self, *args, **kwargs)
         except InvalidCredentialsError as err:

@@ -8,12 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -37,6 +32,7 @@ from .const import (
     CONF_TOKEN_EXPIRATION,
     DOMAIN,
 )
+from .coordinator import EufySecurityConfigEntry
 
 CONF_CAPTCHA_ID = "captcha_id"
 CONF_CAPTCHA_CODE = "captcha_code"
@@ -71,7 +67,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EufySecurityConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return EufySecurityOptionsFlowHandler()
