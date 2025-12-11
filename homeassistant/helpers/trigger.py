@@ -342,10 +342,7 @@ class EntityTriggerBase(Trigger):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
-        if from_state.state == to_state.state:
-            return False
-
-        return True
+        return from_state.state != to_state.state
 
     @abc.abstractmethod
     def is_valid_state(self, state: State) -> bool:
