@@ -93,8 +93,6 @@ venv
 .venv
 Pipfile*
 uv.lock
-poetry.lock
-package-lock.json
 share/*
 /Scripts/
 
