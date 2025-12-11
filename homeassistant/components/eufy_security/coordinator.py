@@ -8,9 +8,10 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import EufySecurityAPI, EufySecurityError
+from .api import EufySecurityAPI, EufySecurityError, InvalidCredentialsError
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,11 +53,12 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         try:
-            # Check if still connected
-            if not self.api.connected:
-                await self.api.async_connect()
-
             await self.api.async_update_device_info()
+        except InvalidCredentialsError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except EufySecurityError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.eufy_security.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -32,7 +32,8 @@ def mock_camera() -> MagicMock:
     camera.hardware_version = "2.2"
     camera.software_version = "2.0.7.6"
     camera.last_camera_image_url = "https://example.com/image.jpg"
-    camera.properties = {}
+    camera.async_start_stream = AsyncMock(return_value="rtsp://example.com/stream")
+    camera.async_stop_stream = AsyncMock()
     return camera
 
 
@@ -52,29 +53,18 @@ def mock_eufy_api(
 ) -> Generator[MagicMock]:
     """Mock the Eufy Security API."""
     with (
+        patch("homeassistant.components.eufy_security.async_login") as mock_login,
         patch(
-            "homeassistant.components.eufy_security.async_connect"
-        ) as mock_connect,
-        patch(
-            "homeassistant.components.eufy_security.config_flow.async_connect"
-        ) as mock_config_connect,
+            "homeassistant.components.eufy_security.config_flow.async_login"
+        ) as mock_config_login,
     ):
         api = MagicMock()
         api.cameras = {mock_camera.serial: mock_camera}
         api.stations = {mock_station.serial: mock_station}
         api.async_update_device_info = AsyncMock()
-        api.async_connect = AsyncMock()
-        api.async_disconnect = AsyncMock()
-        api.connected = True
-        api.async_start_livestream = AsyncMock(return_value="rtsp://example.com/stream")
-        api.async_stop_livestream = AsyncMock()
-        api.async_start_rtsp_livestream = AsyncMock(
-            return_value="rtsp://example.com/stream"
-        )
-        api.async_stop_rtsp_livestream = AsyncMock()
 
-        mock_connect.return_value = api
-        mock_config_connect.return_value = api
+        mock_login.return_value = api
+        mock_config_login.return_value = api
         yield api
 
 
@@ -83,12 +73,12 @@ def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Eufy Security (127.0.0.1:3000)",
+        title="test@example.com",
         data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 3000,
+            CONF_EMAIL: "test@example.com",
+            CONF_PASSWORD: "test-password",
         },
-        unique_id="127.0.0.1:3000",
+        unique_id="test@example.com",
         version=1,
         minor_version=1,
     )
