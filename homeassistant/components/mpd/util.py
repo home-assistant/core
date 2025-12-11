@@ -15,18 +15,24 @@ async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
 
     try:
         aiozc = await zeroconf.async_get_async_instance(hass)
-        # Query for the A/AAAA records
-        info = AsyncServiceInfo(
-            "_mpd._tcp.local.",
-            f"{host.removesuffix('.local')}._mpd._tcp.local.",
-        )
-        await info.async_request(aiozc.zeroconf, 3000)
-
-        if info.parsed_addresses():
-            resolved = info.parsed_addresses()[0]
+        # Try to resolve the hostname using zeroconf's address lookup
+        addresses = await aiozc.async_get_host_by_name(host)
+        if addresses:
+            resolved = addresses[0]
             LOGGER.debug("Resolved %s to %s via zeroconf", host, resolved)
             return resolved
     except Exception as ex:  # noqa: BLE001
         LOGGER.debug("Failed to resolve %s via zeroconf: %s", host, ex)
 
+    # Fallback to standard asyncio DNS resolution
+    import asyncio
+    try:
+        infos = await asyncio.get_event_loop().getaddrinfo(host, None)
+        for family, _, _, _, sockaddr in infos:
+            if family in (2, 10):  # socket.AF_INET, socket.AF_INET6
+                resolved = sockaddr[0]
+                LOGGER.debug("Resolved %s to %s via getaddrinfo", host, resolved)
+                return resolved
+    except Exception as ex:  # noqa: BLE001
+        LOGGER.debug("Failed to resolve %s via getaddrinfo: %s", host, ex)
     return host
