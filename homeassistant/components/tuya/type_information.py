@@ -243,6 +243,10 @@ class IntegerTypeInformation(TypeInformation[float]):
         """Scale a value."""
         return value / (10**self.scale)
 
+    def scale_value_back(self, value: float) -> int:
+        """Return raw value for scaled."""
+        return round(value * (10**self.scale))
+
     def remap_value_to(
         self,
         value: float,
