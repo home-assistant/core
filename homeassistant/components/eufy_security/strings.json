@@ -12,11 +12,11 @@
     "step": {
       "user": {
         "data": {
-          "username": "[%key:common::config_flow::data::email%]",
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "Your Eufy Security account email address. It is recommended to create a separate guest account for Home Assistant.",
+          "email": "Your Eufy Security account email address. It is recommended to create a separate guest account for Home Assistant.",
           "password": "Your Eufy Security account password."
         },
         "title": "Sign in with Eufy Security account"
@@ -28,7 +28,7 @@
         "data_description": {
           "password": "[%key:component::eufy_security::config::step::user::data_description::password%]"
         },
-        "description": "The Eufy Security integration needs to re-authenticate your account {username}",
+        "description": "The Eufy Security integration needs to re-authenticate your account {email}",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }

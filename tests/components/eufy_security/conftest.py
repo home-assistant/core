@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.eufy_security.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -75,7 +75,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="test@example.com",
         data={
-            CONF_USERNAME: "test@example.com",
+            CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
         unique_id="test@example.com",

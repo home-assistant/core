@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import EufySecurityError, InvalidCredentialsError, async_login
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_EMAIL): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
@@ -38,14 +38,14 @@ async def validate_input(hass, data: dict[str, str]) -> dict[str, Any]:
     """
     session = async_get_clientsession(hass)
     api = await async_login(
-        data[CONF_USERNAME],
+        data[CONF_EMAIL],
         data[CONF_PASSWORD],
         session,
     )
 
     # Return info that you want to store in the config entry.
     return {
-        "title": data[CONF_USERNAME],
+        "title": data[CONF_EMAIL],
         "cameras": len(api.cameras),
     }
 
@@ -63,7 +63,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
             self._abort_if_unique_id_configured()
 
             try:
@@ -79,7 +79,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=info["title"],
                     data={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
@@ -108,7 +108,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(
                     self.hass,
                     {
-                        CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                        CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
@@ -123,7 +123,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
-                        CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                        CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
@@ -133,6 +133,6 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
             },
         )
