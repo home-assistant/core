@@ -68,6 +68,7 @@ async def _get_version_from_docker_sha() -> str:
     not os.environ.get("CI"),
     reason="This test requires Docker and only runs in CI",
 )
+@pytest.mark.timeout(30)
 async def test_docker_version_matches_recommended() -> None:
     """Test that the go2rtc Docker SHA version matches or exceeds RECOMMENDED_VERSION."""
     # Extract version from the actual Docker container
