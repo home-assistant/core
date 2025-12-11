@@ -170,7 +170,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             await self.properties_api.home.discover_home()
             await self.properties_api.home.refresh()
         except RoborockException as ex:
-            raise UpdateFailed(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             ) from ex
@@ -243,8 +243,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             > IMAGE_CACHE_INTERVAL
         ) or self.last_update_state != new_status.state_name:
             self._last_home_update_attempt = dt_util.utcnow()
-            # Will raise UpdateFailed on failure
-            await self.update_map()
+            try:
+                await self.update_map()
+            except HomeAssistantError as err:
+                _LOGGER.debug("Failed to update map: %s", err)
 
         if self.properties_api.status.in_cleaning:
             if self._device.is_local_connected:

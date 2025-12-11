@@ -308,7 +308,7 @@ async def test_update_unavailability_threshold(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that a small number of updates failures are suppressed before marking a device unavailable."""
+    """Test that a small number of update failures are suppressed before marking a device unavailable."""
     await async_setup_component(hass, HA_DOMAIN, {})
     assert setup_entry.state is ConfigEntryState.LOADED
 
