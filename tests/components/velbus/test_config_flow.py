@@ -186,18 +186,60 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
-@pytest.mark.parametrize(
-    ("getParams", "expected"),
-    [
-        ([], "no_modules"),
-        ([1, 2, 3, 4], None),
-    ],
-)
-async def test_vlp_step(
+async def test_vlp_step_no_modules(
     hass: HomeAssistant,
     mock_process_uploaded_file: MagicMock,
-    getParams: list,
-    expected: str | None,
+) -> None:
+    """Test VLP step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "network"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_TLS: False,
+            CONF_HOST: "192.168.88.9",
+            CONF_PORT: 27015,
+            CONF_PASSWORD: "",
+        },
+    )
+    assert result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
+
+    with (
+        patch(
+            "homeassistant.components.velbus.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "velbusaio.vlp_reader.VlpFile.read",
+            AsyncMock(return_value=True),
+        ),
+        patch(
+            "velbusaio.vlp_reader.VlpFile.get",
+            return_value=[],
+        ),
+    ):
+        file_id = mock_process_uploaded_file.file_id
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {CONF_VLP_FILE: file_id[CONF_VLP_FILE]},
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {CONF_VLP_FILE: "no_modules"}
+
+
+@pytest.mark.usefixtures("controller")
+async def test_vlp_step_succes(
+    hass: HomeAssistant,
+    mock_process_uploaded_file: MagicMock,
 ) -> None:
     """Test VLP step."""
     result = await hass.config_entries.flow.async_init(
@@ -231,7 +273,7 @@ async def test_vlp_step(
         ),
         patch(
             "velbusaio.vlp_reader.VlpFile.get",
-            return_value=getParams,
+            return_value=[1, 2, 3, 4],
         ),
     ):
         file_id = mock_process_uploaded_file.file_id
@@ -241,12 +283,8 @@ async def test_vlp_step(
         )
         await hass.async_block_till_done()
 
-    if expected is None:
-        assert result.get("type") is FlowResultType.CREATE_ENTRY
-        assert len(mock_setup_entry.mock_calls) == 1
-    else:
-        assert result.get("type") is FlowResultType.FORM
-        assert result.get("errors") == {CONF_VLP_FILE: expected}
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("controller")
