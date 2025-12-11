@@ -3,6 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
+from homeassistant.components.eufy_security.api import (
+    CannotConnectError,
+    EufySecurityError,
+    InvalidCredentialsError,
+)
 from homeassistant.components.eufy_security.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -11,22 +16,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-class MockInvalidCredentialsError(Exception):
-    """Mock InvalidCredentialsError for testing."""
-
-
-class MockCannotConnectError(Exception):
-    """Mock CannotConnectError for testing."""
-
-
-class MockEufySecurityError(Exception):
-    """Mock EufySecurityError for testing."""
-
-
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_eufy_api: MagicMock,
+    mock_config_flow_api: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -46,10 +39,9 @@ async def test_form(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test@example.com"
-    assert result2["data"] == {
-        CONF_EMAIL: "test@example.com",
-        CONF_PASSWORD: "test-password",
-    }
+    # Check that required fields are present in data
+    assert result2["data"][CONF_EMAIL] == "test@example.com"
+    assert result2["data"][CONF_PASSWORD] == "test-password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -62,15 +54,9 @@ async def test_form_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.eufy_security.config_flow.async_login",
-            side_effect=MockInvalidCredentialsError,
-        ),
-        patch(
-            "homeassistant.components.eufy_security.config_flow.InvalidCredentialsError",
-            MockInvalidCredentialsError,
-        ),
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=InvalidCredentialsError("Invalid credentials"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -93,15 +79,34 @@ async def test_form_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.eufy_security.config_flow.async_login",
-            side_effect=MockCannotConnectError,
-        ),
-        patch(
-            "homeassistant.components.eufy_security.config_flow.CannotConnectError",
-            MockCannotConnectError,
-        ),
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=CannotConnectError("Connection failed"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_eufy_security_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we handle generic Eufy Security errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=EufySecurityError("API error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -143,7 +148,7 @@ async def test_form_unknown_error(
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_eufy_api: MagicMock,
+    mock_config_flow_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort when account is already configured."""
@@ -169,7 +174,7 @@ async def test_form_already_configured(
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_eufy_api: MagicMock,
+    mock_config_flow_api: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test reauthentication flow."""
@@ -197,7 +202,6 @@ async def test_reauth_flow(
 async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_eufy_api: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test reauthentication flow with invalid auth."""
@@ -208,15 +212,9 @@ async def test_reauth_flow_invalid_auth(
     assert len(flows) == 1
     [result] = flows
 
-    with (
-        patch(
-            "homeassistant.components.eufy_security.config_flow.async_login",
-            side_effect=MockInvalidCredentialsError,
-        ),
-        patch(
-            "homeassistant.components.eufy_security.config_flow.InvalidCredentialsError",
-            MockInvalidCredentialsError,
-        ),
+    with patch(
+        "homeassistant.components.eufy_security.config_flow.async_login",
+        side_effect=InvalidCredentialsError("Invalid credentials"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
