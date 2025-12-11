@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, cast
 
@@ -10,26 +9,8 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.util.json import json_loads_object
 
-from .const import LOGGER, DPType
+from .const import DPType
 from .util import parse_dptype, remap_value
-
-# Dictionary to track logged warnings to avoid spamming logs
-# Keyed by device ID
-DEVICE_WARNINGS: dict[str, set[str]] = {}
-
-
-def _should_log_warning(device_id: str, warning_key: str) -> bool:
-    """Check if a warning has already been logged for a device and add it if not.
-
-    Returns: True if the warning should be logged, False if it was already logged.
-    """
-    if (device_warnings := DEVICE_WARNINGS.get(device_id)) is None:
-        device_warnings = set()
-        DEVICE_WARNINGS[device_id] = device_warnings
-    if warning_key in device_warnings:
-        return False
-    DEVICE_WARNINGS[device_id].add(warning_key)
-    return True
 
 
 @dataclass(kw_only=True)
@@ -42,24 +23,6 @@ class TypeInformation[T]:
     _DPTYPE: ClassVar[DPType]
     dpcode: str
     type_data: str | None = None
-
-    def process_raw_value(
-        self, raw_value: Any | None, device: CustomerDevice
-    ) -> T | None:
-        """Read and process raw value against this type information.
-
-        Base implementation does no validation, subclasses may override to provide
-        specific validation.
-        """
-        return raw_value
-
-    def process_value_back(self, value: T) -> Any:
-        """Convert display value back to a raw device value.
-
-        Base implementation does no validation, subclasses may override to provide
-        specific validation.
-        """
-        return value
 
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
@@ -129,37 +92,6 @@ class BooleanTypeInformation(TypeInformation[bool]):
 
     _DPTYPE = DPType.BOOLEAN
 
-    def process_raw_value(
-        self, raw_value: Any | None, device: CustomerDevice
-    ) -> bool | None:
-        """Read and process raw value against this type information."""
-        if raw_value is None:
-            return None
-        # Validate input against defined range
-        if raw_value not in (True, False):
-            if _should_log_warning(
-                device.id, f"boolean_out_range|{self.dpcode}|{raw_value}"
-            ):
-                LOGGER.warning(
-                    "Found invalid boolean value `%s` for datapoint `%s` in product "
-                    "id `%s`, expected one of `%s`; please report this defect to "
-                    "Tuya support",
-                    raw_value,
-                    self.dpcode,
-                    device.product_id,
-                    (True, False),
-                )
-            return None
-        return raw_value
-
-    def process_value_back(self, value: bool) -> Any | None:
-        """Convert a Home Assistant value back to a raw device value."""
-        if value in (True, False):
-            return value
-        # Currently only called with boolean values
-        # Safety net in case of future changes
-        raise ValueError(f"Invalid boolean value `{value}`")
-
 
 @dataclass(kw_only=True)
 class EnumTypeInformation(TypeInformation[str]):
@@ -168,37 +100,6 @@ class EnumTypeInformation(TypeInformation[str]):
     _DPTYPE = DPType.ENUM
 
     range: list[str]
-
-    def process_raw_value(
-        self, raw_value: Any | None, device: CustomerDevice
-    ) -> str | None:
-        """Read and process raw value against this type information."""
-        if raw_value is None:
-            return None
-        # Validate input against defined range
-        if raw_value not in self.range:
-            if _should_log_warning(
-                device.id, f"enum_out_range|{self.dpcode}|{raw_value}"
-            ):
-                LOGGER.warning(
-                    "Found invalid enum value `%s` for datapoint `%s` in product "
-                    "id `%s`, expected one of `%s`; please report this defect to "
-                    "Tuya support",
-                    raw_value,
-                    self.dpcode,
-                    device.product_id,
-                    self.range,
-                )
-            return None
-        return raw_value
-
-    def process_value_back(self, value: str) -> Any | None:
-        """Convert a Home Assistant value back to a raw device value."""
-        if value in self.range:
-            return value
-        # Guarded by select option validation
-        # Safety net in case of future changes
-        raise ValueError(f"Enum value `{value}` out of range: {self.range}")
 
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
@@ -223,21 +124,6 @@ class IntegerTypeInformation(TypeInformation[float]):
     scale: int
     step: int
     unit: str | None = None
-
-    @property
-    def max_scaled(self) -> float:
-        """Return the max scaled."""
-        return self.scale_value(self.max)
-
-    @property
-    def min_scaled(self) -> float:
-        """Return the min scaled."""
-        return self.scale_value(self.min)
-
-    @property
-    def step_scaled(self) -> float:
-        """Return the step scaled."""
-        return self.step / (10**self.scale)
 
     def scale_value(self, value: int) -> float:
         """Scale a value."""
@@ -267,43 +153,6 @@ class IntegerTypeInformation(TypeInformation[float]):
         """Remap a value from its current range to this range."""
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
-    def process_raw_value(
-        self, raw_value: Any | None, device: CustomerDevice
-    ) -> float | None:
-        """Read and process raw value against this type information."""
-        if raw_value is None:
-            return None
-        # Validate input against defined range
-        if not isinstance(raw_value, int) or not (self.min <= raw_value <= self.max):
-            if _should_log_warning(
-                device.id, f"integer_out_range|{self.dpcode}|{raw_value}"
-            ):
-                LOGGER.warning(
-                    "Found invalid integer value `%s` for datapoint `%s` in product "
-                    "id `%s`, expected integer value between %s and %s; please report "
-                    "this defect to Tuya support",
-                    raw_value,
-                    self.dpcode,
-                    device.product_id,
-                    self.min,
-                    self.max,
-                )
-
-            return None
-        return self.scale_value(raw_value)
-
-    def process_value_back(self, value: float) -> int:
-        """Convert a Home Assistant value back to a raw device value."""
-        new_value = self.scale_value_back(value)
-        if self.min <= new_value <= self.max:
-            return new_value
-        # Guarded by number validation
-        # Safety net in case of future changes
-        raise ValueError(
-            f"Value `{new_value}` (converted from `{value}`) out of range:"
-            f" ({self.min}-{self.max})"
-        )
-
     @classmethod
     def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return an IntegerTypeInformation object."""
@@ -327,28 +176,12 @@ class JsonTypeInformation(TypeInformation[dict[str, Any]]):
 
     _DPTYPE = DPType.JSON
 
-    def process_raw_value(
-        self, raw_value: Any | None, device: CustomerDevice
-    ) -> dict[str, Any] | None:
-        """Read and process raw value against this type information."""
-        if raw_value is None:
-            return None
-        return json_loads_object(raw_value)
-
 
 @dataclass(kw_only=True)
 class RawTypeInformation(TypeInformation[bytes]):
     """Raw type information."""
 
     _DPTYPE = DPType.RAW
-
-    def process_raw_value(
-        self, raw_value: Any | None, device: CustomerDevice
-    ) -> bytes | None:
-        """Read and process raw value against this type information."""
-        if raw_value is None:
-            return None
-        return base64.b64decode(raw_value)
 
 
 @dataclass(kw_only=True)
