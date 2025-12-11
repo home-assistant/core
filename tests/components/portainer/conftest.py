@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, DockerContainerStats
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 import pytest
@@ -60,6 +60,9 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.docker_version.return_value = DockerVersion.from_dict(
             load_json_value_fixture("docker_version.json", DOMAIN)
         )
+        client.container_stats.return_value = DockerContainerStats.from_dict(
+            load_json_value_fixture("container_stats.json", DOMAIN)
+        )
 
         client.restart_container = AsyncMock(return_value=None)
 
@@ -73,6 +76,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
+        unique_id=MOCK_TEST_CONFIG[CONF_API_TOKEN],
         entry_id="portainer_test_entry_123",
         version=2,
     )

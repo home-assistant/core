@@ -7,7 +7,7 @@ from bleak import BleakError
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import pytest
 
-from homeassistant.components.airthings_ble.const import DOMAIN
+from homeassistant.components.airthings_ble.const import DEVICE_MODEL, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -29,12 +29,13 @@ from tests.common import MockConfigEntry
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
+    wave_plus_device = AirthingsDeviceType.WAVE_PLUS
     with (
         patch_async_ble_device_from_address(WAVE_SERVICE_INFO),
         patch_airthings_ble(
             AirthingsDevice(
                 manufacturer="Airthings AS",
-                model=AirthingsDeviceType.WAVE_PLUS,
+                model=wave_plus_device,
                 name="Airthings Wave Plus",
                 identifier="123456",
             )
@@ -60,6 +61,8 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["data"] == {DEVICE_MODEL: wave_plus_device.value}
+    assert result["result"].data == {DEVICE_MODEL: wave_plus_device.value}
 
 
 async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
@@ -118,6 +121,7 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
 
 async def test_user_setup(hass: HomeAssistant) -> None:
     """Test the user initiated form."""
+    wave_plus_device = AirthingsDeviceType.WAVE_PLUS
     with (
         patch(
             "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
@@ -127,7 +131,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         patch_airthings_ble(
             AirthingsDevice(
                 manufacturer="Airthings AS",
-                model=AirthingsDeviceType.WAVE_PLUS,
+                model=wave_plus_device,
                 name="Airthings Wave Plus",
                 identifier="123456",
             )
@@ -158,6 +162,8 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["data"] == {DEVICE_MODEL: wave_plus_device.value}
+    assert result["result"].data == {DEVICE_MODEL: wave_plus_device.value}
 
 
 async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
@@ -168,6 +174,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         source=SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)
+    wave_plus_device = AirthingsDeviceType.WAVE_PLUS
     with (
         patch(
             "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
@@ -177,7 +184,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         patch_airthings_ble(
             AirthingsDevice(
                 manufacturer="Airthings AS",
-                model=AirthingsDeviceType.WAVE_PLUS,
+                model=wave_plus_device,
                 name="Airthings Wave Plus",
                 identifier="123456",
             )
@@ -208,6 +215,8 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["data"] == {DEVICE_MODEL: wave_plus_device.value}
+    assert result["result"].data == {DEVICE_MODEL: wave_plus_device.value}
 
 
 async def test_user_setup_no_device(hass: HomeAssistant) -> None:

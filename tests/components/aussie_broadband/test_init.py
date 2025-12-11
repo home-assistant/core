@@ -28,6 +28,8 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
             "type": FlowResultType.FORM,
             "flow_id": "mock_flow",
             "step_id": "reauth_confirm",
+            "description_placeholders": {"username": "test", "name": "test"},
+            "data_schema": None,
         },
     ) as mock_async_step_reauth:
         await setup_platform(hass, side_effect=AuthenticationException())
