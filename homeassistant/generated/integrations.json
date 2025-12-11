@@ -1860,12 +1860,6 @@
           "iot_class": "local_polling",
           "name": "EufyHome"
         },
-        "eufy_security": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "Eufy Security"
-        },
         "eufylife_ble": {
           "integration_type": "device",
           "config_flow": true,
@@ -1873,6 +1867,12 @@
           "name": "EufyLife"
         }
       }
+    },
+    "eufy_security": {
+      "name": "Eufy Security",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "eve": {
       "name": "Eve",
