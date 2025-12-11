@@ -87,3 +87,44 @@ async def test_zeroconf_confirm(hass):
 
     assert result2["type"] == "create_entry"
     assert serial in result2["title"]
+
+
+async def test_zeroconf_duplicate_aborts(hass):
+    serial = "1000004"
+    host = "rebooter-pro.local"
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: host}, unique_id=serial)
+    entry.add_to_hass(hass)
+
+    with patch.object(config_flow, "_probe_serial_over_https", return_value=serial):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data={
+                "hostname": f"{host}.",
+                "properties": {"api": "local", "protocol": "https"},
+                "name": "rebooter-pro",
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_probe_failure_falls_back(hass):
+    host = "rebooter-pro.local"
+    with patch.object(config_flow, "_probe_serial_over_https", side_effect=Exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data={
+                "hostname": f"{host}.",
+                "properties": {"api": "local", "protocol": "https"},
+                "name": "rebooter-pro",
+            },
+        )
+        assert result["type"] == "form"
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"][CONF_HOST] == host
+    assert host in result2["title"]
