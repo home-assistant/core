@@ -1,11 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect to host",
-      "unknown": "Unknown failure"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
@@ -207,10 +207,10 @@
         "name": "Generator stop on voltage timer"
       },
       "generator_gen_id_warm_up_timer": {
-        "name": "Generator warm up timer"
+        "name": "Generator warm-up timer"
       },
       "multi_ess_min_soc_limit": {
-        "name": "ESS minimum SoC limit"
+        "name": "ESS minimum SOC limit"
       },
       "multiplus_assist_current_boost_factor": {
         "name": "Assist current boost factor"
@@ -361,7 +361,7 @@
         "name": "Battery consumed amp-hours"
       },
       "battery_current": {
-        "name": "DC Bus current"
+        "name": "DC bus current"
       },
       "battery_discharged_energy": {
         "name": "Discharged energy"
@@ -394,13 +394,13 @@
         "name": "Battery maximum cell voltage"
       },
       "battery_max_charge_current": {
-        "name": "Battery maximum charge current allowed"
+        "name": "Battery maximum allowed charge current"
       },
       "battery_max_charge_voltage": {
-        "name": "Battery maximum charging voltage allowed"
+        "name": "Battery maximum allowed charging voltage"
       },
       "battery_max_discharge_current": {
-        "name": "Battery maximum discharge current allowed"
+        "name": "Battery maximum allowed discharge current"
       },
       "battery_max_temperature_cell_id": {
         "name": "Battery maximum temperature cell ID"
@@ -409,10 +409,10 @@
         "name": "Battery maximum voltage cell ID"
       },
       "battery_mid_voltage": {
-        "name": "DC Bus mid voltage"
+        "name": "DC bus mid voltage"
       },
       "battery_mid_voltage_deviation": {
-        "name": "DC Bus mid voltage deviation"
+        "name": "DC bus mid voltage deviation"
       },
       "battery_min_cell_temperature": {
         "name": "Battery minimum cell temperature"
@@ -454,7 +454,7 @@
         "name": "Battery time to go"
       },
       "battery_voltage": {
-        "name": "DC Bus voltage"
+        "name": "DC bus voltage"
       },
       "charge_mode": {
         "name": "Battery charge mode"
@@ -469,16 +469,16 @@
         "name": "DC load voltage"
       },
       "dcsystem_aux_voltage": {
-        "name": "DC System auxiliary voltage"
+        "name": "DC system auxiliary voltage"
       },
       "dcsystem_current": {
-        "name": "DC System current"
+        "name": "DC system current"
       },
       "dcsystem_power": {
-        "name": "DC System power"
+        "name": "DC system power"
       },
       "dcsystem_voltage": {
-        "name": "DC System voltage"
+        "name": "DC system voltage"
       },
       "digitalinput_alarm": {
         "name": "Digital input alarm"
@@ -494,6 +494,12 @@
       },
       "evcharger_current": {
         "name": "EV charger current"
+      },
+      "evcharger_max_set_current": {
+        "name": "EV charger maximum set current"
+      },
+      "evcharger_min_set_current": {
+        "name": "EV charger minimum set current"
       },
       "evcharger_mode": {
         "name": "EV charger mode"
@@ -559,7 +565,7 @@
         "name": "Generator stop on voltage timer"
       },
       "generator_gen_id_warm_up_timer": {
-        "name": "Generator warm up timer"
+        "name": "Generator warm-up timer"
       },
       "generator_run_state": {
         "name": "Generator run state"
@@ -697,7 +703,7 @@
         "name": "ESS AC power setpoint"
       },
       "multi_ess_min_soc_limit": {
-        "name": "ESS minimum SoC limit"
+        "name": "ESS minimum SOC limit"
       },
       "multi_inverter_to_acin1": {
         "name": "Inverter to AC-in-1"
@@ -793,13 +799,13 @@
         "name": "Total yield"
       },
       "solarcharger_current": {
-        "name": "PV Bus current"
+        "name": "PV bus current"
       },
       "solarcharger_dc_current": {
-        "name": "DC (Batt) Bus current"
+        "name": "DC (battery) bus current"
       },
       "solarcharger_dc_voltage": {
-        "name": "DC (Batt) Bus voltage"
+        "name": "DC (battery) bus voltage"
       },
       "solarcharger_device_off_reason": {
         "name": "Solar charger device off reason"
@@ -808,7 +814,7 @@
         "name": "Solar charger error code"
       },
       "solarcharger_load_current": {
-        "name": "Load Bus current"
+        "name": "Load bus current"
       },
       "solarcharger_max_battery_voltage_today": {
         "name": "Solar charger max battery voltage today"
@@ -850,7 +856,7 @@
         "name": "PV tracker {tracker} voltage"
       },
       "solarcharger_voltage": {
-        "name": "PV Bus voltage"
+        "name": "PV bus voltage"
       },
       "solarcharger_yield_power": {
         "name": "PV yield power"
@@ -1056,6 +1062,9 @@
       "temperature_offset": {
         "name": "Temperature offset"
       },
+      "temperature_pressure": {
+        "name": "Pressure"
+      },
       "temperature_scale": {
         "name": "Temperature scale factor"
       },
@@ -1170,6 +1179,9 @@
       "vebus_inverter_input_apparent_power_phase": {
         "name": "Inverter input apparent power {phase}"
       },
+      "vebus_inverter_input_current_phase": {
+        "name": "Inverter input current {phase}"
+      },
       "vebus_inverter_input_frequency_phase": {
         "name": "Inverter input frequency {phase}"
       },
@@ -1271,13 +1283,12 @@
   },
   "options": {
     "abort": {
-      "already_configured": "[%key:component::victron_gx_mqtt::config::abort::already_configured%]",
-      "not_victronvenus": "Not a Victron Venus device"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:component::victron_gx_mqtt::config::error::cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:component::victron_gx_mqtt::config::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "init": {
