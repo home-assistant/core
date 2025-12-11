@@ -7,19 +7,23 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_captcha": "Invalid CAPTCHA code. Please try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "captcha": {
         "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "captcha_code": "CAPTCHA code"
         },
-        "data_description": {
-          "email": "Your Eufy Security account email address. It is recommended to create a separate guest account for Home Assistant.",
-          "password": "Your Eufy Security account password."
+        "description": "{captcha_img}",
+        "title": "CAPTCHA verification"
+      },
+      "reauth_captcha": {
+        "data": {
+          "captcha_code": "CAPTCHA code"
         },
-        "title": "Sign in with Eufy Security account"
+        "description": "{captcha_img}",
+        "title": "CAPTCHA verification"
       },
       "reauth_confirm": {
         "data": {
@@ -30,6 +34,17 @@
         },
         "description": "The Eufy Security integration needs to re-authenticate your account {email}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Your Eufy Security account email address. It is recommended to create a separate guest account for Home Assistant.",
+          "password": "Your Eufy Security account password."
+        },
+        "title": "Sign in with Eufy Security account"
       }
     }
   },
@@ -49,6 +64,26 @@
     },
     "invalid_auth": {
       "message": "Invalid authentication for Eufy Security account"
+    }
+  },
+  "options": {
+    "step": {
+      "camera": {
+        "data": {
+          "rtsp_password": "RTSP password",
+          "rtsp_username": "RTSP username"
+        },
+        "data_description": {
+          "rtsp_password": "The password you set in the Eufy Security app for RTSP streaming",
+          "rtsp_username": "The username you set in the Eufy Security app for RTSP streaming"
+        },
+        "description": "Camera {camera_number} of {total_cameras}\n\nIP address: {camera_ip}\n\nEnter the RTSP credentials you configured in the Eufy Security app for this camera. Leave blank if RTSP is not enabled.",
+        "title": "Configure {camera_name}"
+      },
+      "init": {
+        "description": "{camera_info}",
+        "title": "RTSP streaming settings"
+      }
     }
   }
 }
