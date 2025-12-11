@@ -583,7 +583,7 @@
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 1.0,
-      'temperature': 2.3,
+      'temperature': None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.floor_thermostat_kitchen',
@@ -651,7 +651,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[climate.itc_308_wifi_thermostat-entry]
@@ -713,7 +713,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[climate.kabinet-entry]
@@ -1007,7 +1007,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[climate.polotentsosushitel-entry]
@@ -1501,7 +1501,7 @@
     'max_temp': 66,
     'min_temp': 12,
     'target_temp_step': 1.0,
-    'temperature': 4,
+    'temperature': None,
   })
 # ---
 # name: test_us_customary_system[climate.geti_solar_pv_water_heater]

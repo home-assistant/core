@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -91,8 +90,6 @@ async def test_light_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
@@ -150,8 +147,6 @@ async def test_light_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
@@ -208,8 +203,6 @@ async def test_light_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
