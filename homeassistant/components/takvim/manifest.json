@@ -1,0 +1,14 @@
+{
+  "domain": "takvim",
+  "name": "Fazilet Takvim",
+  "codeowners": ["@TalhaKalabalik"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/takvim",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
