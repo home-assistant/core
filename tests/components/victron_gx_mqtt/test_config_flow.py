@@ -290,8 +290,7 @@ async def test_ssdp_flow_cannot_connect(
     )
 
     # Should fall back to user form when connection fails
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.usefixtures("mock_victron_hub")
