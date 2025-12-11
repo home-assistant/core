@@ -11,7 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import EufySecurityAPI, EufySecurityError, InvalidCredentialsError
+from .api import (
+    CaptchaRequiredError,
+    EufySecurityAPI,
+    EufySecurityError,
+    InvalidCredentialsError,
+)
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +60,12 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self.api.async_update_device_info()
         except InvalidCredentialsError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except CaptchaRequiredError as err:
+            # CAPTCHA required during refresh - trigger reauth flow
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
