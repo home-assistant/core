@@ -12,7 +12,7 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import oauth2
 from .const import DOMAIN
-from .coordinator import HomeLinkConfigEntry, HomeLinkCoordinator, HomeLinkData
+from .coordinator import HomeLinkConfigEntry, HomeLinkCoordinator
 
 PLATFORMS: list[Platform] = [Platform.EVENT]
 
@@ -50,9 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
     )
 
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = HomeLinkData(
-        provider=provider, coordinator=coordinator, last_update_id=None
-    )
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -60,5 +58,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.coordinator.async_on_unload(None)
+    await entry.runtime_data.async_on_unload(None)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
