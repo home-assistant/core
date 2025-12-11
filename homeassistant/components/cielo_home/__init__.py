@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, PLATFORMS
 from .coordinator import CieloDataUpdateCoordinator
 
-CONFIG_ENTRY_VERSION = 1
 
 type CieloHomeConfigEntry = ConfigEntry[CieloDataUpdateCoordinator]
 
