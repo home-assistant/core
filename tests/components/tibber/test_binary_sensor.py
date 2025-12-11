@@ -1,11 +1,7 @@
-"""Unit tests for the Tibber phase imbalance alarm binary sensor."""
-
 from __future__ import annotations
 
 from datetime import timedelta
 from types import SimpleNamespace
-
-import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
