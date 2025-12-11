@@ -4,6 +4,7 @@ from collections.abc import Callable, Generator
 from http import HTTPStatus
 import pathlib
 import socket
+import uuid
 
 from _pytest.compat import get_real_func
 from aiohttp import web
@@ -111,15 +112,16 @@ async def test_evict_faked_translations(
     translations cache.
     """
     cache: translation._TranslationsCacheData = translations_once.kwargs["return_value"]
-    fake_domain = "test"
+    # Use a unique domain name to avoid conflicts with other tests that may
+    # have loaded translations into the shared session-scoped cache
+    fake_domain = f"test_domain_{uuid.uuid4().hex}"
     real_domain = "homeassistant"
 
-    if "en" in cache.loaded:
-        # Evict the real domain from the cache in case it's been loaded before
-        cache.loaded["en"].discard(real_domain)
+    # Evict the real domain from the cache in case it's been loaded before
+    cache.loaded.setdefault("en", set()).discard(real_domain)
 
-        assert fake_domain not in cache.loaded["en"]
-        assert real_domain not in cache.loaded["en"]
+    assert fake_domain not in cache.loaded["en"]
+    assert real_domain not in cache.loaded["en"]
 
     # The evict_faked_translations fixture has module scope, so we set it up and
     # tear it down manually
