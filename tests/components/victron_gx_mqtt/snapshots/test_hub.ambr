@@ -30,7 +30,7 @@
       }),
       'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
       'original_icon': None,
-      'original_name': 'DC Bus current',
+      'original_name': 'DC bus current',
       'platform': 'victron_gx_mqtt',
       'previous_unique_id': None,
       'suggested_object_id': None,
