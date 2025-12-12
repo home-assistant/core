@@ -61,9 +61,15 @@
       "step": {
         "forecast": {
           "data": {
-            "forecast": "Enable Forecast",
+            "forecast": "Enable forecast",
             "forecast_time": "Forecast time"
-          }
+          },
+          "data_description": {
+            "forecast": "Turn on the air-quality forecast",
+            "forecast_time": "Hours for which the forecast should apply"
+          },
+          "description": "Configure the air-quality forecast settings.",
+          "title": "Air-quality forecast"
         },
         "location": {
           "data": {
