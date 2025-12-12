@@ -15,7 +15,7 @@ from homeassistant.components.cielo_home.const import (
     NoUsernameError,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
@@ -56,7 +56,7 @@ async def test_full_config_flow_success(
     assert result["title"] == TEST_TITLE_MASKED
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY,
-        "token": TEST_TOKEN,
+        CONF_TOKEN: TEST_TOKEN,
     }
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -69,7 +69,7 @@ async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) ->
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: TEST_API_KEY, "token": TEST_TOKEN},
+        data={CONF_API_KEY: TEST_API_KEY, CONF_TOKEN: TEST_TOKEN},
         unique_id=TEST_TOKEN,
     )
     entry.add_to_hass(hass)
@@ -131,7 +131,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Cielo Home (Old Key)",
-        data={CONF_API_KEY: old_api_key, "token": "old-token"},
+        data={CONF_API_KEY: old_api_key, CONF_TOKEN: "old-token"},
         unique_id="old-token",
     )
     entry.add_to_hass(hass)
@@ -162,5 +162,5 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated_entry
     assert updated_entry.data[CONF_API_KEY] == NEW_API_KEY
-    assert updated_entry.data["token"] == NEW_TOKEN
+    assert updated_entry.data[CONF_TOKEN] == NEW_TOKEN
     assert updated_entry.unique_id == NEW_TOKEN

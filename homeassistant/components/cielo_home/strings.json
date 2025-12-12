@@ -45,15 +45,15 @@
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
               "quiet": "Quiet",
-              "super_high": "Super High",
-              "ultra_high": "Ultra High"
+              "super_high": "Super high",
+              "ultra_high": "Ultra high"
             }
           },
           "swing_mode": {
             "state": {
               "adjust": "Adjust",
               "auto": "[%key:common::state::auto%]",
-              "auto-stop": "Auto Stop",
+              "auto-stop": "Auto-stop",
               "pos1": "Pos 1",
               "pos10": "Pos 10",
               "pos11": "Pos 11",
@@ -69,7 +69,7 @@
               "pos7": "Pos 7",
               "pos8": "Pos 8",
               "pos9": "Pos 9",
-              "swing": "swing"
+              "swing": "Swing"
             }
           }
         }

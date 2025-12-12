@@ -645,7 +645,7 @@ cached-ipaddress==1.0.1
 caldav==2.1.0
 
 # homeassistant.components.cielo_home
-cielo-connect-api==1.0.2
+cielo-connect-api==1.0.3
 
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2

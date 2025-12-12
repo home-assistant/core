@@ -12,7 +12,7 @@ from cieloconnectapi.exceptions import AuthenticationError, CieloError
 from cieloconnectapi.model import CieloDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -42,7 +42,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         self.client = CieloClient(
             api_key=entry.data[CONF_API_KEY],
             timeout=TIMEOUT,
-            token=entry.data.get("token"),
+            token=entry.data[CONF_TOKEN],
             session=async_get_clientsession(hass),
         )
 
@@ -70,45 +70,6 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             "ts": int(time()),
             "state": dict(state or {}),
         }
-
-    def _apply_recent_action_overlay(
-        self, device: CieloDevice, recent: dict[str, Any]
-    ) -> None:
-        """Helper to apply recent action to device data."""
-        if getattr(device, "ac_states", None) is not None:
-            if type(device.ac_states) is dict:
-                device.ac_states.update(recent)
-
-        for k in (
-            "mode",
-            "fan_speed",
-            "preset",
-            "swing_position",
-            "power",
-            "set_point",
-            "heat_set_point",
-            "cool_set_point",
-        ):
-            if k not in recent:
-                continue
-
-            val = recent[k]
-            if k == "mode":
-                setattr(device, "hvac_mode", val)
-            elif k == "fan_speed":
-                setattr(device, "fan_mode", val)
-            elif k == "preset":
-                setattr(device, "preset_mode", val)
-            elif k == "swing_position":
-                setattr(device, "swing_mode", val)
-            elif k == "power":
-                setattr(device, "device_on", val == "on")
-            elif k == "set_point":
-                setattr(device, "target_temp", str(val))
-            elif k == "heat_set_point":
-                setattr(device, "target_heat_set_point", float(val))
-            elif k == "cool_set_point":
-                setattr(device, "target_cool_set_point", float(val))
 
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
@@ -151,15 +112,9 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             for dev_id, info in list(self._recent_actions.items()):
                 ts = info.get("ts", 0)
                 if now - ts <= self._hold_seconds and dev_id in parsed:
-                    try:
-                        recent = dict(info.get("state") or {})
-                        device = parsed[dev_id]
-                        self._apply_recent_action_overlay(device, recent)
-
-                    except Exception:
-                        self.logger.exception(
-                            "Error applying recent action overlay for %s", dev_id
-                        )
+                    recent = dict(info.get("state") or {})
+                    device = parsed[dev_id]
+                    device.apply_update(recent)
                 else:
                     to_delete.append(dev_id)
 

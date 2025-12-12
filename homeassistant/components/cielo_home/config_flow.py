@@ -11,8 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -44,6 +43,34 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.client: CieloClient | None = None
         self._reauth_entry: config_entries.ConfigEntry | None = None
 
+    async def _async_validate_api_key(self, api_key: str) -> dict[str, str]:
+        """Validate the API key, initialize the client, and return errors or token."""
+        if self.client is None:
+            self.client = CieloClient(
+                api_key=api_key,
+                timeout=TIMEOUT,
+                session=async_get_clientsession(self.hass),
+            )
+        else:
+            self.client.api_key = api_key
+
+        try:
+            token = await self.client.get_or_refresh_token()
+
+        except AuthenticationError:
+            return {"base": "invalid_auth"}
+        except ConnectionError:
+            return {"base": "cannot_connect"}
+        except NoDevicesError:
+            return {"base": "no_devices"}
+        except NoUsernameError:
+            return {"base": "no_username"}
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception during config flow validation")
+            return {"base": "unknown"}
+
+        return {"token": token}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -53,42 +80,21 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             api_key = user_input[CONF_API_KEY].strip()
 
-            # Check if an entry with this API key already exists.
             self._async_abort_entries_match({CONF_API_KEY: api_key})
 
-            # Initialize client if not already done
-            if self.client is None:
-                self.client = CieloClient(
-                    api_key="",
-                    timeout=TIMEOUT,
-                    session=async_get_clientsession(self.hass),
-                )
+            validation_result = await self._async_validate_api_key(api_key)
 
-            self.client.api_key = api_key
-
-            try:
-                # Attempt to get or refresh token to validate the key
-                token = await self.client.get_or_refresh_token()
-
-                # Validation successful. Prepare data for entry.
-                user_input[CONF_API_KEY] = api_key
-                user_input["token"] = token
-
-            except AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except NoDevicesError:
-                errors["base"] = "no_devices"
-            except NoUsernameError:
-                errors["base"] = "no_username"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception during config flow validation")
-                errors["base"] = "unknown"
+            if "base" in validation_result:
+                errors = validation_result
             else:
+                token: str = validation_result[CONF_TOKEN]
 
+                user_input[CONF_API_KEY] = api_key
+                user_input[CONF_TOKEN] = token
+
+                await self.async_set_unique_id(token)
                 return self.async_create_entry(
-                    title=f"Cielo Home ({api_key[-4:]})",
+                    title=f"Cielo Home ({api_key[:4]}*****************{api_key[-4:]})",
                     data=user_input,
                 )
 
@@ -113,6 +119,9 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._reauth_entry:
             self.context["title_placeholders"] = {"name": self._reauth_entry.title}
 
+        if self._reauth_entry and self._reauth_entry.unique_id:
+            await self.async_set_unique_id(self._reauth_entry.unique_id)
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -134,38 +143,21 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         api_key = user_input[CONF_API_KEY].strip()
 
-        # Re-initialize client with the new key
-        if self.client is None:
-            self.client = CieloClient(
-                api_key=api_key,
-                timeout=TIMEOUT,
-                session=async_get_clientsession(self.hass),
-            )
-        else:
-            self.client.api_key = api_key
+        validation_result = await self._async_validate_api_key(api_key)
 
-        try:
-            token = await self.client.get_or_refresh_token()
-        except AuthenticationError:
-            errors["base"] = "invalid_auth"
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
-        except NoDevicesError:
-            errors["base"] = "no_devices"
-        except NoUsernameError:
-            errors["base"] = "no_username"
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected exception during reauth validation")
-            errors["base"] = "unknown"
+        if "base" in validation_result:
+            errors = validation_result
         else:
+            token: str = validation_result[CONF_TOKEN]
+
             new_data = {
                 **self._reauth_entry.data,
                 CONF_API_KEY: api_key,
-                "token": token,
+                CONF_TOKEN: token,
             }
 
             self.hass.config_entries.async_update_entry(
-                self._reauth_entry, unique_id=token
+                self._reauth_entry, unique_id=token, data=new_data
             )
 
             # Update the entry, and reload the integration
@@ -183,11 +175,3 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "url": "https://www.home-assistant.io/integrations/cielo_home"
             },
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

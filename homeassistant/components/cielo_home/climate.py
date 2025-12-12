@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+from collections.abc import Callable, Coroutine
+from time import time
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -12,10 +15,15 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CIELO_ERRORS, LOGGER, TIMEOUT
 from .coordinator import CieloDataUpdateCoordinator
-from .entity import CieloDeviceBaseEntity, async_handle_api_call
+from .entity import CieloDeviceBaseEntity
+
+_T = TypeVar("_T", bound="CieloDeviceBaseEntity")
+_P = ParamSpec("_P")
 
 
 async def async_setup_entry(
@@ -25,8 +33,71 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Cielo climate platform."""
     coordinator = entry.runtime_data
-    devices = getattr(coordinator.data, "parsed", {}) or {}
+    devices = coordinator.data.parsed
     async_add_entities([CieloClimate(coordinator, dev_id) for dev_id in devices])
+
+
+def async_handle_api_call(
+    function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
+    """Decorate api calls to handle exceptions, update state, and note recent actions."""
+
+    async def wrap_api_call(*args: Any, **kwargs: Any) -> dict[str, Any] | None:
+        """Wrap services for api calls."""
+        entity: _T = args[0]
+        res: Any = None
+
+        try:
+            client = getattr(entity, "_client", None)
+            if client is not None:
+                if entity.device_data:
+                    client.device_data = entity.device_data
+
+            async with asyncio.timeout(TIMEOUT):
+                res = await function(*args, **kwargs)
+
+        except CIELO_ERRORS as err:
+            LOGGER.error("API call failed for entity %s: %s", entity.entity_id, err)
+            raise HomeAssistantError from err
+        except TimeoutError as err:
+            LOGGER.error("API call timed out for entity %s: %s", entity.entity_id, err)
+            raise HomeAssistantError("API call timed out") from err
+
+        LOGGER.debug("API call result for entity %s: %s", entity.entity_id, res)
+
+        if not isinstance(res, dict):
+            LOGGER.error("API function did not return a dictionary: %s", res)
+            return None
+
+        data: dict[str, Any] | None = res.get("data")
+
+        if not data:
+            LOGGER.error("API call response contained no 'data' payload")
+            return None
+
+        if entity.device_data is None:
+            LOGGER.error("Cannot update state: entity.device_data is None")
+            return None
+
+        try:
+            entity.device_data.apply_update(data)
+        except (KeyError, ValueError, TypeError) as err:
+            LOGGER.error(
+                "Failed to apply API response data to device model for entity %s: %s",
+                entity.entity_id,
+                err,
+            )
+            return None
+
+        entity.last_action = data
+        entity.last_action_timestamp = int(time())
+
+        entity.async_write_ha_state()
+        entity.coordinator.note_recent_action(entity._device_id, data)  # noqa: SLF001
+
+        return data
+
+    return wrap_api_call
 
 
 class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):

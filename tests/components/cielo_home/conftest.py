@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def entry_config() -> dict:
     """Return valid config for a Cielo Home entry."""
     return {
         CONF_API_KEY: "test-api-key",
-        "token": "valid-test-token",
+        CONF_TOKEN: "valid-test-token",
     }
 
 
