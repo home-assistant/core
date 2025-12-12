@@ -120,7 +120,7 @@ class VictronMqttManager:
     _topic_device_map: dict[str, DeviceKey]
     _topic_payload_cache: dict[str, bytes]
     _pending_via_device_discoveries: dict[DeviceKey, list[dict[str, Any]]]
-    _keepalive_timer_handle: asyncio.TimerHandle | None
+    _republish_timer_handle: asyncio.TimerHandle | None
     _unique_id: str | None
     _keepalive_task_started: bool
 
@@ -136,7 +136,7 @@ class VictronMqttManager:
         self._topic_device_map = {}
         self._topic_payload_cache = {}
         self._pending_via_device_discoveries = {}
-        self._keepalive_timer_handle = None
+        self._republish_timer_handle = None
         self._unique_id = None
         self._keepalive_task_started = False
 
@@ -152,7 +152,7 @@ class VictronMqttManager:
             _LOGGER.debug("Starting MQTT client loop")
             self.client.loop_forever()
 
-    async def _publish_keepalive_task(self) -> None:
+    async def _keepalive_suppress_republish_task(self) -> None:
         """Publish keepalive JSON payload every 30 seconds."""
         topic = f"R/{self._unique_id}/keepalive"
         while True:
@@ -166,7 +166,7 @@ class VictronMqttManager:
                 )
             await asyncio.sleep(30)
 
-    def _send_keepalive_now(self) -> None:
+    def _send_republish(self) -> None:
         """Timer callback to send keepalive."""
         try:
             # Send the keepalive
@@ -183,23 +183,25 @@ class VictronMqttManager:
         except Exception as err:
             _LOGGER.error("Error sending keepalive: %s", err)
         finally:
-            self._keepalive_timer_handle = None
+            self._republish_timer_handle = None
 
-    def _queue_keepalive_for_device(self, device_identifiers) -> None:
-        """Queue a keepalive request using a resettable timer (batches multiple requests)."""
-        if not device_identifiers or not self._unique_id:
-            return
+    def _queue_republish(self) -> None:
+        """Queue a keepalive request using a resettable timer (batches multiple requests).
 
-        # Cancel existing timer if running
-        if self._keepalive_timer_handle:
-            self._keepalive_timer_handle.cancel()
+        This function should be called from the main event loop.
+
+        """
+        if self._republish_timer_handle:
+            # Cancel existing timer if running
+            self._republish_timer_handle.cancel()
             _LOGGER.debug("Reset keepalive timer (batching multiple requests)")
         else:
             _LOGGER.debug("Started keepalive timer for device batch")
 
         # Start/restart timer for 2 seconds from now
-        loop = asyncio.get_running_loop()
-        self._keepalive_timer_handle = loop.call_later(2.0, self._send_keepalive_now)
+        self._republish_timer_handle = self.hass.loop.call_later(
+            2.0, self._send_republish
+        )  # Wake up event loop
 
     def _store_device_info(
         self, device_key: DeviceKey, device_info: dict[str, Any]
@@ -376,7 +378,7 @@ class VictronMqttManager:
         components: dict[str, Any],
     ) -> bool:
         """Process device after via_device availability check passes."""
-        queue_keep_alive = len(components) > 0
+        queue_republish = len(components) > 0
         self._store_device_info(device_key, device_info)
         await self._ensure_device_registered(device_key, device_info)
         await self._process_device_components(device_info, components, device_key)
@@ -403,8 +405,8 @@ class VictronMqttManager:
             )
 
             # Process deferred device and accumulate new entities count
-            queue_keep_alive = (
-                queue_keep_alive
+            queue_republish = (
+                queue_republish
                 | await self._process_device_after_via_check(
                     pending_device_key, pending_device_info, pending_components
                 )
@@ -414,7 +416,7 @@ class VictronMqttManager:
         self._pending_via_device_discoveries.pop(device_key, None)
         _LOGGER.info("Processed pending discoveries for via_device %s", device_key)
 
-        return queue_keep_alive
+        return queue_republish
 
     async def _handle_discovery_message(self, topic: str, payload: bytes) -> None:
         """Handle a Home Assistant MQTT discovery message."""
@@ -491,12 +493,12 @@ class VictronMqttManager:
             return  # Exit early, don't process any components
 
         # Process device after via_device check passes (store info, register, process components)
-        queue_keep_alive = await self._process_device_after_via_check(
+        queue_republish = await self._process_device_after_via_check(
             device_key, device_info, components
         )
 
-        if queue_keep_alive:
-            self._queue_keepalive_for_device(device_info.get("identifiers"))
+        if queue_republish:
+            self._queue_republish()
 
     def _handle_state_message(self, topic: str, payload: bytes) -> None:
         """Handle state messages by passing them on to the entities."""
@@ -530,7 +532,7 @@ class VictronMqttManager:
                 _LOGGER.debug("Published initial keepalive to topic: %s", topic)
                 # Schedule keepalive task on main event loop
                 self.hass.loop.call_soon_threadsafe(
-                    lambda: asyncio.create_task(self._publish_keepalive_task())
+                    lambda: asyncio.create_task(self._keepalive_suppress_republish_task())
                 )
                 self._keepalive_task_started = True
                 _LOGGER.debug(
@@ -651,10 +653,10 @@ class VictronMqttManager:
         _LOGGER.info("Cleaning up VictronMqttManager resources")
 
         # Cancel any running keepalive timer
-        if self._keepalive_timer_handle:
+        if self._republish_timer_handle:
             _LOGGER.debug("Cancelling keepalive timer")
-            self._keepalive_timer_handle.cancel()
-            self._keepalive_timer_handle = None
+            self._republish_timer_handle.cancel()
+            self._republish_timer_handle = None
 
         # Clear all registries
         registries_to_clear = [
