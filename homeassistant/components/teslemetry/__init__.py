@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from typing import Final
 
+from aiohttp import ClientResponseError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -20,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,6 +34,7 @@ from .coordinator import (
 )
 from .helpers import flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .oauth import TeslemetryImplementation
 from .services import async_setup_services
 
 PLATFORMS: Final = [
@@ -65,11 +68,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     access_token = entry.data["token"]["access_token"]
     session = async_get_clientsession(hass)
+    oauth_session = OAuth2Session(hass, entry, TeslemetryImplementation(hass))
+
+    async def _refresh_hook() -> str:
+        try:
+            await oauth_session.async_ensure_token_valid()
+        except ClientResponseError as e:
+            if e.status == 401:
+                raise ConfigEntryAuthFailed from e
+            raise ConfigEntryNotReady from e
+        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
+        return token
 
     # Create API connection
     teslemetry = Teslemetry(
         session=session,
         access_token=access_token,
+        refresh_hook=_refresh_hook,
     )
     try:
         calls = await asyncio.gather(
