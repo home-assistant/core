@@ -223,3 +223,6 @@ gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# pycares 5.x is not yet compatible with aiodns
+pycares==4.11.0
