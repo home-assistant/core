@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 import logging
 from typing import Any
@@ -13,10 +13,23 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DATA_DISCOVERY_STARTED, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class UniFiProtectRuntimeData:
+    """Runtime data stored in hass.data[DOMAIN]."""
+
+    auth_retries: dict[str, int] = field(default_factory=dict)
+    discovery_started: bool = False
+
+
+# Typed key for hass.data access at DOMAIN level
+DATA_UNIFIPROTECT: HassKey[UniFiProtectRuntimeData] = HassKey(DOMAIN)
 
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
@@ -24,9 +37,10 @@ DISCOVERY_INTERVAL = timedelta(minutes=60)
 @callback
 def async_start_discovery(hass: HomeAssistant) -> None:
     """Start discovery."""
-    if hass.data.get(DATA_DISCOVERY_STARTED):
+    domain_data = hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
+    if domain_data.discovery_started:
         return
-    hass.data[DATA_DISCOVERY_STARTED] = True
+    domain_data.discovery_started = True
 
     async def _async_discovery() -> None:
         async_trigger_discovery(hass, await async_discover_devices())

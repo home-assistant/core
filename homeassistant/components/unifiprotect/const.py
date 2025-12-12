@@ -5,14 +5,9 @@ from typing import Final
 from uiprotect.data import ModelType, Version
 
 from homeassistant.const import Platform
-from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "unifiprotect"
 
-# Typed key for hass.data access - stores auth retries per config entry
-DATA_AUTH_RETRIES: HassKey[dict[str, int]] = HassKey(f"{DOMAIN}_auth_retries")
-# Typed key for discovery state
-DATA_DISCOVERY_STARTED: HassKey[bool] = HassKey(f"{DOMAIN}_discovery")
 # If rate limit for 4.x or later a 429 is returned
 # so we can use a lower value
 AUTH_RETRIES = 2

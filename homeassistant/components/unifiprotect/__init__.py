@@ -34,14 +34,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
-    DATA_AUTH_RETRIES,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
     PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
-from .discovery import async_start_discovery
+from .discovery import DATA_UNIFIPROTECT, UniFiProtectRuntimeData, async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_setup_services
 from .utils import (
@@ -65,6 +64,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
+    # Initialize domain data structure (setdefault in case discovery already started)
+    hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
     # Only start discovery once regardless of how many entries they have
     async_setup_services(hass)
     async_start_discovery(hass)
@@ -80,11 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     try:
         await protect.update()
     except NotAuthorized as err:
-        auth_retries = hass.data.setdefault(DATA_AUTH_RETRIES, {})
-        retries = auth_retries.get(entry.entry_id, 0)
+        domain_data = hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
+        retries = domain_data.auth_retries.get(entry.entry_id, 0)
         if retries < AUTH_RETRIES:
             retries += 1
-            auth_retries[entry.entry_id] = retries
+            domain_data.auth_retries[entry.entry_id] = retries
             raise ConfigEntryNotReady from err
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
