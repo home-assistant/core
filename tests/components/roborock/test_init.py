@@ -10,6 +10,7 @@ from roborock import (
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
 )
+from roborock.exceptions import RoborockException
 
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -330,3 +331,71 @@ async def test_cloud_api_repair(
     await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_zeo_device_fails_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Simulate an error while setting up a zeo device."""
+    # We have a single zeo device in the test setup. Find it then set it to fail.
+    zeo_device = next(
+        (device for device in fake_devices if device.zeo is not None),
+        None,
+    )
+    assert zeo_device is not None
+    zeo_device.zeo.query_values.side_effect = RoborockException("Simulated Zeo failure")
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The current behavior is that we do not add the Zeo device if it fails to setup
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in found_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        # Zeo device is missing
+    }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_dyad_device_fails_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Simulate an error while setting up a dyad device."""
+    # We have a single dyad device in the test setup. Find it then set it to fail.
+    dyad_device = next(
+        (device for device in fake_devices if device.dyad is not None),
+        None,
+    )
+    assert dyad_device is not None
+    dyad_device.dyad.query_values.side_effect = RoborockException(
+        "Simulated Dyad failure"
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The current behavior is that we do not add the Dyad device if it fails to setup
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in found_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        # Dyad device is missing
+        "Zeo One",
+    }
