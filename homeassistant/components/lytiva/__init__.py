@@ -133,12 +133,10 @@ class LytivaMQTTHandler:
         """Fallback message handler."""
         _LOGGER.debug("Fallback on_message for topic %s", msg.topic)
 
-    def _on_status(
-        self, client: mqtt_client.Client, userdata: Any, message: mqtt_client.MQTTMessage
-    ) -> None:
+    def _on_status(self, client, userdata, message):
         """Handle status messages."""
-        asyncio.run_coroutine_threadsafe(
-            self._async_handle_status(message), self.hass.loop
+        self.hass.async_add_executor_job(
+            self._async_handle_status, message
         )
 
     async def _async_handle_status(self, message: mqtt_client.MQTTMessage) -> None:
