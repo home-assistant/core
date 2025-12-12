@@ -35,6 +35,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN, LOGGER
+from .util import async_resolve_host
 
 DEFAULT_NAME = "MPD"
 DEFAULT_PORT = 6600
@@ -77,6 +78,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             MpdDevice(
+                hass,
                 entry.data[CONF_HOST],
                 entry.data[CONF_PORT],
                 entry.data.get(CONF_PASSWORD),
@@ -95,9 +97,15 @@ class MpdDevice(MediaPlayerEntity):
     _attr_name = None
 
     def __init__(
-        self, server: str, port: int, password: str | None, unique_id: str
+        self,
+        hass: HomeAssistant,
+        server: str,
+        port: int,
+        password: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize the MPD device."""
+        self.hass = hass
         self.server = server
         self.port = port
         self._attr_unique_id = unique_id
@@ -114,6 +122,8 @@ class MpdDevice(MediaPlayerEntity):
         self._media_image_hash = None
         # Track if the song changed so image doesn't have to be loaded every update.
         self._media_image_file = None
+        # Cache the resolved host to avoid repeated zeroconf resolution
+        self._resolved_host: str | None = None
 
         # set up MPD client
         self._client = MPDClient()
@@ -130,12 +140,19 @@ class MpdDevice(MediaPlayerEntity):
         """Handle MPD connect and disconnect."""
         async with self._client_lock:
             try:
+                # Resolve hostname using zeroconf if needed, use cached value if available
+                if self._resolved_host is None:
+                    self._resolved_host = await async_resolve_host(
+                        self.hass, self.server
+                    )
+                resolved_host = self._resolved_host
+
                 # MPDClient.connect() doesn't always respect its timeout. To
                 # prevent a deadlock, enforce an additional (slightly longer)
                 # timeout on the coroutine itself.
                 try:
                     async with asyncio.timeout(self._client.timeout + 5):
-                        await self._client.connect(self.server, self.port)
+                        await self._client.connect(resolved_host, self.port)
                 except TimeoutError as error:
                     # TimeoutError has no message (which hinders logging further
                     # down the line), so provide one.
