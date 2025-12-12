@@ -460,7 +460,7 @@ async def test_non_main_components_are_supported(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test to check if non-main components are supported."""
+    """Test that range hood lamp component creates light entity from non-main component."""
     await setup_integration(hass, mock_config_entry)
 
     # The hood device should create a light entity for the lamp component
