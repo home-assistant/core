@@ -28,6 +28,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "invalid_region": "Invalid region parameter. Must be either 'NA' or 'EU'",
+      "missing_region": "Region parameter is required but missing from authorization response",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },

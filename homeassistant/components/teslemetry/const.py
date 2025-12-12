@@ -9,6 +9,12 @@ AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
 
+# Regional token URLs
+TOKEN_URLS = {
+    "NA": "https://na.teslemetry.com/oauth/token",  # North America
+    "EU": "https://eu.teslemetry.eu/oauth/token",  # Europe
+}
+
 DOMAIN = "teslemetry"
 
 LOGGER = logging.getLogger(__package__)

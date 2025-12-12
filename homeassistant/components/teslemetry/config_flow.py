@@ -18,7 +18,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, TOKEN_URLS
 from .oauth import TeslemetryImplementation
 
 
@@ -34,6 +34,7 @@ class OAuth2FlowHandler(
         super().__init__()
         self.data: dict[str, Any] = {}
         self.uid: str | None = None
+        self._oauth_impl: TeslemetryImplementation | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -44,12 +45,38 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        self.async_register_implementation(
-            self.hass,
-            TeslemetryImplementation(self.hass),
-        )
+        self._oauth_impl = TeslemetryImplementation(self.hass)
+        self.async_register_implementation(self.hass, self._oauth_impl)
 
         return await super().async_step_user()
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle OAuth2 authorization step with region capture."""
+        if user_input is not None:
+            # Check if region parameter is present in the callback
+            if "region" not in user_input:
+                return self.async_abort(reason="missing_region")
+
+            region = user_input["region"]
+            if region not in TOKEN_URLS:
+                return self.async_abort(reason="invalid_region")
+
+            # Set region on the OAuth implementation
+            if self._oauth_impl and hasattr(self._oauth_impl, "set_region"):
+                try:
+                    self._oauth_impl.set_region(region)
+                except ValueError:
+                    return self.async_abort(reason="invalid_region")
+
+            # Store region in external data for later use
+            self.external_data = user_input
+            next_step = "authorize_rejected" if "error" in user_input else "creation"
+            return self.async_external_step_done(next_step_id=next_step)
+
+        # Continue with standard auth flow
+        return await super().async_step_auth(user_input)
 
     async def async_oauth_create_entry(
         self,
