@@ -2,13 +2,13 @@
 
 from unittest.mock import MagicMock
 
-import pytest
-
-from homeassistant.components.eufy_security.api import (
+from eufy_security import (
     CaptchaRequiredError,
     EufySecurityError,
     InvalidCredentialsError,
 )
+import pytest
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
