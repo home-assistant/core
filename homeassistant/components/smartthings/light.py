@@ -30,6 +30,7 @@ CAPABILITIES = (
     Capability.SWITCH_LEVEL,
     Capability.COLOR_CONTROL,
     Capability.COLOR_TEMPERATURE,
+    Capability.SAMSUNG_CE_LAMP,
 )
 
 # Components that should be exposed as light entities, in addition to the main component.
