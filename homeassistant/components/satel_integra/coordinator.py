@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from satel_integra.satel_integra import AlarmState, AsyncSatel
 
@@ -133,13 +134,26 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
         if not result:
             raise ConfigEntryNotReady("Controller failed to connect")
 
+        if TYPE_CHECKING:
+            assert self.config_entry
+
         # Create a task instead of adding a tracking job, since this task will
         # run until the connection to satel_integra is closed.
-        self.hass.loop.create_task(self.controller.keep_alive())
-        self.hass.loop.create_task(
+
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.controller.keep_alive(),
+            f"satel_integra.{self.config_entry.entry_id}.keep_alive",
+            eager_start=False,
+        )
+
+        self.config_entry.async_create_background_task(
+            self.hass,
             self.controller.monitor_status(
                 self.alarm_status_update_callback,
                 self.zones_update_callback,
                 self.outputs_update_callback,
-            )
+            ),
+            f"satel_integra.{self.config_entry.entry_id}.monitor_status",
+            eager_start=False,
         )
