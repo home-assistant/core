@@ -14,9 +14,13 @@ from .models import ConnectSenseConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConnectSenseConfigEntry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConnectSenseConfigEntry, async_add_entities
+):
     data = entry.runtime_data
-    async_add_entities([RebooterRebootButton(hass, data.coordinator, entry, data.client)])
+    async_add_entities(
+        [RebooterRebootButton(hass, data.coordinator, entry, data.client)]
+    )
 
 
 class RebooterRebootButton(ConnectSenseEntity, ButtonEntity):

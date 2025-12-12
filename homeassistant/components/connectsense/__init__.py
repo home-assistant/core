@@ -20,7 +20,9 @@ PLATFORMS = ["button"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _probe_serial_over_https(hass: HomeAssistant, entry_or_host: ConfigEntry | str) -> str | None:
+async def _probe_serial_over_https(
+    hass: HomeAssistant, entry_or_host: ConfigEntry | str
+) -> str | None:
     """Return the numeric serial from GET /info (device), or None on failure."""
     if isinstance(entry_or_host, str):
         entry = None
@@ -32,7 +34,11 @@ async def _probe_serial_over_https(hass: HomeAssistant, entry_or_host: ConfigEnt
     if not host:
         return None
 
-    client = await (async_get_client(hass, entry) if entry is not None else build_probe_client(hass, host))
+    client = await (
+        async_get_client(hass, entry)
+        if entry is not None
+        else build_probe_client(hass, host)
+    )
     try:
         data: dict[str, Any] | None = await client.get_info()
     except Exception as exc:  # pragma: no cover - logged only
@@ -43,7 +49,11 @@ async def _probe_serial_over_https(hass: HomeAssistant, entry_or_host: ConfigEnt
     if not isinstance(device_field, str):
         return None
 
-    candidate = device_field[len(DEVICE_PREFIX) :] if device_field.startswith(DEVICE_PREFIX) else device_field
+    candidate = (
+        device_field[len(DEVICE_PREFIX) :]
+        if device_field.startswith(DEVICE_PREFIX)
+        else device_field
+    )
     candidate = candidate.strip()
     if _SERIAL_RE.match(candidate):
         return candidate
@@ -52,7 +62,9 @@ async def _probe_serial_over_https(hass: HomeAssistant, entry_or_host: ConfigEnt
     return candidate or None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConnectSenseConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConnectSenseConfigEntry
+) -> bool:
     """Set up the ConnectSense entry."""
     try:
         host = entry.data.get(CONF_HOST)
@@ -80,13 +92,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConnectSenseConfigEntry)
         raise ConfigEntryNotReady from exc
 
     store["coordinator"] = coordinator
-    entry.runtime_data = ConnectSenseRuntimeData(store=store, coordinator=coordinator, client=client)
+    entry.runtime_data = ConnectSenseRuntimeData(
+        store=store, coordinator=coordinator, client=client
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConnectSenseConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ConnectSenseConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

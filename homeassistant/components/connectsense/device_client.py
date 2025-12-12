@@ -21,7 +21,9 @@ async def async_get_client(hass, entry) -> RebooterProClient:
         session = async_get_clientsession(hass)
         ssl_ctx = await _get_ssl_for_host(hass, entry.data[CONF_HOST])
         # Pass pre-built SSL to avoid blocking load_verify_locations on the event loop.
-        client = RebooterProClient(entry.data[CONF_HOST], session=session, ssl_context=ssl_ctx, ca_bundle=None)
+        client = RebooterProClient(
+            entry.data[CONF_HOST], session=session, ssl_context=ssl_ctx, ca_bundle=None
+        )
         store["client"] = client
     return client
 
@@ -46,6 +48,7 @@ async def build_probe_client(hass, host: str) -> RebooterProClient:
 @lru_cache(maxsize=1)
 def _cached_ca_path() -> Path | None:
     from importlib.resources import files
+
     try:
         path = files("rebooterpro_async.data") / "device_ca.pem"
         return path if path.exists() else None

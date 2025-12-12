@@ -18,7 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectSenseCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
     """Coordinator to manage communication with a Rebooter Pro device."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConnectSenseConfigEntry, client: RebooterProClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConnectSenseConfigEntry,
+        client: RebooterProClient,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -34,4 +39,6 @@ class ConnectSenseCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
         try:
             return await self.client.get_info()
         except RebooterError as exc:
-            raise UpdateFailed(f"Failed to talk to Rebooter Pro at {self.entry.data.get(CONF_HOST)}") from exc
+            raise UpdateFailed(
+                f"Failed to talk to Rebooter Pro at {self.entry.data.get(CONF_HOST)}"
+            ) from exc

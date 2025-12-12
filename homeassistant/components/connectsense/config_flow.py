@@ -18,9 +18,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 # Only hostname is requested now
-USER_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST, default="rebooter-pro.local"): str,
-})
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default="rebooter-pro.local"): str,
+    }
+)
 
 
 def _zget(obj: Any, attr: str, default: Any = None) -> Any:
@@ -34,9 +36,12 @@ def _zget(obj: Any, attr: str, default: Any = None) -> Any:
         return obj.get(attr, default)
     return default
 
+
 DEVICE_PREFIX = "CS-RBTR-"
-_SERIAL_RE = re.compile(r"^(\d+)$") #for https poll of serial
-_NAME_SERIAL_RE = re.compile(r"Rebooter Pro\s+(\d+)", re.IGNORECASE) #for dns name
+_SERIAL_RE = re.compile(r"^(\d+)$")  # for https poll of serial
+_NAME_SERIAL_RE = re.compile(r"Rebooter Pro\s+(\d+)", re.IGNORECASE)  # for dns name
+
+
 async def _probe_serial_over_https(hass, entry_or_host) -> str | None:
     """Return the numeric serial from GET /info (device), or None on failure.
 
@@ -67,7 +72,7 @@ async def _probe_serial_over_https(hass, entry_or_host) -> str | None:
 
     # Strip the leading "CS-RBTR-" if present
     if device_field.startswith(DEVICE_PREFIX):
-        candidate = device_field[len(DEVICE_PREFIX):]
+        candidate = device_field[len(DEVICE_PREFIX) :]
     else:
         candidate = device_field
 
@@ -78,6 +83,7 @@ async def _probe_serial_over_https(hass, entry_or_host) -> str | None:
 
     _LOGGER.debug("Unexpected device format in /info: %r", device_field)
     return candidate or None
+
 
 # --- mDNS helper: map an IP -> .local hostname by browsing services briefly ---
 async def _mdns_hostname_for_ip(hass, ip: str, timeout: float = 2.0) -> str | None:
@@ -105,7 +111,7 @@ async def _mdns_hostname_for_ip(hass, ip: str, timeout: float = 2.0) -> str | No
                     return
                 addrs = []
                 # Zeroconf returns packed bytes; convert to dotted-quad (IPv4 only)
-                for a in (info.addresses or []):
+                for a in info.addresses or []:
                     try:
                         addrs.append(socket.inet_ntoa(a))
                     except Exception:
@@ -152,8 +158,10 @@ def _norm_host(s: str | None) -> str:
         s = s[:-1]
     return s.lower()
 
+
 class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
+
     def __init__(self) -> None:
         self._discovered: dict[str, str] | None = None
         self._zc: dict[str, str] = {}  # holds zeroconf details for confirm step
@@ -161,33 +169,43 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=USER_SCHEMA)
-    
+
         host = _norm_host(user_input.get(CONF_HOST))
         _LOGGER.debug("User step received host input: %s", host)
-        
+
         # Guard against empty/invalid host field
         if not host:
-            return self.async_show_form(step_id="user", data_schema=USER_SCHEMA, errors={"base": "cannot_connect"})
-    
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_SCHEMA,
+                errors={"base": "cannot_connect"},
+            )
+
         # If the user typed an IP, try reverse DNS to prefer a hostname
         preferred_host = host
         is_ip = False
         try:
             ipaddress.ip_address(host)
             is_ip = True
-            _LOGGER.debug("User entered IP '%s'; downstream SSL helper should disable hostname verification.", host)
+            _LOGGER.debug(
+                "User entered IP '%s'; downstream SSL helper should disable hostname verification.",
+                host,
+            )
         except Exception as exc:
-            _LOGGER.debug("Host '%s' is not an IP (%r); keeping as hostname.", host, exc)
-    
+            _LOGGER.debug(
+                "Host '%s' is not an IP (%r); keeping as hostname.", host, exc
+            )
+
         if is_ip:
             # Prefer a true mDNS hostname (e.g. rebooter-pro-2.local) over the IP
             mdns_host = await _mdns_hostname_for_ip(self.hass, host, timeout=2.0)
             if mdns_host:
-                _LOGGER.debug("mDNS lookup for %s -> adopting hostname '%s'", host, mdns_host)
+                _LOGGER.debug(
+                    "mDNS lookup for %s -> adopting hostname '%s'", host, mdns_host
+                )
                 preferred_host = mdns_host
             else:
                 _LOGGER.debug("mDNS lookup for %s found no hostname; keeping IP", host)
-
 
         # Try to fetch a stable serial now so manual setup and Zeroconf share the same unique_id
         try:
@@ -195,33 +213,35 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as e:
             _LOGGER.debug("Serial probe failed for %s: %r", preferred_host, e)
             serial = None
-            
+
         # If the probe failed (unreachable or invalid /info), do NOT add the entry.
         if not serial:
-            _LOGGER.debug("Host '%s' unreachable or /info invalid; not creating entry.", preferred_host)
+            _LOGGER.debug(
+                "Host '%s' unreachable or /info invalid; not creating entry.",
+                preferred_host,
+            )
             return self.async_show_form(
                 step_id="user",
                 data_schema=USER_SCHEMA,
                 errors={"base": "cannot_connect"},
             )
-    
+
         _LOGGER.debug("Integration using unique id '%s'", serial)
 
         self.context["title_placeholders"] = {
             "serial": str(serial),
             "host": preferred_host,
         }
-        
+
         await self.async_set_unique_id(str(serial), raise_on_progress=False)
         self._abort_if_unique_id_configured(updates={CONF_HOST: preferred_host})
-        
+
         # Use a serial-based title
         title = f"Rebooter Pro {serial}"
         return self.async_create_entry(
             title=title,
             data={CONF_HOST: preferred_host},
         )
-
 
     async def async_step_zeroconf(self, discovery_info: Any):
         # Handle both ZeroconfServiceInfo and dict payloads
@@ -246,7 +266,9 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host,
             )
 
-        name = _zget(discovery_info, "name") or ""  # e.g. "Rebooter Pro 1010001._https._tcp.local."
+        name = (
+            _zget(discovery_info, "name") or ""
+        )  # e.g. "Rebooter Pro 1010001._https._tcp.local."
         m = _NAME_SERIAL_RE.search(name)
         serial = m.group(1) if m else None
 
@@ -273,15 +295,19 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Stash details for the dedicated confirm step
         self._zc = {"host": host, "serial": str(serial), "model": "Rebooter Pro"}
-        self.context.update({
-            "title_placeholders": {
-                "serial": self._zc["serial"],
-                "model": self._zc["model"],
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "serial": self._zc["serial"],
+                    "model": self._zc["model"],
+                }
             }
-        })
+        )
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input: dict[str, Any] | None = None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ):
         """Handle the user clicking Configure on the discovery tile."""
         if not self._zc:
             return self.async_abort(reason="unknown")
@@ -301,7 +327,9 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         },
                     )
             except Exception as exc:
-                _LOGGER.debug("Zeroconf confirm: probe /info failed for %s: %r", host, exc)
+                _LOGGER.debug(
+                    "Zeroconf confirm: probe /info failed for %s: %r", host, exc
+                )
                 return self.async_show_form(
                     step_id="zeroconf_confirm",
                     data_schema=vol.Schema({}),
@@ -313,7 +341,9 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             title = f"{self._zc['model']} {serial}"
-            return self.async_create_entry(title=title, data={CONF_HOST: host, **user_input})
+            return self.async_create_entry(
+                title=title, data={CONF_HOST: host, **user_input}
+            )
 
         return self.async_show_form(
             step_id="zeroconf_confirm",

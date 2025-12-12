@@ -14,7 +14,9 @@ class ConnectSenseEntity(CoordinatorEntity[ConnectSenseCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass, coordinator: ConnectSenseCoordinator, entry: ConnectSenseConfigEntry) -> None:
+    def __init__(
+        self, hass, coordinator: ConnectSenseCoordinator, entry: ConnectSenseConfigEntry
+    ) -> None:
         super().__init__(coordinator)
         self.hass = hass
         self.entry = entry
