@@ -394,7 +394,14 @@ class RoborockWashingMachineUpdateCoordinator(
     async def _async_update_data(
         self,
     ) -> dict[RoborockZeoProtocol, StateType]:
-        return await self.api.query_values(self.request_protocols)
+        try:
+            return await self.api.query_values(self.request_protocols)
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to update washing machine data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
 
 
 class RoborockWetDryVacUpdateCoordinator(
@@ -425,4 +432,11 @@ class RoborockWetDryVacUpdateCoordinator(
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
-        return await self.api.query_values(self.request_protocols)
+        try:
+            return await self.api.query_values(self.request_protocols)
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
